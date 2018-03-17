@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <composition>
     <autoStartNextComposition>false</autoStartNextComposition>
-    <durationMillis>0</durationMillis>
+    <durationMillis>314000</durationMillis>
     <fileList>
         <midiFile>
             <active>true</active>
