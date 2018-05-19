@@ -1,4 +1,50 @@
 <div class="form-group row">
+  <label class="col-lg-3 col-form-label">{{ 'settings.wlan-ap' | translate }}</label>
+  <div class="col-lg-9">
+    <div class="card">
+      <div class="card-body">
+        <i>{{ 'settings.wlan-ap-description' | translate }}</i>
+        <br />
+        <br />
+
+        <div class="form-group row mb-0">
+          <label for="channel-offset" class="col-sm-3 col-form-label">{{ 'settings.wlan-ap-status' | translate }}</label>
+          <div class="col-sm-9">
+            <label class="form-check-label mt-2">
+              <input type="checkbox" [ngModel]="settings?.wlanApEnable" (ngModelChange)="settings.wlanApEnable = $event" class="form-check-input"> {{ 'settings.wlan-ap-enable' | translate }}
+            </label>
+          </div>
+        </div>
+
+        <div *ngIf="settings?.wlanApEnable" class="mt-2">
+          <div class="form-group row">
+            <label for="channel-offset" class="col-sm-3 col-form-label">{{ 'settings.wlan-ap-ssid' | translate }}</label>
+            <div class="col-sm-9">
+              <input type="text" [ngModel]="settings?.wlanApSsid" (ngModelChange)="settings.wlanApSsid = $event" class="form-control">
+            </div>
+          </div>
+          <div class="form-group row">
+            <label for="channel-offset" class="col-sm-3 col-form-label">{{ 'settings.wlan-ap-wpa-passphrase' | translate }}</label>
+            <div class="col-sm-9">
+              <input type="text" [ngModel]="settings?.wlanApPassphrase" (ngModelChange)="settings.wlanApPassphrase = $event" class="form-control">
+            </div>
+          </div>
+          <div class="form-group row mb-0">
+            <label for="note-offset" class="col-sm-3 col-form-label"></label>
+            <div class="col-sm-9">
+              <label class="form-check-label mt-2">
+                <input type="checkbox" [ngModel]="settings?.wlanApSsidHide" (ngModelChange)="settings.wlanApSsidHide = $event" class="form-check-input"> {{ 'settings.wlan-ap-ssid-hide' | translate }}
+              </label>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="form-group row">
   <label class="col-lg-3 col-form-label">{{ 'routing.remote-devices' | translate }}</label>
   <div class="col-lg-9">
     <div class="list-group" [sortablejs]="settings?.remoteDeviceList" [sortablejsOptions]="{ onMove: sortMove }">

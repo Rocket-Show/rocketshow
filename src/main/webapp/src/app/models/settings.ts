@@ -28,6 +28,10 @@ export class Settings {
     audioRate: number;
     audioDevice: AudioDevice;
     audioBusList: AudioBus[];
+    wlanApEnable: boolean;
+    wlanApSsid: string;
+    wlanApPassphrase: boolean;
+    wlanApSsidHide: boolean;
 
     constructor(data?: any) {
         if (!data) {
@@ -102,6 +106,11 @@ export class Settings {
                 this.audioBusList.push(new AudioBus(audioBus));
             }
         }
+
+        this.wlanApEnable = data.wlanApEnable;
+        this.wlanApSsid = data.wlanApSsid;
+        this.wlanApPassphrase = data.wlanApPassphrase;
+        this.wlanApSsidHide = data.wlanApSsidHide;
     }
 
 }

@@ -6,8 +6,9 @@
 
 # Install all required packages (libnss-mdns installs the Bonjour service, if not already installed)
 apt-get update
+apt-get upgrade
 
-apt-get -y install oracle-java8-jdk omxplayer fbi ola mplayer libnss-mdns authbind
+apt-get -y install oracle-java8-jdk omxplayer fbi ola mplayer libnss-mdns dnsmasq hostapd
 
 # Add the rocketshow user
 adduser \
@@ -172,3 +173,44 @@ sed -i '/127.0.1.1/d' /etc/hosts
 sed -i "\$a127.0.1.1\tRocketShow" /etc/hosts
 
 sed -i 's/raspberrypi/RocketShow/g' /etc/hostname
+
+# Install the wireless access point feature
+# https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
+systemctl stop dnsmasq
+systemctl stop hostapd
+
+printf "\n# ROCKETSHOWSTART\ninterface wlan0\n    static ip_address=192.168.4.1/24\n# ROCKETSHOWEND\n" | tee -a /etc/dhcpcd.conf
+
+service dhcpcd restart
+
+printf "\n# ROCKETSHOWSTART\nDAEMON_CONF=\"/etc/hostapd/hostapd.conf\"\n# ROCKETSHOWEND\n" | tee -a /etc/default/hostapd
+	
+cat <<'EOF' >/etc/hostapd/hostapd.conf
+interface=wlan0
+driver=nl80211
+ssid=Rocket Show   
+hw_mode=g
+channel=7
+wmm_enabled=0
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+#wpa=2
+wpa_passphrase=Awesome742
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+EOF
+
+printf "\n# ROCKETSHOWSTART\nDAEMON_CONF=\"/etc/hostapd/hostapd.conf\"\n# ROCKETSHOWEND\n" | tee -a /etc/default/hostapd
+
+sudo systemctl start hostapd
+sudo systemctl start dnsmasq
+
+printf "\n# ROCKETSHOWSTART\nnet.ipv4.ip_forward=1\n# ROCKETSHOWEND\n" | tee -a /etc/sysctl.conf
+
+iptables -t nat -A  POSTROUTING -o eth0 -j MASQUERADE
+
+iptables-save > /etc/iptables.ipv4.nat
+
+sed -i '/exit 0/i# ROCKETSHOWSTART\niptables-restore < /etc/iptables.ipv4.nat\n# ROCKETSHOWEND\n' /etc/rc.local

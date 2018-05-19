@@ -77,6 +77,14 @@ public class Settings {
 	private AudioDevice audioDevice;
 
 	private List<AudioBus> audioBusList = new ArrayList<AudioBus>();
+	
+	private boolean wlanApEnable = true;
+	
+	private String wlanApSsid = "Rocket Show";
+	
+	private String wlanApPassphrase = "";
+	
+	private boolean wlanApSsidHide = false;
 
 	public Settings() {
 		// Initialize default settings
@@ -269,6 +277,10 @@ public class Settings {
 			break;
 		}
 	}
+	
+	private void updateWlanAp() {
+		
+	}
 
 	public void updateSystem() {
 		// Update all system settings
@@ -285,6 +297,11 @@ public class Settings {
 			logger.error("Could not update the logging level system settings", e);
 		}
 
+		try {
+			updateWlanAp();
+		} catch (Exception e) {
+			logger.error("Could not update the wireless access point settings", e);
+		}
 	}
 
 	@XmlElement
@@ -485,6 +502,42 @@ public class Settings {
 
 	public void setAudioDevice(AudioDevice audioDevice) {
 		this.audioDevice = audioDevice;
+	}
+
+	@XmlElement
+	public boolean isWlanApEnable() {
+		return wlanApEnable;
+	}
+
+	public void setWlanApEnable(boolean wlanApEnable) {
+		this.wlanApEnable = wlanApEnable;
+	}
+
+	@XmlElement
+	public String getWlanApSsid() {
+		return wlanApSsid;
+	}
+
+	public void setWlanApSsid(String wlanApSsid) {
+		this.wlanApSsid = wlanApSsid;
+	}
+
+	@XmlElement
+	public String getWlanApPassphrase() {
+		return wlanApPassphrase;
+	}
+
+	public void setWlanApPassphrase(String wlanApPassphrase) {
+		this.wlanApPassphrase = wlanApPassphrase;
+	}
+
+	@XmlElement
+	public boolean isWlanApSsidHide() {
+		return wlanApSsidHide;
+	}
+
+	public void setWlanApSsidHide(boolean wlanApSsidHide) {
+		this.wlanApSsidHide = wlanApSsidHide;
 	}
 
 }
