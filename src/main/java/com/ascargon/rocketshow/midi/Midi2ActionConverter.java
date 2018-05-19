@@ -1,7 +1,6 @@
 package com.ascargon.rocketshow.midi;
 
 import java.io.IOException;
-import java.util.List;
 
 import javax.sound.midi.ShortMessage;
 
@@ -10,7 +9,6 @@ import org.apache.log4j.Logger;
 
 import com.ascargon.rocketshow.Manager;
 import com.ascargon.rocketshow.RemoteDevice;
-import com.ascargon.rocketshow.midi.MidiControl.MidiAction;
 
 public class Midi2ActionConverter {
 
@@ -21,7 +19,7 @@ public class Midi2ActionConverter {
 	public Midi2ActionConverter(Manager manager) {
 		this.manager = manager;
 	}
-
+	
 	/**
 	 * Does this action mapping match to the current MIDI message and should the
 	 * action be executed?
@@ -40,10 +38,10 @@ public class Midi2ActionConverter {
 		return false;
 	}
 
-	private void executeActionOnRemoteDevice(MidiAction action, RemoteDevice remoteDevice)
+	private void executeActionOnRemoteDevice(MidiControl midiControl, RemoteDevice remoteDevice)
 			throws ClientProtocolException, IOException {
 
-		switch (action) {
+		switch (midiControl.getAction()) {
 		case PLAY:
 			remoteDevice.play();
 			break;
@@ -65,6 +63,13 @@ public class Midi2ActionConverter {
 		case PREVIOUS_COMPOSITION:
 			remoteDevice.setPreviousComposition();
 			break;
+		case SELECT_COMPOSITION_BY_NAME:
+			remoteDevice.setCompositionName(midiControl.getSelectComposition());
+			break;
+		case SELECT_COMPOSITION_BY_NAME_AND_PLAY:
+			remoteDevice.setCompositionName(midiControl.getSelectComposition());
+			remoteDevice.play();
+			break;
 		case SET_COMPOSITION_INDEX:
 			remoteDevice.setCompositionIndex(manager.getCurrentSet().getCurrentCompositionIndex());
 			break;
@@ -72,16 +77,16 @@ public class Midi2ActionConverter {
 			remoteDevice.reboot();
 			break;
 		default:
-			logger.warn("Action '" + action.toString() + "' is unknown for remote devices and cannot be executed");
+			logger.warn("Action '" + midiControl.getAction().toString() + "' is unknown for remote devices and cannot be executed");
 			break;
 		}
 	}
 
-	private void executeActionLocally(MidiAction action) throws Exception {
+	private void executeActionLocally(MidiControl midiControl) throws Exception {
 		// Execute the action locally
 		logger.info("Execute action from MIDI event");
 		
-		switch (action) {
+		switch (midiControl.getAction()) {
 		case PLAY:
 			manager.getPlayer().play();
 			break;
@@ -103,11 +108,18 @@ public class Midi2ActionConverter {
 		case PREVIOUS_COMPOSITION:
 			manager.getCurrentSet().previousComposition();
 			break;
+		case SELECT_COMPOSITION_BY_NAME:
+			manager.getPlayer().setCompositionName(midiControl.getSelectComposition());
+			break;
+		case SELECT_COMPOSITION_BY_NAME_AND_PLAY:
+			manager.getPlayer().setCompositionName(midiControl.getSelectComposition());
+			manager.getPlayer().play();
+			break;
 		case REBOOT:
 			manager.reboot();
 			break;
 		default:
-			logger.warn("Action '" + action.toString() + "' is locally unknown and cannot be executed");
+			logger.warn("Action '" + midiControl.getAction().toString() + "' is locally unknown and cannot be executed");
 			break;
 		}
 	}
@@ -119,10 +131,8 @@ public class Midi2ActionConverter {
 	 * @throws Exception
 	 */
 	private void executeActionMappingAction(MidiControl midiControl) throws Exception {
-		MidiAction action = midiControl.getAction();
-
 		if (midiControl.isExecuteLocally()) {
-			executeActionLocally(action);
+			executeActionLocally(midiControl);
 		}
 
 		// Execute the action on each specified remote device
@@ -132,12 +142,12 @@ public class Midi2ActionConverter {
 			if (remoteDevice == null) {
 				logger.warn("No remote device could be found in the settings with name " + name);
 			} else {
-				executeActionOnRemoteDevice(action, remoteDevice);
+				executeActionOnRemoteDevice(midiControl, remoteDevice);
 			}
 		}
 	}
 
-	public void processMidiEvent(MidiSignal midiSignal, List<MidiControl> actionMappingList) throws Exception {
+	public void processMidiSignal(MidiSignal midiSignal) throws Exception {
 		// Map the MIDI event and execute the appropriate actions
 
 		// Only react to NOTE_ON events with a velocity higher than 0
@@ -147,9 +157,9 @@ public class Midi2ActionConverter {
 		}
 
 		// Search for and execute all required actions
-		for (MidiControl actionMapping : actionMappingList) {
-			if (isActionMappingMatch(actionMapping, midiSignal.getChannel(), midiSignal.getNote())) {
-				executeActionMappingAction(actionMapping);
+		for (MidiControl midiControl : manager.getSettings().getMidiControlList()) {
+			if (isActionMappingMatch(midiControl, midiSignal.getChannel(), midiSignal.getNote())) {
+				executeActionMappingAction(midiControl);
 			}
 		}
 	}

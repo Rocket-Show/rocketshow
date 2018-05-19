@@ -145,6 +145,10 @@
         "midi-control-channel-in": "Input channel",
         "midi-control-note-in": "Input note",
         "midi-control-action": "Action",
+        "midi-control-select-composition": "Composition",
+        "midi-control-test": "Test",
+        "midi-control-test-success-title": "Executed",
+        "midi-control-test-success": "The test has been executed.",
         "no-midi-devices": "No MIDI devices available",
         "version": "Current version",
         "remote-version": "Latest version",
@@ -175,6 +179,7 @@
         "audio-bus-stereo": "Stereo",
         "audio-bus-surround": "Surround",
         "no-audio-bus": "None",
+        "no-composition": "None",
         "audio-output": "Output",
         "audio-device": "USB audio device",
         "no-audio-devices": "No USB audio devices available",
@@ -203,7 +208,9 @@
             "NEXT_COMPOSITION": "Select next composition",
             "PREVIOUS_COMPOSITION": "Select previous composition",
             "STOP": "Stop",
-            "REBOOT": "Reboot device"
+            "REBOOT": "Reboot device",
+            "SELECT_COMPOSITION_BY_NAME": "Select composition",
+            "SELECT_COMPOSITION_BY_NAME_AND_PLAY": "Select composition and play"
         },
         "audio-output-enum": {
             "HEADPHONES": "Headphone jack",

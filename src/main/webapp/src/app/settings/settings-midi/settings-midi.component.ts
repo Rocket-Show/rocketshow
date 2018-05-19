@@ -1,3 +1,8 @@
+import { TranslateService } from '@ngx-translate/core';
+import { ToastrService } from 'ngx-toastr';
+import { ApiService } from './../../services/api.service';
+import { CompositionService } from './../../services/composition.service';
+import { Composition } from './../../models/composition';
 import { RemoteDevice } from './../../models/remote-device';
 import { MidiControl } from './../../models/midi-control';
 import { Subject } from 'rxjs/Subject';
@@ -13,6 +18,8 @@ import { Settings } from '../../models/settings';
 })
 export class SettingsMidiComponent implements OnInit {
 
+  selectUndefinedOptionValue: any;
+
   settings: Settings;
 
   midiInDevices: MidiDevice[];
@@ -22,11 +29,21 @@ export class SettingsMidiComponent implements OnInit {
   noteList: number[] = [];
   midiActionList: string[] = [];
 
+  compositions: Composition[];
+
   private noteIdNames = new Map<number, string>();
 
   constructor(
-    private settingsService: SettingsService
+    private settingsService: SettingsService,
+    private compositionService: CompositionService,
+    private apiService: ApiService,
+    private translateService: TranslateService,
+    private toastrService: ToastrService
   ) {
+    this.compositionService.getCompositions(true).subscribe((compositions: Composition[]) => {
+      this.compositions = compositions;
+    });
+
     for (let i = 0; i < 16; i++) {
       this.channelList.push(i);
     }
@@ -40,6 +57,8 @@ export class SettingsMidiComponent implements OnInit {
     this.midiActionList.push('PREVIOUS_COMPOSITION');
     this.midiActionList.push('STOP');
     this.midiActionList.push('REBOOT');
+    this.midiActionList.push('SELECT_COMPOSITION_BY_NAME');
+    this.midiActionList.push('SELECT_COMPOSITION_BY_NAME_AND_PLAY');
 
     this.noteIdNames.set(0, 'C-2');
     this.noteIdNames.set(1, 'C#-2');
@@ -178,15 +197,15 @@ export class SettingsMidiComponent implements OnInit {
       this.settingsService.getMidiInDevices().subscribe((response) => {
         this.midiInDevices = response;
 
-        if((!this.settings.midiInDevice || this.settings.midiInDevice && this.settings.midiInDevice.id == 0) && response.length > 0) {
+        if ((!this.settings.midiInDevice || this.settings.midiInDevice && this.settings.midiInDevice.id == 0) && response.length > 0) {
           this.settings.midiInDevice = response[0];
         }
       });
-  
+
       this.settingsService.getMidiOutDevices().subscribe((response) => {
         this.midiOutDevices = response;
 
-        if((!this.settings.midiOutDevice || this.settings.midiOutDevice && this.settings.midiOutDevice.id == 0) && response.length > 0) {
+        if ((!this.settings.midiOutDevice || this.settings.midiOutDevice && this.settings.midiOutDevice.id == 0) && response.length > 0) {
           this.settings.midiOutDevice = response[0];
         }
       });
@@ -218,6 +237,14 @@ export class SettingsMidiComponent implements OnInit {
 
   midiIdToNote(id: number): string {
     return this.noteIdNames.get(id);
+  }
+
+  testControl(midiControl: MidiControl): void {
+    this.apiService.post('midi/test-control?command=144&channel=' + midiControl.channelFrom + '&note=' + midiControl.noteFrom + '&velocity=' + 127, null).subscribe((result) => {
+      this.translateService.get(['settings.midi-control-test-success', 'settings.midi-control-test-success-title']).subscribe(result => {
+        this.toastrService.success(result['settings.midi-control-test-success'], result['settings.midi-control-test-success-title']);
+      });
+    });
   }
 
 }

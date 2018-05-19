@@ -219,14 +219,30 @@ public class Player {
 
 	public void setComposition(Composition composition, boolean playDefaultCompositionWhenStoppingComposition)
 			throws Exception {
+
+		if(composition == null) {
+			return;
+		}
+		
+		if (composition.getName().equals(this.getCompositionName())) {
+			// This composition is already loaded, don't stop/load again
+			return;
+		}
+
 		// Stop the current composition, if needed
 		stop(playDefaultCompositionWhenStoppingComposition);
 
 		this.composition = composition;
+		
+		manager.getStateManager().notifyClients();
 	}
 
 	public void setComposition(Composition composition) throws Exception {
 		setComposition(composition, true);
+	}
+
+	public void setCompositionName(String name) throws Exception {
+		setComposition(manager.getCompositionManager().loadComposition(name));;
 	}
 
 	public void loadFiles() throws Exception {

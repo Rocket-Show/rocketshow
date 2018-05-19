@@ -16,10 +16,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class MidiControl {
 
 	public enum MidiAction {
-		PLAY, TOGGLE_PLAY, PAUSE, RESUME, NEXT_COMPOSITION, PREVIOUS_COMPOSITION, STOP, SET_COMPOSITION_INDEX, REBOOT
+		PLAY, TOGGLE_PLAY, PAUSE, RESUME, NEXT_COMPOSITION, PREVIOUS_COMPOSITION, STOP, SET_COMPOSITION_INDEX, REBOOT, SELECT_COMPOSITION_BY_NAME, SELECT_COMPOSITION_BY_NAME_AND_PLAY
 	}
 
 	private MidiAction action;
+
+	private String selectComposition;
 
 	// If null -> all channels
 	private Integer channelFrom;
@@ -40,6 +42,15 @@ public class MidiControl {
 
 	public void setAction(MidiAction action) {
 		this.action = action;
+	}
+
+	@XmlElement
+	public String getSelectComposition() {
+		return selectComposition;
+	}
+
+	public void setSelectComposition(String selectComposition) {
+		this.selectComposition = selectComposition;
 	}
 
 	@XmlElement

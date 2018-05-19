@@ -14,6 +14,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.ascargon.rocketshow.Manager;
+import com.ascargon.rocketshow.midi.MidiControl;
 import com.ascargon.rocketshow.midi.MidiDevice;
 import com.ascargon.rocketshow.midi.MidiRouting;
 import com.ascargon.rocketshow.midi.MidiSignal;
@@ -58,6 +59,26 @@ public class Midi {
 		for(MidiRouting remoteMidiRouting : manager.getSettings().getRemoteMidiRoutingList()) {
 			remoteMidiRouting.sendMidiMessage(midiSignal);
 		}
+		return Response.status(200).build();
+	}
+	
+	@Path("test-control")
+	@POST
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response testControl(@QueryParam("command") int command, @QueryParam("channel") int channel,
+			@QueryParam("note") int note, @QueryParam("velocity") int velocity) throws Exception {
+		
+		Manager manager = (Manager) context.getAttribute("manager");
+		MidiSignal midiSignal = new MidiSignal();
+		
+		midiSignal.setCommand(command);
+		midiSignal.setChannel(channel);
+		midiSignal.setNote(note);
+		midiSignal.setVelocity(velocity);
+		
+		manager.getMidi2ActionConverter().processMidiSignal(midiSignal);
+		
 		return Response.status(200).build();
 	}
 	

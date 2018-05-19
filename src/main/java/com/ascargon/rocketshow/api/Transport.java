@@ -150,11 +150,7 @@ public class Transport {
 		Manager manager = (Manager) context.getAttribute("manager");
 
 		if (compositionName.length() > 0) {
-			if (manager.getPlayer().getCompositionName() == null || !manager.getPlayer().getCompositionName().equals(compositionName)) {
-				// Load the composition with the given name into the player
-				manager.getPlayer().setComposition(manager.getCompositionManager().loadComposition(compositionName), false);
-				manager.getStateManager().notifyClients();
-			}
+			manager.getPlayer().setCompositionName(compositionName);
 		}
 
 		return Response.status(200).build();

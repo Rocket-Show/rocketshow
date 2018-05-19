@@ -87,6 +87,15 @@
             </select>
           </div>
         </div>
+        <div class="form-group row" *ngIf="midiControl.action == 'SELECT_COMPOSITION_BY_NAME' || midiControl.action == 'SELECT_COMPOSITION_BY_NAME_AND_PLAY'">
+          <label class="col-md-3 col-form-label">{{ 'settings.midi-control-select-composition' | translate }}</label>
+          <div class="col-md-9">
+            <select class="custom-select" [ngModel]="midiControl.selectComposition" (ngModelChange)="midiControl.selectComposition = $event">
+              <option [value]="selectUndefinedOptionValue">- {{ 'settings.no-composition' | translate }} -</option>
+              <option *ngFor="let composition of compositions" value="{{ composition.name }}">{{ composition.name }}</option>
+            </select>
+          </div>
+        </div>
         <div class="form-group row">
           <label class="col-md-3 col-form-label"></label>
           <div class="col-md-9">
@@ -95,7 +104,7 @@
             </label>
           </div>
         </div>
-        <div class="form-group row mb-2 mt-0">
+        <div class="form-group row mb-2">
           <label class="col-md-3 col-form-label">{{ 'routing.remote-devices' | translate }}</label>
           <div class="col-md-9">
             <div class="card mb-0">
@@ -103,6 +112,13 @@
                 <app-remote-device-selection [remoteDeviceList]="midiControl.remoteDeviceList"></app-remote-device-selection>
               </div>
             </div>
+          </div>
+        </div>
+        <div class="form-group row mb-2 mt-3">
+          <label class="col-md-3 col-form-label"></label>
+          <div class="col-md-9">
+            <a href="#" class="btn btn-primary btn-sm" (click)="testControl(midiControl); false;">
+              <i class="fa fa-flask" aria-hidden="true"></i> {{ 'settings.midi-control-test' | translate }}</a>
           </div>
         </div>
 

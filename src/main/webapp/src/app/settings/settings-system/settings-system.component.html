@@ -18,7 +18,7 @@
   <label class="col-lg-3 col-form-label">{{ 'settings.default-composition' | translate }}</label>
   <div class="col-lg-9">
     <select class="custom-select" [ngModel]="settings?.defaultComposition" (ngModelChange)="settings.defaultComposition = $event">
-      <option [value]="selectUndefinedOptionValue">- {{ 'settings.no-audio-bus' | translate }} -</option>
+      <option [value]="selectUndefinedOptionValue">- {{ 'settings.no-composition' | translate }} -</option>
       <option *ngFor="let composition of compositions" value="{{ composition.name }}">{{ composition.name }}</option>
     </select>
   </div>

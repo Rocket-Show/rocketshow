@@ -133,6 +133,10 @@ public class RemoteDevice {
 	public void setPreviousComposition() {
 		doPost("transport/previous-composition");
 	}
+	
+	public void setCompositionName(String compositionName) {
+		doPost("transport/set-composition-name?name=" + compositionName, true);
+	}
 
 	public void setCompositionIndex(int compositionIndex) {
 		doPost("transport/set-composition-index?index=" + compositionIndex, true);

@@ -145,6 +145,10 @@
         "midi-control-channel-in": "Eingangskanal",
         "midi-control-note-in": "Eingangsnote",
         "midi-control-action": "Aktion",
+        "midi-control-select-composition": "Komposition",
+        "midi-control-test": "Testen",
+        "midi-control-test-success-title": "Ausgeführt",
+        "midi-control-test-success": "Der Test wurde ausgeführt.",
         "no-midi-devices": "No MIDI devices available",
         "version": "Aktuelle Version",
         "remote-version": "Neueste Version",
@@ -175,6 +179,7 @@
         "audio-bus-stereo": "Stereo",
         "audio-bus-surround": "Surround",
         "no-audio-bus": "Kein",
+        "no-composition": "Keine",
         "audio-output": "Ausgang",
         "audio-device": "USB Audio Gerät",
         "no-audio-devices": "Keine USB Audio Geräte verfügbar",
@@ -203,7 +208,9 @@
             "NEXT_COMPOSITION": "Nächste Komposition auswählen",
             "PREVIOUS_COMPOSITION": "Vorherige Komposition auswählen",
             "STOP": "Stop",
-            "REBOOT": "Gerät neu starten"
+            "REBOOT": "Gerät neu starten",
+            "SELECT_COMPOSITION_BY_NAME": "Komposition auswählen",
+            "SELECT_COMPOSITION_BY_NAME_AND_PLAY": "Komposition auswählen und abspielen"
         },
         "audio-output-enum": {
             "HEADPHONES": "Kopfhörerbuchse",
