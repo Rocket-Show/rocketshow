@@ -434,7 +434,11 @@ public class Composition {
 
 	@XmlTransient
 	public long getPassedMillis() {
-		return passedMillis;
+		if(lastStartTime == null) {
+			return 0;
+		}
+		
+		return lastStartTime.until(LocalDateTime.now(), ChronoUnit.MILLIS);
 	}
 
 	public void setPassedMillis(long passedMillis) {
