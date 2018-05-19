@@ -30,7 +30,7 @@ export class Settings {
     audioBusList: AudioBus[];
     wlanApEnable: boolean;
     wlanApSsid: string;
-    wlanApPassphrase: boolean;
+    wlanApPassphrase: string;
     wlanApSsidHide: boolean;
 
     constructor(data?: any) {

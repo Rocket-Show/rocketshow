@@ -63,9 +63,11 @@
                 <a class="mr-3 my-auto" href="#" role="button" (click)="discard(); false">
                   {{ 'misc.discard' | translate }}
                 </a>
-                <a class="btn btn-primary" href="#" role="button" (click)="save(currentComposition); false">
-                  <i class="fa fa-floppy-o" aria-hidden="true"></i> {{ 'misc.save' | translate }}
-                </a>
+                
+                <button type="button" class="btn btn-primary" (click)="save(currentComposition); false" [disabled]="savingSettings" role="button">
+                  <i *ngIf="savingSettings" class="fa fa-spinner fa-pulse fa-fw" aria-hidden="true"></i>
+                  <i *ngIf="!savingSettings" class="fa fa-floppy-o fa-fw" aria-hidden="true"></i> {{ 'misc.save' | translate }}
+                </button>
               </div>
             </div>
           </div>

@@ -4,8 +4,10 @@
     <div class="card">
       <div class="card-body">
         <i>{{ 'settings.wlan-ap-description' | translate }}</i>
-        <br />
-        <br />
+
+        <div class="alert alert-warning mt-3 mb-2" role="alert">
+          <i class="fa fa-exclamation-triangle" aria-hidden="true"></i> {{ 'settings.restart-required' | translate }}
+        </div>
 
         <div class="form-group row mb-0">
           <label for="channel-offset" class="col-sm-3 col-form-label">{{ 'settings.wlan-ap-status' | translate }}</label>
@@ -26,7 +28,7 @@
           <div class="form-group row">
             <label for="channel-offset" class="col-sm-3 col-form-label">{{ 'settings.wlan-ap-wpa-passphrase' | translate }}</label>
             <div class="col-sm-9">
-              <input type="text" [ngModel]="settings?.wlanApPassphrase" (ngModelChange)="settings.wlanApPassphrase = $event" class="form-control">
+              <input type="text" [class.text-danger]="settings?.wlanApPassphrase && settings?.wlanApPassphrase.length < 8" [ngModel]="settings?.wlanApPassphrase" (ngModelChange)="settings.wlanApPassphrase = $event" class="form-control">
             </div>
           </div>
           <div class="form-group row mb-0">

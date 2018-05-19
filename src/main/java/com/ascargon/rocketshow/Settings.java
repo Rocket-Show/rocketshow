@@ -77,13 +77,13 @@ public class Settings {
 	private AudioDevice audioDevice;
 
 	private List<AudioBus> audioBusList = new ArrayList<AudioBus>();
-	
+
 	private boolean wlanApEnable = true;
-	
+
 	private String wlanApSsid = "Rocket Show";
-	
+
 	private String wlanApPassphrase = "";
-	
+
 	private boolean wlanApSsidHide = false;
 
 	public Settings() {
@@ -157,41 +157,41 @@ public class Settings {
 
 		return total;
 	}
-	
+
 	private String getBusNameFromId(int id) {
 		return "bus" + (id + 1);
 	}
 
 	public String getAlsaDeviceFromOutputBus(String outputBus) {
 		logger.debug("Find ALSA device for bus name '" + outputBus + "'...");
-		
+
 		// Get an alsa device name from a bus name
 		for (int i = 0; i < audioBusList.size(); i++) {
 			AudioBus audioBus = audioBusList.get(i);
-			
+
 			logger.debug("Got bus '" + audioBus.getName() + "'");
-			
-			if(outputBus != null && outputBus.equals(audioBus.getName())) {
+
+			if (outputBus != null && outputBus.equals(audioBus.getName())) {
 				logger.debug("Found device '" + getBusNameFromId(i) + "'");
-				
+
 				return getBusNameFromId(i);
 			}
 		}
-		
+
 		// Return a default bus, if none is found
-		if(audioBusList.size() > 0) {
+		if (audioBusList.size() > 0) {
 			return getBusNameFromId(0);
 		}
-		
+
 		return "";
 	}
-	
+
 	private String getAlsaSettings() {
 		// Generate the ALSA settings
 		String settings = "";
 		int currentChannel = 0;
-		
-		if(audioDevice == null) {
+
+		if (audioDevice == null) {
 			// We got no audio device
 			return "";
 		}
@@ -245,17 +245,17 @@ public class Settings {
 			// Write the audio settings to /home/.asoundrc and use ALSA to
 			// output audio on the selected device name
 			File alsaSettings = new File("/home/rocketshow/.asoundrc");
-			
+
 			try {
-			    FileWriter fileWriter = new FileWriter(alsaSettings, false);
-			    fileWriter.write(getAlsaSettings());
-			    fileWriter.close();
+				FileWriter fileWriter = new FileWriter(alsaSettings, false);
+				fileWriter.write(getAlsaSettings());
+				fileWriter.close();
 			} catch (IOException e) {
-			    logger.error("Could not write .asoundrc", e);
-			} 
+				logger.error("Could not write .asoundrc", e);
+			}
 		}
 	}
-	
+
 	private void updateLoggingLevel() {
 		// Set the proper logging level (map from the log4j enum to our own
 		// enum)
@@ -277,9 +277,57 @@ public class Settings {
 			break;
 		}
 	}
-	
+
 	private void updateWlanAp() {
+		String apConfig = "";
+		String statusCommand = "";
+
+		// Update the access point configuration
+		apConfig += "interface=wlan0\n";
+		apConfig += "driver=nl80211\n";
+		apConfig += "ssid=" + wlanApSsid + "\n";
+		apConfig += "utf8_ssid=1\n";
+		apConfig += "hw_mode=g\n";
+		apConfig += "channel=7\n";
+		apConfig += "wmm_enabled=0\n";
+		apConfig += "macaddr_acl=0\n";
+		apConfig += "auth_algs=1\n";
 		
+		if(wlanApSsidHide) {
+			apConfig += "ignore_broadcast_ssid=1\n";
+		} else {
+			apConfig += "ignore_broadcast_ssid=0\n";
+		}
+		
+		if (wlanApPassphrase != null && wlanApPassphrase.length() >= 8) {
+			apConfig += "wpa=2\n";
+			apConfig += "wpa_passphrase=" + wlanApPassphrase + "\n";
+		}
+
+		apConfig += "wpa_key_mgmt=WPA-PSK\n";
+		apConfig += "wpa_pairwise=TKIP\n";
+		apConfig += "rsn_pairwise=CCMP\n";
+
+		try {
+			FileWriter fileWriter = new FileWriter("/etc/hostapd/hostapd.conf", false);
+			fileWriter.write(apConfig);
+			fileWriter.close();
+		} catch (IOException e) {
+			logger.error("Could not write /etc/hostapd/hostapd.conf", e);
+		}
+		
+		// Activate/deactivate the access point completely
+		if (wlanApEnable) {
+			statusCommand = "enable";
+		} else {
+			statusCommand = "disable";
+		}
+
+		try {
+			new ShellManager(new String[] { "sudo", "systemctl", statusCommand, "hostapd" });
+		} catch (IOException e) {
+			logger.error("Could not update the access point status with '" + statusCommand + "'", e);
+		}
 	}
 
 	public void updateSystem() {
@@ -290,7 +338,7 @@ public class Settings {
 		} catch (Exception e) {
 			logger.error("Could not update the audio system settings", e);
 		}
-		
+
 		try {
 			updateLoggingLevel();
 		} catch (Exception e) {

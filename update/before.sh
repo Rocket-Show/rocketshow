@@ -29,19 +29,21 @@ if [ $UPD_VERSION = $CURR_VERSION ] || [ $UPD_VERSION != $(printf "$UPD_VERSION\
 	sudo sh -c "cat <<'EOF' >/etc/hostapd/hostapd.conf
 interface=wlan0
 driver=nl80211
-ssid=Rocket Show   
+ssid=Rocket Show  
+utf8_ssid=1 
 hw_mode=g
 channel=7
 wmm_enabled=0
 macaddr_acl=0
 auth_algs=1
 ignore_broadcast_ssid=0
-#wpa=2
 wpa_passphrase=Awesome742
 wpa_key_mgmt=WPA-PSK
 wpa_pairwise=TKIP
 rsn_pairwise=CCMP
 	EOF"
+
+	sudo chmod 777 /etc/hostapd/hostapd.conf
 
 	printf "\n# ROCKETSHOWSTART\nDAEMON_CONF=\"/etc/hostapd/hostapd.conf\"\n# ROCKETSHOWEND\n" | sudo tee -a /etc/default/hostapd
 	

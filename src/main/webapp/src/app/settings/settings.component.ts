@@ -19,6 +19,8 @@ export class SettingsComponent implements OnInit {
 
   loading: boolean = true;
 
+  savingSettings: boolean = false;
+
   constructor(
     private settingsService: SettingsService,
     private pendingChangesDialogService: PendingChangesDialogService,
@@ -85,7 +87,17 @@ export class SettingsComponent implements OnInit {
     }).subscribe();
   }
 
+  private settingsError(errorKey: string) {
+    this.translateService.get(errorKey).subscribe(result => {
+      this.toastrService.error(result);
+    });
+
+    this.savingSettings = false;
+  }
+
   save() {
+    this.savingSettings = true;
+
     this.settingsService.getSettings().map(result => {
       this.translateService.get(['intro.default-unit-name', 'settings.remote-device-name-placeholder']).subscribe((translations) => {
         // Set some default settings
@@ -105,6 +117,15 @@ export class SettingsComponent implements OnInit {
           }
         }
 
+        if(!result.wlanApSsid || result.wlanApSsid.length == 0) {
+          result.wlanApSsid = 'Rocket Show';
+        }
+
+        if(result.wlanApPassphrase && result.wlanApPassphrase.length < 8 && result.wlanApPassphrase.length > 0) {
+          this.settingsError('settings.wlan-ap-wpa-passphrase-short-error');
+          return;
+        }
+
         // Save the settings on the device
         this.settingsService.saveSettings(result).map(() => {
           this.copyInitialSettings(result);
@@ -118,6 +139,9 @@ export class SettingsComponent implements OnInit {
         })
           .catch((err) =>  {
             return this.toastGeneralErrorService.show(err);
+          })
+          .finally(() => {
+            this.savingSettings = false;
           })
           .subscribe();
       });
