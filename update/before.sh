@@ -24,7 +24,7 @@ if [ $UPD_VERSION = $CURR_VERSION ] || [ $UPD_VERSION != $(printf "$UPD_VERSION\
 	
 	sudo service dhcpcd restart
 	
-	printf "\n# ROCKETSHOWSTART\ninterface=wlan0\n  dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h\naddress=/#/192.168.4.1\n# ROCKETSHOWEND\n" | sudo tee -a /etc/dnsmasq.conf
+	printf "\n# ROCKETSHOWSTART\ninterface=wlan0\n  dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h\naddress=/rocketshow.local/192.168.4.1\n# ROCKETSHOWEND\n" | sudo tee -a /etc/dnsmasq.conf
 
 	sudo touch /etc/hostapd/hostapd.conf
 
@@ -52,10 +52,4 @@ EOF
 	sudo systemctl start dnsmasq
 	
 	printf "\n# ROCKETSHOWSTART\nnet.ipv4.ip_forward=1\n# ROCKETSHOWEND\n" | sudo tee -a /etc/sysctl.conf
-	
-	sudo iptables -t nat -A  POSTROUTING -o eth0 -j MASQUERADE
-	
-	sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
-	
-	sudo sed -i '/exit 0/i# ROCKETSHOWSTART\niptables-restore < /etc/iptables.ipv4.nat\n# ROCKETSHOWEND\n' /etc/rc.local
 fi

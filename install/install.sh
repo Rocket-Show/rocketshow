@@ -152,28 +152,6 @@ wget https://www.rocketshow.net/update/new/currentversion.xml
 # on the update script
 chown -R rocketshow:rocketshow /opt/rocketshow
 
-# Keep the whole directory in its current state for the factory reset
-cd /opt
-tar -zcvf rocketshow_factory.tar.gz rocketshow
-
-# Create the factory reset script
-cat <<'EOF' >/opt/rocketshow_reset.sh
-#!/bin/bash
-#
-rm -rf /opt/rocketshow
-cd /opt
-tar xvzf /opt/rocketshow_factory.tar.gz
-sudo reboot
-EOF
-
-chmod +x /opt/rocketshow_reset.sh
-
-# Set the hostname to RocketShow
-sed -i '/127.0.1.1/d' /etc/hosts
-sed -i "\$a127.0.1.1\tRocketShow" /etc/hosts
-
-sed -i 's/raspberrypi/RocketShow/g' /etc/hostname
-
 # Install the wireless access point feature
 # https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
 systemctl stop dnsmasq
@@ -183,7 +161,7 @@ printf "\n# ROCKETSHOWSTART\ninterface wlan0\n    static ip_address=192.168.4.1/
 
 service dhcpcd restart
 
-printf "\n# ROCKETSHOWSTART\nDAEMON_CONF=\"/etc/hostapd/hostapd.conf\"\n# ROCKETSHOWEND\n" | tee -a /etc/default/hostapd
+printf "\n# ROCKETSHOWSTART\ninterface=wlan0\n  dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h\naddress=/rocketshow.local/192.168.4.1\n# ROCKETSHOWEND\n" | tee -a /etc/dnsmasq.conf
 
 touch /etc/hostapd/hostapd.conf
 
@@ -212,8 +190,24 @@ systemctl start dnsmasq
 
 printf "\n# ROCKETSHOWSTART\nnet.ipv4.ip_forward=1\n# ROCKETSHOWEND\n" | tee -a /etc/sysctl.conf
 
-iptables -t nat -A  POSTROUTING -o eth0 -j MASQUERADE
+# Keep the whole directory in its current state for the factory reset
+cd /opt
+tar -zcvf rocketshow_factory.tar.gz rocketshow
 
-iptables-save > /etc/iptables.ipv4.nat
+# Create the factory reset script
+cat <<'EOF' >/opt/rocketshow_reset.sh
+#!/bin/bash
+#
+rm -rf /opt/rocketshow
+cd /opt
+tar xvzf /opt/rocketshow_factory.tar.gz
+sudo reboot
+EOF
 
-sed -i '/exit 0/i# ROCKETSHOWSTART\niptables-restore < /etc/iptables.ipv4.nat\n# ROCKETSHOWEND\n' /etc/rc.local
+chmod +x /opt/rocketshow_reset.sh
+
+# Set the hostname to RocketShow
+sed -i '/127.0.1.1/d' /etc/hosts
+sed -i "\$a127.0.1.1\tRocketShow" /etc/hosts
+
+sed -i 's/raspberrypi/RocketShow/g' /etc/hostname
