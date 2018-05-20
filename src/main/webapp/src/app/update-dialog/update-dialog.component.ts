@@ -158,7 +158,7 @@ export class UpdateDialogComponent implements OnInit {
     if (this.updateFinished) {
       // Reload the page (caching has been disabled in Angular CLI and we
       // therefore automatically receive the new version of the app)
-      location.reload();
+      location.reload(true);
     } else {
       this.onClose.next(1);
       this.bsModalRef.hide();
