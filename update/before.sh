@@ -26,6 +26,8 @@ if [ $UPD_VERSION = $CURR_VERSION ] || [ $UPD_VERSION != $(printf "$UPD_VERSION\
 	
 	printf "\n# ROCKETSHOWSTART\ninterface=wlan0\n  dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h\naddress=/#/192.168.4.1\n# ROCKETSHOWEND\n" | sudo tee -a /etc/dnsmasq.conf
 
+	sudo touch /etc/hostapd/hostapd.conf
+
 	sudo chmod 777 /etc/hostapd/hostapd.conf
 
 	cat <<'EOF' >/etc/hostapd/hostapd.conf

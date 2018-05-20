@@ -185,6 +185,8 @@ service dhcpcd restart
 
 printf "\n# ROCKETSHOWSTART\nDAEMON_CONF=\"/etc/hostapd/hostapd.conf\"\n# ROCKETSHOWEND\n" | tee -a /etc/default/hostapd
 
+touch /etc/hostapd/hostapd.conf
+
 chmod 777 /etc/hostapd/hostapd.conf
 
 cat <<'EOF' >/etc/hostapd/hostapd.conf
