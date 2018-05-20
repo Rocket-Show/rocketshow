@@ -26,7 +26,9 @@ if [ $UPD_VERSION = $CURR_VERSION ] || [ $UPD_VERSION != $(printf "$UPD_VERSION\
 	
 	printf "\n# ROCKETSHOWSTART\ninterface=wlan0\n  dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h\naddress=/#/192.168.4.1\n# ROCKETSHOWEND\n" | sudo tee -a /etc/dnsmasq.conf
 
-	sudo sh -c "cat <<'EOF' >/etc/hostapd/hostapd.conf
+	sudo chmod 777 /etc/hostapd/hostapd.conf
+
+	cat <<'EOF' >/etc/hostapd/hostapd.conf
 interface=wlan0
 driver=nl80211
 ssid=Rocket Show  
@@ -37,13 +39,10 @@ wmm_enabled=0
 macaddr_acl=0
 auth_algs=1
 ignore_broadcast_ssid=0
-wpa_passphrase=Awesome742
 wpa_key_mgmt=WPA-PSK
 wpa_pairwise=TKIP
 rsn_pairwise=CCMP
-	EOF"
-
-	sudo chmod 777 /etc/hostapd/hostapd.conf
+EOF
 
 	printf "\n# ROCKETSHOWSTART\nDAEMON_CONF=\"/etc/hostapd/hostapd.conf\"\n# ROCKETSHOWEND\n" | sudo tee -a /etc/default/hostapd
 	

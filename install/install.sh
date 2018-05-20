@@ -184,7 +184,9 @@ printf "\n# ROCKETSHOWSTART\ninterface wlan0\n    static ip_address=192.168.4.1/
 service dhcpcd restart
 
 printf "\n# ROCKETSHOWSTART\nDAEMON_CONF=\"/etc/hostapd/hostapd.conf\"\n# ROCKETSHOWEND\n" | tee -a /etc/default/hostapd
-	
+
+chmod 777 /etc/hostapd/hostapd.conf
+
 cat <<'EOF' >/etc/hostapd/hostapd.conf
 interface=wlan0
 driver=nl80211
@@ -196,18 +198,15 @@ wmm_enabled=0
 macaddr_acl=0
 auth_algs=1
 ignore_broadcast_ssid=0
-wpa_passphrase=Awesome742
 wpa_key_mgmt=WPA-PSK
 wpa_pairwise=TKIP
 rsn_pairwise=CCMP
 EOF
 
-chmod 777 /etc/hostapd/hostapd.conf
-
 printf "\n# ROCKETSHOWSTART\nDAEMON_CONF=\"/etc/hostapd/hostapd.conf\"\n# ROCKETSHOWEND\n" | tee -a /etc/default/hostapd
 
-sudo systemctl start hostapd
-sudo systemctl start dnsmasq
+systemctl start hostapd
+systemctl start dnsmasq
 
 printf "\n# ROCKETSHOWSTART\nnet.ipv4.ip_forward=1\n# ROCKETSHOWEND\n" | tee -a /etc/sysctl.conf
 
