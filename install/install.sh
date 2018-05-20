@@ -144,9 +144,9 @@ rm -rf /opt/rocketshow/tomcat/webapps/*
 
 # Download current war and versioninfo
 cd /opt/rocketshow/tomcat/webapps
-wget -O ROOT.war https://www.rocketshow.net/update/new/current.war
+wget -O ROOT.war https://www.rocketshow.net/update/current.war
 cd /opt/rocketshow
-wget https://www.rocketshow.net/update/new/currentversion.xml
+wget https://www.rocketshow.net/update/currentversion.xml
 
 # Set the user rocketshow as owner and add execution permissions
 # on the update script
