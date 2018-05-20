@@ -8,7 +8,7 @@
 apt-get update
 apt-get upgrade
 
-apt-get -y install oracle-java8-jdk omxplayer fbi ola mplayer libnss-mdns dnsmasq hostapd
+apt-get -y install oracle-java8-jdk omxplayer fbi ola mplayer libnss-mdns dnsmasq hostapd authbind
 
 # Add the rocketshow user
 adduser \
