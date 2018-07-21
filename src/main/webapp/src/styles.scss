@@ -76,3 +76,25 @@ dropzone.dz-wrapper>.dropzone .dz-preview .dz-details {
 .text-break-word {
     word-break: break-word;
 }
+
+/* Style the slider for the play component */
+.slider-track {
+    background-image: none;
+    background-color: #e9ecef;
+    box-shadow: none;
+    height: 8px !important;
+}
+
+.slider-selection {
+    @extend .progress-bar;
+    @extend .progress-bar-striped;
+}
+
+.slider-handle {
+    background-color: theme-color("primary");
+    background-image: none;
+
+    border: 1px solid white;
+
+    top: -1px;
+}

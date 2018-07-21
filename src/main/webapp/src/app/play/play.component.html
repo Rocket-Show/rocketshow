@@ -37,6 +37,19 @@
                 <div class="progress-bar progress-bar-striped" [class.progress-bar-animated]="currentState?.playState == 'PLAYING'" role="progressbar"
                   aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" [ngStyle]="{'width': playPercentage + '%'}" style="width: 25%"></div>
               </div>
+
+              <!-- <div class="progress" style="margin-top: 5px; height: 8px;"> -->
+                <!-- TODO SEE BOTTOM OF THE PAGE AND REMOVE THE JS WITH THE DIRECTIVE -->
+                <input class="progress-bar progress-bar-striped" style="width: 100%;" [class.progress-bar-animated]="currentState?.playState == 'PLAYING'" role="progressbar"
+                  data-provide="slider"
+                  data-slider-min="1"
+                  data-slider-max="180000"
+                  data-slider-step="1"
+                  data-slider-value="0"
+                  data-slider-tooltip="hide"
+                >
+              <!-- </div> -->
+
             </div>
 
           </div>
@@ -206,3 +219,10 @@
   </div>
 
 </div>
+
+<!-- TODO REMOVE -->
+<script>
+  var mySlider = new Slider("input.slider", {
+  // initial options object
+});
+</script>

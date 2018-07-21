@@ -21,12 +21,14 @@
       "styles": [
         "../node_modules/font-awesome/css/font-awesome.css",
         "../node_modules/ngx-toastr/toastr.css",
+        "../node_modules/bootstrap-slider/dist/css/bootstrap-slider.min.css",
         "styles.scss"
       ],
       "scripts": [
         "../node_modules/jquery/dist/jquery.js",
         "../node_modules/tether/dist/js/tether.js",
-        "../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"
+        "../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js",
+        "../node_modules/bootstrap-slider/dist/bootstrap-slider.min.js"
       ],
       "environmentSource": "environments/environment.ts",
       "environments": {
