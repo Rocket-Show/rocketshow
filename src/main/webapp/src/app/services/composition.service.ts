@@ -1,11 +1,10 @@
+import { HttpClient } from '@angular/common/http';
 import { Subject } from 'rxjs/Subject';
 import { Composition } from './../models/composition';
 import { Observable } from 'rxjs/Rx';
 import { Set } from './../models/set';
 import { Injectable } from '@angular/core';
-import { ApiService } from './api.service';
 import { Response } from '@angular/http';
-import { environment } from '../../environments/environment';
 
 @Injectable()
 export class CompositionService {
@@ -18,16 +17,16 @@ export class CompositionService {
   // Fires, when compositions have changed (new ones, deleted)
   compositionsChanged: Subject<void> = new Subject<void>();
 
-  constructor(private apiService: ApiService) { }
+  constructor(private http: HttpClient) { }
 
   getCurrentSet(clearCache: boolean = false): Observable<Set> {
     if (this.currentSet && !clearCache) {
       return Observable.of(this.currentSet);
     }
 
-    return this.apiService.get('set')
-      .map((response: Response) => {
-        this.currentSet = new Set(response.json());
+    return this.http.get('set')
+      .map(response => {
+        this.currentSet = new Set(response);
         return this.currentSet;
       });
   }
@@ -37,11 +36,11 @@ export class CompositionService {
       return Observable.of(this.compositions);
     }
 
-    return this.apiService.get('composition/list')
-      .map((response: Response) => {
+    return this.http.get('composition/list')
+      .map((response: Array<Object>) => {
         this.compositions = [];
 
-        for (let composition of response.json()) {
+        for (let composition of response) {
           this.compositions.push(new Composition(composition));
         }
 
@@ -54,11 +53,11 @@ export class CompositionService {
       return Observable.of(this.sets);
     }
 
-    return this.apiService.get('set/list')
-      .map((response: Response) => {
+    return this.http.get('set/list')
+      .map((response: Array<Object>) => {
         this.sets = [];
 
-        for (let set of response.json()) {
+        for (let set of response) {
           this.sets.push(new Set(set));
         }
 
@@ -67,39 +66,39 @@ export class CompositionService {
   }
 
   getComposition(compositionName: string): Observable<Composition> {
-    return this.apiService.get('composition?name=' + compositionName)
-      .map((response: Response) => {
-        return new Composition(response.json());
+    return this.http.get('composition?name=' + compositionName)
+      .map(response => {
+        return new Composition(response);
       });
   }
 
   // Load a set on the device
-  loadSet(name: string): Observable<Response> {
-    return this.apiService.post('set/load?name=' + name, undefined);
+  loadSet(name: string): Observable<Object> {
+    return this.http.post('set/load?name=' + name, undefined);
   }
 
   // Get a set from the device
   getSet(setName: string): Observable<Set> {
-    return this.apiService.get('set/details?name=' + setName)
-      .map((response: Response) => {
-        return new Set(response.json());
+    return this.http.get('set/details?name=' + setName)
+      .map(response => {
+        return new Set(response);
       });
   }
 
-  saveComposition(composition: Composition): Observable<Response> {
-    return this.apiService.post('composition', composition.stringify());
+  saveComposition(composition: Composition): Observable<Object> {
+    return this.http.post('composition', composition.stringify());
   }
 
-  deleteComposition(name: string): Observable<Response> {
-    return this.apiService.post('composition/delete?name=' + name, undefined);
+  deleteComposition(name: string): Observable<Object> {
+    return this.http.post('composition/delete?name=' + name, undefined);
   }
 
-  saveSet(set: Set): Observable<Response> {
-    return this.apiService.post('set', set.stringify());
+  saveSet(set: Set): Observable<Object> {
+    return this.http.post('set', set.stringify());
   }
 
-  deleteSet(name: string): Observable<Response> {
-    return this.apiService.post('set/delete?name=' + name, undefined);
+  deleteSet(name: string): Observable<Object> {
+    return this.http.post('set/delete?name=' + name, undefined);
   }
 
 }

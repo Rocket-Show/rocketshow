@@ -6,9 +6,9 @@ import { Component, OnInit } from '@angular/core';
 import { SettingsService } from '../../services/settings.service';
 import { Settings } from '../../models/settings';
 import { WarningDialogService } from '../../services/warning-dialog.service';
-import { ApiService } from '../../services/api.service';
 import { State } from '../../models/state';
 import { saveAs } from 'file-saver/FileSaver';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-settings-advanced',
@@ -26,7 +26,7 @@ export class SettingsAdvancedComponent implements OnInit {
     private settingsService: SettingsService,
     private warningDialogService: WarningDialogService,
     private waitDialogService: WaitDialogService,
-    private apiService: ApiService,
+    private http: HttpClient,
     private stateService: StateService,
     private infoDialogService: InfoDialogService) {
 
@@ -66,18 +66,18 @@ export class SettingsAdvancedComponent implements OnInit {
       if (result) {
         this.waitDialogService.show('settings.wait-factory-reset');
         this.isResettingToFactory = true;
-        this.apiService.post('system/factory-reset', undefined).subscribe();
+        this.http.post('system/factory-reset', undefined).subscribe();
       }
     }).subscribe();
   }
 
-  private downloadFile(response: Response) {
-    saveAs(response.blob(), 'logs.zip');
+  private downloadFile(blob: Blob) {
+    saveAs(blob, 'logs.zip');
   }
 
   downloadLogs() {
-    this.apiService.get('system/download-logs', { responseType: ResponseContentType.Blob }).subscribe(response => {
-      this.downloadFile(response);
+    this.http.get('system/download-logs', { responseType: "blob" }).subscribe(blob => {
+      this.downloadFile(blob);
     });
   }
 

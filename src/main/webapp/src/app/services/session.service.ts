@@ -1,8 +1,7 @@
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
 import { Injectable } from '@angular/core';
-import { ApiService } from './api.service';
 import { Session } from './../models/session';
-import { Response } from '@angular/http';
 
 @Injectable()
 export class SessionService {
@@ -10,7 +9,7 @@ export class SessionService {
   session: Session;
   observable: Observable<Session>;
 
-  constructor(private apiService: ApiService) { }
+  constructor(private http: HttpClient) { }
 
   getSession(clearCache: boolean = false): Observable<Session> {
     if(clearCache) {
@@ -26,9 +25,9 @@ export class SessionService {
       return this.observable;
     }
 
-    this.observable = this.apiService.get('session')
+    this.observable = this.http.get('session')
     .map(result => {
-      this.session = new Session(result.json());
+      this.session = new Session(result);
       this.observable = undefined;
 
       return this.session;
@@ -37,8 +36,8 @@ export class SessionService {
     return this.observable;
   }
 
-  introFinished(): Observable<Response> {
-    return this.apiService.post('session/wizard-finished', undefined);
+  introFinished(): Observable<Object> {
+    return this.http.post('session/wizard-finished', undefined);
   }
 
 }

@@ -1,11 +1,11 @@
 import { Response } from '@angular/http';
 import { Injectable } from '@angular/core';
-import { $WebSocket, WebSocketSendMode, WebSocketConfig } from 'angular2-websocket/angular2-websocket';
+import { $WebSocket, WebSocketConfig } from 'angular2-websocket/angular2-websocket';
 import * as Rx from 'rxjs/Rx';
 import { Observable, Subject } from 'rxjs/Rx';
 import { environment } from '../../environments/environment';
-import { ApiService } from './api.service';
 import { State } from '../models/state';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable()
 export class StateService {
@@ -21,7 +21,7 @@ export class StateService {
 
   connected: boolean;
 
-  constructor(private apiService: ApiService) {
+  constructor(private http: HttpClient) {
     // Create the backend-url
     if (environment.name == 'dev') {
       this.wsUrl = 'ws://' + environment.localBackend + '/';
@@ -66,9 +66,9 @@ export class StateService {
   }
 
   getState(): Observable<State> {
-    return this.apiService.get('system/state')
-      .map((response: Response) => {
-        this.currentState = new State(response.json());
+    return this.http.get('system/state')
+      .map(response => {
+        this.currentState = new State(response);
         return this.currentState;
       });
   }

@@ -1,6 +1,6 @@
+import { HttpClient } from '@angular/common/http';
 import { TranslateService } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
-import { ApiService } from './../../services/api.service';
 import { CompositionService } from './../../services/composition.service';
 import { Composition } from './../../models/composition';
 import { RemoteDevice } from './../../models/remote-device';
@@ -36,7 +36,7 @@ export class SettingsMidiComponent implements OnInit {
   constructor(
     private settingsService: SettingsService,
     private compositionService: CompositionService,
-    private apiService: ApiService,
+    private http: HttpClient,
     private translateService: TranslateService,
     private toastrService: ToastrService
   ) {
@@ -240,7 +240,7 @@ export class SettingsMidiComponent implements OnInit {
   }
 
   testControl(midiControl: MidiControl): void {
-    this.apiService.post('midi/test-control?command=144&channel=' + midiControl.channelFrom + '&note=' + midiControl.noteFrom + '&velocity=' + 127, null).subscribe((result) => {
+    this.http.post('midi/test-control?command=144&channel=' + midiControl.channelFrom + '&note=' + midiControl.noteFrom + '&velocity=' + 127, null).subscribe((result) => {
       this.translateService.get(['settings.midi-control-test-success', 'settings.midi-control-test-success-title']).subscribe(result => {
         this.toastrService.success(result['settings.midi-control-test-success'], result['settings.midi-control-test-success-title']);
       });
