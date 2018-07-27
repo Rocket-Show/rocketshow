@@ -1,3 +1,4 @@
+import { HttpClient } from '@angular/common/http';
 import { AudioBus } from './../models/audio-bus';
 import { TranslateService } from '@ngx-translate/core';
 import { AudioDevice } from './../models/audio-device';
@@ -5,7 +6,6 @@ import { MidiDevice } from './../models/midi-device';
 import { Subject, Observable } from 'rxjs/Rx';
 import { Settings } from './../models/settings';
 import { Injectable } from '@angular/core';
-import { ApiService } from './api.service';
 import { Response } from '@angular/http';
 import { Language } from '../models/language';
 
@@ -20,7 +20,7 @@ export class SettingsService {
   observable: Observable<Settings>;
 
   constructor(
-    private apiService: ApiService,
+    private http: HttpClient,
     private translateService: TranslateService) {
 
     let language: Language;
@@ -50,10 +50,10 @@ export class SettingsService {
       return this.observable;
     }
 
-    this.observable = this.apiService.get('system/settings')
-      .map((response: Response) => {
+    this.observable = this.http.get('system/settings')
+      .map(response => {
         if (!this.settings) {
-          this.settings = new Settings(response.json());
+          this.settings = new Settings(response);
         }
         this.observable = undefined;
 
@@ -63,16 +63,16 @@ export class SettingsService {
     return this.observable;
   }
 
-  saveSettings(settings: Settings): Observable<Response> {
-    return this.apiService.post('system/settings', JSON.stringify(settings));
+  saveSettings(settings: Settings): Observable<Object> {
+    return this.http.post('system/settings', JSON.stringify(settings));
   }
 
   private apiGetMidiDevices(url: string) {
-    return this.apiService.get('midi/' + url)
-      .map((response: Response) => {
+    return this.http.get('midi/' + url)
+      .map((response: Array<Object>) => {
         let deviceList: MidiDevice[] = [];
 
-        for (let midiDevice of response.json()) {
+        for (let midiDevice of response) {
           deviceList.push(new MidiDevice(midiDevice));
         }
 
@@ -89,11 +89,11 @@ export class SettingsService {
   }
 
   getAudioDevices(): Observable<AudioDevice[]> {
-    return this.apiService.get('audio/devices')
-      .map((response: Response) => {
+    return this.http.get('audio/devices')
+      .map((response: Array<Object>) => {
         let deviceList: AudioDevice[] = [];
 
-        for (let audioDevice of response.json()) {
+        for (let audioDevice of response) {
           deviceList.push(new AudioDevice(audioDevice));
         }
 

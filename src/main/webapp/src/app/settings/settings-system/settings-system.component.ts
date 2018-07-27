@@ -1,3 +1,4 @@
+import { HttpClient } from '@angular/common/http';
 import { UpdateDialogComponent } from './../../update-dialog/update-dialog.component';
 import { BsModalService } from 'ngx-bootstrap/modal';
 import { UpdateService } from './../../services/update.service';
@@ -5,8 +6,6 @@ import { WarningDialogService } from './../../services/warning-dialog.service';
 import { Settings } from './../../models/settings';
 import { Component, OnInit } from '@angular/core';
 import { SettingsService } from '../../services/settings.service';
-import { ApiService } from '../../services/api.service';
-import { PendingChangesDialogService } from '../../services/pending-changes-dialog.service';
 import { CompositionService } from '../../services/composition.service';
 import { Composition } from '../../models/composition';
 import { Version } from '../../models/version';
@@ -27,7 +26,7 @@ export class SettingsSystemComponent implements OnInit {
   constructor(
     public settingsService: SettingsService,
     private warningDialogService: WarningDialogService,
-    private apiService: ApiService,
+    private http: HttpClient,
     private compositionService: CompositionService,
     private updateService: UpdateService,
     private modalService: BsModalService) { }
@@ -61,7 +60,7 @@ export class SettingsSystemComponent implements OnInit {
   reboot() {
     this.warningDialogService.show('settings.warning-reboot').map(result => {
       if (result) {
-        this.apiService.post('system/reboot', undefined).subscribe();
+        this.http.post('system/reboot', undefined).subscribe();
       }
     }).subscribe();
   }

@@ -1,3 +1,4 @@
+import { HttpClient } from '@angular/common/http';
 import { Composition } from './../models/composition';
 import { CompositionService } from './../services/composition.service';
 import { StateService } from './../services/state.service';
@@ -5,7 +6,6 @@ import { Set } from './../models/set';
 import { Component, OnInit } from '@angular/core';
 import { trigger, state, animate, transition, style, query } from '@angular/animations';
 import { State } from '../models/state';
-import { ApiService } from '../services/api.service';
 import { TransportService } from '../services/transport.service';
 import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
@@ -33,7 +33,8 @@ export class PlayComponent implements OnInit {
 
   loadingSet: boolean = false;
 
-  constructor(public apiService: ApiService,
+  constructor(
+    private http: HttpClient,
     private stateService: StateService,
     private compositionService: CompositionService,
     private transportService: TransportService) {

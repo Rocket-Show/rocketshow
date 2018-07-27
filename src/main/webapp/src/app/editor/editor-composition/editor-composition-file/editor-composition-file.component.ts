@@ -1,3 +1,4 @@
+import { AppHttpInterceptor } from './../../../app-http-interceptor/app-http-interceptor';
 import { Settings } from './../../../models/settings';
 import { SettingsService } from './../../../services/settings.service';
 import { WarningDialogService } from './../../../services/warning-dialog.service';
@@ -5,13 +6,11 @@ import { CompositionMidiFile } from './../../../models/composition-midi-file';
 import { FileService } from './../../../services/file.service';
 import { TranslateService } from '@ngx-translate/core';
 import { CompositionFile } from './../../../models/composition-file';
-import { MidiRouting } from './../../../models/midi-routing';
 import { Component, OnInit } from '@angular/core';
 import { BsModalRef } from 'ngx-bootstrap';
 import { Subject } from 'rxjs/Subject';
 import { Composition } from '../../../models/composition';
 import { DropzoneConfigInterface } from 'ngx-dropzone-wrapper/dist/lib/dropzone.interfaces';
-import { ApiService } from '../../../services/api.service';
 
 @Component({
   selector: 'app-editor-composition-file',
@@ -37,14 +36,14 @@ export class EditorCompositionFileComponent implements OnInit {
 
   constructor(
     private bsModalRef: BsModalRef,
-    private apiService: ApiService,
+    private appHttpInterceptor: AppHttpInterceptor,
     private translateService: TranslateService,
     private fileService: FileService,
     private warningDialogService: WarningDialogService,
     private settingsService: SettingsService) {
 
     this.dropzoneConfig = {
-      url: apiService.getRestUrl() + 'file/upload',
+      url: appHttpInterceptor.getRestUrl() + 'file/upload',
       addRemoveLinks: false,
       maxFilesize: 10000 /* 10 GB */,
       acceptedFiles: 'audio/*,video/*',

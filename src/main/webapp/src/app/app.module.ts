@@ -2,8 +2,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule, Routes } from '@angular/router';
-import { HttpModule } from '@angular/http';
-import { HttpClientModule, HttpClient } from '@angular/common/http';
+import { HttpClientModule, HttpClient, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -17,7 +16,7 @@ import { ToastrModule } from 'ngx-toastr';
 
 import { PendingChangesGuard } from './pending-changes.guard';
 
-import { ApiService } from './services/api.service';
+import { AppHttpInterceptor } from './app-http-interceptor/app-http-interceptor';
 import { StateService } from './services/state.service';
 import { TransportService } from './services/transport.service';
 import { CompositionService } from './services/composition.service';
@@ -100,10 +99,9 @@ const DROPZONE_CONFIG: DropzoneConfigInterface = {
     SettingsDmxComponent,
     MidiRoutingComponent,
     MidiMappingComponent,
-    SettingsInfoComponent,
+    SettingsInfoComponent
   ],
   imports: [
-    HttpModule,
     BrowserModule,
     HttpClientModule,
     RouterModule.forRoot(
@@ -131,8 +129,13 @@ const DROPZONE_CONFIG: DropzoneConfigInterface = {
     })
   ],
   providers: [
+    AppHttpInterceptor,
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AppHttpInterceptor,
+      multi: true
+    },
     PendingChangesGuard,
-    ApiService,
     StateService,
     TransportService,
     CompositionService,
