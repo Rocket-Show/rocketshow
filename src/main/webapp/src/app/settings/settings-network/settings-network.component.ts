@@ -44,4 +44,10 @@ export class SettingsNetworkComponent implements OnInit {
     this.settings.remoteDeviceList.splice(remoteDeviceIndex, 1);
   }
 
+  // Prevent the last item in the file-list to be draggable.
+  // Taken from http://jsbin.com/tuyafe/1/edit?html,js,output
+  sortMove(evt) {
+    return evt.related.className.indexOf('no-sortjs') === -1;
+  }
+
 }

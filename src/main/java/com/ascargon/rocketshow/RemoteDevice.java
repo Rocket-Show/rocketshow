@@ -122,10 +122,6 @@ public class RemoteDevice {
 		doPost("transport/toggle-play");
 	}
 
-	public void resume() {
-		doPost("transport/resume");
-	}
-
 	public void setNextComposition() {
 		doPost("transport/next-composition");
 	}

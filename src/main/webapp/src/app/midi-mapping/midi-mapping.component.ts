@@ -7,7 +7,7 @@ import { Component, OnInit, Input } from '@angular/core';
   styleUrls: ['./midi-mapping.component.scss']
 })
 export class MidiMappingComponent implements OnInit {
-  @Input() midiMapping: MidiMapping[];
+  @Input() midiMapping: MidiMapping;
 
   constructor() { }
 

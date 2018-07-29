@@ -10,11 +10,16 @@
         </div>
 
         <div class="form-group row mb-0">
-          <label for="channel-offset" class="col-sm-3 col-form-label">{{ 'settings.wlan-ap-status' | translate }}</label>
+          <div class="col-sm-3">{{ 'settings.wlan-ap-status' | translate }}</div>
           <div class="col-sm-9">
-            <label class="form-check-label mt-2">
-              <input type="checkbox" [ngModel]="settings?.wlanApEnable" (ngModelChange)="settings.wlanApEnable = $event" class="form-check-input"> {{ 'settings.wlan-ap-enable' | translate }}
-            </label>
+            <div class="form-check">
+              <input type="checkbox" [ngModel]="settings?.wlanApEnable" (ngModelChange)="settings.wlanApEnable = $event" class="form-check-input"
+                id="wlanApEnable">
+
+              <label class="form-check-label" for="wlanApEnable">
+                {{ 'settings.wlan-ap-enable' | translate }}
+              </label>
+            </div>
           </div>
         </div>
 
@@ -28,15 +33,22 @@
           <div class="form-group row">
             <label for="channel-offset" class="col-sm-3 col-form-label">{{ 'settings.wlan-ap-wpa-passphrase' | translate }}</label>
             <div class="col-sm-9">
-              <input type="text" [class.text-danger]="settings?.wlanApPassphrase && settings?.wlanApPassphrase.length < 8" [ngModel]="settings?.wlanApPassphrase" (ngModelChange)="settings.wlanApPassphrase = $event" class="form-control">
+              <input type="text" [class.text-danger]="settings?.wlanApPassphrase && settings?.wlanApPassphrase.length < 8" [ngModel]="settings?.wlanApPassphrase"
+                (ngModelChange)="settings.wlanApPassphrase = $event" class="form-control">
             </div>
           </div>
           <div class="form-group row mb-0">
-            <label for="note-offset" class="col-sm-3 col-form-label"></label>
+            <div class="col-sm-3"></div>
+
             <div class="col-sm-9">
-              <label class="form-check-label mt-2">
-                <input type="checkbox" [ngModel]="settings?.wlanApSsidHide" (ngModelChange)="settings.wlanApSsidHide = $event" class="form-check-input"> {{ 'settings.wlan-ap-ssid-hide' | translate }}
-              </label>
+              <div class="form-check">
+                <input type="checkbox" [ngModel]="settings?.wlanApSsidHide" (ngModelChange)="settings.wlanApSsidHide = $event" class="form-check-input"
+                  id="wlanApSsidHide">
+
+                <label class="form-check-label" for="wlanApSsidHide">
+                  {{ 'settings.wlan-ap-ssid-hide' | translate }}
+                </label>
+              </div>
             </div>
           </div>
         </div>

@@ -108,18 +108,6 @@ public class Player {
 		}
 	}
 
-	public void resume() throws Exception {
-		for (RemoteDevice remoteDevice : manager.getSettings().getRemoteDeviceList()) {
-			if (remoteDevice.isSynchronize()) {
-				remoteDevice.resume();
-			}
-		}
-
-		if (composition != null) {
-			composition.resume();
-		}
-	}
-
 	public void togglePlay() throws Exception {
 		for (RemoteDevice remoteDevice : manager.getSettings().getRemoteDeviceList()) {
 			if (remoteDevice.isSynchronize()) {

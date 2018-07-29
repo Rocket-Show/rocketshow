@@ -1,4 +1,4 @@
-import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
+import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest, HttpHeaders } from '@angular/common/http';
 
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Rx';
@@ -24,12 +24,16 @@ export class AppHttpInterceptor implements HttpInterceptor {
   public intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     let newUrl: string;
 
-    if(req.url.startsWith('\.')) {
+    if (req.url.startsWith('\.')) {
       // Referencing local resources (e.g. ./assets for the translate module)
       // -> don't add the api-url
       newUrl = req.url;
     } else {
       newUrl = this.restUrl + req.url;
+    }
+
+    if (!req.headers.has('Content-Type')) {
+      req = req.clone({ headers: req.headers.set('Content-Type', 'application/json') });
     }
 
     const clonedRequest: HttpRequest<any> = req.clone({
@@ -42,23 +46,5 @@ export class AppHttpInterceptor implements HttpInterceptor {
   getRestUrl(): string {
     return this.restUrl;
   }
-
-  // get(url: string, options: RequestOptionsArgs = undefined): Observable<Response> {
-  //   return super.get(this.restUrl + url, options);
-  // }
-
-  // post(url: string, body: any): Observable<Response> {
-  //   let headers = new Headers();
-  //   headers.append('Content-Type', 'application/json');
-  //   return super.post(this.restUrl + url, body, {headers: headers});
-  // }
-
-  // put(url: string, body: any): Observable<Response> {
-  //   return super.put(this.restUrl + url, body);
-  // }
-
-  // delete(url: string): Observable<Response> {
-  //   return super.delete(this.restUrl + url);
-  // }
 
 }

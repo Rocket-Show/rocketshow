@@ -66,18 +66,6 @@ public class Transport {
 		return Response.status(200).build();
 	}
 
-	@Path("resume")
-	@POST
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response resume() throws Exception {
-		logger.info("Received API request for transport/resume");
-
-		Manager manager = (Manager) context.getAttribute("manager");
-		manager.getPlayer().resume();
-		
-		return Response.status(200).build();
-	}
-
 	@Path("toggle-play")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)

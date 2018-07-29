@@ -211,13 +211,14 @@ public class Composition {
 	}
 
 	public synchronized void play() throws Exception {
-		// Load all files
-		loadFiles();
-
-		if (playState != PlayState.PAUSED) {
-			// Maybe the composition is stopping meanwhile
+		if (playState == PlayState.PAUSED) {
+			// Special handling for paused compositions
+			resume();
 			return;
 		}
+		
+		// Load all files
+		loadFiles();
 
 		// All files are loaded -> play the composition (start each file)
 		logger.info("Playing composition '" + name + "'");
@@ -270,7 +271,9 @@ public class Composition {
 		}
 	}
 
-	public synchronized void resume() throws Exception {
+	private synchronized void resume() throws Exception {
+		// TODO Unload all files and load them again at the correct position. As soon as all files are ready, play them as usual.
+		
 		// Restart the auto-stop timer from the last pause
 		startAutoStopTimer(passedMillis);
 		lastStartTime = LocalDateTime.now();
@@ -317,6 +320,7 @@ public class Composition {
 		}
 
 		passedMillis = 0;
+		lastStartTime = null;
 
 		logger.info("Stopping composition '" + name + "'");
 
@@ -434,11 +438,7 @@ public class Composition {
 
 	@XmlTransient
 	public long getPassedMillis() {
-		if(lastStartTime == null) {
-			return 0;
-		}
-		
-		return lastStartTime.until(LocalDateTime.now(), ChronoUnit.MILLIS);
+		return passedMillis;
 	}
 
 	public void setPassedMillis(long passedMillis) {

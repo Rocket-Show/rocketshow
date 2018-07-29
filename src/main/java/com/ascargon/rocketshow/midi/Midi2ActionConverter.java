@@ -51,9 +51,6 @@ public class Midi2ActionConverter {
 		case TOGGLE_PLAY:
 			remoteDevice.togglePlay();
 			break;
-		case RESUME:
-			remoteDevice.resume();
-			break;
 		case STOP:
 			remoteDevice.stop();
 			break;
@@ -95,9 +92,6 @@ public class Midi2ActionConverter {
 			break;
 		case TOGGLE_PLAY:
 			manager.getPlayer().togglePlay();
-			break;
-		case RESUME:
-			manager.getPlayer().resume();
 			break;
 		case STOP:
 			manager.getPlayer().stop();

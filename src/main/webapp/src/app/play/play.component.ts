@@ -35,7 +35,7 @@ export class PlayComponent implements OnInit {
 
   constructor(
     private http: HttpClient,
-    private stateService: StateService,
+    public stateService: StateService,
     private compositionService: CompositionService,
     private transportService: TransportService) {
   }
@@ -153,14 +153,15 @@ export class PlayComponent implements OnInit {
       });
     }
 
-    if (newState.playState == 'STOPPED' && this.currentState.playState != 'STOPPED') {
+    if ((newState.playState == 'STOPPED' && this.currentState.playState != 'STOPPED')
+      || newState.playState == 'PAUSED') {
+
       if (this.playUpdateSubscription) {
         this.playUpdateSubscription.unsubscribe();
-
       }
 
-      this.playTime = '00:00.000';
-      this.passedMillis = 0;
+      this.passedMillis = newState.passedMillis;
+      this.playTime = this.msToTime(this.passedMillis);
     }
 
     // Scroll the corresponding composition into the view, except the user selected the
@@ -199,7 +200,8 @@ export class PlayComponent implements OnInit {
   }
 
   pause() {
-    // TODO
+    this.currentState.playState = 'PAUSING';
+    this.transportService.pause().subscribe();
   }
 
   nextComposition() {

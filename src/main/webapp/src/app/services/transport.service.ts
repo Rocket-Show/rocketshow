@@ -20,6 +20,12 @@ export class TransportService {
     });
   }
 
+  pause(): Observable<null> {
+    return this.http.post('transport/pause', null).map((response: Response) => {
+      return null;
+    });
+  }
+
   nextComposition(): Observable<null> {
     return this.http.post('transport/next-composition', null).map((response: Response) => {
       return null;
