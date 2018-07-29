@@ -78,6 +78,10 @@ dropzone.dz-wrapper>.dropzone .dz-preview .dz-details {
 }
 
 /* Style the slider for the play component */
+.slider.slider-horizontal {
+    width: 100%;
+}
+
 .slider-track {
     background-image: none;
     background-color: #e9ecef;
@@ -86,8 +90,8 @@ dropzone.dz-wrapper>.dropzone .dz-preview .dz-details {
 }
 
 .slider-selection {
-    @extend .progress-bar;
-    @extend .progress-bar-striped;
+    background-color: theme-color("primary");
+    background-image: none;
 }
 
 .slider-handle {

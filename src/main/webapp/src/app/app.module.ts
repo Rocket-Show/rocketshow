@@ -13,6 +13,7 @@ import { ModalModule } from 'ngx-bootstrap';
 import { DropzoneModule } from 'ngx-dropzone-wrapper';
 import { DropzoneConfigInterface } from 'ngx-dropzone-wrapper';
 import { ToastrModule } from 'ngx-toastr';
+import { NgxBootstrapSliderModule } from 'ngx-bootstrap-slider';
 
 import { PendingChangesGuard } from './pending-changes.guard';
 
@@ -126,7 +127,8 @@ const DROPZONE_CONFIG: DropzoneConfigInterface = {
     DropzoneModule.forRoot(DROPZONE_CONFIG),
     ToastrModule.forRoot({
       newestOnTop: true
-    })
+    }),
+    NgxBootstrapSliderModule
   ],
   providers: [
     AppHttpInterceptor,

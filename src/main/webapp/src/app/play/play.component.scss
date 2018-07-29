@@ -18,3 +18,24 @@
     border-top-left-radius: 0;
     border-top-right-radius: 0;
 }
+
+.btn-transport {
+}
+
+.btn-transport:focus, .btn-transport:active:focus, .btn-transport.active:focus { 
+    outline: none !important;
+    outline-style: none;
+    box-shadow: none;
+}
+
+.btn-transport-main {
+    border: 1px solid black;
+    border-radius: 50%;
+
+    width: 46px;
+    height: 46px;
+}
+
+.list-group-item.active {
+    z-index: 0;
+}

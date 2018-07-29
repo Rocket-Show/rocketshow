@@ -22,7 +22,7 @@ export class PlayComponent implements OnInit {
 
   sets: Set[];
 
-  playPercentage: number = 0;
+  passedMillis: number = 0;
   playTime: string = '00:00.000';
   playUpdateSubscription: Subscription;
   lastPlayTime: Date;
@@ -149,7 +149,7 @@ export class PlayComponent implements OnInit {
           this.playTime = this.msToTime(passedMillis);
         }
 
-        this.playPercentage = 100 * passedMillis / this.currentState.currentCompositionDurationMillis;
+        this.passedMillis = passedMillis;
       });
     }
 
@@ -160,7 +160,7 @@ export class PlayComponent implements OnInit {
       }
 
       this.playTime = '00:00.000';
-      this.playPercentage = 0;
+      this.passedMillis = 0;
     }
 
     // Scroll the corresponding composition into the view, except the user selected the
@@ -196,6 +196,10 @@ export class PlayComponent implements OnInit {
   stop() {
     this.currentState.playState = 'STOPPING';
     this.transportService.stop().subscribe();
+  }
+
+  pause() {
+    // TODO
   }
 
   nextComposition() {
