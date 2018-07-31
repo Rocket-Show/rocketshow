@@ -37,7 +37,7 @@ public class MidiFile extends com.ascargon.rocketshow.composition.File {
 		return Manager.BASE_PATH + MEDIA_PATH + MIDI_PATH + getName();
 	}
 
-	public void load() throws Exception {
+	public void load(long positionMillis) throws Exception {
 		logger.debug("Loading file '" + this.getName() + "'...");
 
 		this.setLoaded(false);
@@ -47,7 +47,7 @@ public class MidiFile extends com.ascargon.rocketshow.composition.File {
 			midiPlayer = new MidiPlayer(this.getManager(), midiRoutingList);
 		}
 		midiPlayer.setLoop(this.isLoop());
-		midiPlayer.load(this, this.getPath());
+		midiPlayer.load(this, this.getPath(), positionMillis);
 
 		for (MidiRouting midiRouting : midiRoutingList) {
 			midiRouting.load(this.getManager());

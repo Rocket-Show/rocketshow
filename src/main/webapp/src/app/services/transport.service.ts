@@ -26,6 +26,12 @@ export class TransportService {
     });
   }
 
+  seek(positionMillis: number): Observable<null> {
+    return this.http.post('transport/seek?position=' + positionMillis, null).map((response: Response) => {
+      return null;
+    });
+  }
+
   nextComposition(): Observable<null> {
     return this.http.post('transport/next-composition', null).map((response: Response) => {
       return null;

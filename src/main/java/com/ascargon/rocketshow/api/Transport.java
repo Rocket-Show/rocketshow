@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.api;
 
 import javax.servlet.ServletContext;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -24,7 +25,7 @@ public class Transport {
 	@Path("load")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response load(@QueryParam("name") String compositionName) throws Exception {
+	public Response load(@QueryParam("name") String compositionName, @QueryParam("position") @DefaultValue("0") Long position) throws Exception {
 		logger.info("Received API request for transport/load");
 
 		Manager manager = (Manager) context.getAttribute("manager");
@@ -37,7 +38,7 @@ public class Transport {
 		}
 
 		// Load the files for the current composition
-		manager.getPlayer().loadFiles();
+		manager.getPlayer().loadFiles(position);
 
 		return Response.status(200).build();
 	}
@@ -86,6 +87,18 @@ public class Transport {
 
 		Manager manager = (Manager) context.getAttribute("manager");
 		manager.getPlayer().stop();
+		
+		return Response.status(200).build();
+	}
+	
+	@Path("seek")
+	@POST
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response seek(@QueryParam("position") long position) throws Exception {
+		logger.info("Received API request for transport/seek");
+
+		Manager manager = (Manager) context.getAttribute("manager");
+		manager.getPlayer().seek(position);
 		
 		return Response.status(200).build();
 	}

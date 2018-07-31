@@ -19,13 +19,19 @@ public class Player {
 		this.manager = manager;
 	}
 
-	public void load() throws Exception {
+	private long getSeekMillis(long millis) {
+		// Round bottom to a full second, because seeking to milliseconds is
+		// currently not supported by audio- and videoplayer.
+		return millis - (millis % 1000);
+	}
+
+	public void load(long positionMillis) throws Exception {
 		if (composition != null) {
-			composition.loadFiles();
+			composition.loadFiles(positionMillis);
 		}
 	}
 
-	public void play() throws Exception {
+	public void play(long positionMillis) throws Exception {
 		if (composition == null) {
 			return;
 		}
@@ -35,6 +41,17 @@ public class Player {
 
 			return;
 		}
+
+		// Special handling for resume
+		if (composition.getPlayState() == PlayState.PAUSED) {
+			// First stop the current composition and load it again at the
+			// correct position (simply resuming would cause desync)
+			positionMillis = getSeekMillis(composition.getPositionMillis());
+			stop(false);
+		}
+
+		// Initialize the final variable (enclosing scope)
+		final long loadAtPositionMillis = positionMillis;
 
 		ExecutorService playExecutor;
 
@@ -47,7 +64,7 @@ public class Player {
 			if (remoteDevice.isSynchronize()) {
 				playExecutor.execute(new Runnable() {
 					public void run() {
-						remoteDevice.load(true, composition.getName());
+						remoteDevice.load(true, composition.getName(), loadAtPositionMillis);
 					}
 				});
 			}
@@ -57,7 +74,7 @@ public class Player {
 		playExecutor.execute(new Runnable() {
 			public void run() {
 				try {
-					composition.loadFiles();
+					composition.loadFiles(loadAtPositionMillis);
 				} catch (Exception e) {
 					logger.error("Could not load the composition files", e);
 				}
@@ -74,7 +91,7 @@ public class Player {
 
 		logger.debug("All devices loaded");
 
-		if (composition.getPlayState() != PlayState.PAUSED) {
+		if (composition.getPlayState() != PlayState.LOADED) {
 			// Maybe the composition stopped meanwhile
 			return;
 		}
@@ -94,6 +111,10 @@ public class Player {
 		}
 
 		logger.debug("Playing on all devices");
+	}
+
+	public void play() throws Exception {
+		this.play(0);
 	}
 
 	public void pause() throws Exception {
@@ -167,6 +188,28 @@ public class Player {
 		stop(true);
 	}
 
+	public void seek(long positionMillis) throws Exception {
+		// Seek to a specified position and continue playing the composition, if
+		// necessary.
+		if (composition.getPlayState() == PlayState.STOPPING || composition.getPlayState() == PlayState.LOADING) {
+			return;
+		}
+
+		positionMillis = getSeekMillis(positionMillis);
+
+		PlayState currentPlayState = composition.getPlayState();
+
+		// Stop the current composition and load it again to avoid desync of the
+		// files
+		stop(false);
+
+		if (currentPlayState == PlayState.PLAYING) {
+			play(positionMillis);
+		} else {
+			load(positionMillis);
+		}
+	}
+
 	public PlayState getPlayState() {
 		if (composition == null) {
 			return PlayState.STOPPED;
@@ -191,12 +234,12 @@ public class Player {
 		return composition.getDurationMillis();
 	}
 
-	public long getCompostionPassedMillis() {
+	public long getPositionMillis() {
 		if (composition == null) {
 			return 0;
 		}
 
-		return composition.getPassedMillis();
+		return composition.getPositionMillis();
 	}
 
 	public void close() throws Exception {
@@ -208,10 +251,10 @@ public class Player {
 	public void setComposition(Composition composition, boolean playDefaultCompositionWhenStoppingComposition)
 			throws Exception {
 
-		if(composition == null) {
+		if (composition == null) {
 			return;
 		}
-		
+
 		if (composition.getName().equals(this.getCompositionName())) {
 			// This composition is already loaded, don't stop/load again
 			return;
@@ -221,7 +264,7 @@ public class Player {
 		stop(playDefaultCompositionWhenStoppingComposition);
 
 		this.composition = composition;
-		
+
 		manager.getStateManager().notifyClients();
 	}
 
@@ -230,15 +273,16 @@ public class Player {
 	}
 
 	public void setCompositionName(String name) throws Exception {
-		setComposition(manager.getCompositionManager().loadComposition(name));;
+		setComposition(manager.getCompositionManager().loadComposition(name));
+		;
 	}
 
-	public void loadFiles() throws Exception {
+	public void loadFiles(long positionMillis) throws Exception {
 		if (composition == null) {
 			return;
 		}
 
-		composition.loadFiles();
+		composition.loadFiles(positionMillis);
 	}
 
 	public void setAutoStartNextComposition(boolean autoStartNextComposition) {

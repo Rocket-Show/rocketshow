@@ -32,7 +32,7 @@ public class MidiPlayer {
 		sequencer.setMicrosecondPosition(position);
 	}
 
-	public void load(PlayerLoadedListener playerLoadedListener, String path) throws Exception {
+	public void load(PlayerLoadedListener playerLoadedListener, String path, long positionMillis) throws Exception {
 		if (sequencer != null) {
 			if (sequencer.isOpen()) {
 				sequencer.close();
@@ -53,6 +53,8 @@ public class MidiPlayer {
 		if(loop) {
 			sequencer.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
 		}
+		
+		sequencer.setMicrosecondPosition(positionMillis);
 		
 		// Read the first bytes but pause immediately for better synched start
 		sequencer.start();

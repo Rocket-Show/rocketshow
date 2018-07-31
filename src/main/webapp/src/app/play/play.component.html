@@ -16,7 +16,7 @@
                   <i class="fa fa-step-backward fa-fw" aria-hidden="true"></i>
                 </button>
                 <button type="button" [disabled]="!currentState?.currentCompositionName" (click)="play()" class="btn btn-transport btn-transport-main"
-                  *ngIf="currentState?.playState == 'STOPPED' || currentState?.playState == 'PAUSED'  || currentState?.playState == 'STOPPING'">
+                  *ngIf="currentState?.playState == 'STOPPED' || currentState?.playState == 'PAUSED'  || currentState?.playState == 'STOPPING' || currentState?.playState == 'LOADED'">
                   <i class="fa fa-play fa-fw loading-transition" [class.text-warning]="currentState?.playState == 'STOPPING'" aria-hidden="true"></i>
                 </button>
                 <button type="button" [disabled]="!currentState?.currentCompositionName" (click)="pause()" class="btn btn-transport btn-transport-main"
@@ -36,7 +36,7 @@
             <!-- The slider -->
             <div class="row d-flex mb-2">
               <div class="col-sm my-auto" *ngIf="currentState?.currentCompositionName">
-                <mv-slider min="0" [max]="currentState.currentCompositionDurationMillis" [(value)]="passedMillis"></mv-slider>
+                <mv-slider min="0" [max]="currentState.currentCompositionDurationMillis" [(value)]="positionMillis" (slideStart)="slideStart($event)" (slideStop)="slideStop($event)" (change)="slideChange($event)"></mv-slider>
               </div>
             </div>
   

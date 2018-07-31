@@ -28,7 +28,7 @@ public class AudioPlayer {
 
 	private PlayerType playerType = PlayerType.MPLAYER;
 
-	public void load(PlayerType playerType, PlayerLoadedListener playerLoadedListener, String path,
+	public void load(PlayerType playerType, PlayerLoadedListener playerLoadedListener, String path, long positionMillis,
 			AudioOutput audioOutput, String device) throws IOException, InterruptedException {
 
 		this.playerType = playerType;
@@ -55,6 +55,10 @@ public class AudioPlayer {
 			// Set the cache
 			params.add("-cache-min");
 			params.add("99");
+			
+			// Set the startposition in seconds
+			params.add("-ss");
+			params.add(String.valueOf(Math.floor(positionMillis / 1000)));
 
 			// Set the player looped, if necessary
 			if (loop) {

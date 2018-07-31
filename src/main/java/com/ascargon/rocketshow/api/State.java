@@ -14,7 +14,7 @@ public class State {
 	private PlayState playState;
 	private String currentCompositionName;
 	private long currentCompositionDurationMillis;
-	private long passedMillis;
+	private long positionMillis;
 	private MidiSignal midiSignal;
 	private UpdateState updateState;
 	private String currentSetName;
@@ -57,12 +57,12 @@ public class State {
 	}
 
 	@XmlElement
-	public long getPassedMillis() {
-		return passedMillis;
+	public long getPositionMillis() {
+		return positionMillis;
 	}
 
-	public void setPassedMillis(long passedMillis) {
-		this.passedMillis = passedMillis;
+	public void setPositionMillis(long positionMillis) {
+		this.positionMillis = positionMillis;
 	}
 
 	@XmlElement

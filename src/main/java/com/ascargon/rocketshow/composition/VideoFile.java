@@ -27,7 +27,7 @@ public class VideoFile extends File {
 	}
 	
 	@Override
-	public void load() throws Exception {
+	public void load(long positionMillis) throws Exception {
 		logger.debug("Loading file '" + this.getName() + "...");
 		
 		this.setLoaded(false);
@@ -37,7 +37,7 @@ public class VideoFile extends File {
 			videoPlayer = new VideoPlayer();
 		}
 		videoPlayer.setLoop(this.isLoop());
-		videoPlayer.load(this, getPath());
+		videoPlayer.load(this, getPath(), positionMillis);
 	}
 
 	@Override

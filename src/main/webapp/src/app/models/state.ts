@@ -3,7 +3,7 @@ export class State {
     currentCompositionIndex: number = 0;
     currentCompositionName: string = "";
     currentCompositionDurationMillis: number = 0;
-    passedMillis: number;
+    positionMillis: number;
     updateState: string;
     currentSetName: string;
     updateFinished: boolean;
@@ -17,7 +17,7 @@ export class State {
         this.currentCompositionIndex = data.currentCompositionIndex;
         this.currentCompositionName = data.currentCompositionName;
         this.currentCompositionDurationMillis = data.currentCompositionDurationMillis;
-        this.passedMillis = data.passedMillis;
+        this.positionMillis = data.positionMillis;
         this.updateState = data.updateState;
         this.currentSetName = data.currentSetName;
         this.updateFinished = data.updateFinished;

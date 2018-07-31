@@ -22,10 +22,13 @@ export class PlayComponent implements OnInit {
 
   sets: Set[];
 
-  passedMillis: number = 0;
+  positionMillis: number = 0;
   playTime: string = '00:00.000';
   playUpdateSubscription: Subscription;
   lastPlayTime: Date;
+
+  // Is the user currently using the slider?
+  sliding: boolean = false;
 
   manualCompositionSelection: boolean = false;
 
@@ -58,13 +61,13 @@ export class PlayComponent implements OnInit {
     this.compositionService.getSets().map(result => {
       this.sets = result;
     })
-    .subscribe();
+      .subscribe();
   }
 
   private updateTotalDuration() {
     let totalDurationMillis: number = 0;
 
-    for(let composition of this.currentSet.compositionList) {
+    for (let composition of this.currentSet.compositionList) {
       totalDurationMillis += composition.durationMillis;
     }
 
@@ -78,12 +81,12 @@ export class PlayComponent implements OnInit {
     this.compositionService.getCurrentSet(true).subscribe((set: Set) => {
       this.currentSet = undefined;
 
-      if(set) {
+      if (set) {
         this.currentSet = set;
         this.updateTotalDuration();
       }
 
-      if(this.currentSet && !this.currentSet.name) {
+      if (this.currentSet && !this.currentSet.name) {
         // The default set with all compositions is loaded -> display all compositions
         this.compositionService.getCompositions(true).subscribe((compositions: Composition[]) => {
           this.currentSet.compositionList = compositions;
@@ -99,15 +102,15 @@ export class PlayComponent implements OnInit {
   selectSet(set: Set) {
     let setName: string = '';
 
-    if(set) {
+    if (set) {
       setName = set.name;
     }
 
     this.compositionService.loadSet(setName).subscribe();
-  } 
+  }
 
   private pad(num: number, size: number): string {
-    if(!num) {
+    if (!num) {
       num = 0;
     }
 
@@ -124,7 +127,7 @@ export class PlayComponent implements OnInit {
     let seconds: number = Math.floor(((millis % 360000) % 60000) / 1000);
     let minutes: number = Math.floor((millis % 3600000) / 60000);
 
-    if(includeMillis) {
+    if (includeMillis) {
       return this.pad(minutes, 2) + ':' + this.pad(seconds, 2) + '.' + this.pad(ms, 3);
     } else {
       return this.pad(minutes, 2) + ':' + this.pad(seconds, 2);
@@ -143,25 +146,27 @@ export class PlayComponent implements OnInit {
       let playUpdater = Observable.timer(0, 10);
       this.playUpdateSubscription = playUpdater.subscribe(() => {
         let currentTime = new Date();
-        let passedMillis = currentTime.getTime() - this.lastPlayTime.getTime() + this.currentState.passedMillis;
+        let positionMillis = currentTime.getTime() - this.lastPlayTime.getTime() + this.currentState.positionMillis;
 
-        if (passedMillis > 0) {
-          this.playTime = this.msToTime(passedMillis);
+        if (!this.sliding && this.currentState.playState != 'STOPPING') {
+          if (positionMillis > 0) {
+            this.playTime = this.msToTime(positionMillis);
+          }
+
+          this.positionMillis = positionMillis;
         }
-
-        this.passedMillis = passedMillis;
       });
     }
 
+    this.positionMillis = newState.positionMillis;
+    this.playTime = this.msToTime(this.positionMillis);
+
     if ((newState.playState == 'STOPPED' && this.currentState.playState != 'STOPPED')
-      || newState.playState == 'PAUSED') {
+      || (newState.playState == 'PAUSED' && this.currentState.playState != 'PAUSED')) {
 
       if (this.playUpdateSubscription) {
         this.playUpdateSubscription.unsubscribe();
       }
-
-      this.passedMillis = newState.passedMillis;
-      this.playTime = this.msToTime(this.passedMillis);
     }
 
     // Scroll the corresponding composition into the view, except the user selected the
@@ -200,8 +205,27 @@ export class PlayComponent implements OnInit {
   }
 
   pause() {
-    this.currentState.playState = 'PAUSING';
     this.transportService.pause().subscribe();
+  }
+
+  slideStart() {
+    this.sliding = true;
+  }
+
+  slideStop(positionMillis: number) {
+    this.currentState.playState = 'STOPPING';
+
+    // Only seeking to seconds is possible at the moment
+    this.positionMillis = positionMillis - (positionMillis % 1000);
+
+    this.transportService.seek(this.positionMillis).subscribe();
+
+    this.sliding = false;
+  }
+
+  slideChange(event: any) {
+    this.positionMillis = event.newValue;
+    this.playTime = this.msToTime(this.positionMillis);
   }
 
   nextComposition() {
@@ -215,7 +239,7 @@ export class PlayComponent implements OnInit {
   setComposition(index: number, composition: Composition) {
     this.manualCompositionSelection = true;
 
-    if(this.currentSet && !this.currentSet.name) {
+    if (this.currentSet && !this.currentSet.name) {
       // We got the default set loaded -> select compositions by name
       this.transportService.setCompositionName(composition.name).subscribe();
     } else {

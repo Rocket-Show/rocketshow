@@ -35,7 +35,7 @@ abstract public class File implements PlayerLoadedListener {
 	// Play offset
 	private int offsetMillis = 0;
 
-	abstract public void load() throws Exception;
+	abstract public void load(long positionMillis) throws Exception;
 
 	abstract public void close() throws Exception;
 

@@ -29,9 +29,9 @@ public class Composition {
 		PAUSED, // Is the composition paused?
 		STOPPING, // Is the composition being stopped?
 		STOPPED, // Is the composition stopped?
-		LOADING // Is the composition waiting for all files to be loaded to
-				// start
-				// playing?
+		LOADING, // Is the composition waiting for all files to be loaded to
+					// start playing?
+		LOADED // Has the composition finished loading all files?
 	}
 
 	private PlayState playState = PlayState.STOPPED;
@@ -53,7 +53,7 @@ public class Composition {
 	private Timer autoStopTimer;
 
 	private LocalDateTime lastStartTime;
-	private long passedMillis;
+	private long positionMillis;
 
 	private boolean filesLoaded = false;
 
@@ -93,7 +93,7 @@ public class Composition {
 	}
 
 	// Load all files but don't start playing
-	public synchronized void loadFiles() throws Exception {
+	public synchronized void loadFiles(long positionMillis) throws Exception {
 		if (filesLoaded) {
 			return;
 		}
@@ -123,7 +123,7 @@ public class Composition {
 				file.setManager(manager);
 				file.setComposition(this);
 
-				file.load();
+				file.load(positionMillis);
 			}
 		}
 
@@ -137,12 +137,15 @@ public class Composition {
 
 		// Maybe we are stopping meanwhile
 		if (playState == PlayState.LOADING) {
-			playState = PlayState.PAUSED;
+			playState = PlayState.LOADED;
+			this.positionMillis = positionMillis;
 			filesLoaded = true;
+
+			manager.getStateManager().notifyClients();
 		}
 	}
 
-	private void startAutoStopTimer(long passedMillis) {
+	private void startAutoStopTimer(long positionMillis) {
 		// Start the autostop timer, to automatically stop the composition, as
 		// soon as the last file (the longest one, which has the most offset)
 		// has been finished)
@@ -153,7 +156,8 @@ public class Composition {
 				int fileOffset = 0;
 
 				if (file.isLoop()) {
-					// At least one file is looped -> don't stop the composition automatically
+					// At least one file is looped -> don't stop the composition
+					// automatically
 					return;
 				}
 
@@ -171,7 +175,7 @@ public class Composition {
 			}
 		}
 
-		maxDurationAndOffset -= passedMillis;
+		maxDurationAndOffset -= positionMillis;
 
 		logger.debug("Scheduled the auto-stop timer in " + maxDurationAndOffset + " millis");
 
@@ -211,14 +215,9 @@ public class Composition {
 	}
 
 	public synchronized void play() throws Exception {
-		if (playState == PlayState.PAUSED) {
-			// Special handling for paused compositions
-			resume();
-			return;
-		}
-		
-		// Load all files
-		loadFiles();
+		// Load the files, if not already done by a previously by a separate
+		// call
+		loadFiles(0);
 
 		// All files are loaded -> play the composition (start each file)
 		logger.info("Playing composition '" + name + "'");
@@ -232,7 +231,6 @@ public class Composition {
 		startAutoStopTimer(0);
 
 		lastStartTime = LocalDateTime.now();
-		passedMillis = 0;
 
 		playState = PlayState.PLAYING;
 
@@ -248,8 +246,13 @@ public class Composition {
 			autoStopTimer = null;
 		}
 
-		// Save the passed time since the last run
-		passedMillis += lastStartTime.until(LocalDateTime.now(), ChronoUnit.MILLIS);
+		// Save the position in milliseconds since the last run
+		positionMillis += lastStartTime.until(LocalDateTime.now(), ChronoUnit.MILLIS);
+		
+		// A the moment, only second exact pausing/seeking is possible
+		positionMillis = positionMillis - (positionMillis % 1000);
+		
+		lastStartTime = null;
 
 		if (playState == PlayState.PAUSED) {
 			return;
@@ -265,33 +268,6 @@ public class Composition {
 		}
 
 		playState = PlayState.PAUSED;
-
-		if (!defaultComposition) {
-			manager.getStateManager().notifyClients();
-		}
-	}
-
-	private synchronized void resume() throws Exception {
-		// TODO Unload all files and load them again at the correct position. As soon as all files are ready, play them as usual.
-		
-		// Restart the auto-stop timer from the last pause
-		startAutoStopTimer(passedMillis);
-		lastStartTime = LocalDateTime.now();
-
-		if (playState == PlayState.PLAYING) {
-			return;
-		}
-
-		logger.info("Resuming composition '" + name + "'");
-
-		// Resume the composition
-		for (File file : fileList) {
-			if (file.isActive()) {
-				file.resume();
-			}
-		}
-
-		playState = PlayState.PLAYING;
 
 		if (!defaultComposition) {
 			manager.getStateManager().notifyClients();
@@ -319,7 +295,7 @@ public class Composition {
 			autoStopTimer = null;
 		}
 
-		passedMillis = 0;
+		positionMillis = 0;
 		lastStartTime = null;
 
 		logger.info("Stopping composition '" + name + "'");
@@ -437,12 +413,12 @@ public class Composition {
 	}
 
 	@XmlTransient
-	public long getPassedMillis() {
-		return passedMillis;
-	}
+	public long getPositionMillis() {
+		if (lastStartTime == null) {
+			return positionMillis;
+		}
 
-	public void setPassedMillis(long passedMillis) {
-		this.passedMillis = passedMillis;
+		return lastStartTime.until(LocalDateTime.now(), ChronoUnit.MILLIS) + positionMillis;
 	}
 
 }

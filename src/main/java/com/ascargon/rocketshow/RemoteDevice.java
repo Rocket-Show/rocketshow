@@ -94,9 +94,10 @@ public class RemoteDevice {
 		doPost("system/reboot");
 	}
 
-	public void load(boolean synchronous, String name) {
+	public void load(boolean synchronous, String name, long positionMillis) {
 		try {
-			doPost("transport/load?name=" + URLEncoder.encode(name, "UTF-8"), synchronous);
+			doPost("transport/load?name=" + URLEncoder.encode(name, "UTF-8") + "&position=" + positionMillis,
+					synchronous);
 		} catch (UnsupportedEncodingException e) {
 			logger.error("Could not encode the name " + name, e);
 		}
@@ -129,7 +130,7 @@ public class RemoteDevice {
 	public void setPreviousComposition() {
 		doPost("transport/previous-composition");
 	}
-	
+
 	public void setCompositionName(String compositionName) {
 		doPost("transport/set-composition-name?name=" + compositionName, true);
 	}

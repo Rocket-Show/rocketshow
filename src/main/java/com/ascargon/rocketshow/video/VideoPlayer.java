@@ -24,7 +24,20 @@ public class VideoPlayer {
 	private boolean loop;
 	private String path;
 
-	public void load(PlayerLoadedListener playerLoadedListener, String path) throws IOException, InterruptedException {
+	private String getTimeFromPositionMillis(long positionMillis) {
+		//long millis = positionMillis % 1000;
+		long second = (positionMillis / 1000) % 60;
+		long minute = (positionMillis / (1000 * 60)) % 60;
+		long hour = (positionMillis / (1000 * 60 * 60)) % 24;
+
+		// Return the string including millis
+		//String time = String.format("%02d:%02d:%02d.%d", hour, minute, second, millis);
+		
+		// Return the string without millis
+		return String.format("%02d:%02d:%02d", hour, minute, second);
+	}
+	
+	public void load(PlayerLoadedListener playerLoadedListener, String path, long positionMillis) throws IOException, InterruptedException {
 		logger.debug("Loading video '" + path + "'");
 
 		this.path = path;
@@ -39,6 +52,10 @@ public class VideoPlayer {
 		// Set background to black
 		params.add("-b");
 
+		// Set the start position
+		params.add("--pos");
+		params.add(getTimeFromPositionMillis(positionMillis));
+		
 		if (loop) {
 			params.add("--loop");
 		}
