@@ -161,9 +161,7 @@ export class PlayComponent implements OnInit {
     this.positionMillis = newState.positionMillis;
     this.playTime = this.msToTime(this.positionMillis);
 
-    if ((newState.playState == 'STOPPED' && this.currentState.playState != 'STOPPED')
-      || (newState.playState == 'PAUSED' && this.currentState.playState != 'PAUSED')) {
-
+    if (newState.playState == 'STOPPING' || newState.playState == 'STOPPING' || newState.playState == 'PAUSED') {
       if (this.playUpdateSubscription) {
         this.playUpdateSubscription.unsubscribe();
       }

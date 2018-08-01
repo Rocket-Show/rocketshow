@@ -194,7 +194,7 @@ public class Composition {
 					if (autoStartNextComposition && manager.getCurrentSet().hasNextComposition()) {
 						// Stop, don't play the default composition but start
 						// playing the next composition
-						manager.getPlayer().stop(false, true);
+						manager.getPlayer().stop(false);
 
 						if (manager.getCurrentSet() != null) {
 							manager.getCurrentSet().nextComposition(false);
@@ -203,7 +203,7 @@ public class Composition {
 					} else {
 						// Stop, play the default composition and select the
 						// next composition automatically (if there is one)
-						manager.getPlayer().stop(true, true);
+						manager.getPlayer().stop(true);
 
 						if (manager.getCurrentSet() != null) {
 							manager.getCurrentSet().nextComposition();
@@ -288,7 +288,7 @@ public class Composition {
 		}
 	}
 
-	public synchronized void stop(boolean playDefaultComposition, boolean resetPosition) throws Exception {
+	public synchronized void stop(boolean playDefaultComposition, boolean restartAfter) throws Exception {
 		playState = PlayState.STOPPING;
 
 		if (!defaultComposition) {
@@ -301,7 +301,7 @@ public class Composition {
 			autoStopTimer = null;
 		}
 
-		if (resetPosition) {
+		if (!restartAfter) {
 			positionMillis = 0;
 		}
 
@@ -326,7 +326,7 @@ public class Composition {
 
 		playState = PlayState.STOPPED;
 
-		if (!defaultComposition) {
+		if (!defaultComposition && !restartAfter) {
 			manager.getStateManager().notifyClients();
 		}
 
@@ -336,8 +336,12 @@ public class Composition {
 		}
 	}
 
+	public synchronized void stop(boolean playDefaultComposition) throws Exception {
+		stop(playDefaultComposition, false);
+	}
+	
 	public synchronized void stop() throws Exception {
-		stop(true, true);
+		stop(true, false);
 	}
 
 	@XmlTransient
@@ -431,6 +435,7 @@ public class Composition {
 	}
 
 	public void setPositionMillis(long positionMillis) {
+		lastStartTime = null;
 		this.positionMillis = positionMillis;
 	}
 

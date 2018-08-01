@@ -82,11 +82,11 @@ public class Transport {
 	@Path("stop")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response stop(@QueryParam("playDefaultComposition") @DefaultValue("true") boolean playDefaultComposition, @QueryParam("resetPosition") @DefaultValue("true") boolean resetPosition) throws Exception {
+	public Response stop(@QueryParam("playDefaultComposition") @DefaultValue("true") boolean playDefaultComposition, @QueryParam("restartAfter") @DefaultValue("false") boolean restartAfter) throws Exception {
 		logger.info("Received API request for transport/stop");
 
 		Manager manager = (Manager) context.getAttribute("manager");
-		manager.getPlayer().stop(playDefaultComposition, resetPosition);
+		manager.getPlayer().stop(playDefaultComposition, restartAfter);
 		
 		return Response.status(200).build();
 	}

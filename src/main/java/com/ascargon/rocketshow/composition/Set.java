@@ -130,7 +130,7 @@ public class Set {
 	public void setCompositionIndex(int compositionIndex, boolean playDefaultComposition) throws Exception {
 		// Stop a playing composition if needed
 		if (manager != null) {
-			manager.getPlayer().stop(playDefaultComposition, true);
+			manager.getPlayer().stop(playDefaultComposition);
 		}
 
 		// Return, if we already have the correct composition set

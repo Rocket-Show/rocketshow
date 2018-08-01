@@ -51,17 +51,17 @@ public class AudioPlayer {
 
 			// Start in slave-mode to process the input easier
 			params.add("-slave");
-			
+
 			// Not trying to load subtitles (a little faster startup)
 			params.add("-noautosub");
-			
+
 			// No video (a little faster startup)
 			params.add("-novideo");
 
 			// Set the cache
 			params.add("-cache-min");
 			params.add("99");
-			
+
 			// Set the startposition in seconds
 			params.add("-ss");
 			params.add(String.valueOf(Math.round(positionMillis / 1000)));
@@ -90,6 +90,15 @@ public class AudioPlayer {
 							if (line.startsWith("Starting playback...")) {
 								// Rewind to the start position
 								shellManager.sendCommand("pausing", true);
+
+								// Needed, when you seek and immediately play
+								// (seeking while playing). Would cause desync
+								// without.
+								try {
+									Thread.sleep(200);
+								} catch (InterruptedException e) {
+									logger.error(e);
+								}
 
 								logger.debug("File '" + path + "' loaded");
 								playerLoadedListener.playerLoaded();

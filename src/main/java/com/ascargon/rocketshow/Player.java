@@ -136,7 +136,7 @@ public class Player {
 		}
 	}
 
-	public void stop(boolean playDefaultComposition, boolean resetPosition) throws Exception {
+	public void stop(boolean playDefaultComposition, boolean restartAfter) throws Exception {
 		if (composition == null) {
 			return;
 		}
@@ -155,7 +155,7 @@ public class Player {
 			if (remoteDevice.isSynchronize()) {
 				executor.execute(new Runnable() {
 					public void run() {
-						remoteDevice.stop(playDefaultComposition, resetPosition);
+						remoteDevice.stop(playDefaultComposition, restartAfter);
 					}
 				});
 			}
@@ -165,7 +165,7 @@ public class Player {
 		executor.execute(new Runnable() {
 			public void run() {
 				try {
-					composition.stop(playDefaultComposition, resetPosition);
+					composition.stop(playDefaultComposition, restartAfter);
 				} catch (Exception e) {
 					logger.error("Could not load the composition files", e);
 				}
@@ -179,8 +179,12 @@ public class Player {
 		}
 	}
 
+	public void stop(boolean playDefaultComposition) throws Exception {
+		stop(playDefaultComposition, false);
+	}
+	
 	public void stop() throws Exception {
-		stop(true, true);
+		stop(true, false);
 	}
 
 	public void seek(long positionMillis) throws Exception {
@@ -196,7 +200,7 @@ public class Player {
 
 		// Stop the current composition and load it again to avoid desync of the
 		// files
-		stop(false, false);
+		stop(false, true);
 
 		if (currentPlayState == PlayState.PLAYING) {
 			play(composition.getPositionMillis());
@@ -256,7 +260,7 @@ public class Player {
 		}
 
 		// Stop the current composition, if needed
-		stop(playDefaultCompositionWhenStoppingComposition, true);
+		stop(playDefaultCompositionWhenStoppingComposition);
 
 		this.composition = composition;
 
