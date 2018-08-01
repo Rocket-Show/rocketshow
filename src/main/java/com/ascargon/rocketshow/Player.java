@@ -42,14 +42,6 @@ public class Player {
 			return;
 		}
 
-		// Special handling for resume
-		if (composition.getPlayState() == PlayState.PAUSED) {
-			// First stop the current composition and load it again at the
-			// correct position (simply resuming would cause desync)
-			positionMillis = getSeekMillis(composition.getPositionMillis());
-			stop(false);
-		}
-
 		// Initialize the final variable (enclosing scope)
 		final long loadAtPositionMillis = positionMillis;
 
@@ -125,7 +117,10 @@ public class Player {
 		}
 
 		if (composition != null) {
-			composition.pause();
+			// Seek to the correct position to avoid desync (stop and load
+			// again)
+			composition.setPlayState(PlayState.PAUSED);
+			seek(composition.getPositionMillis());
 		}
 	}
 
@@ -141,7 +136,7 @@ public class Player {
 		}
 	}
 
-	public void stop(boolean playDefaultComposition) throws Exception {
+	public void stop(boolean playDefaultComposition, boolean resetPosition) throws Exception {
 		if (composition == null) {
 			return;
 		}
@@ -160,7 +155,7 @@ public class Player {
 			if (remoteDevice.isSynchronize()) {
 				executor.execute(new Runnable() {
 					public void run() {
-						remoteDevice.stop();
+						remoteDevice.stop(playDefaultComposition, resetPosition);
 					}
 				});
 			}
@@ -170,7 +165,7 @@ public class Player {
 		executor.execute(new Runnable() {
 			public void run() {
 				try {
-					composition.stop(playDefaultComposition);
+					composition.stop(playDefaultComposition, resetPosition);
 				} catch (Exception e) {
 					logger.error("Could not load the composition files", e);
 				}
@@ -185,7 +180,7 @@ public class Player {
 	}
 
 	public void stop() throws Exception {
-		stop(true);
+		stop(true, true);
 	}
 
 	public void seek(long positionMillis) throws Exception {
@@ -195,18 +190,18 @@ public class Player {
 			return;
 		}
 
-		positionMillis = getSeekMillis(positionMillis);
+		composition.setPositionMillis(getSeekMillis(positionMillis));
 
 		PlayState currentPlayState = composition.getPlayState();
 
 		// Stop the current composition and load it again to avoid desync of the
 		// files
-		stop(false);
+		stop(false, false);
 
 		if (currentPlayState == PlayState.PLAYING) {
-			play(positionMillis);
+			play(composition.getPositionMillis());
 		} else {
-			load(positionMillis);
+			load(composition.getPositionMillis());
 		}
 	}
 
@@ -261,7 +256,7 @@ public class Player {
 		}
 
 		// Stop the current composition, if needed
-		stop(playDefaultCompositionWhenStoppingComposition);
+		stop(playDefaultCompositionWhenStoppingComposition, true);
 
 		this.composition = composition;
 

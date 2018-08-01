@@ -14,9 +14,9 @@ import com.ascargon.rocketshow.video.VideoPlayer;
 public class VideoFile extends File {
 
 	final static Logger logger = Logger.getLogger(VideoFile.class);
-	
+
 	public final static String VIDEO_PATH = "video/";
-	
+
 	private VideoPlayer videoPlayer;
 
 	private Timer playTimer;
@@ -25,17 +25,18 @@ public class VideoFile extends File {
 	public String getPath() {
 		return Manager.BASE_PATH + MEDIA_PATH + VIDEO_PATH + getName();
 	}
-	
+
 	@Override
 	public void load(long positionMillis) throws Exception {
-		logger.debug("Loading file '" + this.getName() + "...");
-		
+		logger.debug("Loading file '" + this.getName() + " at millisecond position " + positionMillis + "...");
+
 		this.setLoaded(false);
 		this.setLoading(true);
 
-		if(videoPlayer == null) {
+		if (videoPlayer == null) {
 			videoPlayer = new VideoPlayer();
 		}
+		
 		videoPlayer.setLoop(this.isLoop());
 		videoPlayer.load(this, getPath(), positionMillis);
 	}
@@ -49,7 +50,7 @@ public class VideoFile extends File {
 	public int getFullOffsetMillis() {
 		return this.getOffsetMillis() + this.getManager().getSettings().getOffsetMillisVideo();
 	}
-	
+
 	@Override
 	public void play() throws IOException {
 		String path = getPath();
@@ -83,16 +84,16 @@ public class VideoFile extends File {
 
 	@Override
 	public void pause() throws IOException {
-		if(playTimer != null) {
+		if (playTimer != null) {
 			playTimer.cancel();
 			playTimer = null;
 		}
-		
+
 		if (videoPlayer == null) {
 			logger.error("Video player not initialized for file '" + getPath() + "'");
 			return;
 		}
-		
+
 		videoPlayer.pause();
 	}
 
@@ -102,27 +103,27 @@ public class VideoFile extends File {
 			logger.error("Video player not initialized for file '" + getPath() + "'");
 			return;
 		}
-		
+
 		videoPlayer.resume();
 	}
 
 	@Override
 	public void stop() throws Exception {
-		if(playTimer != null) {
+		if (playTimer != null) {
 			playTimer.cancel();
 			playTimer = null;
 		}
-		
+
 		if (videoPlayer == null) {
 			logger.error("Video player not initialized for file '" + getPath() + "'");
 			return;
 		}
-		
+
 		this.setLoaded(false);
 		this.setLoading(false);
 		videoPlayer.stop();
 	}
-	
+
 	public FileType getType() {
 		return FileType.VIDEO;
 	}

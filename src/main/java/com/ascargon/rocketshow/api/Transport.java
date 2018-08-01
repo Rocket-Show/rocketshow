@@ -25,7 +25,7 @@ public class Transport {
 	@Path("load")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response load(@QueryParam("name") String compositionName, @QueryParam("position") @DefaultValue("0") Long position) throws Exception {
+	public Response load(@QueryParam("name") String compositionName, @QueryParam("positionMillis") @DefaultValue("0") Long position) throws Exception {
 		logger.info("Received API request for transport/load");
 
 		Manager manager = (Manager) context.getAttribute("manager");
@@ -82,11 +82,11 @@ public class Transport {
 	@Path("stop")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response stop() throws Exception {
+	public Response stop(@QueryParam("playDefaultComposition") @DefaultValue("true") boolean playDefaultComposition, @QueryParam("resetPosition") @DefaultValue("true") boolean resetPosition) throws Exception {
 		logger.info("Received API request for transport/stop");
 
 		Manager manager = (Manager) context.getAttribute("manager");
-		manager.getPlayer().stop();
+		manager.getPlayer().stop(playDefaultComposition, resetPosition);
 		
 		return Response.status(200).build();
 	}
@@ -94,11 +94,11 @@ public class Transport {
 	@Path("seek")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response seek(@QueryParam("position") long position) throws Exception {
+	public Response seek(@QueryParam("positionMillis") long positionMillis) throws Exception {
 		logger.info("Received API request for transport/seek");
 
 		Manager manager = (Manager) context.getAttribute("manager");
-		manager.getPlayer().seek(position);
+		manager.getPlayer().seek(positionMillis);
 		
 		return Response.status(200).build();
 	}

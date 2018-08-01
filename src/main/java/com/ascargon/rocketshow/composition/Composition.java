@@ -97,6 +97,8 @@ public class Composition {
 		if (filesLoaded) {
 			return;
 		}
+		
+		this.positionMillis = positionMillis;
 
 		if (!defaultComposition) {
 			manager.stopDefaultComposition();
@@ -108,7 +110,8 @@ public class Composition {
 			manager.getStateManager().notifyClients();
 		}
 
-		logger.debug("Loading all files for composition '" + name + "'...");
+		logger.debug(
+				"Loading all files for composition '" + name + "' at millisecond position " + positionMillis + " ...");
 
 		for (File file : fileList) {
 			if (file.isActive()) {
@@ -138,7 +141,6 @@ public class Composition {
 		// Maybe we are stopping meanwhile
 		if (playState == PlayState.LOADING) {
 			playState = PlayState.LOADED;
-			this.positionMillis = positionMillis;
 			filesLoaded = true;
 
 			manager.getStateManager().notifyClients();
@@ -192,7 +194,7 @@ public class Composition {
 					if (autoStartNextComposition && manager.getCurrentSet().hasNextComposition()) {
 						// Stop, don't play the default composition but start
 						// playing the next composition
-						manager.getPlayer().stop(false);
+						manager.getPlayer().stop(false, true);
 
 						if (manager.getCurrentSet() != null) {
 							manager.getCurrentSet().nextComposition(false);
@@ -201,7 +203,7 @@ public class Composition {
 					} else {
 						// Stop, play the default composition and select the
 						// next composition automatically (if there is one)
-						manager.getPlayer().stop(true);
+						manager.getPlayer().stop(true, true);
 
 						if (manager.getCurrentSet() != null) {
 							manager.getCurrentSet().nextComposition();
@@ -247,11 +249,15 @@ public class Composition {
 		}
 
 		// Save the position in milliseconds since the last run
-		positionMillis += lastStartTime.until(LocalDateTime.now(), ChronoUnit.MILLIS);
-		
+		if (lastStartTime == null) {
+			positionMillis = 0;
+		} else {
+			positionMillis += lastStartTime.until(LocalDateTime.now(), ChronoUnit.MILLIS);
+		}
+
 		// A the moment, only second exact pausing/seeking is possible
 		positionMillis = positionMillis - (positionMillis % 1000);
-		
+
 		lastStartTime = null;
 
 		if (playState == PlayState.PAUSED) {
@@ -282,7 +288,7 @@ public class Composition {
 		}
 	}
 
-	public synchronized void stop(boolean playDefaultComposition) throws Exception {
+	public synchronized void stop(boolean playDefaultComposition, boolean resetPosition) throws Exception {
 		playState = PlayState.STOPPING;
 
 		if (!defaultComposition) {
@@ -295,7 +301,10 @@ public class Composition {
 			autoStopTimer = null;
 		}
 
-		positionMillis = 0;
+		if (resetPosition) {
+			positionMillis = 0;
+		}
+
 		lastStartTime = null;
 
 		logger.info("Stopping composition '" + name + "'");
@@ -328,7 +337,7 @@ public class Composition {
 	}
 
 	public synchronized void stop() throws Exception {
-		stop(true);
+		stop(true, true);
 	}
 
 	@XmlTransient
@@ -419,6 +428,10 @@ public class Composition {
 		}
 
 		return lastStartTime.until(LocalDateTime.now(), ChronoUnit.MILLIS) + positionMillis;
+	}
+
+	public void setPositionMillis(long positionMillis) {
+		this.positionMillis = positionMillis;
 	}
 
 }

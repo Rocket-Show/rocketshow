@@ -96,7 +96,7 @@ public class RemoteDevice {
 
 	public void load(boolean synchronous, String name, long positionMillis) {
 		try {
-			doPost("transport/load?name=" + URLEncoder.encode(name, "UTF-8") + "&position=" + positionMillis,
+			doPost("transport/load?name=" + URLEncoder.encode(name, "UTF-8") + "&positionMillis=" + positionMillis,
 					synchronous);
 		} catch (UnsupportedEncodingException e) {
 			logger.error("Could not encode the name " + name, e);
@@ -115,8 +115,8 @@ public class RemoteDevice {
 		doPost("transport/pause");
 	}
 
-	public void stop() {
-		doPost("transport/stop");
+	public void stop(boolean playDefaultComposition, boolean resetPosition) {
+		doPost("transport/stop?playDefaultComposition=" + playDefaultComposition + "&resetPosition=" + resetPosition);
 	}
 
 	public void togglePlay() {

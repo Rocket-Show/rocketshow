@@ -37,6 +37,16 @@ export class SettingsSystemComponent implements OnInit {
     }).subscribe();
   }
 
+  setDefaultComposition(event?: any) {
+    console.log('xxx', event);
+    if(event == undefined) {
+      console.log('aaa');
+    }
+    this.settings.defaultComposition = event;
+
+    console.log('fff', this.settings);
+  }
+
   ngOnInit() {
     this.loadSettings();
 

@@ -30,7 +30,7 @@ public class AudioFile extends com.ascargon.rocketshow.composition.File {
 
 	@Override
 	public void load(long positionMillis) throws Exception {
-		logger.debug("Loading file '" + this.getName() + "...");
+		logger.debug("Loading file '" + this.getName() + " at millisecond position " + positionMillis + "...");
 
 		this.setLoaded(false);
 		this.setLoading(true);
@@ -41,7 +41,8 @@ public class AudioFile extends com.ascargon.rocketshow.composition.File {
 
 		audioPlayer.setLoop(this.isLoop());
 		audioPlayer.load(this.getManager().getSettings().getAudioPlayerType(), this, getPath(), positionMillis,
-				this.getManager().getSettings().getAudioOutput(), this.getManager().getSettings().getAlsaDeviceFromOutputBus(outputBus));
+				this.getManager().getSettings().getAudioOutput(),
+				this.getManager().getSettings().getAlsaDeviceFromOutputBus(outputBus));
 	}
 
 	@Override

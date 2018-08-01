@@ -38,7 +38,7 @@ public class MidiFile extends com.ascargon.rocketshow.composition.File {
 	}
 
 	public void load(long positionMillis) throws Exception {
-		logger.debug("Loading file '" + this.getName() + "'...");
+		logger.debug("Loading file '" + this.getName() + " at millisecond position " + positionMillis + "...");
 
 		this.setLoaded(false);
 		this.setLoading(true);
@@ -153,5 +153,5 @@ public class MidiFile extends com.ascargon.rocketshow.composition.File {
 	public FileType getType() {
 		return FileType.MIDI;
 	}
-	
+
 }

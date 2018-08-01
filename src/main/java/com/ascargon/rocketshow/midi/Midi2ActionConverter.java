@@ -52,7 +52,7 @@ public class Midi2ActionConverter {
 			remoteDevice.togglePlay();
 			break;
 		case STOP:
-			remoteDevice.stop();
+			remoteDevice.stop(true, true);
 			break;
 		case NEXT_COMPOSITION:
 			remoteDevice.setNextComposition();
