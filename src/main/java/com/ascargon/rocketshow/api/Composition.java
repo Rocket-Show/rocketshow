@@ -48,15 +48,18 @@ public class Composition {
 		manager.getCompositionManager().saveComposition(composition);
 
 		// If this is the current composition, read it again
-		if(manager.getPlayer().getCompositionName() != null && manager.getPlayer().getCompositionName().equals(composition.getName())) {
-			manager.getPlayer().setComposition(manager.getCompositionManager().loadComposition(composition.getName()));
+		if (manager.getPlayer().getCompositionName() != null
+				&& manager.getPlayer().getCompositionName().equals(composition.getName())) {
+			
+			manager.getPlayer().setComposition(manager.getCompositionManager().loadComposition(composition.getName()),
+					true, true);
 		}
 
 		// Refresh the current set
-		if(manager.getCurrentSet() != null) {
+		if (manager.getCurrentSet() != null) {
 			manager.loadSetAndComposition(manager.getCurrentSet().getName());
 		}
-		
+
 		return Response.status(200).build();
 	}
 
@@ -66,11 +69,11 @@ public class Composition {
 	public Response delete(@QueryParam("name") String name) throws Exception {
 		Manager manager = (Manager) context.getAttribute("manager");
 		manager.getCompositionManager().deleteComposition(name);
-		
-		if(manager.getCurrentSet() != null) {
+
+		if (manager.getCurrentSet() != null) {
 			manager.loadSetAndComposition(manager.getCurrentSet().getName());
 		}
-		
+
 		return Response.status(200).build();
 	}
 

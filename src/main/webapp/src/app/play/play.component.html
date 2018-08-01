@@ -45,7 +45,7 @@
               </button>
 
               <!-- Stop -->
-              <button type="button" [disabled]="!currentState?.currentCompositionName" (click)="stop()" class="btn btn-transport">
+              <button type="button" [disabled]="!currentState?.currentCompositionName || currentState?.playState == 'STOPPING' || currentState?.playState == 'STOPPED'" (click)="stop()" class="btn btn-transport">
                 <i class="fa fa-stop fa-fw" aria-hidden="true"></i>
               </button>
             </div>
@@ -54,7 +54,7 @@
           <!-- The slider -->
           <div class="row d-flex mb-2">
             <div class="col-sm my-auto" *ngIf="currentState?.currentCompositionName">
-              <mv-slider min="0" [max]="currentState.currentCompositionDurationMillis" [(value)]="positionMillis" (slideStart)="slideStart($event)"
+              <mv-slider min="0" tooltip="hide" [max]="currentState.currentCompositionDurationMillis" [(value)]="positionMillis" (slideStart)="slideStart($event)"
                 (slideStop)="slideStop($event)" (change)="slideChange($event)"></mv-slider>
             </div>
           </div>

@@ -182,7 +182,7 @@ public class Player {
 	public void stop(boolean playDefaultComposition) throws Exception {
 		stop(playDefaultComposition, false);
 	}
-	
+
 	public void stop() throws Exception {
 		stop(true, false);
 	}
@@ -247,14 +247,14 @@ public class Player {
 		}
 	}
 
-	public void setComposition(Composition composition, boolean playDefaultCompositionWhenStoppingComposition)
-			throws Exception {
+	public void setComposition(Composition composition, boolean playDefaultCompositionWhenStoppingComposition,
+			boolean forceLoad) throws Exception {
 
 		if (composition == null) {
 			return;
 		}
 
-		if (composition.getName().equals(this.getCompositionName())) {
+		if (composition.getName().equals(this.getCompositionName()) && !forceLoad) {
 			// This composition is already loaded, don't stop/load again
 			return;
 		}
@@ -268,7 +268,7 @@ public class Player {
 	}
 
 	public void setComposition(Composition composition) throws Exception {
-		setComposition(composition, true);
+		setComposition(composition, true, false);
 	}
 
 	public void setCompositionName(String name) throws Exception {

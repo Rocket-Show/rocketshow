@@ -219,7 +219,7 @@ public class Composition {
 	public synchronized void play() throws Exception {
 		// Load the files, if not already done by a previously by a separate
 		// call
-		loadFiles(0);
+		loadFiles(positionMillis);
 
 		// All files are loaded -> play the composition (start each file)
 		logger.info("Playing composition '" + name + "'");
@@ -230,7 +230,7 @@ public class Composition {
 			}
 		}
 
-		startAutoStopTimer(0);
+		startAutoStopTimer(positionMillis);
 
 		lastStartTime = LocalDateTime.now();
 
