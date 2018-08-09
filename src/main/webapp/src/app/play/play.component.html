@@ -9,9 +9,9 @@
           <!-- The transport buttons -->
           <div class="row d-flex mb-1">
             <div class="col-auto mx-auto">
-              <!-- Loop the set -->
+              <!-- Automatically select the next song when finished -->
               <button type="button" [disabled]="!currentState?.currentCompositionName" (click)="toggleLoop()" class="btn btn-transport">
-                <i class="fa fa-retweet fa-fw" aria-hidden="true"></i>
+                <i class="fa fa-level-down fa-fw" aria-hidden="true"></i>
               </button>
 
               <!-- Previous composition -->
@@ -54,7 +54,7 @@
           <!-- The slider -->
           <div class="row d-flex mb-2">
             <div class="col-sm my-auto" *ngIf="currentState?.currentCompositionName">
-              <mv-slider min="0" tooltip="hide" [max]="currentState.currentCompositionDurationMillis" [(value)]="positionMillis" (slideStart)="slideStart($event)"
+              <mv-slider min="0" tooltip="hide" [max]="currentState.currentCompositionDurationMillis" [(value)]="positionMillis" step="1000" (slideStart)="slideStart($event)"
                 (slideStop)="slideStop($event)" (change)="slideChange($event)"></mv-slider>
             </div>
           </div>

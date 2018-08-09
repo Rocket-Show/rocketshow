@@ -60,8 +60,7 @@ export class PlayComponent implements OnInit {
     // Load all sets
     this.compositionService.getSets().map(result => {
       this.sets = result;
-    })
-      .subscribe();
+    }).subscribe();
   }
 
   private updateTotalDuration() {
@@ -135,6 +134,9 @@ export class PlayComponent implements OnInit {
   }
 
   private stateChanged(newState: State) {
+    this.positionMillis = newState.positionMillis;
+    this.playTime = this.msToTime(this.positionMillis);
+
     if (newState.playState == 'PLAYING' && this.currentState.playState != 'PLAYING') {
       if (this.playUpdateSubscription) {
         this.playUpdateSubscription.unsubscribe;
@@ -157,9 +159,6 @@ export class PlayComponent implements OnInit {
         }
       });
     }
-
-    this.positionMillis = newState.positionMillis;
-    this.playTime = this.msToTime(this.positionMillis);
 
     if (newState.playState == 'STOPPING' || newState.playState == 'STOPPING' || newState.playState == 'PAUSED') {
       if (this.playUpdateSubscription) {
