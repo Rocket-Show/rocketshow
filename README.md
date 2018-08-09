@@ -25,7 +25,7 @@ Login to docker container and inspect logs:
 `# cat logs/localhost*` 
 
 Open tomcat manager in browser: http://localhost:8080/manager/ \
-Username tomact, password s3cret
+Username tomcat, password 1234
 
 ### Deployment
 #### Seed directory
