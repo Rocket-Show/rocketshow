@@ -92,7 +92,7 @@ public class Manager {
 	/**
 	 * Connect to the MIDI out device. Also call this method, if you change the
 	 * settings or want to reconnect the device.
-	 * 
+	 *
 	 * @throws MidiUnavailableException
 	 */
 	public void connectMidiSender() throws MidiUnavailableException {
@@ -189,8 +189,8 @@ public class Manager {
 		logger.info("Initialize...");
 
 		// Setup iptables, because it's not working properly in pi-gen distro generation
-		new ShellManager(new String[] {"sudo", "iptables", "-t", "nat", "-A", "POSTROUTING", "-o", "eth0", "-j", "MASQUERADE"});
-		
+		//new ShellManager(new String[] {"sudo", "iptables", "-t", "nat", "-A", "POSTROUTING", "-o", "eth0", "-j", "MASQUERADE"});
+
 		// Initialize the player
 		player = new Player(this);
 
