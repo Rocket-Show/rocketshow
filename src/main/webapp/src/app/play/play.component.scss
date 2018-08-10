@@ -1,12 +1,7 @@
 .container-fluid {
     display: flex;
     flex-flow: column;
-    height: calc(100% - 71px);
-}
-
-.composition-list {
-    border-bottom-left-radius: 0.25em;
-    border-bottom-right-radius: 0.25em;
+    height: calc(100% - 87px);
 }
 
 .list-group-item:first-child {
@@ -15,17 +10,19 @@
     border-top-right-radius: 0;
 }
 
-.btn-transport {
-}
-
 .btn-transport:focus, .btn-transport:active:focus, .btn-transport.active:focus { 
     outline: none !important;
     outline-style: none;
     box-shadow: none;
 }
 
+.btn-transport {
+    background-color: transparent;
+    color: white;
+}
+
 .btn-transport-main {
-    border: 1px solid black;
+    border: 1px solid white;
     border-radius: 50%;
 
     width: 46px;

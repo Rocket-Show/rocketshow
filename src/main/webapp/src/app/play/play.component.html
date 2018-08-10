@@ -3,7 +3,7 @@
   <!-- Transport -->
   <div class="row" *ngIf="stateService.connected" style="flex: 0 0 auto;">
     <div class="col">
-      <div class="card mb-3">
+      <div class="card border-secondary mb-3">
         <div class="card-body">
 
           <!-- The transport buttons -->
@@ -81,7 +81,7 @@
 
       <!-- For larger screens -->
       <div class="list-group d-none d-sm-flex" style="flex: 0 0 auto;">
-        <div class="list-group-item list-group-item-action flex-column align-items-start" style="border-top-left-radius: 0.25em; border-top-right-radius: 0.25em; border-bottom-left-radius: 0; border-bottom-right-radius: 0;">
+        <div class="list-group-item flex-column align-items-start">
           <a href="#" class="" d="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             <span *ngIf="currentSet && currentSet.name">{{ currentSet?.name }}</span>
             <span *ngIf="!currentSet || !currentSet.name">{{ 'misc.default-set' | translate }}</span>
@@ -100,7 +100,7 @@
       <div class="list-group composition-list d-none d-sm-flex" style="flex: 0 1 auto; overflow: auto;">
         <!-- Display all compositions -->
         <a *ngFor="let composition of currentSet?.compositionList; let i = index" id="composition{{ i }}" href="#" (click)="setComposition(i, composition); false"
-          class="list-group-item list-group-item-action flex-column align-items-start" [class.active]="currentState?.currentCompositionName == composition.name">
+          class="list-group-item flex-column align-items-start" [class.active]="currentState?.currentCompositionName == composition.name">
           <div class="d-flex w-100 justify-content-between">
             <p class="mb-1">{{ composition.name }}</p>
             <small class="my-auto">{{ msToTime(composition.durationMillis, false) }}</small>
@@ -109,7 +109,7 @@
 
         <!-- No compositions in the current set -->
         <a *ngIf="!loadingSet && currentSet && currentSet.name && currentSet.compositionList.length == 0" id="composition0" href="#"
-          routerLink="/editor" class="list-group-item list-group-item-action flex-column align-items-start">
+          routerLink="/editor" class="list-group-item flex-column align-items-start">
           <div class="d-flex w-100 justify-content-between">
             <p class="mb-1">{{ 'misc.set-without-compositions' | translate }}</p>
           </div>
@@ -117,14 +117,14 @@
 
         <!-- no compositions at all -->
         <a *ngIf="!loadingSet && (currentSet && !currentSet.name) && currentSet.compositionList == 0" id="composition0" href="#"
-          routerLink="/editor" class="list-group-item list-group-item-action flex-column align-items-start">
+          routerLink="/editor" class="list-group-item flex-column align-items-start">
           <div class="d-flex w-100 justify-content-between">
             <p class="mb-1">{{ 'misc.no-compositions' | translate }}</p>
           </div>
         </a>
 
         <!-- Loading the set -->
-        <a *ngIf="loadingSet" id="composition0" href="#" class="list-group-item list-group-item-action flex-column align-items-start">
+        <a *ngIf="loadingSet" id="composition0" href="#" class="list-group-item flex-column align-items-start">
           <div class="d-flex w-100 justify-content-between">
             <p class="mb-1 mx-auto">
               <i class="fa fa-spinner fa-pulse fa-2x fa-fw"></i>
@@ -135,7 +135,7 @@
 
       <!-- For smaller screens -->
       <div class="list-group d-sm-none" style="flex: 0 0 auto;">
-        <div class="list-group-item list-group-item-action flex-column align-items-start pt-2 pb-2" style="border-top-left-radius: 0.25em; border-top-right-radius: 0.25em; border-bottom-left-radius: 0; border-bottom-right-radius: 0;">
+        <div class="list-group-item flex-column align-items-start pt-2 pb-2">
           <a href="#" class="" d="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             <span *ngIf="currentSet && currentSet.name">{{ currentSet?.name }}</span>
             <span *ngIf="!currentSet || !currentSet.name">{{ 'misc.default-set' | translate }}</span>
@@ -154,7 +154,7 @@
       <div class="list-group composition-list d-sm-none" style="flex: 0 1 auto; overflow: auto;">
         <!-- Display all compositions -->
         <a *ngFor="let composition of currentSet?.compositionList; let i = index" id="compositionSmall{{ i }}" href="#" (click)="setComposition(i, composition); false"
-          class="list-group-item list-group-item-action flex-column align-items-start pt-1 pb-1" [class.active]="currentState?.currentCompositionName == composition.name">
+          class="list-group-item flex-column align-items-start pt-1 pb-1" [class.active]="currentState?.currentCompositionName == composition.name">
 
           <div class="d-flex w-100 justify-content-between">
             <p class="mb-1">{{ composition.name }}</p>
@@ -164,7 +164,7 @@
 
         <!-- No compositions in the current set -->
         <a *ngIf="!loadingSet && currentSet && currentSet.name && currentSet.compositionList.length == 0" id="composition0" href="#"
-          routerLink="/editor" class="list-group-item list-group-item-action flex-column align-items-start">
+          routerLink="/editor" class="list-group-item flex-column align-items-start">
 
           <div class="d-flex w-100 justify-content-between">
             <p class="mb-1">{{ 'misc.set-without-compositions' | translate }}</p>
@@ -173,7 +173,7 @@
 
         <!-- no compositions at all -->
         <a *ngIf="!loadingSet && (currentSet && !currentSet.name) && currentSet.compositionList == 0" id="composition0" href="#"
-          routerLink="/editor" class="list-group-item list-group-item-action flex-column align-items-start">
+          routerLink="/editor" class="list-group-item flex-column align-items-start">
 
           <div class="d-flex w-100 justify-content-between">
             <p class="mb-1">{{ 'misc.no-compositions' | translate }}</p>
@@ -181,7 +181,7 @@
         </a>
 
         <!-- Loading the set -->
-        <a *ngIf="loadingSet" id="composition0" href="#" class="list-group-item list-group-item-action flex-column align-items-start">
+        <a *ngIf="loadingSet" id="composition0" href="#" class="list-group-item flex-column align-items-start">
           <div class="d-flex w-100 justify-content-between">
             <p class="mb-1 mx-auto">
               <i class="fa fa-spinner fa-pulse fa-fw"></i>

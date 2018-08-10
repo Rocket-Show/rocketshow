@@ -88,7 +88,6 @@ public class AudioPlayer {
 							logger.debug("Output from audio player: " + line);
 
 							if (line.startsWith("Starting playback...")) {
-								// Rewind to the start position
 								shellManager.sendCommand("pausing", true);
 
 								// Needed, when you seek and immediately play

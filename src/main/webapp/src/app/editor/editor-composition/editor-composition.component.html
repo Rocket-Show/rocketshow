@@ -16,13 +16,13 @@
     <div class="card" style="height: 400px; overflow-y: scroll;">
       <div class="card-body p-0">
         <div class="list-group list-group-flush">
-          <a *ngIf="loadingCompositions" (click)="selectComposition(composition); false" href="#" class="list-group-item list-group-item-action flex-column align-items-start d-flex">
+          <a *ngIf="loadingCompositions" (click)="selectComposition(composition); false" href="#" class="list-group-item flex-column align-items-start d-flex">
             <p class="mb-0 mx-auto">
               <i class="fa fa-spinner fa-pulse fa-fw"></i>
             </p>
           </a>
 
-          <a *ngFor="let composition of filteredCompositions" (click)="selectComposition(composition); false" href="#" class="list-group-item list-group-item-action flex-column align-items-start"
+          <a *ngFor="let composition of filteredCompositions" (click)="selectComposition(composition); false" href="#" class="list-group-item flex-column align-items-start"
             [class.active]="initialComposition?.name == composition.name">
 
             <p class="mb-0">{{ composition.name }}</p>
@@ -78,7 +78,7 @@
                 </div>
               </div>
             </div>
-            <a href="#" (click)="addCompositionFile(); false" class="no-sortjs list-group-item list-group-item-action text-center">
+            <a href="#" (click)="addCompositionFile(); false" class="no-sortjs list-group-item text-center">
               <i class="fa fa-plus" aria-hidden="true"></i> {{ 'editor.add-file' | translate }}
             </a>
           </div>

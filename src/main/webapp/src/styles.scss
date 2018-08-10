@@ -1,20 +1,15 @@
-/* Configure and load Bootstrap SASS */
-$theme-colors: (
-    "primary":#502b7f
-);
+/* Add the theme */
+@import 'theme.scss';
 
+/* Some overrides */
+$enable-rounded: false;
+
+/* Add bootstrap */
 @import '../node_modules/bootstrap/scss/bootstrap';
 
 /* To vertically center some parts (like the intro wizard) */
 html, body {
     height: 100%;
-}
-
-/* Tiled background, infinite movement during the intro wizard with
-animation-play-stateto not reset the position on stop */
-body {
-    background-image: url(assets/img/intro_bg.png);
-    background-repeat: repeat;
 }
 
 /* Run the background movement during the intro */
