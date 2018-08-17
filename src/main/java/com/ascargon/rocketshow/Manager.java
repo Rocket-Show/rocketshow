@@ -189,7 +189,12 @@ public class Manager {
 		logger.info("Initialize...");
 
 		// Setup iptables, because it's not working properly in pi-gen distro generation
-		new ShellManager(new String[] {"sudo", "iptables", "-t", "nat", "-A", "POSTROUTING", "-o", "eth0", "-j", "MASQUERADE"});
+		try {
+			new ShellManager(new String[] { "sudo", "iptables", "-t", "nat", "-A", "POSTROUTING", "-o", "eth0", "-j",
+					"MASQUERADE" });
+		} catch (IOException e) {
+			logger.error("Could not initialize iptables", e);
+		}
 		
 		// Initialize the player
 		player = new Player(this);
