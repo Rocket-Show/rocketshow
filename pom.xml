@@ -60,14 +60,15 @@
 						<phase>generate-sources</phase>
 						<configuration>
 							<workingDirectory>${project.basedir}/src/main/webapp</workingDirectory>
-							<executable>ng</executable>
+							<executable>npx</executable>
 							<arguments>
+								<argument>ng</argument>
 								<argument>build</argument>
 								<argument>--base-href=/app/</argument>
 								<argument>--environment=prod</argument>
 
-								<!-- No caching to make sure, the newest version will always be loaded 
-									(e.g. after an update). Caching anyways only has a small impact, because 
+								<!-- No caching to make sure, the newest version will always be loaded
+									(e.g. after an update). Caching anyways only has a small impact, because
 									the devices are most probably run in an internal network. -->
 								<argument>--output-hashing=all</argument>
 							</arguments>
@@ -81,7 +82,7 @@
 		</plugins>
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings 
+				<!--This plugin's configuration is used to store Eclipse m2e settings
 					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
