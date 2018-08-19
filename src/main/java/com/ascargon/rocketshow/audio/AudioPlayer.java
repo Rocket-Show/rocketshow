@@ -31,6 +31,8 @@ public class AudioPlayer {
 	public void load(PlayerType playerType, PlayerLoadedListener playerLoadedListener, String path, long positionMillis,
 			AudioOutput audioOutput, String device) throws IOException, InterruptedException {
 
+		String seekSeconds = String.valueOf(Math.round(positionMillis / 1000));
+		
 		this.playerType = playerType;
 		this.path = path;
 		this.device = device;
@@ -62,10 +64,6 @@ public class AudioPlayer {
 			params.add("-cache-min");
 			params.add("99");
 
-			// Set the startposition in seconds
-			params.add("-ss");
-			params.add(String.valueOf(Math.round(positionMillis / 1000)));
-
 			// Set the player looped, if necessary
 			if (loop) {
 				params.add("-loop");
@@ -78,6 +76,7 @@ public class AudioPlayer {
 			params.add(path);
 
 			shellManager = new ShellManager(params.toArray(new String[0]));
+			shellManager.sendCommand("pausing", true);
 
 			new Thread(new Runnable() {
 				public void run() {
@@ -88,16 +87,7 @@ public class AudioPlayer {
 							logger.debug("Output from audio player: " + line);
 
 							if (line.startsWith("Starting playback...")) {
-								shellManager.sendCommand("pausing", true);
-
-								// Needed, when you seek and immediately play
-								// (seeking while playing). Would cause desync
-								// without.
-								try {
-									Thread.sleep(200);
-								} catch (InterruptedException e) {
-									logger.error(e);
-								}
+								shellManager.sendCommand("pausing seek " + seekSeconds + " 2", true);
 
 								logger.debug("File '" + path + "' loaded");
 								playerLoadedListener.playerLoaded();
