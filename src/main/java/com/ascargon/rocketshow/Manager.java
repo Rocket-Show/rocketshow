@@ -92,7 +92,7 @@ public class Manager {
 	/**
 	 * Connect to the MIDI out device. Also call this method, if you change the
 	 * settings or want to reconnect the device.
-	 * 
+	 *
 	 * @throws MidiUnavailableException
 	 */
 	public void connectMidiSender() throws MidiUnavailableException {
