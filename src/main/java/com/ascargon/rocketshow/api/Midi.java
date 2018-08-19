@@ -14,7 +14,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.ascargon.rocketshow.Manager;
-import com.ascargon.rocketshow.midi.MidiControl;
 import com.ascargon.rocketshow.midi.MidiDevice;
 import com.ascargon.rocketshow.midi.MidiRouting;
 import com.ascargon.rocketshow.midi.MidiSignal;

@@ -89,6 +89,15 @@ public class AudioPlayer {
 							if (line.startsWith("Starting playback...")) {
 								shellManager.sendCommand("pausing seek " + seekSeconds + " 2", true);
 
+								// Needed, when you seek and immediately play
+								// (seeking while playing). Would cause desync
+								// without.
+								try {
+									Thread.sleep(200);
+								} catch (InterruptedException e) {
+									logger.error(e);
+								}
+								
 								logger.debug("File '" + path + "' loaded");
 								playerLoadedListener.playerLoaded();
 							}

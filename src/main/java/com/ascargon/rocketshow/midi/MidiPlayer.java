@@ -53,14 +53,10 @@ public class MidiPlayer {
 		if(loop) {
 			sequencer.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
 		}
-		
-		sequencer.setMicrosecondPosition(positionMillis);
-		
-		// Read the first bytes but pause immediately for better synched start
-		sequencer.start();
-		sequencer.stop();
 
-		logger.debug("File '" + path + "' loaded");
+		sequencer.setMicrosecondPosition(positionMillis * 1000);
+
+		logger.debug("File '" + path + "' loaded on millis position " + positionMillis);
 		playerLoadedListener.playerLoaded();
 	}
 
@@ -78,7 +74,7 @@ public class MidiPlayer {
 	}
 
 	public void play() {
-		logger.debug("Starting MIDI player from position " + sequencer.getMicrosecondPosition());
+		logger.debug("Starting MIDI player from position " + Math.round(sequencer.getMicrosecondPosition() / 1000));
 		sequencer.start();
 	}
 
