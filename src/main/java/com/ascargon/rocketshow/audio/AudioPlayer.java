@@ -32,7 +32,7 @@ public class AudioPlayer {
 			AudioOutput audioOutput, String device) throws IOException, InterruptedException {
 
 		String seekSeconds = String.valueOf(Math.round(positionMillis / 1000));
-		
+
 		this.playerType = playerType;
 		this.path = path;
 		this.device = device;
@@ -89,15 +89,15 @@ public class AudioPlayer {
 							if (line.startsWith("Starting playback...")) {
 								shellManager.sendCommand("pausing seek " + seekSeconds + " 2", true);
 
-								// Needed, when you seek and immediately play
-								// (seeking while playing). Would cause desync
-								// without.
+								// Needed for immediate play. If playing starts
+								// immediately after being ready, the audio will
+								// be delayed.
 								try {
 									Thread.sleep(200);
 								} catch (InterruptedException e) {
 									logger.error(e);
 								}
-								
+
 								logger.debug("File '" + path + "' loaded");
 								playerLoadedListener.playerLoaded();
 							}
