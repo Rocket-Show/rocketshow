@@ -1,5 +1,5 @@
 <div class="card-modal">
-  <div class="card">
+  <div class="card border-secondary">
     <div class="card-header">
       {{ 'editor.edit-file' | translate }}
     </div>
@@ -65,7 +65,7 @@
               <input type="text" class="form-control input-block mb-3" id="searchFileList" placeholder="{{ 'editor.search-files' | translate }}"
                 (input)="filterExistingFiles($event.target.value)">
 
-              <div class="card" style="height: 300px; overflow-y: scroll;">
+              <div class="card border-secondary" style="height: 300px; overflow-y: scroll;">
                 <div class="card-body p-0">
                   <div class="list-group list-group-flush">
                     <div *ngFor="let existingFile of filteredExistingFiles" class="list-group-item list-group-item-action" [class.active]="file?.name == existingFile.name && file?.type == existingFile.type">
@@ -97,7 +97,7 @@
         <hr />
 
         <div class="col-lg-6">
-          <div class="card">
+          <div class="card border-secondary">
             <div class="card-header">
               {{ 'editor.file-settings' | translate }}
             </div>
@@ -106,10 +106,13 @@
 
               <!-- Active (muted) -->
               <div class="form-group">
-                <label class="col-form-label"></label>
-                <label class="form-check-label">
-                  <input type="checkbox" [ngModel]="!file?.active" (ngModelChange)="file.active = !$event" class="form-check-input"> {{ 'editor.mute' | translate }}
-                </label>
+                <div class="form-check">
+                  <input type="checkbox" [ngModel]="!file?.active" (ngModelChange)="file.active = !$event" class="form-check-input" id="active">
+
+                  <label class="form-check-label" for="active">
+                    {{ 'editor.mute' | translate }}
+                  </label>
+                </div>
               </div>
 
               <!-- Audio Bus -->
@@ -132,10 +135,13 @@
 
               <!-- Loop -->
               <div class="form-group">
-                <label class="col-form-label"></label>
-                <label class="form-check-label">
-                  <input type="checkbox" [ngModel]="file?.loop" (ngModelChange)="file.loop = $event" class="form-check-input"> {{ 'editor.loop' | translate }}
-                </label>
+                <div class="form-check">
+                  <input type="checkbox" [ngModel]="file?.loop" (ngModelChange)="file.loop = $event" class="form-check-input" id="loop">
+
+                  <label class="form-check-label" for="loop">
+                    {{ 'editor.loop' | translate }}
+                  </label>
+                </div>
               </div>
 
               <!-- MIDI routing -->

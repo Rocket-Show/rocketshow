@@ -1,7 +1,7 @@
 <!-- Initial loading -->
 <div class="container d-flex h-100" *ngIf="!loaded">
   <div class="row justify-content-center align-self-center mx-auto">
-    <div class="col-xl">
+    <div class="col">
       <div class="card border-secondary">
         <div class="card-body text-center">
           <h4 class="card-title">{{ 'loading.title' | translate }}</h4>
@@ -17,7 +17,7 @@
 </div>
 
 <!-- Navigation -->
-<nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light" *ngIf="loaded && !isIntro">
+<nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light border-secondary" style="border-bottom: 1px solid #444;" *ngIf="loaded && !isIntro">
   <a class="navbar-brand d-flex" href="#" routerLink="/">
     <img class="my-auto d-none d-sm-block" src="assets/img/logo.png" height="30px" style="margin-right: 0px;">
     <span class="my-auto d-none d-sm-block">&nbsp;|&nbsp;</span>

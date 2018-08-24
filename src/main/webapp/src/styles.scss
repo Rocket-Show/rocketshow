@@ -4,6 +4,11 @@
 /* Some overrides */
 $enable-rounded: false;
 
+$theme-colors: (
+  warning: $orange,
+  danger: $orange
+) !default;
+
 /* Add bootstrap */
 @import '../node_modules/bootstrap/scss/bootstrap';
 
@@ -11,17 +16,6 @@ $enable-rounded: false;
 html, body {
     height: 100%;
 }
-
-/* Run the background movement during the intro */
-.body-bg-moving {
-    animation: bgMovement 60s linear infinite;
-}
-@keyframes bgMovement {
-    100%{
-        background-position: 1000px -1000px;
-    }
-}
-
 
 /* Better navbar spacing for elements below */
 .navbar {
@@ -44,6 +38,7 @@ dropzone.dz-wrapper>.dropzone {
     max-width: 100% !important;
     min-height: 150px !important;
     display: flex !important;
+    background-color: transparent !important;
 }
 
 .dz-text {
@@ -61,6 +56,10 @@ dropzone.dz-wrapper>.dropzone .dz-preview .dz-details {
     padding: 0 !important;
     padding-left: 3px !important;
     padding-top: 3px !important;
+}
+
+dropzone.dz-wrapper>.dropzone {
+    color: white !important;
 }
 
 /* Enable a column taking up the left space */
@@ -96,4 +95,23 @@ dropzone.dz-wrapper>.dropzone .dz-preview .dz-details {
     border: 1px solid white;
 
     top: -1px;
+}
+
+/* Style the toasts */
+.toast-container .toast {
+    border-radius: 0;
+    box-shadow: none;
+}
+
+/* Misc */
+.list-group-item {
+    color: white;
+}
+
+.list-group .active {
+    background-color: #303030;
+    color: theme-color("primary");
+    border-color: #444;
+    border-left: 10px solid #fd7e14;
+    padding-left: 11px;
 }

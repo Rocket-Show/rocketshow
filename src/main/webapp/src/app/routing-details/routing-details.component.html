@@ -1,4 +1,4 @@
-<div class="card">
+<div class="card border-secondary">
   <div class="card-header">
     {{ 'routing.title' | translate }}
   </div>
@@ -23,7 +23,7 @@
     <div class="form-group row">
       <label class="col-sm-4 col-form-label">{{ 'routing.midi-transformation' | translate }}</label>
       <div class="col-sm-8">
-        <div class="card">
+        <div class="card border-secondary">
           <div class="card-body">
             <app-midi-mapping [midiMapping]="midiRouting?.midiMapping"></app-midi-mapping>
           </div>
@@ -35,7 +35,7 @@
     <div class="form-group row" *ngIf="midiRouting?.midiDestination == 'DMX'">
       <label class="col-sm-4 col-form-label">{{ 'routing.dmx-mapping' | translate }}</label>
       <div class="col-sm-8">
-        <div class="card">
+        <div class="card border-secondary">
           <div class="card-body">
             <div class="form-group row mb-0">
               <label class="col-sm-6 col-form-label">{{ 'routing.dmx-mapping-type' | translate }}</label>
@@ -54,7 +54,7 @@
     <div class="form-group row" *ngIf="midiRouting?.midiDestination == 'REMOTE'">
       <label class="col-sm-4 col-form-label">{{ 'routing.remote-devices' | translate }}</label>
       <div class="col-sm-8">
-        <div class="card">
+        <div class="card border-secondary">
           <div class="card-body">
             <app-remote-device-selection [remoteDeviceList]="midiRouting?.remoteDeviceList"></app-remote-device-selection>
           </div>

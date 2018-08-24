@@ -7,7 +7,11 @@ export const environment = {
   production: false,
   name: "dev",
 
-  // Add the local backend to test
-  localBackend: "localhost:8080",
+  // Local backend in local Tomcat
+  localBackend: "localhost:8080/ROOT",
+
+  // Local backend in docker
+  //localBackend: "localhost:8080",
+
   debug: true
 };

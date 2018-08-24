@@ -1,3 +1,4 @@
+import { UuidService } from './../services/uuid.service';
 import { SettingsService } from './../services/settings.service';
 import { Settings } from './../models/settings';
 import { RemoteDevice } from './../models/remote-device';
@@ -13,9 +14,16 @@ export class RemoteDeviceSelectionComponent implements OnInit {
 
   settings: Settings;
 
+  // Used to generate unique ids for the checkboxes inside this component,
+  // if this component is used multiple times in the same page
+  uuid: string;
+
   constructor(
-    private settingsService: SettingsService
-  ) { }
+    private settingsService: SettingsService,
+    private uuidService: UuidService
+  ) {
+    this.uuid = uuidService.getUuid();
+  }
 
   private loadSettings() {
     this.settingsService.getSettings().map(result => {

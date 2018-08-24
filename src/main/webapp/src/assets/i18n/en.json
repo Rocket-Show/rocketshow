@@ -26,7 +26,7 @@
     },
     "intro": {
         "welcome": "Whoop, whoop!",
-        "welcome-language": "Welcome to Rocket Show! Which language do you speak?",
+        "welcome-language": "Welcome to Rocket Show! Please select your preferred language.",
         "choose-language": "Choose your language",
         "almost-finished": "We're almost ready!",
         "name-unit": "Please name this device.",

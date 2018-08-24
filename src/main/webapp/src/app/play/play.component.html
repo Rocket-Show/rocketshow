@@ -82,7 +82,7 @@
       <!-- For larger screens -->
       <div class="list-group d-none d-sm-flex" style="flex: 0 0 auto;">
         <div class="list-group-item flex-column align-items-start">
-          <a href="#" class="" d="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <a href="#" class="" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             <span *ngIf="currentSet && currentSet.name">{{ currentSet?.name }}</span>
             <span *ngIf="!currentSet || !currentSet.name">{{ 'misc.default-set' | translate }}</span>
             <i class="fa fa-caret-down ml-2" aria-hidden="true"></i>

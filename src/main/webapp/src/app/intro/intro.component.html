@@ -4,11 +4,11 @@
       <div id="carousel" class="carousel slide" data-ride="carousel" data-interval="false">
         <div class="carousel-inner">
           <div class="carousel-item active">
-            <div class="card text-center" style="border: none">
-              <img class="card-img-top" src="assets/img/intro_title.png" alt="Card image cap">
+            <div class="card text-center border-secondary">
+              <img class="card-img-top" src="assets/img/intro_title.jpg" alt="Card image cap">
               <div class="card-body" style="min-height: 158px;">
                 <h4 class="card-title">{{ 'intro.welcome' | translate }}</h4>
-                <h6 class="card-subtitle mb-2 text-muted">{{ 'intro.welcome-language' | translate }}</h6>
+                <h6 class="card-subtitle mb-2">{{ 'intro.welcome-language' | translate }}</h6>
 
                 <select class="custom-select" [ngModel]="settings?.language" (ngModelChange)="switchLanguage($event)">
                   <option *ngFor="let language of settingsService?.languages" [ngValue]="language.key">{{ language.name }}</option>
@@ -24,10 +24,10 @@
           </div>
           <div class="carousel-item">
             <div class="card text-center" style="border: none">
-              <img class="card-img-top" src="assets/img/intro_title.png" alt="Card image cap">
+              <img class="card-img-top" src="assets/img/intro_title.jpg" alt="Card image cap">
               <div class="card-body" style="min-height: 158px;">
                 <h4 class="card-title">{{ 'intro.almost-finished' | translate }}</h4>
-                <h6 class="card-subtitle mb-2 text-muted">{{ 'intro.name-unit' | translate }}</h6>
+                <h6 class="card-subtitle mb-2">{{ 'intro.name-unit' | translate }}</h6>
 
                 <input type="text" class="form-control text-center" [(ngModel)]="deviceName" placeholder="{{ 'intro.default-unit-name' | translate }}">
               </div>

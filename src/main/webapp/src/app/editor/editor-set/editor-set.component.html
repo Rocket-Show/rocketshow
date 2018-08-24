@@ -12,7 +12,7 @@
       (input)="filterSets($event.target.value)">
 
     <!-- Existing sets -->
-    <div class="card" style="height: 400px; overflow-y: scroll;">
+    <div class="card border-secondary" style="height: 400px; overflow-y: scroll;">
       <div class="card-body p-0">
         <div class="list-group list-group-flush">
           <a *ngIf="loadingSets" (click)="selectComposition(composition); false" href="#" class="list-group-item list-group-item-action flex-column align-items-start d-flex">
@@ -21,7 +21,7 @@
             </p>
           </a>
 
-          <a *ngFor="let set of filteredSets" (click)="selectSet(set); false" href="#" class="list-group-item list-group-item-action flex-column align-items-start"
+          <a *ngFor="let set of filteredSets" (click)="selectSet(set); false" href="#" class="list-group-item flex-column align-items-start"
             [class.active]="initialSet?.name == set.name">
 
             <p class="mb-0">{{ set.name }}</p>
@@ -33,7 +33,7 @@
 
   <!-- Edit the selected/new set -->
   <div class="col-md-8" *ngIf="currentSet && !loadingSet">
-    <div class="card">
+    <div class="card border-secondary">
       <div class="card-header">
         <span *ngIf="currentSet?.name">{{ currentSet?.name }}</span>
         <span *ngIf="!currentSet?.name">{{ 'editor.default-set-name' | translate }}</span>
@@ -45,11 +45,6 @@
           <input type="text" class="form-control" [(ngModel)]="currentSet.name" maxlength="50" id="setName" placeholder="{{ 'editor.default-set-name' | translate }}">
         </div>
 
-        <!--div class="form-group">
-          <label for="setNotes">{{ 'editor.notes' | translate }}</label>
-          <textarea [(ngModel)]="currentSet.notes" class="form-control" id="setNotes" rows="3"></textarea>
-        </div-->
-
         <div class="row">
           <div class="col-lg">
             <div class="form-group">
@@ -58,7 +53,7 @@
               <input type="text" class="form-control input-block mb-3" id="searchCompositions" placeholder="{{ 'editor.search-compositions' | translate }}"
                 (input)="filterCompositions($event.target.value)">
 
-              <div class="card" style="height: 400px; overflow-y: scroll;">
+              <div class="card border-secondary" style="height: 400px; overflow-y: scroll;">
                 <div class="card-body p-0">
                   <div class="list-group list-group-flush">
                     <a *ngIf="loadingCompositions" (click)="selectComposition(composition); false" href="#" class="list-group-item list-group-item-action flex-column align-items-start d-flex">
@@ -90,7 +85,7 @@
             <div class="form-group">
               <label>{{ 'editor.compositions-in-set' | translate }}</label>
 
-              <div class="card" style="height: 450px; overflow-y: scroll;">
+              <div class="card border-secondary" style="height: 450px; overflow-y: scroll;">
                 <div class="card-body p-0">
                   <div class="list-group list-group-flush" [sortablejs]="currentSet?.compositionList">
                     <div class="list-group-item" *ngFor="let composition of currentSet?.compositionList">
@@ -98,7 +93,7 @@
                         <div class="col-auto list-sort-handle my-auto" style="cursor: move; cursor: -webkit-grabbing;">
                           <i class="fa fa-bars" aria-hidden="true"></i>
                         </div>
-                        <a href="#" class="col-auto pl-0 my-auto" (click)="toggleAutoStartNextComposition(composition); false" [class.text-danger]="composition.autoStartNextComposition">
+                        <a href="#" class="col-auto pl-0 my-auto" (click)="toggleAutoStartNextComposition(composition); false" [class.text-white]="!composition.autoStartNextComposition">
                           <i class="fa fa-level-down" aria-hidden="true"></i>
                         </a>
                         <div class="col-auto flex-grow text-break-word col-auto my-auto pl-0">

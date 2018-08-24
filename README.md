@@ -3,21 +3,14 @@ A tool to automate your DMX and videoshow.
 
 ## For developers
 ### Development
-
-1. `mvn install`
+#### Build
+1. The Java web archive (WAR) can be built using this command: `mvn install`
 2. Start API server: `docker-compose down && docker-compose up`
 3. Start web frontend server: `cd src/main/webapp && npx ng serve --base-href /`
 
 Verify web api works: http://localhost:8080/api/system/state \
 Open web application: http://localhost:4200
 
-### Build
-The Java web archive (WAR) can be built using this command:
-```shell
-mvn install
-```
-
-### Build
 #### Troubleshooting tomcat issues during development
 Login to docker container and inspect logs:
 `$ docker-compose down && docker-compose up` \

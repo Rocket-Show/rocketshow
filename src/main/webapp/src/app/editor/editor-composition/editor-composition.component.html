@@ -13,7 +13,7 @@
       (input)="filterCompositions($event.target.value)">
 
     <!-- Existing composition list -->
-    <div class="card" style="height: 400px; overflow-y: scroll;">
+    <div class="card border-secondary" style="height: 400px; overflow-y: scroll;">
       <div class="card-body p-0">
         <div class="list-group list-group-flush">
           <a *ngIf="loadingCompositions" (click)="selectComposition(composition); false" href="#" class="list-group-item flex-column align-items-start d-flex">
@@ -34,7 +34,7 @@
 
   <!-- Edit the selected/new composition -->
   <div class="col-md-8" *ngIf="currentComposition && !loadingComposition">
-    <div class="card">
+    <div class="card border-secondary">
       <div class="card-header">
         <span *ngIf="currentComposition?.name">{{ currentComposition?.name }}</span>
         <span *ngIf="!currentComposition?.name">{{ 'editor.default-composition-name' | translate }}</span>
@@ -60,7 +60,7 @@
                 <div class="col-auto list-sort-handle my-auto" style="cursor: move; cursor: -webkit-grabbing;">
                   <i class="fa fa-bars" aria-hidden="true"></i>
                 </div>
-                <a href="#" class="col-auto col-auto my-auto pl-0" (click)="toggleActive(file); false" [class.text-danger]="!file.active">
+                <a href="#" class="col-auto col-auto my-auto pl-0" (click)="toggleActive(file); false" [class.text-white]="!file.active">
                   <i class="fa fa-fw" [ngClass]="file.getFontAwesomeIconClass()" aria-hidden="true"></i>
                 </a>
                 <div class="col-auto flex-grow text-break-word my-auto pl-0">

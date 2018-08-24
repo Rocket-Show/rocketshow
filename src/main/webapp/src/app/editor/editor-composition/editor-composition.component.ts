@@ -5,15 +5,9 @@ import { EditorCompositionFileComponent } from './editor-composition-file/editor
 import { Composition } from './../../models/composition';
 import { CompositionService } from './../../services/composition.service';
 import { Component, OnInit } from '@angular/core';
-import { NgModel } from '@angular/forms';
-import { CompositionVideoFile } from './../../models/composition-video-file';
-import { CompositionMidiFile } from "./../../models/composition-midi-file";
-import { CompositionAudioFile } from "./../../models/composition-audio-file";
 import { BsModalService } from 'ngx-bootstrap/modal';
-import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
 import { PendingChangesDialogService } from '../../services/pending-changes-dialog.service';
 import { Observable } from 'rxjs/Observable';
-import { SortablejsOptions } from 'angular-sortablejs/dist';
 import { ToastrService } from 'ngx-toastr';
 import { TranslateService } from '@ngx-translate/core';
 

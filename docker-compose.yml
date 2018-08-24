@@ -8,4 +8,3 @@ services:
     volumes:
          - ./tomcat-users.xml:/usr/local/tomcat/conf/tomcat-users.xml
          - ./target/ROOT.war:/usr/local/tomcat/webapps/ROOT.war
-         - ./target/ROOT:/usr/local/tomcat/webapps/ROOT
