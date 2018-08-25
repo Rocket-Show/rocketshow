@@ -21,6 +21,9 @@ Open tomcat manager in browser: http://localhost:8080/manager/ \
 Username tomcat, password 1234
 
 ### Deployment
+#### Refresh cache
+Set a new version in the file WebContent/index.jsp -> url=app?v=x.y to prevent Chrome from caching the app's index.html.
+
 #### Seed directory
 The seed directory structure /install/rocketshow can be packed on a mac with this commands (assuming you're currently in the install directory):
 ```shell
