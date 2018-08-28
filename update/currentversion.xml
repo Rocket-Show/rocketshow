@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <versionInfo>
-    <version>1.3.0</version>
-    <date>2018-05-19</date>
+    <version>1.4.0</version>
+    <date>2018-09-01</date>
     <changeNoteList>
+        <changeNote>
+            <version>1.4.0</version>
+            <changes>Ability to seek through compositions, pause/resume, dark design, performance improvements and bugfixes</changes>
+        </changeNote>
         <changeNote>
             <version>1.3.0</version>
             <changes>Added wireless access point feature, select specific compositions by MIDI control, minor enhancements and bugfixes</changes>

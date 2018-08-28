@@ -19,6 +19,7 @@ public class State {
 	private UpdateState updateState;
 	private String currentSetName;
 	private boolean updateFinished;
+	private boolean isInitializing = false;
 
 	@XmlElement
 	public int getCurrentCompositionIndex() {
@@ -99,6 +100,15 @@ public class State {
 
 	public void setUpdateFinished(boolean updateFinished) {
 		this.updateFinished = updateFinished;
+	}
+
+	@XmlElement
+	public boolean isInitializing() {
+		return isInitializing;
+	}
+
+	public void setInitializing(boolean isInitializing) {
+		this.isInitializing = isInitializing;
 	}
 
 }

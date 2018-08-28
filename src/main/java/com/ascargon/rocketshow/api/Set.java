@@ -50,7 +50,7 @@ public class Set {
 	@Produces(MediaType.APPLICATION_JSON)
 	public com.ascargon.rocketshow.composition.Set getByName(@QueryParam("name") String name) throws Exception {
 		Manager manager = (Manager)context.getAttribute("manager");
-		return manager.getCompositionManager().loadSet(name);
+		return manager.getCompositionManager().getSet(name);
 	}
 
 	@POST

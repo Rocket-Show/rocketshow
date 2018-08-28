@@ -53,3 +53,9 @@ EOF
 	
 	printf "\n# ROCKETSHOWSTART\nnet.ipv4.ip_forward=1\n# ROCKETSHOWEND\n" | sudo tee -a /etc/sysctl.conf
 fi
+
+### Install zip ###
+UPD_VERSION="1.3.0"
+if [ $UPD_VERSION = $CURR_VERSION ] || [ $UPD_VERSION != $(printf "$UPD_VERSION\n$CURR_VERSION\n" | sort -V | head -n1) ] ; then
+	sudo apt-get -y install zip
+fi

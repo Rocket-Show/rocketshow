@@ -272,7 +272,7 @@ public class Player {
 	}
 
 	public void setCompositionName(String name) throws Exception {
-		setComposition(manager.getCompositionManager().loadComposition(name));
+		setComposition(manager.getCompositionManager().getComposition(name));
 		;
 	}
 

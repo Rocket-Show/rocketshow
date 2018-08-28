@@ -1,10 +1,11 @@
+import { Session } from './../models/session';
+import { SessionService } from './../services/session.service';
 import { HttpClient } from '@angular/common/http';
 import { Composition } from './../models/composition';
 import { CompositionService } from './../services/composition.service';
 import { StateService } from './../services/state.service';
 import { Set } from './../models/set';
 import { Component, OnInit } from '@angular/core';
-import { trigger, state, animate, transition, style, query } from '@angular/animations';
 import { State } from '../models/state';
 import { TransportService } from '../services/transport.service';
 import { Observable } from 'rxjs/Observable';
@@ -19,6 +20,8 @@ export class PlayComponent implements OnInit {
 
   currentSet: Set;
   currentState: State = new State();
+
+  session: Session;
 
   sets: Set[];
 
@@ -40,7 +43,8 @@ export class PlayComponent implements OnInit {
     private http: HttpClient,
     public stateService: StateService,
     private compositionService: CompositionService,
-    private transportService: TransportService) {
+    private transportService: TransportService,
+    private sessionService: SessionService) {
   }
 
   ngOnInit() {
@@ -49,15 +53,28 @@ export class PlayComponent implements OnInit {
       this.stateChanged(state);
     });
 
+    // Subscribe to the get connection service
+    this.stateService.getsConnected.subscribe(() => {
+      this.loadAllSets();
+      this.loadCurrentSet();
+    });
+
     // Load the current state
     this.stateService.getState().subscribe((state: State) => {
       this.stateChanged(state);
       this.currentState = state;
     });
 
-    this.loadCurrentSet();
+    // Load the current session
+    this.sessionService.getSession().subscribe(session => {
+      this.session = session;
+    });
 
-    // Load all sets
+    this.loadAllSets();
+    this.loadCurrentSet();
+  }
+
+  private loadAllSets() {
     this.compositionService.getSets().map(result => {
       this.sets = result;
     }).subscribe();
@@ -77,7 +94,9 @@ export class PlayComponent implements OnInit {
     // Load the current set
     this.loadingSet = true;
 
-    this.compositionService.getCurrentSet(true).subscribe((set: Set) => {
+    this.compositionService.getCurrentSet(true).finally(() => {
+      this.loadingSet = false;
+    }).subscribe((set: Set) => {
       this.currentSet = undefined;
 
       if (set) {
@@ -243,6 +262,12 @@ export class PlayComponent implements OnInit {
       // We got a real set loaded -> select compositions by index
       this.transportService.setCompositionIndex(index).subscribe();
     }
+  }
+
+  toggleAutoSelectNextSong() {
+    this.session.autoSelectNextComposition = !this.session.autoSelectNextComposition;
+
+    this.sessionService.setAutoSelectNextComposition(this.session.autoSelectNextComposition).subscribe();
   }
 
 }

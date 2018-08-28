@@ -5,6 +5,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -40,6 +41,16 @@ public class Session {
 	public Response dismissUpdateFinished() throws Exception {
 		Manager manager = (Manager)context.getAttribute("manager");
 		manager.getSession().setUpdateFinished(false);
+		manager.saveSession();
+		return Response.status(200).build();
+	}
+	
+	@Path("set-auto-select-next-composition")
+	@POST
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response setAutoSelectNextComposition(@QueryParam("value") boolean value) throws Exception {
+		Manager manager = (Manager)context.getAttribute("manager");
+		manager.getSession().setAutoSelectNextComposition(value);
 		manager.saveSession();
 		return Response.status(200).build();
 	}

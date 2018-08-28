@@ -67,6 +67,8 @@ public class Manager {
 	private Composition defaultComposition;
 
 	private Player player;
+	
+	private boolean isInitializing = true;
 
 	public void addMidiOutDeviceConnectedListener(MidiDeviceConnectedListener listener) {
 		midiOutDeviceConnectedListeners.add(listener);
@@ -168,7 +170,7 @@ public class Manager {
 
 		logger.info("Play default composition");
 
-		defaultComposition = compositionManager.loadComposition(settings.getDefaultComposition());
+		defaultComposition = compositionManager.getComposition(settings.getDefaultComposition());
 		defaultComposition.setManager(this);
 		defaultComposition.setDefaultComposition(true);
 		defaultComposition.play();
@@ -188,6 +190,31 @@ public class Manager {
 	public void load() throws IOException {
 		logger.info("Initialize...");
 
+		// Initialize the filemanager
+		fileManager = new FileManager();
+
+		// Initialize the session
+		session = new Session();
+
+		// Initialize the settings
+		settings = new Settings();
+		
+		// Initialize the compositionmanager
+		compositionManager = new CompositionManager(this);
+		
+		// Cache all compositions and sets
+		try {
+			compositionManager.loadAllCompositions();
+		} catch (Exception e) {
+			logger.error("Could not cache the compositions", e);
+		}
+		
+		try {
+			compositionManager.loadAllSets();
+		} catch (Exception e) {
+			logger.error("Could not cache the sets", e);
+		}
+		
 		// Setup iptables, because it's not working properly in pi-gen distro generation
 		try {
 			new ShellManager(new String[] { "sudo", "iptables", "-t", "nat", "-A", "POSTROUTING", "-o", "eth0", "-j",
@@ -205,18 +232,6 @@ public class Manager {
 
 		// Initialize the updater
 		updater = new Updater(this);
-
-		// Initialize the compositionmanager
-		compositionManager = new CompositionManager(this);
-
-		// Initialize the filemanager
-		fileManager = new FileManager();
-
-		// Initialize the session
-		session = new Session();
-
-		// Initialize the settings
-		settings = new Settings();
 
 		// Initialize the MIDI action converter
 		midi2ActionConverter = new Midi2ActionConverter(this);
@@ -280,6 +295,8 @@ public class Manager {
 			logger.error("Could not restore session", e);
 		}
 
+		isInitializing = false;
+		
 		logger.info("Finished initializing");
 	}
 
@@ -391,7 +408,7 @@ public class Manager {
 
 		if (setName.length() > 0) {
 			// Load the new set
-			currentSet = compositionManager.loadSet(setName);
+			currentSet = compositionManager.getSet(setName);
 			currentSet.setManager(this);
 			currentSet.setName(setName);
 		}
@@ -558,6 +575,10 @@ public class Manager {
 
 	public ImageDisplayer getImageDisplayer() {
 		return imageDisplayer;
+	}
+
+	public boolean isInitializing() {
+		return isInitializing;
 	}
 
 }

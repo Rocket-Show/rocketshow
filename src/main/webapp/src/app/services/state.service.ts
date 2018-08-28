@@ -1,4 +1,3 @@
-import { Response } from '@angular/http';
 import { Injectable } from '@angular/core';
 import { $WebSocket, WebSocketConfig } from 'angular2-websocket/angular2-websocket';
 import * as Rx from 'rxjs/Rx';
@@ -19,9 +18,11 @@ export class StateService {
   // The websocket connection
   websocket: $WebSocket;
 
-  connected: boolean;
+  connected: boolean = false;
+  public getsConnected: Subject<void> = new Rx.Subject();
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient
+  ) {
     // Create the backend-url
     if (environment.name == 'dev') {
       this.wsUrl = 'ws://' + environment.localBackend + '/';
@@ -44,8 +45,6 @@ export class StateService {
     );
 
     this.websocket.onOpen(() => {
-      this.connected = true;
-
       this.getState().subscribe((state: State) => {
         this.receiveState(state);
       });
@@ -69,6 +68,17 @@ export class StateService {
     return this.http.get('system/state')
       .map(response => {
         this.currentState = new State(response);
+
+        if(this.currentState.isInitializing) {
+          this.connected = false;
+        } else {
+          if(!this.connected) {
+            this.getsConnected.next();
+          }
+
+          this.connected = true;
+        }
+
         return this.currentState;
       });
   }

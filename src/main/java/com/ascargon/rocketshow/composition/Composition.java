@@ -97,7 +97,7 @@ public class Composition {
 		if (filesLoaded) {
 			return;
 		}
-		
+
 		this.positionMillis = positionMillis;
 
 		if (!defaultComposition) {
@@ -196,10 +196,10 @@ public class Composition {
 						// playing the next composition
 						manager.getPlayer().stop(false);
 
-						if (manager.getCurrentSet() != null) {
-							manager.getCurrentSet().nextComposition(false);
-							manager.getPlayer().play();
-						}
+						manager.getCurrentSet().nextComposition(false);
+						manager.getPlayer().play();
+					} else if(manager.getSession().isAutoSelectNextComposition()) {
+						manager.getCompositionManager().nextComposition();
 					} else {
 						// Stop, play the default composition and select the
 						// next composition automatically (if there is one)
@@ -339,7 +339,7 @@ public class Composition {
 	public synchronized void stop(boolean playDefaultComposition) throws Exception {
 		stop(playDefaultComposition, false);
 	}
-	
+
 	public synchronized void stop() throws Exception {
 		stop(true, false);
 	}

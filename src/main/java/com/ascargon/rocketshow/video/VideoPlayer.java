@@ -93,7 +93,7 @@ public class VideoPlayer {
 					playerLoadedListener.playerLoaded();
 				}
 			}
-		}, 1000 /* TODO Specify in global config */);
+		}, 2000 /* TODO Specify in global config */);
 	}
 
 	public void play() throws IOException {

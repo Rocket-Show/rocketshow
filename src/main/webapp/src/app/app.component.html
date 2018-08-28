@@ -1,3 +1,6 @@
+<!-- Connectivity indicator -->
+<app-connection *ngIf="loaded"></app-connection>
+
 <!-- Initial loading -->
 <div class="container d-flex h-100" *ngIf="!loaded">
   <div class="row justify-content-center align-self-center mx-auto">
@@ -43,9 +46,6 @@
     </ul>
   </div>
 </nav>
-
-<!-- Connectivity indicator -->
-<app-connection *ngIf="loaded"></app-connection>
 
 <!-- Main content -->
 <router-outlet *ngIf="loaded"></router-outlet>

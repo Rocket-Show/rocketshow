@@ -7,6 +7,7 @@ export class State {
     updateState: string;
     currentSetName: string;
     updateFinished: boolean;
+    isInitializing: boolean;
 
     constructor(data?: any) {
         if(!data) {
@@ -21,5 +22,6 @@ export class State {
         this.updateState = data.updateState;
         this.currentSetName = data.currentSetName;
         this.updateFinished = data.updateFinished;
+        this.isInitializing = data.isInitializing;
     }
 }

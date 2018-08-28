@@ -69,7 +69,8 @@ public class StateManager {
 			currentState.setCurrentCompositionName(manager.getPlayer().getCompositionName());
 			currentState.setCurrentCompositionDurationMillis(manager.getPlayer().getCompositionDurationMillis());
 			currentState.setPositionMillis(manager.getPlayer().getPositionMillis());
-
+			currentState.setInitializing(manager.isInitializing());
+			
 			if (manager.getCurrentSet() != null) {
 				currentState.setCurrentCompositionIndex(manager.getCurrentSet().getCurrentCompositionIndex());
 				currentState.setCurrentSetName(manager.getCurrentSet().getName());

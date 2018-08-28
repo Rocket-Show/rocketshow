@@ -45,6 +45,10 @@ dropzone.dz-wrapper>.dropzone {
     margin: auto;
 }
 
+.dz-details {
+    color: white !important;
+}
+
 .dropzone .dz-preview {
     margin: 0 !important;
     margin-top: 10px !important;
@@ -112,6 +116,9 @@ dropzone.dz-wrapper>.dropzone {
     background-color: #303030;
     color: theme-color("primary");
     border-color: #444;
+}
+
+.main-list .active {
     border-left: 10px solid #fd7e14;
     padding-left: 11px;
 }

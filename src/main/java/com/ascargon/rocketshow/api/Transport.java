@@ -33,9 +33,9 @@ public class Transport {
 
 		if (compositionName.length() > 0) {
 			if (!manager.getPlayer().getCompositionName().equals(compositionName)) {
-				
+
 				// Load the composition with the given name into the player
-				manager.getPlayer().setComposition(manager.getCompositionManager().loadComposition(compositionName),
+				manager.getPlayer().setComposition(manager.getCompositionManager().getComposition(compositionName),
 						false, false);
 			}
 		}
@@ -114,7 +114,9 @@ public class Transport {
 		logger.info("Received API request for transport/next-composition");
 
 		Manager manager = (Manager) context.getAttribute("manager");
-		if (manager.getCurrentSet() != null) {
+		if (manager.getCurrentSet() == null) {
+			manager.getCompositionManager().nextComposition();
+		} else {
 			manager.getCurrentSet().nextComposition();
 		}
 		return Response.status(200).build();
@@ -127,7 +129,9 @@ public class Transport {
 		logger.info("Received API request for transport/previous-composition");
 
 		Manager manager = (Manager) context.getAttribute("manager");
-		if (manager.getCurrentSet() != null) {
+		if (manager.getCurrentSet() == null) {
+			manager.getCompositionManager().previousComposition();
+		} else {	
 			manager.getCurrentSet().previousComposition();
 		}
 		return Response.status(200).build();

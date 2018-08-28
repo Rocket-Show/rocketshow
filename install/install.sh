@@ -8,7 +8,7 @@
 apt-get update
 apt-get upgrade
 
-apt-get -y install oracle-java8-jdk omxplayer fbi ola mplayer libnss-mdns dnsmasq hostapd authbind
+apt-get -y install oracle-java8-jdk omxplayer fbi ola mplayer libnss-mdns dnsmasq hostapd authbind zip
 
 # Add the rocketshow user
 adduser \
@@ -211,3 +211,7 @@ sed -i '/127.0.1.1/d' /etc/hosts
 sed -i "\$a127.0.1.1\tRocketShow" /etc/hosts
 
 sed -i 's/raspberrypi/RocketShow/g' /etc/hostname
+
+# Give the setup some time, because umount won't work afterwards if called too fast ("umount: device is busy")
+echo "Wait 30 seconds..."
+sleep 30s

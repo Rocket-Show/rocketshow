@@ -9,6 +9,7 @@ public class Session {
 	private String currentSetName;
 	private boolean firstStart = true;
 	private boolean updateFinished = false;
+	private boolean autoSelectNextComposition = false;
 	
 	public Session() {
 	}
@@ -38,6 +39,15 @@ public class Session {
 
 	public void setUpdateFinished(boolean updateFinished) {
 		this.updateFinished = updateFinished;
+	}
+
+	@XmlElement
+	public boolean isAutoSelectNextComposition() {
+		return autoSelectNextComposition;
+	}
+
+	public void setAutoSelectNextComposition(boolean autoSelectNextComposition) {
+		this.autoSelectNextComposition = autoSelectNextComposition;
 	}
 	
 }

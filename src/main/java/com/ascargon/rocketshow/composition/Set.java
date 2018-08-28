@@ -41,7 +41,7 @@ public class Set {
 		SetComposition currentSetComposition = setCompositionList.get(currentCompositionIndex);
 
 		manager.getPlayer()
-				.setComposition(manager.getCompositionManager().loadComposition(currentSetComposition.getName()));
+				.setComposition(manager.getCompositionManager().getComposition(currentSetComposition.getName()));
 		manager.getPlayer().setAutoStartNextComposition(currentSetComposition.isAutoStartNextComposition());
 	}
 

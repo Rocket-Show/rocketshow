@@ -21,8 +21,6 @@ Open tomcat manager in browser: http://localhost:8080/manager/ \
 Username tomcat, password 1234
 
 ### Deployment
-#### Refresh cache
-Set a new version in the file WebContent/index.jsp -> url=app?v=x.y to prevent Chrome from caching the app's index.html.
 
 #### Seed directory
 The seed directory structure /install/rocketshow can be packed on a mac with this commands (assuming you're currently in the install directory):
@@ -30,7 +28,49 @@ The seed directory structure /install/rocketshow can be packed on a mac with thi
 COPYFILE_DISABLE=true tar -c --exclude='.DS_Store' -zf directory.tar.gz rocketshow
 ```
 
-The resulting directory.tar.gz should be uploaded to rocketshow.net/install.
+#### Image building
+
+This script is used to build the image (may take about 45 minutes). Preparation should be done according to the readme in the GIT repo.
+
+```shell
+git clone https://github.com/RPi-distro/pi-gen.git
+cd pi-gen
+git checkout tags/2018-03-13-raspbian-stretch
+
+echo "IMG_NAME='RocketShow'" > config
+
+touch ./stage3/SKIP ./stage4/SKIP ./stage5/SKIP
+rm stage4/EXPORT* stage5/EXPORT*
+
+# Enhance stage2 with rocketshow
+mkdir ./stage2/99-rocket-show
+
+cat <<'EOF' >./stage2/99-rocket-show/00-run-chroot.sh
+#!/bin/bash
+#
+cd /tmp
+wget https://rocketshow.net/install/script/install.sh
+chmod +x install.sh
+./install.sh
+rm -rf install.sh
+EOF
+
+chmod +x ./stage2/99-rocket-show/00-run-chroot.sh
+
+./build.sh
+```
+
+#### Update process
+- Copy seed directory directory.tar.gz to rocketshow.net/install, if updated
+- Copy target/ROOT.war to rocketshow.net/update/current.war
+- Copy install/install.sh to rocketshow.net/install/script/install.sh, if updated
+- Copy update/currentversion.xml to rocketshow.net/update/currentversion.xml
+- Copy update/before.sh, update/after.sh to rocketshow.net/update/xy.sh, if updated
+- Copy the new complete image to rocketshow.net/install/images and change the file latest.php to link the new version
+- GIT merge DEV branch to MASTER
+- GIT tag with the current version
+- Switch to DEV and update POM and currentversion.xml versions
+- Set a new version in the file WebContent/index.jsp -> url=app?v=x.y to prevent Chrome from caching the app's index.html.
 
 #### Application
 The built application should be uploaded to rocketshow.net/update and be named "current.war". The file "currentversion.xml" can be modified accordingly.

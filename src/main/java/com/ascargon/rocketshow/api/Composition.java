@@ -37,7 +37,7 @@ public class Composition {
 	@Produces(MediaType.APPLICATION_JSON)
 	public com.ascargon.rocketshow.composition.Composition get(@QueryParam("name") String name) throws Exception {
 		Manager manager = (Manager) context.getAttribute("manager");
-		return manager.getCompositionManager().loadComposition(name);
+		return manager.getCompositionManager().getComposition(name);
 	}
 
 	@POST
@@ -51,7 +51,7 @@ public class Composition {
 		if (manager.getPlayer().getCompositionName() != null
 				&& manager.getPlayer().getCompositionName().equals(composition.getName())) {
 			
-			manager.getPlayer().setComposition(manager.getCompositionManager().loadComposition(composition.getName()),
+			manager.getPlayer().setComposition(manager.getCompositionManager().getComposition(composition.getName()),
 					true, true);
 		}
 
