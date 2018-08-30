@@ -55,6 +55,7 @@
         "default-composition-name": "My new composition",
         "default-set-name": "My new set",
         "notes": "Notes",
+        "lead-sheets": "Leadsheets",
         "files": "Files",
         "mute": "Mute",
         "offset-millis": "Delay in milliseconds",

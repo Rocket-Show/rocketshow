@@ -1,0 +1,25 @@
+<div class="card-modal">
+    <div class="card border-secondary">
+      <div class="card-header">
+        {{ 'editor.edit-file' | translate }}
+      </div>
+  
+      <div class="card-body">
+  
+        
+  
+      </div>
+  
+      <div class="card-footer">
+        <div class="d-flex float-right">
+          <a class="mr-3 my-auto" href="#" role="button" (click)="cancel(); false">
+            {{ 'misc.cancel' | translate }}
+          </a>
+          <button type="button" class="btn btn-primary" [disabled]="!file?.name || file?.name.length === 0" (click)="ok(); false">
+            {{ 'misc.ok' | translate }}
+          </button>
+        </div>
+      </div>
+  
+    </div>
+  </div>

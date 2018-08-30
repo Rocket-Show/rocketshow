@@ -48,7 +48,19 @@
 
         <div class="form-group">
           <label for="compositionNotes">{{ 'editor.notes' | translate }}</label>
-          <textarea [(ngModel)]="currentComposition.notes" class="form-control" id="compositionNotes" rows="3"></textarea>
+          <textarea [(ngModel)]="currentComposition.notes" class="form-control" id="compositionNotes" rows="2"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>{{ 'editor.lead-sheets' | translate }}</label>
+          <div class="row">
+            <div class="col text-muted">
+              <a href="#" (click)="editLeadSheets(); false">- None -</a>
+            </div>
+            <div class="col col-auto">
+              <a class="btn btn-secondary btn-sm float-right" href="#" role="button" (click)="editLeadSheets(); false">...</a>
+            </div>
+          </div>
         </div>
 
         <div class="form-group">
@@ -87,7 +99,9 @@
         <!-- More than one video/image -->
         <div *ngIf="multipleVideoImage()" class="alert alert-danger mb-0 text-center" role="alert">
           <h3>
-            <i class="fa fa-exclamation-circle" aria-hidden="true"></i> {{ 'editor.error-multiple-video-images-title' | translate }}</h3>
+            <i class="fa fa-exclamation-circle" aria-hidden="true"></i> {{ 'editor.error-multiple-video-images-title' | translate
+            }}
+          </h3>
           <p class="mb-0">{{ 'editor.error-multiple-video-images' | translate }}</p>
         </div>
 
@@ -106,7 +120,8 @@
             role="button">
 
             <i *ngIf="savingComposition" class="fa fa-spinner fa-pulse fa-fw" aria-hidden="true"></i>
-            <i *ngIf="!savingComposition" class="fa fa-floppy-o fa-fw" aria-hidden="true"></i> {{ 'misc.save' | translate }}
+            <i *ngIf="!savingComposition" class="fa fa-floppy-o fa-fw" aria-hidden="true"></i> {{ 'misc.save' | translate
+            }}
           </button>
         </div>
       </div>
