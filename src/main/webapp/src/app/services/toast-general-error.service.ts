@@ -15,7 +15,7 @@ export class ToastGeneralErrorService {
       let text = result['settings.toast-general-error'];
 
       if(error) {
-        text += '<hr /><small>' + error + '</small>';
+        text += '<hr /><small>HTTP ' + error.status + ': ' + error.error + '</small>';
       }
 
       this.toastrService.error(text, result['settings.toast-general-error-title'], {timeOut: 0, extendedTimeOut: 0, enableHtml: true});

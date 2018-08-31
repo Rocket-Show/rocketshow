@@ -59,6 +59,10 @@ export class AppComponent implements OnInit {
              this.isPlay = true;
              break; 
           }
+          case '/': { 
+            this.isPlay = true;
+            break; 
+         }
        } 
       }
     });

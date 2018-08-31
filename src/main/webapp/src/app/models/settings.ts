@@ -1,3 +1,4 @@
+import { Instrument } from './instrument';
 import { AudioDevice } from './audio-device';
 import { MidiRouting } from './midi-routing';
 import { AudioBus } from './audio-bus';
@@ -32,6 +33,7 @@ export class Settings {
     wlanApSsid: string;
     wlanApPassphrase: string;
     wlanApSsidHide: boolean;
+    instrumentList: Instrument[] = [];
 
     constructor(data?: any) {
         if (!data) {
@@ -111,6 +113,14 @@ export class Settings {
         this.wlanApSsid = data.wlanApSsid;
         this.wlanApPassphrase = data.wlanApPassphrase;
         this.wlanApSsidHide = data.wlanApSsidHide;
+
+        if (data.instrumentList) {
+            this.instrumentList = [];
+
+            for (let instrument of data.instrumentList) {
+                this.instrumentList.push(new Instrument(instrument));
+            }
+        }
     }
 
 }

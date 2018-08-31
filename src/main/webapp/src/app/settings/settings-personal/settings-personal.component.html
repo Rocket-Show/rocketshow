@@ -1,0 +1,9 @@
+<div class="form-group row">
+  <label class="col-lg-3 col-form-label">{{ 'settings.instrument' | translate }}</label>
+  <div class="col-lg-9">
+    <select class="custom-select" [ngModel]="settingsPersonal?.instrumentUuid" (ngModelChange)="settingsPersonal.instrumentUuid = $event">
+      <option [value]="selectUndefinedOptionValue">- {{ 'settings.instrument-not-specified' | translate }} -</option>
+      <option *ngFor="let instrument of settings?.instrumentList" [ngValue]="instrument.uuid">{{ instrument.name }}</option>
+    </select>
+  </div>
+</div>

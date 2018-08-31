@@ -1,25 +1,42 @@
 <div class="card-modal">
-    <div class="card border-secondary">
-      <div class="card-header">
-        {{ 'editor.edit-file' | translate }}
-      </div>
-  
-      <div class="card-body">
-  
-        
-  
-      </div>
-  
-      <div class="card-footer">
-        <div class="d-flex float-right">
-          <a class="mr-3 my-auto" href="#" role="button" (click)="cancel(); false">
-            {{ 'misc.cancel' | translate }}
-          </a>
-          <button type="button" class="btn btn-primary" [disabled]="!file?.name || file?.name.length === 0" (click)="ok(); false">
-            {{ 'misc.ok' | translate }}
-          </button>
+  <div class="card border-secondary">
+    <div class="card-header">
+      {{ 'editor.lead-sheets-edit' | translate }}
+    </div>
+
+    <div class="card-body">
+
+      <!-- Upload -->
+      <div class="tab-pane fade show active" id="upload" role="tabpanel">
+        <dropzone [config]="dropzoneConfig" [useDropzoneClass]="'false'" [message]="uploadMessage" (error)="onUploadError($event)"
+          (success)="onUploadSuccess($event)"></dropzone>
+
+        <div id="dz-preview-template" class="dz-preview dz-file-preview">
+          <div class="dz-details">
+            <div class="dz-filename">
+              <span data-dz-name></span>
+            </div>
+            <div class="dz-size" data-dz-size></div>
+            <img data-dz-thumbnail />
+          </div>
+          <div class="dz-progress">
+            <span class="dz-upload" data-dz-uploadprogress></span>
+          </div>
         </div>
       </div>
-  
+
     </div>
+
+    <div class="card-footer">
+      <div class="d-flex float-right">
+        <a class="mr-3 my-auto" href="#" role="button" (click)="cancel(); false">
+          {{ 'misc.cancel' | translate }}
+        </a>
+        <button type="button" class="btn btn-primary" (click)="ok(); false">
+          {{ 'misc.ok' | translate }}
+        </button>
+      </div>
+    </div>
+
   </div>
+</div>

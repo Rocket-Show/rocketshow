@@ -58,6 +58,8 @@ import { MidiMappingComponent } from './midi-mapping/midi-mapping.component';
 import { SettingsInfoComponent } from './settings/settings-info/settings-info.component';
 import { LeadSheetComponent } from './lead-sheet/lead-sheet.component';
 import { EditorCompositionLeadSheetComponent } from './editor/editor-composition/editor-composition-lead-sheet/editor-composition-lead-sheet.component';
+import { SettingsBandComponent } from './settings/settings-band/settings-band.component';
+import { SettingsPersonalComponent } from './settings/settings-personal/settings-personal.component';
 
 const appRoutes: Routes = [
   { path: 'intro', component: IntroComponent },
@@ -104,7 +106,9 @@ const DROPZONE_CONFIG: DropzoneConfigInterface = {
     MidiMappingComponent,
     SettingsInfoComponent,
     LeadSheetComponent,
-    EditorCompositionLeadSheetComponent
+    EditorCompositionLeadSheetComponent,
+    SettingsBandComponent,
+    SettingsPersonalComponent
   ],
   imports: [
     BrowserModule,

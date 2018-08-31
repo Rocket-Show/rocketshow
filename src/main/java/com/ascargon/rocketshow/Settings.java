@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.sound.midi.MidiUnavailableException;
 import javax.xml.bind.annotation.XmlElement;
@@ -85,6 +86,8 @@ public class Settings {
 	private String wlanApPassphrase = "";
 
 	private boolean wlanApSsidHide = false;
+	
+	private List<Instrument> instrumentList = new ArrayList<Instrument>();
 
 	public Settings() {
 		// Initialize default settings
@@ -128,6 +131,25 @@ public class Settings {
 		audioOutput = AudioOutput.HEADPHONES;
 		audioRate = 44100 /* or 48000 */;
 
+		Instrument instrument;
+		
+		instrument = new Instrument();
+		instrument.setName("Vocals");
+		instrument.setUuid(UUID.randomUUID().toString());
+		instrumentList.add(instrument);
+		
+		instrument = new Instrument();
+		instrument.setName("Guitar");
+		instrumentList.add(instrument);
+		
+		instrument = new Instrument();
+		instrument.setName("Bass");
+		instrumentList.add(instrument);
+		
+		instrument = new Instrument();
+		instrument.setName("Horns");
+		instrumentList.add(instrument);
+		
 		loggingLevel = LoggingLevel.INFO;
 
 		updateSystem();
@@ -586,6 +608,15 @@ public class Settings {
 
 	public void setWlanApSsidHide(boolean wlanApSsidHide) {
 		this.wlanApSsidHide = wlanApSsidHide;
+	}
+
+	@XmlElement
+	public List<Instrument> getInstrumentList() {
+		return instrumentList;
+	}
+
+	public void setInstrumentList(List<Instrument> instrumentList) {
+		this.instrumentList = instrumentList;
 	}
 
 }

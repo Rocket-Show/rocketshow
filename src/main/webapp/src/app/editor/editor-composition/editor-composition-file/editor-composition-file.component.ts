@@ -43,7 +43,7 @@ export class EditorCompositionFileComponent implements OnInit {
     private settingsService: SettingsService) {
 
     this.dropzoneConfig = {
-      url: appHttpInterceptor.getRestUrl() + 'file/upload',
+      url: this.appHttpInterceptor.getRestUrl() + 'file/upload',
       addRemoveLinks: false,
       maxFilesize: 10000 /* 10 GB */,
       acceptedFiles: 'audio/*,video/*',
@@ -66,7 +66,7 @@ export class EditorCompositionFileComponent implements OnInit {
       `
     };
 
-    translateService.get('editor.dropzone-message').map(result => {
+    this.translateService.get('editor.dropzone-message').map(result => {
       this.uploadMessage = '<h3 class="mb-0"><i class="fa fa-cloud-upload"></i></h3>' + result;
     }).subscribe();
 

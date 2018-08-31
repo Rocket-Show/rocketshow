@@ -1,0 +1,27 @@
+<div class="form-group row">
+    <label class="col-lg-3 col-form-label">{{ 'settings.instruments' | translate }}</label>
+    <div class="col-lg-9">
+      <div class="list-group" [sortablejs]="settings?.instrumentList" [sortablejsOptions]="{ onMove: sortMove }">
+        <div class="list-group-item" *ngFor="let instrument of settings?.instrumentList; let i = index">
+  
+          <div class="form-group row" style="margin-top: 10px; margin-bottom: -30px;">
+            <div class="col d-flex">
+              <a class="my-auto ml-auto text-danger" href="#" role="button" (click)="deleteInstrument(i); false">
+                <i class="fa fa-trash-o" aria-hidden="true"></i>
+              </a>
+            </div>
+          </div>
+          <div class="form-group row mb-0">
+            <label class="col-md-3 col-form-label">{{ 'settings.instrument-name' | translate }}</label>
+            <div class="col-md-8">
+              <input type="text" class="form-control" [(ngModel)]="instrument.name" id="name">
+            </div>
+          </div>
+  
+        </div>
+        <a href="#" (click)="addInstrument(); false" class="no-sortjs list-group-item text-center">
+          <i class="fa fa-plus" aria-hidden="true"></i> {{ 'settings.instrument-add' | translate }}
+        </a>
+      </div>
+    </div>
+  </div>
