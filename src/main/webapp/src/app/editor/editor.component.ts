@@ -23,7 +23,11 @@ export class EditorComponent implements OnInit, ComponentCanDeactivate {
   canDeactivate(): Observable<boolean> {
     return this.editorCompositionComponent.checkPendingChanges()
     .flatMap(result => {
-      return result && this.editorSetComponent.checkPendingChanges();
+      if(result){
+        return this.editorSetComponent.checkPendingChanges();
+      } else {
+        return Observable.of(false);
+      }
     });
   }
 
