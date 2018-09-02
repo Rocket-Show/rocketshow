@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <versionInfo>
-    <version>1.5.0</version>
-    <date>2018-09-01</date>
+    <version>1.4.1</version>
+    <date>2018-09-02</date>
     <changeNoteList>
+        <changeNote>
+            <version>1.4.1</version>
+            <changes>Minor bugfixes</changes>
+        </changeNote>
         <changeNote>
             <version>1.4.0</version>
             <changes>Ability to seek through compositions, pause/resume, dark design, performance improvements and bugfixes</changes>
