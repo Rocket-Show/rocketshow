@@ -269,7 +269,7 @@ export class EditorCompositionComponent implements OnInit {
     return false;
   }
 
-  editLeadSheets() {
+  editLeadSheet(fileIndex: number, addNew: boolean = false) {
     // Create a backup of the current composition
     let compositionCopy: Composition = new Composition(JSON.parse(this.currentComposition.stringify()));
 

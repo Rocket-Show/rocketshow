@@ -38,7 +38,6 @@ export class SettingsSystemComponent implements OnInit {
   }
 
   setDefaultComposition(event?: any) {
-    console.log('xxx', event);
     if(event == undefined) {
       console.log('aaa');
     }

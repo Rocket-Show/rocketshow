@@ -6,22 +6,153 @@
 
     <div class="card-body">
 
-      <!-- Upload -->
-      <div class="tab-pane fade show active" id="upload" role="tabpanel">
-        <dropzone [config]="dropzoneConfig" [useDropzoneClass]="'false'" [message]="uploadMessage" (error)="onUploadError($event)"
-          (success)="onUploadSuccess($event)"></dropzone>
+      <div class="row">
+        <div class="col-lg-6">
 
-        <div id="dz-preview-template" class="dz-preview dz-file-preview">
-          <div class="dz-details">
-            <div class="dz-filename">
-              <span data-dz-name></span>
+          <!-- Selected file -->
+          <div class="card mb-3 border-secondary">
+            <div class="card-body">
+              <!-- No file selected -->
+              <div *ngIf="!file?.name">
+                {{ 'editor.no-file-selected' | translate }}
+              </div>
+
+              <!-- A file is selected -->
+              <div *ngIf="file?.name">
+                <i class="fa fa-fw" [ngClass]="file.getFontAwesomeIconClass()" aria-hidden="true"></i>
+                {{ file?.name }}
+              </div>
             </div>
-            <div class="dz-size" data-dz-size></div>
-            <img data-dz-thumbnail />
           </div>
-          <div class="dz-progress">
-            <span class="dz-upload" data-dz-uploadprogress></span>
+
+          <!-- Choose file -->
+          <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+            <li class="nav-item">
+              <a class="nav-link active" id="upload-tab" data-toggle="tab" href="#upload" role="tab">
+                <i class="fa fa-upload" aria-hidden="true"></i> {{ 'editor.upload' | translate }}
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" id="media-library-tab" data-toggle="tab" href="#media-library" role="tab">
+                <i class="fa fa-folder-o" aria-hidden="true"></i> {{ 'editor.media-library' | translate }}
+              </a>
+            </li>
+          </ul>
+
+          <div class="tab-content mb-3" id="myTabContent">
+
+            <!-- Upload -->
+            <div class="tab-pane fade show active" id="upload" role="tabpanel">
+              <dropzone [config]="dropzoneConfig" [useDropzoneClass]="'false'" [message]="uploadMessage" (error)="onUploadError($event)"
+                (success)="onUploadSuccess($event)"></dropzone>
+
+              <div id="dz-preview-template" class="dz-preview dz-file-preview">
+                <div class="dz-details">
+                  <div class="dz-filename">
+                    <span data-dz-name></span>
+                  </div>
+                  <div class="dz-size" data-dz-size></div>
+                  <img data-dz-thumbnail />
+                </div>
+                <div class="dz-progress">
+                  <span class="dz-upload" data-dz-uploadprogress></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Media library -->
+            <div class="tab-pane fade" id="media-library" role="tabpanel">
+              <input type="text" class="form-control input-block mb-3" id="searchFileList" placeholder="{{ 'editor.search-files' | translate }}"
+                (input)="filterExistingFiles($event.target.value)">
+
+              <div class="card border-secondary" style="height: 300px; overflow-y: scroll;">
+                <div class="card-body p-0">
+                  <div class="list-group list-group-flush">
+                    <div *ngFor="let existingFile of filteredExistingFiles" class="list-group-item list-group-item-action" [class.active]="file?.name == existingFile.name && file?.type == existingFile.type">
+
+                      <div class="row">
+                        <a [class.text-white]="file?.name == existingFile.name && file?.type == existingFile.type" href="#" (click)="selectExistingFile(existingFile); false"
+                          class="col-auto my-auto">
+                          <i class="fa fa-fw" [ngClass]="existingFile.getFontAwesomeIconClass()" aria-hidden="true"></i>
+                        </a>
+
+                        <a [class.text-white]="file?.name == existingFile.name && file?.type == existingFile.type" href="#" (click)="selectExistingFile(existingFile); false"
+                          class="col-auto my-auto flex-grow text-break-word pl-0">
+                          {{ existingFile.name }}
+                        </a>
+
+                        <a class="col-auto my-auto pl-0 text-danger float-right" href="#" role="button" (click)="deleteFile(existingFile); false">
+                          <i class="fa fa-trash-o" aria-hidden="true"></i>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
+        </div>
+
+        <hr />
+
+        <div class="col-lg-6">
+          <div class="card border-secondary">
+            <div class="card-header">
+              {{ 'editor.file-settings' | translate }}
+            </div>
+
+            <div class="card-body">
+
+              <!-- Active (muted) -->
+              <div class="form-group">
+                <div class="form-check">
+                  <input type="checkbox" [ngModel]="!file?.active" (ngModelChange)="file.active = !$event" class="form-check-input" id="active">
+
+                  <label class="form-check-label" for="active">
+                    {{ 'editor.mute' | translate }}
+                  </label>
+                </div>
+              </div>
+
+              <!-- Audio Bus -->
+              <div class="form-group" *ngIf="file?.type == 'AUDIO' && settings && settings.audioOutput == 'DEVICE'">
+                <label class="col-form-label">{{ 'settings.audio-bus' | translate }}</label>
+
+                <select class="custom-select form-control" [ngModel]="file?.outputBus" (ngModelChange)="file.outputBus = $event">
+                  <option [value]="selectUndefinedOptionValue">- {{ 'settings.no-audio-bus' | translate }} -</option>
+                  <option *ngFor="let audioBus of settings.audioBusList" [ngValue]="audioBus.name">{{ audioBus.name }}</option>
+                </select>
+              </div>
+
+              <!-- Delay (offset) -->
+              <div class="form-group">
+                <label class="col-form-label" for="offsetMillis">{{ 'editor.offset-millis' | translate }}</label>
+
+                <input type="text" class="form-control" [ngModel]="file?.offsetMillis" (ngModelChange)="file.offsetMillis = $event" id="offsetMillis"
+                  placeholder="{{ 'editor.offset-placeholder' | translate }}">
+              </div>
+
+              <!-- Loop -->
+              <div class="form-group">
+                <div class="form-check">
+                  <input type="checkbox" [ngModel]="file?.loop" (ngModelChange)="file.loop = $event" class="form-check-input" id="loop">
+
+                  <label class="form-check-label" for="loop">
+                    {{ 'editor.loop' | translate }}
+                  </label>
+                </div>
+              </div>
+
+              <!-- MIDI routing -->
+              <div class="form-group" *ngIf="file?.type == 'MIDI'">
+                <label class="col-form-label">{{ 'editor.routing' | translate }}</label>
+                <app-midi-routing [midiRoutingList]="file?.midiRoutingList"></app-midi-routing>
+              </div>
+
+            </div>
+          </div>
+
         </div>
       </div>
 
