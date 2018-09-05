@@ -35,14 +35,26 @@ export class LeadSheetComponent implements OnInit {
       this.stateChanged(state);
       this.currentState = state;
     });
+
+    this.leadSheetService.doShow.subscribe(() => {
+      // Wait one tick for the image height to be calculated correctly after the show
+      setTimeout(() => {
+        this.update();
+      }, 0);
+    });
   }
 
   imgLoaded() {
     this.update();
+
+    // Wait one tick for the image height to be calculated correctly
+    setTimeout(() => {
+      this.update();
+    }, 0);
   }
 
   update() {
-    if(!this.leadSheetService.showLeadSheet) {
+    if (!this.leadSheetService.showLeadSheet) {
       return;
     }
 
@@ -50,16 +62,16 @@ export class LeadSheetComponent implements OnInit {
     let windowHeight = window.innerHeight - 16 * 2 /* Padding */;
 
     let positionMillis = this.currentState.positionMillis;
-    
-    if(this.lastPlayTime) {
+
+    if (this.lastPlayTime) {
       positionMillis = new Date().getTime() - this.lastPlayTime.getTime() + this.currentState.positionMillis;
     }
-    
+
     let lengthMillis = this.currentState.currentCompositionDurationMillis;
 
     let scrollHeight = imgHeight - windowHeight;
 
-    if(scrollHeight < 0 || lengthMillis == 0) {
+    if (scrollHeight < 0 || lengthMillis == 0) {
       return;
     }
 

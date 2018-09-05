@@ -95,7 +95,7 @@ export class AppComponent implements OnInit {
   }
 
   showLeadSheet() {
-    this.leadSheetService.showLeadSheet = true;
+    this.leadSheetService.show();
   }
 
 }

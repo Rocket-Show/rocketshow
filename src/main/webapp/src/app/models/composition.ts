@@ -1,3 +1,4 @@
+import { LeadSheet } from './lead-sheet';
 import { CompositionVideoFile } from './composition-video-file';
 import { CompositionMidiFile } from "./composition-midi-file";
 import { CompositionAudioFile } from "./composition-audio-file";
@@ -9,6 +10,7 @@ export class Composition {
     fileList: CompositionFile[] = [];
     notes: string;
     autoStartNextComposition: boolean = false;
+    leadSheetList: LeadSheet[] = [];
 
     constructor(data?: any) {
         if (!data) {
@@ -21,6 +23,12 @@ export class Composition {
         this.autoStartNextComposition = data.autoStartNextComposition;
 
         this.fileList = this.parseFileList(data);
+
+        if (data.leadSheetList) {
+            for (let leadSheet of data.leadSheetList) {
+                this.leadSheetList.push(new LeadSheet(leadSheet));
+            }
+        }
     }
 
     private parseFileList(data: any): CompositionFile[] {

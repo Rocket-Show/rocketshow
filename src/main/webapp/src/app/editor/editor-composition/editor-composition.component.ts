@@ -195,6 +195,11 @@ export class EditorCompositionComponent implements OnInit {
     this.editCompositionFileDetails(0, true);
   }
 
+  // Add a new lead sheet to the composition
+  addLeadSheet() {
+    this.editLeadSheet(0, true);
+  }
+
   // Toggle the active state (mute)
   toggleActive(file: CompositionFile) {
     file.active = !file.active;
@@ -274,7 +279,7 @@ export class EditorCompositionComponent implements OnInit {
     let compositionCopy: Composition = new Composition(JSON.parse(this.currentComposition.stringify()));
 
     // Show the lead sheet details dialog
-    let leadSheetDialog = this.modalService.show(EditorCompositionLeadSheetComponent, { keyboard: true, ignoreBackdropClick: true, class: 'modal-lg' });
+    let leadSheetDialog = this.modalService.show(EditorCompositionLeadSheetComponent, { keyboard: true, ignoreBackdropClick: true });
     (<EditorCompositionFileComponent>leadSheetDialog.content).composition = compositionCopy;
 
     (<EditorCompositionFileComponent>leadSheetDialog.content).onClose.subscribe(result => {
