@@ -1,3 +1,5 @@
+import { DiskSpace } from './../../../models/disk-space';
+import { DiskSpaceService } from './../../../services/disk-space.service';
 import { AppHttpInterceptor } from './../../../app-http-interceptor/app-http-interceptor';
 import { Settings } from './../../../models/settings';
 import { SettingsService } from './../../../services/settings.service';
@@ -34,16 +36,21 @@ export class EditorCompositionFileComponent implements OnInit {
   dropzoneConfig: DropzoneConfigInterface;
   uploadMessage: string;
 
+  diskSpaceUsedGB: number = 0;
+  diskSpaceAvailableGB: number = 0;
+  diskSpacePercentage: number = 0;
+
   constructor(
     private bsModalRef: BsModalRef,
     private appHttpInterceptor: AppHttpInterceptor,
     private translateService: TranslateService,
     private fileService: FileService,
     private warningDialogService: WarningDialogService,
-    private settingsService: SettingsService) {
+    private settingsService: SettingsService,
+    private diskSpaceService: DiskSpaceService) {
 
     this.dropzoneConfig = {
-      url: appHttpInterceptor.getRestUrl() + 'file/upload',
+      url: this.appHttpInterceptor.getRestUrl() + 'file/upload',
       addRemoveLinks: false,
       maxFilesize: 10000 /* 10 GB */,
       acceptedFiles: 'audio/*,video/*',
@@ -66,11 +73,23 @@ export class EditorCompositionFileComponent implements OnInit {
       `
     };
 
-    translateService.get('editor.dropzone-message').map(result => {
+    this.translateService.get('editor.dropzone-message').map(result => {
       this.uploadMessage = '<h3 class="mb-0"><i class="fa fa-cloud-upload"></i></h3>' + result;
     }).subscribe();
 
     this.loadFiles();
+    this.loadDiskSpace();
+  }
+
+  private loadDiskSpace() {
+    this.diskSpaceService.getDiskSpace().map(diskSpace => {
+      this.diskSpaceUsedGB = Math.round(diskSpace.usedMB / 10) / 100;
+      this.diskSpaceAvailableGB = Math.round(diskSpace.availableMB / 10) / 100;
+
+      if(diskSpace.usedMB != 0) {
+        this.diskSpacePercentage = Math.round(diskSpace.availableMB / diskSpace.usedMB);
+      }
+    }).subscribe();
   }
 
   private loadSettings() {
@@ -112,6 +131,7 @@ export class EditorCompositionFileComponent implements OnInit {
 
   public onUploadSuccess(args: any) {
     this.loadFiles();
+    this.loadDiskSpace();
 
     // Hide the preview element
     args[0].previewElement.hidden = true;
@@ -168,6 +188,7 @@ export class EditorCompositionFileComponent implements OnInit {
       if (result) {
         this.fileService.deleteFile(existingFile).subscribe(() => {
           this.loadFiles();
+          this.loadDiskSpace();
         });
       }
     }).subscribe();
