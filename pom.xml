@@ -217,6 +217,18 @@
 			<scope>system</scope>
 			<systemPath>${project.basedir}/WebContent/WEB-INF/lib/ola-java-client-0.0.2.jar</systemPath>
 		</dependency>
+		
+		<!-- For Gstreamer -->
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>4.5.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.freedesktop.gstreamer</groupId>
+            <artifactId>gst1-java-core</artifactId>
+            <version>[0.9.3,1.0)</version>
+        </dependency>
 
 	</dependencies>
 

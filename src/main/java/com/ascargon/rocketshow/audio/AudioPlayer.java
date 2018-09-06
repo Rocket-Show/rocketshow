@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.freedesktop.gstreamer.Gst;
 
 import com.ascargon.rocketshow.Settings.AudioOutput;
 import com.ascargon.rocketshow.composition.PlayerLoadedListener;
@@ -17,7 +18,7 @@ public class AudioPlayer {
 	final static Logger logger = Logger.getLogger(AudioPlayer.class);
 
 	public enum PlayerType {
-		ALSA_PLAYER, MPLAYER
+		ALSA_PLAYER, MPLAYER, GST
 	}
 
 	private ShellManager shellManager;
@@ -37,6 +38,11 @@ public class AudioPlayer {
 		this.path = path;
 		this.device = device;
 
+		if(playerType == PlayerType.GST) {
+			Gst.init();
+			Gst.
+		}
+		
 		if (playerType == PlayerType.MPLAYER) {
 			List<String> params = new ArrayList<String>();
 
