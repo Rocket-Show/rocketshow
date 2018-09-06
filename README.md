@@ -61,6 +61,7 @@ chmod +x ./stage2/99-rocket-show/00-run-chroot.sh
 ```
 
 #### Update process
+- Add the release notes in update/currentversion.xml and build the war ("mvn install")
 - Copy seed directory directory.tar.gz to rocketshow.net/install, if updated
 - Copy target/ROOT.war to rocketshow.net/update/current.war
 - Copy install/install.sh to rocketshow.net/install/script/install.sh, if updated
@@ -69,7 +70,7 @@ chmod +x ./stage2/99-rocket-show/00-run-chroot.sh
 - Copy the new complete image to rocketshow.net/install/images and change the file latest.php to link the new version
 - GIT merge DEV branch to MASTER
 - GIT tag with the current version
-- Switch to DEV and update POM and currentversion.xml versions
+- Switch to DEV and update POM and update/currentversion.xml versions
 - Set a new version in the file WebContent/index.jsp -> url=app?v=x.y to prevent Chrome from caching the app's index.html.
 
 #### Application

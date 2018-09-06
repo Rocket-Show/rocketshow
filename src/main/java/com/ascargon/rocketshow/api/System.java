@@ -11,6 +11,8 @@ import javax.ws.rs.core.Response;
 
 import com.ascargon.rocketshow.Manager;
 import com.ascargon.rocketshow.Settings;
+import com.ascargon.rocketshow.util.DiskSpace;
+import com.ascargon.rocketshow.util.DiskSpaceUtil;
 import com.ascargon.rocketshow.util.FactoryReset;
 import com.ascargon.rocketshow.util.LogDownload;
 import com.ascargon.rocketshow.util.VersionInfo;
@@ -114,6 +116,13 @@ public class System {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response downloadLogs() throws Exception {
 		return Response.ok(LogDownload.getLogsFile(), "application/zip").build();
+	}
+	
+	@Path("disk-space")
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	public DiskSpace getDiskSpace() throws Exception {
+		return DiskSpaceUtil.get();
 	}
 	
 }

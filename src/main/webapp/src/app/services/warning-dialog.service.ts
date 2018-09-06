@@ -17,7 +17,7 @@ export class WarningDialogService {
     return this.translateService.get(message).map(result => {
       return result;
     }).flatMap(result => {
-      let fileDialog = this.modalService.show(WarningDialogComponent, { keyboard: true, ignoreBackdropClick: true });
+      let fileDialog = this.modalService.show(WarningDialogComponent, { keyboard: false, ignoreBackdropClick: true });
       (<WarningDialogComponent>fileDialog.content).message = result;
   
       return (<WarningDialogComponent>fileDialog.content).onClose.map(result => {
