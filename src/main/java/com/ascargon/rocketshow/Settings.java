@@ -85,6 +85,8 @@ public class Settings {
 	private String wlanApPassphrase = "";
 
 	private boolean wlanApSsidHide = false;
+	
+	private boolean enableRaspberryGpio;
 
 	public Settings() {
 		// Initialize default settings
@@ -129,6 +131,8 @@ public class Settings {
 		audioRate = 44100 /* or 48000 */;
 
 		loggingLevel = LoggingLevel.INFO;
+		
+		enableRaspberryGpio = false;
 
 		updateSystem();
 	}
@@ -586,6 +590,15 @@ public class Settings {
 
 	public void setWlanApSsidHide(boolean wlanApSsidHide) {
 		this.wlanApSsidHide = wlanApSsidHide;
+	}
+
+	@XmlElement
+	public boolean isEnableRaspberryGpio() {
+		return enableRaspberryGpio;
+	}
+
+	public void setEnableRaspberryGpio(boolean enableRaspberryGpio) {
+		this.enableRaspberryGpio = enableRaspberryGpio;
 	}
 
 }

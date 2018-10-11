@@ -30,6 +30,7 @@ import com.ascargon.rocketshow.midi.MidiInDeviceReceiver;
 import com.ascargon.rocketshow.midi.MidiRouting;
 import com.ascargon.rocketshow.midi.MidiUtil;
 import com.ascargon.rocketshow.midi.MidiUtil.MidiDirection;
+import com.ascargon.rocketshow.util.RaspberryGpio;
 import com.ascargon.rocketshow.util.ResetUsb;
 import com.ascargon.rocketshow.util.ShellManager;
 import com.ascargon.rocketshow.util.Updater;
@@ -67,7 +68,10 @@ public class Manager {
 	private Composition defaultComposition;
 
 	private Player player;
-	
+
+	// The Raspberry GPIO controller
+	private RaspberryGpio raspberryGpio;
+
 	private boolean isInitializing = true;
 
 	public void addMidiOutDeviceConnectedListener(MidiDeviceConnectedListener listener) {
@@ -198,31 +202,32 @@ public class Manager {
 
 		// Initialize the settings
 		settings = new Settings();
-		
+
 		// Initialize the compositionmanager
 		compositionManager = new CompositionManager(this);
-		
+
 		// Cache all compositions and sets
 		try {
 			compositionManager.loadAllCompositions();
 		} catch (Exception e) {
 			logger.error("Could not cache the compositions", e);
 		}
-		
+
 		try {
 			compositionManager.loadAllSets();
 		} catch (Exception e) {
 			logger.error("Could not cache the sets", e);
 		}
-		
-		// Setup iptables, because it's not working properly in pi-gen distro generation
+
+		// Setup iptables, because it's not working properly in pi-gen distro
+		// generation
 		try {
 			new ShellManager(new String[] { "sudo", "iptables", "-t", "nat", "-A", "POSTROUTING", "-o", "eth0", "-j",
 					"MASQUERADE" });
 		} catch (IOException e) {
 			logger.error("Could not initialize iptables", e);
 		}
-		
+
 		// Initialize the player
 		player = new Player(this);
 
@@ -295,8 +300,15 @@ public class Manager {
 			logger.error("Could not restore session", e);
 		}
 
+		// Initialize the Raspberry GPIO
+		try {
+			raspberryGpio = new RaspberryGpio(this);
+		} catch (Exception e) {
+			logger.error("Could not initialize the Raspberry GPIO controller", e);
+		}
+
 		isInitializing = false;
-		
+
 		logger.info("Finished initializing");
 	}
 
@@ -488,6 +500,12 @@ public class Manager {
 			stopDefaultComposition();
 		} catch (Exception e) {
 			logger.error("Could not stop the default composition", e);
+		}
+		
+		try {
+			raspberryGpio.close();;
+		} catch (Exception e) {
+			logger.error("Could not close the Raspberry GPIO controller", e);
 		}
 
 		logger.info("Finished closing");

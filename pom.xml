@@ -67,8 +67,8 @@
 								<argument>--base-href=/app/</argument>
 								<argument>--prod</argument>
 
-								<!-- No caching to make sure, the newest version will always be loaded
-									(e.g. after an update). Caching anyways only has a small impact, because
+								<!-- No caching to make sure, the newest version will always be loaded 
+									(e.g. after an update). Caching anyways only has a small impact, because 
 									the devices are most probably run in an internal network. -->
 								<argument>--output-hashing=all</argument>
 							</arguments>
@@ -82,7 +82,7 @@
 		</plugins>
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
 					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
@@ -216,6 +216,13 @@
 			<version>1.0</version>
 			<scope>system</scope>
 			<systemPath>${project.basedir}/WebContent/WEB-INF/lib/ola-java-client-0.0.2.jar</systemPath>
+		</dependency>
+
+		<!-- To access Raspberry Pi GPIO pins -->
+		<dependency>
+			<groupId>com.pi4j</groupId>
+			<artifactId>pi4j-core</artifactId>
+			<version>1.1</version>
 		</dependency>
 
 	</dependencies>
