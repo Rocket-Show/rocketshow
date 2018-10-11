@@ -15,6 +15,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.log4j.Logger;
+import org.freedesktop.gstreamer.Gst;
 
 import com.ascargon.rocketshow.api.StateManager;
 import com.ascargon.rocketshow.composition.Composition;
@@ -198,6 +199,12 @@ public class Manager {
 
 		// Initialize the settings
 		settings = new Settings();
+		
+		try {
+			Gst.init();
+		} catch (Exception e) {
+			logger.error("Could not initialize Gstreamer", e);
+		}
 		
 		// Initialize the compositionmanager
 		compositionManager = new CompositionManager(this);
