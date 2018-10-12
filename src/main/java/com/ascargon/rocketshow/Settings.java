@@ -24,6 +24,7 @@ import com.ascargon.rocketshow.midi.MidiMapping;
 import com.ascargon.rocketshow.midi.MidiRouting;
 import com.ascargon.rocketshow.midi.MidiUtil;
 import com.ascargon.rocketshow.midi.MidiUtil.MidiDirection;
+import com.ascargon.rocketshow.raspberry.RaspberryGpioControl;
 import com.ascargon.rocketshow.util.ShellManager;
 
 @XmlRootElement
@@ -36,6 +37,7 @@ public class Settings {
 		ERROR, WARN, INFO, DEBUG, TRACE
 	}
 
+	// Possible audio outputs
 	public enum AudioOutput {
 		HEADPHONES, HDMI, DEVICE
 	}
@@ -47,6 +49,8 @@ public class Settings {
 
 	private List<MidiControl> midiControlList = new ArrayList<MidiControl>();
 	private MidiMapping midiMapping;
+	
+	private List<RaspberryGpioControl> raspberryGpioControlList = new ArrayList<RaspberryGpioControl>();
 
 	private int dmxSendDelayMillis;
 
@@ -132,7 +136,7 @@ public class Settings {
 
 		loggingLevel = LoggingLevel.INFO;
 		
-		enableRaspberryGpio = false;
+		enableRaspberryGpio = true;
 
 		updateSystem();
 	}
@@ -434,8 +438,18 @@ public class Settings {
 		return midiControlList;
 	}
 
-	public void setActionMappingList(List<MidiControl> midiControlList) {
+	public void setMidiControlList(List<MidiControl> midiControlList) {
 		this.midiControlList = midiControlList;
+	}
+	
+	@XmlElement(name = "raspberryGpioControl")
+	@XmlElementWrapper(name = "raspberryGpioControlList")
+	public List<RaspberryGpioControl> getRaspberryGpioControlList() {
+		return raspberryGpioControlList;
+	}
+
+	public void setRaspberryGpioControlList(List<RaspberryGpioControl> raspberryGpioControlList) {
+		this.raspberryGpioControlList = raspberryGpioControlList;
 	}
 
 	@XmlElement

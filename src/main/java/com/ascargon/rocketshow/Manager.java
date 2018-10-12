@@ -24,13 +24,14 @@ import com.ascargon.rocketshow.composition.Set;
 import com.ascargon.rocketshow.dmx.DmxManager;
 import com.ascargon.rocketshow.dmx.Midi2DmxConverter;
 import com.ascargon.rocketshow.image.ImageDisplayer;
-import com.ascargon.rocketshow.midi.Midi2ActionConverter;
+import com.ascargon.rocketshow.midi.MidiControlActionExecuter;
 import com.ascargon.rocketshow.midi.MidiDeviceConnectedListener;
 import com.ascargon.rocketshow.midi.MidiInDeviceReceiver;
 import com.ascargon.rocketshow.midi.MidiRouting;
 import com.ascargon.rocketshow.midi.MidiUtil;
 import com.ascargon.rocketshow.midi.MidiUtil.MidiDirection;
-import com.ascargon.rocketshow.util.RaspberryGpio;
+import com.ascargon.rocketshow.raspberry.RaspberryGpioControlActionExecuter;
+import com.ascargon.rocketshow.util.ControlActionExecuter;
 import com.ascargon.rocketshow.util.ResetUsb;
 import com.ascargon.rocketshow.util.ShellManager;
 import com.ascargon.rocketshow.util.Updater;
@@ -49,9 +50,11 @@ public class Manager {
 	private CompositionManager compositionManager;
 	private FileManager fileManager;
 
+	private ControlActionExecuter controlActionExecuter;
+
 	private ImageDisplayer imageDisplayer;
 	private MidiInDeviceReceiver midiInDeviceReceiver;
-	private Midi2ActionConverter midi2ActionConverter;
+	private MidiControlActionExecuter midi2ActionConverter;
 
 	private DmxManager dmxManager;
 	private Midi2DmxConverter midi2DmxConverter;
@@ -70,7 +73,7 @@ public class Manager {
 	private Player player;
 
 	// The Raspberry GPIO controller
-	private RaspberryGpio raspberryGpio;
+	private RaspberryGpioControlActionExecuter raspberryGpioControlActionExecuter;
 
 	private boolean isInitializing = true;
 
@@ -238,8 +241,11 @@ public class Manager {
 		// Initialize the updater
 		updater = new Updater(this);
 
+		// Initialize the control action executer
+		controlActionExecuter = new ControlActionExecuter(this);
+
 		// Initialize the MIDI action converter
-		midi2ActionConverter = new Midi2ActionConverter(this);
+		midi2ActionConverter = new MidiControlActionExecuter(this);
 
 		// Initialize the DMX manager
 		dmxManager = new DmxManager(this);
@@ -300,9 +306,9 @@ public class Manager {
 			logger.error("Could not restore session", e);
 		}
 
-		// Initialize the Raspberry GPIO
+		// Initialize the Raspberry GPIO control action executer
 		try {
-			raspberryGpio = new RaspberryGpio(this);
+			raspberryGpioControlActionExecuter = new RaspberryGpioControlActionExecuter(this);
 		} catch (Exception e) {
 			logger.error("Could not initialize the Raspberry GPIO controller", e);
 		}
@@ -501,9 +507,10 @@ public class Manager {
 		} catch (Exception e) {
 			logger.error("Could not stop the default composition", e);
 		}
-		
+
 		try {
-			raspberryGpio.close();;
+			raspberryGpioControlActionExecuter.close();
+			;
 		} catch (Exception e) {
 			logger.error("Could not close the Raspberry GPIO controller", e);
 		}
@@ -551,7 +558,7 @@ public class Manager {
 		this.dmxManager = dmxManager;
 	}
 
-	public Midi2ActionConverter getMidi2ActionConverter() {
+	public MidiControlActionExecuter getMidi2ActionConverter() {
 		return midi2ActionConverter;
 	}
 
@@ -597,6 +604,14 @@ public class Manager {
 
 	public boolean isInitializing() {
 		return isInitializing;
+	}
+
+	public ControlActionExecuter getControlActionExecuter() {
+		return controlActionExecuter;
+	}
+
+	public void setControlActionExecuter(ControlActionExecuter controlActionExecuter) {
+		this.controlActionExecuter = controlActionExecuter;
 	}
 
 }

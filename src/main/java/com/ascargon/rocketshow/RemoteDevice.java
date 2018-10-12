@@ -110,6 +110,10 @@ public class RemoteDevice {
 	public void play() {
 		doPost("transport/play");
 	}
+	
+	public void playAsSample(String compositionName) {
+		doPost("transport/play-as-sample?name=" + compositionName);
+	}
 
 	public void pause() {
 		doPost("transport/pause");

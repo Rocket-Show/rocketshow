@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
@@ -38,6 +39,8 @@ public class Composition {
 
 	private String name;
 
+	final String uuid = String.valueOf(UUID.randomUUID());
+
 	private boolean autoStartNextComposition = false;
 
 	private String notes;
@@ -59,6 +62,9 @@ public class Composition {
 
 	// Is this the default composition?
 	private boolean defaultComposition = false;
+	
+	// Is this composition played as a sample?
+	private boolean isSample = false;
 
 	public void close() throws Exception {
 		for (File file : fileList) {
@@ -106,7 +112,7 @@ public class Composition {
 
 		playState = PlayState.LOADING;
 
-		if (!defaultComposition) {
+		if (!defaultComposition && !isSample) {
 			manager.getStateManager().notifyClients();
 		}
 
@@ -139,7 +145,7 @@ public class Composition {
 		logger.debug("All files for composition '" + name + "' loaded");
 
 		// Maybe we are stopping meanwhile
-		if (playState == PlayState.LOADING) {
+		if (playState == PlayState.LOADING && !defaultComposition && !isSample) {
 			playState = PlayState.LOADED;
 			filesLoaded = true;
 
@@ -152,6 +158,9 @@ public class Composition {
 		// soon as the last file (the longest one, which has the most offset)
 		// has been finished)
 		long maxDurationAndOffset = 0;
+
+		// Workaround, because "this" does not work inside a TimerTask.
+		Composition thisComposition = this;
 
 		for (File file : fileList) {
 			if (file.isActive()) {
@@ -198,7 +207,7 @@ public class Composition {
 
 						manager.getCurrentSet().nextComposition(false);
 						manager.getPlayer().play();
-					} else if(manager.getSession().isAutoSelectNextComposition()) {
+					} else if (manager.getSession().isAutoSelectNextComposition()) {
 						manager.getCompositionManager().nextComposition();
 					} else {
 						// Stop, play the default composition and select the
@@ -208,6 +217,10 @@ public class Composition {
 						if (manager.getCurrentSet() != null) {
 							manager.getCurrentSet().nextComposition();
 						}
+					}
+
+					if(isSample) {
+						manager.getPlayer().sampleCompositionFinishedPlaying(thisComposition);
 					}
 				} catch (Exception e) {
 					logger.error("Could not automatically stop composition '" + name + "'", e);
@@ -236,7 +249,7 @@ public class Composition {
 
 		playState = PlayState.PLAYING;
 
-		if (!defaultComposition) {
+		if (!defaultComposition && !isSample) {
 			manager.getStateManager().notifyClients();
 		}
 	}
@@ -275,7 +288,7 @@ public class Composition {
 
 		playState = PlayState.PAUSED;
 
-		if (!defaultComposition) {
+		if (!defaultComposition && !isSample) {
 			manager.getStateManager().notifyClients();
 		}
 	}
@@ -291,7 +304,7 @@ public class Composition {
 	public synchronized void stop(boolean playDefaultComposition, boolean restartAfter) throws Exception {
 		playState = PlayState.STOPPING;
 
-		if (!defaultComposition) {
+		if (!defaultComposition && !isSample) {
 			manager.getStateManager().notifyClients();
 		}
 
@@ -326,12 +339,12 @@ public class Composition {
 
 		playState = PlayState.STOPPED;
 
-		if (!defaultComposition && !restartAfter) {
+		if (!defaultComposition && !restartAfter && !isSample) {
 			manager.getStateManager().notifyClients();
 		}
 
 		// Play the default composition, if necessary
-		if (!defaultComposition && playDefaultComposition) {
+		if (!defaultComposition && playDefaultComposition && !isSample) {
 			manager.playDefaultComposition();
 		}
 	}
@@ -342,6 +355,19 @@ public class Composition {
 
 	public synchronized void stop() throws Exception {
 		stop(true, false);
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		if (object instanceof Composition) {
+			Composition composition = (Composition) object;
+
+			if (this.uuid.equals(composition.uuid)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	@XmlTransient
@@ -437,6 +463,15 @@ public class Composition {
 	public void setPositionMillis(long positionMillis) {
 		lastStartTime = null;
 		this.positionMillis = positionMillis;
+	}
+
+	@XmlTransient
+	public boolean isSample() {
+		return isSample;
+	}
+
+	public void setSample(boolean isSample) {
+		this.isSample = isSample;
 	}
 
 }

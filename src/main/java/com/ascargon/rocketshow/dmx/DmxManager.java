@@ -36,7 +36,7 @@ public class DmxManager {
 	private Manager manager;
 
 	// Cache the channel values and send them each time
-	private HashMap<Integer, Integer> channelValues;
+	private List<DmxUniverse> dmxUniverseList = new ArrayList<DmxUniverse>();
 
 	private OlaClient olaClient;
 
@@ -45,7 +45,7 @@ public class DmxManager {
 	// enough
 	// - Glitches: If we send each event separately, you can see the transitions
 	// even if they're not meant to be (e.g. activate two channels at the same
-	// time, but sentseparately)
+	// time, but sent separately)
 	private Timer sendUniverseTimer;
 
 	private List<String> standardDeviceNames = new ArrayList<String>();
@@ -75,10 +75,12 @@ public class DmxManager {
 
 	public void reset() {
 		// Initialize the universe
-		channelValues = new HashMap<Integer, Integer>();
-
-		for (int i = 0; i < 512; i++) {
-			channelValues.put(i, 0);
+		for (DmxUniverse dmxUniverse : dmxUniverseList) {
+			HashMap<Integer, Integer> universe = dmxUniverse.getUniverse();
+			
+			for (int i = 0; i < 512; i++) {
+				universe.put(i, 0);
+			}
 		}
 
 		try {
@@ -93,24 +95,33 @@ public class DmxManager {
 			return;
 		}
 
-		short[] universe = new short[512];
+		// Mix all current universes into one -> highest value per channel wins
+		short[] mixedUniverse = new short[512];
 
-		for (int i = 0; i < channelValues.size(); i++) {
-			universe[i] = (short) channelValues.get(i).intValue();
+		for (int i = 0; i < 512; i++) {
+			int highestValue = 0;
+
+			for (DmxUniverse dmxUniverse : dmxUniverseList) {
+				HashMap<Integer, Integer> universe = dmxUniverse.getUniverse();
+						
+				if (universe.get(i).intValue() > highestValue) {
+					highestValue = universe.get(i).intValue();
+				}
+			}
+
+			mixedUniverse[i] = (short) highestValue;
 		}
 
-		olaClient.streamDmx(1, universe);
+		olaClient.streamDmx(1, mixedUniverse);
 	}
 
-	public void send(int channel, int value) throws IOException {
-		logger.trace("Setting DMX channel " + channel + " to value " + value);
-
-		channelValues.put(channel, value);
+	public void send() throws IOException {
+		logger.trace("Sending a DMX value");
 
 		// Schedule the specified count of executions in the specified delay
 		if (sendUniverseTimer != null) {
-			sendUniverseTimer.cancel();
-			sendUniverseTimer = null;
+			// There is already a timer running -> let it finish
+			return;
 		}
 
 		TimerTask timerTask = new TimerTask() {
@@ -167,7 +178,7 @@ public class DmxManager {
 		return null;
 	}
 
-	private void createUniverse(int universeId, String name, String portId)
+	private void createOlaUniverse(int universeId, String name, String portId)
 			throws ClientProtocolException, IOException {
 
 		logger.debug("Adding new universe with port '" + portId + "'...");
@@ -235,12 +246,20 @@ public class DmxManager {
 		try {
 			// Create the port with the device-id, "O" for output and the port
 			// ID
-			createUniverse(1, "Standard", portId);
+			createOlaUniverse(1, "Standard", portId);
 		} catch (Exception e) {
 			logger.error("Could not create a new universe on OLA", e);
 		}
 
 		logger.debug("DMX universe on OLA initialized");
+	}
+
+	public void addDmxUniverse(DmxUniverse dmxUniverse) {
+		dmxUniverseList.add(dmxUniverse);
+	}
+
+	public void removeDmxUniverse(DmxUniverse dmxUniverse) {
+		dmxUniverseList.remove(dmxUniverse);
 	}
 
 	public void close() {

@@ -13,36 +13,37 @@ public class Midi2DmxConverter {
 
 	final static Logger logger = Logger.getLogger(Midi2DmxConverter.class);
 
-	private DmxManager dmxSignalSender;
+	private DmxManager dmxManager;
 
-	public Midi2DmxConverter(DmxManager dmxSignalSender) {
-		this.dmxSignalSender = dmxSignalSender;
+	public Midi2DmxConverter(DmxManager dmxManager) {
+		this.dmxManager = dmxManager;
 	}
 
-	private void mapSimple(MidiSignal midiSignal) throws IOException {
+	private void mapSimple(MidiSignal midiSignal, DmxUniverse dmxUniverse) throws IOException {
 		if (midiSignal.getCommand() == ShortMessage.NOTE_ON) {
 			int valueTo = midiSignal.getVelocity() * 2;
-			
+
 			// Extend the last note to the max
 			// TODO enable this feature by a mapping-setting
-			if(valueTo == 254) {
+			if (valueTo == 254) {
 				valueTo = 255;
 			}
 
-			dmxSignalSender.send(midiSignal.getNote(), valueTo);
+			dmxUniverse.getUniverse().put(midiSignal.getNote(), valueTo);
+			dmxManager.send();
 		} else if (midiSignal.getCommand() == ShortMessage.NOTE_OFF) {
 			int valueTo = 0;
-			dmxSignalSender.send(midiSignal.getNote(), valueTo);
+			
+			dmxUniverse.getUniverse().put(midiSignal.getNote(), valueTo);
+			dmxManager.send();
 		}
 	}
 
-	private void mapExact(MidiSignal midiSignal, Midi2DmxMapping midi2DmxMapping)
-			throws IOException {
-
+	private void mapExact(MidiSignal midiSignal, Midi2DmxMapping midi2DmxMapping, DmxUniverse dmxUniverse) throws IOException {
 		// TODO
 	}
 
-	public void processMidiEvent(MidiSignal midiSignal, Midi2DmxMapping midi2DmxMapping) throws IOException {
+	public void processMidiEvent(MidiSignal midiSignal, Midi2DmxMapping midi2DmxMapping, DmxUniverse dmxUniverse) throws IOException {
 		// Map the MIDI event and send the appropriate DMX signal
 
 		// Only react to NOTE_ON/NOTE_OFF events
@@ -51,18 +52,18 @@ public class Midi2DmxConverter {
 		}
 
 		if (midi2DmxMapping.getMappingType() == MappingType.SIMPLE) {
-			mapSimple(midiSignal);
+			mapSimple(midiSignal, dmxUniverse);
 		} else if (midi2DmxMapping.getMappingType() == MappingType.EXACT) {
-			mapExact(midiSignal, midi2DmxMapping);
+			mapExact(midiSignal, midi2DmxMapping, dmxUniverse);
 		}
 	}
 
-	public DmxManager getDmxSignalSender() {
-		return dmxSignalSender;
+	public DmxManager getDmxManager() {
+		return dmxManager;
 	}
 
-	public void setDmxSignalSender(DmxManager dmxSignalSender) {
-		this.dmxSignalSender = dmxSignalSender;
+	public void setDmxManager(DmxManager dmxManager) {
+		this.dmxManager = dmxManager;
 	}
 
 }

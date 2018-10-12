@@ -57,6 +57,18 @@ public class Transport {
 
 		return Response.status(200).build();
 	}
+	
+	@Path("play-as-sample")
+	@POST
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response playAsSample(@QueryParam("name") String compositionName) throws Exception {
+		logger.info("Received API request for transport/play-as-sample");
+
+		Manager manager = (Manager) context.getAttribute("manager");
+		manager.getPlayer().playAsSample(compositionName);
+
+		return Response.status(200).build();
+	}
 
 	@Path("pause")
 	@POST
@@ -87,6 +99,7 @@ public class Transport {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response stop(@QueryParam("playDefaultComposition") @DefaultValue("true") boolean playDefaultComposition,
 			@QueryParam("restartAfter") @DefaultValue("false") boolean restartAfter) throws Exception {
+		
 		logger.info("Received API request for transport/stop");
 
 		Manager manager = (Manager) context.getAttribute("manager");
