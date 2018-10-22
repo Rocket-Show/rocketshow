@@ -177,6 +177,7 @@
         "audio-bus-channels": "Channels",
         "audio-bus-mono": "Mono",
         "audio-bus-stereo": "Stereo",
+        "audio-bus-quadro": "Quadro",
         "audio-bus-surround": "Surround",
         "no-audio-bus": "None",
         "no-composition": "None",

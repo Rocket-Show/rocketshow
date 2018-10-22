@@ -59,6 +59,7 @@
             <select class="custom-select" [ngModel]="audioBus.channels" (ngModelChange)="audioBus.channels = $event">
               <option value="1">1 {{ 'settings.audio-bus-mono' | translate }}</option>
               <option value="2">2 {{ 'settings.audio-bus-stereo' | translate }}</option>
+              <option value="4">4 {{ 'settings.audio-bus-quadro' | translate }}</option>
               <option value="3">3 {{ 'settings.audio-bus-surround' | translate }} 2.1</option>
               <option value="6">6 {{ 'settings.audio-bus-surround' | translate }} 5.1</option>
               <option value="7">7 {{ 'settings.audio-bus-surround' | translate }} 6.1</option>

@@ -49,7 +49,7 @@ public class Settings {
 
 	private List<MidiControl> midiControlList = new ArrayList<MidiControl>();
 	private MidiMapping midiMapping;
-	
+
 	private List<RaspberryGpioControl> raspberryGpioControlList = new ArrayList<RaspberryGpioControl>();
 
 	private int dmxSendDelayMillis;
@@ -89,7 +89,7 @@ public class Settings {
 	private String wlanApPassphrase = "";
 
 	private boolean wlanApSsidHide = false;
-	
+
 	private boolean enableRaspberryGpio;
 
 	public Settings() {
@@ -135,7 +135,7 @@ public class Settings {
 		audioRate = 44100 /* or 48000 */;
 
 		loggingLevel = LoggingLevel.INFO;
-		
+
 		enableRaspberryGpio = true;
 
 		updateSystem();
@@ -206,11 +206,25 @@ public class Settings {
 
 		// Build the general device settings
 		// @formatter:off
-		settings += "pcm_slave.card_slave {\n" +
-				"  pcm \"hw:" + audioDevice.getKey() + "\"\n" +
-				"  channels " + getTotalAudioChannels() + "\n" +
-				"\n" +
-				"  rate " + audioRate + "\n" +
+		settings += 
+				"pcm.dshare {\n" +
+				"  type dmix\n" +
+				"  ipc_key 2048\n" +
+				"  slave {\n" +
+				"    pcm \"hw:" + audioDevice.getKey() + "\"\n" +
+				"    rate " + audioRate + "\n" +
+				"    channels " + getTotalAudioChannels() + "\n" +
+				"  }\n"+
+				"  bindings {\n";
+		
+		// Add all channels
+		for (int i = 0; i < getTotalAudioChannels(); i++) {
+			settings += 
+					"    " + i + " " + i + "\n";
+		}
+		
+		settings += 
+				"  }\n" +
 				"}\n";
 		
 		// List each bus
@@ -218,26 +232,21 @@ public class Settings {
 			AudioBus audioBus = audioBusList.get(i);
 			
 			settings += "\n" +
-					"pcm." + getBusNameFromId(i) + "_dshare {\n" +
-					"  type dshare\n" +
-					"  ipc_key " + 87273 + "\n" +
-					"  slave card_slave\n";
+					"pcm." + getBusNameFromId(i) + " {\n" +
+					"  type plug\n" +
+					"  slave {\n" +
+					"    pcm \"dshare\"\n" +
+					"    channels " + audioBus.getChannels() + "\n" +
+					"  }\n";
 			
 			// Add each channel to the bus
 			for (int j = 0; j < audioBus.getChannels(); j++) {
-				settings += "  bindings." + j + " " + currentChannel + "\n";
+				settings += "  ttable." + j + "." + currentChannel + " 1\n";
 				
 				currentChannel ++;
 			}
 					
 			settings += 	"}\n";	
-			
-			// Add the plugin for the bus
-			settings += "\n" +
-					"pcm." + getBusNameFromId(i) + " {\n" +
-					"  type plug\n" +
-					"  slave.pcm " + getBusNameFromId(i) + "_dshare\n" +
-					"}\n";
 		}
 		// @formatter:on
 
@@ -300,13 +309,13 @@ public class Settings {
 		apConfig += "wmm_enabled=0\n";
 		apConfig += "macaddr_acl=0\n";
 		apConfig += "auth_algs=1\n";
-		
-		if(wlanApSsidHide) {
+
+		if (wlanApSsidHide) {
 			apConfig += "ignore_broadcast_ssid=1\n";
 		} else {
 			apConfig += "ignore_broadcast_ssid=0\n";
 		}
-		
+
 		if (wlanApPassphrase != null && wlanApPassphrase.length() >= 8) {
 			apConfig += "wpa=2\n";
 			apConfig += "wpa_passphrase=" + wlanApPassphrase + "\n";
@@ -323,7 +332,7 @@ public class Settings {
 		} catch (IOException e) {
 			logger.error("Could not write /etc/hostapd/hostapd.conf", e);
 		}
-		
+
 		// Activate/deactivate the access point completely
 		if (wlanApEnable) {
 			statusCommand = "enable";
@@ -441,7 +450,7 @@ public class Settings {
 	public void setMidiControlList(List<MidiControl> midiControlList) {
 		this.midiControlList = midiControlList;
 	}
-	
+
 	@XmlElement(name = "raspberryGpioControl")
 	@XmlElementWrapper(name = "raspberryGpioControlList")
 	public List<RaspberryGpioControl> getRaspberryGpioControlList() {

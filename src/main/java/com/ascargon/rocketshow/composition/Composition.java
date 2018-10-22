@@ -62,7 +62,7 @@ public class Composition {
 
 	// Is this the default composition?
 	private boolean defaultComposition = false;
-	
+
 	// Is this composition played as a sample?
 	private boolean isSample = false;
 
@@ -190,43 +190,48 @@ public class Composition {
 
 		logger.debug("Scheduled the auto-stop timer in " + maxDurationAndOffset + " millis");
 
-		autoStopTimer = new Timer();
-		autoStopTimer.schedule(new TimerTask() {
+		Timer timer = new Timer();
+		timer.schedule(new TimerTask() {
 			@Override
 			public void run() {
 				try {
 					logger.debug("Automatically stopping the composition...");
-
-					autoStopTimer.cancel();
+					
+					timer.cancel();
 					autoStopTimer = null;
-
-					if (autoStartNextComposition && manager.getCurrentSet().hasNextComposition()) {
-						// Stop, don't play the default composition but start
-						// playing the next composition
-						manager.getPlayer().stop(false);
-
-						manager.getCurrentSet().nextComposition(false);
-						manager.getPlayer().play();
-					} else if (manager.getSession().isAutoSelectNextComposition()) {
-						manager.getCompositionManager().nextComposition();
-					} else {
-						// Stop, play the default composition and select the
-						// next composition automatically (if there is one)
-						manager.getPlayer().stop(true);
-
-						if (manager.getCurrentSet() != null) {
-							manager.getCurrentSet().nextComposition();
-						}
-					}
-
-					if(isSample) {
+					
+					if (isSample) {
 						manager.getPlayer().sampleCompositionFinishedPlaying(thisComposition);
+					} else {
+						// Don't stop the composition for samples (they should
+						// be short anyway)
+						if (autoStartNextComposition && manager.getCurrentSet().hasNextComposition()) {
+							// Stop, don't play the default composition but
+							// start
+							// playing the next composition
+							manager.getPlayer().stop(false);
+
+							manager.getCurrentSet().nextComposition(false);
+							manager.getPlayer().play();
+						} else if (manager.getSession().isAutoSelectNextComposition()) {
+							manager.getCompositionManager().nextComposition();
+						} else {
+							// Stop, play the default composition and select the
+							// next composition automatically (if there is one)
+							manager.getPlayer().stop(true);
+
+							if (manager.getCurrentSet() != null) {
+								manager.getCurrentSet().nextComposition();
+							}
+						}
 					}
 				} catch (Exception e) {
 					logger.error("Could not automatically stop composition '" + name + "'", e);
 				}
 			}
 		}, maxDurationAndOffset);
+		
+		autoStopTimer = timer;
 	}
 
 	public synchronized void play() throws Exception {
