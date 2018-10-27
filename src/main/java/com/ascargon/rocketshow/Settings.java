@@ -236,7 +236,7 @@ public class Settings {
 					"  type plug\n" +
 					"  slave {\n" +
 					"    pcm \"dshare\"\n" +
-					"    channels " + audioBus.getChannels() + "\n" +
+					"    channels " + getTotalAudioChannels() + "\n" +
 					"  }\n";
 			
 			// Add each channel to the bus

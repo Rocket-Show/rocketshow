@@ -1,6 +1,6 @@
 export class MidiControl {
     action: string = 'PLAY';
-    selectComposition: string;
+    compositionName: string;
     channelFrom: number = 0;
     noteFrom: number = 0;
     remoteDeviceList: string[] = [];
@@ -12,7 +12,7 @@ export class MidiControl {
         }
         
         this.action = data.action;
-        this.selectComposition = data.selectComposition;
+        this.compositionName = data.compositionName;
         this.channelFrom = data.channelFrom;
         this.noteFrom = data.noteFrom;
 

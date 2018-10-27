@@ -252,7 +252,7 @@ public class Player {
 	}
 
 	public PlayState getPlayState() {
-		if (composition == null) {
+		if (composition == null || composition.isSample()) {
 			return PlayState.STOPPED;
 		}
 

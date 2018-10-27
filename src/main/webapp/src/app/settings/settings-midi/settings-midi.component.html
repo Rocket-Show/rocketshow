@@ -91,9 +91,9 @@
         <div class="form-group row" *ngIf="midiControl.action == 'SELECT_COMPOSITION_BY_NAME' || midiControl.action == 'SELECT_COMPOSITION_BY_NAME_AND_PLAY'">
           <label class="col-md-3 col-form-label">{{ 'settings.midi-control-select-composition' | translate }}</label>
           <div class="col-md-9">
-            <select class="custom-select" [ngModel]="midiControl.selectComposition" (ngModelChange)="midiControl.selectComposition = $event">
-              <option [value]="selectUndefinedOptionValue">- {{ 'settings.no-composition' | translate }} -</option>
-              <option *ngFor="let composition of compositions" value="{{ composition.name }}">{{ composition.name }}</option>
+            <select class="custom-select" [ngModel]="midiControl.compositionName" (ngModelChange)="midiControl.compositionName = $event">
+              <option [ngValue]="selectUndefinedOptionValue">- {{ 'settings.no-composition' | translate }} -</option>
+              <option *ngFor="let composition of compositions" [ngValue]="composition.name">{{ composition.name }}</option>
             </select>
           </div>
         </div>
