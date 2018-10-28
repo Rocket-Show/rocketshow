@@ -123,7 +123,7 @@ public class Player {
 		if (sampleCompositionList.size() >= 20) {
 			logger.debug("Not playing composition '" + compositionName
 					+ "' as sample, because too many samples are already playing");
-			
+
 			return;
 		}
 
@@ -144,8 +144,10 @@ public class Player {
 
 		playExecutor.shutdown();
 
-		// Play the composition locally
-		Composition composition = manager.getCompositionManager().getComposition(compositionName);
+		// Clone the composition for each played sample (we don't want them all
+		// to share the same instance) and play it
+		Composition composition = manager.getCompositionManager()
+				.cloneComposition(manager.getCompositionManager().getComposition(compositionName));
 		composition.setSample(true);
 		sampleCompositionList.add(composition);
 		composition.play();
@@ -252,7 +254,7 @@ public class Player {
 	}
 
 	public PlayState getPlayState() {
-		if (composition == null || composition.isSample()) {
+		if (composition == null) {
 			return PlayState.STOPPED;
 		}
 
@@ -332,7 +334,7 @@ public class Player {
 
 		composition.setAutoStartNextComposition(autoStartNextComposition);
 	}
-	
+
 	public void sampleCompositionFinishedPlaying(Composition composition) {
 		sampleCompositionList.remove(composition);
 	}

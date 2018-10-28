@@ -47,7 +47,7 @@ public class Midi2DmxReceiver implements Receiver {
 		}
 
 		MidiSignal midiSignal = new MidiSignal((ShortMessage) message);
-		
+
 		try {
 			MidiMapper.processMidiEvent(midiSignal, midiMapping);
 		} catch (IOException e) {

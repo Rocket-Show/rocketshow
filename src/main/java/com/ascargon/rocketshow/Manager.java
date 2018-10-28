@@ -434,12 +434,12 @@ public class Manager {
 		// Read the current composition file
 		if (currentSet == null) {
 			// We have no set. Simply read the first composition, if available
-			logger.debug("Try setting a default composition...");
+			logger.debug("Try setting an initial composition...");
 
 			List<Composition> compositions = compositionManager.getAllCompositions();
 
 			if (compositions.size() > 0) {
-				logger.debug("Set default composition '" + compositions.get(0).getName() + "'...");
+				logger.debug("Set initial composition '" + compositions.get(0).getName() + "'...");
 
 				player.setComposition(compositions.get(0));
 			}

@@ -32,7 +32,7 @@ public class AudioFile extends com.ascargon.rocketshow.composition.File {
 	@Override
 	public void load(long positionMillis) throws Exception {
 		PlayerType playerType;
-		
+
 		logger.debug("Loading file '" + this.getName() + " at millisecond position " + positionMillis + "...");
 
 		this.setLoaded(false);
@@ -43,16 +43,17 @@ public class AudioFile extends com.ascargon.rocketshow.composition.File {
 		}
 
 		audioPlayer.setLoop(this.isLoop());
-		
+
 		playerType = this.getManager().getSettings().getAudioPlayerType();
-		
-		// Play samples with alsa, because no sync is required and it's faster
-		if(this.getComposition().isSample()) {
+
+		// Play samples with alsa, because it's important to play it faster but
+		// sync is less important
+		// TODO Make this setting configurable
+		if (this.getComposition().isSample()) {
 			playerType = PlayerType.ALSA_PLAYER;
 		}
-		
-		audioPlayer.load(playerType, this, getPath(), positionMillis,
-				this.getManager().getSettings().getAudioOutput(),
+
+		audioPlayer.load(playerType, this, getPath(), positionMillis, this.getManager().getSettings().getAudioOutput(),
 				this.getManager().getSettings().getAlsaDeviceFromOutputBus(outputBus));
 	}
 

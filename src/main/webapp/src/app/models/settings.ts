@@ -1,3 +1,4 @@
+import { RaspberryGpioControl } from './raspberry-gpio-control';
 import { AudioDevice } from './audio-device';
 import { MidiRouting } from './midi-routing';
 import { AudioBus } from './audio-bus';
@@ -14,6 +15,7 @@ export class Settings {
     remoteMidiRoutingList: MidiRouting[];
     midiControlList: MidiControl[];
     midiMapping: MidiMapping;
+    raspberryGpioControlList: RaspberryGpioControl[];
     dmxSendDelayMillis: number;
     defaultComposition: string;
     offsetMillisMidi: number;
@@ -32,6 +34,7 @@ export class Settings {
     wlanApSsid: string;
     wlanApPassphrase: string;
     wlanApSsidHide: boolean;
+    enableRaspberryGpio: boolean;
 
     constructor(data?: any) {
         if (!data) {
@@ -82,6 +85,14 @@ export class Settings {
             this.midiMapping = new MidiMapping(data.midiMapping);
         }
 
+        if (data.raspberryGpioControlList) {
+            this.raspberryGpioControlList = [];
+
+            for (let raspberryGpioControl of data.raspberryGpioControlList) {
+                this.raspberryGpioControlList.push(new RaspberryGpioControl(raspberryGpioControl));
+            }
+        }
+
         this.dmxSendDelayMillis = data.dmxSendDelayMillis;
         this.defaultComposition = data.defaultComposition;
         this.offsetMillisMidi = data.offsetMillisMidi;
@@ -111,6 +122,8 @@ export class Settings {
         this.wlanApSsid = data.wlanApSsid;
         this.wlanApPassphrase = data.wlanApPassphrase;
         this.wlanApSsidHide = data.wlanApSsidHide;
+
+        this.enableRaspberryGpio = data.enableRaspberryGpio;
     }
 
 }

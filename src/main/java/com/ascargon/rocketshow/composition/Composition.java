@@ -201,6 +201,7 @@ public class Composition {
 					autoStopTimer = null;
 					
 					if (isSample) {
+						stop(false);
 						manager.getPlayer().sampleCompositionFinishedPlaying(thisComposition);
 					} else {
 						// Don't stop the composition for samples (they should

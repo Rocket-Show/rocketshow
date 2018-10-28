@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -36,7 +37,7 @@ public class DmxManager {
 	private Manager manager;
 
 	// Cache the channel values and send them each time
-	private List<DmxUniverse> dmxUniverseList = new ArrayList<DmxUniverse>();
+	private List<DmxUniverse> dmxUniverseList = new CopyOnWriteArrayList<DmxUniverse>();
 
 	private OlaClient olaClient;
 
@@ -50,8 +51,18 @@ public class DmxManager {
 
 	private List<String> standardDeviceNames = new ArrayList<String>();
 
+	private HttpClient httpClient;
+
+	// Whether to use RPC to send the DMX universe or to send it by HttpClient.
+	// RPC may break down, if called parallel multiple times. HttpClient is more
+	// stable but maybe slower?
+	private boolean useRpcToSendDMX = true;
+
 	public DmxManager(Manager manager) {
 		this.manager = manager;
+
+		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).build();
+		httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
 
 		try {
 			olaClient = new OlaClient();
@@ -77,14 +88,14 @@ public class DmxManager {
 		// Initialize the universe
 		for (DmxUniverse dmxUniverse : dmxUniverseList) {
 			HashMap<Integer, Integer> universe = dmxUniverse.getUniverse();
-			
+
 			for (int i = 0; i < 512; i++) {
 				universe.put(i, 0);
 			}
 		}
 
 		try {
-			sendUniverse();
+			send();
 		} catch (IOException e) {
 			logger.error("Could not initialize the DMX universe", e);
 		}
@@ -95,16 +106,21 @@ public class DmxManager {
 			return;
 		}
 
+		logger.trace("Send the DMX universe");
+
 		// Mix all current universes into one -> highest value per channel wins
 		short[] mixedUniverse = new short[512];
+
+		// Copy the list to protect against changes while mixing
+		List<DmxUniverse> dmxUniverseListCopy = new CopyOnWriteArrayList<DmxUniverse>(dmxUniverseList);
 
 		for (int i = 0; i < 512; i++) {
 			int highestValue = 0;
 
-			for (DmxUniverse dmxUniverse : dmxUniverseList) {
+			for (DmxUniverse dmxUniverse : dmxUniverseListCopy) {
 				HashMap<Integer, Integer> universe = dmxUniverse.getUniverse();
-						
-				if (universe.get(i).intValue() > highestValue) {
+
+				if (universe.size() > i && universe.get(i).intValue() > highestValue) {
 					highestValue = universe.get(i).intValue();
 				}
 			}
@@ -112,10 +128,47 @@ public class DmxManager {
 			mixedUniverse[i] = (short) highestValue;
 		}
 
-		olaClient.streamDmx(1, mixedUniverse);
+		if (useRpcToSendDMX) {
+			// Send to OLA over RPC call (faster but not so stable, when called
+			// in parallel)
+			olaClient.streamDmx(1, mixedUniverse);
+		} else {
+			// Send to OLA over HttpClient (uses more ressources but more
+			// stable)
+			String universeString = "";
+			for (int i = 0; i < mixedUniverse.length; i++) {
+				universeString += mixedUniverse[i] + ",";
+			}
+
+			// Cut away the last delimiter
+			universeString = universeString.substring(0, universeString.length() - 1);
+
+			// Post the data to the OLA backend API
+			HttpPost httpPost = new HttpPost(OLA_URL + "set_dmx");
+			List<NameValuePair> data = new ArrayList<NameValuePair>(2);
+			data.add(new BasicNameValuePair("u", "1"));
+			data.add(new BasicNameValuePair("d", universeString));
+			httpPost.setEntity(new UrlEncodedFormEntity(data, "UTF-8"));
+			httpPost.addHeader("Content-Type", "application/x-www-form-urlencoded");
+			HttpResponse response = httpClient.execute(httpPost);
+
+			// Read the response. The POST connection will not be released
+			// otherwise
+			BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+
+			String line = "";
+
+			while ((line = rd.readLine()) != null) {
+				logger.trace("Response from OLA POST: " + line);
+			}
+		}
 	}
 
-	public void send() throws IOException {
+	// Make sure, this method is synchronized. Otherwise it may happen, that
+	// some timers are started in parallel, because different threads send at
+	// the same time. This will cause the OLA rpc stream to break and a restart
+	// is required.
+	public synchronized void send() throws IOException {
 		logger.trace("Sending a DMX value");
 
 		// Schedule the specified count of executions in the specified delay
@@ -130,7 +183,7 @@ public class DmxManager {
 				try {
 					// Send the universe
 					sendUniverse();
-				} catch (IOException e) {
+				} catch (Exception e) {
 					logger.error("Could not send the DMX universe", e);
 				}
 
@@ -158,9 +211,6 @@ public class DmxManager {
 
 	private String getConnectedPort() throws ClientProtocolException, IOException {
 		// Query the OLA JSON API for all ports
-		HttpClient httpClient;
-		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).build();
-		httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
 		HttpGet httpGet = new HttpGet(OLA_URL + "json/get_ports");
 		HttpResponse response = httpClient.execute(httpGet);
 
@@ -267,6 +317,14 @@ public class DmxManager {
 			sendUniverseTimer.cancel();
 			sendUniverseTimer = null;
 		}
+	}
+
+	public boolean isUseRpcToSendDMX() {
+		return useRpcToSendDMX;
+	}
+
+	public void setUseRpcToSendDMX(boolean useRpcToSendDMX) {
+		this.useRpcToSendDMX = useRpcToSendDMX;
 	}
 
 }
