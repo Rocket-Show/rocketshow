@@ -17,7 +17,7 @@ import { Version } from '../../models/version';
 })
 export class SettingsSystemComponent implements OnInit {
 
-  selectUndefinedOptionValue: any;
+  selectUndefinedOptionValue: any = undefined;
 
   settings: Settings;
   compositions: Composition[];
@@ -35,16 +35,6 @@ export class SettingsSystemComponent implements OnInit {
     this.settingsService.getSettings().map(result => {
       this.settings = result;
     }).subscribe();
-  }
-
-  setDefaultComposition(event?: any) {
-    console.log('xxx', event);
-    if(event == undefined) {
-      console.log('aaa');
-    }
-    this.settings.defaultComposition = event;
-
-    console.log('fff', this.settings);
   }
 
   ngOnInit() {

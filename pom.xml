@@ -6,6 +6,18 @@
 	<version>1.4.2</version>
 	<packaging>war</packaging>
 
+	<repositories>
+		<repository>
+			<id>oss-snapshots-repo</id>
+			<name>Sonatype OSS Maven Repository</name>
+			<url>https://oss.sonatype.org/content/groups/public</url>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+			</snapshots>
+		</repository>
+	</repositories>
+
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
 		<finalName>ROOT</finalName>
@@ -67,8 +79,8 @@
 								<argument>--base-href=/app/</argument>
 								<argument>--prod</argument>
 
-								<!-- No caching to make sure, the newest version will always be loaded
-									(e.g. after an update). Caching anyways only has a small impact, because
+								<!-- No caching to make sure, the newest version will always be loaded 
+									(e.g. after an update). Caching anyways only has a small impact, because 
 									the devices are most probably run in an internal network. -->
 								<argument>--output-hashing=all</argument>
 							</arguments>
@@ -82,7 +94,7 @@
 		</plugins>
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
 					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
@@ -229,6 +241,13 @@
             <artifactId>gst1-java-core</artifactId>
             <version>[0.9.3,1.0)</version>
         </dependency>
+
+		<!-- To access Raspberry Pi GPIO pins -->
+		<dependency>
+			<groupId>com.pi4j</groupId>
+			<artifactId>pi4j-core</artifactId>
+			<version>1.2-SNAPSHOT</version>
+		</dependency>
 
 	</dependencies>
 

@@ -25,12 +25,14 @@ import com.ascargon.rocketshow.composition.Set;
 import com.ascargon.rocketshow.dmx.DmxManager;
 import com.ascargon.rocketshow.dmx.Midi2DmxConverter;
 import com.ascargon.rocketshow.image.ImageDisplayer;
-import com.ascargon.rocketshow.midi.Midi2ActionConverter;
+import com.ascargon.rocketshow.midi.MidiControlActionExecuter;
 import com.ascargon.rocketshow.midi.MidiDeviceConnectedListener;
 import com.ascargon.rocketshow.midi.MidiInDeviceReceiver;
 import com.ascargon.rocketshow.midi.MidiRouting;
 import com.ascargon.rocketshow.midi.MidiUtil;
 import com.ascargon.rocketshow.midi.MidiUtil.MidiDirection;
+import com.ascargon.rocketshow.raspberry.RaspberryGpioControlActionExecuter;
+import com.ascargon.rocketshow.util.ControlActionExecuter;
 import com.ascargon.rocketshow.util.ResetUsb;
 import com.ascargon.rocketshow.util.ShellManager;
 import com.ascargon.rocketshow.util.Updater;
@@ -49,9 +51,11 @@ public class Manager {
 	private CompositionManager compositionManager;
 	private FileManager fileManager;
 
+	private ControlActionExecuter controlActionExecuter;
+
 	private ImageDisplayer imageDisplayer;
 	private MidiInDeviceReceiver midiInDeviceReceiver;
-	private Midi2ActionConverter midi2ActionConverter;
+	private MidiControlActionExecuter midi2ActionConverter;
 
 	private DmxManager dmxManager;
 	private Midi2DmxConverter midi2DmxConverter;
@@ -68,7 +72,10 @@ public class Manager {
 	private Composition defaultComposition;
 
 	private Player player;
-	
+
+	// The Raspberry GPIO controller
+	private RaspberryGpioControlActionExecuter raspberryGpioControlActionExecuter;
+
 	private boolean isInitializing = true;
 
 	public void addMidiOutDeviceConnectedListener(MidiDeviceConnectedListener listener) {
@@ -199,7 +206,7 @@ public class Manager {
 
 		// Initialize the settings
 		settings = new Settings();
-		
+
 		try {
 			Gst.init();
 		} catch (Exception e) {
@@ -208,28 +215,29 @@ public class Manager {
 		
 		// Initialize the compositionmanager
 		compositionManager = new CompositionManager(this);
-		
+
 		// Cache all compositions and sets
 		try {
 			compositionManager.loadAllCompositions();
 		} catch (Exception e) {
 			logger.error("Could not cache the compositions", e);
 		}
-		
+
 		try {
 			compositionManager.loadAllSets();
 		} catch (Exception e) {
 			logger.error("Could not cache the sets", e);
 		}
-		
-		// Setup iptables, because it's not working properly in pi-gen distro generation
+
+		// Setup iptables, because it's not working properly in pi-gen distro
+		// generation
 		try {
 			new ShellManager(new String[] { "sudo", "iptables", "-t", "nat", "-A", "POSTROUTING", "-o", "eth0", "-j",
 					"MASQUERADE" });
 		} catch (IOException e) {
 			logger.error("Could not initialize iptables", e);
 		}
-		
+
 		// Initialize the player
 		player = new Player(this);
 
@@ -240,8 +248,11 @@ public class Manager {
 		// Initialize the updater
 		updater = new Updater(this);
 
+		// Initialize the control action executer
+		controlActionExecuter = new ControlActionExecuter(this);
+
 		// Initialize the MIDI action converter
-		midi2ActionConverter = new Midi2ActionConverter(this);
+		midi2ActionConverter = new MidiControlActionExecuter(this);
 
 		// Initialize the DMX manager
 		dmxManager = new DmxManager(this);
@@ -302,8 +313,15 @@ public class Manager {
 			logger.error("Could not restore session", e);
 		}
 
+		// Initialize the Raspberry GPIO control action executer
+		try {
+			raspberryGpioControlActionExecuter = new RaspberryGpioControlActionExecuter(this);
+		} catch (Exception e) {
+			logger.error("Could not initialize the Raspberry GPIO controller", e);
+		}
+
 		isInitializing = false;
-		
+
 		logger.info("Finished initializing");
 	}
 
@@ -423,12 +441,12 @@ public class Manager {
 		// Read the current composition file
 		if (currentSet == null) {
 			// We have no set. Simply read the first composition, if available
-			logger.debug("Try setting a default composition...");
+			logger.debug("Try setting an initial composition...");
 
 			List<Composition> compositions = compositionManager.getAllCompositions();
 
 			if (compositions.size() > 0) {
-				logger.debug("Set default composition '" + compositions.get(0).getName() + "'...");
+				logger.debug("Set initial composition '" + compositions.get(0).getName() + "'...");
 
 				player.setComposition(compositions.get(0));
 			}
@@ -497,6 +515,13 @@ public class Manager {
 			logger.error("Could not stop the default composition", e);
 		}
 
+		try {
+			raspberryGpioControlActionExecuter.close();
+			;
+		} catch (Exception e) {
+			logger.error("Could not close the Raspberry GPIO controller", e);
+		}
+
 		logger.info("Finished closing");
 	}
 
@@ -540,7 +565,7 @@ public class Manager {
 		this.dmxManager = dmxManager;
 	}
 
-	public Midi2ActionConverter getMidi2ActionConverter() {
+	public MidiControlActionExecuter getMidi2ActionConverter() {
 		return midi2ActionConverter;
 	}
 
@@ -586,6 +611,14 @@ public class Manager {
 
 	public boolean isInitializing() {
 		return isInitializing;
+	}
+
+	public ControlActionExecuter getControlActionExecuter() {
+		return controlActionExecuter;
+	}
+
+	public void setControlActionExecuter(ControlActionExecuter controlActionExecuter) {
+		this.controlActionExecuter = controlActionExecuter;
 	}
 
 }

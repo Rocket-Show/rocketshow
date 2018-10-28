@@ -26,9 +26,17 @@ public class Midi2DmxReceiver implements Receiver {
 	private MidiMapping midiMapping;
 	private Midi2DmxMapping midi2DmxMapping;
 	private Midi2DmxConverter midi2DmxConverter;
+	private DmxManager dmxManager;
+	
+	private DmxUniverse dmxUniverse;
 
 	public Midi2DmxReceiver(Manager manager) throws MidiUnavailableException {
 		this.midi2DmxConverter = manager.getMidi2DmxConverter();
+		this.dmxManager = manager.getDmxManager();
+		
+		dmxUniverse = new DmxUniverse();
+		
+		dmxManager.addDmxUniverse(dmxUniverse);
 	}
 
 	@Override
@@ -39,7 +47,7 @@ public class Midi2DmxReceiver implements Receiver {
 		}
 
 		MidiSignal midiSignal = new MidiSignal((ShortMessage) message);
-		
+
 		try {
 			MidiMapper.processMidiEvent(midiSignal, midiMapping);
 		} catch (IOException e) {
@@ -47,7 +55,7 @@ public class Midi2DmxReceiver implements Receiver {
 		}
 
 		try {
-			midi2DmxConverter.processMidiEvent(midiSignal, midi2DmxMapping);
+			midi2DmxConverter.processMidiEvent(midiSignal, midi2DmxMapping, dmxUniverse);
 		} catch (IOException e) {
 			logger.error("Could not send DMX signal", e);
 		}
@@ -71,7 +79,7 @@ public class Midi2DmxReceiver implements Receiver {
 	
 	@Override
 	public void close() {
-		// Nothing to do at the moment
+		dmxManager.removeDmxUniverse(dmxUniverse);
 	}
 
 }

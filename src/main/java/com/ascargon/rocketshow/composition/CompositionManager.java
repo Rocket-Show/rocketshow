@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.composition;
 
 import java.io.File;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.concurrent.Executors;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.util.JAXBSource;
 
 import org.apache.log4j.Logger;
 
@@ -40,7 +42,28 @@ public class CompositionManager {
 	private void sortSetCache() {
 		setCache.sort((o1, o2) -> o1.getName().compareTo(o2.getName()));
 	}
+	
+	private void finalizeLoadedComposition(Composition composition, String name) {
+		composition.setName(name);
+		composition.getMidiMapping().setParent(manager.getSettings().getMidiMapping());
+		composition.setManager(manager);
+	}
 
+	public Composition cloneComposition(Composition composition) throws Exception {
+		// Return a deep cloned instance of the composition
+		Composition clonedComposition;
+		JAXBContext jaxbContext = JAXBContext.newInstance(Composition.class);
+		
+		JAXBSource source = new JAXBSource(jaxbContext, composition);
+		
+        Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+        clonedComposition = (Composition) unmarshaller.unmarshal(source);
+
+        finalizeLoadedComposition(clonedComposition, composition.getName());
+        
+		return clonedComposition;
+	}
+	
 	private Composition loadComposition(String name) throws Exception {
 		Composition composition;
 
@@ -51,9 +74,7 @@ public class CompositionManager {
 		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 		composition = (Composition) jaxbUnmarshaller.unmarshal(new File(Manager.BASE_PATH + COMPOSITIONS_PATH + name));
 
-		composition.setName(name);
-		composition.getMidiMapping().setParent(manager.getSettings().getMidiMapping());
-		composition.setManager(manager);
+		finalizeLoadedComposition(composition, name);
 
 		logger.debug("Composition '" + name + "' successfully loaded");
 

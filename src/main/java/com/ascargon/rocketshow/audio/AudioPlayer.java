@@ -132,7 +132,7 @@ public class AudioPlayer {
 			shellManager.sendCommand("pause", true);
 		} else if (playerType == PlayerType.ALSA_PLAYER) {
 			// Buffer-time in microseconds = 100 seconds
-			shellManager = new ShellManager(new String[] { "aplay", "-D", "plug:" + device, path, "-B", "100000000" });
+			shellManager = new ShellManager(new String[] { "aplay", "-D", "plug:" + device, path });
 		}
 	}
 

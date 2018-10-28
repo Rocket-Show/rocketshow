@@ -134,7 +134,7 @@
                 <label class="col-form-label">{{ 'settings.audio-bus' | translate }}</label>
 
                 <select class="custom-select form-control" [ngModel]="file?.outputBus" (ngModelChange)="file.outputBus = $event">
-                  <option [value]="selectUndefinedOptionValue">- {{ 'settings.no-audio-bus' | translate }} -</option>
+                  <option [ngValue]="selectUndefinedOptionValue">- {{ 'settings.no-audio-bus' | translate }} -</option>
                   <option *ngFor="let audioBus of settings.audioBusList" [ngValue]="audioBus.name">{{ audioBus.name }}</option>
                 </select>
               </div>

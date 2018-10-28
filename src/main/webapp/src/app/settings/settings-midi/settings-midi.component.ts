@@ -196,18 +196,10 @@ export class SettingsMidiComponent implements OnInit {
 
       this.settingsService.getMidiInDevices().subscribe((response) => {
         this.midiInDevices = response;
-
-        if ((!this.settings.midiInDevice || this.settings.midiInDevice && this.settings.midiInDevice.id == 0) && response.length > 0) {
-          this.settings.midiInDevice = response[0];
-        }
       });
 
       this.settingsService.getMidiOutDevices().subscribe((response) => {
         this.midiOutDevices = response;
-
-        if ((!this.settings.midiOutDevice || this.settings.midiOutDevice && this.settings.midiOutDevice.id == 0) && response.length > 0) {
-          this.settings.midiOutDevice = response[0];
-        }
       });
     }).subscribe();
   }

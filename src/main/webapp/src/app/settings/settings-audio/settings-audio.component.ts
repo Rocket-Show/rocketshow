@@ -1,7 +1,5 @@
 import { AudioDevice } from './../../models/audio-device';
-import { AudioBus } from './../../models/audio-bus';
 import { Settings } from './../../models/settings';
-import { TranslateService } from '@ngx-translate/core';
 import { SettingsService } from './../../services/settings.service';
 import { Component, OnInit } from '@angular/core';
 
@@ -17,8 +15,7 @@ export class SettingsAudioComponent implements OnInit {
   audioOutputList: string[] = [];
 
   constructor(
-    private settingsService: SettingsService,
-    private translateService: TranslateService
+    private settingsService: SettingsService
   ) {
     this.audioOutputList.push('HEADPHONES');
     this.audioOutputList.push('HDMI');

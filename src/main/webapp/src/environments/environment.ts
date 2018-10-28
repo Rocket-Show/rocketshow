@@ -13,5 +13,7 @@ export const environment = {
   // Local backend in docker
   //localBackend: "localhost:8080",
 
+  //localBackend: "rocketshow.local",
+
   debug: true
 };

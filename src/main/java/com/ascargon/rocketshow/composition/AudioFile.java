@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 
 import com.ascargon.rocketshow.Manager;
 import com.ascargon.rocketshow.audio.AudioPlayer;
+import com.ascargon.rocketshow.audio.AudioPlayer.PlayerType;
 
 public class AudioFile extends com.ascargon.rocketshow.composition.File {
 
@@ -30,6 +31,8 @@ public class AudioFile extends com.ascargon.rocketshow.composition.File {
 
 	@Override
 	public void load(long positionMillis) throws Exception {
+		PlayerType playerType;
+
 		logger.debug("Loading file '" + this.getName() + " at millisecond position " + positionMillis + "...");
 
 		this.setLoaded(false);
@@ -40,8 +43,17 @@ public class AudioFile extends com.ascargon.rocketshow.composition.File {
 		}
 
 		audioPlayer.setLoop(this.isLoop());
-		audioPlayer.load(this.getManager().getSettings().getAudioPlayerType(), this, getPath(), positionMillis,
-				this.getManager().getSettings().getAudioOutput(),
+
+		playerType = this.getManager().getSettings().getAudioPlayerType();
+
+		// Play samples with alsa, because it's important to play it faster but
+		// sync is less important
+		// TODO Make this setting configurable
+		if (this.getComposition().isSample()) {
+			playerType = PlayerType.ALSA_PLAYER;
+		}
+
+		audioPlayer.load(playerType, this, getPath(), positionMillis, this.getManager().getSettings().getAudioOutput(),
 				this.getManager().getSettings().getAlsaDeviceFromOutputBus(outputBus));
 	}
 

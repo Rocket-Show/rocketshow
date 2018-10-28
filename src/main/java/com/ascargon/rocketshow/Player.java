@@ -1,5 +1,7 @@
 package com.ascargon.rocketshow;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -13,6 +15,7 @@ public class Player {
 	final static Logger logger = Logger.getLogger(Player.class);
 
 	private Composition composition;
+	private List<Composition> sampleCompositionList = new ArrayList<Composition>();
 	private Manager manager;
 
 	public Player(Manager manager) {
@@ -107,6 +110,47 @@ public class Player {
 
 	public void play() throws Exception {
 		this.play(0);
+	}
+
+	public void playAsSample(String compositionName) throws Exception {
+		// Play this composition in parallel without an option to stop/pause it
+		// and without sync
+		logger.trace("Play composition '" + compositionName + "' as a sample");
+
+		// Don't allow more than a specified amount of samples to be played in
+		// parallel because of performances reasons
+		// TODO make the max parallel samples configurable
+		if (sampleCompositionList.size() >= 20) {
+			logger.debug("Not playing composition '" + compositionName
+					+ "' as sample, because too many samples are already playing");
+
+			return;
+		}
+
+		ExecutorService playExecutor;
+
+		playExecutor = Executors.newFixedThreadPool(30);
+
+		// Play the composition on all remote devices
+		for (RemoteDevice remoteDevice : manager.getSettings().getRemoteDeviceList()) {
+			if (remoteDevice.isSynchronize()) {
+				playExecutor.execute(new Runnable() {
+					public void run() {
+						remoteDevice.playAsSample(compositionName);
+					}
+				});
+			}
+		}
+
+		playExecutor.shutdown();
+
+		// Clone the composition for each played sample (we don't want them all
+		// to share the same instance) and play it
+		Composition composition = manager.getCompositionManager()
+				.cloneComposition(manager.getCompositionManager().getComposition(compositionName));
+		composition.setSample(true);
+		sampleCompositionList.add(composition);
+		composition.play();
 	}
 
 	public void pause() throws Exception {
@@ -273,7 +317,6 @@ public class Player {
 
 	public void setCompositionName(String name) throws Exception {
 		setComposition(manager.getCompositionManager().getComposition(name));
-		;
 	}
 
 	public void loadFiles(long positionMillis) throws Exception {
@@ -290,6 +333,10 @@ public class Player {
 		}
 
 		composition.setAutoStartNextComposition(autoStartNextComposition);
+	}
+
+	public void sampleCompositionFinishedPlaying(Composition composition) {
+		sampleCompositionList.remove(composition);
 	}
 
 }
