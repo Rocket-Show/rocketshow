@@ -71,11 +71,11 @@ public class FileManager {
 		String path = Manager.BASE_PATH + com.ascargon.rocketshow.composition.File.MEDIA_PATH;
 
 		// Audio files
-		if (type.equals(FileType.MIDI.name())) {
+		if (type.equals(com.ascargon.rocketshow.composition.File.FileType.MIDI.name())) {
 			path += MidiFile.MIDI_PATH;
-		} else if (type.equals(FileType.AUDIO.name())) {
+		} else if (type.equals(com.ascargon.rocketshow.composition.File.FileType.AUDIO.name())) {
 			path += AudioFile.AUDIO_PATH;
-		} else if (type.equals(FileType.VIDEO.name())) {
+		} else if (type.equals(com.ascargon.rocketshow.composition.File.FileType.VIDEO.name())) {
 			path += VideoFile.VIDEO_PATH;
 		}
 

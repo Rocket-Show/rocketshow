@@ -3,6 +3,7 @@ package com.ascargon.rocketshow.util;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+import com.ascargon.rocketshow.composition.File;
 import org.apache.log4j.Logger;
 
 import com.ascargon.rocketshow.audio.AudioFile;

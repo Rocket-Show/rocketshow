@@ -17,7 +17,6 @@ import org.apache.log4j.Logger;
 
 import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.audio.AudioDevice;
-import com.ascargon.rocketshow.audio.AlsaPlayer.PlayerType;
 import com.ascargon.rocketshow.midi.MidiControl;
 import com.ascargon.rocketshow.midi.MidiDevice;
 import com.ascargon.rocketshow.midi.MidiMapping;
@@ -62,8 +61,6 @@ public class Settings {
 	private List<MidiRouting> deviceInMidiRoutingList = new ArrayList<MidiRouting>();
 	private List<MidiRouting> remoteMidiRoutingList = new ArrayList<MidiRouting>();
 
-	private PlayerType audioPlayerType;
-
 	private String defaultComposition;
 
 	private LoggingLevel loggingLevel;
@@ -97,8 +94,6 @@ public class Settings {
 
 		midiInDevice = new MidiDevice();
 		midiOutDevice = new MidiDevice();
-
-		audioPlayerType = PlayerType.GST;
 
 		// Global MIDI mapping
 		midiMapping = new MidiMapping();
@@ -459,15 +454,6 @@ public class Settings {
 
 	public void setRaspberryGpioControlList(List<RaspberryGpioControl> raspberryGpioControlList) {
 		this.raspberryGpioControlList = raspberryGpioControlList;
-	}
-
-	@XmlElement
-	public PlayerType getAudioPlayerType() {
-		return audioPlayerType;
-	}
-
-	public void setAudioPlayerType(PlayerType audioPlayerType) {
-		this.audioPlayerType = audioPlayerType;
 	}
 
 	@XmlElement

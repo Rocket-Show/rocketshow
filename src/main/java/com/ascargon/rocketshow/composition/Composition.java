@@ -15,6 +15,7 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.ascargon.rocketshow.api.Audio;
 import com.ascargon.rocketshow.midi.MidiPlayer;
 import org.apache.log4j.Logger;
 import org.freedesktop.gstreamer.*;
@@ -96,12 +97,12 @@ public class Composition {
 
     // Create a new pipeline, if there is at least one audio- or video file in this composition
     private boolean compositionNeedsPipeline() {
-        if (!isSample) {
+        if (isSample) {
             return false;
         }
 
         for (File file : fileList) {
-            if (file.isActive() && file instanceof MidiFile) {
+            if (file.isActive() && (file instanceof AudioFile || file instanceof VideoFile)) {
                 return true;
             }
         }
@@ -127,6 +128,9 @@ public class Composition {
                 "Loading composition '" + name + "...");
 
         if (compositionNeedsPipeline()) {
+            logger.trace(
+                    "Pipeline required");
+
             if (pipeline != null) {
                 pipeline.stop();
             }
@@ -546,14 +550,6 @@ public class Composition {
 
     public void setSample(boolean isSample) {
         this.isSample = isSample;
-    }
-
-    public Pipeline getPipeline() {
-        return pipeline;
-    }
-
-    public void setPipeline(Pipeline pipeline) {
-        this.pipeline = pipeline;
     }
 
 }
