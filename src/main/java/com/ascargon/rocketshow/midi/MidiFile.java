@@ -1,4 +1,4 @@
-package com.ascargon.rocketshow.composition;
+package com.ascargon.rocketshow.midi;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,8 +12,6 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.apache.log4j.Logger;
 
 import com.ascargon.rocketshow.Manager;
-import com.ascargon.rocketshow.midi.MidiPlayer;
-import com.ascargon.rocketshow.midi.MidiRouting;
 
 public class MidiFile extends com.ascargon.rocketshow.composition.File {
 
@@ -40,14 +38,22 @@ public class MidiFile extends com.ascargon.rocketshow.composition.File {
 	public void load(long positionMillis) throws Exception {
 		logger.debug("Loading file '" + this.getName() + " at millisecond position " + positionMillis + "...");
 
+		boolean useGst = true;
+		
 		this.setLoaded(false);
 		this.setLoading(true);
-
+		
 		if (midiPlayer == null) {
 			midiPlayer = new MidiPlayer(this.getManager(), midiRoutingList);
 		}
+		
+		if(this.getComposition().isSample()) {
+			// No synced playback over GST
+			useGst = false;
+		}
+		
 		midiPlayer.setLoop(this.isLoop());
-		midiPlayer.load(this, this.getPath(), positionMillis);
+		midiPlayer.load(this, this.getPath(), positionMillis, this.getComposition().getPipeline(), useGst);
 
 		for (MidiRouting midiRouting : midiRoutingList) {
 			midiRouting.load(this.getManager());

@@ -12,6 +12,7 @@ import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
 
 import org.apache.log4j.Logger;
+import org.freedesktop.gstreamer.Pipeline;
 
 import com.ascargon.rocketshow.Manager;
 import com.ascargon.rocketshow.composition.PlayerLoadedListener;
@@ -32,7 +33,9 @@ public class MidiPlayer {
 		sequencer.setMicrosecondPosition(position);
 	}
 
-	public void load(PlayerLoadedListener playerLoadedListener, String path, long positionMillis) throws Exception {
+	public void load(PlayerLoadedListener playerLoadedListener, String path, long positionMillis, Pipeline pipeline,
+			boolean useGst) throws Exception {
+
 		if (sequencer != null) {
 			if (sequencer.isOpen()) {
 				sequencer.close();
@@ -50,7 +53,7 @@ public class MidiPlayer {
 		}
 
 		// Set the sequencer to looped, if necessary
-		if(loop) {
+		if (loop) {
 			sequencer.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
 		}
 

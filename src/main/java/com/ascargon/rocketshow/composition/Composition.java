@@ -15,10 +15,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.log4j.Logger;
+import org.freedesktop.gstreamer.Pipeline;
 
 import com.ascargon.rocketshow.Manager;
+import com.ascargon.rocketshow.audio.AudioFile;
+import com.ascargon.rocketshow.midi.MidiFile;
 import com.ascargon.rocketshow.midi.MidiMapping;
-import com.ascargon.rocketshow.midi.MidiRouting;;
+import com.ascargon.rocketshow.midi.MidiRouting;
+import com.ascargon.rocketshow.video.VideoFile;;
 
 @XmlRootElement
 public class Composition {
@@ -66,6 +70,9 @@ public class Composition {
 	// Is this composition played as a sample?
 	private boolean isSample = false;
 
+	// The gstreamer pipeline, used to sync all files in this composition
+	private Pipeline pipeline;
+
 	public void close() throws Exception {
 		for (File file : fileList) {
 			file.close();
@@ -102,6 +109,10 @@ public class Composition {
 	public synchronized void loadFiles(long positionMillis) throws Exception {
 		if (filesLoaded) {
 			return;
+		}
+
+		if (!isSample) {
+			pipeline = new Pipeline();
 		}
 
 		this.positionMillis = positionMillis;
@@ -196,10 +207,10 @@ public class Composition {
 			public void run() {
 				try {
 					logger.debug("Automatically stopping the composition...");
-					
+
 					timer.cancel();
 					autoStopTimer = null;
-					
+
 					if (isSample) {
 						stop(false);
 						manager.getPlayer().sampleCompositionFinishedPlaying(thisComposition);
@@ -231,7 +242,7 @@ public class Composition {
 				}
 			}
 		}, maxDurationAndOffset);
-		
+
 		autoStopTimer = timer;
 	}
 
@@ -242,6 +253,8 @@ public class Composition {
 
 		// All files are loaded -> play the composition (start each file)
 		logger.info("Playing composition '" + name + "'");
+		
+		pipeline.play();
 
 		for (File file : fileList) {
 			if (file.isActive()) {
@@ -274,9 +287,6 @@ public class Composition {
 			positionMillis += lastStartTime.until(LocalDateTime.now(), ChronoUnit.MILLIS);
 		}
 
-		// A the moment, only second exact pausing/seeking is possible
-		positionMillis = positionMillis - (positionMillis % 1000);
-
 		lastStartTime = null;
 
 		if (playState == PlayState.PAUSED) {
@@ -286,6 +296,8 @@ public class Composition {
 		logger.info("Pausing composition '" + name + "'");
 
 		// Pause the composition
+		pipeline.pause();
+		
 		for (File file : fileList) {
 			if (file.isActive()) {
 				file.pause();
@@ -329,6 +341,9 @@ public class Composition {
 		logger.info("Stopping composition '" + name + "'");
 
 		// Stop the composition
+		pipeline.stop();
+		pipeline = null;
+		
 		for (File file : fileList) {
 			if (file.isActive()) {
 				try {
@@ -478,6 +493,14 @@ public class Composition {
 
 	public void setSample(boolean isSample) {
 		this.isSample = isSample;
+	}
+
+	public Pipeline getPipeline() {
+		return pipeline;
+	}
+
+	public void setPipeline(Pipeline pipeline) {
+		this.pipeline = pipeline;
 	}
 
 }

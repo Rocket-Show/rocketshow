@@ -1,4 +1,4 @@
-package com.ascargon.rocketshow.composition;
+package com.ascargon.rocketshow.audio;
 
 import java.io.IOException;
 import java.util.Timer;
@@ -9,7 +9,6 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.apache.log4j.Logger;
 
 import com.ascargon.rocketshow.Manager;
-import com.ascargon.rocketshow.audio.AudioPlayer;
 import com.ascargon.rocketshow.audio.AudioPlayer.PlayerType;
 
 public class AudioFile extends com.ascargon.rocketshow.composition.File {
@@ -54,7 +53,7 @@ public class AudioFile extends com.ascargon.rocketshow.composition.File {
 		}
 
 		audioPlayer.load(playerType, this, getPath(), positionMillis, this.getManager().getSettings().getAudioOutput(),
-				this.getManager().getSettings().getAlsaDeviceFromOutputBus(outputBus));
+				this.getManager().getSettings().getAlsaDeviceFromOutputBus(outputBus), this.getComposition().getPipeline());
 	}
 
 	@Override

@@ -98,7 +98,7 @@ public class Settings {
 		midiInDevice = new MidiDevice();
 		midiOutDevice = new MidiDevice();
 
-		audioPlayerType = PlayerType.MPLAYER;
+		audioPlayerType = PlayerType.GST;
 
 		// Global MIDI mapping
 		midiMapping = new MidiMapping();

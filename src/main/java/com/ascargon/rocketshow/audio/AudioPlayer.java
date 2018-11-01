@@ -9,6 +9,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.freedesktop.gstreamer.Element;
 import org.freedesktop.gstreamer.ElementFactory;
+import org.freedesktop.gstreamer.Pipeline;
 import org.freedesktop.gstreamer.lowlevel.GstControlSourceAPI.ValueArray;
 
 import com.ascargon.rocketshow.Settings.AudioOutput;
@@ -32,7 +33,7 @@ public class AudioPlayer {
 	private PlayerType playerType = PlayerType.MPLAYER;
 
 	public void load(PlayerType playerType, PlayerLoadedListener playerLoadedListener, String path, long positionMillis,
-			AudioOutput audioOutput, String device) throws IOException, InterruptedException {
+			AudioOutput audioOutput, String device, Pipeline pipeline) throws IOException, InterruptedException {
 
 		String seekSeconds = String.valueOf(Math.round(positionMillis / 1000));
 
@@ -42,7 +43,7 @@ public class AudioPlayer {
 
 		// TODO
 		playerType = PlayerType.GST;
-		
+
 		if (playerType == PlayerType.MPLAYER) {
 			List<String> params = new ArrayList<String>();
 
@@ -120,10 +121,10 @@ public class AudioPlayer {
 		} else if (playerType == PlayerType.ALSA_PLAYER) {
 			logger.debug("File '" + path + "' loaded");
 			playerLoadedListener.playerLoaded();
-		} else if(playerType == PlayerType.GST) {
+		} else if (playerType == PlayerType.GST) {
 			Element element = ElementFactory.make("alsasink", "audio-output");
 			ValueArray xx = new ValueArray();
-			
+
 		}
 	}
 

@@ -1,4 +1,4 @@
-package com.ascargon.rocketshow.composition;
+package com.ascargon.rocketshow.video;
 
 import java.io.IOException;
 import java.util.Timer;
@@ -9,7 +9,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.apache.log4j.Logger;
 
 import com.ascargon.rocketshow.Manager;
-import com.ascargon.rocketshow.video.VideoPlayer;
+import com.ascargon.rocketshow.composition.File;
 
 public class VideoFile extends File {
 
@@ -38,7 +38,7 @@ public class VideoFile extends File {
 		}
 		
 		videoPlayer.setLoop(this.isLoop());
-		videoPlayer.load(this, getPath(), positionMillis);
+		videoPlayer.load(this, getPath(), positionMillis, this.getComposition().getPipeline());
 	}
 
 	@Override

@@ -10,6 +10,45 @@ apt-get upgrade
 
 apt-get -y install oracle-java8-jdk omxplayer fbi ola mplayer libnss-mdns dnsmasq hostapd authbind zip
 
+# Install the gstreamer packages, built by Rocket Show for the Raspberry Pi to make 
+# accelerated video playback on Raspberry Pi possible. The versions on the official repos did not work until
+# now (version 1.14.3). The script used to compile the custom gst-version is available here:
+# https://gist.github.com/moritzvieli/417de950209a24a4f7a57ce1bb5bfeb7
+wget https://rocketshow.net/install/gst/gstreamer_1.14.3-1_armhf.deb
+wget https://rocketshow.net/install/gst/gst-plugins-base_1.14.3-1_armhf.deb
+wget https://rocketshow.net/install/gst/gst-plugins-good_1.14.3-1_armhf.deb
+wget https://rocketshow.net/install/gst/gst-plugins-ugly_1.14.3-1_armhf.deb
+wget https://rocketshow.net/install/gst/gst-plugins-bad_1.14.3-1_armhf.deb
+wget https://rocketshow.net/install/gst/gst-libav_1.14.3-1_armhf.deb
+wget https://rocketshow.net/install/gst/gst-omx_1.14.3-1_armhf.deb
+
+apt-get install ./gstreamer_1.14.3-1_armhf.deb
+apt-get install ./gst-plugins-base_1.14.3-1_armhf.deb
+apt-get install ./gst-plugins-good_1.14.3-1_armhf.deb
+apt-get install ./gst-plugins-ugly_1.14.3-1_armhf.deb
+apt-get install ./gst-plugins-bad_1.14.3-1_armhf.deb
+apt-get install ./gst-libav_1.14.3-1_armhf.deb
+apt-get install ./gst-omx_1.14.3-1_armhf.deb
+
+rm gstreamer_1.14.3-1_armhf.deb
+rm gst-plugins-base_1.14.3-1_armhf.deb
+rm gst-plugins-good_1.14.3-1_armhf.deb
+rm gst-plugins-ugly_1.14.3-1_armhf.deb
+rm gst-plugins-bad_1.14.3-1_armhf.deb
+rm gst-libav_1.14.3-1_armhf.deb
+rm gst-omx_1.14.3-1_armhf.deb
+
+# Point libEGL and libGLESv2 to the correct version by copying the correct files. A symbolic link
+# won't work until ldconfig is run again. There should be a cleaner solution, configuring ldconfig
+# to do this work.
+rm /usr/lib/arm-linux-gnueabihf/libEGL.so.1
+rm /usr/lib/arm-linux-gnueabihf/libGLESv2.so.2
+
+cp /opt/vc/lib/libbrcmEGL.so /usr/lib/arm-linux-gnueabihf/libEGL.so.1
+cp /opt/vc/lib/libbrcmGLESv2.so /usr/lib/arm-linux-gnueabihf/libGLESv2.so.2
+
+ldconfig
+
 # Add the rocketshow user
 adduser \
   --system \
