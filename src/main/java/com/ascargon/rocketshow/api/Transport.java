@@ -25,8 +25,7 @@ public class Transport {
 	@Path("load")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response load(@QueryParam("name") String compositionName,
-			@QueryParam("positionMillis") @DefaultValue("0") Long position) throws Exception {
+	public Response load(@QueryParam("name") String compositionName) throws Exception {
 		logger.info("Received API request for transport/load");
 
 		Manager manager = (Manager) context.getAttribute("manager");
@@ -41,7 +40,7 @@ public class Transport {
 		}
 
 		// Load the files for the current composition
-		manager.getPlayer().loadFiles(position);
+		manager.getPlayer().load();
 
 		return Response.status(200).build();
 	}

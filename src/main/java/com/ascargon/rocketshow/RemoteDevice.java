@@ -24,150 +24,150 @@ import org.apache.log4j.Logger;
 @XmlRootElement
 public class RemoteDevice {
 
-	final static Logger logger = Logger.getLogger(RemoteDevice.class);
+    final static Logger logger = Logger.getLogger(RemoteDevice.class);
 
-	private HttpClient httpClient;
+    private HttpClient httpClient;
 
-	// The name of the remote device
-	private String name;
+    // The name of the remote device
+    private String name;
 
-	// The host address (IP or hostname) of the remote device
-	private String host;
+    // The host address (IP or hostname) of the remote device
+    private String host;
 
-	// Synchronize composition plays/stops with the local device
-	private boolean synchronize;
+    // Synchronize composition plays/stops with the local device
+    private boolean synchronize;
 
-	public RemoteDevice() {
-		// TODO Add this timeout to the settings
-		RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).build();
-		httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
-	}
+    public RemoteDevice() {
+        // TODO Add this timeout to the settings
+        RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).build();
+        httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
+    }
 
-	private void executeRequest(String url) {
-		try {
-			HttpPost httpPost = new HttpPost(url);
-			HttpResponse response;
+    private void executeRequest(String url) {
+        try {
+            HttpPost httpPost = new HttpPost(url);
+            HttpResponse response;
 
-			response = httpClient.execute(httpPost);
+            response = httpClient.execute(httpPost);
 
-			// Read the response. The POST connection will not be
-			// released
-			// otherwise
-			BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+            // Read the response. The POST connection will not be
+            // released
+            // otherwise
+            BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 
-			String line = "";
+            String line = "";
 
-			while ((line = rd.readLine()) != null) {
-				logger.debug("Response from remote device POST: " + line);
-			}
+            while ((line = rd.readLine()) != null) {
+                logger.debug("Response from remote device POST: " + line);
+            }
 
-			if (response.getStatusLine().getStatusCode() != 200) {
-				logger.error("Could not execute action on remote device with url '" + url + "'. Reason: '"
-						+ response.getStatusLine().getReasonPhrase() + "'. Body: "
-						+ EntityUtils.toString(response.getEntity()));
-			}
-		} catch (Exception e) {
-			logger.error("Could not execute action on remote device '" + name + "' with url '" + url + "'", e);
-		}
-	}
+            if (response.getStatusLine().getStatusCode() != 200) {
+                logger.error("Could not execute action on remote device with url '" + url + "'. Reason: '"
+                        + response.getStatusLine().getReasonPhrase() + "'. Body: "
+                        + EntityUtils.toString(response.getEntity()));
+            }
+        } catch (Exception e) {
+            logger.error("Could not execute action on remote device '" + name + "' with url '" + url + "'", e);
+        }
+    }
 
-	public void doPost(String apiUrl, boolean synchronous) {
-		// Build the url for the post request
-		String url = "http://" + host + "/api/" + apiUrl;
+    public void doPost(String apiUrl, boolean synchronous) {
+        // Build the url for the post request
+        String url = "http://" + host + "/api/" + apiUrl;
 
-		if (synchronous) {
-			executeRequest(url);
-		} else {
-			new Thread(new Runnable() {
-				public void run() {
-					executeRequest(url);
-				}
-			}).start();
-		}
-	}
+        if (synchronous) {
+            executeRequest(url);
+        } else {
+            new Thread(new Runnable() {
+                public void run() {
+                    executeRequest(url);
+                }
+            }).start();
+        }
+    }
 
-	public void doPost(String apiUrl) {
-		doPost(apiUrl, false);
-	}
+    public void doPost(String apiUrl) {
+        doPost(apiUrl, false);
+    }
 
-	public void reboot() {
-		doPost("system/reboot");
-	}
+    public void reboot() {
+        doPost("system/reboot");
+    }
 
-	public void load(boolean synchronous, String name, long positionMillis) {
-		try {
-			doPost("transport/load?name=" + URLEncoder.encode(name, "UTF-8") + "&positionMillis=" + positionMillis,
-					synchronous);
-		} catch (UnsupportedEncodingException e) {
-			logger.error("Could not encode the name " + name, e);
-		}
-	}
+    public void load(boolean synchronous, String name) {
+        try {
+            doPost("transport/load?name=" + URLEncoder.encode(name, "UTF-8"),
+                    synchronous);
+        } catch (UnsupportedEncodingException e) {
+            logger.error("Could not encode the name " + name, e);
+        }
+    }
 
-	public void load() {
-		doPost("transport/load", false);
-	}
+    public void load() {
+        doPost("transport/load", false);
+    }
 
-	public void play() {
-		doPost("transport/play");
-	}
-	
-	public void playAsSample(String compositionName) {
-		doPost("transport/play-as-sample?name=" + compositionName);
-	}
+    public void play() {
+        doPost("transport/play");
+    }
 
-	public void pause() {
-		doPost("transport/pause");
-	}
+    public void playAsSample(String compositionName) {
+        doPost("transport/play-as-sample?name=" + compositionName);
+    }
 
-	public void stop(boolean playDefaultComposition, boolean restartAfter) {
-		doPost("transport/stop?playDefaultComposition=" + playDefaultComposition + "&restartAfter=" + restartAfter);
-	}
+    public void pause() {
+        doPost("transport/pause");
+    }
 
-	public void togglePlay() {
-		doPost("transport/toggle-play");
-	}
+    public void stop(boolean playDefaultComposition, boolean restartAfter) {
+        doPost("transport/stop?playDefaultComposition=" + playDefaultComposition + "&restartAfter=" + restartAfter);
+    }
 
-	public void setNextComposition() {
-		doPost("transport/next-composition");
-	}
+    public void togglePlay() {
+        doPost("transport/toggle-play");
+    }
 
-	public void setPreviousComposition() {
-		doPost("transport/previous-composition");
-	}
+    public void setNextComposition() {
+        doPost("transport/next-composition");
+    }
 
-	public void setCompositionName(String compositionName) {
-		doPost("transport/set-composition-name?name=" + compositionName, true);
-	}
+    public void setPreviousComposition() {
+        doPost("transport/previous-composition");
+    }
 
-	public void setCompositionIndex(int compositionIndex) {
-		doPost("transport/set-composition-index?index=" + compositionIndex, true);
-	}
+    public void setCompositionName(String compositionName) {
+        doPost("transport/set-composition-name?name=" + compositionName, true);
+    }
 
-	@XmlElement
-	public String getName() {
-		return name;
-	}
+    public void setCompositionIndex(int compositionIndex) {
+        doPost("transport/set-composition-index?index=" + compositionIndex, true);
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    @XmlElement
+    public String getName() {
+        return name;
+    }
 
-	@XmlElement
-	public String getHost() {
-		return host;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public void setHost(String host) {
-		this.host = host;
-	}
+    @XmlElement
+    public String getHost() {
+        return host;
+    }
 
-	@XmlElement
-	public boolean isSynchronize() {
-		return synchronize;
-	}
+    public void setHost(String host) {
+        this.host = host;
+    }
 
-	public void setSynchronize(boolean synchronize) {
-		this.synchronize = synchronize;
-	}
+    @XmlElement
+    public boolean isSynchronize() {
+        return synchronize;
+    }
+
+    public void setSynchronize(boolean synchronize) {
+        this.synchronize = synchronize;
+    }
 
 }

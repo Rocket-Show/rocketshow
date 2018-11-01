@@ -9,145 +9,67 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.apache.log4j.Logger;
 
 import com.ascargon.rocketshow.Manager;
-import com.ascargon.rocketshow.audio.AudioPlayer.PlayerType;
 
 public class AudioFile extends com.ascargon.rocketshow.composition.File {
 
-	final static Logger logger = Logger.getLogger(AudioFile.class);
+    final static Logger logger = Logger.getLogger(AudioFile.class);
 
-	public final static String AUDIO_PATH = "audio/";
+    public final static String AUDIO_PATH = "audio/";
 
-	private AudioPlayer audioPlayer;
+    private boolean isSample = false;
 
-	private String outputBus;
+    private AlsaPlayer alsaPlayer;
 
-	private Timer playTimer;
+    private String outputBus;
 
-	@XmlTransient
-	public String getPath() {
-		return Manager.BASE_PATH + MEDIA_PATH + AUDIO_PATH + getName();
-	}
+    @XmlTransient
+    public String getPath() {
+        return Manager.BASE_PATH + MEDIA_PATH + AUDIO_PATH + getName();
+    }
 
-	@Override
-	public void load(long positionMillis) throws Exception {
-		PlayerType playerType;
+    public void load(boolean isSample) throws Exception {
+        logger.debug("Loading file '" + this.getName() + "...");
 
-		logger.debug("Loading file '" + this.getName() + " at millisecond position " + positionMillis + "...");
+        this.isSample = isSample;
 
-		this.setLoaded(false);
-		this.setLoading(true);
+        // Play samples with alsa, because it's important to play it faster but
+        // sync is less important
+        // TODO Make this setting configurable
+        if (isSample) {
+            alsaPlayer = new AlsaPlayer();
+        }
+    }
 
-		if (audioPlayer == null) {
-			audioPlayer = new AudioPlayer();
-		}
+    @XmlTransient
+    public int getFullOffsetMillis() {
+        return this.getOffsetMillis() + this.getManager().getSettings().getOffsetMillisAudio();
+    }
 
-		audioPlayer.setLoop(this.isLoop());
+    public void play() throws Exception {
+        String path = getPath();
 
-		playerType = this.getManager().getSettings().getAudioPlayerType();
+        if (isSample) {
+            alsaPlayer.play(this.getPath(), this.getManager().getSettings().getAlsaDeviceFromOutputBus(outputBus));
+        }
+    }
 
-		// Play samples with alsa, because it's important to play it faster but
-		// sync is less important
-		// TODO Make this setting configurable
-		if (this.getComposition().isSample()) {
-			playerType = PlayerType.ALSA_PLAYER;
-		}
+    public void close() throws Exception {
+        if (alsaPlayer != null) {
+            alsaPlayer.close();
+            alsaPlayer = null;
+        }
+    }
 
-		audioPlayer.load(playerType, this, getPath(), positionMillis, this.getManager().getSettings().getAudioOutput(),
-				this.getManager().getSettings().getAlsaDeviceFromOutputBus(outputBus), this.getComposition().getPipeline());
-	}
+    public String getOutputBus() {
+        return outputBus;
+    }
 
-	@Override
-	public void close() throws Exception {
-		stop();
-	}
+    public void setOutputBus(String outputBus) {
+        this.outputBus = outputBus;
+    }
 
-	@XmlTransient
-	public int getFullOffsetMillis() {
-		return this.getOffsetMillis() + this.getManager().getSettings().getOffsetMillisAudio();
-	}
-
-	@Override
-	public void play() throws Exception {
-		String path = getPath();
-
-		if (audioPlayer == null) {
-			logger.error("Audio player not initialized for file '" + path + "'");
-			return;
-		}
-
-		if (this.getFullOffsetMillis() > 0) {
-			logger.debug("Wait " + this.getFullOffsetMillis() + " milliseconds before starting the audio file '"
-					+ this.getPath() + "'");
-
-			playTimer = new Timer();
-			playTimer.schedule(new TimerTask() {
-				@Override
-				public void run() {
-					try {
-						playTimer.cancel();
-						playTimer = null;
-						audioPlayer.play();
-					} catch (IOException e) {
-						logger.error("Could not play audio file '" + path + "'", e);
-					}
-				}
-			}, this.getFullOffsetMillis());
-		} else {
-			audioPlayer.play();
-		}
-	}
-
-	@Override
-	public void pause() throws IOException {
-		if (playTimer != null) {
-			playTimer.cancel();
-			playTimer = null;
-		}
-
-		if (audioPlayer == null) {
-			logger.error("Audio player not initialized for file '" + getPath() + "'");
-			return;
-		}
-
-		audioPlayer.pause();
-	}
-
-	@Override
-	public void resume() throws IOException {
-		if (audioPlayer == null) {
-			logger.error("Audio player not initialized for file '" + getPath() + "'");
-			return;
-		}
-
-		audioPlayer.resume();
-	}
-
-	@Override
-	public void stop() throws Exception {
-		if (playTimer != null) {
-			playTimer.cancel();
-			playTimer = null;
-		}
-
-		if (audioPlayer == null) {
-			logger.error("Audio player not initialized for file '" + getPath() + "'");
-			return;
-		}
-
-		this.setLoaded(false);
-		audioPlayer.stop();
-	}
-
-	public String getOutputBus() {
-		return outputBus;
-	}
-
-	public void setOutputBus(String outputBus) {
-		this.outputBus = outputBus;
-	}
-
-	public FileType getType() {
-		return FileType.AUDIO;
-	}
+    public FileType getType() {
+        return FileType.AUDIO;
+    }
 
 }

@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.ascargon.rocketshow.Manager;
 
 @XmlRootElement
-abstract public class File implements PlayerLoadedListener {
+abstract public class File {
 
 	public enum FileType {
 		MIDI, AUDIO, VIDEO, UNKNOWN
@@ -18,10 +18,6 @@ abstract public class File implements PlayerLoadedListener {
 	private String name;
 
 	private Manager manager;
-	private Composition composition;
-
-	private boolean loading = false;
-	private boolean loaded = false;
 
 	private boolean active = true;
 
@@ -34,28 +30,6 @@ abstract public class File implements PlayerLoadedListener {
 
 	// Play offset
 	private int offsetMillis = 0;
-
-	abstract public void load(long positionMillis) throws Exception;
-
-	abstract public void close() throws Exception;
-
-	abstract public void play() throws Exception;
-
-	abstract public void pause() throws Exception;
-
-	abstract public void resume() throws Exception;
-
-	abstract public void stop() throws Exception;
-
-	@Override
-	public void playerLoaded() {
-		loaded = true;
-		loading = false;
-
-		if (composition != null) {
-			composition.playerLoaded();
-		}
-	}
 
 	@XmlElement
 	public String getName() {
@@ -82,33 +56,6 @@ abstract public class File implements PlayerLoadedListener {
 
 	public void setManager(Manager manager) {
 		this.manager = manager;
-	}
-
-	@XmlTransient
-	public Composition getComposition() {
-		return composition;
-	}
-
-	public void setComposition(Composition composition) {
-		this.composition = composition;
-	}
-
-	@XmlTransient
-	public boolean isLoaded() {
-		return loaded;
-	}
-
-	public void setLoaded(boolean loaded) {
-		this.loaded = loaded;
-	}
-
-	@XmlTransient
-	public boolean isLoading() {
-		return loading;
-	}
-
-	public void setLoading(boolean loading) {
-		this.loading = loading;
 	}
 
 	public boolean isActive() {

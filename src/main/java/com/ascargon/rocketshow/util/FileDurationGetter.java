@@ -6,7 +6,6 @@ import java.io.InputStreamReader;
 import org.apache.log4j.Logger;
 
 import com.ascargon.rocketshow.audio.AudioFile;
-import com.ascargon.rocketshow.composition.File;
 import com.ascargon.rocketshow.midi.MidiFile;
 import com.ascargon.rocketshow.midi.MidiPlayer;
 import com.ascargon.rocketshow.video.VideoFile;;

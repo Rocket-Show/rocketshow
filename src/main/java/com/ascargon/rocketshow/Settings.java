@@ -17,7 +17,7 @@ import org.apache.log4j.Logger;
 
 import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.audio.AudioDevice;
-import com.ascargon.rocketshow.audio.AudioPlayer.PlayerType;
+import com.ascargon.rocketshow.audio.AlsaPlayer.PlayerType;
 import com.ascargon.rocketshow.midi.MidiControl;
 import com.ascargon.rocketshow.midi.MidiDevice;
 import com.ascargon.rocketshow.midi.MidiMapping;

@@ -14,7 +14,6 @@ import org.apache.log4j.Logger;
 
 import com.ascargon.rocketshow.Manager;
 import com.ascargon.rocketshow.audio.AudioFile;
-import com.ascargon.rocketshow.composition.File.FileType;
 import com.ascargon.rocketshow.midi.MidiFile;
 import com.ascargon.rocketshow.video.VideoFile;
 

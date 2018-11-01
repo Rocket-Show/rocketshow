@@ -12,152 +12,153 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.apache.log4j.Logger;
 
 import com.ascargon.rocketshow.Manager;
+import org.freedesktop.gstreamer.Pipeline;
 
 public class MidiFile extends com.ascargon.rocketshow.composition.File {
 
-	final static Logger logger = Logger.getLogger(MidiFile.class);
+    final static Logger logger = Logger.getLogger(MidiFile.class);
 
-	public final static String MIDI_PATH = "midi/";
+    public final static String MIDI_PATH = "midi/";
 
-	private MidiPlayer midiPlayer;
+    private MidiPlayer midiPlayer;
 
-	private List<MidiRouting> midiRoutingList;
+    private List<MidiRouting> midiRoutingList;
 
-	private Timer playTimer;
+    private Timer playTimer;
 
-	public MidiFile() {
-		List<MidiRouting> midiRoutingList = new ArrayList<MidiRouting>();
-		setMidiRoutingList(midiRoutingList);
-	}
+    public MidiFile() {
+        List<MidiRouting> midiRoutingList = new ArrayList<MidiRouting>();
+        setMidiRoutingList(midiRoutingList);
+    }
 
-	@XmlTransient
-	public String getPath() {
-		return Manager.BASE_PATH + MEDIA_PATH + MIDI_PATH + getName();
-	}
+    @XmlTransient
+    public String getPath() {
+        return Manager.BASE_PATH + MEDIA_PATH + MIDI_PATH + getName();
+    }
 
-	public void load(long positionMillis) throws Exception {
-		logger.debug("Loading file '" + this.getName() + " at millisecond position " + positionMillis + "...");
+    public void load(Pipeline syncPipeline, MidiPlayer syncMidiPlayer) throws Exception {
+        logger.debug("Loading file '" + this.getName() + "...");
 
-		boolean useGst = true;
-		
-		this.setLoaded(false);
-		this.setLoading(true);
-		
-		if (midiPlayer == null) {
-			midiPlayer = new MidiPlayer(this.getManager(), midiRoutingList);
-		}
-		
-		if(this.getComposition().isSample()) {
-			// No synced playback over GST
-			useGst = false;
-		}
-		
-		midiPlayer.setLoop(this.isLoop());
-		midiPlayer.load(this, this.getPath(), positionMillis, this.getComposition().getPipeline(), useGst);
+        if (midiPlayer == null) {
+            midiPlayer = new MidiPlayer(this.getManager(), midiRoutingList);
+        }
 
-		for (MidiRouting midiRouting : midiRoutingList) {
-			midiRouting.load(this.getManager());
-		}
-	}
+        midiPlayer.setLoop(this.isLoop());
+        midiPlayer.load(this.getPath(), syncPipeline, syncMidiPlayer);
 
-	@XmlTransient
-	public int getFullOffsetMillis() {
-		return this.getOffsetMillis() + this.getManager().getSettings().getOffsetMillisMidi();
-	}
+        for (MidiRouting midiRouting : midiRoutingList) {
+            midiRouting.load(this.getManager());
+        }
+    }
 
-	@Override
-	public void play() {
-		if (midiPlayer == null) {
-			logger.error("MIDI player not initialized for file '" + getPath() + "'");
-			return;
-		}
+    @XmlTransient
+    public int getFullOffsetMillis() {
+        return this.getOffsetMillis() + this.getManager().getSettings().getOffsetMillisMidi();
+    }
 
-		if (this.getFullOffsetMillis() > 0) {
-			logger.debug("Wait " + this.getFullOffsetMillis() + " milliseconds before starting the MIDI file '"
-					+ this.getPath() + "'");
+    public void play() {
+        if (midiPlayer == null) {
+            logger.error("MIDI player not initialized for file '" + getPath() + "'");
+            return;
+        }
 
-			playTimer = new Timer();
-			playTimer.schedule(new TimerTask() {
-				@Override
-				public void run() {
-					playTimer.cancel();
-					playTimer = null;
-					midiPlayer.play();
-				}
-			}, this.getFullOffsetMillis());
-		} else {
-			midiPlayer.play();
-		}
-	}
+        if (this.getFullOffsetMillis() > 0) {
+            logger.debug("Wait " + this.getFullOffsetMillis() + " milliseconds before starting the MIDI file '"
+                    + this.getPath() + "'");
 
-	@Override
-	public void pause() {
-		if (playTimer != null) {
-			playTimer.cancel();
-			playTimer = null;
-		}
+            playTimer = new Timer();
+            playTimer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    playTimer.cancel();
+                    playTimer = null;
+                    midiPlayer.play();
+                }
+            }, this.getFullOffsetMillis());
+        } else {
+            midiPlayer.play();
+        }
+    }
 
-		if (midiPlayer == null) {
-			logger.error("MIDI player not initialized for file '" + getPath() + "'");
-			return;
-		}
+    public void pause() {
+        if (playTimer != null) {
+            playTimer.cancel();
+            playTimer = null;
+        }
 
-		midiPlayer.pause();
-	}
+        if (midiPlayer == null) {
+            logger.error("MIDI player not initialized for file '" + getPath() + "'");
+            return;
+        }
 
-	@Override
-	public void resume() {
-		if (midiPlayer == null) {
-			logger.error("MIDI player not initialized for file '" + getPath() + "'");
-			return;
-		}
+        midiPlayer.pause();
+    }
 
-		midiPlayer.play();
-	}
+    public void resume() {
+        if (midiPlayer == null) {
+            logger.error("MIDI player not initialized for file '" + getPath() + "'");
+            return;
+        }
 
-	@Override
-	public void stop() throws Exception {
-		if (playTimer != null) {
-			playTimer.cancel();
-			playTimer = null;
-		}
+        midiPlayer.play();
+    }
 
-		if (midiPlayer == null) {
-			logger.error("MIDI player not initialized for file '" + getPath() + "'");
-			return;
-		}
+    public void stop() throws Exception {
+        if (playTimer != null) {
+            playTimer.cancel();
+            playTimer = null;
+        }
 
-		midiPlayer.stop();
-	}
+        if (midiPlayer == null) {
+            logger.error("MIDI player not initialized for file '" + getPath() + "'");
+            return;
+        }
 
-	@Override
-	public void close() {
-		if (playTimer != null) {
-			playTimer.cancel();
-			playTimer = null;
-		}
+        midiPlayer.stop();
+    }
 
-		if (midiPlayer != null) {
-			midiPlayer.close();
-		}
-	}
+    public void seek(long positionMillis) {
+        midiPlayer.seek(positionMillis);
+    }
 
-	public void setMidiRoutingList(List<MidiRouting> midiRoutingList) {
-		for (MidiRouting midiRouting : midiRoutingList) {
-			midiRouting.setMidiSource("MIDI file '" + getPath() + "'");
-		}
+    public long getPositionMillis() {
+        if (midiPlayer != null) {
+            return midiPlayer.getPositionMillis();
+        }
 
-		this.midiRoutingList = midiRoutingList;
-	}
+        return 0;
+    }
 
-	@XmlElement(name = "midiRouting")
-	@XmlElementWrapper(name = "midiRoutingList")
-	public List<MidiRouting> getMidiRoutingList() {
-		return midiRoutingList;
-	}
+    public void close() {
+        if (playTimer != null) {
+            playTimer.cancel();
+            playTimer = null;
+        }
 
-	public FileType getType() {
-		return FileType.MIDI;
-	}
+        if (midiPlayer != null) {
+            midiPlayer.close();
+        }
+    }
 
+    public void setMidiRoutingList(List<MidiRouting> midiRoutingList) {
+        for (MidiRouting midiRouting : midiRoutingList) {
+            midiRouting.setMidiSource("MIDI file '" + getPath() + "'");
+        }
+
+        this.midiRoutingList = midiRoutingList;
+    }
+
+    @XmlElement(name = "midiRouting")
+    @XmlElementWrapper(name = "midiRoutingList")
+    public List<MidiRouting> getMidiRoutingList() {
+        return midiRoutingList;
+    }
+
+    public FileType getType() {
+        return FileType.MIDI;
+    }
+
+    public MidiPlayer getMidiPlayer() {
+        return midiPlayer;
+    }
 }
