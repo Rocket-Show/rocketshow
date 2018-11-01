@@ -19,6 +19,7 @@ public class AlsaPlayer {
     private String device;
 
     public void play(String device, String path) throws IOException {
+        logger.debug("Play " + path + " on ALSA device " + device);
         shellManager = new ShellManager(new String[]{"aplay", "-D", "plug:" + device, path});
     }
 

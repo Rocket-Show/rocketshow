@@ -49,7 +49,7 @@ public class AudioFile extends com.ascargon.rocketshow.composition.File {
         String path = getPath();
 
         if (isSample) {
-            alsaPlayer.play(this.getPath(), this.getManager().getSettings().getAlsaDeviceFromOutputBus(outputBus));
+            alsaPlayer.play(this.getManager().getSettings().getAlsaDeviceFromOutputBus(outputBus), this.getPath());
         }
     }
 

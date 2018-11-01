@@ -77,7 +77,7 @@ public class Player {
 
         logger.debug("All devices loaded");
 
-        if (composition.getPlayState() != PlayState.LOADED) {
+        if (composition.getPlayState() != PlayState.LOADED && composition.getPlayState() != PlayState.PAUSED) {
             // Maybe the composition stopped meanwhile
             return;
         }
@@ -148,10 +148,8 @@ public class Player {
         }
 
         if (composition != null) {
-            // Seek to the correct position to avoid desync (stop and load
-            // again)
-            composition.setPlayState(PlayState.PAUSED);
-            seek(composition.getPositionMillis());
+            // Seek to the correct position
+            composition.pause();
         }
     }
 
@@ -167,7 +165,7 @@ public class Player {
         }
     }
 
-    public void stop(boolean playDefaultComposition, boolean restartAfter) throws Exception {
+    public void stop(boolean playDefaultComposition) throws Exception {
         if (composition == null) {
             return;
         }
@@ -186,7 +184,7 @@ public class Player {
             if (remoteDevice.isSynchronize()) {
                 executor.execute(new Runnable() {
                     public void run() {
-                        remoteDevice.stop(playDefaultComposition, restartAfter);
+                        remoteDevice.stop(playDefaultComposition);
                     }
                 });
             }
@@ -196,7 +194,7 @@ public class Player {
         executor.execute(new Runnable() {
             public void run() {
                 try {
-                    composition.stop(playDefaultComposition, restartAfter);
+                    composition.stop(playDefaultComposition);
                 } catch (Exception e) {
                     logger.error("Could not load the composition files", e);
                 }
@@ -210,12 +208,8 @@ public class Player {
         }
     }
 
-    public void stop(boolean playDefaultComposition) throws Exception {
-        stop(playDefaultComposition, false);
-    }
-
     public void stop() throws Exception {
-        stop(true, false);
+        stop(true);
     }
 
     public void seek(long positionMillis) throws Exception {
@@ -257,6 +251,10 @@ public class Player {
     public void close() throws Exception {
         if (composition != null) {
             composition.close();
+        }
+
+        for (Composition sampleComposition : sampleCompositionList) {
+            sampleComposition.close();
         }
     }
 

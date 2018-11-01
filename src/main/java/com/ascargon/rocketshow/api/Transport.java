@@ -17,164 +17,163 @@ import com.ascargon.rocketshow.Manager;
 @Path("/transport")
 public class Transport {
 
-	final static Logger logger = Logger.getLogger(Transport.class);
+    final static Logger logger = Logger.getLogger(Transport.class);
 
-	@Context
-	ServletContext context;
+    @Context
+    ServletContext context;
 
-	@Path("load")
-	@POST
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response load(@QueryParam("name") String compositionName) throws Exception {
-		logger.info("Received API request for transport/load");
+    @Path("load")
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response load(@QueryParam("name") String compositionName) throws Exception {
+        logger.info("Received API request for transport/load");
 
-		Manager manager = (Manager) context.getAttribute("manager");
+        Manager manager = (Manager) context.getAttribute("manager");
 
-		if (compositionName.length() > 0) {
-			if (!manager.getPlayer().getCompositionName().equals(compositionName)) {
+        if (compositionName.length() > 0) {
+            if (!manager.getPlayer().getCompositionName().equals(compositionName)) {
 
-				// Load the composition with the given name into the player
-				manager.getPlayer().setComposition(manager.getCompositionManager().getComposition(compositionName),
-						false, false);
-			}
-		}
+                // Load the composition with the given name into the player
+                manager.getPlayer().setComposition(manager.getCompositionManager().getComposition(compositionName),
+                        false, false);
+            }
+        }
 
-		// Load the files for the current composition
-		manager.getPlayer().load();
+        // Load the files for the current composition
+        manager.getPlayer().load();
 
-		return Response.status(200).build();
-	}
+        return Response.status(200).build();
+    }
 
-	@Path("play")
-	@POST
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response play() throws Exception {
-		logger.info("Received API request for transport/play");
+    @Path("play")
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response play() throws Exception {
+        logger.info("Received API request for transport/play");
 
-		Manager manager = (Manager) context.getAttribute("manager");
-		manager.getPlayer().play();
+        Manager manager = (Manager) context.getAttribute("manager");
+        manager.getPlayer().play();
 
-		return Response.status(200).build();
-	}
-	
-	@Path("play-as-sample")
-	@POST
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response playAsSample(@QueryParam("name") String compositionName) throws Exception {
-		logger.info("Received API request for transport/play-as-sample");
+        return Response.status(200).build();
+    }
 
-		Manager manager = (Manager) context.getAttribute("manager");
-		manager.getPlayer().playAsSample(compositionName);
+    @Path("play-as-sample")
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response playAsSample(@QueryParam("name") String compositionName) throws Exception {
+        logger.info("Received API request for transport/play-as-sample");
 
-		return Response.status(200).build();
-	}
+        Manager manager = (Manager) context.getAttribute("manager");
+        manager.getPlayer().playAsSample(compositionName);
 
-	@Path("pause")
-	@POST
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response pause() throws Exception {
-		logger.info("Received API request for transport/pause");
+        return Response.status(200).build();
+    }
 
-		Manager manager = (Manager) context.getAttribute("manager");
-		manager.getPlayer().pause();
+    @Path("pause")
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response pause() throws Exception {
+        logger.info("Received API request for transport/pause");
 
-		return Response.status(200).build();
-	}
+        Manager manager = (Manager) context.getAttribute("manager");
+        manager.getPlayer().pause();
 
-	@Path("toggle-play")
-	@POST
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response togglePlay() throws Exception {
-		logger.info("Received API request for transport/toggle-play");
+        return Response.status(200).build();
+    }
 
-		Manager manager = (Manager) context.getAttribute("manager");
-		manager.getPlayer().togglePlay();
+    @Path("toggle-play")
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response togglePlay() throws Exception {
+        logger.info("Received API request for transport/toggle-play");
 
-		return Response.status(200).build();
-	}
+        Manager manager = (Manager) context.getAttribute("manager");
+        manager.getPlayer().togglePlay();
 
-	@Path("stop")
-	@POST
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response stop(@QueryParam("playDefaultComposition") @DefaultValue("true") boolean playDefaultComposition,
-			@QueryParam("restartAfter") @DefaultValue("false") boolean restartAfter) throws Exception {
-		
-		logger.info("Received API request for transport/stop");
+        return Response.status(200).build();
+    }
 
-		Manager manager = (Manager) context.getAttribute("manager");
-		manager.getPlayer().stop(playDefaultComposition, restartAfter);
+    @Path("stop")
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response stop(@QueryParam("playDefaultComposition") @DefaultValue("true") boolean playDefaultComposition) throws Exception {
 
-		return Response.status(200).build();
-	}
+        logger.info("Received API request for transport/stop");
 
-	@Path("seek")
-	@POST
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response seek(@QueryParam("positionMillis") long positionMillis) throws Exception {
-		logger.info("Received API request for transport/seek");
+        Manager manager = (Manager) context.getAttribute("manager");
+        manager.getPlayer().stop(playDefaultComposition);
 
-		Manager manager = (Manager) context.getAttribute("manager");
-		manager.getPlayer().seek(positionMillis);
+        return Response.status(200).build();
+    }
 
-		return Response.status(200).build();
-	}
+    @Path("seek")
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response seek(@QueryParam("positionMillis") long positionMillis) throws Exception {
+        logger.info("Received API request for transport/seek");
 
-	@Path("next-composition")
-	@POST
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response nextComposition() throws Exception {
-		logger.info("Received API request for transport/next-composition");
+        Manager manager = (Manager) context.getAttribute("manager");
+        manager.getPlayer().seek(positionMillis);
 
-		Manager manager = (Manager) context.getAttribute("manager");
-		if (manager.getCurrentSet() == null) {
-			manager.getCompositionManager().nextComposition();
-		} else {
-			manager.getCurrentSet().nextComposition();
-		}
-		return Response.status(200).build();
-	}
+        return Response.status(200).build();
+    }
 
-	@Path("previous-composition")
-	@POST
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response previousComposition() throws Exception {
-		logger.info("Received API request for transport/previous-composition");
+    @Path("next-composition")
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response nextComposition() throws Exception {
+        logger.info("Received API request for transport/next-composition");
 
-		Manager manager = (Manager) context.getAttribute("manager");
-		if (manager.getCurrentSet() == null) {
-			manager.getCompositionManager().previousComposition();
-		} else {	
-			manager.getCurrentSet().previousComposition();
-		}
-		return Response.status(200).build();
-	}
+        Manager manager = (Manager) context.getAttribute("manager");
+        if (manager.getCurrentSet() == null) {
+            manager.getCompositionManager().nextComposition();
+        } else {
+            manager.getCurrentSet().nextComposition();
+        }
+        return Response.status(200).build();
+    }
 
-	@Path("set-composition-index")
-	@POST
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response setCompositionIndex(@QueryParam("index") int index) throws Exception {
-		logger.info("Received API request for transport/set-composition-index");
+    @Path("previous-composition")
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response previousComposition() throws Exception {
+        logger.info("Received API request for transport/previous-composition");
 
-		Manager manager = (Manager) context.getAttribute("manager");
-		if (manager.getCurrentSet() != null) {
-			manager.getCurrentSet().setCompositionIndex(index);
-		}
-		return Response.status(200).build();
-	}
+        Manager manager = (Manager) context.getAttribute("manager");
+        if (manager.getCurrentSet() == null) {
+            manager.getCompositionManager().previousComposition();
+        } else {
+            manager.getCurrentSet().previousComposition();
+        }
+        return Response.status(200).build();
+    }
 
-	@Path("set-composition-name")
-	@POST
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response setCompositionName(@QueryParam("name") String compositionName) throws Exception {
-		logger.info("Received API request for transport/set-composition-name");
+    @Path("set-composition-index")
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response setCompositionIndex(@QueryParam("index") int index) throws Exception {
+        logger.info("Received API request for transport/set-composition-index");
 
-		Manager manager = (Manager) context.getAttribute("manager");
+        Manager manager = (Manager) context.getAttribute("manager");
+        if (manager.getCurrentSet() != null) {
+            manager.getCurrentSet().setCompositionIndex(index);
+        }
+        return Response.status(200).build();
+    }
 
-		if (compositionName.length() > 0) {
-			manager.getPlayer().setCompositionName(compositionName);
-		}
+    @Path("set-composition-name")
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response setCompositionName(@QueryParam("name") String compositionName) throws Exception {
+        logger.info("Received API request for transport/set-composition-name");
 
-		return Response.status(200).build();
-	}
+        Manager manager = (Manager) context.getAttribute("manager");
+
+        if (compositionName.length() > 0) {
+            manager.getPlayer().setCompositionName(compositionName);
+        }
+
+        return Response.status(200).build();
+    }
 
 }

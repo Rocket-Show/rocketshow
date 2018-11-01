@@ -64,8 +64,6 @@ public class Composition {
 
     private Timer autoStopTimer;
 
-    private long positionMillis;
-
     private boolean filesLoaded = false;
 
     // Is this the default composition?
@@ -77,10 +75,18 @@ public class Composition {
     // The gstreamer pipeline, used to sync all files in this composition
     private Pipeline pipeline;
 
+    private long startPosition = 0;
+
     public void close() throws Exception {
+        if (pipeline != null) {
+            pipeline.stop();
+        }
+
         for (File file : fileList) {
             if (file.isActive() && file instanceof MidiFile) {
                 ((MidiFile) file).close();
+            } else if (file.isActive() && file instanceof AudioFile) {
+                ((AudioFile) file).close();
             }
         }
 
@@ -93,6 +99,10 @@ public class Composition {
         }
 
         playState = PlayState.STOPPED;
+
+        if (!defaultComposition && !isSample) {
+            manager.getStateManager().notifyClients();
+        }
     }
 
     // Create a new pipeline, if there is at least one audio- or video file in this composition
@@ -136,6 +146,25 @@ public class Composition {
             }
 
             pipeline = new Pipeline();
+
+            pipeline.getBus().connect(new Bus.ERROR() {
+                @Override
+                public void errorMessage(GstObject source, int code, String message) {
+                    logger.error("GST: " + message);
+                }
+            });
+            pipeline.getBus().connect(new Bus.WARNING() {
+                @Override
+                public void warningMessage(GstObject source, int code, String message) {
+                    logger.warn("GST: " + message);
+                }
+            });
+            pipeline.getBus().connect(new Bus.INFO() {
+                @Override
+                public void infoMessage(GstObject source, int code, String message) {
+                    logger.warn("GST: " + message);
+                }
+            });
         }
 
         if (!defaultComposition) {
@@ -167,11 +196,11 @@ public class Composition {
 
                     // Samples are played with the AlsaPlayer
                     if (!isSample) {
-                        Element convert = ElementFactory.make("audioconvert", "audioconvert" + i);
-                        pipeline.add(convert);
-
                         URIDecodeBin audioSource = (URIDecodeBin) ElementFactory.make("uridecodebin", "uridecodebin" + i);
                         audioSource.set("uri", "file://" + ((AudioFile) file).getPath());
+                        pipeline.add(audioSource);
+
+                        Element convert = ElementFactory.make("audioconvert", "audioconvert" + i);
                         audioSource.connect(new Element.PAD_ADDED() {
                             @Override
                             public void padAdded(Element element, Pad pad) {
@@ -182,7 +211,7 @@ public class Composition {
                                 }
                             }
                         });
-                        pipeline.add(audioSource);
+                        pipeline.add(convert);
 
                         Element resample = ElementFactory.make("audioresample", "audioresample" + i);
                         pipeline.add(resample);
@@ -213,11 +242,17 @@ public class Composition {
         }
     }
 
-    private void startAutoStopTimer(long positionMillis) {
+    private void startAutoStopTimer() {
         // Start the autostop timer, to automatically stop the composition, as
         // soon as the last file (the longest one, which has the most offset)
         // has been finished)
         long maxDurationAndOffset = 0;
+        long positionMillis = getPositionMillis();
+
+        if (autoStopTimer != null) {
+            autoStopTimer.cancel();
+            autoStopTimer = null;
+        }
 
         // Workaround, because "this" does not work inside a TimerTask.
         Composition thisComposition = this;
@@ -303,6 +338,12 @@ public class Composition {
         // All files are loaded -> play the composition (start each file)
         logger.info("Playing composition '" + name + "'...");
 
+        // TODO Seek does not work here. Maybe wait, until the pipeline is playing?
+        if (startPosition > 0) {
+            seek(startPosition);
+            startPosition = 0;
+        }
+
         if (pipeline != null) {
             pipeline.play();
         }
@@ -315,7 +356,7 @@ public class Composition {
             }
         }
 
-        startAutoStopTimer(positionMillis);
+        startAutoStopTimer();
 
         playState = PlayState.PLAYING;
 
@@ -363,12 +404,14 @@ public class Composition {
         }
     }
 
-    public synchronized void stop(boolean playDefaultComposition, boolean restartAfter) throws Exception {
+    public synchronized void stop(boolean playDefaultComposition) throws Exception {
         playState = PlayState.STOPPING;
 
         if (!defaultComposition && !isSample) {
             manager.getStateManager().notifyClients();
         }
+
+        startPosition = 0;
 
         // Cancel the auto-stop timer
         if (autoStopTimer != null) {
@@ -376,15 +419,13 @@ public class Composition {
             autoStopTimer = null;
         }
 
-        if (!restartAfter) {
-            positionMillis = 0;
-        }
-
         logger.info("Stopping composition '" + name + "'");
 
         // Stop the composition
-        pipeline.stop();
-        pipeline = null;
+        if (pipeline != null) {
+            pipeline.stop();
+            pipeline = null;
+        }
 
         for (File file : fileList) {
             if (file.isActive() && file instanceof MidiFile) {
@@ -404,7 +445,7 @@ public class Composition {
 
         playState = PlayState.STOPPED;
 
-        if (!defaultComposition && !restartAfter && !isSample) {
+        if (!defaultComposition && !isSample) {
             manager.getStateManager().notifyClients();
         }
 
@@ -414,7 +455,12 @@ public class Composition {
         }
     }
 
-    public void seek(long positionMillis) {
+    public void seek(long positionMillis) throws Exception {
+        // When we seek before pressing play
+        startPosition = positionMillis;
+
+        logger.debug("Seek to position " + positionMillis);
+
         if (pipeline != null) {
             pipeline.seek(positionMillis, TimeUnit.MILLISECONDS);
         }
@@ -424,14 +470,16 @@ public class Composition {
                 ((MidiFile) file).seek(positionMillis);
             }
         }
-    }
 
-    public synchronized void stop(boolean playDefaultComposition) throws Exception {
-        stop(playDefaultComposition, false);
+        startAutoStopTimer();
+
+        if (!isSample) {
+            manager.getStateManager().notifyClients();
+        }
     }
 
     public synchronized void stop() throws Exception {
-        stop(true, false);
+        stop(true);
     }
 
     @Override
@@ -530,6 +578,10 @@ public class Composition {
 
     @XmlTransient
     public long getPositionMillis() {
+        if (startPosition > 0) {
+            return startPosition;
+        }
+
         if (pipeline != null) {
             return pipeline.queryPosition(TimeUnit.MILLISECONDS);
         }

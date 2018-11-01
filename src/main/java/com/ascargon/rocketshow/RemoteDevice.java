@@ -119,8 +119,8 @@ public class RemoteDevice {
         doPost("transport/pause");
     }
 
-    public void stop(boolean playDefaultComposition, boolean restartAfter) {
-        doPost("transport/stop?playDefaultComposition=" + playDefaultComposition + "&restartAfter=" + restartAfter);
+    public void stop(boolean playDefaultComposition) {
+        doPost("transport/stop?playDefaultComposition=" + playDefaultComposition);
     }
 
     public void togglePlay() {

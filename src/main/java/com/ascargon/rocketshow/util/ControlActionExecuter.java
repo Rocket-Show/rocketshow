@@ -35,7 +35,7 @@ public class ControlActionExecuter {
 			remoteDevice.togglePlay();
 			break;
 		case STOP:
-			remoteDevice.stop(true, true);
+			remoteDevice.stop(true);
 			break;
 		case NEXT_COMPOSITION:
 			remoteDevice.setNextComposition();

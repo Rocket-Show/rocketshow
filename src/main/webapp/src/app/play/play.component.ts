@@ -229,12 +229,10 @@ export class PlayComponent implements OnInit {
   }
 
   slideStop(positionMillis: number) {
-    this.currentState.playState = 'STOPPING';
-
-    // Only seeking to seconds is possible at the moment
-    this.positionMillis = positionMillis - (positionMillis % 1000);
-
-    this.transportService.seek(this.positionMillis).subscribe();
+    this.lastPlayTime = new Date();
+    this.currentState.positionMillis = positionMillis;
+    this.playTime = this.msToTime(positionMillis);
+    this.transportService.seek(positionMillis).subscribe();
 
     this.sliding = false;
   }
