@@ -216,8 +216,15 @@ export class PlayComponent implements OnInit {
   }
 
   stop() {
-    this.currentState.playState = 'STOPPING';
-    this.transportService.stop().subscribe();
+    if(this.currentState.playState == 'STOPPED') {
+      this.lastPlayTime = new Date();
+      this.currentState.positionMillis = 0;
+      this.playTime = this.msToTime(0);
+      this.transportService.seek(0).subscribe();
+    } else {
+      this.currentState.playState = 'STOPPING';
+      this.transportService.stop().subscribe();
+    }
   }
 
   pause() {

@@ -120,7 +120,7 @@ public class DmxManager {
 			for (DmxUniverse dmxUniverse : dmxUniverseListCopy) {
 				HashMap<Integer, Integer> universe = dmxUniverse.getUniverse();
 
-				if (universe.size() > i && universe.get(i).intValue() > highestValue) {
+				if (universe.get(i) != null && universe.get(i).intValue() > highestValue) {
 					highestValue = universe.get(i).intValue();
 				}
 			}

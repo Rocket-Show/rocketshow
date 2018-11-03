@@ -123,7 +123,7 @@ public class Settings {
 		dmxSendDelayMillis = 10;
 
 		offsetMillisMidi = 0;
-		offsetMillisAudio = 200;
+		offsetMillisAudio = 0;
 		offsetMillisVideo = 0;
 
 		audioOutput = AudioOutput.HEADPHONES;

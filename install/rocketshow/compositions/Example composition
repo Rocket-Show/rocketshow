@@ -1,11 +1,27 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <composition>
-    <autoStartNextComposition>false</autoStartNextComposition>
-    <durationMillis>314000</durationMillis>
+    <durationMillis>242000</durationMillis>
     <fileList>
+        <audioFile>
+            <active>true</active>
+            <durationMillis>242000</durationMillis>
+            <loop>false</loop>
+            <name>head_smashed_far_away_click.wav</name>
+            <offsetMillis>0</offsetMillis>
+            <type>AUDIO</type>
+        </audioFile>
+        <audioFile>
+            <active>true</active>
+            <durationMillis>242000</durationMillis>
+            <loop>false</loop>
+            <name>head_smashed_far_away.wav</name>
+            <offsetMillis>0</offsetMillis>
+            <type>AUDIO</type>
+        </audioFile>
         <midiFile>
             <active>true</active>
-            <durationMillis>239000</durationMillis>
+            <durationMillis>72858</durationMillis>
+            <loop>false</loop>
             <name>light_example.mid</name>
             <offsetMillis>0</offsetMillis>
             <type>MIDI</type>
@@ -16,31 +32,18 @@
                     </midi2DmxMapping>
                     <midiDestination>DMX</midiDestination>
                     <midiMapping>
+                        <channelOffset>0</channelOffset>
+                        <noteOffset>0</noteOffset>
                         <overrideParent>false</overrideParent>
                     </midiMapping>
-                    <remoteDeviceId/>
+                    <remoteDeviceList/>
                 </midiRouting>
             </midiRoutingList>
         </midiFile>
-        <audioFile>
-            <active>true</active>
-            <device>stereo1</device>
-            <durationMillis>239000</durationMillis>
-            <name>head_smashed_far_away.mp3</name>
-            <offsetMillis>0</offsetMillis>
-            <type>AUDIO</type>
-        </audioFile>
-        <audioFile>
-            <active>true</active>
-            <device>stereo2</device>
-            <durationMillis>314000</durationMillis>
-            <name>click_example.wav</name>
-            <offsetMillis>0</offsetMillis>
-            <type>AUDIO</type>
-        </audioFile>
         <videoFile>
             <active>true</active>
             <durationMillis>31000</durationMillis>
+            <loop>false</loop>
             <name>clouds.mp4</name>
             <offsetMillis>0</offsetMillis>
             <type>VIDEO</type>

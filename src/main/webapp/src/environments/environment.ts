@@ -8,12 +8,12 @@ export const environment = {
   name: "dev",
 
   // Local backend in local Tomcat
-  localBackend: "localhost:8080/ROOT",
+  //localBackend: "localhost:8080/ROOT",
 
   // Local backend in docker
   //localBackend: "localhost:8080",
 
-  //localBackend: "rocketshow.local",
+  localBackend: "rocketshow.local",
 
   debug: true
 };

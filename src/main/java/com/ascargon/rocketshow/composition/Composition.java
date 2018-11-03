@@ -216,17 +216,20 @@ public class Composition {
                         audioSource.set("uri", "file://" + ((AudioFile) file).getPath());
                         pipeline.add(audioSource);
 
-                        Element convert = ElementFactory.make("audioconvert", "audioconvert" + i);
+                        Element queue = ElementFactory.make("queue", "queue" + i);
                         audioSource.connect(new Element.PAD_ADDED() {
                             @Override
                             public void padAdded(Element element, Pad pad) {
                                 String name = pad.getCaps().getStructure(0).getName();
 
                                 if ("audio/x-raw-float".equals(name) || "audio/x-raw-int".equals(name) || "audio/x-raw".equals(name)) {
-                                    pad.link(convert.getSinkPads().get(0));
+                                    pad.link(queue.getSinkPads().get(0));
                                 }
                             }
                         });
+                        pipeline.add(queue);
+
+                        Element convert = ElementFactory.make("audioconvert", "audioconvert" + i);
                         pipeline.add(convert);
 
                         Element resample = ElementFactory.make("audioresample", "audioresample" + i);
@@ -236,6 +239,7 @@ public class Composition {
                         alsaSink.set("device", this.getManager().getSettings().getAlsaDeviceFromOutputBus(audioFile.getOutputBus()));
                         pipeline.add(alsaSink);
 
+                        queue.link(convert);
                         convert.link(resample);
                         resample.link(alsaSink);
                     }

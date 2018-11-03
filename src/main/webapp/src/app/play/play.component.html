@@ -45,7 +45,7 @@
               </button>
 
               <!-- Stop -->
-              <button type="button" [disabled]="!currentState?.currentCompositionName || currentState?.playState == 'STOPPING' || currentState?.playState == 'STOPPED'" (click)="stop()" class="btn btn-transport">
+              <button type="button" [disabled]="!currentState?.currentCompositionName || currentState?.playState == 'STOPPING' || (currentState?.playState == 'STOPPED' && currentState?.positionMillis == 0)" (click)="stop()" class="btn btn-transport">
                 <i class="fa fa-stop fa-fw" aria-hidden="true"></i>
               </button>
             </div>

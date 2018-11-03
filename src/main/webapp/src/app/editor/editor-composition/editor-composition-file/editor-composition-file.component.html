@@ -10,7 +10,7 @@
         <div class="col-lg-6">
 
           <!-- Selected file -->
-          <div class="card mb-3">
+          <div class="card border-secondary mb-3">
             <div class="card-body">
               <!-- No file selected -->
               <div *ngIf="!file?.name">
@@ -148,7 +148,8 @@
               </div>
 
               <!-- Loop -->
-              <div class="form-group">
+              <!-- TODO Not working with the Gstreamer backend -->
+              <!-- <div class="form-group">
                 <div class="form-check">
                   <input type="checkbox" [ngModel]="file?.loop" (ngModelChange)="file.loop = $event" class="form-check-input" id="loop">
 
@@ -156,7 +157,7 @@
                     {{ 'editor.loop' | translate }}
                   </label>
                 </div>
-              </div>
+              </div> -->
 
               <!-- MIDI routing -->
               <div class="form-group" *ngIf="file?.type == 'MIDI'">
