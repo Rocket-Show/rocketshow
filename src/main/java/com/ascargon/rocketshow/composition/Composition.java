@@ -165,6 +165,22 @@ public class Composition {
                     logger.warn("GST: " + message);
                 }
             });
+            pipeline.getBus().connect(new Bus.STATE_CHANGED() {
+                @Override
+                public void stateChanged(GstObject source, State old, State newState, State pending) {
+                    if (source.getTypeName().equals("GstPipeline") && newState == State.PLAYING) {
+                        // We changed to playing, maybe we need to seek to the startposition (not possible before playing)
+                        if (startPosition > 0) {
+                            try {
+                                seek(startPosition);
+                            } catch (Exception e) {
+                                logger.error("Could not set start position when changed to playing", e);
+                            }
+                            startPosition = 0;
+                        }
+                    }
+                }
+            });
         }
 
         if (!defaultComposition) {
@@ -337,12 +353,6 @@ public class Composition {
 
         // All files are loaded -> play the composition (start each file)
         logger.info("Playing composition '" + name + "'...");
-
-        // TODO Seek does not work here. Maybe wait, until the pipeline is playing?
-        if (startPosition > 0) {
-            seek(startPosition);
-            startPosition = 0;
-        }
 
         if (pipeline != null) {
             pipeline.play();
