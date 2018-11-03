@@ -35,7 +35,7 @@ public class MidiPlayer {
     private Timer syncTimer;
 
     // The millis we allow to diff to the master, before syncing
-    private long syncDifferenceThresholdMillis = 0;
+    private long syncDifferenceThresholdMillis = 10;
 
     public MidiPlayer(Manager manager, List<MidiRouting> midiRoutingList) {
         this.midiRoutingList = midiRoutingList;

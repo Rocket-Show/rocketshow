@@ -165,8 +165,6 @@ public class Manager {
 	}
 
 	public void playDefaultComposition() throws Exception {
-		logger.debug("Playing the default composition...");
-
 		if (defaultComposition != null) {
 			// The default composition is already initialized
 			return;

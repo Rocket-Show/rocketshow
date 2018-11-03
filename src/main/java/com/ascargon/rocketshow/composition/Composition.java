@@ -235,13 +235,17 @@ public class Composition {
                         Element resample = ElementFactory.make("audioresample", "audioresample" + i);
                         pipeline.add(resample);
 
+                        Element queue2 = ElementFactory.make("queue", "queue2" + i);
+
                         Element alsaSink = ElementFactory.make("alsasink", "alsasink" + i);
                         alsaSink.set("device", this.getManager().getSettings().getAlsaDeviceFromOutputBus(audioFile.getOutputBus()));
+                        alsaSink.set("buffer-time", 50000);
                         pipeline.add(alsaSink);
 
                         queue.link(convert);
                         convert.link(resample);
-                        resample.link(alsaSink);
+                        resample.link(queue2);
+                        queue2.link(alsaSink);
                     }
                 } else if (file instanceof VideoFile) {
                     PlayBin playBin = (PlayBin) ElementFactory.make("playbin", "playbin" + i);
