@@ -15,17 +15,13 @@ public class ShellManager {
 		outStream = new PrintStream(process.getOutputStream());
 	}
 
-	public void sendCommand(String command, boolean newLine) throws IOException {
+	public void sendCommand(String command, boolean newLine) {
 		if (newLine) {
 			outStream.println(command);
 		} else {
 			outStream.print(command);
 		}
 		outStream.flush();
-	}
-
-	public void sendCommand(String command) throws IOException {
-		sendCommand(command, false);
 	}
 
 	public InputStream getInputStream() {

@@ -14,10 +14,10 @@ import com.ascargon.rocketshow.Manager;
 public class ResetUsb {
 
 	public static void resetAllInterfaces() throws Exception {
-		ProcessBuilder pb = new ProcessBuilder(new String[] { "lsusb" });
+		ProcessBuilder pb = new ProcessBuilder("lsusb");
 		Process process = pb.start();
 		BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
-		String line = null;
+		String line;
 
 		// Loop over each interface
 		while ((line = br.readLine()) != null) {

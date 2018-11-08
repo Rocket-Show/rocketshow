@@ -1,9 +1,5 @@
 package com.ascargon.rocketshow.audio;
 
-import java.io.IOException;
-import java.util.Timer;
-import java.util.TimerTask;
-
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.log4j.Logger;
@@ -12,7 +8,7 @@ import com.ascargon.rocketshow.Manager;
 
 public class AudioFile extends com.ascargon.rocketshow.composition.File {
 
-    final static Logger logger = Logger.getLogger(AudioFile.class);
+    private final static Logger logger = Logger.getLogger(AudioFile.class);
 
     public final static String AUDIO_PATH = "audio/";
 
@@ -27,7 +23,7 @@ public class AudioFile extends com.ascargon.rocketshow.composition.File {
         return Manager.BASE_PATH + MEDIA_PATH + AUDIO_PATH + getName();
     }
 
-    public void load(boolean isSample) throws Exception {
+    public void load(boolean isSample) {
         logger.debug("Loading file '" + this.getName() + "...");
 
         this.isSample = isSample;
@@ -46,8 +42,6 @@ public class AudioFile extends com.ascargon.rocketshow.composition.File {
     }
 
     public void play() throws Exception {
-        String path = getPath();
-
         if (isSample) {
             alsaPlayer.play(this.getManager().getSettings().getAlsaDeviceFromOutputBus(outputBus), this.getPath());
         }

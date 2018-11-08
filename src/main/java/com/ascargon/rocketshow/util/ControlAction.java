@@ -20,7 +20,7 @@ public abstract class ControlAction {
 	private String compositionName;
 
 	// Should this action apply to a remote device?
-	private List<String> remoteDeviceNames = new ArrayList<String>();
+	private List<String> remoteDeviceNames = new ArrayList<>();
 
 	// Should this action apply locally?
 	private boolean executeLocally = true;
@@ -54,10 +54,12 @@ public abstract class ControlAction {
 
 	@XmlElement(name = "remoteDevice")
 	@XmlElementWrapper(name = "remoteDeviceList")
+	@SuppressWarnings("WeakerAccess")
 	public List<String> getRemoteDeviceNames() {
 		return remoteDeviceNames;
 	}
 
+	@SuppressWarnings("unused")
 	public void setRemoteDeviceNames(List<String> remoteDeviceNames) {
 		this.remoteDeviceNames = remoteDeviceNames;
 	}

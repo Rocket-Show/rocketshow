@@ -1,7 +1,5 @@
 package com.ascargon.rocketshow.composition;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -15,7 +13,6 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import com.ascargon.rocketshow.api.Audio;
 import com.ascargon.rocketshow.midi.MidiPlayer;
 import org.apache.log4j.Logger;
 import org.freedesktop.gstreamer.*;
@@ -26,13 +23,14 @@ import com.ascargon.rocketshow.midi.MidiFile;
 import com.ascargon.rocketshow.midi.MidiMapping;
 import com.ascargon.rocketshow.midi.MidiRouting;
 import com.ascargon.rocketshow.video.VideoFile;
+import org.freedesktop.gstreamer.elements.BaseSink;
 import org.freedesktop.gstreamer.elements.PlayBin;
-import org.freedesktop.gstreamer.elements.URIDecodeBin;;
+import org.freedesktop.gstreamer.elements.URIDecodeBin;
 
 @XmlRootElement
 public class Composition {
 
-    final static Logger logger = Logger.getLogger(Composition.class);
+    private final static Logger logger = Logger.getLogger(Composition.class);
 
     public enum PlayState {
         PLAYING, // Is the composition playing?
@@ -48,7 +46,7 @@ public class Composition {
 
     private String name;
 
-    final String uuid = String.valueOf(UUID.randomUUID());
+    private final String uuid = String.valueOf(UUID.randomUUID());
 
     private boolean autoStartNextComposition = false;
 
@@ -58,7 +56,7 @@ public class Composition {
 
     private MidiMapping midiMapping = new MidiMapping();
 
-    private List<File> fileList = new ArrayList<File>();
+    private List<File> fileList = new ArrayList<>();
 
     private Manager manager;
 
@@ -147,37 +145,19 @@ public class Composition {
 
             pipeline = new Pipeline();
 
-            pipeline.getBus().connect(new Bus.ERROR() {
-                @Override
-                public void errorMessage(GstObject source, int code, String message) {
-                    logger.error("GST: " + message);
-                }
-            });
-            pipeline.getBus().connect(new Bus.WARNING() {
-                @Override
-                public void warningMessage(GstObject source, int code, String message) {
-                    logger.warn("GST: " + message);
-                }
-            });
-            pipeline.getBus().connect(new Bus.INFO() {
-                @Override
-                public void infoMessage(GstObject source, int code, String message) {
-                    logger.warn("GST: " + message);
-                }
-            });
-            pipeline.getBus().connect(new Bus.STATE_CHANGED() {
-                @Override
-                public void stateChanged(GstObject source, State old, State newState, State pending) {
-                    if (source.getTypeName().equals("GstPipeline") && newState == State.PLAYING) {
-                        // We changed to playing, maybe we need to seek to the startposition (not possible before playing)
-                        if (startPosition > 0) {
-                            try {
-                                seek(startPosition);
-                            } catch (Exception e) {
-                                logger.error("Could not set start position when changed to playing", e);
-                            }
-                            startPosition = 0;
+            pipeline.getBus().connect((Bus.ERROR) (GstObject source, int code, String message) -> logger.error("GST: " + message));
+            pipeline.getBus().connect((Bus.WARNING) (GstObject source, int code, String message) -> logger.warn("GST: " + message));
+            pipeline.getBus().connect((Bus.INFO) (GstObject source, int code, String message) -> logger.warn("GST: " + message));
+            pipeline.getBus().connect((GstObject source, State old, State newState, State pending) -> {
+                if (source.getTypeName().equals("GstPipeline") && newState == State.PLAYING) {
+                    // We changed to playing, maybe we need to seek to the start position (not possible before playing)
+                    if (startPosition > 0) {
+                        try {
+                            seek(startPosition);
+                        } catch (Exception e) {
+                            logger.error("Could not set start position when changed to playing", e);
                         }
+                        startPosition = 0;
                     }
                 }
             });
@@ -216,36 +196,26 @@ public class Composition {
                         audioSource.set("uri", "file://" + ((AudioFile) file).getPath());
                         pipeline.add(audioSource);
 
-                        Element queue = ElementFactory.make("queue", "queue" + i);
-                        audioSource.connect(new Element.PAD_ADDED() {
-                            @Override
-                            public void padAdded(Element element, Pad pad) {
-                                String name = pad.getCaps().getStructure(0).getName();
+                        Element convert = ElementFactory.make("audioconvert", "audioconvert" + i);
+                        audioSource.connect((Element.PAD_ADDED) (Element element, Pad pad) -> {
+                            String name = pad.getCaps().getStructure(0).getName();
 
-                                if ("audio/x-raw-float".equals(name) || "audio/x-raw-int".equals(name) || "audio/x-raw".equals(name)) {
-                                    pad.link(queue.getSinkPads().get(0));
-                                }
+                            if ("audio/x-raw-float".equals(name) || "audio/x-raw-int".equals(name) || "audio/x-raw".equals(name)) {
+                                pad.link(convert.getSinkPads().get(0));
                             }
                         });
-                        pipeline.add(queue);
-
-                        Element convert = ElementFactory.make("audioconvert", "audioconvert" + i);
                         pipeline.add(convert);
 
                         Element resample = ElementFactory.make("audioresample", "audioresample" + i);
                         pipeline.add(resample);
 
-                        Element queue2 = ElementFactory.make("queue", "queue2" + i);
-
-                        Element alsaSink = ElementFactory.make("alsasink", "alsasink" + i);
-                        alsaSink.set("device", this.getManager().getSettings().getAlsaDeviceFromOutputBus(audioFile.getOutputBus()));
-                        alsaSink.set("buffer-time", 50000);
+                        BaseSink alsaSink = (BaseSink) ElementFactory.make("alsasink", "alsasink" + i);
+                        //alsaSink.set("device", this.getManager().getSettings().getAlsaDeviceFromOutputBus(audioFile.getOutputBus()));
+                        alsaSink.set("device", "bus1");
                         pipeline.add(alsaSink);
 
-                        queue.link(convert);
                         convert.link(resample);
-                        resample.link(queue2);
-                        queue2.link(alsaSink);
+                        resample.link(alsaSink);
                     }
                 } else if (file instanceof VideoFile) {
                     PlayBin playBin = (PlayBin) ElementFactory.make("playbin", "playbin" + i);
@@ -505,9 +475,7 @@ public class Composition {
         if (object instanceof Composition) {
             Composition composition = (Composition) object;
 
-            if (this.uuid.equals(composition.uuid)) {
-                return true;
-            }
+            return this.uuid.equals(composition.uuid);
         }
 
         return false;

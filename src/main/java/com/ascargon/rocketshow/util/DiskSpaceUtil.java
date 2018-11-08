@@ -14,10 +14,10 @@ public class DiskSpaceUtil {
 		DiskSpace diskSpace = new DiskSpace();
 		
 		// Get the used and available space in MB
-		ProcessBuilder pb = new ProcessBuilder(new String[] { "df", "-BMB" });
+		ProcessBuilder pb = new ProcessBuilder("df", "-BMB");
 		Process process = pb.start();
 		BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
-		String line = null;
+		String line;
 
 		// Loop over each line
 		while ((line = br.readLine()) != null) {

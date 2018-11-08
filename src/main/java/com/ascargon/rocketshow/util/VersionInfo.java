@@ -7,12 +7,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.log4j.Logger;
-
 @XmlRootElement
 public class VersionInfo {
-
-	final static Logger logger = Logger.getLogger(VersionInfo.class);
 
 	private String version;
 	private Date date;
@@ -41,10 +37,12 @@ public class VersionInfo {
 
 	@XmlElement(name = "changeNote")
 	@XmlElementWrapper(name = "changeNoteList")
+	@SuppressWarnings("unused")
 	public List<ChangeNote> getChangeNotes() {
 		return changeNotes;
 	}
 
+	@SuppressWarnings("unused")
 	public void setChangeNotes(List<ChangeNote> changeNotes) {
 		this.changeNotes = changeNotes;
 	}

@@ -1,8 +1,5 @@
 package com.ascargon.rocketshow.raspberry;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.log4j.Logger;
 
 import com.ascargon.rocketshow.Manager;
@@ -12,16 +9,13 @@ import com.pi4j.io.gpio.GpioPinDigitalInput;
 import com.pi4j.io.gpio.Pin;
 import com.pi4j.io.gpio.PinPullResistance;
 import com.pi4j.io.gpio.RaspiPin;
-import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 
 public class RaspberryGpioControlActionExecuter {
 
 	private GpioController gpioController;
 
-	private List<GpioPinDigitalInput> buttons = new ArrayList<GpioPinDigitalInput>();
-
-	final static Logger logger = Logger.getLogger(RaspberryGpioControlActionExecuter.class);
+	private final static Logger logger = Logger.getLogger(RaspberryGpioControlActionExecuter.class);
 
 	public RaspberryGpioControlActionExecuter(Manager manager) {
 		if (!manager.getSettings().isEnableRaspberryGpio()) {
@@ -38,17 +32,14 @@ public class RaspberryGpioControlActionExecuter {
 
 			button.setShutdownOptions(true);
 
-			GpioPinListenerDigital listener = new GpioPinListenerDigital() {
-				@Override
-				public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
-					if (event.getState().isHigh()) {
-						logger.debug("Input high from GPIO " + event.getPin() + " recognized");
+			GpioPinListenerDigital listener = event -> {
+				if (event.getState().isHigh()) {
+					logger.debug("Input high from GPIO " + event.getPin() + " recognized");
 
-						try {
-							manager.getControlActionExecuter().execute(raspberryGpioControl);
-						} catch (Exception e) {
-							logger.error("Could not execute action from Raspberry GPIO", e);
-						}
+					try {
+						manager.getControlActionExecuter().execute(raspberryGpioControl);
+					} catch (Exception e) {
+						logger.error("Could not execute action from Raspberry GPIO", e);
 					}
 				}
 			};
@@ -60,8 +51,6 @@ public class RaspberryGpioControlActionExecuter {
 
 			// TODO Make debounce time configurable
 			button.setDebounce(500);
-
-			buttons.add(button);
 		}
 	}
 

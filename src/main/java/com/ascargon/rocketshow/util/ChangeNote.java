@@ -3,8 +3,6 @@ package com.ascargon.rocketshow.util;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.log4j.Logger;
-
 /**
  * Release change notes for the app.
  *
@@ -12,8 +10,6 @@ import org.apache.log4j.Logger;
  */
 @XmlRootElement
 public class ChangeNote {
-
-	final static Logger logger = Logger.getLogger(ChangeNote.class);
 
 	private String version;
 	private String changes;

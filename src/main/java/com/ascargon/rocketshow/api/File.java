@@ -37,7 +37,7 @@ public class File {
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
 	public com.ascargon.rocketshow.composition.File upload(@FormDataParam("file") InputStream uploadedInputStream,
-			@FormDataParam("file") FormDataContentDisposition fileDetail) throws Exception {
+			@FormDataParam("file") FormDataContentDisposition fileDetail) {
 
 		Manager manager = (Manager) context.getAttribute("manager");
 		return manager.getFileManager().saveFile(uploadedInputStream, fileDetail.getFileName());

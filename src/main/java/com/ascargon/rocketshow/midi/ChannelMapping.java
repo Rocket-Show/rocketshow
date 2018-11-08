@@ -22,7 +22,8 @@ public class ChannelMapping {
 	public int getChannelTo() {
 		return channelTo;
 	}
-	
+
+    @SuppressWarnings("unused")
 	public void setChannelTo(int channelTo) {
 		this.channelTo = channelTo;
 	}

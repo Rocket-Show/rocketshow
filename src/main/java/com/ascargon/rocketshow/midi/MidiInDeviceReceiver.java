@@ -21,7 +21,7 @@ import com.ascargon.rocketshow.midi.MidiUtil.MidiDirection;
  */
 public class MidiInDeviceReceiver implements Receiver {
 
-	final static Logger logger = Logger.getLogger(MidiInDeviceReceiver.class);
+    private final static Logger logger = Logger.getLogger(MidiInDeviceReceiver.class);
 
 	private Manager manager;
 
@@ -42,8 +42,6 @@ public class MidiInDeviceReceiver implements Receiver {
 	/**
 	 * Connect the MIDI player to a sender, if required. Also call this method,
 	 * if you change the settings or want to reconnect the device.
-	 * 
-	 * @throws MidiUnavailableException
 	 */
 	public void connectMidiReceiver() throws MidiUnavailableException {
 		// Cancel an eventually existing timer
@@ -57,6 +55,7 @@ public class MidiInDeviceReceiver implements Receiver {
 			try {
 				midiReceiver.close();
 			} catch (Exception e) {
+				logger.error("Could not close MIDI receiver", e);
 			}
 		}
 
@@ -146,10 +145,6 @@ public class MidiInDeviceReceiver implements Receiver {
 		if (midiReceiver != null && midiReceiver.isOpen()) {
 			midiReceiver.close();
 		}
-	}
-
-	public boolean isMidiLearn() {
-		return midiLearn;
 	}
 
 	public void setMidiLearn(boolean midiLearn) {

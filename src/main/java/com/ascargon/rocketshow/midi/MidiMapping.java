@@ -32,6 +32,7 @@ public class MidiMapping {
 		return overrideParent;
 	}
 
+    @SuppressWarnings("unused")
 	public void setOverrideParent(Boolean overrideParent) {
 		this.overrideParent = overrideParent;
 	}
@@ -40,6 +41,7 @@ public class MidiMapping {
 		return channelMap;
 	}
 
+    @SuppressWarnings("unused")
 	public void setChannelMap(List<ChannelMapping> channelMap) {
 		this.channelMap = channelMap;
 	}

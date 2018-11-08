@@ -45,7 +45,7 @@ public class Midi {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response sendMessage(@QueryParam("command") int command, @QueryParam("channel") int channel,
-			@QueryParam("note") int note, @QueryParam("velocity") int velocity) throws Exception {
+			@QueryParam("note") int note, @QueryParam("velocity") int velocity) {
 		
 		Manager manager = (Manager) context.getAttribute("manager");
 		MidiSignal midiSignal = new MidiSignal();
@@ -84,7 +84,7 @@ public class Midi {
 	@Path("activate-midi-learn")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response activateMidiLearn() throws Exception {
+	public Response activateMidiLearn() {
 		Manager manager = (Manager) context.getAttribute("manager");
 		manager.getMidiInDeviceReceiver().setMidiLearn(true);
 		return Response.status(200).build();
@@ -93,7 +93,7 @@ public class Midi {
 	@Path("deactivate-midi-learn")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response deactivateMidiLearn() throws Exception {
+	public Response deactivateMidiLearn() {
 		Manager manager = (Manager) context.getAttribute("manager");
 		manager.getMidiInDeviceReceiver().setMidiLearn(false);
 		return Response.status(200).build();

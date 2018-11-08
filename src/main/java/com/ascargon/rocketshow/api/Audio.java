@@ -21,7 +21,7 @@ public class Audio {
 	@Path("devices")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<AudioDevice> getDevices() throws Exception {
+	public List<AudioDevice> getDevices() {
 		return AudioUtil.getAudioDevices();
 	}
 

@@ -1,9 +1,6 @@
 package com.ascargon.rocketshow.midi;
 
-import java.io.IOException;
-
 import javax.sound.midi.MidiMessage;
-import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
 
@@ -18,67 +15,57 @@ import com.ascargon.rocketshow.Manager;
  */
 public class Midi2DeviceOutReceiver implements Receiver, MidiDeviceConnectedListener {
 
-	final static Logger logger = Logger.getLogger(Midi2DeviceOutReceiver.class);
+    private final static Logger logger = Logger.getLogger(Midi2DeviceOutReceiver.class);
 
-	private MidiMapping midiMapping;
+    private MidiMapping midiMapping;
 
-	private Manager manager;
+    private Manager manager;
 
-	private javax.sound.midi.MidiDevice midiOutDevice;
-	
-	public Midi2DeviceOutReceiver(Manager manager) throws MidiUnavailableException {
-		this.manager = manager;
-		manager.addMidiOutDeviceConnectedListener(this);
-	}
+    private javax.sound.midi.MidiDevice midiOutDevice;
 
-	@Override
-	public void send(MidiMessage message, long timeStamp) {
-		if (midiOutDevice == null) {
-			return;
-		}
-		
-		if (!(message instanceof ShortMessage)) {
-			return;
-		}
+    Midi2DeviceOutReceiver(Manager manager) {
+        this.manager = manager;
+        manager.addMidiOutDeviceConnectedListener(this);
+    }
 
-		MidiSignal midiSignal = new MidiSignal((ShortMessage) message);
-		
-		try {
-			MidiMapper.processMidiEvent(midiSignal, midiMapping);
-		} catch (IOException e) {
-			logger.error("Could not map MIDI signal for remote receiver", e);
-		}
+    @Override
+    public void send(MidiMessage message, long timeStamp) {
+        if (midiOutDevice == null) {
+            return;
+        }
 
-		try {
-			midiOutDevice.getReceiver().send(midiSignal.getShortMessage(), -1);
-		} catch (Exception e) {
-			logger.error("Could not send MIDI signal to out device receiver", e);
-		}
-	}
+        if (!(message instanceof ShortMessage)) {
+            return;
+        }
 
-	@Override
-	public void close() {
-		if (manager != null) {
-			manager.removeMidiOutDeviceConnectedListener(this);
-		}
-	}
+        MidiSignal midiSignal = new MidiSignal((ShortMessage) message);
+        MidiMapper.processMidiEvent(midiSignal, midiMapping);
 
-	@Override
-	public void deviceConnected(javax.sound.midi.MidiDevice midiDevice) {
-		this.midiOutDevice = midiDevice;
-	}
+        try {
+            midiOutDevice.getReceiver().send(midiSignal.getShortMessage(), -1);
+        } catch (Exception e) {
+            logger.error("Could not send MIDI signal to out device receiver", e);
+        }
+    }
 
-	@Override
-	public void deviceDisconnected(javax.sound.midi.MidiDevice midiDevice) {
-		this.midiOutDevice = null;
-	}
-	
-	public MidiMapping getMidiMapping() {
-		return midiMapping;
-	}
+    @Override
+    public void close() {
+        if (manager != null) {
+            manager.removeMidiOutDeviceConnectedListener(this);
+        }
+    }
 
-	public void setMidiMapping(MidiMapping midiMapping) {
-		this.midiMapping = midiMapping;
-	}
+    @Override
+    public void deviceConnected(javax.sound.midi.MidiDevice midiDevice) {
+        this.midiOutDevice = midiDevice;
+    }
+
+    public MidiMapping getMidiMapping() {
+        return midiMapping;
+    }
+
+    public void setMidiMapping(MidiMapping midiMapping) {
+        this.midiMapping = midiMapping;
+    }
 
 }

@@ -13,14 +13,10 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.log4j.Logger;
-
 import com.ascargon.rocketshow.Manager;
 
 @Path("/composition")
 public class Composition {
-
-	final static Logger logger = Logger.getLogger(Composition.class);
 
 	@Context
 	ServletContext context;
@@ -35,7 +31,7 @@ public class Composition {
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public com.ascargon.rocketshow.composition.Composition get(@QueryParam("name") String name) throws Exception {
+	public com.ascargon.rocketshow.composition.Composition get(@QueryParam("name") String name) {
 		Manager manager = (Manager) context.getAttribute("manager");
 		return manager.getCompositionManager().getComposition(name);
 	}

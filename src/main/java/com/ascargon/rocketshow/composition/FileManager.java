@@ -19,126 +19,136 @@ import com.ascargon.rocketshow.video.VideoFile;
 
 public class FileManager {
 
-	final static Logger logger = Logger.getLogger(FileManager.class);
+    private final static Logger logger = Logger.getLogger(FileManager.class);
 
-	public List<com.ascargon.rocketshow.composition.File> getAllFiles() throws Exception {
-		List<com.ascargon.rocketshow.composition.File> returnFileList = new ArrayList<com.ascargon.rocketshow.composition.File>();
-		File folder;
-		File[] fileList;
+    public List<com.ascargon.rocketshow.composition.File> getAllFiles() {
+        List<com.ascargon.rocketshow.composition.File> returnFileList = new ArrayList<>();
+        File folder;
+        File[] fileList;
 
-		// Audio files
-		folder = new File(
-				Manager.BASE_PATH + com.ascargon.rocketshow.composition.File.MEDIA_PATH + AudioFile.AUDIO_PATH);
-		fileList = folder.listFiles();
+        // Audio files
+        folder = new File(
+                Manager.BASE_PATH + com.ascargon.rocketshow.composition.File.MEDIA_PATH + AudioFile.AUDIO_PATH);
+        fileList = folder.listFiles();
 
-		for (File file : fileList) {
-			if (file.isFile()) {
-				AudioFile audioFile = new AudioFile();
-				audioFile.setName(file.getName());
-				returnFileList.add(audioFile);
-			}
-		}
+        if (fileList != null) {
+            for (File file : fileList) {
+                if (file.isFile()) {
+                    AudioFile audioFile = new AudioFile();
+                    audioFile.setName(file.getName());
+                    returnFileList.add(audioFile);
+                }
+            }
+        }
 
-		// MIDI files
-		folder = new File(Manager.BASE_PATH + com.ascargon.rocketshow.composition.File.MEDIA_PATH + MidiFile.MIDI_PATH);
-		fileList = folder.listFiles();
+        // MIDI files
+        folder = new File(Manager.BASE_PATH + com.ascargon.rocketshow.composition.File.MEDIA_PATH + MidiFile.MIDI_PATH);
+        fileList = folder.listFiles();
 
-		for (File file : fileList) {
-			if (file.isFile()) {
-				MidiFile midiFile = new MidiFile();
-				midiFile.setName(file.getName());
-				returnFileList.add(midiFile);
-			}
-		}
+        if (fileList != null) {
+            for (File file : fileList) {
+                if (file.isFile()) {
+                    MidiFile midiFile = new MidiFile();
+                    midiFile.setName(file.getName());
+                    returnFileList.add(midiFile);
+                }
+            }
+        }
 
-		// Video files
-		folder = new File(
-				Manager.BASE_PATH + com.ascargon.rocketshow.composition.File.MEDIA_PATH + VideoFile.VIDEO_PATH);
-		fileList = folder.listFiles();
+        // Video files
+        folder = new File(
+                Manager.BASE_PATH + com.ascargon.rocketshow.composition.File.MEDIA_PATH + VideoFile.VIDEO_PATH);
+        fileList = folder.listFiles();
 
-		for (File file : fileList) {
-			if (file.isFile()) {
-				VideoFile videoFile = new VideoFile();
-				videoFile.setName(file.getName());
-				returnFileList.add(videoFile);
-			}
-		}
+        if (fileList != null) {
+            for (File file : fileList) {
+                if (file.isFile()) {
+                    VideoFile videoFile = new VideoFile();
+                    videoFile.setName(file.getName());
+                    returnFileList.add(videoFile);
+                }
+            }
+        }
 
-		return returnFileList;
-	}
+        return returnFileList;
+    }
 
-	public void deleteFile(String name, String type) throws Exception {
-		String path = Manager.BASE_PATH + com.ascargon.rocketshow.composition.File.MEDIA_PATH;
+    public void deleteFile(String name, String type) {
+        String path = Manager.BASE_PATH + com.ascargon.rocketshow.composition.File.MEDIA_PATH;
 
-		// Audio files
-		if (type.equals(com.ascargon.rocketshow.composition.File.FileType.MIDI.name())) {
-			path += MidiFile.MIDI_PATH;
-		} else if (type.equals(com.ascargon.rocketshow.composition.File.FileType.AUDIO.name())) {
-			path += AudioFile.AUDIO_PATH;
-		} else if (type.equals(com.ascargon.rocketshow.composition.File.FileType.VIDEO.name())) {
-			path += VideoFile.VIDEO_PATH;
-		}
+        // Audio files
+        if (type.equals(com.ascargon.rocketshow.composition.File.FileType.MIDI.name())) {
+            path += MidiFile.MIDI_PATH;
+        } else if (type.equals(com.ascargon.rocketshow.composition.File.FileType.AUDIO.name())) {
+            path += AudioFile.AUDIO_PATH;
+        } else if (type.equals(com.ascargon.rocketshow.composition.File.FileType.VIDEO.name())) {
+            path += VideoFile.VIDEO_PATH;
+        }
 
-		path += name;
+        path += name;
 
-		File systemFile = new File(path);
+        File systemFile = new File(path);
 
-		if (!systemFile.exists()) {
-			return;
-		}
+        if (!systemFile.exists()) {
+            return;
+        }
 
-		systemFile.delete();
-	}
+        boolean result = systemFile.delete();
 
-	public com.ascargon.rocketshow.composition.File saveFile(InputStream uploadedInputStream, String fileName) {
-		String[] midiFormats = { "midi", "mid" };
-		String[] audioFormats = { "wav", "wave", "mp3", "aac", "ogg", "oga", "mogg", "wma" };
-		String[] videoFormats = { "avi", "mpg", "mpeg", "mkv", "mp4", "mov", "m4a" };
+        if (!result) {
+            logger.error("Could not delete file '" + name + "'");
+        }
+    }
 
-		com.ascargon.rocketshow.composition.File file = null;
+    public com.ascargon.rocketshow.composition.File saveFile(InputStream uploadedInputStream, String fileName) {
+        String[] midiFormats = {"midi", "mid"};
+        String[] audioFormats = {"wav", "wave", "mp3", "aac", "ogg", "oga", "mogg", "wma"};
+        String[] videoFormats = {"avi", "mpg", "mpeg", "mkv", "mp4", "mov", "m4a"};
 
-		// Compute the path according to the file extension
-		String extension = FilenameUtils.getExtension(fileName).toLowerCase().trim();
-		String path = Manager.BASE_PATH + com.ascargon.rocketshow.composition.File.MEDIA_PATH;
+        com.ascargon.rocketshow.composition.File file = null;
 
-		if (Arrays.asList(midiFormats).contains(extension)) {
-			path += MidiFile.MIDI_PATH;
-			file = new MidiFile();
-		} else if (Arrays.asList(audioFormats).contains(extension)) {
-			path += AudioFile.AUDIO_PATH;
-			file = new AudioFile();
-		} else if (Arrays.asList(videoFormats).contains(extension)) {
-			path += VideoFile.VIDEO_PATH;
-			file = new VideoFile();
-		}
+        // Compute the path according to the file extension
+        String extension = FilenameUtils.getExtension(fileName).toLowerCase().trim();
+        String path = Manager.BASE_PATH + com.ascargon.rocketshow.composition.File.MEDIA_PATH;
 
-		if (file == null) {
-			// We could not determine the file type -> don't store the file
-			return null;
-		}
+        if (Arrays.asList(midiFormats).contains(extension)) {
+            path += MidiFile.MIDI_PATH;
+            file = new MidiFile();
+        } else if (Arrays.asList(audioFormats).contains(extension)) {
+            path += AudioFile.AUDIO_PATH;
+            file = new AudioFile();
+        } else if (Arrays.asList(videoFormats).contains(extension)) {
+            path += VideoFile.VIDEO_PATH;
+            file = new VideoFile();
+        }
 
-		file.setName(fileName);
+        if (file == null) {
+            // We could not determine the file type -> don't store the file
+            return null;
+        }
 
-		path += fileName;
+        file.setName(fileName);
 
-		try {
-			OutputStream out = new FileOutputStream(new File(path));
-			int read = 0;
-			byte[] bytes = new byte[1024];
+        path += fileName;
 
-			out = new FileOutputStream(new File(path));
+        try {
+            OutputStream out;
+            int read;
+            byte[] bytes = new byte[1024];
 
-			while ((read = uploadedInputStream.read(bytes)) != -1) {
-				out.write(bytes, 0, read);
-			}
+            out = new FileOutputStream(new File(path));
 
-			out.flush();
-			out.close();
-		} catch (IOException e) {
-			logger.error("Could not save file '" + fileName + "'", e);
-		}
+            while ((read = uploadedInputStream.read(bytes)) != -1) {
+                out.write(bytes, 0, read);
+            }
 
-		return file;
-	}
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            logger.error("Could not save file '" + fileName + "'", e);
+        }
+
+        return file;
+    }
 
 }

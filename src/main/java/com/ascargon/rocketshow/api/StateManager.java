@@ -27,9 +27,9 @@ import com.ascargon.rocketshow.util.Updater.UpdateState;
 @ServerEndpoint(value = "/state")
 public class StateManager {
 
-	final static Logger logger = Logger.getLogger(StateManager.class);
+	private final static Logger logger = Logger.getLogger(StateManager.class);
 
-	private static List<Session> activeSessions = new ArrayList<Session>();
+	private static List<Session> activeSessions = new ArrayList<>();
 
 	private Manager manager;
 
@@ -41,18 +41,18 @@ public class StateManager {
 	}
 
 	@OnOpen
-	public void onOpen(Session session) throws Exception {
+	public void onOpen(Session session) {
 		activeSessions.add(session);
 	}
 
 	@OnClose
-	public void onClose(Session session) throws IOException {
+	public void onClose(Session session) {
 		activeSessions.remove(session);
 	}
 
 	@OnError
 	public void onError(Session session, Throwable throwable) {
-		logger.error("Got websocket error", throwable);
+		logger.error("Got web socket error", throwable);
 
 		// Session maybe closed?
 		activeSessions.remove(session);

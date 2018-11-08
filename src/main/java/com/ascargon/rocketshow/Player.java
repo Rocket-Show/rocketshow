@@ -12,10 +12,10 @@ import com.ascargon.rocketshow.composition.Composition.PlayState;
 
 public class Player {
 
-    final static Logger logger = Logger.getLogger(Player.class);
+    private final static Logger logger = Logger.getLogger(Player.class);
 
     private Composition composition;
-    private List<Composition> sampleCompositionList = new ArrayList<Composition>();
+    private List<Composition> sampleCompositionList = new ArrayList<>();
     private Manager manager;
 
     public Player(Manager manager) {
@@ -48,22 +48,16 @@ public class Player {
         // Load the composition on all remote devices
         for (RemoteDevice remoteDevice : manager.getSettings().getRemoteDeviceList()) {
             if (remoteDevice.isSynchronize()) {
-                playExecutor.execute(new Runnable() {
-                    public void run() {
-                        remoteDevice.load(true, composition.getName());
-                    }
-                });
+                playExecutor.execute(() -> remoteDevice.load(true, composition.getName()));
             }
         }
 
         // Also load the local composition files
-        playExecutor.execute(new Runnable() {
-            public void run() {
-                try {
-                    composition.loadFiles();
-                } catch (Exception e) {
-                    logger.error("Could not load the composition files", e);
-                }
+        playExecutor.execute(() -> {
+            try {
+                composition.loadFiles();
+            } catch (Exception e) {
+                logger.error("Could not load the composition files", e);
             }
         });
 
@@ -73,6 +67,7 @@ public class Player {
         playExecutor.shutdown();
 
         while (!playExecutor.isTerminated()) {
+            Thread.sleep(50);
         }
 
         logger.debug("All devices loaded");
@@ -121,11 +116,7 @@ public class Player {
         // Play the composition on all remote devices
         for (RemoteDevice remoteDevice : manager.getSettings().getRemoteDeviceList()) {
             if (remoteDevice.isSynchronize()) {
-                playExecutor.execute(new Runnable() {
-                    public void run() {
-                        remoteDevice.playAsSample(compositionName);
-                    }
-                });
+                playExecutor.execute(() -> remoteDevice.playAsSample(compositionName));
             }
         }
 
@@ -165,7 +156,7 @@ public class Player {
         }
     }
 
-    public void stop(boolean playDefaultComposition) throws Exception {
+    public void stop(boolean playDefaultComposition) {
         if (composition == null) {
             return;
         }
@@ -182,22 +173,16 @@ public class Player {
         // Stop all remote devices
         for (RemoteDevice remoteDevice : manager.getSettings().getRemoteDeviceList()) {
             if (remoteDevice.isSynchronize()) {
-                executor.execute(new Runnable() {
-                    public void run() {
-                        remoteDevice.stop(playDefaultComposition);
-                    }
-                });
+                executor.execute(() -> remoteDevice.stop(playDefaultComposition));
             }
         }
 
         // Also stop the local composition
-        executor.execute(new Runnable() {
-            public void run() {
-                try {
-                    composition.stop(playDefaultComposition);
-                } catch (Exception e) {
-                    logger.error("Could not load the composition files", e);
-                }
+        executor.execute(() -> {
+            try {
+                composition.stop(playDefaultComposition);
+            } catch (Exception e) {
+                logger.error("Could not load the composition files", e);
             }
         });
 
@@ -205,10 +190,15 @@ public class Player {
         executor.shutdown();
 
         while (!executor.isTerminated()) {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                logger.error("Error while waiting to stop the composition", e);
+            }
         }
     }
 
-    public void stop() throws Exception {
+    public void stop() {
         stop(true);
     }
 

@@ -16,7 +16,7 @@ import org.freedesktop.gstreamer.Pipeline;
 
 public class MidiFile extends com.ascargon.rocketshow.composition.File {
 
-    final static Logger logger = Logger.getLogger(MidiFile.class);
+    private final static Logger logger = Logger.getLogger(MidiFile.class);
 
     public final static String MIDI_PATH = "midi/";
 
@@ -27,7 +27,7 @@ public class MidiFile extends com.ascargon.rocketshow.composition.File {
     private Timer playTimer;
 
     public MidiFile() {
-        List<MidiRouting> midiRoutingList = new ArrayList<MidiRouting>();
+        List<MidiRouting> midiRoutingList = new ArrayList<>();
         setMidiRoutingList(midiRoutingList);
     }
 
@@ -40,7 +40,7 @@ public class MidiFile extends com.ascargon.rocketshow.composition.File {
         logger.debug("Loading file '" + this.getName() + "...");
 
         if (midiPlayer == null) {
-            midiPlayer = new MidiPlayer(this.getManager(), midiRoutingList);
+            midiPlayer = new MidiPlayer(midiRoutingList);
         }
 
         midiPlayer.setLoop(this.isLoop());
@@ -103,7 +103,7 @@ public class MidiFile extends com.ascargon.rocketshow.composition.File {
         midiPlayer.play();
     }
 
-    public void stop() throws Exception {
+    public void stop() {
         if (playTimer != null) {
             playTimer.cancel();
             playTimer = null;
@@ -141,10 +141,6 @@ public class MidiFile extends com.ascargon.rocketshow.composition.File {
     }
 
     public void setMidiRoutingList(List<MidiRouting> midiRoutingList) {
-        for (MidiRouting midiRouting : midiRoutingList) {
-            midiRouting.setMidiSource("MIDI file '" + getPath() + "'");
-        }
-
         this.midiRoutingList = midiRoutingList;
     }
 

@@ -17,7 +17,7 @@ import com.ascargon.rocketshow.Manager;
 @Path("/transport")
 public class Transport {
 
-    final static Logger logger = Logger.getLogger(Transport.class);
+    private final static Logger logger = Logger.getLogger(Transport.class);
 
     @Context
     ServletContext context;

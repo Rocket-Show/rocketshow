@@ -19,7 +19,7 @@ public class Dmx {
 	@Path("reset")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response reset() throws Exception {
+	public Response reset() {
 		Manager manager = (Manager)context.getAttribute("manager");
 		manager.getDmxManager().reset();
 		return Response.status(200).build();

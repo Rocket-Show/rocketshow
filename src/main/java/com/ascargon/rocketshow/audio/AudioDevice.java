@@ -3,13 +3,9 @@ package com.ascargon.rocketshow.audio;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.log4j.Logger;
-
 @XmlRootElement
 public class AudioDevice {
 
-	final static Logger logger = Logger.getLogger(AudioDevice.class);
-	
 	private int id;
 	private String key;
 	private String name;

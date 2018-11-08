@@ -20,7 +20,7 @@ public class Session {
    
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public com.ascargon.rocketshow.Session getSession() throws Exception {
+	public com.ascargon.rocketshow.Session getSession() {
 		Manager manager = (Manager)context.getAttribute("manager");
 		return manager.getSession();
 	}
@@ -28,7 +28,7 @@ public class Session {
 	@Path("wizard-finished")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response setWizardFinished() throws Exception {
+	public Response setWizardFinished() {
 		Manager manager = (Manager)context.getAttribute("manager");
 		manager.getSession().setFirstStart(false);
 		manager.saveSession();
@@ -38,7 +38,7 @@ public class Session {
 	@Path("dismiss-update-finished")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response dismissUpdateFinished() throws Exception {
+	public Response dismissUpdateFinished() {
 		Manager manager = (Manager)context.getAttribute("manager");
 		manager.getSession().setUpdateFinished(false);
 		manager.saveSession();
@@ -48,7 +48,7 @@ public class Session {
 	@Path("set-auto-select-next-composition")
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response setAutoSelectNextComposition(@QueryParam("value") boolean value) throws Exception {
+	public Response setAutoSelectNextComposition(@QueryParam("value") boolean value) {
 		Manager manager = (Manager)context.getAttribute("manager");
 		manager.getSession().setAutoSelectNextComposition(value);
 		manager.saveSession();

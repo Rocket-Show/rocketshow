@@ -13,7 +13,7 @@ abstract public class File {
 		MIDI, AUDIO, VIDEO, UNKNOWN
 	}
 
-	public final static String MEDIA_PATH = "media/";
+	protected final static String MEDIA_PATH = "media/";
 
 	private String name;
 

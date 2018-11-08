@@ -1,8 +1,5 @@
 package com.ascargon.rocketshow.util;
 
-import java.io.IOException;
-
-import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
 
 import com.ascargon.rocketshow.Manager;
@@ -10,7 +7,7 @@ import com.ascargon.rocketshow.RemoteDevice;
 
 public class ControlActionExecuter {
 
-	final static Logger logger = Logger.getLogger(ControlActionExecuter.class);
+	private final static Logger logger = Logger.getLogger(ControlActionExecuter.class);
 
 	private Manager manager;
 
@@ -18,9 +15,7 @@ public class ControlActionExecuter {
 		this.manager = manager;
 	}
 
-	private void executeActionOnRemoteDevice(ControlAction controlAction, RemoteDevice remoteDevice)
-			throws ClientProtocolException, IOException {
-
+	private void executeActionOnRemoteDevice(ControlAction controlAction, RemoteDevice remoteDevice) {
 		switch (controlAction.getAction()) {
 		case PLAY:
 			remoteDevice.play();
@@ -108,9 +103,6 @@ public class ControlActionExecuter {
 
 	/**
 	 * Execute the control action.
-	 * 
-	 * @param controlAction
-	 * @throws Exception
 	 */
 	public void execute(ControlAction controlAction) throws Exception {
 		if (controlAction.isExecuteLocally()) {

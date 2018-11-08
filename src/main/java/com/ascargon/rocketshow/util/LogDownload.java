@@ -16,9 +16,9 @@ import com.ascargon.rocketshow.Manager;
  */
 public class LogDownload {
 
-	final static Logger logger = Logger.getLogger(LogDownload.class);
+	private final static Logger logger = Logger.getLogger(LogDownload.class);
 
-	public final static String LOGS_FILE_NAME = "logs.zip";
+	private final static String LOGS_FILE_NAME = "logs.zip";
 
 	public static File getLogsFile() throws Exception {
 		// Prepare the log directory for download
@@ -26,7 +26,7 @@ public class LogDownload {
 				"zip -r -j " + Manager.BASE_PATH + LOGS_FILE_NAME + " " + Manager.BASE_PATH + "log/*" });
 
 		BufferedReader reader = new BufferedReader(new InputStreamReader(shellManager.getInputStream()));
-		String line = null;
+		String line;
 		try {
 			while ((line = reader.readLine()) != null) {
 				logger.debug("Output from log prepare process: " + line);

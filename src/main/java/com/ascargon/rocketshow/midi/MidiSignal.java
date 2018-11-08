@@ -36,6 +36,7 @@ public class MidiSignal {
 	// app.
 	@XmlTransient
 	@JsonIgnore
+    @SuppressWarnings("WeakerAccess")
 	public ShortMessage getShortMessage() throws InvalidMidiDataException {
 		ShortMessage shortMessage = new ShortMessage();
 		shortMessage.setMessage(command, channel, note, velocity);

@@ -9,7 +9,7 @@ import org.apache.log4j.Logger;
 import com.ascargon.rocketshow.audio.AudioFile;
 import com.ascargon.rocketshow.midi.MidiFile;
 import com.ascargon.rocketshow.midi.MidiPlayer;
-import com.ascargon.rocketshow.video.VideoFile;;
+import com.ascargon.rocketshow.video.VideoFile;
 
 /**
  * Get the duration of a file.
@@ -18,7 +18,7 @@ import com.ascargon.rocketshow.video.VideoFile;;
  */
 public class FileDurationGetter implements Runnable {
 
-	final static Logger logger = Logger.getLogger(FileDurationGetter.class);
+	private final static Logger logger = Logger.getLogger(FileDurationGetter.class);
 
 	private static final String DURATION = "ID_LENGTH=";
 
@@ -33,14 +33,14 @@ public class FileDurationGetter implements Runnable {
 	}
 
 	private long getDurationWithMplayer(String path) throws Exception {
-		ProcessBuilder pb = new ProcessBuilder(new String[] { "mplayer", "-identify", "-frames", "0", path });
+		ProcessBuilder pb = new ProcessBuilder("mplayer", "-identify", "-frames", "0", path);
 		Process process = pb.start();
 		BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
-		String line = null;
+		String line;
 
 		while ((line = br.readLine()) != null) {
 			if (isDurationLine(line)) {
-				Double duration = Double.parseDouble(line.trim().substring(DURATION.length()));
+				double duration = Double.parseDouble(line.trim().substring(DURATION.length()));
 				return Math.round(duration) * 1000;
 			}
 		}

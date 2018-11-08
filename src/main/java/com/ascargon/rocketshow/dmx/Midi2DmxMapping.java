@@ -17,10 +17,12 @@ public class Midi2DmxMapping {
 	private MappingType mappingType = MappingType.SIMPLE;
 
 	@XmlElement
+    @SuppressWarnings("WeakerAccess")
 	public MappingType getMappingType() {
 		return mappingType;
 	}
 
+	@SuppressWarnings("unused")
 	public void setMappingType(MappingType mappingType) {
 		this.mappingType = mappingType;
 	}

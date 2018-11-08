@@ -1,14 +1,8 @@
 package com.ascargon.rocketshow.midi;
 
-import java.io.IOException;
-
 import javax.sound.midi.ShortMessage;
 
-import org.apache.log4j.Logger;
-
 public class MidiMapper {
-
-	final static Logger logger = Logger.getLogger(MidiMapper.class);
 
 	private static int getChannelTo(int channelFrom, MidiMapping midiMapping) {
 		// Search the channel map on the current mapping
@@ -70,7 +64,7 @@ public class MidiMapper {
 		return 0;
 	}
 	
-	public static void processMidiEvent(MidiSignal midiSignal, MidiMapping midiMapping) throws IOException {
+	public static void processMidiEvent(MidiSignal midiSignal, MidiMapping midiMapping) {
 		// Transform the message according to the mapping
 
 		// Only react to NOTE_ON/NOTE_OFF events

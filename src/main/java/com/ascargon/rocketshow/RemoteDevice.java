@@ -24,7 +24,7 @@ import org.apache.log4j.Logger;
 @XmlRootElement
 public class RemoteDevice {
 
-    final static Logger logger = Logger.getLogger(RemoteDevice.class);
+    private final static Logger logger = Logger.getLogger(RemoteDevice.class);
 
     private HttpClient httpClient;
 
@@ -55,7 +55,7 @@ public class RemoteDevice {
             // otherwise
             BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 
-            String line = "";
+            String line;
 
             while ((line = rd.readLine()) != null) {
                 logger.debug("Response from remote device POST: " + line);
@@ -71,18 +71,14 @@ public class RemoteDevice {
         }
     }
 
-    public void doPost(String apiUrl, boolean synchronous) {
+    private void doPost(String apiUrl, boolean synchronous) {
         // Build the url for the post request
         String url = "http://" + host + "/api/" + apiUrl;
 
         if (synchronous) {
             executeRequest(url);
         } else {
-            new Thread(new Runnable() {
-                public void run() {
-                    executeRequest(url);
-                }
-            }).start();
+            new Thread(() -> executeRequest(url)).start();
         }
     }
 

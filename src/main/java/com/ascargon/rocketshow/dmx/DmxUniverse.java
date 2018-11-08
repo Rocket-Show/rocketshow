@@ -6,21 +6,18 @@ import java.util.UUID;
 public class DmxUniverse {
 
 	private HashMap<Integer, Integer> universe;
-	
-	final String uuid = String.valueOf(UUID.randomUUID());
-	
-	public DmxUniverse() {
-		universe = new HashMap<Integer, Integer>();
+
+	private final String uuid = String.valueOf(UUID.randomUUID());
+
+	DmxUniverse() {
+		universe = new HashMap<>();
 	}
-	
+
 	@Override
 	public boolean equals(Object object) {
 		if (object instanceof DmxUniverse) {
 			DmxUniverse dmxUniverse = (DmxUniverse) object;
-
-			if (this.uuid.equals(dmxUniverse.uuid)) {
-				return true;
-			}
+			return this.uuid.equals(dmxUniverse.uuid);
 		}
 
 		return false;
@@ -33,5 +30,5 @@ public class DmxUniverse {
 	public void setUniverse(HashMap<Integer, Integer> universe) {
 		this.universe = universe;
 	}
-	
+
 }

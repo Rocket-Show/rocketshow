@@ -14,16 +14,14 @@ import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
 
 import org.apache.log4j.Logger;
-import org.freedesktop.gstreamer.Bus;
 import org.freedesktop.gstreamer.GstObject;
 import org.freedesktop.gstreamer.Pipeline;
 
-import com.ascargon.rocketshow.Manager;
 import org.freedesktop.gstreamer.State;
 
 public class MidiPlayer {
 
-    final static Logger logger = Logger.getLogger(MidiPlayer.class);
+    private final static Logger logger = Logger.getLogger(MidiPlayer.class);
 
     private Sequencer sequencer;
     private List<MidiRouting> midiRoutingList;
@@ -34,10 +32,7 @@ public class MidiPlayer {
     // Sync to a master, if available
     private Timer syncTimer;
 
-    // The millis we allow to diff to the master, before syncing
-    private long syncDifferenceThresholdMillis = 10;
-
-    public MidiPlayer(Manager manager, List<MidiRouting> midiRoutingList) {
+    MidiPlayer(List<MidiRouting> midiRoutingList) {
         this.midiRoutingList = midiRoutingList;
     }
 
@@ -47,6 +42,9 @@ public class MidiPlayer {
 
     private void syncToMaster() {
         Long masterPositionMillis = null;
+
+        // The millis we allow to diff to the master, before syncing
+        long syncDifferenceThresholdMillis = 10;
 
         // Sync to a master source, if available
         if (syncPipeline != null) {
@@ -112,17 +110,14 @@ public class MidiPlayer {
         }
 
         if (syncPipeline != null) {
-            syncPipeline.getBus().connect(new Bus.STATE_CHANGED() {
-                @Override
-                public void stateChanged(GstObject source, State old, State newState, State pending) {
-                    if (source.getTypeName().equals("GstPipeline")) {
-                        if (newState == State.PLAYING) {
-                            sequencer.start();
-                            startSyncTimer();
-                        } else if (newState == State.PAUSED) {
-                            sequencer.stop();
-                            stopSyncTimer();
-                        }
+            syncPipeline.getBus().connect((GstObject source, State old, State newState, State pending) -> {
+                if (source.getTypeName().equals("GstPipeline")) {
+                    if (newState == State.PLAYING) {
+                        sequencer.start();
+                        startSyncTimer();
+                    } else if (newState == State.PAUSED) {
+                        sequencer.stop();
+                        stopSyncTimer();
                     }
                 }
             });

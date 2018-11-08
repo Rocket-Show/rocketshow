@@ -1,13 +1,8 @@
 package com.ascargon.rocketshow.dmx;
 
-import java.io.IOException;
-
 import javax.sound.midi.MidiMessage;
-import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
-
-import org.apache.log4j.Logger;
 
 import com.ascargon.rocketshow.Manager;
 import com.ascargon.rocketshow.midi.MidiMapper;
@@ -21,65 +16,51 @@ import com.ascargon.rocketshow.midi.MidiSignal;
  */
 public class Midi2DmxReceiver implements Receiver {
 
-	final static Logger logger = Logger.getLogger(Midi2DmxReceiver.class);
+    private MidiMapping midiMapping;
+    private Midi2DmxMapping midi2DmxMapping;
+    private Midi2DmxConverter midi2DmxConverter;
+    private DmxManager dmxManager;
 
-	private MidiMapping midiMapping;
-	private Midi2DmxMapping midi2DmxMapping;
-	private Midi2DmxConverter midi2DmxConverter;
-	private DmxManager dmxManager;
-	
-	private DmxUniverse dmxUniverse;
+    private DmxUniverse dmxUniverse;
 
-	public Midi2DmxReceiver(Manager manager) throws MidiUnavailableException {
-		this.midi2DmxConverter = manager.getMidi2DmxConverter();
-		this.dmxManager = manager.getDmxManager();
-		
-		dmxUniverse = new DmxUniverse();
-		
-		dmxManager.addDmxUniverse(dmxUniverse);
-	}
+    public Midi2DmxReceiver(Manager manager) {
+        this.midi2DmxConverter = manager.getMidi2DmxConverter();
+        this.dmxManager = manager.getDmxManager();
 
-	@Override
-	public void send(MidiMessage message, long timeStamp) {
-		// Map the midi to DMX out
-		if (!(message instanceof ShortMessage)) {
-			return;
-		}
+        dmxUniverse = new DmxUniverse();
 
-		MidiSignal midiSignal = new MidiSignal((ShortMessage) message);
+        dmxManager.addDmxUniverse(dmxUniverse);
+    }
 
-		try {
-			MidiMapper.processMidiEvent(midiSignal, midiMapping);
-		} catch (IOException e) {
-			logger.error("Could not map MIDI signal for DMX receiver", e);
-		}
+    @Override
+    public void send(MidiMessage message, long timeStamp) {
+        // Map the midi to DMX out
+        if (!(message instanceof ShortMessage)) {
+            return;
+        }
 
-		try {
-			midi2DmxConverter.processMidiEvent(midiSignal, midi2DmxMapping, dmxUniverse);
-		} catch (IOException e) {
-			logger.error("Could not send DMX signal", e);
-		}
-	}
+        MidiSignal midiSignal = new MidiSignal((ShortMessage) message);
 
-	public Midi2DmxMapping getMidi2DmxMapping() {
-		return midi2DmxMapping;
-	}
+        MidiMapper.processMidiEvent(midiSignal, midiMapping);
 
-	public void setMidi2DmxMapping(Midi2DmxMapping midi2DmxMapping) {
-		this.midi2DmxMapping = midi2DmxMapping;
-	}
+        midi2DmxConverter.processMidiEvent(midiSignal, midi2DmxMapping, dmxUniverse);
+    }
 
-	public MidiMapping getMidiMapping() {
-		return midiMapping;
-	}
+    public void setMidi2DmxMapping(Midi2DmxMapping midi2DmxMapping) {
+        this.midi2DmxMapping = midi2DmxMapping;
+    }
 
-	public void setMidiMapping(MidiMapping midiMapping) {
-		this.midiMapping = midiMapping;
-	}
-	
-	@Override
-	public void close() {
-		dmxManager.removeDmxUniverse(dmxUniverse);
-	}
+    public MidiMapping getMidiMapping() {
+        return midiMapping;
+    }
+
+    public void setMidiMapping(MidiMapping midiMapping) {
+        this.midiMapping = midiMapping;
+    }
+
+    @Override
+    public void close() {
+        dmxManager.removeDmxUniverse(dmxUniverse);
+    }
 
 }

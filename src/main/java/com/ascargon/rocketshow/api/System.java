@@ -78,7 +78,7 @@ public class System {
 	@Path("state")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public com.ascargon.rocketshow.api.State getState() throws Exception {
+	public com.ascargon.rocketshow.api.State getState() {
 		Manager manager = (Manager)context.getAttribute("manager");
 		return manager.getStateManager().getCurrentState();
 	}
@@ -86,7 +86,7 @@ public class System {
 	@Path("settings")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Settings getSettings() throws Exception {
+	public Settings getSettings() {
 		Manager manager = (Manager)context.getAttribute("manager");
 		return manager.getSettings();
 	}

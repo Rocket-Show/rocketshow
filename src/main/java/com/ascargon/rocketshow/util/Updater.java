@@ -22,15 +22,15 @@ public class Updater {
 		DOWNLOADING, INSTALLING, REBOOTING
 	}
 
-	final static Logger logger = Logger.getLogger(Updater.class);
+	private final static Logger logger = Logger.getLogger(Updater.class);
 
-	public final static String UPDATE_PATH = "update/";
-	public final static String BEFORE_SCRIPT_NAME = "before.sh";
-	public final static String AFTER_SCRIPT_NAME = "after.sh";
-	public final static String WAR_NAME = "current.war";
-	public final static String CURRENT_VERSION = "currentversion.xml";
-	public final static String UPDATE_URL = "https://www.rocketshow.net/update/";
-	public final static String UPDATE_SCRIPT = "update.sh";
+	private final static String UPDATE_PATH = "update/";
+	private final static String BEFORE_SCRIPT_NAME = "before.sh";
+	private final static String AFTER_SCRIPT_NAME = "after.sh";
+	private final static String WAR_NAME = "current.war";
+	private final static String CURRENT_VERSION = "currentversion.xml";
+	private final static String UPDATE_URL = "https://www.rocketshow.net/update/";
+	private final static String UPDATE_SCRIPT = "update.sh";
 
 	private Manager manager;
 

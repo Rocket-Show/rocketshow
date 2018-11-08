@@ -40,7 +40,7 @@ public class Set {
 	
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public com.ascargon.rocketshow.composition.Set getCurrent() throws Exception {
+	public com.ascargon.rocketshow.composition.Set getCurrent() {
 		Manager manager = (Manager)context.getAttribute("manager");
 		return manager.getCurrentSet();
 	}
@@ -48,7 +48,7 @@ public class Set {
 	@Path("details")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public com.ascargon.rocketshow.composition.Set getByName(@QueryParam("name") String name) throws Exception {
+	public com.ascargon.rocketshow.composition.Set getByName(@QueryParam("name") String name) {
 		Manager manager = (Manager)context.getAttribute("manager");
 		return manager.getCompositionManager().getSet(name);
 	}
