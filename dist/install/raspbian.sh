@@ -1,6 +1,6 @@
 #!/bin/bash
 # 
-# Install RocketShow on a Raspian.
+# Install Rocket Show on a Raspian Stretch.
 # This script needs to be executed as root.
 # 
 
@@ -8,7 +8,7 @@
 apt-get update
 apt-get upgrade
 
-apt-get -y install oracle-java8-jdk omxplayer fbi ola mplayer libnss-mdns dnsmasq hostapd authbind zip
+apt-get -y install oracle-java8-jdk fbi ola mplayer libnss-mdns dnsmasq hostapd authbind zip
 
 # Install the gstreamer packages, built by Rocket Show for the Raspberry Pi to make 
 # accelerated video playback on Raspberry Pi possible. The versions on the official repos did not work until
@@ -169,7 +169,7 @@ cd /opt/rocketshow/bin
 chmod +x usbreset
 
 # Overclock the raspberry to sustain streams without underruns
-# - Set more memory for the GPU to play larger video files with omxplayer
+# - Set more memory for the GPU to play larger video files with omx
 # - Enable turbo-mode by default (boot_delay avoids sdcard corruption)
 # - Overclock the sdcard a little bit to prevent bufferunderruns with ALSA
 # - Hide warnings (e.g. temperature icon)
@@ -251,6 +251,7 @@ sed -i "\$a127.0.1.1\tRocketShow" /etc/hosts
 
 sed -i 's/raspberrypi/RocketShow/g' /etc/hostname
 
-# Give the setup some time, because umount won't work afterwards if called too fast ("umount: device is busy")
+# Give the setup some time during image creation, because umount won't work afterwards if called
+# too fast ("umount: device is busy")
 echo "Wait 30 seconds..."
 sleep 30s
