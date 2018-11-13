@@ -140,8 +140,8 @@ public class Set {
         readCurrentComposition();
 
         if (manager != null) {
-            if (manager.getStateManager() != null) {
-                manager.getStateManager().notifyClients();
+            if (manager.getStateService() != null) {
+                manager.getStateService().notifyClients();
             }
         }
 

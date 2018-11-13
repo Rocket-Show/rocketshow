@@ -79,7 +79,7 @@ public class Updater {
 
 		logger.info("Downloading new version...");
 
-		manager.getStateManager().notifyClients(UpdateState.DOWNLOADING);
+		manager.getStateService().notifyClients(UpdateState.DOWNLOADING);
 
 		// Download the new version
 		downloadUpdateFile(CURRENT_VERSION);
@@ -87,13 +87,13 @@ public class Updater {
 		downloadUpdateFile(BEFORE_SCRIPT_NAME);
 		downloadUpdateFile(AFTER_SCRIPT_NAME);
 
-		manager.getStateManager().notifyClients(UpdateState.INSTALLING);
+		manager.getStateService().notifyClients(UpdateState.INSTALLING);
 
 		// Execute the script
 		logger.info("Files downloaded. Execute update...");
 		executeScript(new String[] { Manager.BASE_PATH + UPDATE_SCRIPT });
 
-		manager.getStateManager().notifyClients(UpdateState.REBOOTING);
+		manager.getStateService().notifyClients(UpdateState.REBOOTING);
 
 		// After the reboot, the new status will be update finished and this
 		// status should be dismissed

@@ -107,7 +107,7 @@ const DROPZONE_CONFIG: DropzoneConfigInterface = {
     HttpClientModule,
     RouterModule.forRoot(
       appRoutes,
-      { enableTracing: false } // <-- debugging purposes only
+      { enableTracing: false, useHash: true }
     ),
     BrowserAnimationsModule,
     TranslateModule.forRoot({

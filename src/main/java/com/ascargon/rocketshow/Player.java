@@ -265,7 +265,7 @@ public class Player {
 
         this.composition = composition;
 
-        manager.getStateManager().notifyClients();
+        manager.getStateService().notifyClients();
     }
 
     public void setComposition(Composition composition) throws Exception {

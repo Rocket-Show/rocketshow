@@ -30,7 +30,7 @@ export class StateService {
       this.wsUrl = 'ws://' + location.hostname + '/';
     }
 
-    this.wsUrl += 'state';
+    this.wsUrl += 'api/state';
 
     // Connect to the websocket backend
     const wsConfig = { reconnectIfNotNormalClose: true } as WebSocketConfig;

@@ -1,4 +1,0 @@
-<tomcat-users>
-    <role rolename="admin-gui"/>
-    <user username="tomcat" password="1234" roles="manager-gui"/>
-</tomcat-users>

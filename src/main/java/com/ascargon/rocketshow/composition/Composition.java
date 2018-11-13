@@ -99,7 +99,7 @@ public class Composition {
         playState = PlayState.STOPPED;
 
         if (!defaultComposition && !isSample) {
-            manager.getStateManager().notifyClients();
+            manager.getStateService().notifyClients();
         }
     }
 
@@ -129,7 +129,7 @@ public class Composition {
         playState = PlayState.LOADING;
 
         if (!defaultComposition && !isSample) {
-            manager.getStateManager().notifyClients();
+            manager.getStateService().notifyClients();
         }
 
         logger.debug(
@@ -232,7 +232,7 @@ public class Composition {
             playState = PlayState.LOADED;
             filesLoaded = true;
 
-            manager.getStateManager().notifyClients();
+            manager.getStateService().notifyClients();
         }
     }
 
@@ -349,7 +349,7 @@ public class Composition {
         playState = PlayState.PLAYING;
 
         if (!defaultComposition && !isSample) {
-            manager.getStateManager().notifyClients();
+            manager.getStateService().notifyClients();
         }
     }
 
@@ -380,7 +380,7 @@ public class Composition {
         playState = PlayState.PAUSED;
 
         if (!defaultComposition && !isSample) {
-            manager.getStateManager().notifyClients();
+            manager.getStateService().notifyClients();
         }
     }
 
@@ -396,7 +396,7 @@ public class Composition {
         playState = PlayState.STOPPING;
 
         if (!defaultComposition && !isSample) {
-            manager.getStateManager().notifyClients();
+            manager.getStateService().notifyClients();
         }
 
         startPosition = 0;
@@ -434,7 +434,7 @@ public class Composition {
         playState = PlayState.STOPPED;
 
         if (!defaultComposition && !isSample) {
-            manager.getStateManager().notifyClients();
+            manager.getStateService().notifyClients();
         }
 
         // Play the default composition, if necessary
@@ -462,7 +462,7 @@ public class Composition {
         startAutoStopTimer();
 
         if (!isSample) {
-            manager.getStateManager().notifyClients();
+            manager.getStateService().notifyClients();
         }
     }
 

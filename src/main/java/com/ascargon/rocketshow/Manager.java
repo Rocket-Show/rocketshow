@@ -17,7 +17,7 @@ import javax.xml.bind.Unmarshaller;
 import org.apache.log4j.Logger;
 import org.freedesktop.gstreamer.Gst;
 
-import com.ascargon.rocketshow.api.StateManager;
+import com.ascargon.rocketshow.api.StateService;
 import com.ascargon.rocketshow.composition.Composition;
 import com.ascargon.rocketshow.composition.CompositionManager;
 import com.ascargon.rocketshow.composition.FileManager;
@@ -44,7 +44,7 @@ public class Manager {
     public final static String BASE_PATH = "/opt/rocketshow/";
 
     // Manage the client states (web GUI)
-    private StateManager stateManager;
+    private StateService stateService;
 
     private Updater updater;
 
@@ -239,8 +239,8 @@ public class Manager {
         player = new Player(this);
 
         // Initialize the client state
-        stateManager = new StateManager();
-        stateManager.load(this);
+        stateService = new StateService();
+        stateService.load(this);
 
         // Initialize the updater
         updater = new Updater(this);
@@ -452,7 +452,7 @@ public class Manager {
             }
         }
 
-        stateManager.notifyClients();
+        stateService.notifyClients();
 
         saveSession();
     }
@@ -569,8 +569,8 @@ public class Manager {
         return session;
     }
 
-    public StateManager getStateManager() {
-        return stateManager;
+    public StateService getStateService() {
+        return stateService;
     }
 
     public FileManager getFileManager() {

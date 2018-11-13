@@ -122,7 +122,7 @@ public class MidiInDeviceReceiver implements Receiver {
 		// Notify the frontend, if midi learn is activated
 		if (midiLearn) {
 			try {
-				manager.getStateManager().notifyClients(midiSignal);
+				manager.getStateService().notifyClients(midiSignal);
 			} catch (Exception e) {
 				logger.error("Could not notify the clients about a MIDI learn event", e);
 			}

@@ -10,13 +10,14 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
 
 import com.ascargon.rocketshow.Manager;
 import com.ascargon.rocketshow.composition.Composition.PlayState;
 import com.ascargon.rocketshow.midi.MidiSignal;
 import com.ascargon.rocketshow.util.Updater.UpdateState;
+import org.springframework.stereotype.Service;
 
 /**
  * Handle the current state of the device and notify all connected clients on
@@ -25,15 +26,16 @@ import com.ascargon.rocketshow.util.Updater.UpdateState;
  * @author Moritz A. Vieli
  */
 @ServerEndpoint(value = "/state")
-public class StateManager {
+@Service
+public class StateService {
 
-	private final static Logger logger = Logger.getLogger(StateManager.class);
+	private final static Logger logger = Logger.getLogger(StateService.class);
 
 	private static List<Session> activeSessions = new ArrayList<>();
 
 	private Manager manager;
 
-	public StateManager() {
+	public StateService() {
 	}
 
 	public void load(Manager manager) {

@@ -1,11 +1,26 @@
-# Auto generated files
-target/*
+src/main/resources/static/*
 /target/
-WebContent/app/*
+!.mvn/wrapper/maven-wrapper.jar
 
-# IDE files
+### STS ###
+.apt_generated
 .classpath
+.factorypath
 .project
-.settings/*
-.idea/*
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
 *.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/build/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
