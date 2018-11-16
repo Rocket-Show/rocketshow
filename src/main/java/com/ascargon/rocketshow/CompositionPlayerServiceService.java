@@ -5,20 +5,25 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.ascargon.rocketshow.api.NotificationService;
 import org.apache.log4j.Logger;
 
 import com.ascargon.rocketshow.composition.Composition;
 import com.ascargon.rocketshow.composition.Composition.PlayState;
+import org.springframework.stereotype.Service;
 
-public class Player {
+@Service
+public class CompositionPlayerServiceService implements PlayerService {
 
-    private final static Logger logger = Logger.getLogger(Player.class);
+    private final static Logger logger = Logger.getLogger(CompositionPlayerServiceService.class);
 
+    private NotificationService notificationService;
     private Composition composition;
     private List<Composition> sampleCompositionList = new ArrayList<>();
     private Manager manager;
 
-    public Player(Manager manager) {
+    public CompositionPlayerServiceService(NotificationService notificationService, Manager manager) {
+        this.notificationService = notificationService;
         this.manager = manager;
     }
 
@@ -124,8 +129,8 @@ public class Player {
 
         // Clone the composition for each played sample (we don't want them all
         // to share the same instance) and play it
-        Composition composition = manager.getCompositionManager()
-                .cloneComposition(manager.getCompositionManager().getComposition(compositionName));
+        Composition composition = manager.getFileCompositionService()
+                .cloneComposition(manager.getFileCompositionService().getComposition(compositionName));
         composition.setSample(true);
         sampleCompositionList.add(composition);
         composition.play();
@@ -265,7 +270,7 @@ public class Player {
 
         this.composition = composition;
 
-        manager.getStateService().notifyClients();
+        notificationService.notifyClients();
     }
 
     public void setComposition(Composition composition) throws Exception {
@@ -273,7 +278,7 @@ public class Player {
     }
 
     public void setCompositionName(String name) throws Exception {
-        setComposition(manager.getCompositionManager().getComposition(name));
+        setComposition(manager.getFileCompositionService().getComposition(name));
     }
 
     public void setAutoStartNextComposition(boolean autoStartNextComposition) {

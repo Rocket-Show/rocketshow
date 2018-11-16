@@ -11,6 +11,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.ascargon.rocketshow.api.NotificationService;
 import org.apache.log4j.Logger;
 
 import com.ascargon.rocketshow.Manager;
@@ -32,9 +33,11 @@ public class Updater {
 	private final static String UPDATE_URL = "https://www.rocketshow.net/update/";
 	private final static String UPDATE_SCRIPT = "update.sh";
 
+	private NotificationService notificationService;
 	private Manager manager;
 
-	public Updater(Manager manager) {
+	public Updater(NotificationService notificationService, Manager manager) {
+		this.notificationService = notificationService;
 		this.manager = manager;
 	}
 
@@ -79,7 +82,7 @@ public class Updater {
 
 		logger.info("Downloading new version...");
 
-		manager.getStateService().notifyClients(UpdateState.DOWNLOADING);
+		notificationService.notifyClients(UpdateState.DOWNLOADING);
 
 		// Download the new version
 		downloadUpdateFile(CURRENT_VERSION);
@@ -87,13 +90,13 @@ public class Updater {
 		downloadUpdateFile(BEFORE_SCRIPT_NAME);
 		downloadUpdateFile(AFTER_SCRIPT_NAME);
 
-		manager.getStateService().notifyClients(UpdateState.INSTALLING);
+		notificationService.notifyClients(UpdateState.INSTALLING);
 
 		// Execute the script
 		logger.info("Files downloaded. Execute update...");
 		executeScript(new String[] { Manager.BASE_PATH + UPDATE_SCRIPT });
 
-		manager.getStateService().notifyClients(UpdateState.REBOOTING);
+		notificationService.notifyClients(UpdateState.REBOOTING);
 
 		// After the reboot, the new status will be update finished and this
 		// status should be dismissed

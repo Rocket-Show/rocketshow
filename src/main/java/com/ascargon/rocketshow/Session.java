@@ -11,9 +11,6 @@ public class Session {
 	private boolean updateFinished = false;
 	private boolean autoSelectNextComposition = false;
 	
-	public Session() {
-	}
-	
 	@XmlElement
 	public String getCurrentSetName() {
 		return currentSetName;

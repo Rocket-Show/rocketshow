@@ -66,11 +66,11 @@ public class SystemController {
 //		return Response.status(200).build();
 //	}
 
-	@GetMapping("state")
-	public com.ascargon.rocketshow.api.State getState() {
-		return stateService.getCurrentState();
-	}
-	
+    @GetMapping("state")
+    public com.ascargon.rocketshow.api.State getState() {
+        return stateService.getCurrentState();
+    }
+
 //	@Path("settings")
 //	@GET
 //	@Produces(MediaType.APPLICATION_JSON)
@@ -112,5 +112,5 @@ public class SystemController {
 //	public DiskSpace getDiskSpace() throws Exception {
 //		return DiskSpaceUtil.get();
 //	}
-	
+
 }

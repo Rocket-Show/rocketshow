@@ -9,14 +9,15 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.ascargon.rocketshow.composition.CompositionFile;
 import org.apache.log4j.Logger;
 
 import com.ascargon.rocketshow.Manager;
 import org.freedesktop.gstreamer.Pipeline;
 
-public class MidiFile extends com.ascargon.rocketshow.composition.File {
+public class MidiCompositionFile extends CompositionFile {
 
-    private final static Logger logger = Logger.getLogger(MidiFile.class);
+    private final static Logger logger = Logger.getLogger(MidiCompositionFile.class);
 
     public final static String MIDI_PATH = "midi/";
 
@@ -26,7 +27,7 @@ public class MidiFile extends com.ascargon.rocketshow.composition.File {
 
     private Timer playTimer;
 
-    public MidiFile() {
+    public MidiCompositionFile() {
         List<MidiRouting> midiRoutingList = new ArrayList<>();
         setMidiRoutingList(midiRoutingList);
     }

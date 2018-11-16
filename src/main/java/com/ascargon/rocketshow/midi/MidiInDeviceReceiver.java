@@ -9,6 +9,7 @@ import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
 
+import com.ascargon.rocketshow.api.NotificationService;
 import org.apache.log4j.Logger;
 
 import com.ascargon.rocketshow.Manager;
@@ -23,17 +24,15 @@ public class MidiInDeviceReceiver implements Receiver {
 
     private final static Logger logger = Logger.getLogger(MidiInDeviceReceiver.class);
 
+    private NotificationService notificationService;
 	private Manager manager;
-
 	private Timer connectTimer;
-
 	private javax.sound.midi.MidiDevice midiReceiver;
-
 	private List<MidiRouting> midiRoutingList;
-
 	private boolean midiLearn = false;
 
-	public MidiInDeviceReceiver(Manager manager) {
+	public MidiInDeviceReceiver(NotificationService notificationService, Manager manager) {
+		this.notificationService = notificationService;
 		this.manager = manager;
 
 		midiRoutingList = manager.getSettings().getDeviceInMidiRoutingList();
@@ -122,7 +121,7 @@ public class MidiInDeviceReceiver implements Receiver {
 		// Notify the frontend, if midi learn is activated
 		if (midiLearn) {
 			try {
-				manager.getStateService().notifyClients(midiSignal);
+				notificationService.notifyClients(midiSignal);
 			} catch (Exception e) {
 				logger.error("Could not notify the clients about a MIDI learn event", e);
 			}

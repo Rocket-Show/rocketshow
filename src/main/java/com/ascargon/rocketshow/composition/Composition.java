@@ -13,16 +13,16 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.midi.MidiPlayer;
+import com.ascargon.rocketshow.video.VideoCompositionFile;
 import org.apache.log4j.Logger;
 import org.freedesktop.gstreamer.*;
 
 import com.ascargon.rocketshow.Manager;
-import com.ascargon.rocketshow.audio.AudioFile;
-import com.ascargon.rocketshow.midi.MidiFile;
+import com.ascargon.rocketshow.midi.MidiCompositionFile;
 import com.ascargon.rocketshow.midi.MidiMapping;
 import com.ascargon.rocketshow.midi.MidiRouting;
-import com.ascargon.rocketshow.video.VideoFile;
 import org.freedesktop.gstreamer.elements.BaseSink;
 import org.freedesktop.gstreamer.elements.PlayBin;
 import org.freedesktop.gstreamer.elements.URIDecodeBin;
@@ -56,7 +56,7 @@ public class Composition {
 
     private MidiMapping midiMapping = new MidiMapping();
 
-    private List<File> fileList = new ArrayList<>();
+    private List<CompositionFile> compositionFileList = new ArrayList<>();
 
     private Manager manager;
 
@@ -80,11 +80,11 @@ public class Composition {
             pipeline.stop();
         }
 
-        for (File file : fileList) {
-            if (file.isActive() && file instanceof MidiFile) {
-                ((MidiFile) file).close();
-            } else if (file.isActive() && file instanceof AudioFile) {
-                ((AudioFile) file).close();
+        for (CompositionFile compositionFile : compositionFileList) {
+            if (compositionFile.isActive() && compositionFile instanceof MidiCompositionFile) {
+                ((MidiCompositionFile) compositionFile).close();
+            } else if (compositionFile.isActive() && compositionFile instanceof AudioCompositionFile) {
+                ((AudioCompositionFile) compositionFile).close();
             }
         }
 
@@ -99,7 +99,7 @@ public class Composition {
         playState = PlayState.STOPPED;
 
         if (!defaultComposition && !isSample) {
-            manager.getStateService().notifyClients();
+            manager.getWebSocketClientNotifier().notifyClients();
         }
     }
 
@@ -109,8 +109,8 @@ public class Composition {
             return false;
         }
 
-        for (File file : fileList) {
-            if (file.isActive() && (file instanceof AudioFile || file instanceof VideoFile)) {
+        for (CompositionFile compositionFile : compositionFileList) {
+            if (compositionFile.isActive() && (compositionFile instanceof AudioCompositionFile || compositionFile instanceof VideoCompositionFile)) {
                 return true;
             }
         }
@@ -129,7 +129,7 @@ public class Composition {
         playState = PlayState.LOADING;
 
         if (!defaultComposition && !isSample) {
-            manager.getStateService().notifyClients();
+            manager.getWebSocketClientNotifier().notifyClients();
         }
 
         logger.debug(
@@ -168,14 +168,14 @@ public class Composition {
         }
 
         // Load all files, create the pipeline and handle exceptions to pipeline-playing
-        for (int i = 0; i < fileList.size(); i++) {
-            File file = fileList.get(i);
+        for (int i = 0; i < compositionFileList.size(); i++) {
+            CompositionFile compositionFile = compositionFileList.get(i);
 
-            if (file.isActive()) {
-                file.setManager(manager);
+            if (compositionFile.isActive()) {
+                compositionFile.setManager(manager);
 
-                if (file instanceof MidiFile) {
-                    MidiFile midiFile = (MidiFile) file;
+                if (compositionFile instanceof MidiCompositionFile) {
+                    MidiCompositionFile midiFile = (MidiCompositionFile) compositionFile;
 
                     for (MidiRouting midiRouting : midiFile.getMidiRoutingList()) {
                         midiRouting.getMidiMapping().setParent(midiMapping);
@@ -186,14 +186,14 @@ public class Composition {
                     if (firstMidiPlayer == null) {
                         firstMidiPlayer = midiFile.getMidiPlayer();
                     }
-                } else if (file instanceof AudioFile) {
-                    AudioFile audioFile = (AudioFile) file;
+                } else if (compositionFile instanceof AudioCompositionFile) {
+                    AudioCompositionFile audioFile = (AudioCompositionFile) compositionFile;
                     audioFile.load(isSample);
 
                     // Samples are played with the AlsaPlayer
                     if (!isSample) {
                         URIDecodeBin audioSource = (URIDecodeBin) ElementFactory.make("uridecodebin", "uridecodebin" + i);
-                        audioSource.set("uri", "file://" + ((AudioFile) file).getPath());
+                        audioSource.set("uri", "file://" + ((AudioCompositionFile) compositionFile).getPath());
                         pipeline.add(audioSource);
 
                         Element convert = ElementFactory.make("audioconvert", "audioconvert" + i);
@@ -217,9 +217,9 @@ public class Composition {
                         convert.link(resample);
                         resample.link(alsaSink);
                     }
-                } else if (file instanceof VideoFile) {
+                } else if (compositionFile instanceof VideoCompositionFile) {
                     PlayBin playBin = (PlayBin) ElementFactory.make("playbin", "playbin" + i);
-                    playBin.set("uri", "file://" + ((VideoFile) file).getPath());
+                    playBin.set("uri", "file://" + ((VideoCompositionFile) compositionFile).getPath());
                     pipeline.add(playBin);
                 }
             }
@@ -232,7 +232,7 @@ public class Composition {
             playState = PlayState.LOADED;
             filesLoaded = true;
 
-            manager.getStateService().notifyClients();
+            manager.getWebSocketClientNotifier().notifyClients();
         }
     }
 
@@ -251,26 +251,26 @@ public class Composition {
         // Workaround, because "this" does not work inside a TimerTask.
         Composition thisComposition = this;
 
-        for (File file : fileList) {
-            if (file.isActive()) {
+        for (CompositionFile compositionFile : compositionFileList) {
+            if (compositionFile.isActive()) {
                 int fileOffset = 0;
 
-                if (file.isLoop()) {
+                if (compositionFile.isLoop()) {
                     // At least one file is looped -> don't stop the composition
                     // automatically
                     return;
                 }
 
-                if (file instanceof MidiFile) {
-                    fileOffset = ((MidiFile) file).getFullOffsetMillis();
-                } else if (file instanceof AudioFile) {
-                    fileOffset = ((AudioFile) file).getFullOffsetMillis();
-                } else if (file instanceof VideoFile) {
-                    fileOffset = ((VideoFile) file).getFullOffsetMillis();
+                if (compositionFile instanceof MidiCompositionFile) {
+                    fileOffset = ((MidiCompositionFile) compositionFile).getFullOffsetMillis();
+                } else if (compositionFile instanceof AudioCompositionFile) {
+                    fileOffset = ((AudioCompositionFile) compositionFile).getFullOffsetMillis();
+                } else if (compositionFile instanceof VideoCompositionFile) {
+                    fileOffset = ((VideoCompositionFile) compositionFile).getFullOffsetMillis();
                 }
 
-                if (file.getDurationMillis() + fileOffset > maxDurationAndOffset) {
-                    maxDurationAndOffset = file.getDurationMillis() + fileOffset;
+                if (compositionFile.getDurationMillis() + fileOffset > maxDurationAndOffset) {
+                    maxDurationAndOffset = compositionFile.getDurationMillis() + fileOffset;
                 }
             }
         }
@@ -295,23 +295,23 @@ public class Composition {
                     } else {
                         // Don't stop the composition for samples (they should
                         // be short anyway)
-                        if (autoStartNextComposition && manager.getCurrentSet().hasNextComposition()) {
+                        if (autoStartNextComposition && manager.getCurrentCompositionSet().hasNextComposition()) {
                             // Stop, don't play the default composition but
                             // start
                             // playing the next composition
                             manager.getPlayer().stop(false);
 
-                            manager.getCurrentSet().nextComposition(false);
+                            manager.getCurrentCompositionSet().nextComposition(false);
                             manager.getPlayer().play();
                         } else if (manager.getSession().isAutoSelectNextComposition()) {
-                            manager.getCompositionManager().nextComposition();
+                            manager.getFileCompositionService().nextComposition();
                         } else {
                             // Stop, play the default composition and select the
                             // next composition automatically (if there is one)
                             manager.getPlayer().stop(true);
 
-                            if (manager.getCurrentSet() != null) {
-                                manager.getCurrentSet().nextComposition();
+                            if (manager.getCurrentCompositionSet() != null) {
+                                manager.getCurrentCompositionSet().nextComposition();
                             }
                         }
                     }
@@ -336,11 +336,11 @@ public class Composition {
             pipeline.play();
         }
 
-        for (File file : fileList) {
-            if (file.isActive() && file instanceof MidiFile) {
-                ((MidiFile) file).play();
-            } else if (file instanceof AudioFile) {
-                ((AudioFile) file).play();
+        for (CompositionFile compositionFile : compositionFileList) {
+            if (compositionFile.isActive() && compositionFile instanceof MidiCompositionFile) {
+                ((MidiCompositionFile) compositionFile).play();
+            } else if (compositionFile instanceof AudioCompositionFile) {
+                ((AudioCompositionFile) compositionFile).play();
             }
         }
 
@@ -349,7 +349,7 @@ public class Composition {
         playState = PlayState.PLAYING;
 
         if (!defaultComposition && !isSample) {
-            manager.getStateService().notifyClients();
+            manager.getWebSocketClientNotifier().notifyClients();
         }
     }
 
@@ -371,16 +371,16 @@ public class Composition {
             pipeline.pause();
         }
 
-        for (File file : fileList) {
-            if (file.isActive() && file instanceof MidiFile) {
-                ((MidiFile) file).pause();
+        for (CompositionFile compositionFile : compositionFileList) {
+            if (compositionFile.isActive() && compositionFile instanceof MidiCompositionFile) {
+                ((MidiCompositionFile) compositionFile).pause();
             }
         }
 
         playState = PlayState.PAUSED;
 
         if (!defaultComposition && !isSample) {
-            manager.getStateService().notifyClients();
+            manager.getWebSocketClientNotifier().notifyClients();
         }
     }
 
@@ -396,7 +396,7 @@ public class Composition {
         playState = PlayState.STOPPING;
 
         if (!defaultComposition && !isSample) {
-            manager.getStateService().notifyClients();
+            manager.getWebSocketClientNotifier().notifyClients();
         }
 
         startPosition = 0;
@@ -415,15 +415,15 @@ public class Composition {
             pipeline = null;
         }
 
-        for (File file : fileList) {
-            if (file.isActive() && file instanceof MidiFile) {
+        for (CompositionFile compositionFile : compositionFileList) {
+            if (compositionFile.isActive() && compositionFile instanceof MidiCompositionFile) {
                 try {
-                    ((MidiFile) file).close();
+                    ((MidiCompositionFile) compositionFile).close();
                 } catch (Exception e) {
-                    logger.error("Could not stop file '" + file.getName() + "'");
+                    logger.error("Could not stop file '" + compositionFile.getName() + "'");
                 }
-            } else if (file instanceof AudioFile) {
-                ((AudioFile) file).close();
+            } else if (compositionFile instanceof AudioCompositionFile) {
+                ((AudioCompositionFile) compositionFile).close();
             }
         }
 
@@ -434,7 +434,7 @@ public class Composition {
         playState = PlayState.STOPPED;
 
         if (!defaultComposition && !isSample) {
-            manager.getStateService().notifyClients();
+            manager.getWebSocketClientNotifier().notifyClients();
         }
 
         // Play the default composition, if necessary
@@ -453,16 +453,16 @@ public class Composition {
             pipeline.seek(positionMillis, TimeUnit.MILLISECONDS);
         }
 
-        for (File file : fileList) {
-            if (file.isActive() && file instanceof MidiFile) {
-                ((MidiFile) file).seek(positionMillis);
+        for (CompositionFile compositionFile : compositionFileList) {
+            if (compositionFile.isActive() && compositionFile instanceof MidiCompositionFile) {
+                ((MidiCompositionFile) compositionFile).seek(positionMillis);
             }
         }
 
         startAutoStopTimer();
 
         if (!isSample) {
-            manager.getStateService().notifyClients();
+            manager.getWebSocketClientNotifier().notifyClients();
         }
     }
 
@@ -491,15 +491,15 @@ public class Composition {
     }
 
     @XmlElementWrapper(name = "fileList")
-    @XmlElements({@XmlElement(type = MidiFile.class, name = "midiFile"),
-            @XmlElement(type = VideoFile.class, name = "videoFile"),
-            @XmlElement(type = AudioFile.class, name = "audioFile")})
-    public List<File> getFileList() {
-        return fileList;
+    @XmlElements({@XmlElement(type = MidiCompositionFile.class, name = "midiFile"),
+            @XmlElement(type = VideoCompositionFile.class, name = "videoFile"),
+            @XmlElement(type = AudioCompositionFile.class, name = "audioFile")})
+    public List<CompositionFile> getCompositionFileList() {
+        return compositionFileList;
     }
 
-    public void setFileList(List<File> fileList) {
-        this.fileList = fileList;
+    public void setCompositionFileList(List<CompositionFile> compositionFileList) {
+        this.compositionFileList = compositionFileList;
     }
 
     public String getName() {
@@ -572,9 +572,9 @@ public class Composition {
             return pipeline.queryPosition(TimeUnit.MILLISECONDS);
         }
 
-        for (File file : fileList) {
-            if (file.isActive() && file instanceof MidiFile) {
-                return ((MidiFile) file).getPositionMillis();
+        for (CompositionFile compositionFile : compositionFileList) {
+            if (compositionFile.isActive() && compositionFile instanceof MidiCompositionFile) {
+                return ((MidiCompositionFile) compositionFile).getPositionMillis();
             }
         }
 

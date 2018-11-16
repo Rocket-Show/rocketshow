@@ -3,9 +3,9 @@ package com.ascargon.rocketshow.video;
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.ascargon.rocketshow.Manager;
-import com.ascargon.rocketshow.composition.File;
+import com.ascargon.rocketshow.composition.CompositionFile;
 
-public class VideoFile extends File {
+public class VideoCompositionFile extends CompositionFile {
 
     public final static String VIDEO_PATH = "video/";
 

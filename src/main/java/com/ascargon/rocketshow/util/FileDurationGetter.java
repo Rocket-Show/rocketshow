@@ -3,13 +3,13 @@ package com.ascargon.rocketshow.util;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
-import com.ascargon.rocketshow.composition.File;
+import com.ascargon.rocketshow.audio.AudioCompositionFile;
+import com.ascargon.rocketshow.composition.CompositionFile;
+import com.ascargon.rocketshow.midi.MidiCompositionFile;
+import com.ascargon.rocketshow.video.VideoCompositionFile;
 import org.apache.log4j.Logger;
 
-import com.ascargon.rocketshow.audio.AudioFile;
-import com.ascargon.rocketshow.midi.MidiFile;
 import com.ascargon.rocketshow.midi.MidiPlayer;
-import com.ascargon.rocketshow.video.VideoFile;
 
 /**
  * Get the duration of a file.
@@ -22,10 +22,10 @@ public class FileDurationGetter implements Runnable {
 
 	private static final String DURATION = "ID_LENGTH=";
 
-	private File file;
+	private CompositionFile compositionFile;
 
-	public FileDurationGetter(File file) {
-		this.file = file;
+	public FileDurationGetter(CompositionFile compositionFile) {
+		this.compositionFile = compositionFile;
 	}
 
 	private static boolean isDurationLine(String line) {
@@ -51,18 +51,18 @@ public class FileDurationGetter implements Runnable {
 	@Override
 	public void run() {
 		try {
-			if (file instanceof MidiFile) {
-				MidiFile midiFile = (MidiFile) file;
-				file.setDurationMillis(MidiPlayer.getDuration(midiFile.getPath()));
-			} else if (file instanceof AudioFile) {
-				AudioFile audioFile = (AudioFile) file;
-				file.setDurationMillis(getDurationWithMplayer(audioFile.getPath()));
-			} else if (file instanceof VideoFile) {
-				VideoFile videoFile = (VideoFile) file;
-				file.setDurationMillis(getDurationWithMplayer(videoFile.getPath()));
+			if (compositionFile instanceof MidiCompositionFile) {
+				MidiCompositionFile midiFile = (MidiCompositionFile) compositionFile;
+				compositionFile.setDurationMillis(MidiPlayer.getDuration(midiFile.getPath()));
+			} else if (compositionFile instanceof AudioCompositionFile) {
+				AudioCompositionFile audioFile = (AudioCompositionFile) compositionFile;
+				compositionFile.setDurationMillis(getDurationWithMplayer(audioFile.getPath()));
+			} else if (compositionFile instanceof VideoCompositionFile) {
+				VideoCompositionFile videoFile = (VideoCompositionFile) compositionFile;
+				compositionFile.setDurationMillis(getDurationWithMplayer(videoFile.getPath()));
 			}
 		} catch (Exception e) {
-			logger.error("Could not get duration for file '" + file.getName() + "'", e);
+			logger.error("Could not get duration for file '" + compositionFile.getName() + "'", e);
 		}
 	}
 

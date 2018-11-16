@@ -46,7 +46,7 @@ public class ControlActionExecuter {
 			remoteDevice.play();
 			break;
 		case SET_COMPOSITION_INDEX:
-			remoteDevice.setCompositionIndex(manager.getCurrentSet().getCurrentCompositionIndex());
+			remoteDevice.setCompositionIndex(manager.getCurrentCompositionSet().getCurrentCompositionIndex());
 			break;
 		case REBOOT:
 			remoteDevice.reboot();
@@ -79,10 +79,10 @@ public class ControlActionExecuter {
 			manager.getPlayer().stop();
 			break;
 		case NEXT_COMPOSITION:
-			manager.getCurrentSet().nextComposition();
+			manager.getCurrentCompositionSet().nextComposition();
 			break;
 		case PREVIOUS_COMPOSITION:
-			manager.getCurrentSet().previousComposition();
+			manager.getCurrentCompositionSet().previousComposition();
 			break;
 		case SELECT_COMPOSITION_BY_NAME:
 			manager.getPlayer().setCompositionName(controlAction.getCompositionName());

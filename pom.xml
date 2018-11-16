@@ -41,75 +41,54 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
 
-            <!-- Compile Java -->
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.6.1</version>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                    <excludes>
-                        <exclude>webapp/**</exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
-
             <!-- Compile the webapp -->
             <!--<plugin>-->
-                <!--<groupId>org.codehaus.mojo</groupId>-->
-                <!--<artifactId>exec-maven-plugin</artifactId>-->
-                <!--<version>1.6.0</version>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<id>exec-npm-install</id>-->
-                        <!--<phase>generate-sources</phase>-->
-                        <!--<configuration>-->
-                            <!--<workingDirectory>${project.basedir}/src/main/webapp</workingDirectory>-->
-                            <!--<executable>npm</executable>-->
-                            <!--<arguments>-->
-                                <!--<argument>install</argument>-->
-                            <!--</arguments>-->
-                        <!--</configuration>-->
-                        <!--<goals>-->
-                            <!--<goal>exec</goal>-->
-                        <!--</goals>-->
-                    <!--</execution>-->
-                    <!--<execution>-->
-                        <!--<id>exec-npm-ng-build</id>-->
-                        <!--<phase>generate-sources</phase>-->
-                        <!--<configuration>-->
-                            <!--<workingDirectory>${project.basedir}/src/main/webapp</workingDirectory>-->
-                            <!--<executable>npx</executable>-->
-                            <!--<arguments>-->
-                                <!--<argument>ng</argument>-->
-                                <!--<argument>build</argument>-->
-                                <!--<argument>&#45;&#45;prod</argument>-->
+            <!--<groupId>org.codehaus.mojo</groupId>-->
+            <!--<artifactId>exec-maven-plugin</artifactId>-->
+            <!--<version>1.6.0</version>-->
+            <!--<executions>-->
+            <!--<execution>-->
+            <!--<id>exec-npm-install</id>-->
+            <!--<phase>generate-sources</phase>-->
+            <!--<configuration>-->
+            <!--<workingDirectory>${project.basedir}/src/main/webapp</workingDirectory>-->
+            <!--<executable>npm</executable>-->
+            <!--<arguments>-->
+            <!--<argument>install</argument>-->
+            <!--</arguments>-->
+            <!--</configuration>-->
+            <!--<goals>-->
+            <!--<goal>exec</goal>-->
+            <!--</goals>-->
+            <!--</execution>-->
+            <!--<execution>-->
+            <!--<id>exec-npm-ng-build</id>-->
+            <!--<phase>generate-sources</phase>-->
+            <!--<configuration>-->
+            <!--<workingDirectory>${project.basedir}/src/main/webapp</workingDirectory>-->
+            <!--<executable>npx</executable>-->
+            <!--<arguments>-->
+            <!--<argument>ng</argument>-->
+            <!--<argument>build</argument>-->
+            <!--<argument>&#45;&#45;prod</argument>-->
 
-                                <!--&lt;!&ndash; No caching to make sure, the newest version will always be loaded-->
-                                <!--(e.g. after an update). Caching anyways only has a small impact, because-->
-                                <!--the devices are most probably run in an internal network. &ndash;&gt;-->
-                                <!--<argument>&#45;&#45;output-hashing=all</argument>-->
-                            <!--</arguments>-->
-                        <!--</configuration>-->
-                        <!--<goals>-->
-                            <!--<goal>exec</goal>-->
-                        <!--</goals>-->
-                    <!--</execution>-->
-                <!--</executions>-->
+            <!--&lt;!&ndash; No caching to make sure, the newest version will always be loaded-->
+            <!--(e.g. after an update). Caching anyways only has a small impact, because-->
+            <!--the devices are most probably run in an internal network. &ndash;&gt;-->
+            <!--<argument>&#45;&#45;output-hashing=all</argument>-->
+            <!--</arguments>-->
+            <!--</configuration>-->
+            <!--<goals>-->
+            <!--<goal>exec</goal>-->
+            <!--</goals>-->
+            <!--</execution>-->
+            <!--</executions>-->
             <!--</plugin>-->
-
-            <!-- Generate a WAR -->
-            <plugin>
-                <artifactId>maven-war-plugin</artifactId>
-                <version>3.0.0</version>
-                <configuration>
-                    <warSourceDirectory>OLD_WebContent</warSourceDirectory>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 
     <dependencies>
+        <!-- Spring dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -119,23 +98,18 @@
             <artifactId>spring-boot-starter-tomcat</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-websocket</artifactId>
-            <version>4.2.4.RELEASE</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-messaging</artifactId>
-            <version>4.2.4.RELEASE</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-websocket</artifactId>
+            <version>5.1.2.RELEASE</version>
+        </dependency>
 
+        <!-- Common dependencies -->
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
@@ -151,43 +125,6 @@
             <artifactId>jackson-databind</artifactId>
             <version>2.9.7</version>
         </dependency>
-        <!--<dependency>-->
-            <!--<groupId>org.json</groupId>-->
-            <!--<artifactId>json</artifactId>-->
-            <!--<version>20171018</version>-->
-        <!--</dependency>-->
-
-        <!--<dependency>-->
-            <!--<groupId>com.sun.jersey</groupId>-->
-            <!--<artifactId>jersey-bundle</artifactId>-->
-            <!--<version>1.19.4</version>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-            <!--<groupId>com.sun.jersey</groupId>-->
-            <!--<artifactId>jersey-server</artifactId>-->
-            <!--<version>1.19.4</version>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-            <!--<groupId>com.sun.jersey</groupId>-->
-            <!--<artifactId>jersey-core</artifactId>-->
-            <!--<version>1.19.4</version>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-            <!--<groupId>com.sun.jersey</groupId>-->
-            <!--<artifactId>jersey-json</artifactId>-->
-            <!--<version>1.19.4</version>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-            <!--<groupId>com.sun.jersey.contribs</groupId>-->
-            <!--<artifactId>jersey-multipart</artifactId>-->
-            <!--<version>1.19.4</version>-->
-        <!--</dependency>-->
-
-        <!--<dependency>-->
-            <!--<groupId>javax.websocket</groupId>-->
-            <!--<artifactId>javax.websocket-api</artifactId>-->
-            <!--<version>1.1</version>-->
-        <!--</dependency>-->
 
         <!-- For the OLA client -->
         <dependency>
@@ -201,13 +138,6 @@
             <artifactId>httpclient</artifactId>
             <version>4.5.3</version>
         </dependency>
-
-        <!--<dependency>-->
-            <!--<groupId>javax.servlet</groupId>-->
-            <!--<artifactId>javax.servlet-api</artifactId>-->
-            <!--<version>3.0.1</version>-->
-            <!--<scope>provided</scope>-->
-        <!--</dependency>-->
 
         <!-- Add the local OLA client library, because there exists no Maven resource -->
         <dependency>

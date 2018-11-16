@@ -14,14 +14,13 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import com.ascargon.rocketshow.composition.CompositionFileManager;
+import com.ascargon.rocketshow.composition.FileCompositionService;
+import com.ascargon.rocketshow.composition.Set;
 import org.apache.log4j.Logger;
 import org.freedesktop.gstreamer.Gst;
 
-import com.ascargon.rocketshow.api.StateService;
 import com.ascargon.rocketshow.composition.Composition;
-import com.ascargon.rocketshow.composition.CompositionManager;
-import com.ascargon.rocketshow.composition.FileManager;
-import com.ascargon.rocketshow.composition.Set;
 import com.ascargon.rocketshow.dmx.DmxManager;
 import com.ascargon.rocketshow.dmx.Midi2DmxConverter;
 import com.ascargon.rocketshow.image.ImageDisplayer;
@@ -43,13 +42,10 @@ public class Manager {
 
     public final static String BASE_PATH = "/opt/rocketshow/";
 
-    // Manage the client states (web GUI)
-    private StateService stateService;
-
     private Updater updater;
 
-    private CompositionManager compositionManager;
-    private FileManager fileManager;
+    private FileCompositionService fileCompositionService;
+    private CompositionFileManager compositionFileManager;
 
     private ControlActionExecuter controlActionExecuter;
 
@@ -67,11 +63,7 @@ public class Manager {
     private Session session;
     private Settings settings;
 
-    private Set currentSet;
-
     private Composition defaultComposition;
-
-    private Player player;
 
     // The Raspberry GPIO controller
     private RaspberryGpioControlActionExecuter raspberryGpioControlActionExecuter;
@@ -175,7 +167,7 @@ public class Manager {
 
         logger.info("Play default composition");
 
-        defaultComposition = compositionManager.getComposition(settings.getDefaultComposition());
+        defaultComposition = fileCompositionService.getComposition(settings.getDefaultComposition());
         defaultComposition.setManager(this);
         defaultComposition.setDefaultComposition(true);
         defaultComposition.play();
@@ -196,7 +188,7 @@ public class Manager {
         logger.info("Initialize...");
 
         // Initialize the filemanager
-        fileManager = new FileManager();
+        compositionFileManager = new CompositionFileManager();
 
         // Initialize the session
         session = new Session();
@@ -211,17 +203,17 @@ public class Manager {
         }
 
         // Initialize the compositionmanager
-        compositionManager = new CompositionManager(this);
+        fileCompositionService = new FileCompositionService(this);
 
         // Cache all compositions and sets
         try {
-            compositionManager.loadAllCompositions();
+            fileCompositionService.loadAllCompositions();
         } catch (Exception e) {
             logger.error("Could not cache the compositions", e);
         }
 
         try {
-            compositionManager.loadAllSets();
+            fileCompositionService.loadAllSets();
         } catch (Exception e) {
             logger.error("Could not cache the sets", e);
         }
@@ -234,13 +226,6 @@ public class Manager {
         } catch (IOException e) {
             logger.error("Could not initialize iptables", e);
         }
-
-        // Initialize the player
-        player = new Player(this);
-
-        // Initialize the client state
-        stateService = new StateService();
-        stateService.load(this);
 
         // Initialize the updater
         updater = new Updater(this);
@@ -365,10 +350,10 @@ public class Manager {
     }
 
     public void saveSession() {
-        if (currentSet == null) {
+        if (currentCompositionSet == null) {
             session.setCurrentSetName("");
         } else {
-            session.setCurrentSetName(currentSet.getName());
+            session.setCurrentSetName(currentCompositionSet.getName());
         }
 
         try {
@@ -418,41 +403,43 @@ public class Manager {
     }
 
     public void loadSetAndComposition(String setName) throws Exception {
-        if (currentSet != null) {
+        if (currentCompositionSet != null) {
             // Unload the current set
-            currentSet.close();
-            currentSet = null;
+            currentCompositionSet.close();
+            currentCompositionSet = null;
         }
 
         if (setName.length() > 0) {
             // Load the new set
-            currentSet = compositionManager.getSet(setName);
-            currentSet.setManager(this);
-            currentSet.setName(setName);
+            currentCompositionSet = fileCompositionService.getSet(setName);
+            currentCompositionSet.setManager(this);
+            currentCompositionSet.setName(setName);
         }
 
         // Read the current composition file
-        if (currentSet == null) {
+        if (currentCompositionSet == null) {
             // We have no set. Simply read the first composition, if available
             logger.debug("Try setting an initial composition...");
 
-            List<Composition> compositions = compositionManager.getAllCompositions();
+            List<Composition> compositions = fileCompositionService.getAllCompositions();
 
             if (compositions.size() > 0) {
                 logger.debug("Set initial composition '" + compositions.get(0).getName() + "'...");
 
-                player.setComposition(compositions.get(0));
+                // TODO Call after init
+                //player.setComposition(compositions.get(0));
             }
         } else {
             // We got a set loaded
             try {
-                currentSet.readCurrentComposition();
+                currentCompositionSet.readCurrentComposition();
             } catch (Exception e) {
                 logger.error("Could not read current composition", e);
             }
         }
 
-        stateService.notifyClients();
+        // TODO Notify after init
+        //webSocketClientNotifier.notifyClients();
 
         saveSession();
     }
@@ -468,8 +455,11 @@ public class Manager {
             }
         }
 
+        // TODO Close all websocket sessions
+
         try {
-            player.close();
+            // TODO Call after close
+            //player.close();
         } catch (Exception e) {
             logger.error("Could not close the player", e);
         }
@@ -494,9 +484,9 @@ public class Manager {
             }
         }
 
-        if (currentSet != null) {
+        if (currentCompositionSet != null) {
             try {
-                currentSet.close();
+                currentCompositionSet.close();
             } catch (Exception e) {
                 logger.error("Could not close current set list", e);
             }
@@ -532,12 +522,12 @@ public class Manager {
         return midi2DmxConverter;
     }
 
-    public Set getCurrentSet() {
-        return currentSet;
+    public Set getCurrentCompositionSet() {
+        return currentCompositionSet;
     }
 
-    public void setCurrentSet(Set currentSet) {
-        this.currentSet = currentSet;
+    public void setCurrentCompositionSet(Set currentCompositionSet) {
+        this.currentCompositionSet = currentCompositionSet;
         saveSession();
     }
 
@@ -557,8 +547,8 @@ public class Manager {
         return midi2ActionConverter;
     }
 
-    public CompositionManager getCompositionManager() {
-        return compositionManager;
+    public FileCompositionService getFileCompositionService() {
+        return fileCompositionService;
     }
 
     public Updater getUpdater() {
@@ -569,28 +559,16 @@ public class Manager {
         return session;
     }
 
-    public StateService getStateService() {
-        return stateService;
+    public CompositionFileManager getCompositionFileManager() {
+        return compositionFileManager;
     }
 
-    public FileManager getFileManager() {
-        return fileManager;
-    }
-
-    public void setFileManager(FileManager fileManager) {
-        this.fileManager = fileManager;
+    public void setCompositionFileManager(CompositionFileManager compositionFileManager) {
+        this.compositionFileManager = compositionFileManager;
     }
 
     public MidiInDeviceReceiver getMidiInDeviceReceiver() {
         return midiInDeviceReceiver;
-    }
-
-    public Player getPlayer() {
-        return player;
-    }
-
-    public void setPlayer(Player player) {
-        this.player = player;
     }
 
     public boolean isInitializing() {
@@ -601,4 +579,6 @@ public class Manager {
         return controlActionExecuter;
     }
 
+    public static interface SettingsService {
+    }
 }

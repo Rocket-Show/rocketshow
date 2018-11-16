@@ -13,40 +13,48 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.util.JAXBSource;
 
+import com.ascargon.rocketshow.PlayerService;
+import com.ascargon.rocketshow.SettingsService;
 import org.apache.log4j.Logger;
 
-import com.ascargon.rocketshow.Manager;
 import com.ascargon.rocketshow.util.FileDurationGetter;
 
-public class CompositionManager {
+/**
+ * Handle storage, sorting, etc. of compositions and sets.
+ */
+public class FileCompositionService implements CompositionService {
 
-    private final static Logger logger = Logger.getLogger(CompositionManager.class);
+    private final static Logger logger = Logger.getLogger(FileCompositionService.class);
 
     private final static String COMPOSITIONS_PATH = "compositions/";
     private final static String SETS_PATH = "sets/";
 
-    private Manager manager;
+    private SettingsService settingsService;
+    private PlayerService playerService;
 
     // All available compositions
     private List<Composition> compositionCache = new ArrayList<>();
-    private List<Set> setCache = new ArrayList<>();
+    private List<Set> compositionSetCache = new ArrayList<>();
 
-    public CompositionManager(Manager manager) {
-        this.manager = manager;
+    public FileCompositionService(SettingsService settingsService, PlayerService playerService) {
+        this.settingsService = settingsService;
+        this.playerService = playerService;
     }
 
-    private void sortCompositionCache() { compositionCache.sort(Comparator.comparing(Composition::getName)); }
+    private void sortCompositionCache() {
+        compositionCache.sort(Comparator.comparing(Composition::getName));
+    }
 
     private void sortSetCache() {
-        setCache.sort(Comparator.comparing(Set::getName));
+        compositionSetCache.sort(Comparator.comparing(Set::getName));
     }
 
     private void finalizeLoadedComposition(Composition composition, String name) {
         composition.setName(name);
-        composition.getMidiMapping().setParent(manager.getSettings().getMidiMapping());
-        composition.setManager(manager);
+        composition.getMidiMapping().setParent(settingsService.getSettings().getMidiMapping());
     }
 
+    @Override
     public Composition cloneComposition(Composition composition) throws Exception {
         // Return a deep cloned instance of the composition
         Composition clonedComposition;
@@ -70,7 +78,7 @@ public class CompositionManager {
         // Load a composition
         JAXBContext jaxbContext = JAXBContext.newInstance(Composition.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-        composition = (Composition) jaxbUnmarshaller.unmarshal(new File(Manager.BASE_PATH + COMPOSITIONS_PATH + name));
+        composition = (Composition) jaxbUnmarshaller.unmarshal(new File(settingsService.getSettings().getBasePath() + COMPOSITIONS_PATH + name));
 
         finalizeLoadedComposition(composition, name);
 
@@ -87,13 +95,14 @@ public class CompositionManager {
         // Load a set
         JAXBContext jaxbContext = JAXBContext.newInstance(Set.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-        set = (Set) jaxbUnmarshaller.unmarshal(new File(Manager.BASE_PATH + SETS_PATH + name));
+        set = (Set) jaxbUnmarshaller.unmarshal(new File(settingsService.getSettings().getBasePath() + SETS_PATH + name));
 
         logger.info("Set '" + name + "' successfully loaded");
 
         return set;
     }
 
+    @Override
     public Composition getComposition(String name) {
         for (Composition cachedComposition : compositionCache) {
             if (cachedComposition.getName().equals(name)) {
@@ -104,10 +113,11 @@ public class CompositionManager {
         return null;
     }
 
+    @Override
     public Set getSet(String name) {
-        for (Set cachedSet : setCache) {
-            if (cachedSet.getName().equals(name)) {
-                return cachedSet;
+        for (Set cachedCompositionSet : compositionSetCache) {
+            if (cachedCompositionSet.getName().equals(name)) {
+                return cachedCompositionSet;
             }
         }
 
@@ -118,25 +128,28 @@ public class CompositionManager {
         // Update all sets (remove deleted files, update playing times),
         // when a composition has been changed/deleted
 
-        List<Set> sets = getAllSets();
+        List<Set> compositionSets = getAllSets();
 
-        for (Set set : sets) {
+        for (Set set : compositionSets) {
             // Load the full set
-            Set fullSet = loadSet(set.getName());
-            saveSet(fullSet);
+            Set fullCompositionSet = loadSet(set.getName());
+            saveSet(fullCompositionSet);
         }
     }
 
+    @Override
     public List<Composition> getAllCompositions() {
         return compositionCache;
     }
 
+    @Override
     public List<Set> getAllSets() {
-        return setCache;
+        return compositionSetCache;
     }
 
+    @Override
     public synchronized void loadAllCompositions() {
-        File folder = new File(Manager.BASE_PATH + COMPOSITIONS_PATH);
+        File folder = new File(settingsService.getSettings().getBasePath() + COMPOSITIONS_PATH);
         File[] fileList = folder.listFiles();
 
         if (fileList != null) {
@@ -155,8 +168,9 @@ public class CompositionManager {
         sortCompositionCache();
     }
 
+    @Override
     public synchronized void loadAllSets() {
-        File folder = new File(Manager.BASE_PATH + SETS_PATH);
+        File folder = new File(settingsService.getSettings().getBasePath() + SETS_PATH);
         File[] fileList = folder.listFiles();
 
         if (fileList != null) {
@@ -165,7 +179,7 @@ public class CompositionManager {
                     Set set = new Set();
                     set.setName(file.getName());
 
-                    setCache.add(set);
+                    compositionSetCache.add(set);
                 }
             }
         }
@@ -173,12 +187,13 @@ public class CompositionManager {
         sortSetCache();
     }
 
+    @Override
     public synchronized void saveComposition(Composition composition) throws Exception {
         // Get the duration of each file
         ExecutorService executor = Executors.newFixedThreadPool(30);
 
-        for (com.ascargon.rocketshow.composition.File file : composition.getFileList()) {
-            Runnable fileDurationGetter = new FileDurationGetter(file);
+        for (CompositionFile compositionFile : composition.getCompositionFileList()) {
+            Runnable fileDurationGetter = new FileDurationGetter(compositionFile);
             executor.execute(fileDurationGetter);
         }
 
@@ -193,18 +208,15 @@ public class CompositionManager {
         // files
         long maxDuration = 0;
 
-        for (com.ascargon.rocketshow.composition.File file : composition.getFileList()) {
-            if (file.getDurationMillis() > maxDuration) {
-                maxDuration = file.getDurationMillis();
+        for (CompositionFile compositionFile : composition.getCompositionFileList()) {
+            if (compositionFile.getDurationMillis() > maxDuration) {
+                maxDuration = compositionFile.getDurationMillis();
             }
         }
         composition.setDurationMillis(maxDuration);
 
-        // Set the manager
-        composition.setManager(manager);
-
         // Save the composition in XML
-        File file = new File(Manager.BASE_PATH + COMPOSITIONS_PATH + composition.getName());
+        File file = new File(settingsService.getSettings().getBasePath() + COMPOSITIONS_PATH + composition.getName());
         JAXBContext jaxbContext = JAXBContext.newInstance(Composition.class);
         Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
@@ -226,6 +238,7 @@ public class CompositionManager {
         logger.info("Composition '" + composition.getName() + "' saved");
     }
 
+    @Override
     public synchronized void saveSet(Set set, boolean checkCompositions) throws Exception {
         if (checkCompositions) {
             // Update all composition information
@@ -253,7 +266,7 @@ public class CompositionManager {
             }
         }
 
-        File file = new File(Manager.BASE_PATH + SETS_PATH + set.getName());
+        File file = new File(settingsService.getSettings().getBasePath() + SETS_PATH + set.getName());
         JAXBContext jaxbContext = JAXBContext.newInstance(Set.class);
         Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
@@ -261,25 +274,27 @@ public class CompositionManager {
         jaxbMarshaller.marshal(set, file);
 
         // Update the cache
-        for (Set cachedSet : setCache) {
-            if (cachedSet.getName().equals(set.getName())) {
-                setCache.remove(cachedSet);
+        for (Set cachedCompositionSet : compositionSetCache) {
+            if (cachedCompositionSet.getName().equals(set.getName())) {
+                compositionSetCache.remove(cachedCompositionSet);
                 break;
             }
         }
-        setCache.add(set);
+        compositionSetCache.add(set);
         sortSetCache();
 
         logger.info("Set '" + set.getName() + "' saved");
     }
 
+    @Override
     public synchronized void saveSet(Set set) throws Exception {
         saveSet(set, true);
     }
 
+    @Override
     public synchronized void deleteComposition(String name) throws Exception {
         // Delete the composition
-        File file = new File(Manager.BASE_PATH + COMPOSITIONS_PATH + name);
+        File file = new File(settingsService.getSettings().getBasePath() + COMPOSITIONS_PATH + name);
 
         if (file.exists()) {
             boolean result = file.delete();
@@ -299,18 +314,19 @@ public class CompositionManager {
         updateSets();
 
         // Set another composition, if we deleted the current one
-        if (manager.getPlayer().getCompositionName().equals(name)) {
+        if (playerService.getCompositionName().equals(name)) {
             if (compositionCache.size() > 0) {
-                manager.getPlayer().setComposition(compositionCache.get(0));
+                playerService.setComposition(compositionCache.get(0));
             }
         }
 
         logger.info("Composition '" + name + "' deleted");
     }
 
+    @Override
     public synchronized void deleteSet(String name) {
         // Delete the set
-        File file = new File(Manager.BASE_PATH + SETS_PATH + name);
+        File file = new File(settingsService.getSettings().getBasePath() + SETS_PATH + name);
 
         if (file.exists()) {
             boolean result = file.delete();
@@ -320,52 +336,14 @@ public class CompositionManager {
             }
         }
 
-        for (Set cachedSet : setCache) {
-            if (cachedSet.getName().equals(name)) {
-                setCache.remove(cachedSet);
+        for (Set cachedCompositionSet : compositionSetCache) {
+            if (cachedCompositionSet.getName().equals(name)) {
+                compositionSetCache.remove(cachedCompositionSet);
                 break;
             }
         }
 
         logger.info("Set '" + name + "' deleted");
-    }
-
-    public void nextComposition() {
-        // Set the next composition (not set based)
-        if (manager.getPlayer().getCompositionName().length() > 0) {
-            for (int i = 0; i < compositionCache.size(); i++) {
-                if (compositionCache.get(i).getName().equals(manager.getPlayer().getCompositionName())) {
-                    if (compositionCache.size() > i + 1) {
-                        try {
-                            manager.getPlayer().setComposition(compositionCache.get(i + 1));
-                        } catch (Exception e) {
-                            logger.error("Could not set the next composition", e);
-                        }
-                    }
-
-                    return;
-                }
-            }
-        }
-    }
-
-    public void previousComposition() {
-        // Set the previous composition (not set based)
-        if (manager.getPlayer().getCompositionName().length() > 0) {
-            for (int i = 0; i < compositionCache.size(); i++) {
-                if (compositionCache.get(i).getName().equals(manager.getPlayer().getCompositionName())) {
-                    if (i - 1 >= 0) {
-                        try {
-                            manager.getPlayer().setComposition(compositionCache.get(i - 1));
-                        } catch (Exception e) {
-                            logger.error("Could not set the previous composition", e);
-                        }
-                    }
-
-                    return;
-                }
-            }
-        }
     }
 
 }
