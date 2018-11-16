@@ -22,9 +22,9 @@ import com.ascargon.rocketshow.util.FileDurationGetter;
 /**
  * Handle storage, sorting, etc. of compositions and sets.
  */
-public class FileCompositionService implements CompositionService {
+public class DefaultCompositionService implements CompositionService {
 
-    private final static Logger logger = Logger.getLogger(FileCompositionService.class);
+    private final static Logger logger = Logger.getLogger(DefaultCompositionService.class);
 
     private final static String COMPOSITIONS_PATH = "compositions/";
     private final static String SETS_PATH = "sets/";
@@ -36,9 +36,13 @@ public class FileCompositionService implements CompositionService {
     private List<Composition> compositionCache = new ArrayList<>();
     private List<Set> compositionSetCache = new ArrayList<>();
 
-    public FileCompositionService(SettingsService settingsService, PlayerService playerService) {
+    public DefaultCompositionService(SettingsService settingsService, PlayerService playerService) {
         this.settingsService = settingsService;
         this.playerService = playerService;
+
+        // Initialize the cache
+        this.loadAllCompositions();
+        this.loadAllSets();
     }
 
     private void sortCompositionCache() {
@@ -316,7 +320,7 @@ public class FileCompositionService implements CompositionService {
         // Set another composition, if we deleted the current one
         if (playerService.getCompositionName().equals(name)) {
             if (compositionCache.size() > 0) {
-                playerService.setComposition(compositionCache.get(0));
+                playerService.setCurrentComposition(compositionCache.get(0));
             }
         }
 

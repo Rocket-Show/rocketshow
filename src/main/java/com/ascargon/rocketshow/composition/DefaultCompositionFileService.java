@@ -9,17 +9,24 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
+import org.springframework.stereotype.Service;
 
-import com.ascargon.rocketshow.Manager;
+@Service
+public class DefaultCompositionFileService implements CompositionFileService {
 
-public class CompositionFileManager {
+    private final static Logger logger = Logger.getLogger(DefaultCompositionFileService.class);
 
-    private final static Logger logger = Logger.getLogger(CompositionFileManager.class);
+    private SettingsService settingsService;
+
+    public DefaultCompositionFileService(SettingsService settingsService) {
+        this.settingsService = settingsService;
+    }
 
     public List<CompositionFile> getAllFiles() {
         List<CompositionFile> returnCompositionFileList = new ArrayList<>();
@@ -28,7 +35,7 @@ public class CompositionFileManager {
 
         // Audio files
         folder = new File(
-                Manager.BASE_PATH + CompositionFile.MEDIA_PATH + AudioCompositionFile.AUDIO_PATH);
+                settingsService.getSettings().getBasePath() + CompositionFile.MEDIA_PATH + AudioCompositionFile.AUDIO_PATH);
         fileList = folder.listFiles();
 
         if (fileList != null) {
@@ -42,7 +49,7 @@ public class CompositionFileManager {
         }
 
         // MIDI files
-        folder = new File(Manager.BASE_PATH + CompositionFile.MEDIA_PATH + MidiCompositionFile.MIDI_PATH);
+        folder = new File(settingsService.getSettings().getBasePath() + CompositionFile.MEDIA_PATH + MidiCompositionFile.MIDI_PATH);
         fileList = folder.listFiles();
 
         if (fileList != null) {
@@ -57,7 +64,7 @@ public class CompositionFileManager {
 
         // Video files
         folder = new File(
-                Manager.BASE_PATH + CompositionFile.MEDIA_PATH + VideoCompositionFile.VIDEO_PATH);
+                settingsService.getSettings().getBasePath() + CompositionFile.MEDIA_PATH + VideoCompositionFile.VIDEO_PATH);
         fileList = folder.listFiles();
 
         if (fileList != null) {
@@ -74,7 +81,7 @@ public class CompositionFileManager {
     }
 
     public void deleteFile(String name, String type) {
-        String path = Manager.BASE_PATH + CompositionFile.MEDIA_PATH;
+        String path = settingsService.getSettings().getBasePath() + CompositionFile.MEDIA_PATH;
 
         // Audio files
         if (type.equals(CompositionFile.FileType.MIDI.name())) {
@@ -109,7 +116,7 @@ public class CompositionFileManager {
 
         // Compute the path according to the file extension
         String extension = FilenameUtils.getExtension(fileName).toLowerCase().trim();
-        String path = Manager.BASE_PATH + CompositionFile.MEDIA_PATH;
+        String path = settingsService.getSettings().getBasePath() + CompositionFile.MEDIA_PATH;
 
         if (Arrays.asList(midiFormats).contains(extension)) {
             path += MidiCompositionFile.MIDI_PATH;

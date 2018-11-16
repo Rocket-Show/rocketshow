@@ -2,6 +2,9 @@ package com.ascargon.rocketshow.composition;
 
 import java.util.List;
 
+/**
+ * Handle loading and saving of compositions and sets.
+ */
 public interface CompositionService {
 
     Composition cloneComposition(Composition composition) throws Exception;

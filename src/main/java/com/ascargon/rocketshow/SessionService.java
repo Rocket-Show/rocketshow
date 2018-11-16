@@ -6,4 +6,6 @@ public interface SessionService {
 
     void setSession(Session session);
 
+    void save();
+
 }

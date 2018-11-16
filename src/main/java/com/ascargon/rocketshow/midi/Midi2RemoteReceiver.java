@@ -7,6 +7,8 @@ import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
 
+import com.ascargon.rocketshow.Settings;
+import com.ascargon.rocketshow.SettingsService;
 import org.apache.log4j.Logger;
 
 import com.ascargon.rocketshow.Manager;
@@ -21,13 +23,17 @@ public class Midi2RemoteReceiver implements Receiver {
 
     private final static Logger logger = Logger.getLogger(Midi2RemoteReceiver.class);
 
+    private SettingsService settingsService;
+
     private MidiMapping midiMapping;
 
     private List<String> remoteDeviceNameList = new ArrayList<>();
 
     private Manager manager;
 
-    Midi2RemoteReceiver(Manager manager) {
+    Midi2RemoteReceiver(SettingsService settingsService, Manager manager) {
+        this.settingsService = settingsService;
+
         this.manager = manager;
     }
 
@@ -44,7 +50,7 @@ public class Midi2RemoteReceiver implements Receiver {
                 + "&note=" + midiSignal.getNote() + "&velocity" + midiSignal.getVelocity();
 
         for (String name : remoteDeviceNameList) {
-            RemoteDevice remoteDevice = manager.getSettings().getRemoteDeviceByName(name);
+            RemoteDevice remoteDevice = settingsService.getRemoteDeviceByName(name);
 
             if (remoteDevice == null) {
                 logger.warn("No remote device could be found in the settings with name " + name);

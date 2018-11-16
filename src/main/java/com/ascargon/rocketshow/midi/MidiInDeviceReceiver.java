@@ -9,6 +9,7 @@ import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
 
+import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.api.NotificationService;
 import org.apache.log4j.Logger;
 
@@ -25,129 +26,134 @@ public class MidiInDeviceReceiver implements Receiver {
     private final static Logger logger = Logger.getLogger(MidiInDeviceReceiver.class);
 
     private NotificationService notificationService;
-	private Manager manager;
-	private Timer connectTimer;
-	private javax.sound.midi.MidiDevice midiReceiver;
-	private List<MidiRouting> midiRoutingList;
-	private boolean midiLearn = false;
+    private SettingsService settingsService;
+    private MidiControlActionExecutionService midiControlActionExecutionService;
 
-	public MidiInDeviceReceiver(NotificationService notificationService, Manager manager) {
-		this.notificationService = notificationService;
-		this.manager = manager;
+    private Timer connectTimer;
+    private javax.sound.midi.MidiDevice midiReceiver;
+    private List<MidiRouting> midiRoutingList;
+    private boolean midiLearn = false;
 
-		midiRoutingList = manager.getSettings().getDeviceInMidiRoutingList();
-	}
+    public MidiInDeviceReceiver(NotificationService notificationService, SettingsService settingsService, MidiControlActionExecutionService midiControlActionExecutionService) {
+        this.notificationService = notificationService;
+        this.settingsService = settingsService;
+        this.midiControlActionExecutionService = midiControlActionExecutionService;
 
-	/**
-	 * Connect the MIDI player to a sender, if required. Also call this method,
-	 * if you change the settings or want to reconnect the device.
-	 */
-	public void connectMidiReceiver() throws MidiUnavailableException {
-		// Cancel an eventually existing timer
-		if (connectTimer != null) {
-			connectTimer.cancel();
-			connectTimer = null;
-		}
+        midiRoutingList = settingsService.getSettings().getDeviceInMidiRoutingList();
 
-		if (midiReceiver != null && midiReceiver.isOpen()) {
-			// We already have an open receiver -> close this one
-			try {
-				midiReceiver.close();
-			} catch (Exception e) {
-				logger.error("Could not close MIDI receiver", e);
-			}
-		}
+        try {
+            connectMidiReceiver();
+        } catch (MidiUnavailableException e) {
+            logger.error("Could not initialize the MIDI receiver", e);
+        }
+    }
 
-		MidiDevice midiDevice = manager.getSettings().getMidiInDevice();
+    /**
+     * Connect the MIDI player to a sender, if required. Also call this method,
+     * if you change the settings or want to reconnect the device.
+     */
+    public void connectMidiReceiver() throws MidiUnavailableException {
+        // Cancel an eventually existing timer
+        if (connectTimer != null) {
+            connectTimer.cancel();
+            connectTimer = null;
+        }
 
-		logger.trace("Try connecting to input MIDI device " + midiDevice.getId() + " \"" + midiDevice.getName() + "\"");
+        if (midiReceiver != null && midiReceiver.isOpen()) {
+            // We already have an open receiver -> close this one
+            try {
+                midiReceiver.close();
+            } catch (Exception e) {
+                logger.error("Could not close MIDI receiver", e);
+            }
+        }
 
-		midiReceiver = MidiUtil.getHardwareMidiDevice(midiDevice, MidiDirection.IN);
+        MidiDevice midiDevice = settingsService.getSettings().getMidiInDevice();
 
-		if (midiReceiver == null) {
-			logger.trace("MIDI input device not found. Try again in 5 seconds.");
+        logger.trace("Try connecting to input MIDI device " + midiDevice.getId() + " \"" + midiDevice.getName() + "\"");
 
-			TimerTask timerTask = new TimerTask() {
-				@Override
-				public void run() {
-					try {
-						connectMidiReceiver();
-					} catch (Exception e) {
-						logger.debug("Could not connect to MIDI input device", e);
-					}
-				}
-			};
+        midiReceiver = MidiUtil.getHardwareMidiDevice(midiDevice, MidiDirection.IN);
 
-			connectTimer = new Timer();
-			connectTimer.schedule(timerTask, 5000);
+        if (midiReceiver == null) {
+            logger.trace("MIDI input device not found. Try again in 5 seconds.");
 
-			return;
-		}
+            TimerTask timerTask = new TimerTask() {
+                @Override
+                public void run() {
+                    try {
+                        connectMidiReceiver();
+                    } catch (Exception e) {
+                        logger.debug("Could not connect to MIDI input device", e);
+                    }
+                }
+            };
 
-		// We found the device
-		if (connectTimer != null) {
-			connectTimer.cancel();
-			connectTimer = null;
-		}
+            connectTimer = new Timer();
+            connectTimer.schedule(timerTask, 5000);
 
-		midiReceiver.open();
+            return;
+        }
 
-		// Set the MIDI routing receivers
-		for (MidiRouting midiRouting : midiRoutingList) {
-			midiRouting.setTransmitter(midiReceiver.getTransmitter());
-		}
+        // We found the device
+        if (connectTimer != null) {
+            connectTimer.cancel();
+            connectTimer = null;
+        }
 
-		// Also set this class as a second receiver to execute the MIDI actions
-		// (midiReceiver.getTransmitter returns a different transmitter each
-		// time)
-		midiReceiver.getTransmitter().setReceiver(this);
+        midiReceiver.open();
 
-		logger.info("Successfully connected to input MIDI device " + midiDevice.getId() + " \"" + midiDevice.getName()
-				+ "\"");
-	}
+        // Set the MIDI routing receivers
+        for (MidiRouting midiRouting : midiRoutingList) {
+            midiRouting.setTransmitter(midiReceiver.getTransmitter());
+        }
 
-	public void load() throws MidiUnavailableException {
-		connectMidiReceiver();
-	}
+        // Also set this class as a second receiver to execute the MIDI actions
+        // (midiReceiver.getTransmitter returns a different transmitter each
+        // time)
+        midiReceiver.getTransmitter().setReceiver(this);
 
-	@Override
-	public void send(MidiMessage message, long timeStamp) {
-		if (!(message instanceof ShortMessage)) {
-			return;
-		}
+        logger.info("Successfully connected to input MIDI device " + midiDevice.getId() + " \"" + midiDevice.getName()
+                + "\"");
+    }
 
-		MidiSignal midiSignal = new MidiSignal((ShortMessage) message);
+    @Override
+    public void send(MidiMessage message, long timeStamp) {
+        if (!(message instanceof ShortMessage)) {
+            return;
+        }
 
-		// Notify the frontend, if midi learn is activated
-		if (midiLearn) {
-			try {
-				notificationService.notifyClients(midiSignal);
-			} catch (Exception e) {
-				logger.error("Could not notify the clients about a MIDI learn event", e);
-			}
-		}
+        MidiSignal midiSignal = new MidiSignal((ShortMessage) message);
 
-		// Process MIDI events as actions according to the settings
-		try {
-			manager.getMidi2ActionConverter().processMidiSignal(midiSignal);
-		} catch (Exception e) {
-			logger.error("Could not execute action from live MIDI", e);
-		}
-	}
+        // Notify the frontend, if midi learn is activated
+        if (midiLearn) {
+            try {
+                notificationService.notifyClients(midiSignal);
+            } catch (Exception e) {
+                logger.error("Could not notify the clients about a MIDI learn event", e);
+            }
+        }
 
-	@Override
-	public void close() {
-		if (connectTimer != null) {
-			connectTimer.cancel();
-		}
+        // Process MIDI events as actions according to the settings
+        try {
+            midiControlActionExecutionService.processMidiSignal(midiSignal);
+        } catch (Exception e) {
+            logger.error("Could not execute action from live MIDI", e);
+        }
+    }
 
-		if (midiReceiver != null && midiReceiver.isOpen()) {
-			midiReceiver.close();
-		}
-	}
+    @Override
+    public void close() {
+        if (connectTimer != null) {
+            connectTimer.cancel();
+        }
 
-	public void setMidiLearn(boolean midiLearn) {
-		this.midiLearn = midiLearn;
-	}
+        if (midiReceiver != null && midiReceiver.isOpen()) {
+            midiReceiver.close();
+        }
+    }
+
+    public void setMidiLearn(boolean midiLearn) {
+        this.midiLearn = midiLearn;
+    }
 
 }

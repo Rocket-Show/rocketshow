@@ -3,11 +3,11 @@ package com.ascargon.rocketshow.midi;
 import javax.sound.midi.ShortMessage;
 import com.ascargon.rocketshow.Manager;
 
-public class MidiControlActionExecuter {
+public class DefaultMidiControlActionExecutionService implements MidiControlActionExecutionService {
 
     private Manager manager;
 
-    public MidiControlActionExecuter(Manager manager) {
+    public DefaultMidiControlActionExecutionService(Manager manager) {
         this.manager = manager;
     }
 
@@ -20,6 +20,7 @@ public class MidiControlActionExecuter {
                 && (midiControl.getNoteFrom() == null || midiControl.getNoteFrom() == note);
     }
 
+    @Override
     public void processMidiSignal(MidiSignal midiSignal) throws Exception {
         // Map the MIDI event and execute the appropriate actions
 

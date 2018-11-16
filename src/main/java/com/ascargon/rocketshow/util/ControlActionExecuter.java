@@ -1,18 +1,25 @@
 package com.ascargon.rocketshow.util;
 
+import com.ascargon.rocketshow.*;
+import com.ascargon.rocketshow.composition.SetService;
 import org.apache.log4j.Logger;
-
-import com.ascargon.rocketshow.Manager;
-import com.ascargon.rocketshow.RemoteDevice;
 
 public class ControlActionExecuter {
 
 	private final static Logger logger = Logger.getLogger(ControlActionExecuter.class);
 
+	private PlayerService playerService;
+    private SetService setService;
+    private SettingsService settingsService;
+
 	private Manager manager;
 
-	public ControlActionExecuter(Manager manager) {
-		this.manager = manager;
+	public ControlActionExecuter(PlayerService playerService, SetService setService, SettingsService settingsService, Manager manager) {
+		this.playerService = playerService;
+		this.setService = setService;
+		this.settingsService = settingsService;
+
+	    this.manager = manager;
 	}
 
 	private void executeActionOnRemoteDevice(ControlAction controlAction, RemoteDevice remoteDevice) {
@@ -46,7 +53,7 @@ public class ControlActionExecuter {
 			remoteDevice.play();
 			break;
 		case SET_COMPOSITION_INDEX:
-			remoteDevice.setCompositionIndex(manager.getCurrentCompositionSet().getCurrentCompositionIndex());
+			remoteDevice.setCompositionIndex(setService.getCurrentCompositionIndex());
 			break;
 		case REBOOT:
 			remoteDevice.reboot();
@@ -64,32 +71,32 @@ public class ControlActionExecuter {
 
 		switch (controlAction.getAction()) {
 		case PLAY:
-			manager.getPlayer().play();
+			playerService.play();
 			break;
 		case PLAY_AS_SAMPLE:
-			manager.getPlayer().playAsSample(controlAction.getCompositionName());
+            playerService.playAsSample(controlAction.getCompositionName());
 			break;
 		case PAUSE:
-			manager.getPlayer().pause();
+            playerService.pause();
 			break;
 		case TOGGLE_PLAY:
-			manager.getPlayer().togglePlay();
+            playerService.togglePlay();
 			break;
 		case STOP:
-			manager.getPlayer().stop();
+            playerService.stop();
 			break;
 		case NEXT_COMPOSITION:
-			manager.getCurrentCompositionSet().nextComposition();
+			setService.nextComposition();
 			break;
 		case PREVIOUS_COMPOSITION:
-			manager.getCurrentCompositionSet().previousComposition();
+			setService.previousComposition();
 			break;
 		case SELECT_COMPOSITION_BY_NAME:
-			manager.getPlayer().setCompositionName(controlAction.getCompositionName());
+			playerService.setCompositionName(controlAction.getCompositionName());
 			break;
 		case SELECT_COMPOSITION_BY_NAME_AND_PLAY:
-			manager.getPlayer().setCompositionName(controlAction.getCompositionName());
-			manager.getPlayer().play();
+			playerService.setCompositionName(controlAction.getCompositionName());
+			playerService.play();
 			break;
 		case REBOOT:
 			manager.reboot();
@@ -111,7 +118,7 @@ public class ControlActionExecuter {
 
 		// Execute the action on each specified remote device
 		for (String name : controlAction.getRemoteDeviceNames()) {
-			RemoteDevice remoteDevice = manager.getSettings().getRemoteDeviceByName(name);
+			RemoteDevice remoteDevice = settingsService.getRemoteDeviceByName(name);
 
 			if (remoteDevice == null) {
 				logger.warn("No remote device could be found in the settings with name " + name);

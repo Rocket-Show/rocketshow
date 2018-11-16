@@ -4,22 +4,32 @@ import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.midi.MidiDevice;
 import com.ascargon.rocketshow.midi.MidiMapping;
 import com.ascargon.rocketshow.midi.MidiUtil;
+import com.ascargon.rocketshow.util.ResetUsb;
 import com.ascargon.rocketshow.util.ShellManager;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.springframework.boot.system.ApplicationHome;
+import org.springframework.stereotype.Service;
 
 import javax.sound.midi.MidiUnavailableException;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
-public class FileSettingsService {
+@Service
+public class FileSettingsService implements SettingsService {
 
     private final static Logger logger = Logger.getLogger(Settings.class);
 
     private Settings settings;
+
+    private ApplicationHome applicationHome = new ApplicationHome(RocketShowApplication.class);
 
     // Create an own logging enum to save it in the settings xml
     public enum LoggingLevel {
@@ -31,10 +41,28 @@ public class FileSettingsService {
         HEADPHONES, HDMI, DEVICE
     }
 
+    public FileSettingsService() {
+        initDefaultSettings();
+
+        // Load the settings
+        try {
+            load();
+        } catch (Exception e) {
+            logger.error("Could not load the settings", e);
+        }
+
+        // Save the settings (in case none were already existant)
+        try {
+            save();
+        } catch (JAXBException e) {
+            logger.error("Could not save settings", e);
+        }
+    }
+
     private void initDefaultSettings() {
         // Initialize default settings
 
-        settings.setBasePath("/opt/rocketshow/");
+        settings.setBasePath(applicationHome.getDir().toString() + "/");
 
         settings.setMidiInDevice(new MidiDevice());
         settings.setMidiOutDevice(new MidiDevice());
@@ -76,10 +104,9 @@ public class FileSettingsService {
         settings.setLoggingLevel(LoggingLevel.INFO);
 
         settings.setEnableRaspberryGpio(true);
-
-        updateSystem();
     }
 
+    @Override
     public RemoteDevice getRemoteDeviceByName(String name) {
         for (RemoteDevice remoteDevice : settings.getRemoteDeviceList()) {
             if (remoteDevice.getName().equals(name)) {
@@ -286,6 +313,51 @@ public class FileSettingsService {
         } catch (Exception e) {
             logger.error("Could not update the wireless access point settings", e);
         }
+    }
+
+    public void save() throws JAXBException {
+        File file = new File(applicationHome.getDir() + "/settings");
+        JAXBContext jaxbContext = JAXBContext.newInstance(Settings.class);
+        Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+
+        // output pretty printed
+        jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+
+        jaxbMarshaller.marshal(settings, file);
+
+        logger.info("Settings saved");
+    }
+
+    private void load() throws Exception {
+        File file = new File(applicationHome.getDir() + "/settings");
+
+        if (!file.exists() || file.isDirectory()) {
+            return;
+        }
+
+        // Restore the session from the file
+        JAXBContext jaxbContext = JAXBContext.newInstance(Settings.class);
+
+        Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+        settings = (Settings) jaxbUnmarshaller.unmarshal(file);
+
+        updateSystem();
+
+        // Reset the USB interface, if needed
+        try {
+            if (settings.isResetUsbAfterBoot()) {
+                logger.info("Resetting all USB devices");
+                ResetUsb.resetAllInterfaces();
+            }
+        } catch (Exception e) {
+            logger.error("Could not reset the USB devices", e);
+        }
+
+        logger.info("Settings loaded");
+    }
+
+    public Settings getSettings() {
+        return settings;
     }
 
 }

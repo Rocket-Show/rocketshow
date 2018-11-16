@@ -3,14 +3,14 @@ package com.ascargon.rocketshow.composition;
 import com.ascargon.rocketshow.PlayerService;
 import com.ascargon.rocketshow.api.NotificationService;
 
-public class CompositionSetService implements SetService {
+public class FileSetService implements SetService {
 
     private PlayerService playerService;
     private NotificationService notificationService;
     private Set currentSet;
     private int currentCompositionIndex;
 
-    public CompositionSetService(NotificationService notificationService, PlayerService playerService) {
+    public FileSetService(NotificationService notificationService, PlayerService playerService) {
         this.notificationService = notificationService;
         this.playerService = playerService;
 
@@ -18,7 +18,8 @@ public class CompositionSetService implements SetService {
     }
 
     // Read the current composition from its file and set it to the player
-    private void readCurrentComposition() throws Exception {
+    @Override
+    public void readCurrentComposition() throws Exception {
         if (currentSet == null) {
             return;
         }

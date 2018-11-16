@@ -33,7 +33,7 @@ public class TransportController {
 //            if (!manager.getPlayer().getCompositionName().equals(compositionName)) {
 //
 //                // Load the composition with the given name into the player
-//                manager.getPlayer().setComposition(manager.getFileCompositionService().getComposition(compositionName),
+//                manager.getPlayer().setComposition(manager.getDefaultCompositionService().getComposition(compositionName),
 //                        false, false);
 //            }
 //        }
@@ -125,7 +125,7 @@ public class TransportController {
 //
 //        Manager manager = (Manager) context.getAttribute("manager");
 //        if (manager.getCurrentSet() == null) {
-//            manager.getFileCompositionService().nextComposition();
+//            manager.getDefaultCompositionService().nextComposition();
 //        } else {
 //            manager.getCurrentSet().nextComposition();
 //        }
@@ -140,7 +140,7 @@ public class TransportController {
 //
 //        Manager manager = (Manager) context.getAttribute("manager");
 //        if (manager.getCurrentSet() == null) {
-//            manager.getFileCompositionService().previousComposition();
+//            manager.getDefaultCompositionService().previousComposition();
 //        } else {
 //            manager.getCurrentSet().previousComposition();
 //        }

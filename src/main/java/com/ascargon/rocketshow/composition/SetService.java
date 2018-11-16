@@ -6,6 +6,8 @@ public interface SetService {
 
     void setCurrentSet(Set set);
 
+    void readCurrentComposition() throws Exception;
+
     void setCompositionIndex(int compositionIndex, boolean playDefaultComposition) throws Exception;
 
     void setCompositionIndex(int compositionIndex) throws Exception;
