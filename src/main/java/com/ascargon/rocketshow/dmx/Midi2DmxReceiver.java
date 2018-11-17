@@ -19,17 +19,17 @@ public class Midi2DmxReceiver implements Receiver {
     private MidiMapping midiMapping;
     private Midi2DmxMapping midi2DmxMapping;
     private Midi2DmxConverter midi2DmxConverter;
-    private DmxManager dmxManager;
+    private DefaultDmxService defaultDmxService;
 
     private DmxUniverse dmxUniverse;
 
     public Midi2DmxReceiver(Manager manager) {
         this.midi2DmxConverter = manager.getMidi2DmxConverter();
-        this.dmxManager = manager.getDmxManager();
+        this.defaultDmxService = manager.getDefaultDmxService();
 
         dmxUniverse = new DmxUniverse();
 
-        dmxManager.addDmxUniverse(dmxUniverse);
+        defaultDmxService.addDmxUniverse(dmxUniverse);
     }
 
     @Override
@@ -60,7 +60,7 @@ public class Midi2DmxReceiver implements Receiver {
 
     @Override
     public void close() {
-        dmxManager.removeDmxUniverse(dmxUniverse);
+        defaultDmxService.removeDmxUniverse(dmxUniverse);
     }
 
 }

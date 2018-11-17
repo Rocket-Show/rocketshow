@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.util.List;
 
 @Service
-public class FileSettingsService implements SettingsService {
+public class DefaultSettingsService implements SettingsService {
 
     private final static Logger logger = Logger.getLogger(Settings.class);
 
@@ -41,7 +41,7 @@ public class FileSettingsService implements SettingsService {
         HEADPHONES, HDMI, DEVICE
     }
 
-    public FileSettingsService() {
+    public DefaultSettingsService() {
         initDefaultSettings();
 
         // Load the settings

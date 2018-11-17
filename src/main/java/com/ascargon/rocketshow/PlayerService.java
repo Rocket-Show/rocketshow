@@ -10,15 +10,6 @@ import org.springframework.stereotype.Service;
 @Service
 public interface PlayerService {
 
-    void setComposition(Composition composition, boolean playDefaultCompositionWhenStoppingComposition,
-                        boolean forceLoad) throws Exception;
-
-    void setCurrentComposition(Composition currentComposition) throws Exception;
-
-    void setCompositionName(String name) throws Exception;
-
-    void setAutoStartNextComposition(boolean autoStartNextComposition);
-
     void play() throws Exception;
 
     void playAsSample(String compositionName) throws Exception;
@@ -27,11 +18,18 @@ public interface PlayerService {
 
     void togglePlay() throws Exception;
 
-    void stop(boolean playDefaultComposition);
+    void stop(boolean playDefaultComposition) throws Exception;
 
-    void stop();
+    void stop() throws Exception;
 
     void seek(long positionMillis) throws Exception;
+
+    void setComposition(Composition composition, boolean playDefaultCompositionWhenStoppingComposition,
+                        boolean forceLoad) throws Exception;
+
+    void setComposition(Composition currentComposition) throws Exception;
+
+    void setCompositionName(String name) throws Exception;
 
     CompositionPlayer.PlayState getPlayState();
 
@@ -42,9 +40,5 @@ public interface PlayerService {
     long getPositionMillis();
 
     void compositionPlayerFinishedPlaying(CompositionPlayer compositionPlayer) throws Exception;
-
-    void playDefaultComposition() throws Exception;
-
-    void stopDefaultComposition() throws Exception;
 
 }

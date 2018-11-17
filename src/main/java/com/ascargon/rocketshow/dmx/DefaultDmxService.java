@@ -26,10 +26,12 @@ import com.ascargon.rocketshow.Manager;
 
 import ola.OlaClient;
 import ola.proto.Ola.UniverseInfoReply;
+import org.springframework.stereotype.Service;
 
-public class DmxManager {
+@Service
+public class DefaultDmxService implements DmxService {
 
-    private final static Logger logger = Logger.getLogger(DmxManager.class);
+    private final static Logger logger = Logger.getLogger(DefaultDmxService.class);
 
     private final String OLA_URL = "http://localhost:9090/";
 
@@ -52,7 +54,7 @@ public class DmxManager {
 
     private HttpClient httpClient;
 
-    public DmxManager(Manager manager) {
+    public DefaultDmxService(Manager manager) {
         this.manager = manager;
 
         RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).build();

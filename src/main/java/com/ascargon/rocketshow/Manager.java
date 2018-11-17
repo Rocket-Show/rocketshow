@@ -2,7 +2,7 @@ package com.ascargon.rocketshow;
 
 import com.ascargon.rocketshow.composition.DefaultCompositionFileService;
 import com.ascargon.rocketshow.composition.DefaultCompositionService;
-import com.ascargon.rocketshow.dmx.DmxManager;
+import com.ascargon.rocketshow.dmx.DefaultDmxService;
 import com.ascargon.rocketshow.dmx.Midi2DmxConverter;
 import com.ascargon.rocketshow.image.ImageDisplayer;
 import com.ascargon.rocketshow.midi.MidiDeviceConnectedListener;
@@ -38,7 +38,7 @@ public class Manager {
     private ImageDisplayer imageDisplayer;
     private MidiInDeviceReceiver midiInDeviceReceiver;
 
-    private DmxManager dmxManager;
+    private DefaultDmxService defaultDmxService;
     private Midi2DmxConverter midi2DmxConverter;
 
     private MidiDevice midiOutDevice;
@@ -149,8 +149,8 @@ public class Manager {
         }
 
         // Initialize the DMX manager
-        dmxManager = new DmxManager(this);
-        midi2DmxConverter = new Midi2DmxConverter(dmxManager);
+        defaultDmxService = new DefaultDmxService(this);
+        midi2DmxConverter = new Midi2DmxConverter(defaultDmxService);
 
         // Initialize the image displayer and display a default black screen
         // TODO
@@ -191,9 +191,9 @@ public class Manager {
     public void close() {
         logger.info("Close...");
 
-        if (dmxManager != null) {
+        if (defaultDmxService != null) {
             try {
-                dmxManager.close();
+                defaultDmxService.close();
             } catch (Exception e) {
                 logger.error("Could not close the DMX manager", e);
             }
@@ -274,8 +274,8 @@ public class Manager {
         this.settings = settings;
     }
 
-    public DmxManager getDmxManager() {
-        return dmxManager;
+    public DefaultDmxService getDefaultDmxService() {
+        return defaultDmxService;
     }
 
     public DefaultCompositionService getDefaultCompositionService() {

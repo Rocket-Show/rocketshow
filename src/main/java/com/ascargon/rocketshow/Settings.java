@@ -1,19 +1,11 @@
 package com.ascargon.rocketshow;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.sound.midi.MidiUnavailableException;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 
 import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.audio.AudioDevice;
@@ -21,10 +13,7 @@ import com.ascargon.rocketshow.midi.MidiControl;
 import com.ascargon.rocketshow.midi.MidiDevice;
 import com.ascargon.rocketshow.midi.MidiMapping;
 import com.ascargon.rocketshow.midi.MidiRouting;
-import com.ascargon.rocketshow.midi.MidiUtil;
-import com.ascargon.rocketshow.midi.MidiUtil.MidiDirection;
 import com.ascargon.rocketshow.raspberry.RaspberryGpioControl;
-import com.ascargon.rocketshow.util.ShellManager;
 
 @XmlRootElement
 public class Settings {
@@ -53,7 +42,7 @@ public class Settings {
 
     private String defaultComposition;
 
-    private FileSettingsService.LoggingLevel loggingLevel;
+    private DefaultSettingsService.LoggingLevel loggingLevel;
 
     private String language = "en";
 
@@ -61,7 +50,7 @@ public class Settings {
 
     private boolean resetUsbAfterBoot = false;
 
-    private FileSettingsService.AudioOutput audioOutput;
+    private DefaultSettingsService.AudioOutput audioOutput;
 
     private int audioRate;
 
@@ -202,11 +191,11 @@ public class Settings {
     }
 
     @XmlElement
-    public FileSettingsService.LoggingLevel getLoggingLevel() {
+    public DefaultSettingsService.LoggingLevel getLoggingLevel() {
         return loggingLevel;
     }
 
-    public void setLoggingLevel(FileSettingsService.LoggingLevel loggingLevel) {
+    public void setLoggingLevel(DefaultSettingsService.LoggingLevel loggingLevel) {
         this.loggingLevel = loggingLevel;
     }
 
@@ -238,11 +227,11 @@ public class Settings {
     }
 
     @XmlElement
-    public FileSettingsService.AudioOutput getAudioOutput() {
+    public DefaultSettingsService.AudioOutput getAudioOutput() {
         return audioOutput;
     }
 
-    public void setAudioOutput(FileSettingsService.AudioOutput audioOutput) {
+    public void setAudioOutput(DefaultSettingsService.AudioOutput audioOutput) {
         this.audioOutput = audioOutput;
     }
 

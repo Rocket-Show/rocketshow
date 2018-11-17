@@ -55,7 +55,7 @@ public class MidiRouting {
 		midi2DmxReceiver.setMidi2DmxMapping(midi2DmxMapping);
 		midi2DmxReceiver.setMidiMapping(midiMapping);
 
-		midi2RemoteReceiver = new Midi2RemoteReceiver(manager);
+		midi2RemoteReceiver = new Midi2RemoteReceiver();
 		midi2RemoteReceiver.setRemoteDeviceNameList(remoteDeviceNameList);
 		midi2RemoteReceiver.setMidiMapping(midiMapping);
 

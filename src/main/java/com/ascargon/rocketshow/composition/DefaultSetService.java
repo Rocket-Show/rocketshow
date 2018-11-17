@@ -2,15 +2,17 @@ package com.ascargon.rocketshow.composition;
 
 import com.ascargon.rocketshow.PlayerService;
 import com.ascargon.rocketshow.api.NotificationService;
+import org.springframework.stereotype.Service;
 
-public class FileSetService implements SetService {
+@Service
+public class DefaultSetService implements SetService {
 
     private PlayerService playerService;
     private NotificationService notificationService;
     private Set currentSet;
     private int currentCompositionIndex;
 
-    public FileSetService(NotificationService notificationService, PlayerService playerService) {
+    public DefaultSetService(NotificationService notificationService, PlayerService playerService) {
         this.notificationService = notificationService;
         this.playerService = playerService;
 
@@ -32,7 +34,6 @@ public class FileSetService implements SetService {
         SetComposition currentSetComposition = currentSet.getSetCompositionList().get(currentCompositionIndex);
 
         playerService.setCompositionName(currentSetComposition.getName());
-        playerService.setAutoStartNextComposition(currentSetComposition.isAutoStartNextComposition());
     }
 
     @Override

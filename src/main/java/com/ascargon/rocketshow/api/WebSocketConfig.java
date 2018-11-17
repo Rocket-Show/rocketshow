@@ -11,9 +11,9 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @Controller
 public class WebSocketConfig implements WebSocketConfigurer {
 
-    private WebSocketNotificationService webSocketClientNotifier;
+    private DefaultNotificationService webSocketClientNotifier;
 
-    public WebSocketConfig(WebSocketNotificationService webSocketClientNotifier) {
+    public WebSocketConfig(DefaultNotificationService webSocketClientNotifier) {
         this.webSocketClientNotifier = webSocketClientNotifier;
     }
 

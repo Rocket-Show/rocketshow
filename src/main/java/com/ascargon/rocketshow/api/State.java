@@ -1,17 +1,17 @@
 package com.ascargon.rocketshow.api;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-
-import com.ascargon.rocketshow.composition.Composition.PlayState;
+import com.ascargon.rocketshow.composition.CompositionPlayer;
 import com.ascargon.rocketshow.midi.MidiSignal;
 import com.ascargon.rocketshow.util.Updater.UpdateState;
+
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class State {
 
     private int currentCompositionIndex;
-    private PlayState playState;
+    private CompositionPlayer.PlayState playState;
     private String currentCompositionName;
     private long currentCompositionDurationMillis;
     private long positionMillis;
@@ -30,11 +30,11 @@ public class State {
     }
 
     @XmlElement
-    public PlayState getPlayState() {
+    public CompositionPlayer.PlayState getPlayState() {
         return playState;
     }
 
-    public void setPlayState(PlayState playState) {
+    public void setPlayState(CompositionPlayer.PlayState playState) {
         this.playState = playState;
     }
 

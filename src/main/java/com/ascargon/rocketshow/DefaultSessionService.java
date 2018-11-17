@@ -5,6 +5,7 @@ import com.ascargon.rocketshow.composition.Composition;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
 import org.apache.log4j.Logger;
+import org.springframework.stereotype.Service;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -13,6 +14,7 @@ import javax.xml.bind.Unmarshaller;
 import java.io.File;
 import java.util.List;
 
+@Service
 public class DefaultSessionService implements SessionService {
 
     private final static Logger logger = Logger.getLogger(DefaultSessionService.class);
@@ -108,7 +110,7 @@ public class DefaultSessionService implements SessionService {
             if (compositions.size() > 0) {
                 logger.debug("Set initial composition '" + compositions.get(0).getName() + "'...");
 
-                playerService.setCurrentComposition(compositions.get(0));
+                playerService.setComposition(compositions.get(0));
             }
         } else {
             // We got a set loaded

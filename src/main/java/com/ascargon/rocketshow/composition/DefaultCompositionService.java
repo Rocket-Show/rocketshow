@@ -1,5 +1,15 @@
 package com.ascargon.rocketshow.composition;
 
+import com.ascargon.rocketshow.PlayerService;
+import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.util.FileDurationGetter;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Service;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.util.JAXBSource;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -8,20 +18,10 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.util.JAXBSource;
-
-import com.ascargon.rocketshow.PlayerService;
-import com.ascargon.rocketshow.SettingsService;
-import org.apache.log4j.Logger;
-
-import com.ascargon.rocketshow.util.FileDurationGetter;
-
 /**
  * Handle storage, sorting, etc. of compositions and sets.
  */
+@Service
 public class DefaultCompositionService implements CompositionService {
 
     private final static Logger logger = Logger.getLogger(DefaultCompositionService.class);
@@ -55,7 +55,6 @@ public class DefaultCompositionService implements CompositionService {
 
     private void finalizeLoadedComposition(Composition composition, String name) {
         composition.setName(name);
-        composition.getMidiMapping().setParent(settingsService.getSettings().getMidiMapping());
     }
 
     @Override
@@ -320,7 +319,7 @@ public class DefaultCompositionService implements CompositionService {
         // Set another composition, if we deleted the current one
         if (playerService.getCompositionName().equals(name)) {
             if (compositionCache.size() > 0) {
-                playerService.setCurrentComposition(compositionCache.get(0));
+                playerService.setComposition(compositionCache.get(0));
             }
         }
 
@@ -348,6 +347,25 @@ public class DefaultCompositionService implements CompositionService {
         }
 
         logger.info("Set '" + name + "' deleted");
+    }
+
+    public void nextComposition() {
+        // Set the next composition (not set based)
+        if (playerService.getCompositionName().length() > 0) {
+            for (int i = 0; i < compositionCache.size(); i++) {
+                if (compositionCache.get(i).getName().equals(playerService.getCompositionName())) {
+                    if (compositionCache.size() > i + 1) {
+                        try {
+                            playerService.setComposition(compositionCache.get(i + 1));
+                        } catch (Exception e) {
+                            logger.error("Could not set the next composition", e);
+                        }
+                    }
+
+                    return;
+                }
+            }
+        }
     }
 
 }

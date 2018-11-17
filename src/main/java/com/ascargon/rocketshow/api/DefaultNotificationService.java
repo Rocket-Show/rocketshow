@@ -17,13 +17,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Notify all connected websocket clients about the current device state.
  */
 @Service
-public class WebSocketNotificationService extends TextWebSocketHandler implements NotificationService {
+public class DefaultNotificationService extends TextWebSocketHandler implements NotificationService {
 
     private StateService stateService;
 
     private List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
 
-    public WebSocketNotificationService(StateService stateService) {
+    public DefaultNotificationService(StateService stateService) {
         this.stateService = stateService;
     }
 

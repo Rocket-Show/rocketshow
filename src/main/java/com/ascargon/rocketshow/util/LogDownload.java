@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import com.ascargon.rocketshow.SettingsService;
 import org.apache.log4j.Logger;
 
 import com.ascargon.rocketshow.Manager;
@@ -18,12 +19,18 @@ public class LogDownload {
 
 	private final static Logger logger = Logger.getLogger(LogDownload.class);
 
+	private SettingsService settingsService;
+
 	private final static String LOGS_FILE_NAME = "logs.zip";
 
-	public static File getLogsFile() throws Exception {
+	public LogDownload(SettingsService settingsService) {
+		this.settingsService = settingsService;
+	}
+
+	public File getLogsFile() throws Exception {
 		// Prepare the log directory for download
 		ShellManager shellManager = new ShellManager(new String[] { "bash", "-c",
-				"zip -r -j " + Manager.BASE_PATH + LOGS_FILE_NAME + " " + Manager.BASE_PATH + "log/*" });
+				"zip -r -j " + settingsService.getSettings().getBasePath() + LOGS_FILE_NAME + " " + settingsService.getSettings().getBasePath() + "log/*" });
 
 		BufferedReader reader = new BufferedReader(new InputStreamReader(shellManager.getInputStream()));
 		String line;
@@ -38,7 +45,7 @@ public class LogDownload {
 		shellManager.getProcess().waitFor();
 
 		// Return the prepared zip
-		return new File(Manager.BASE_PATH + LOGS_FILE_NAME);
+		return new File(settingsService.getSettings().getBasePath() + LOGS_FILE_NAME);
 	}
 
 }

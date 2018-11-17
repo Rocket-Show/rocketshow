@@ -1,10 +1,13 @@
 package com.ascargon.rocketshow.composition;
 
+import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 /**
  * Handle loading and saving of compositions and sets.
  */
+@Service
 public interface CompositionService {
 
     Composition cloneComposition(Composition composition) throws Exception;
@@ -30,5 +33,7 @@ public interface CompositionService {
     void deleteComposition(String name) throws Exception;
 
     void deleteSet(String name);
+
+    void nextComposition();
 
 }

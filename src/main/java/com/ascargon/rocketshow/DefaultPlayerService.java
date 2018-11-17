@@ -5,6 +5,7 @@ import com.ascargon.rocketshow.composition.Composition;
 import com.ascargon.rocketshow.composition.CompositionPlayer;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
+import com.ascargon.rocketshow.dmx.DmxService;
 import org.apache.log4j.Logger;
 import org.freedesktop.gstreamer.Gst;
 import org.springframework.stereotype.Service;
@@ -24,19 +25,19 @@ public class DefaultPlayerService implements PlayerService {
     private CompositionService compositionService;
     private SetService setService;
     private SessionService sessionService;
+    private DmxService dmxService;
 
     private CompositionPlayer defaultCompositionPlayer;
     private CompositionPlayer currentCompositionPlayer;
     private List<CompositionPlayer> sampleCompositionPlayerList = new ArrayList<>();
 
-    private boolean autoStartNextComposition = false;
-
-    public DefaultPlayerService(NotificationService notificationService, SettingsService settingsService, CompositionService compositionService, SetService setService, SessionService sessionService) {
+    public DefaultPlayerService(NotificationService notificationService, SettingsService settingsService, CompositionService compositionService, SetService setService, SessionService sessionService, DmxService dmxService) {
         this.notificationService = notificationService;
         this.settingsService = settingsService;
         this.compositionService = compositionService;
         this.setService = setService;
         this.sessionService = sessionService;
+        this.dmxService = dmxService;
 
         try {
             Gst.init();
@@ -50,7 +51,7 @@ public class DefaultPlayerService implements PlayerService {
             logger.error("Could not play default composition", e);
         }
 
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, this);
+        defaultCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService);
     }
 
     @Override
@@ -103,6 +104,8 @@ public class DefaultPlayerService implements PlayerService {
             return;
         }
 
+        stopDefaultComposition();
+
         logger.debug("Start playing on all devices...");
 
         // Play the composition on all remote devices
@@ -151,9 +154,9 @@ public class DefaultPlayerService implements PlayerService {
         // to share the same instance) and play it
         Composition composition = compositionService
                 .cloneComposition(compositionService.getComposition(compositionName));
-        CompositionPlayer compositionPlayer = new CompositionPlayer(notificationService, this);
-        compositionPlayer.setComposition(composition);
+        CompositionPlayer compositionPlayer = new CompositionPlayer(notificationService, this, settingsService);
         compositionPlayer.setSample(true);
+        compositionPlayer.setComposition(composition);
         sampleCompositionPlayerList.add(compositionPlayer);
         compositionPlayer.play();
     }
@@ -181,7 +184,7 @@ public class DefaultPlayerService implements PlayerService {
     }
 
     @Override
-    public synchronized void stop(boolean playDefaultComposition) {
+    public synchronized void stop(boolean playDefaultComposition) throws Exception {
         if (currentCompositionPlayer.getPlayState() == CompositionPlayer.PlayState.STOPPED || currentCompositionPlayer.getPlayState() == CompositionPlayer.PlayState.STOPPING) {
             return;
         }
@@ -189,7 +192,7 @@ public class DefaultPlayerService implements PlayerService {
         ExecutorService executor = Executors.newFixedThreadPool(30);
 
         // Reset the DMX universe to clear left out signals
-        manager.getDmxManager().reset();
+        dmxService.reset();
 
         // Stop all remote devices
         for (RemoteDevice remoteDevice : settingsService.getSettings().getRemoteDeviceList()) {
@@ -201,7 +204,7 @@ public class DefaultPlayerService implements PlayerService {
         // Also stop the local composition
         executor.execute(() -> {
             try {
-                currentCompositionPlayer.stop(playDefaultComposition);
+                currentCompositionPlayer.stop();
             } catch (Exception e) {
                 logger.error("Could not load the composition files", e);
             }
@@ -217,10 +220,15 @@ public class DefaultPlayerService implements PlayerService {
                 logger.error("Error while waiting to stop the composition", e);
             }
         }
+
+        // Play the default composition, if necessary
+        if (playDefaultComposition) {
+            playDefaultComposition();
+        }
     }
 
     @Override
-    public synchronized void stop() {
+    public synchronized void stop() throws Exception {
         stop(true);
     }
 
@@ -231,13 +239,13 @@ public class DefaultPlayerService implements PlayerService {
         }
     }
 
-    public synchronized void playDefaultComposition() throws Exception {
+    private synchronized void playDefaultComposition() throws Exception {
         if (defaultCompositionPlayer.getComposition() != null) {
             // The default composition is already initialized
             return;
         }
 
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, this);
+        defaultCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService);
 
         if (settingsService.getSettings().getDefaultComposition() == null || settingsService.getSettings().getDefaultComposition().length() == 0) {
             return;
@@ -245,12 +253,12 @@ public class DefaultPlayerService implements PlayerService {
 
         logger.info("Play default composition");
 
-        defaultCompositionPlayer.setComposition(compositionService.getComposition(settingsService.getSettings().getDefaultComposition()));
         defaultCompositionPlayer.setDefaultComposition(true);
+        defaultCompositionPlayer.setComposition(compositionService.getComposition(settingsService.getSettings().getDefaultComposition()));
         defaultCompositionPlayer.play();
     }
 
-    public synchronized void stopDefaultComposition() throws Exception {
+    private synchronized void stopDefaultComposition() throws Exception {
         if (defaultCompositionPlayer.getComposition() == null) {
             return;
         }
@@ -296,21 +304,26 @@ public class DefaultPlayerService implements PlayerService {
             return;
         }
 
-        if (autoStartNextComposition && setService.hasNextComposition()) {
-            // Stop, don't play the default composition but start playing the next composition
-            stop(false);
+        if (currentCompositionPlayer.getComposition().isAutoStartNextComposition() && setService.hasNextComposition()) {
+            // Stop the current composition, don't play the default composition but start
+            // playing the next composition
 
+            stop(false);
             setService.nextComposition(false);
             play();
         } else if (sessionService.getSession().isAutoSelectNextComposition()) {
-            manager.getFileCompositionService().nextComposition();
-        } else {
-            // TODO What's the difference between this else and the last else if??
-
-            // Stop, play the default composition and select the
+            // Stop the current composition, play the default composition and select the
             // next composition automatically (if there is one)
+
             stop(true);
-            setService.nextComposition();
+
+            if (setService.getCurrentSet() != null) {
+                // Set the next composition in the set
+                setService.nextComposition();
+            } else {
+                // Set the next composition without a set
+                compositionService.nextComposition();
+            }
         }
     }
 
@@ -334,20 +347,14 @@ public class DefaultPlayerService implements PlayerService {
         stop(playDefaultCompositionWhenStoppingComposition);
 
         currentCompositionPlayer.setComposition(composition);
-
-        notificationService.notifyClients();
     }
 
-    public void setCurrentComposition(Composition currentComposition) throws Exception {
+    public void setComposition(Composition currentComposition) throws Exception {
         setComposition(currentComposition, true, false);
     }
 
     public void setCompositionName(String name) throws Exception {
-        setCurrentComposition(compositionService.getComposition(name));
-    }
-
-    public void setAutoStartNextComposition(boolean autoStartNextComposition) {
-        this.autoStartNextComposition = autoStartNextComposition;
+        setComposition(compositionService.getComposition(name));
     }
 
 }

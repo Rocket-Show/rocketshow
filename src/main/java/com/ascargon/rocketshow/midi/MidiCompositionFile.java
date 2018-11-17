@@ -9,6 +9,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.composition.CompositionFile;
 import org.apache.log4j.Logger;
 
@@ -34,7 +35,7 @@ public class MidiCompositionFile extends CompositionFile {
 
     @XmlTransient
     public String getPath() {
-        return Manager.BASE_PATH + MEDIA_PATH + MIDI_PATH + getName();
+        return settingsService.getSettings().getBasePath() + MEDIA_PATH + MIDI_PATH + getName();
     }
 
     public void load(Pipeline syncPipeline, MidiPlayer syncMidiPlayer) throws Exception {

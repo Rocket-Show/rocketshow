@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.composition;
 
 import com.ascargon.rocketshow.PlayerService;
+import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.api.NotificationService;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
@@ -13,6 +14,7 @@ import org.freedesktop.gstreamer.*;
 import org.freedesktop.gstreamer.elements.BaseSink;
 import org.freedesktop.gstreamer.elements.PlayBin;
 import org.freedesktop.gstreamer.elements.URIDecodeBin;
+import org.springframework.stereotype.Service;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -22,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Handle the playing of a single composition.
  */
+@Service
 public class CompositionPlayer {
 
     private final static Logger logger = Logger.getLogger(CompositionPlayer.class);
@@ -59,9 +62,11 @@ public class CompositionPlayer {
     // The gstreamer pipeline, used to sync all files in this composition
     private Pipeline pipeline;
 
-    public CompositionPlayer(NotificationService notificationService, PlayerService playerService) {
+    public CompositionPlayer(NotificationService notificationService, PlayerService playerService, SettingsService settingsService) {
         this.notificationService = notificationService;
         this.playerService = playerService;
+
+        this.midiMapping.setParent(settingsService.getSettings().getMidiMapping());
     }
 
     // Create a new pipeline, if there is at least one audio- or video file in this composition
@@ -122,10 +127,6 @@ public class CompositionPlayer {
                     }
                 }
             });
-        }
-
-        if (!isDefaultComposition) {
-            playerService.stopDefaultComposition();
         }
 
         // Load all files, create the pipeline and handle exceptions to pipeline-playing
@@ -328,7 +329,7 @@ public class CompositionPlayer {
         }
     }
 
-    public void stop(boolean playDefaultComposition) throws Exception {
+    public void stop() throws Exception {
         if(composition == null) {
             return;
         }
@@ -372,15 +373,6 @@ public class CompositionPlayer {
         logger.info("Composition '" + composition.getName() + "' stopped");
 
         playState = PlayState.STOPPED;
-
-        if (!isDefaultComposition && !isSample) {
-            notificationService.notifyClients();
-        }
-
-        // Play the default composition, if necessary
-        if (!isDefaultComposition && playDefaultComposition && !isSample) {
-            playerService.playDefaultComposition();
-        }
     }
 
     public void seek(long positionMillis) throws Exception {
@@ -404,10 +396,6 @@ public class CompositionPlayer {
         if (!isSample) {
             notificationService.notifyClients();
         }
-    }
-
-    public void stop() throws Exception {
-        stop(true);
     }
 
     public void close() throws Exception {
@@ -483,8 +471,12 @@ public class CompositionPlayer {
         return composition;
     }
 
-    public void setComposition(Composition composition) {
+    public void setComposition(Composition composition) throws Exception {
         this.composition = composition;
+
+        if(!isSample && !isDefaultComposition) {
+            notificationService.notifyClients();
+        }
     }
 
     public boolean isDefaultComposition() {

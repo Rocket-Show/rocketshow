@@ -7,10 +7,10 @@ import com.ascargon.rocketshow.midi.MidiSignal;
 
 public class Midi2DmxConverter {
 
-	private DmxManager dmxManager;
+	private DefaultDmxService defaultDmxService;
 
-	public Midi2DmxConverter(DmxManager dmxManager) {
-		this.dmxManager = dmxManager;
+	public Midi2DmxConverter(DefaultDmxService defaultDmxService) {
+		this.defaultDmxService = defaultDmxService;
 	}
 
 	private void mapSimple(MidiSignal midiSignal, DmxUniverse dmxUniverse) {
@@ -24,12 +24,12 @@ public class Midi2DmxConverter {
 			}
 
 			dmxUniverse.getUniverse().put(midiSignal.getNote(), valueTo);
-			dmxManager.send();
+			defaultDmxService.send();
 		} else if (midiSignal.getCommand() == ShortMessage.NOTE_OFF) {
 			int valueTo = 0;
 			
 			dmxUniverse.getUniverse().put(midiSignal.getNote(), valueTo);
-			dmxManager.send();
+			defaultDmxService.send();
 		}
 	}
 

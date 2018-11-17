@@ -3,17 +3,18 @@ package com.ascargon.rocketshow.api;
 import com.ascargon.rocketshow.PlayerService;
 import com.ascargon.rocketshow.SessionService;
 import com.ascargon.rocketshow.composition.Composition;
+import com.ascargon.rocketshow.composition.CompositionPlayer;
 import com.ascargon.rocketshow.composition.SetService;
 import org.springframework.stereotype.Service;
 
 @Service
-public class CurrentStateService implements StateService {
+public class DefaultStateService implements StateService {
 
     private PlayerService playerService;
     private SetService setService;
     private SessionService sessionService;
 
-    public CurrentStateService(PlayerService playerService, SetService setService, SessionService sessionService) {
+    public DefaultStateService(PlayerService playerService, SetService setService, SessionService sessionService) {
         this.playerService = playerService;
         this.setService = setService;
         this.sessionService = sessionService;
@@ -22,7 +23,7 @@ public class CurrentStateService implements StateService {
     public State getCurrentState() {
         State currentState = new State();
 
-        currentState.setPlayState(Composition.PlayState.STOPPED);
+        currentState.setPlayState(CompositionPlayer.PlayState.STOPPED);
         currentState.setCurrentCompositionIndex(0);
 
         currentState.setPlayState(playerService.getPlayState());

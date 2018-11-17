@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
 import com.ascargon.rocketshow.Manager;
+import com.ascargon.rocketshow.Settings;
+import com.ascargon.rocketshow.SettingsService;
 
 /**
  * Resets all USB interfaces. This is sometimes needed for the raspberry pi to
@@ -13,27 +15,33 @@ import com.ascargon.rocketshow.Manager;
  */
 public class ResetUsb {
 
-	public static void resetAllInterfaces() throws Exception {
-		ProcessBuilder pb = new ProcessBuilder("lsusb");
-		Process process = pb.start();
-		BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
-		String line;
+    private SettingsService settingsService;
 
-		// Loop over each interface
-		while ((line = br.readLine()) != null) {
-			// Extract the bus and the device from each line
-			String bus = line.substring(4, 7);
-			String device = line.substring(15, 18);
-			String name = line.substring(33);
+    public ResetUsb(SettingsService settingsService) {
+        this.settingsService = settingsService;
+    }
 
-			if (!name.startsWith("Standard Microsystems Corp") && !name.startsWith("Linux Foundation 2.0")) {
-				// Reset the interface
-				ShellManager shellManager = new ShellManager(new String[] { "sudo", Manager.BASE_PATH + "bin/usbreset",
-						"/dev/bus/usb/" + bus + "/" + device });
+    public void resetAllInterfaces() throws Exception {
+        ProcessBuilder pb = new ProcessBuilder("lsusb");
+        Process process = pb.start();
+        BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+        String line;
 
-				shellManager.getProcess().waitFor();
-			}
-		}
-	}
+        // Loop over each interface
+        while ((line = br.readLine()) != null) {
+            // Extract the bus and the device from each line
+            String bus = line.substring(4, 7);
+            String device = line.substring(15, 18);
+            String name = line.substring(33);
+
+            if (!name.startsWith("Standard Microsystems Corp") && !name.startsWith("Linux Foundation 2.0")) {
+                // Reset the interface
+                ShellManager shellManager = new ShellManager(new String[]{"sudo", settingsService.getSettings().getBasePath() + "bin/usbreset",
+                        "/dev/bus/usb/" + bus + "/" + device});
+
+                shellManager.getProcess().waitFor();
+            }
+        }
+    }
 
 }
