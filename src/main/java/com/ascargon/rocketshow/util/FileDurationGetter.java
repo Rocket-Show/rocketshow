@@ -8,7 +8,8 @@ import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.composition.CompositionFile;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.ascargon.rocketshow.midi.MidiPlayer;
 
@@ -19,7 +20,7 @@ import com.ascargon.rocketshow.midi.MidiPlayer;
  */
 public class FileDurationGetter implements Runnable {
 
-	private final static Logger logger = Logger.getLogger(FileDurationGetter.class);
+	private final static Logger logger = LogManager.getLogger(FileDurationGetter.class);
 
 	private static final String DURATION = "ID_LENGTH=";
 

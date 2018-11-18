@@ -6,9 +6,10 @@ import com.ascargon.rocketshow.midi.MidiMapping;
 import com.ascargon.rocketshow.midi.MidiUtil;
 import com.ascargon.rocketshow.util.ResetUsbService;
 import com.ascargon.rocketshow.util.ShellManager;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.springframework.boot.system.ApplicationHome;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +26,7 @@ import java.util.List;
 @Service
 public class DefaultSettingsService implements SettingsService {
 
-    private final static Logger logger = Logger.getLogger(Settings.class);
+    private final static Logger logger = LogManager.getLogger(Settings.class);
 
     private ResetUsbService resetUsbService;
 
@@ -235,19 +236,19 @@ public class DefaultSettingsService implements SettingsService {
         // enum)
         switch (settings.getLoggingLevel()) {
             case INFO:
-                LogManager.getRootLogger().setLevel(Level.INFO);
+                Configurator.setRootLevel(Level.INFO);
                 break;
             case WARN:
-                LogManager.getRootLogger().setLevel(Level.WARN);
+                Configurator.setRootLevel(Level.WARN);
                 break;
             case ERROR:
-                LogManager.getRootLogger().setLevel(Level.ERROR);
+                Configurator.setRootLevel(Level.ERROR);
                 break;
             case DEBUG:
-                LogManager.getRootLogger().setLevel(Level.DEBUG);
+                Configurator.setRootLevel(Level.DEBUG);
                 break;
             case TRACE:
-                LogManager.getRootLogger().setLevel(Level.TRACE);
+                Configurator.setRootLevel(Level.TRACE);
                 break;
         }
     }

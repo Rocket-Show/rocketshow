@@ -11,7 +11,8 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.composition.CompositionFile;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.ascargon.rocketshow.Manager;
 import org.freedesktop.gstreamer.Pipeline;

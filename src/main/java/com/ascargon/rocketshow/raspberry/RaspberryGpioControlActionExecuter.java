@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.raspberry;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.ascargon.rocketshow.Manager;
 import com.pi4j.io.gpio.GpioController;
@@ -15,7 +16,7 @@ public class RaspberryGpioControlActionExecuter {
 
 	private GpioController gpioController;
 
-	private final static Logger logger = Logger.getLogger(RaspberryGpioControlActionExecuter.class);
+	private final static Logger logger = LogManager.getLogger(RaspberryGpioControlActionExecuter.class);
 
 	public RaspberryGpioControlActionExecuter(Manager manager) {
 		if (!manager.getSettings().isEnableRaspberryGpio()) {

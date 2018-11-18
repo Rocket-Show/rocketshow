@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.api;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +16,7 @@ public class TransportController {
     //private CompositionPlayerService player;
     private NotificationService notificationService;
 
-    private final static Logger logger = Logger.getLogger(TransportController.class);
+    private final static Logger logger = LogManager.getLogger(TransportController.class);
 
     public TransportController(NotificationService notificationService) {
         this.notificationService = notificationService;

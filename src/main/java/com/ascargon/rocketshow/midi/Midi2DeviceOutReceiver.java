@@ -4,7 +4,8 @@ import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.ascargon.rocketshow.Manager;
 
@@ -15,7 +16,7 @@ import com.ascargon.rocketshow.Manager;
  */
 public class Midi2DeviceOutReceiver implements Receiver, MidiDeviceConnectedListener {
 
-    private final static Logger logger = Logger.getLogger(Midi2DeviceOutReceiver.class);
+    private final static Logger logger = LogManager.getLogger(Midi2DeviceOutReceiver.class);
 
     private MidiMapping midiMapping;
 

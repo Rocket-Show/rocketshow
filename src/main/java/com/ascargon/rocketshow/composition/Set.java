@@ -7,12 +7,13 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @XmlRootElement
 public class Set {
 
-    private final static Logger logger = Logger.getLogger(Set.class);
+    private final static Logger logger = LogManager.getLogger(Set.class);
 
     private String name;
     private String notes;

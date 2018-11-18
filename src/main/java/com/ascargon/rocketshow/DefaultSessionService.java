@@ -1,10 +1,10 @@
 package com.ascargon.rocketshow;
 
 import com.ascargon.rocketshow.api.NotificationService;
-import com.ascargon.rocketshow.composition.Composition;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import javax.xml.bind.JAXBContext;
@@ -12,12 +12,11 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import java.io.File;
-import java.util.List;
 
 @Service
 public class DefaultSessionService implements SessionService {
 
-    private final static Logger logger = Logger.getLogger(DefaultSessionService.class);
+    private final static Logger logger = LogManager.getLogger(DefaultSessionService.class);
 
     private SettingsService settingsService;
     private SetService setService;

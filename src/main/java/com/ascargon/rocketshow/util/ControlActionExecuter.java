@@ -2,11 +2,12 @@ package com.ascargon.rocketshow.util;
 
 import com.ascargon.rocketshow.*;
 import com.ascargon.rocketshow.composition.SetService;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ControlActionExecuter {
 
-	private final static Logger logger = Logger.getLogger(ControlActionExecuter.class);
+	private final static Logger logger = LogManager.getLogger(ControlActionExecuter.class);
 
 	private PlayerService playerService;
     private SetService setService;

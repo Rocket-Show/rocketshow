@@ -8,7 +8,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.sound.midi.*;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.freedesktop.gstreamer.GstObject;
 import org.freedesktop.gstreamer.Pipeline;
 
@@ -16,7 +17,7 @@ import org.freedesktop.gstreamer.State;
 
 public class MidiPlayer {
 
-    private final static Logger logger = Logger.getLogger(MidiPlayer.class);
+    private final static Logger logger = LogManager.getLogger(MidiPlayer.class);
 
     private Sequencer sequencer;
     private List<MidiRouting> midiRoutingList;

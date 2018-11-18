@@ -3,7 +3,8 @@ package com.ascargon.rocketshow.util;
 import com.ascargon.rocketshow.SessionService;
 import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.api.NotificationService;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
@@ -20,7 +21,7 @@ public class Updater {
         DOWNLOADING, INSTALLING, REBOOTING
     }
 
-    private final static Logger logger = Logger.getLogger(Updater.class);
+    private final static Logger logger = LogManager.getLogger(Updater.class);
 
     private final static String UPDATE_PATH = "update/";
     private final static String BEFORE_SCRIPT_NAME = "before.sh";

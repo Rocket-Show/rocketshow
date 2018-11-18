@@ -6,7 +6,8 @@ import com.ascargon.rocketshow.composition.CompositionPlayer;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.dmx.DmxService;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.freedesktop.gstreamer.Gst;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +19,7 @@ import java.util.concurrent.Executors;
 @Service
 public class DefaultPlayerService implements PlayerService {
 
-    private final static Logger logger = Logger.getLogger(DefaultPlayerService.class);
+    private final static Logger logger = LogManager.getLogger(DefaultPlayerService.class);
 
     private NotificationService notificationService;
     private SettingsService settingsService;
@@ -41,7 +42,8 @@ public class DefaultPlayerService implements PlayerService {
 
         try {
             Gst.init();
-        } catch (Exception | Error e) {
+        } catch (Exception | UnsatisfiedLinkError e) {
+            // Gstreamer might not be installed properly or not be installed at all
             logger.error("Could not initialize Gstreamer", e);
         }
 

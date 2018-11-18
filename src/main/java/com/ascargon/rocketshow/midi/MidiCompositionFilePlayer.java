@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.midi;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.freedesktop.gstreamer.Pipeline;
 
 import javax.sound.midi.InvalidMidiDataException;
@@ -9,7 +10,7 @@ import java.io.IOException;
 
 public class MidiCompositionFilePlayer {
 
-    private final static Logger logger = Logger.getLogger(MidiCompositionFilePlayer.class);
+    private final static Logger logger = LogManager.getLogger(MidiCompositionFilePlayer.class);
 
     private MidiCompositionFile midiCompositionFile;
     private String path;

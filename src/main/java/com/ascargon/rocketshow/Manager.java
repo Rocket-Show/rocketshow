@@ -14,7 +14,8 @@ import com.ascargon.rocketshow.raspberry.RaspberryGpioControlActionExecuter;
 import com.ascargon.rocketshow.util.ControlActionExecuter;
 import com.ascargon.rocketshow.util.ShellManager;
 import com.ascargon.rocketshow.util.Updater;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiUnavailableException;
@@ -26,7 +27,7 @@ import java.util.TimerTask;
 
 public class Manager {
 
-    private final static Logger logger = Logger.getLogger(Manager.class);
+    private final static Logger logger = LogManager.getLogger(Manager.class);
 
     private Updater updater;
 

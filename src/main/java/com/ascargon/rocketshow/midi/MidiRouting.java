@@ -4,7 +4,8 @@ import com.ascargon.rocketshow.Manager;
 import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.dmx.Midi2DmxMapping;
 import com.ascargon.rocketshow.dmx.Midi2DmxReceiver;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.Receiver;
@@ -23,7 +24,7 @@ import java.util.List;
 @XmlRootElement
 public class MidiRouting {
 
-    private final static Logger logger = Logger.getLogger(MidiRouting.class);
+    private final static Logger logger = LogManager.getLogger(MidiRouting.class);
 
 	public enum MidiDestination {
 		OUT_DEVICE, DMX, REMOTE
