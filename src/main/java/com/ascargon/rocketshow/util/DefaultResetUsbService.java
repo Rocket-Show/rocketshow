@@ -19,12 +19,8 @@ public class DefaultResetUsbService implements ResetUsbService {
 
     private SettingsService settingsService;
 
-    public DefaultResetUsbService(SettingsService settingsService) {
-        this.settingsService = settingsService;
-    }
-
     @Override
-    public void resetAllInterfaces() throws Exception {
+    public void resetAllInterfaces(String basePath) throws Exception {
         ProcessBuilder pb = new ProcessBuilder("lsusb");
         Process process = pb.start();
         BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -39,7 +35,7 @@ public class DefaultResetUsbService implements ResetUsbService {
 
             if (!name.startsWith("Standard Microsystems Corp") && !name.startsWith("Linux Foundation 2.0")) {
                 // Reset the interface
-                ShellManager shellManager = new ShellManager(new String[]{"sudo", settingsService.getSettings().getBasePath() + "/" + "bin/usbreset",
+                ShellManager shellManager = new ShellManager(new String[]{"sudo", basePath + "/" + "bin/usbreset",
                         "/dev/bus/usb/" + bus + "/" + device});
 
                 shellManager.getProcess().waitFor();

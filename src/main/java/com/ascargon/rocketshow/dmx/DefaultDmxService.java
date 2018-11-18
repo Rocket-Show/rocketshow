@@ -1,16 +1,9 @@
 package com.ascargon.rocketshow.dmx;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.CopyOnWriteArrayList;
-
+import com.ascargon.rocketshow.SettingsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import ola.OlaClient;
+import ola.proto.Ola.UniverseInfoReply;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
@@ -21,21 +14,22 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
-
-import com.ascargon.rocketshow.Manager;
-
-import ola.OlaClient;
-import ola.proto.Ola.UniverseInfoReply;
 import org.springframework.stereotype.Service;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
 public class DefaultDmxService implements DmxService {
 
     private final static Logger logger = Logger.getLogger(DefaultDmxService.class);
 
-    private final String OLA_URL = "http://localhost:9090/";
+    private SettingsService settingsService;
 
-    private Manager manager;
+    private final String OLA_URL = "http://localhost:9090/";
 
     // Cache the channel values and send them each time
     private List<DmxUniverse> dmxUniverseList = new CopyOnWriteArrayList<>();
@@ -54,8 +48,8 @@ public class DefaultDmxService implements DmxService {
 
     private HttpClient httpClient;
 
-    public DefaultDmxService(Manager manager) {
-        this.manager = manager;
+    public DefaultDmxService(SettingsService settingsService) {
+        this.settingsService = settingsService;
 
         RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).build();
         httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
@@ -155,7 +149,7 @@ public class DefaultDmxService implements DmxService {
         };
 
         sendUniverseTimer = new Timer();
-        sendUniverseTimer.schedule(timerTask, manager.getSettings().getDmxSendDelayMillis());
+        sendUniverseTimer.schedule(timerTask, settingsService.getSettings().getDmxSendDelayMillis());
     }
 
     private boolean isStandardDevice(String name) {

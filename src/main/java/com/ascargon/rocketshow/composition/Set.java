@@ -22,7 +22,7 @@ public class Set {
     // to a file)
     @XmlElement(name = "composition")
     @XmlElementWrapper(name = "compositionList")
-    List<SetComposition> getSetCompositionList() {
+    public List<SetComposition> getSetCompositionList() {
         return setCompositionList;
     }
 

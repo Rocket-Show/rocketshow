@@ -93,7 +93,7 @@ public class CompositionPlayer {
         playState = PlayState.LOADING;
 
         if (!isDefaultComposition && !isSample) {
-            notificationService.notifyClients();
+            notificationService.notifyClients(playerService);
         }
 
         logger.debug(
@@ -189,7 +189,7 @@ public class CompositionPlayer {
         // Maybe we are stopping meanwhile
         if (playState == PlayState.LOADING && !isDefaultComposition && !isSample) {
             playState = PlayState.LOADED;
-            notificationService.notifyClients();
+            notificationService.notifyClients(playerService);
         }
     }
 
@@ -283,7 +283,7 @@ public class CompositionPlayer {
         playState = PlayState.PLAYING;
 
         if (!isDefaultComposition && !isSample) {
-            notificationService.notifyClients();
+            notificationService.notifyClients(playerService);
         }
     }
 
@@ -312,7 +312,7 @@ public class CompositionPlayer {
         playState = PlayState.PAUSED;
 
         if (!isDefaultComposition && !isSample) {
-            notificationService.notifyClients();
+            notificationService.notifyClients(playerService);
         }
     }
 
@@ -332,7 +332,7 @@ public class CompositionPlayer {
         playState = PlayState.STOPPING;
 
         if (!isDefaultComposition && !isSample) {
-            notificationService.notifyClients();
+            notificationService.notifyClients(playerService);
         }
 
         startPosition = 0;
@@ -380,7 +380,7 @@ public class CompositionPlayer {
         startAutoStopTimer();
 
         if (!isSample) {
-            notificationService.notifyClients();
+            notificationService.notifyClients(playerService);
         }
     }
 
@@ -431,7 +431,7 @@ public class CompositionPlayer {
         this.composition = composition;
 
         if (!isSample && !isDefaultComposition) {
-            notificationService.notifyClients();
+            notificationService.notifyClients(playerService);
         }
     }
 

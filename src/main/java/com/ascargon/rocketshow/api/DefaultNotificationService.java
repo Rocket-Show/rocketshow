@@ -1,5 +1,8 @@
 package com.ascargon.rocketshow.api;
 
+import com.ascargon.rocketshow.PlayerService;
+import com.ascargon.rocketshow.SessionService;
+import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.midi.MidiSignal;
 import com.ascargon.rocketshow.util.Updater.UpdateState;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,10 +40,11 @@ public class DefaultNotificationService extends TextWebSocketHandler implements 
         sessions.remove(session);
     }
 
-    private void notifyClients(MidiSignal midiSignal, UpdateState updateState) throws IOException {
-        State currentState = stateService.getCurrentState();
+    private void notifyClients(PlayerService playerService, SetService setService, MidiSignal midiSignal, UpdateState updateState, Boolean isUpdateFinished) throws IOException {
+        State currentState = stateService.getCurrentState(playerService, setService);
         currentState.setMidiSignal(midiSignal);
         currentState.setUpdateState(updateState);
+        currentState.setUpdateFinished(isUpdateFinished);
 
         ObjectMapper mapper = new ObjectMapper();
         String returnValue = mapper.writeValueAsString(currentState);
@@ -51,18 +55,36 @@ public class DefaultNotificationService extends TextWebSocketHandler implements 
 
     // Notify the clients about the current state and include a midi signal, if
     // midi learn is activated
+    @Override
     public void notifyClients(MidiSignal midiSignal) throws IOException {
-        notifyClients(midiSignal, null);
+        notifyClients(null, null, midiSignal, null, null);
     }
 
     // Notify the clients about the current state and include update
     // information, if an update is running
+    @Override
     public void notifyClients(UpdateState updateState) throws IOException {
-        notifyClients(null, updateState);
+        notifyClients(null, null, null, updateState, null);
     }
 
+    @Override
+    public void notifyClients(PlayerService playerService) throws IOException {
+        notifyClients(playerService, null, null, null, null);
+    }
+
+    @Override
+    public void notifyClients(SetService setService) throws IOException {
+        notifyClients(null, setService, null, null, null);
+    }
+
+    @Override
+    public void notifyClients(boolean isUpdateFinished) throws IOException {
+        notifyClients(null, null, null, null, isUpdateFinished);
+    }
+
+    @Override
     public void notifyClients() throws IOException {
-        notifyClients(null, null);
+        notifyClients(null, null, null, null, null);
     }
 
 }

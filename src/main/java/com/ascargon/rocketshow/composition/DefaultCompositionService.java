@@ -30,15 +30,13 @@ public class DefaultCompositionService implements CompositionService {
     private final static String SETS_PATH = "sets";
 
     private SettingsService settingsService;
-    private PlayerService playerService;
 
     // All available compositions
     private List<Composition> compositionCache = new ArrayList<>();
     private List<Set> compositionSetCache = new ArrayList<>();
 
-    public DefaultCompositionService(SettingsService settingsService, PlayerService playerService) {
+    public DefaultCompositionService(SettingsService settingsService) {
         this.settingsService = settingsService;
-        this.playerService = playerService;
 
         // Initialize the cache
         this.loadAllCompositions();
@@ -295,7 +293,7 @@ public class DefaultCompositionService implements CompositionService {
     }
 
     @Override
-    public synchronized void deleteComposition(String name) throws Exception {
+    public synchronized void deleteComposition(String name, PlayerService playerService) throws Exception {
         // Delete the composition
         File file = new File(settingsService.getSettings().getBasePath() + "/" + COMPOSITIONS_PATH + "/" + name);
 
@@ -349,23 +347,44 @@ public class DefaultCompositionService implements CompositionService {
         logger.info("Set '" + name + "' deleted");
     }
 
-    public void nextComposition() {
-        // Set the next composition (not set based)
-        if (playerService.getCompositionName().length() > 0) {
-            for (int i = 0; i < compositionCache.size(); i++) {
-                if (compositionCache.get(i).getName().equals(playerService.getCompositionName())) {
-                    if (compositionCache.size() > i + 1) {
-                        try {
-                            playerService.setComposition(compositionCache.get(i + 1));
-                        } catch (Exception e) {
-                            logger.error("Could not set the next composition", e);
-                        }
-                    }
+    @Override
+    public Composition getNextComposition(Composition currentComposition) {
+        // Get the next composition (not set based)
+        if (currentComposition != null) {
+            return null;
+        }
 
-                    return;
+        for (int i = 0; i < compositionCache.size(); i++) {
+            if (compositionCache.get(i).getName().equals(currentComposition.getName())) {
+                if (compositionCache.size() > i + 1) {
+                    return compositionCache.get(i + 1);
+                } else {
+                    return null;
                 }
             }
         }
+
+        return null;
+    }
+
+    @Override
+    public Composition getPreviousComposition(Composition currentComposition) {
+        // Get the next composition (not set based)
+        if (currentComposition == null) {
+            return null;
+        }
+
+        for (int i = 0; i < compositionCache.size(); i++) {
+            if (compositionCache.get(i).getName().equals(currentComposition.getName())) {
+                if (i - 1 >= 0) {
+                    return compositionCache.get(i - 1);
+                } else {
+                    return null;
+                }
+            }
+        }
+
+        return null;
     }
 
 }

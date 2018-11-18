@@ -1,5 +1,7 @@
 package com.ascargon.rocketshow.api;
 
+import com.ascargon.rocketshow.PlayerService;
+import com.ascargon.rocketshow.composition.SetService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -9,9 +11,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class SystemController {
 
     private StateService stateService;
+    private SetService setService;
+    private PlayerService playerService;
 
-    public SystemController(StateService stateService) {
+    public SystemController(StateService stateService, SetService setService, PlayerService playerService) {
         this.stateService = stateService;
+        this.setService = setService;
+        this.playerService = playerService;
     }
 
 //	@Path("reboot")
@@ -68,7 +74,7 @@ public class SystemController {
 
     @GetMapping("state")
     public com.ascargon.rocketshow.api.State getState() {
-        return stateService.getCurrentState();
+        return stateService.getCurrentState(playerService, setService);
     }
 
 //	@Path("settings")

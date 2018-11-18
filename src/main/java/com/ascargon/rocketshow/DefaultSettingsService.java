@@ -66,6 +66,8 @@ public class DefaultSettingsService implements SettingsService {
     private void initDefaultSettings() {
         // Initialize default settings
 
+        settings = new Settings();
+
         settings.setBasePath(applicationHome.getDir().toString() + "/");
         settings.setMediaPath("media");
         settings.setAudioPath("audio");
@@ -356,7 +358,7 @@ public class DefaultSettingsService implements SettingsService {
         try {
             if (settings.isResetUsbAfterBoot()) {
                 logger.info("Resetting all USB devices");
-                resetUsbService.resetAllInterfaces();
+                resetUsbService.resetAllInterfaces(settings.getBasePath());
             }
         } catch (Exception e) {
             logger.error("Could not reset the USB devices", e);

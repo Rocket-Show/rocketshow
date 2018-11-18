@@ -86,10 +86,10 @@ public class ControlActionExecuter {
             playerService.stop();
 			break;
 		case NEXT_COMPOSITION:
-			setService.nextComposition();
+            playerService.setNextComposition();
 			break;
 		case PREVIOUS_COMPOSITION:
-			setService.previousComposition();
+            playerService.setPreviousComposition();
 			break;
 		case SELECT_COMPOSITION_BY_NAME:
 			playerService.setCompositionName(controlAction.getCompositionName());

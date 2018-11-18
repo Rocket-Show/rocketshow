@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.composition;
 
+import com.ascargon.rocketshow.PlayerService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,10 +31,12 @@ public interface CompositionService {
 
     void saveSet(Set set) throws Exception;
 
-    void deleteComposition(String name) throws Exception;
+    void deleteComposition(String name, PlayerService playerService) throws Exception;
 
     void deleteSet(String name);
 
-    void nextComposition();
+    Composition getNextComposition(Composition currentComposition);
+
+    Composition getPreviousComposition(Composition currentComposition);
 
 }

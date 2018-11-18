@@ -1,122 +1,69 @@
 package com.ascargon.rocketshow.composition;
 
-import com.ascargon.rocketshow.PlayerService;
 import com.ascargon.rocketshow.api.NotificationService;
 import org.springframework.stereotype.Service;
 
 @Service
 public class DefaultSetService implements SetService {
 
-    private PlayerService playerService;
     private NotificationService notificationService;
     private Set currentSet;
     private int currentCompositionIndex;
 
-    public DefaultSetService(NotificationService notificationService, PlayerService playerService) {
+    public DefaultSetService(NotificationService notificationService) {
         this.notificationService = notificationService;
-        this.playerService = playerService;
 
         currentCompositionIndex = 0;
     }
 
-    // Read the current composition from its file and set it to the player
-    @Override
-    public void readCurrentComposition() throws Exception {
-        if (currentSet == null) {
-            return;
-        }
-
-        if (currentCompositionIndex >= currentSet.getSetCompositionList().size()) {
-            return;
-        }
-
-        // Load the current composition into the player
-        SetComposition currentSetComposition = currentSet.getSetCompositionList().get(currentCompositionIndex);
-
-        playerService.setCompositionName(currentSetComposition.getName());
-    }
-
     @Override
     public Set getCurrentSet() {
-        return null;
+        return currentSet;
     }
 
     @Override
     public void setCurrentSet(Set set) {
-
-    }
-
-    @Override
-    public void setCompositionIndex(int compositionIndex, boolean playDefaultComposition) throws Exception {
-        // Stop a playing composition if needed
-        playerService.stop(playDefaultComposition);
-
-        // Return, if we already have the correct composition set
-        if (currentCompositionIndex == compositionIndex) {
-            return;
-        }
-
-        currentCompositionIndex = compositionIndex;
-
-        // Load the new composition
-        readCurrentComposition();
-
-        notificationService.notifyClients();
-    }
-
-    @Override
-    public void setCompositionIndex(int compositionIndex) throws Exception {
-        setCompositionIndex(compositionIndex, true);
+        this.currentSet = set;
     }
 
     @Override
     public int getCurrentCompositionIndex() {
-        return 0;
+        return currentCompositionIndex;
     }
 
     @Override
     public void setCurrentCompositionIndex(int currentCompositionIndex) {
-
+        this.currentCompositionIndex = currentCompositionIndex;
     }
 
     @Override
-    public void nextComposition(boolean playDefaultComposition) throws Exception {
-        if(currentSet == null) {
-            return;
+    public SetComposition getNextSetComposition() {
+        if (currentSet == null || currentSet.getSetCompositionList().size() == 0) {
+            return null;
         }
 
         int newIndex = currentCompositionIndex + 1;
 
         if (newIndex >= currentSet.getSetCompositionList().size()) {
-            return;
+            return null;
         }
 
-        setCompositionIndex(newIndex, playDefaultComposition);
+        return currentSet.getSetCompositionList().get(newIndex);
     }
 
     @Override
-    public boolean hasNextComposition() {
-        if(currentSet == null) {
-            return false;
+    public SetComposition getPreviousSetComposition() {
+        if (currentSet == null || currentSet.getSetCompositionList().size() == 0) {
+            return null;
         }
 
-        return currentCompositionIndex + 1 < currentSet.getSetCompositionList().size();
-    }
-
-    @Override
-    public void nextComposition() throws Exception {
-        nextComposition(true);
-    }
-
-    @Override
-    public void previousComposition() throws Exception {
         int newIndex = currentCompositionIndex - 1;
 
         if (newIndex < 0) {
-            return;
+            return null;
         }
 
-        setCompositionIndex(newIndex);
+        return currentSet.getSetCompositionList().get(newIndex);
     }
 
 }

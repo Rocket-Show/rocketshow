@@ -24,6 +24,10 @@ public interface PlayerService {
 
     void seek(long positionMillis) throws Exception;
 
+    void setNextComposition() throws Exception;
+
+    void setPreviousComposition() throws Exception;
+
     void setComposition(Composition composition, boolean playDefaultCompositionWhenStoppingComposition,
                         boolean forceLoad) throws Exception;
 

@@ -41,7 +41,7 @@ public class DefaultPlayerService implements PlayerService {
 
         try {
             Gst.init();
-        } catch (Exception e) {
+        } catch (Exception | Error e) {
             logger.error("Could not initialize Gstreamer", e);
         }
 
@@ -52,6 +52,48 @@ public class DefaultPlayerService implements PlayerService {
         }
 
         defaultCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService);
+
+        // Load the last set/composition
+        try {
+            if (sessionService.getSession() != null && sessionService.getSession().getCurrentSetName() != null && sessionService.getSession().getCurrentSetName().length() > 0) {
+                // Load the last set
+                loadSetAndComposition(sessionService.getSession().getCurrentSetName());
+            } else {
+                // Load the default set
+                loadSetAndComposition("");
+            }
+        } catch (Exception e) {
+            logger.error("Could not load the last set from the session", e);
+        }
+    }
+
+    private void loadSetAndComposition(String setName) throws Exception {
+        if (setName.length() > 0) {
+            setService.setCurrentSet(compositionService.getSet(setName));
+        }
+
+        // Read the current composition file
+        if (setService.getCurrentSet() == null) {
+            // We have no set. Simply read the first composition, if available
+            logger.debug("Try setting an initial composition...");
+
+            List<Composition> compositions = compositionService.getAllCompositions();
+
+            if (compositions.size() > 0) {
+                logger.debug("Set initial composition '" + compositions.get(0).getName() + "'...");
+
+                setComposition(compositions.get(0));
+            }
+        } else {
+            // We got a set loaded
+            try {
+                if (setService.getCurrentSet().getSetCompositionList().size() > 0) {
+                    setCompositionName(setService.getCurrentSet().getSetCompositionList().get(0).getName());
+                }
+            } catch (Exception e) {
+                logger.error("Could not read current composition", e);
+            }
+        }
     }
 
     @Override
@@ -298,19 +340,47 @@ public class DefaultPlayerService implements PlayerService {
     }
 
     @Override
+    public void setNextComposition() throws Exception {
+        if (setService.getCurrentSet() == null) {
+            if (setService.getNextSetComposition() != null) {
+                stop(true);
+                setCompositionName(setService.getNextSetComposition().getName());
+            }
+        } else {
+            if (compositionService.getNextComposition(currentCompositionPlayer.getComposition()) != null) {
+                stop(false);
+                setComposition(compositionService.getNextComposition(currentCompositionPlayer.getComposition()));
+            }
+        }
+    }
+
+    @Override
+    public void setPreviousComposition() throws Exception {
+        if (setService.getCurrentSet() == null) {
+            if (setService.getPreviousSetComposition() != null) {
+                stop(true);
+                setCompositionName(setService.getPreviousSetComposition().getName());
+            }
+        } else {
+            if (compositionService.getPreviousComposition(currentCompositionPlayer.getComposition()) != null) {
+                stop(true);
+                setComposition(compositionService.getPreviousComposition(currentCompositionPlayer.getComposition()));
+            }
+        }
+    }
+
+    @Override
     public void compositionPlayerFinishedPlaying(CompositionPlayer compositionPlayer) throws Exception {
         if (compositionPlayer.isSample()) {
             sampleCompositionPlayerList.remove(compositionPlayer);
             return;
         }
 
-        if (currentCompositionPlayer.getComposition().isAutoStartNextComposition() && setService.hasNextComposition()) {
+        if (currentCompositionPlayer.getComposition().isAutoStartNextComposition() && setService.getNextSetComposition() != null) {
             // Stop the current composition, don't play the default composition but start
             // playing the next composition
 
-            stop(false);
-            setService.nextComposition(false);
-            play();
+            setNextComposition();
         } else if (sessionService.getSession().isAutoSelectNextComposition()) {
             // Stop the current composition, play the default composition and select the
             // next composition automatically (if there is one)
@@ -319,11 +389,15 @@ public class DefaultPlayerService implements PlayerService {
 
             if (setService.getCurrentSet() != null) {
                 // Set the next composition in the set
-                setService.nextComposition();
+                if (setService.getNextSetComposition() != null) {
+                    setService.setCurrentCompositionIndex(setService.getCurrentCompositionIndex() + 1);
+                }
             } else {
                 // Set the next composition without a set
-                compositionService.nextComposition();
+                setComposition(compositionService.getNextComposition(currentCompositionPlayer.getComposition()));
             }
+        } else {
+            stop(true);
         }
     }
 

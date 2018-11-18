@@ -122,13 +122,7 @@ public class TransportController {
 //    @Produces(MediaType.APPLICATION_JSON)
 //    public Response nextComposition() throws Exception {
 //        logger.info("Received API request for transport/next-composition");
-//
-//        Manager manager = (Manager) context.getAttribute("manager");
-//        if (manager.getCurrentSet() == null) {
-//            manager.getDefaultCompositionService().nextComposition();
-//        } else {
-//            manager.getCurrentSet().nextComposition();
-//        }
+//        playerService.setNextComposition();
 //        return Response.status(200).build();
 //    }
 //
@@ -137,13 +131,7 @@ public class TransportController {
 //    @Produces(MediaType.APPLICATION_JSON)
 //    public Response previousComposition() throws Exception {
 //        logger.info("Received API request for transport/previous-composition");
-//
-//        Manager manager = (Manager) context.getAttribute("manager");
-//        if (manager.getCurrentSet() == null) {
-//            manager.getDefaultCompositionService().previousComposition();
-//        } else {
-//            manager.getCurrentSet().previousComposition();
-//        }
+////      playerService.setPreviousComposition();
 //        return Response.status(200).build();
 //    }
 //

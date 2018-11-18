@@ -149,7 +149,7 @@ public class Manager {
         }
 
         // Initialize the DMX manager
-        defaultDmxService = new DefaultDmxService(this);
+        //defaultDmxService = new DefaultDmxService();
         midi2DmxConverter = new Midi2DmxConverter(defaultDmxService);
 
         // Initialize the image displayer and display a default black screen

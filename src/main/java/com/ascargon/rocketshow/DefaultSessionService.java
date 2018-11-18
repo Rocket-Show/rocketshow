@@ -22,16 +22,14 @@ public class DefaultSessionService implements SessionService {
     private SettingsService settingsService;
     private SetService setService;
     private CompositionService compositionService;
-    private PlayerService playerService;
     private NotificationService notificationService;
 
     private Session session;
 
-    public DefaultSessionService(SettingsService settingsService, SetService setService, CompositionService compositionService, PlayerService playerService, NotificationService notificationService) {
+    public DefaultSessionService(SettingsService settingsService, SetService setService, CompositionService compositionService, NotificationService notificationService) {
         this.settingsService = settingsService;
         this.setService = setService;
         this.compositionService = compositionService;
-        this.playerService = playerService;
         this.notificationService = notificationService;
 
         try {
@@ -85,45 +83,7 @@ public class DefaultSessionService implements SessionService {
             save();
         }
 
-        // Load the last set/composition
-        if (session != null && session.getCurrentSetName() != null && session.getCurrentSetName().length() > 0) {
-            // Load the last set
-            loadSetAndComposition(session.getCurrentSetName());
-        } else {
-            // Load the default set
-            loadSetAndComposition("");
-        }
-    }
-
-    private void loadSetAndComposition(String setName) throws Exception {
-        if (setName.length() > 0) {
-            setService.setCurrentSet(compositionService.getSet(setName));
-        }
-
-        // Read the current composition file
-        if (setService.getCurrentSet() == null) {
-            // We have no set. Simply read the first composition, if available
-            logger.debug("Try setting an initial composition...");
-
-            List<Composition> compositions = compositionService.getAllCompositions();
-
-            if (compositions.size() > 0) {
-                logger.debug("Set initial composition '" + compositions.get(0).getName() + "'...");
-
-                playerService.setComposition(compositions.get(0));
-            }
-        } else {
-            // We got a set loaded
-            try {
-                setService.readCurrentComposition();
-            } catch (Exception e) {
-                logger.error("Could not read current composition", e);
-            }
-        }
-
-        notificationService.notifyClients();
-
-        save();
+        notificationService.notifyClients(session.isUpdateFinished());
     }
 
     @Override
