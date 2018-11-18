@@ -1,17 +1,12 @@
 package com.ascargon.rocketshow.midi;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
-import javax.sound.midi.MidiSystem;
-import javax.sound.midi.Sequence;
-import javax.sound.midi.Sequencer;
+import javax.sound.midi.*;
 
 import org.apache.log4j.Logger;
 import org.freedesktop.gstreamer.GstObject;
@@ -32,8 +27,48 @@ public class MidiPlayer {
     // Sync to a master, if available
     private Timer syncTimer;
 
-    MidiPlayer(List<MidiRouting> midiRoutingList) {
+    MidiPlayer(String path, Pipeline syncPipeline, MidiPlayer syncMidiPlayer, List<MidiRouting> midiRoutingList) throws MidiUnavailableException, IOException, InvalidMidiDataException {
         this.midiRoutingList = midiRoutingList;
+
+        this.syncPipeline = syncPipeline;
+        this.syncMidiPlayer = syncMidiPlayer;
+
+        if (sequencer != null) {
+            if (sequencer.isOpen()) {
+                sequencer.close();
+            }
+        }
+
+        sequencer = MidiSystem.getSequencer(false);
+        sequencer.open();
+
+        InputStream is = new BufferedInputStream(new FileInputStream(new File(path)));
+        sequencer.setSequence(is);
+
+        for (MidiRouting midiRouting : midiRoutingList) {
+            midiRouting.setTransmitter(sequencer.getTransmitter());
+        }
+
+        // Set the sequencer to looped, if necessary
+        if (loop) {
+            sequencer.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+        }
+
+        if (syncPipeline != null) {
+            syncPipeline.getBus().connect((GstObject source, State old, State newState, State pending) -> {
+                if (source.getTypeName().equals("GstPipeline")) {
+                    if (newState == State.PLAYING) {
+                        sequencer.start();
+                        startSyncTimer();
+                    } else if (newState == State.PAUSED) {
+                        sequencer.stop();
+                        stopSyncTimer();
+                    }
+                }
+            });
+        }
+
+        logger.debug("File '" + path + "' loaded");
     }
 
     public void seek(long positionMillis) {
@@ -83,49 +118,6 @@ public class MidiPlayer {
         syncTimer = null;
     }
 
-    public void load(String path, Pipeline syncPipeline, MidiPlayer syncMidiPlayer) throws Exception {
-        // TODO Sync to the GST pipeline or the midiplayer, if one of both is provided
-        this.syncPipeline = syncPipeline;
-        this.syncMidiPlayer = syncMidiPlayer;
-
-        if (sequencer != null) {
-            if (sequencer.isOpen()) {
-                sequencer.close();
-            }
-        }
-
-        sequencer = MidiSystem.getSequencer(false);
-        sequencer.open();
-
-        InputStream is = new BufferedInputStream(new FileInputStream(new File(path)));
-        sequencer.setSequence(is);
-
-        for (MidiRouting midiRouting : midiRoutingList) {
-            midiRouting.setTransmitter(sequencer.getTransmitter());
-        }
-
-        // Set the sequencer to looped, if necessary
-        if (loop) {
-            sequencer.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-        }
-
-        if (syncPipeline != null) {
-            syncPipeline.getBus().connect((GstObject source, State old, State newState, State pending) -> {
-                if (source.getTypeName().equals("GstPipeline")) {
-                    if (newState == State.PLAYING) {
-                        sequencer.start();
-                        startSyncTimer();
-                    } else if (newState == State.PAUSED) {
-                        sequencer.stop();
-                        stopSyncTimer();
-                    }
-                }
-            });
-        }
-
-        logger.debug("File '" + path + "' loaded");
-    }
-
     public static long getDuration(String path) throws Exception {
         long duration;
 
@@ -160,7 +152,12 @@ public class MidiPlayer {
     }
 
     public void stop() {
-        sequencer.stop();
+        sequencer.close();
+
+        for (MidiRouting midiRouting : midiRoutingList) {
+            midiRouting.close();
+        }
+
         sequencer.setMicrosecondPosition(0);
         stopSyncTimer();
     }
@@ -171,16 +168,6 @@ public class MidiPlayer {
         }
 
         return 0;
-    }
-
-    public void close() {
-        sequencer.close();
-
-        for (MidiRouting midiRouting : midiRoutingList) {
-            midiRouting.close();
-        }
-
-        stopSyncTimer();
     }
 
     public boolean isLoop() {

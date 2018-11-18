@@ -4,10 +4,8 @@ import com.ascargon.rocketshow.PlayerService;
 import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.api.NotificationService;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
-import com.ascargon.rocketshow.midi.MidiCompositionFile;
-import com.ascargon.rocketshow.midi.MidiMapping;
-import com.ascargon.rocketshow.midi.MidiPlayer;
-import com.ascargon.rocketshow.midi.MidiRouting;
+import com.ascargon.rocketshow.audio.AudioCompositionFilePlayer;
+import com.ascargon.rocketshow.midi.*;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
 import org.apache.log4j.Logger;
 import org.freedesktop.gstreamer.*;
@@ -16,9 +14,7 @@ import org.freedesktop.gstreamer.elements.PlayBin;
 import org.freedesktop.gstreamer.elements.URIDecodeBin;
 import org.springframework.stereotype.Service;
 
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -42,14 +38,15 @@ public class CompositionPlayer {
 
     private NotificationService notificationService;
     private PlayerService playerService;
+    private SettingsService settingsService;
 
     private Composition composition;
-    private PlayState playState;
+    private PlayState playState = PlayState.STOPPED;
     private Timer autoStopTimer;
     private long startPosition = 0;
 
-    // TODO Isn't this variable already covered by the playstate?
-    private boolean filesLoaded;
+    private List<AudioCompositionFilePlayer> audioCompositionFilePlayerList = new ArrayList<>();
+    private List<MidiCompositionFilePlayer> midiCompositionFilePlayerList = new ArrayList<>();
 
     private MidiMapping midiMapping = new MidiMapping();
 
@@ -65,6 +62,7 @@ public class CompositionPlayer {
     public CompositionPlayer(NotificationService notificationService, PlayerService playerService, SettingsService settingsService) {
         this.notificationService = notificationService;
         this.playerService = playerService;
+        this.settingsService = settingsService;
 
         this.midiMapping.setParent(settingsService.getSettings().getMidiMapping());
     }
@@ -88,7 +86,7 @@ public class CompositionPlayer {
     public void loadFiles() throws Exception {
         MidiPlayer firstMidiPlayer = null;
 
-        if (filesLoaded) {
+        if (playState != PlayState.STOPPED) {
             return;
         }
 
@@ -135,25 +133,26 @@ public class CompositionPlayer {
 
             if (compositionFile.isActive()) {
                 if (compositionFile instanceof MidiCompositionFile) {
+                    MidiCompositionFilePlayer midiCompositionFilePlayer = new MidiCompositionFilePlayer((MidiCompositionFile) compositionFile, settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/" + settingsService.getSettings().getMidiPath() + "/" + compositionFile.getName(), pipeline, firstMidiPlayer);
+                    midiCompositionFilePlayerList.add(midiCompositionFilePlayer);
+
                     MidiCompositionFile midiFile = (MidiCompositionFile) compositionFile;
 
                     for (MidiRouting midiRouting : midiFile.getMidiRoutingList()) {
                         midiRouting.getMidiMapping().setParent(midiMapping);
                     }
 
-                    midiFile.load(pipeline, firstMidiPlayer);
-
                     if (firstMidiPlayer == null) {
-                        firstMidiPlayer = midiFile.getMidiPlayer();
+                        firstMidiPlayer = midiCompositionFilePlayer.getMidiPlayer();
                     }
                 } else if (compositionFile instanceof AudioCompositionFile) {
-                    AudioCompositionFile audioFile = (AudioCompositionFile) compositionFile;
-                    audioFile.load(isSample);
+                    AudioCompositionFilePlayer audioCompositionFilePlayer = new AudioCompositionFilePlayer(settingsService, (AudioCompositionFile) compositionFile, settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/" + settingsService.getSettings().getAudioPath() + "/" + compositionFile.getName(), isSample);
+                    audioCompositionFilePlayerList.add(audioCompositionFilePlayer);
 
                     // Samples are played with the AlsaPlayer
                     if (!isSample) {
                         URIDecodeBin audioSource = (URIDecodeBin) ElementFactory.make("uridecodebin", "uridecodebin" + i);
-                        audioSource.set("uri", "file://" + ((AudioCompositionFile) compositionFile).getPath());
+                        audioSource.set("uri", "file://" + settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/" + settingsService.getSettings().getAudioPath() + "/" + compositionFile.getName());
                         pipeline.add(audioSource);
 
                         Element convert = ElementFactory.make("audioconvert", "audioconvert" + i);
@@ -179,7 +178,7 @@ public class CompositionPlayer {
                     }
                 } else if (compositionFile instanceof VideoCompositionFile) {
                     PlayBin playBin = (PlayBin) ElementFactory.make("playbin", "playbin" + i);
-                    playBin.set("uri", "file://" + ((VideoCompositionFile) compositionFile).getPath());
+                    playBin.set("uri", "file://" + settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/" + settingsService.getSettings().getVideoPath() + "/" + compositionFile.getName());
                     pipeline.add(playBin);
                 }
             }
@@ -190,8 +189,6 @@ public class CompositionPlayer {
         // Maybe we are stopping meanwhile
         if (playState == PlayState.LOADING && !isDefaultComposition && !isSample) {
             playState = PlayState.LOADED;
-            filesLoaded = true;
-
             notificationService.notifyClients();
         }
     }
@@ -210,7 +207,7 @@ public class CompositionPlayer {
 
         for (CompositionFile compositionFile : composition.getCompositionFileList()) {
             if (compositionFile.isActive()) {
-                int fileOffset = 0;
+                int fileOffset = compositionFile.getOffsetMillis();
 
                 if (compositionFile.isLoop()) {
                     // At least one file is looped -> don't stop the composition
@@ -219,11 +216,11 @@ public class CompositionPlayer {
                 }
 
                 if (compositionFile instanceof MidiCompositionFile) {
-                    fileOffset = ((MidiCompositionFile) compositionFile).getFullOffsetMillis();
+                    fileOffset += settingsService.getSettings().getOffsetMillisMidi();
                 } else if (compositionFile instanceof AudioCompositionFile) {
-                    fileOffset = ((AudioCompositionFile) compositionFile).getFullOffsetMillis();
+                    fileOffset += settingsService.getSettings().getOffsetMillisAudio();
                 } else if (compositionFile instanceof VideoCompositionFile) {
-                    fileOffset = ((VideoCompositionFile) compositionFile).getFullOffsetMillis();
+                    fileOffset += settingsService.getSettings().getOffsetMillisVideo();
                 }
 
                 if (compositionFile.getDurationMillis() + fileOffset > maxDurationAndOffset) {
@@ -259,7 +256,7 @@ public class CompositionPlayer {
     }
 
     public void play() throws Exception {
-        if(composition == null) {
+        if (composition == null) {
             return;
         }
 
@@ -273,12 +270,12 @@ public class CompositionPlayer {
             pipeline.play();
         }
 
-        for (CompositionFile compositionFile : composition.getCompositionFileList()) {
-            if (compositionFile.isActive() && compositionFile instanceof MidiCompositionFile) {
-                ((MidiCompositionFile) compositionFile).play();
-            } else if (compositionFile instanceof AudioCompositionFile) {
-                ((AudioCompositionFile) compositionFile).play();
-            }
+        for (AudioCompositionFilePlayer audioCompositionFilePlayer : audioCompositionFilePlayerList) {
+            audioCompositionFilePlayer.play();
+        }
+
+        for (MidiCompositionFilePlayer midiCompositionFilePlayer : midiCompositionFilePlayerList) {
+            midiCompositionFilePlayer.play();
         }
 
         startAutoStopTimer();
@@ -308,10 +305,8 @@ public class CompositionPlayer {
             pipeline.pause();
         }
 
-        for (CompositionFile compositionFile : composition.getCompositionFileList()) {
-            if (compositionFile.isActive() && compositionFile instanceof MidiCompositionFile) {
-                ((MidiCompositionFile) compositionFile).pause();
-            }
+        for (MidiCompositionFilePlayer midiCompositionFilePlayer : midiCompositionFilePlayerList) {
+            midiCompositionFilePlayer.pause();
         }
 
         playState = PlayState.PAUSED;
@@ -330,7 +325,7 @@ public class CompositionPlayer {
     }
 
     public void stop() throws Exception {
-        if(composition == null) {
+        if (composition == null) {
             return;
         }
 
@@ -356,23 +351,16 @@ public class CompositionPlayer {
             pipeline = null;
         }
 
-        for (CompositionFile compositionFile : composition.getCompositionFileList()) {
-            if (compositionFile.isActive() && compositionFile instanceof MidiCompositionFile) {
-                try {
-                    ((MidiCompositionFile) compositionFile).close();
-                } catch (Exception e) {
-                    logger.error("Could not stop file '" + compositionFile.getName() + "'");
-                }
-            } else if (compositionFile instanceof AudioCompositionFile) {
-                ((AudioCompositionFile) compositionFile).close();
-            }
+        for (AudioCompositionFilePlayer audioCompositionFilePlayer : audioCompositionFilePlayerList) {
+            audioCompositionFilePlayer.stop();
         }
 
-        filesLoaded = false;
-
-        logger.info("Composition '" + composition.getName() + "' stopped");
+        for (MidiCompositionFilePlayer midiCompositionFilePlayer : midiCompositionFilePlayerList) {
+            midiCompositionFilePlayer.stop();
+        }
 
         playState = PlayState.STOPPED;
+        logger.info("Composition '" + composition.getName() + "' stopped");
     }
 
     public void seek(long positionMillis) throws Exception {
@@ -385,43 +373,13 @@ public class CompositionPlayer {
             pipeline.seek(positionMillis, TimeUnit.MILLISECONDS);
         }
 
-        for (CompositionFile compositionFile : composition.getCompositionFileList()) {
-            if (compositionFile.isActive() && compositionFile instanceof MidiCompositionFile) {
-                ((MidiCompositionFile) compositionFile).seek(positionMillis);
-            }
+        for (MidiCompositionFilePlayer midiCompositionFilePlayer : midiCompositionFilePlayerList) {
+            midiCompositionFilePlayer.seek(positionMillis);
         }
 
         startAutoStopTimer();
 
         if (!isSample) {
-            notificationService.notifyClients();
-        }
-    }
-
-    public void close() throws Exception {
-        if (pipeline != null) {
-            pipeline.stop();
-        }
-
-        for (CompositionFile compositionFile : composition.getCompositionFileList()) {
-            if (compositionFile.isActive() && compositionFile instanceof MidiCompositionFile) {
-                ((MidiCompositionFile) compositionFile).close();
-            } else if (compositionFile.isActive() && compositionFile instanceof AudioCompositionFile) {
-                ((AudioCompositionFile) compositionFile).close();
-            }
-        }
-
-        filesLoaded = false;
-
-        // Cancel the auto-stop timer
-        if (autoStopTimer != null) {
-            autoStopTimer.cancel();
-            autoStopTimer = null;
-        }
-
-        playState = PlayState.STOPPED;
-
-        if (!isDefaultComposition && !isSample) {
             notificationService.notifyClients();
         }
     }
@@ -439,10 +397,8 @@ public class CompositionPlayer {
             return pipeline.queryPosition(TimeUnit.MILLISECONDS);
         }
 
-        for (CompositionFile compositionFile : composition.getCompositionFileList()) {
-            if (compositionFile.isActive() && compositionFile instanceof MidiCompositionFile) {
-                return ((MidiCompositionFile) compositionFile).getPositionMillis();
-            }
+        for (MidiCompositionFilePlayer midiCompositionFilePlayer : midiCompositionFilePlayerList) {
+            midiCompositionFilePlayer.getPositionMillis();
         }
 
         return 0;
@@ -474,7 +430,7 @@ public class CompositionPlayer {
     public void setComposition(Composition composition) throws Exception {
         this.composition = composition;
 
-        if(!isSample && !isDefaultComposition) {
+        if (!isSample && !isDefaultComposition) {
             notificationService.notifyClients();
         }
     }

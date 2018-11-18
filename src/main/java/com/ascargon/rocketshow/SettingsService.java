@@ -9,4 +9,6 @@ public interface SettingsService {
 
     RemoteDevice getRemoteDeviceByName(String name);
 
+    String getAlsaDeviceFromOutputBus(String outputBus);
+
 }

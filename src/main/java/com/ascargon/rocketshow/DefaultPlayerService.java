@@ -290,10 +290,10 @@ public class DefaultPlayerService implements PlayerService {
     }
 
     public void close() throws Exception {
-        currentCompositionPlayer.close();
+        currentCompositionPlayer.stop();
 
         for (CompositionPlayer sampleCompositionPlayer : sampleCompositionPlayerList) {
-            sampleCompositionPlayer.close();
+            sampleCompositionPlayer.stop();
         }
     }
 

@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import com.ascargon.rocketshow.Manager;
 import com.ascargon.rocketshow.Settings;
 import com.ascargon.rocketshow.SettingsService;
+import org.springframework.stereotype.Service;
 
 /**
  * Resets all USB interfaces. This is sometimes needed for the raspberry pi to
@@ -13,14 +14,16 @@ import com.ascargon.rocketshow.SettingsService;
  *
  * @author Moritz A. Vieli
  */
-public class ResetUsb {
+@Service
+public class DefaultResetUsbService implements ResetUsbService {
 
     private SettingsService settingsService;
 
-    public ResetUsb(SettingsService settingsService) {
+    public DefaultResetUsbService(SettingsService settingsService) {
         this.settingsService = settingsService;
     }
 
+    @Override
     public void resetAllInterfaces() throws Exception {
         ProcessBuilder pb = new ProcessBuilder("lsusb");
         Process process = pb.start();
@@ -36,7 +39,7 @@ public class ResetUsb {
 
             if (!name.startsWith("Standard Microsystems Corp") && !name.startsWith("Linux Foundation 2.0")) {
                 // Reset the interface
-                ShellManager shellManager = new ShellManager(new String[]{"sudo", settingsService.getSettings().getBasePath() + "bin/usbreset",
+                ShellManager shellManager = new ShellManager(new String[]{"sudo", settingsService.getSettings().getBasePath() + "/" + "bin/usbreset",
                         "/dev/bus/usb/" + bus + "/" + device});
 
                 shellManager.getProcess().waitFor();

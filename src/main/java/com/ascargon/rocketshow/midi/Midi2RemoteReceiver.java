@@ -1,18 +1,14 @@
 package com.ascargon.rocketshow.midi;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.ascargon.rocketshow.RemoteDevice;
+import com.ascargon.rocketshow.SettingsService;
+import org.apache.log4j.Logger;
 
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
-
-import com.ascargon.rocketshow.Settings;
-import com.ascargon.rocketshow.SettingsService;
-import org.apache.log4j.Logger;
-
-import com.ascargon.rocketshow.Manager;
-import com.ascargon.rocketshow.RemoteDevice;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Receive MIDI messages and send them to remote devices.
@@ -29,12 +25,8 @@ public class Midi2RemoteReceiver implements Receiver {
 
     private List<String> remoteDeviceNameList = new ArrayList<>();
 
-    private Manager manager;
-
-    Midi2RemoteReceiver(SettingsService settingsService, Manager manager) {
+    Midi2RemoteReceiver(SettingsService settingsService) {
         this.settingsService = settingsService;
-
-        this.manager = manager;
     }
 
     @Override

@@ -9,27 +9,14 @@ import com.ascargon.rocketshow.Manager;
 @XmlRootElement
 abstract public class CompositionFile {
 
-    public enum FileType {
-        MIDI, AUDIO, VIDEO, UNKNOWN
-    }
-
-    protected final static String MEDIA_PATH = "media/";
-
     private String name;
-
-    private Manager manager;
-
     private boolean active = true;
-
     private long durationMillis;
-
     private boolean loop = false;
+    private int offsetMillis = 0;
 
     public CompositionFile() {
     }
-
-    // Play offset
-    private int offsetMillis = 0;
 
     @XmlElement
     public String getName() {
@@ -49,15 +36,7 @@ abstract public class CompositionFile {
         this.offsetMillis = offsetMillis;
     }
 
-    @XmlTransient
-    public Manager getManager() {
-        return manager;
-    }
-
-    public void setManager(Manager manager) {
-        this.manager = manager;
-    }
-
+    @XmlElement
     public boolean isActive() {
         return active;
     }
@@ -66,6 +45,7 @@ abstract public class CompositionFile {
         this.active = active;
     }
 
+    @XmlElement
     public long getDurationMillis() {
         return durationMillis;
     }
@@ -74,14 +54,7 @@ abstract public class CompositionFile {
         this.durationMillis = durationMillis;
     }
 
-    public FileType getType() {
-        return FileType.UNKNOWN;
-    }
-
-    // For API consistency
-    public void setType(FileType fileType) {
-    }
-
+    @XmlElement
     public boolean isLoop() {
         return loop;
     }

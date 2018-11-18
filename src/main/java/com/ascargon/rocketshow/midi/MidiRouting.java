@@ -1,7 +1,10 @@
 package com.ascargon.rocketshow.midi;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.ascargon.rocketshow.Manager;
+import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.dmx.Midi2DmxMapping;
+import com.ascargon.rocketshow.dmx.Midi2DmxReceiver;
+import org.apache.log4j.Logger;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.Receiver;
@@ -9,12 +12,8 @@ import javax.sound.midi.Transmitter;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.apache.log4j.Logger;
-
-import com.ascargon.rocketshow.Manager;
-import com.ascargon.rocketshow.dmx.Midi2DmxMapping;
-import com.ascargon.rocketshow.dmx.Midi2DmxReceiver;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Defines, where to route the output of MIDI signals.
@@ -29,6 +28,8 @@ public class MidiRouting {
 	public enum MidiDestination {
 		OUT_DEVICE, DMX, REMOTE
 	}
+
+	private SettingsService settingsService;
 
 	private MidiDestination midiDestination = MidiDestination.OUT_DEVICE;
 
@@ -47,7 +48,8 @@ public class MidiRouting {
 	private Transmitter transmitter;
 	private Receiver receiver;
 
-	public MidiRouting() {
+	public MidiRouting(SettingsService settingsService) {
+	    this.settingsService = settingsService;
 	}
 
 	public void load(Manager manager) {
@@ -55,7 +57,7 @@ public class MidiRouting {
 		midi2DmxReceiver.setMidi2DmxMapping(midi2DmxMapping);
 		midi2DmxReceiver.setMidiMapping(midiMapping);
 
-		midi2RemoteReceiver = new Midi2RemoteReceiver();
+		midi2RemoteReceiver = new Midi2RemoteReceiver(settingsService);
 		midi2RemoteReceiver.setRemoteDeviceNameList(remoteDeviceNameList);
 		midi2RemoteReceiver.setMidiMapping(midiMapping);
 

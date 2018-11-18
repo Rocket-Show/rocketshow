@@ -1,12 +1,5 @@
 package com.ascargon.rocketshow;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.audio.AudioDevice;
 import com.ascargon.rocketshow.midi.MidiControl;
@@ -15,10 +8,29 @@ import com.ascargon.rocketshow.midi.MidiMapping;
 import com.ascargon.rocketshow.midi.MidiRouting;
 import com.ascargon.rocketshow.raspberry.RaspberryGpioControl;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlRootElement;
+import java.util.ArrayList;
+import java.util.List;
+
 @XmlRootElement
 public class Settings {
 
     private String basePath;
+
+    public String getMediaPath() {
+        return mediaPath;
+    }
+
+    public void setMediaPath(String mediaPath) {
+        this.mediaPath = mediaPath;
+    }
+
+    private String mediaPath;
+    private String midiPath;
+    private String audioPath;
+    private String videoPath;
 
     private MidiDevice midiInDevice;
     private MidiDevice midiOutDevice;
@@ -315,6 +327,33 @@ public class Settings {
 
     public void setBasePath(String basePath) {
         this.basePath = basePath;
+    }
+
+    @XmlElement
+    public String getMidiPath() {
+        return midiPath;
+    }
+
+    public void setMidiPath(String midiPath) {
+        this.midiPath = midiPath;
+    }
+
+    @XmlElement
+    public String getAudioPath() {
+        return audioPath;
+    }
+
+    public void setAudioPath(String audioPath) {
+        this.audioPath = audioPath;
+    }
+
+    @XmlElement
+    public String getVideoPath() {
+        return videoPath;
+    }
+
+    public void setVideoPath(String videoPath) {
+        this.videoPath = videoPath;
     }
 
 }

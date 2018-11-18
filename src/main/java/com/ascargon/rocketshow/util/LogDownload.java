@@ -30,7 +30,7 @@ public class LogDownload {
 	public File getLogsFile() throws Exception {
 		// Prepare the log directory for download
 		ShellManager shellManager = new ShellManager(new String[] { "bash", "-c",
-				"zip -r -j " + settingsService.getSettings().getBasePath() + LOGS_FILE_NAME + " " + settingsService.getSettings().getBasePath() + "log/*" });
+				"zip -r -j " + settingsService.getSettings().getBasePath() + "/" + LOGS_FILE_NAME + " " + settingsService.getSettings().getBasePath() + "log/*" });
 
 		BufferedReader reader = new BufferedReader(new InputStreamReader(shellManager.getInputStream()));
 		String line;
@@ -45,7 +45,7 @@ public class LogDownload {
 		shellManager.getProcess().waitFor();
 
 		// Return the prepared zip
-		return new File(settingsService.getSettings().getBasePath() + LOGS_FILE_NAME);
+		return new File(settingsService.getSettings().getBasePath() + "/" + LOGS_FILE_NAME);
 	}
 
 }

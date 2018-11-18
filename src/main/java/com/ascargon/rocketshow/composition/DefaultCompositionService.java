@@ -26,8 +26,8 @@ public class DefaultCompositionService implements CompositionService {
 
     private final static Logger logger = Logger.getLogger(DefaultCompositionService.class);
 
-    private final static String COMPOSITIONS_PATH = "compositions/";
-    private final static String SETS_PATH = "sets/";
+    private final static String COMPOSITIONS_PATH = "compositions";
+    private final static String SETS_PATH = "sets";
 
     private SettingsService settingsService;
     private PlayerService playerService;
@@ -81,7 +81,7 @@ public class DefaultCompositionService implements CompositionService {
         // Load a composition
         JAXBContext jaxbContext = JAXBContext.newInstance(Composition.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-        composition = (Composition) jaxbUnmarshaller.unmarshal(new File(settingsService.getSettings().getBasePath() + COMPOSITIONS_PATH + name));
+        composition = (Composition) jaxbUnmarshaller.unmarshal(new File(settingsService.getSettings().getBasePath() + "/" + COMPOSITIONS_PATH + "/" + name));
 
         finalizeLoadedComposition(composition, name);
 
@@ -98,7 +98,7 @@ public class DefaultCompositionService implements CompositionService {
         // Load a set
         JAXBContext jaxbContext = JAXBContext.newInstance(Set.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-        set = (Set) jaxbUnmarshaller.unmarshal(new File(settingsService.getSettings().getBasePath() + SETS_PATH + name));
+        set = (Set) jaxbUnmarshaller.unmarshal(new File(settingsService.getSettings().getBasePath() + "/" + SETS_PATH + "/" + name));
 
         logger.info("Set '" + name + "' successfully loaded");
 
@@ -152,7 +152,7 @@ public class DefaultCompositionService implements CompositionService {
 
     @Override
     public synchronized void loadAllCompositions() {
-        File folder = new File(settingsService.getSettings().getBasePath() + COMPOSITIONS_PATH);
+        File folder = new File(settingsService.getSettings().getBasePath() + "/" + COMPOSITIONS_PATH);
         File[] fileList = folder.listFiles();
 
         if (fileList != null) {
@@ -173,7 +173,7 @@ public class DefaultCompositionService implements CompositionService {
 
     @Override
     public synchronized void loadAllSets() {
-        File folder = new File(settingsService.getSettings().getBasePath() + SETS_PATH);
+        File folder = new File(settingsService.getSettings().getBasePath() + "/" + SETS_PATH);
         File[] fileList = folder.listFiles();
 
         if (fileList != null) {
@@ -196,7 +196,7 @@ public class DefaultCompositionService implements CompositionService {
         ExecutorService executor = Executors.newFixedThreadPool(30);
 
         for (CompositionFile compositionFile : composition.getCompositionFileList()) {
-            Runnable fileDurationGetter = new FileDurationGetter(compositionFile);
+            Runnable fileDurationGetter = new FileDurationGetter(settingsService, compositionFile);
             executor.execute(fileDurationGetter);
         }
 
@@ -219,7 +219,7 @@ public class DefaultCompositionService implements CompositionService {
         composition.setDurationMillis(maxDuration);
 
         // Save the composition in XML
-        File file = new File(settingsService.getSettings().getBasePath() + COMPOSITIONS_PATH + composition.getName());
+        File file = new File(settingsService.getSettings().getBasePath() + "/" + COMPOSITIONS_PATH + "/" + composition.getName());
         JAXBContext jaxbContext = JAXBContext.newInstance(Composition.class);
         Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
@@ -269,7 +269,7 @@ public class DefaultCompositionService implements CompositionService {
             }
         }
 
-        File file = new File(settingsService.getSettings().getBasePath() + SETS_PATH + set.getName());
+        File file = new File(settingsService.getSettings().getBasePath() + "/" + SETS_PATH + "/" + set.getName());
         JAXBContext jaxbContext = JAXBContext.newInstance(Set.class);
         Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
@@ -297,7 +297,7 @@ public class DefaultCompositionService implements CompositionService {
     @Override
     public synchronized void deleteComposition(String name) throws Exception {
         // Delete the composition
-        File file = new File(settingsService.getSettings().getBasePath() + COMPOSITIONS_PATH + name);
+        File file = new File(settingsService.getSettings().getBasePath() + "/" + COMPOSITIONS_PATH + "/" + name);
 
         if (file.exists()) {
             boolean result = file.delete();
@@ -329,7 +329,7 @@ public class DefaultCompositionService implements CompositionService {
     @Override
     public synchronized void deleteSet(String name) {
         // Delete the set
-        File file = new File(settingsService.getSettings().getBasePath() + SETS_PATH + name);
+        File file = new File(settingsService.getSettings().getBasePath() + "/" + SETS_PATH + "/" + name);
 
         if (file.exists()) {
             boolean result = file.delete();

@@ -1,14 +1,5 @@
 package com.ascargon.rocketshow.composition;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
@@ -16,6 +7,11 @@ import com.ascargon.rocketshow.video.VideoCompositionFile;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 public class DefaultCompositionFileService implements CompositionFileService {
@@ -35,7 +31,7 @@ public class DefaultCompositionFileService implements CompositionFileService {
 
         // Audio files
         folder = new File(
-                settingsService.getSettings().getBasePath() + CompositionFile.MEDIA_PATH + AudioCompositionFile.AUDIO_PATH);
+                settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/" + settingsService.getSettings().getAudioPath());
         fileList = folder.listFiles();
 
         if (fileList != null) {
@@ -49,7 +45,7 @@ public class DefaultCompositionFileService implements CompositionFileService {
         }
 
         // MIDI files
-        folder = new File(settingsService.getSettings().getBasePath() + CompositionFile.MEDIA_PATH + MidiCompositionFile.MIDI_PATH);
+        folder = new File(settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/" + settingsService.getSettings().getMidiPath());
         fileList = folder.listFiles();
 
         if (fileList != null) {
@@ -64,7 +60,7 @@ public class DefaultCompositionFileService implements CompositionFileService {
 
         // Video files
         folder = new File(
-                settingsService.getSettings().getBasePath() + CompositionFile.MEDIA_PATH + VideoCompositionFile.VIDEO_PATH);
+                settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/" + settingsService.getSettings().getVideoPath());
         fileList = folder.listFiles();
 
         if (fileList != null) {
@@ -81,15 +77,15 @@ public class DefaultCompositionFileService implements CompositionFileService {
     }
 
     public void deleteFile(String name, String type) {
-        String path = settingsService.getSettings().getBasePath() + CompositionFile.MEDIA_PATH;
+        String path = settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/";
 
         // Audio files
-        if (type.equals(CompositionFile.FileType.MIDI.name())) {
-            path += MidiCompositionFile.MIDI_PATH;
-        } else if (type.equals(CompositionFile.FileType.AUDIO.name())) {
-            path += AudioCompositionFile.AUDIO_PATH;
-        } else if (type.equals(CompositionFile.FileType.VIDEO.name())) {
-            path += VideoCompositionFile.VIDEO_PATH;
+        if ("MIDI".equals(type)) {
+            path += settingsService.getSettings().getMidiPath();
+        } else if ("AUDIO".equals(type)) {
+            path += settingsService.getSettings().getAudioPath();
+        } else if ("VIDEO".equals(type)) {
+            path += settingsService.getSettings().getVideoPath();
         }
 
         path += name;
@@ -116,16 +112,16 @@ public class DefaultCompositionFileService implements CompositionFileService {
 
         // Compute the path according to the file extension
         String extension = FilenameUtils.getExtension(fileName).toLowerCase().trim();
-        String path = settingsService.getSettings().getBasePath() + CompositionFile.MEDIA_PATH;
+        String path = settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/";
 
         if (Arrays.asList(midiFormats).contains(extension)) {
-            path += MidiCompositionFile.MIDI_PATH;
+            path += settingsService.getSettings().getMidiPath();
             compositionFile = new MidiCompositionFile();
         } else if (Arrays.asList(audioFormats).contains(extension)) {
-            path += AudioCompositionFile.AUDIO_PATH;
+            path += settingsService.getSettings().getAudioPath();
             compositionFile = new AudioCompositionFile();
         } else if (Arrays.asList(videoFormats).contains(extension)) {
-            path += VideoCompositionFile.VIDEO_PATH;
+            path += settingsService.getSettings().getVideoPath();
             compositionFile = new VideoCompositionFile();
         }
 

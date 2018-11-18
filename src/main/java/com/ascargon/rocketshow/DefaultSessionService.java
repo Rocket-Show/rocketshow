@@ -50,7 +50,7 @@ public class DefaultSessionService implements SessionService {
         }
 
         try {
-            File file = new File(settingsService.getSettings().getBasePath() + "session");
+            File file = new File(settingsService.getSettings().getBasePath() + "/" + "session");
             JAXBContext jaxbContext = JAXBContext.newInstance(Session.class);
             Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
@@ -66,7 +66,7 @@ public class DefaultSessionService implements SessionService {
     }
 
     private void loadSession() throws Exception {
-        File file = new File(settingsService.getSettings().getBasePath() + "session");
+        File file = new File(settingsService.getSettings().getBasePath() + "/" + "session");
 
         if (file.exists()) {
             // We already have a session -> restore it from the file

@@ -3,6 +3,7 @@ package com.ascargon.rocketshow.util;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.composition.CompositionFile;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
@@ -22,9 +23,11 @@ public class FileDurationGetter implements Runnable {
 
 	private static final String DURATION = "ID_LENGTH=";
 
+	private SettingsService settingsService;
+
 	private CompositionFile compositionFile;
 
-	public FileDurationGetter(CompositionFile compositionFile) {
+	public FileDurationGetter(SettingsService settingsService, CompositionFile compositionFile) {
 		this.compositionFile = compositionFile;
 	}
 
@@ -50,16 +53,18 @@ public class FileDurationGetter implements Runnable {
 
 	@Override
 	public void run() {
+	    String path = settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/";
+
 		try {
 			if (compositionFile instanceof MidiCompositionFile) {
 				MidiCompositionFile midiFile = (MidiCompositionFile) compositionFile;
-				compositionFile.setDurationMillis(MidiPlayer.getDuration(midiFile.getPath()));
+				compositionFile.setDurationMillis(MidiPlayer.getDuration(path + settingsService.getSettings().getMidiPath()));
 			} else if (compositionFile instanceof AudioCompositionFile) {
 				AudioCompositionFile audioFile = (AudioCompositionFile) compositionFile;
-				compositionFile.setDurationMillis(getDurationWithMplayer(audioFile.getPath()));
+				compositionFile.setDurationMillis(getDurationWithMplayer(path + settingsService.getSettings().getAudioPath()));
 			} else if (compositionFile instanceof VideoCompositionFile) {
 				VideoCompositionFile videoFile = (VideoCompositionFile) compositionFile;
-				compositionFile.setDurationMillis(getDurationWithMplayer(videoFile.getPath()));
+				compositionFile.setDurationMillis(getDurationWithMplayer(path + settingsService.getSettings().getVideoPath()));
 			}
 		} catch (Exception e) {
 			logger.error("Could not get duration for file '" + compositionFile.getName() + "'", e);

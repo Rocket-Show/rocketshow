@@ -4,7 +4,7 @@ import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.midi.MidiDevice;
 import com.ascargon.rocketshow.midi.MidiMapping;
 import com.ascargon.rocketshow.midi.MidiUtil;
-import com.ascargon.rocketshow.util.ResetUsb;
+import com.ascargon.rocketshow.util.ResetUsbService;
 import com.ascargon.rocketshow.util.ShellManager;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
@@ -27,6 +27,8 @@ public class DefaultSettingsService implements SettingsService {
 
     private final static Logger logger = Logger.getLogger(Settings.class);
 
+    private ResetUsbService resetUsbService;
+
     private Settings settings;
 
     private ApplicationHome applicationHome = new ApplicationHome(RocketShowApplication.class);
@@ -41,7 +43,9 @@ public class DefaultSettingsService implements SettingsService {
         HEADPHONES, HDMI, DEVICE
     }
 
-    public DefaultSettingsService() {
+    public DefaultSettingsService(ResetUsbService resetUsbService) {
+        this.resetUsbService = resetUsbService;
+
         initDefaultSettings();
 
         // Load the settings
@@ -63,6 +67,10 @@ public class DefaultSettingsService implements SettingsService {
         // Initialize default settings
 
         settings.setBasePath(applicationHome.getDir().toString() + "/");
+        settings.setMediaPath("media");
+        settings.setAudioPath("audio");
+        settings.setMidiPath("midi");
+        settings.setVideoPath("video");
 
         settings.setMidiInDevice(new MidiDevice());
         settings.setMidiOutDevice(new MidiDevice());
@@ -136,6 +144,7 @@ public class DefaultSettingsService implements SettingsService {
         return "bus" + (id + 1);
     }
 
+    @Override
     public String getAlsaDeviceFromOutputBus(String outputBus) {
         logger.debug("Find ALSA device for bus name '" + outputBus + "'...");
 
@@ -347,7 +356,7 @@ public class DefaultSettingsService implements SettingsService {
         try {
             if (settings.isResetUsbAfterBoot()) {
                 logger.info("Resetting all USB devices");
-                ResetUsb.resetAllInterfaces();
+                resetUsbService.resetAllInterfaces();
             }
         } catch (Exception e) {
             logger.error("Could not reset the USB devices", e);
