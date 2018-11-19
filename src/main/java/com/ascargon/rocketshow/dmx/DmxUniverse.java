@@ -9,7 +9,7 @@ public class DmxUniverse {
 
 	private final String uuid = String.valueOf(UUID.randomUUID());
 
-	DmxUniverse() {
+	public DmxUniverse() {
 		universe = new HashMap<>();
 	}
 

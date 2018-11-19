@@ -2,13 +2,19 @@ package com.ascargon.rocketshow.midi;
 
 import javax.sound.midi.ShortMessage;
 import com.ascargon.rocketshow.Manager;
+import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.util.ControlActionExecutionService;
+import org.springframework.stereotype.Service;
 
+@Service
 public class DefaultMidiControlActionExecutionService implements MidiControlActionExecutionService {
 
-    private Manager manager;
+    private SettingsService settingsService;
+    private ControlActionExecutionService controlActionExecutionService;
 
-    public DefaultMidiControlActionExecutionService(Manager manager) {
-        this.manager = manager;
+    public DefaultMidiControlActionExecutionService(SettingsService settingsService, ControlActionExecutionService controlActionExecutionService) {
+        this.settingsService = settingsService;
+        this.controlActionExecutionService = controlActionExecutionService;
     }
 
     /**
@@ -31,9 +37,9 @@ public class DefaultMidiControlActionExecutionService implements MidiControlActi
         }
 
         // Search for and execute all required actions
-        for (MidiControl midiControl : manager.getSettings().getMidiControlList()) {
+        for (MidiControl midiControl : settingsService.getSettings().getMidiControlList()) {
             if (isActionMappingMatch(midiControl, midiSignal.getChannel(), midiSignal.getNote())) {
-                manager.getControlActionExecuter().execute(midiControl);
+                controlActionExecutionService.execute(midiControl);
             }
         }
     }

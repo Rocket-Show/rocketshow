@@ -7,4 +7,10 @@ public interface DmxService {
 
     void reset();
 
+    void addDmxUniverse(DmxUniverse dmxUniverse);
+
+    void removeDmxUniverse(DmxUniverse dmxUniverse);
+
+    void close();
+
 }

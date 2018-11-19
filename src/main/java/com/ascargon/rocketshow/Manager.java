@@ -3,27 +3,17 @@ package com.ascargon.rocketshow;
 import com.ascargon.rocketshow.composition.DefaultCompositionFileService;
 import com.ascargon.rocketshow.composition.DefaultCompositionService;
 import com.ascargon.rocketshow.dmx.DefaultDmxService;
-import com.ascargon.rocketshow.dmx.Midi2DmxConverter;
+import com.ascargon.rocketshow.dmx.DefaultMidi2DmxConvertService;
 import com.ascargon.rocketshow.image.ImageDisplayer;
-import com.ascargon.rocketshow.midi.MidiDeviceConnectedListener;
 import com.ascargon.rocketshow.midi.MidiInDeviceReceiver;
-import com.ascargon.rocketshow.midi.MidiRouting;
-import com.ascargon.rocketshow.midi.MidiUtil;
-import com.ascargon.rocketshow.midi.MidiUtil.MidiDirection;
 import com.ascargon.rocketshow.raspberry.RaspberryGpioControlActionExecuter;
-import com.ascargon.rocketshow.util.ControlActionExecuter;
+import com.ascargon.rocketshow.util.DefaultControlActionExecutionService;
 import com.ascargon.rocketshow.util.ShellManager;
 import com.ascargon.rocketshow.util.Updater;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.sound.midi.MidiDevice;
-import javax.sound.midi.MidiUnavailableException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class Manager {
 
@@ -34,17 +24,13 @@ public class Manager {
     private DefaultCompositionService defaultCompositionService;
     private DefaultCompositionFileService defaultCompositionFileService;
 
-    private ControlActionExecuter controlActionExecuter;
+    private DefaultControlActionExecutionService defaultControlActionExecutionService;
 
     private ImageDisplayer imageDisplayer;
     private MidiInDeviceReceiver midiInDeviceReceiver;
 
     private DefaultDmxService defaultDmxService;
-    private Midi2DmxConverter midi2DmxConverter;
-
-    private MidiDevice midiOutDevice;
-    private Timer connectMidiOutDeviceTimer;
-    private List<MidiDeviceConnectedListener> midiOutDeviceConnectedListeners = new ArrayList<>();
+    private DefaultMidi2DmxConvertService defaultMidi2DmxConvertService;
 
     private Session session;
     private Settings settings;
@@ -53,91 +39,6 @@ public class Manager {
     private RaspberryGpioControlActionExecuter raspberryGpioControlActionExecuter;
 
     private boolean isInitializing = true;
-
-    public void addMidiOutDeviceConnectedListener(MidiDeviceConnectedListener listener) {
-        midiOutDeviceConnectedListeners.add(listener);
-
-        // We already have a device connected -> fire the listener
-        if (midiOutDevice != null) {
-            listener.deviceConnected(midiOutDevice);
-        }
-    }
-
-    public void removeMidiOutDeviceConnectedListener(MidiDeviceConnectedListener listener) {
-        midiOutDeviceConnectedListeners.remove(listener);
-    }
-
-    public void reconnectMidiDevices() throws MidiUnavailableException {
-        if (midiInDeviceReceiver != null) {
-            midiInDeviceReceiver.connectMidiReceiver();
-        }
-
-        connectMidiSender();
-    }
-
-    /**
-     * Connect to the MIDI out device. Also call this method, if you change the
-     * settings or want to reconnect the device.
-     */
-    private void connectMidiSender() throws MidiUnavailableException {
-        // Cancel an eventually existing timer
-        if (connectMidiOutDeviceTimer != null) {
-            connectMidiOutDeviceTimer.cancel();
-            connectMidiOutDeviceTimer = null;
-        }
-
-        if (midiOutDevice != null && midiOutDevice.isOpen()) {
-            // We already have an open sender -> close this one
-            try {
-                midiOutDevice.close();
-            } catch (Exception e) {
-                logger.error("Could not close MIDI out device", e);
-            }
-        }
-
-        com.ascargon.rocketshow.midi.MidiDevice midiDevice = settings.getMidiOutDevice();
-
-        logger.trace(
-                "Try connecting to output MIDI device " + midiDevice.getId() + " \"" + midiDevice.getName() + "\"");
-
-        midiOutDevice = MidiUtil.getHardwareMidiDevice(midiDevice, MidiDirection.OUT);
-
-        if (midiOutDevice == null) {
-            logger.trace("MIDI output device not found. Try again in 10 seconds.");
-
-            TimerTask timerTask = new TimerTask() {
-                @Override
-                public void run() {
-                    try {
-                        connectMidiSender();
-                    } catch (Exception e) {
-                        logger.debug("Could not connect to MIDI output device", e);
-                    }
-                }
-            };
-
-            connectMidiOutDeviceTimer = new Timer();
-            connectMidiOutDeviceTimer.schedule(timerTask, 10000);
-
-            return;
-        }
-
-        // We found a device
-        if (connectMidiOutDeviceTimer != null) {
-            connectMidiOutDeviceTimer.cancel();
-            connectMidiOutDeviceTimer = null;
-        }
-
-        midiOutDevice.open();
-
-        // Connect all listeners
-        for (MidiDeviceConnectedListener listener : midiOutDeviceConnectedListeners) {
-            listener.deviceConnected(midiOutDevice);
-        }
-
-        // We found the device and all listeners are connected
-        logger.info("Successfully connected to output MIDI device " + midiOutDevice.getDeviceInfo().getName());
-    }
 
     public void load() {
         // Setup iptables, because it's not working properly in pi-gen distro
@@ -151,7 +52,7 @@ public class Manager {
 
         // Initialize the DMX manager
         //defaultDmxService = new DefaultDmxService();
-        midi2DmxConverter = new Midi2DmxConverter(defaultDmxService);
+        defaultMidi2DmxConvertService = new DefaultMidi2DmxConvertService(defaultDmxService);
 
         // Initialize the image displayer and display a default black screen
         // TODO
@@ -164,25 +65,18 @@ public class Manager {
 
 
         // Initialize the required objects inside settings
-        if (settings.getDeviceInMidiRoutingList() != null) {
-            for (MidiRouting deviceInMidiRouting : settings.getDeviceInMidiRoutingList()) {
-                deviceInMidiRouting.load(this);
-            }
-        }
-
-        // Initialize the MIDI out device
-        try {
-            connectMidiSender();
-        } catch (MidiUnavailableException e) {
-            logger.error("Could not initialize the MIDI out device", e);
-        }
+//        if (settings.getDeviceInMidiRoutingList() != null) {
+//            for (MidiRouting deviceInMidiRouting : settings.getDeviceInMidiRoutingList()) {
+//                deviceInMidiRouting.load(this);
+//            }
+//        }
 
         // Initialize the Raspberry GPIO control action executer
-        try {
-            raspberryGpioControlActionExecuter = new RaspberryGpioControlActionExecuter(this);
-        } catch (Exception e) {
-            logger.error("Could not initialize the Raspberry GPIO controller", e);
-        }
+//        try {
+//            raspberryGpioControlActionExecuter = new RaspberryGpioControlActionExecuter(this);
+//        } catch (Exception e) {
+//            logger.error("Could not initialize the Raspberry GPIO controller", e);
+//        }
 
         isInitializing = false;
 
@@ -263,8 +157,8 @@ public class Manager {
         shellManager.getProcess().waitFor();
     }
 
-    public Midi2DmxConverter getMidi2DmxConverter() {
-        return midi2DmxConverter;
+    public DefaultMidi2DmxConvertService getDefaultMidi2DmxConvertService() {
+        return defaultMidi2DmxConvertService;
     }
 
     public Settings getSettings() {
@@ -307,8 +201,8 @@ public class Manager {
         return isInitializing;
     }
 
-    public ControlActionExecuter getControlActionExecuter() {
-        return controlActionExecuter;
+    public DefaultControlActionExecutionService getDefaultControlActionExecutionService() {
+        return defaultControlActionExecutionService;
     }
 
 }

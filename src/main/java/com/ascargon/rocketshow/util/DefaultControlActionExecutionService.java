@@ -4,23 +4,21 @@ import com.ascargon.rocketshow.*;
 import com.ascargon.rocketshow.composition.SetService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Service;
 
-public class ControlActionExecuter {
+@Service
+public class DefaultControlActionExecutionService implements ControlActionExecutionService {
 
-	private final static Logger logger = LogManager.getLogger(ControlActionExecuter.class);
+	private final static Logger logger = LogManager.getLogger(DefaultControlActionExecutionService.class);
 
 	private PlayerService playerService;
     private SetService setService;
     private SettingsService settingsService;
 
-	private Manager manager;
-
-	public ControlActionExecuter(PlayerService playerService, SetService setService, SettingsService settingsService, Manager manager) {
+	public DefaultControlActionExecutionService(PlayerService playerService, SetService setService, SettingsService settingsService) {
 		this.playerService = playerService;
 		this.setService = setService;
 		this.settingsService = settingsService;
-
-	    this.manager = manager;
 	}
 
 	private void executeActionOnRemoteDevice(ControlAction controlAction, RemoteDevice remoteDevice) {
@@ -100,7 +98,8 @@ public class ControlActionExecuter {
 			playerService.play();
 			break;
 		case REBOOT:
-			manager.reboot();
+		    // TODO
+			//manager.reboot();
 			break;
 		default:
 			logger.warn(
@@ -112,6 +111,7 @@ public class ControlActionExecuter {
 	/**
 	 * Execute the control action.
 	 */
+	@Override
 	public void execute(ControlAction controlAction) throws Exception {
 		if (controlAction.isExecuteLocally()) {
 			executeActionLocally(controlAction);

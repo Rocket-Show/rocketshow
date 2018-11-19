@@ -3,6 +3,7 @@ package com.ascargon.rocketshow;
 import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.midi.MidiDevice;
 import com.ascargon.rocketshow.midi.MidiMapping;
+import com.ascargon.rocketshow.midi.MidiRoutingManager;
 import com.ascargon.rocketshow.midi.MidiUtil;
 import com.ascargon.rocketshow.util.ResetUsbService;
 import com.ascargon.rocketshow.util.ShellManager;
@@ -14,6 +15,7 @@ import org.springframework.boot.system.ApplicationHome;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.MidiUnavailableException;
+import javax.sound.midi.Transmitter;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -32,17 +34,9 @@ public class DefaultSettingsService implements SettingsService {
 
     private Settings settings;
 
+    private Transmitter midiDeviceInTransmitter;
+
     private ApplicationHome applicationHome = new ApplicationHome(RocketShowApplication.class);
-
-    // Create an own logging enum to save it in the settings xml
-    public enum LoggingLevel {
-        ERROR, WARN, INFO, DEBUG, TRACE
-    }
-
-    // Possible audio outputs
-    public enum AudioOutput {
-        HEADPHONES, HDMI, DEVICE
-    }
 
     public DefaultSettingsService(ResetUsbService resetUsbService) {
         this.resetUsbService = resetUsbService;
@@ -109,10 +103,10 @@ public class DefaultSettingsService implements SettingsService {
         settings.setOffsetMillisMidi(0);
         settings.setOffsetMillisVideo(0);
 
-        settings.setAudioOutput(AudioOutput.HEADPHONES);
+        settings.setAudioOutput(Settings.AudioOutput.HEADPHONES);
         settings.setAudioRate(44100 /* or 48000 */);
 
-        settings.setLoggingLevel(LoggingLevel.INFO);
+        settings.setLoggingLevel(Settings.LoggingLevel.INFO);
 
         settings.setEnableRaspberryGpio(true);
     }
@@ -212,11 +206,11 @@ public class DefaultSettingsService implements SettingsService {
     }
 
     private void updateAudioSystem() throws Exception {
-        if (settings.getAudioOutput() == AudioOutput.HEADPHONES) {
+        if (settings.getAudioOutput() == Settings.AudioOutput.HEADPHONES) {
             setSystemAudioOutput(1);
-        } else if (settings.getAudioOutput() == AudioOutput.HDMI) {
+        } else if (settings.getAudioOutput() == Settings.AudioOutput.HDMI) {
             setSystemAudioOutput(2);
-        } else if (settings.getAudioOutput() == AudioOutput.DEVICE) {
+        } else if (settings.getAudioOutput() == Settings.AudioOutput.DEVICE) {
             // Write the audio settings to /home/.asoundrc and use ALSA to
             // output audio on the selected device name
             File alsaSettings = new File("/home/rocketshow/.asoundrc");

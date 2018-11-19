@@ -261,14 +261,17 @@ public class DefaultDmxService implements DmxService {
         logger.debug("DMX universe on OLA initialized");
     }
 
-    void addDmxUniverse(DmxUniverse dmxUniverse) {
+    @Override
+    public void addDmxUniverse(DmxUniverse dmxUniverse) {
         dmxUniverseList.add(dmxUniverse);
     }
 
-    void removeDmxUniverse(DmxUniverse dmxUniverse) {
+    @Override
+    public void removeDmxUniverse(DmxUniverse dmxUniverse) {
         dmxUniverseList.remove(dmxUniverse);
     }
 
+    @Override
     public void close() {
         if (sendUniverseTimer != null) {
             sendUniverseTimer.cancel();

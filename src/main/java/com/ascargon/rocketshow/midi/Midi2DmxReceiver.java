@@ -1,13 +1,16 @@
-package com.ascargon.rocketshow.dmx;
+package com.ascargon.rocketshow.midi;
+
+import com.ascargon.rocketshow.dmx.DmxService;
+import com.ascargon.rocketshow.dmx.DmxUniverse;
+import com.ascargon.rocketshow.dmx.Midi2DmxConvertService;
+import com.ascargon.rocketshow.dmx.Midi2DmxMapping;
+import com.ascargon.rocketshow.midi.MidiMapper;
+import com.ascargon.rocketshow.midi.MidiMapping;
+import com.ascargon.rocketshow.midi.MidiSignal;
 
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
-
-import com.ascargon.rocketshow.Manager;
-import com.ascargon.rocketshow.midi.MidiMapper;
-import com.ascargon.rocketshow.midi.MidiMapping;
-import com.ascargon.rocketshow.midi.MidiSignal;
 
 /**
  * Receive MIDI messages and map them to DMX signals.
@@ -18,18 +21,18 @@ public class Midi2DmxReceiver implements Receiver {
 
     private MidiMapping midiMapping;
     private Midi2DmxMapping midi2DmxMapping;
-    private Midi2DmxConverter midi2DmxConverter;
-    private DefaultDmxService defaultDmxService;
+    private Midi2DmxConvertService midi2DmxConvertService;
+    private DmxService dmxService;
 
     private DmxUniverse dmxUniverse;
 
-    public Midi2DmxReceiver(Manager manager) {
-        this.midi2DmxConverter = manager.getMidi2DmxConverter();
-        this.defaultDmxService = manager.getDefaultDmxService();
+    public Midi2DmxReceiver(Midi2DmxConvertService midi2DmxConvertService, DmxService dmxService) {
+        this.midi2DmxConvertService = midi2DmxConvertService;
+        this.dmxService = dmxService;
 
         dmxUniverse = new DmxUniverse();
 
-        defaultDmxService.addDmxUniverse(dmxUniverse);
+        dmxService.addDmxUniverse(dmxUniverse);
     }
 
     @Override
@@ -43,7 +46,7 @@ public class Midi2DmxReceiver implements Receiver {
 
         MidiMapper.processMidiEvent(midiSignal, midiMapping);
 
-        midi2DmxConverter.processMidiEvent(midiSignal, midi2DmxMapping, dmxUniverse);
+        midi2DmxConvertService.processMidiEvent(midiSignal, midi2DmxMapping, dmxUniverse);
     }
 
     public void setMidi2DmxMapping(Midi2DmxMapping midi2DmxMapping) {
@@ -60,7 +63,7 @@ public class Midi2DmxReceiver implements Receiver {
 
     @Override
     public void close() {
-        defaultDmxService.removeDmxUniverse(dmxUniverse);
+        dmxService.removeDmxUniverse(dmxUniverse);
     }
 
 }

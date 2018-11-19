@@ -6,6 +6,9 @@ import com.ascargon.rocketshow.composition.CompositionPlayer;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.dmx.DmxService;
+import com.ascargon.rocketshow.dmx.Midi2DmxConvertService;
+import com.ascargon.rocketshow.midi.MidiDevice;
+import com.ascargon.rocketshow.midi.MidiDeviceService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.freedesktop.gstreamer.Gst;
@@ -27,18 +30,22 @@ public class DefaultPlayerService implements PlayerService {
     private SetService setService;
     private SessionService sessionService;
     private DmxService dmxService;
+    private Midi2DmxConvertService midi2DmxConvertService;
+    private MidiDeviceService midiDeviceService;
 
     private CompositionPlayer defaultCompositionPlayer;
     private CompositionPlayer currentCompositionPlayer;
     private List<CompositionPlayer> sampleCompositionPlayerList = new ArrayList<>();
 
-    public DefaultPlayerService(NotificationService notificationService, SettingsService settingsService, CompositionService compositionService, SetService setService, SessionService sessionService, DmxService dmxService) {
+    public DefaultPlayerService(NotificationService notificationService, SettingsService settingsService, CompositionService compositionService, SetService setService, SessionService sessionService, DmxService dmxService, Midi2DmxConvertService midi2DmxConvertService, MidiDeviceService midiDeviceService) {
         this.notificationService = notificationService;
         this.settingsService = settingsService;
         this.compositionService = compositionService;
         this.setService = setService;
         this.sessionService = sessionService;
         this.dmxService = dmxService;
+        this.midi2DmxConvertService = midi2DmxConvertService;
+        this.midiDeviceService = midiDeviceService;
 
         try {
             Gst.init();
@@ -53,7 +60,7 @@ public class DefaultPlayerService implements PlayerService {
             logger.error("Could not play default composition", e);
         }
 
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService);
+        defaultCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midi2DmxConvertService, dmxService, midiDeviceService);
 
         // Load the last set/composition
         try {
@@ -198,7 +205,7 @@ public class DefaultPlayerService implements PlayerService {
         // to share the same instance) and play it
         Composition composition = compositionService
                 .cloneComposition(compositionService.getComposition(compositionName));
-        CompositionPlayer compositionPlayer = new CompositionPlayer(notificationService, this, settingsService);
+        CompositionPlayer compositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midi2DmxConvertService, dmxService, midiDeviceService);
         compositionPlayer.setSample(true);
         compositionPlayer.setComposition(composition);
         sampleCompositionPlayerList.add(compositionPlayer);
@@ -289,7 +296,7 @@ public class DefaultPlayerService implements PlayerService {
             return;
         }
 
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService);
+        defaultCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midi2DmxConvertService, dmxService, midiDeviceService);
 
         if (settingsService.getSettings().getDefaultComposition() == null || settingsService.getSettings().getDefaultComposition().length() == 0) {
             return;

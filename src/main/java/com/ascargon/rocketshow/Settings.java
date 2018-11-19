@@ -17,6 +17,16 @@ import java.util.List;
 @XmlRootElement
 public class Settings {
 
+    // Create an own logging enum to save it in the settings xml
+    public enum LoggingLevel {
+        ERROR, WARN, INFO, DEBUG, TRACE
+    }
+
+    // Possible audio outputs
+    public enum AudioOutput {
+        HEADPHONES, HDMI, DEVICE
+    }
+
     private String basePath;
 
     public String getMediaPath() {
@@ -54,7 +64,7 @@ public class Settings {
 
     private String defaultComposition;
 
-    private DefaultSettingsService.LoggingLevel loggingLevel;
+    private LoggingLevel loggingLevel;
 
     private String language = "en";
 
@@ -62,7 +72,7 @@ public class Settings {
 
     private boolean resetUsbAfterBoot = false;
 
-    private DefaultSettingsService.AudioOutput audioOutput;
+    private AudioOutput audioOutput;
 
     private int audioRate;
 
@@ -203,11 +213,11 @@ public class Settings {
     }
 
     @XmlElement
-    public DefaultSettingsService.LoggingLevel getLoggingLevel() {
+    public LoggingLevel getLoggingLevel() {
         return loggingLevel;
     }
 
-    public void setLoggingLevel(DefaultSettingsService.LoggingLevel loggingLevel) {
+    public void setLoggingLevel(LoggingLevel loggingLevel) {
         this.loggingLevel = loggingLevel;
     }
 
@@ -239,11 +249,11 @@ public class Settings {
     }
 
     @XmlElement
-    public DefaultSettingsService.AudioOutput getAudioOutput() {
+    public AudioOutput getAudioOutput() {
         return audioOutput;
     }
 
-    public void setAudioOutput(DefaultSettingsService.AudioOutput audioOutput) {
+    public void setAudioOutput(AudioOutput audioOutput) {
         this.audioOutput = audioOutput;
     }
 
@@ -257,11 +267,11 @@ public class Settings {
         this.audioBusList = audioBusList;
     }
 
+    @XmlElement
     public int getAudioRate() {
         return audioRate;
     }
 
-    @XmlElement
     public void setAudioRate(int audioRate) {
         this.audioRate = audioRate;
     }
