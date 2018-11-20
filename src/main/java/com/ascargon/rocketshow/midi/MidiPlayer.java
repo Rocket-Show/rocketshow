@@ -32,7 +32,7 @@ public class MidiPlayer {
     // Sync to a master, if available
     private Timer syncTimer;
 
-    MidiPlayer(SettingsService settingsService, Midi2DmxConvertService midi2DmxConvertService, DmxService dmxService, MidiDeviceService midiDeviceService, String path, Pipeline syncPipeline, MidiPlayer syncMidiPlayer, List<MidiRouting> midiRoutingList) throws MidiUnavailableException, IOException, InvalidMidiDataException {
+    MidiPlayer(SettingsService settingsService, Midi2DmxConvertService midi2DmxConvertService, DmxService dmxService, MidiDeviceOutService midiDeviceOutService, String path, Pipeline syncPipeline, MidiPlayer syncMidiPlayer, List<MidiRouting> midiRoutingList) throws MidiUnavailableException, IOException, InvalidMidiDataException {
         this.midiRoutingList = midiRoutingList;
 
         this.syncPipeline = syncPipeline;
@@ -53,7 +53,7 @@ public class MidiPlayer {
         midiRoutingManagerList = new ArrayList<>();
 
         for (MidiRouting midiRouting : midiRoutingList) {
-            MidiRoutingManager midiRoutingManager = new MidiRoutingManager(settingsService, midi2DmxConvertService, dmxService, midiDeviceService, sequencer.getTransmitter(), midiRouting);
+            MidiRoutingManager midiRoutingManager = new MidiRoutingManager(settingsService, midi2DmxConvertService, dmxService, midiDeviceOutService, sequencer.getTransmitter(), midiRouting);
             midiRoutingManagerList.add(midiRoutingManager);
         }
 

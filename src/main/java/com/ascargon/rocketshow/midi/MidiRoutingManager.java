@@ -26,7 +26,7 @@ public class MidiRoutingManager {
     private Transmitter transmitter;
     private Receiver receiver;
 
-    public MidiRoutingManager(SettingsService settingsService, Midi2DmxConvertService midi2DmxConvertService, DmxService dmxService, MidiDeviceService midiDeviceService, Transmitter transmitter, MidiRouting midiRouting) throws MidiUnavailableException {
+    public MidiRoutingManager(SettingsService settingsService, Midi2DmxConvertService midi2DmxConvertService, DmxService dmxService, MidiDeviceOutService midiDeviceOutService, Transmitter transmitter, MidiRouting midiRouting) throws MidiUnavailableException {
         this.settingsService = settingsService;
 
         this.midiRouting = midiRouting;
@@ -34,7 +34,7 @@ public class MidiRoutingManager {
 
         if (midiRouting.getMidiDestination() == MidiRouting.MidiDestination.OUT_DEVICE) {
             // Connect the transmitter to the out device
-            this.midi2DeviceOutReceiver = new Midi2DeviceOutReceiver(midiDeviceService);
+            this.midi2DeviceOutReceiver = new Midi2DeviceOutReceiver(midiDeviceOutService);
             midi2DeviceOutReceiver.setMidiMapping(midiRouting.getMidiMapping());
             receiver = midi2DeviceOutReceiver;
         } else if (midiRouting.getMidiDestination() == MidiRouting.MidiDestination.DMX) {

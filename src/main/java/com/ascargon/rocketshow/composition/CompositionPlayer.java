@@ -44,7 +44,7 @@ public class CompositionPlayer {
     private SettingsService settingsService;
     private Midi2DmxConvertService midi2DmxConvertService;
     private DmxService dmxService;
-    private MidiDeviceService midiDeviceService;
+    private MidiDeviceOutService midiDeviceOutService;
 
     private Composition composition;
     private PlayState playState = PlayState.STOPPED;
@@ -65,13 +65,13 @@ public class CompositionPlayer {
     // The gstreamer pipeline, used to sync all files in this composition
     private Pipeline pipeline;
 
-    public CompositionPlayer(NotificationService notificationService, PlayerService playerService, SettingsService settingsService, Midi2DmxConvertService midi2DmxConvertService, DmxService dmxService, MidiDeviceService midiDeviceService) {
+    public CompositionPlayer(NotificationService notificationService, PlayerService playerService, SettingsService settingsService, Midi2DmxConvertService midi2DmxConvertService, DmxService dmxService, MidiDeviceOutService midiDeviceOutService) {
         this.notificationService = notificationService;
         this.playerService = playerService;
         this.settingsService = settingsService;
         this.midi2DmxConvertService = midi2DmxConvertService;
         this.dmxService = dmxService;
-        this.midiDeviceService = midiDeviceService;
+        this.midiDeviceOutService = midiDeviceOutService;
 
         this.midiMapping.setParent(settingsService.getSettings().getMidiMapping());
     }
@@ -142,7 +142,7 @@ public class CompositionPlayer {
 
             if (compositionFile.isActive()) {
                 if (compositionFile instanceof MidiCompositionFile) {
-                    MidiCompositionFilePlayer midiCompositionFilePlayer = new MidiCompositionFilePlayer(settingsService, midi2DmxConvertService, dmxService, (MidiCompositionFile) compositionFile, midiDeviceService, settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/" + settingsService.getSettings().getMidiPath() + "/" + compositionFile.getName(), pipeline, firstMidiPlayer);
+                    MidiCompositionFilePlayer midiCompositionFilePlayer = new MidiCompositionFilePlayer(settingsService, midi2DmxConvertService, dmxService, (MidiCompositionFile) compositionFile, midiDeviceOutService, settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/" + settingsService.getSettings().getMidiPath() + "/" + compositionFile.getName(), pipeline, firstMidiPlayer);
                     midiCompositionFilePlayerList.add(midiCompositionFilePlayer);
 
                     MidiCompositionFile midiFile = (MidiCompositionFile) compositionFile;

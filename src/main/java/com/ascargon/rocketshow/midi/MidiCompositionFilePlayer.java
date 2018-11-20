@@ -20,11 +20,11 @@ public class MidiCompositionFilePlayer {
 
     private MidiPlayer midiPlayer;
 
-    public MidiCompositionFilePlayer(SettingsService settingsService, Midi2DmxConvertService midi2DmxConvertService, DmxService dmxService, MidiCompositionFile midiCompositionFile, MidiDeviceService midiDeviceService, String path, Pipeline syncPipeline, MidiPlayer syncMidiPlayer) throws MidiUnavailableException, InvalidMidiDataException, IOException {
+    public MidiCompositionFilePlayer(SettingsService settingsService, Midi2DmxConvertService midi2DmxConvertService, DmxService dmxService, MidiCompositionFile midiCompositionFile, MidiDeviceOutService midiDeviceOutService, String path, Pipeline syncPipeline, MidiPlayer syncMidiPlayer) throws MidiUnavailableException, InvalidMidiDataException, IOException {
         this.midiCompositionFile = midiCompositionFile;
         this.path = path;
 
-        midiPlayer = new MidiPlayer(settingsService, midi2DmxConvertService, dmxService, midiDeviceService, path, syncPipeline, syncMidiPlayer, midiCompositionFile.getMidiRoutingList());
+        midiPlayer = new MidiPlayer(settingsService, midi2DmxConvertService, dmxService, midiDeviceOutService, path, syncPipeline, syncMidiPlayer, midiCompositionFile.getMidiRoutingList());
     }
 
     public void play() {

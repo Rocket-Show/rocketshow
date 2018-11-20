@@ -16,17 +16,17 @@ public class Midi2DeviceOutReceiver implements Receiver {
 
     private final static Logger logger = LogManager.getLogger(Midi2DeviceOutReceiver.class);
 
-    private MidiDeviceService midiDeviceService;
+    private MidiDeviceOutService midiDeviceOutService;
 
     private MidiMapping midiMapping;
 
-    Midi2DeviceOutReceiver(MidiDeviceService midiDeviceService) {
-        this.midiDeviceService = midiDeviceService;
+    Midi2DeviceOutReceiver(MidiDeviceOutService midiDeviceOutService) {
+        this.midiDeviceOutService = midiDeviceOutService;
     }
 
     @Override
     public void send(MidiMessage message, long timeStamp) {
-        if (midiDeviceService.getMidiOutDevice() == null) {
+        if (midiDeviceOutService.getMidiOutDevice() == null) {
             return;
         }
 
@@ -38,7 +38,7 @@ public class Midi2DeviceOutReceiver implements Receiver {
         MidiMapper.processMidiEvent(midiSignal, midiMapping);
 
         try {
-            midiDeviceService.getMidiOutDevice().getReceiver().send(midiSignal.getShortMessage(), -1);
+            midiDeviceOutService.getMidiOutDevice().getReceiver().send(midiSignal.getShortMessage(), -1);
         } catch (Exception e) {
             logger.error("Could not send MIDI signal to out device receiver", e);
         }

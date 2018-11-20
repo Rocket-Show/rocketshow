@@ -15,27 +15,28 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 @Service
-public class DefaultMidiDeviceService implements MidiDeviceService {
+public class DefaultMidiDeviceInService implements MidiDeviceInService {
 
-    private final static Logger logger = LogManager.getLogger(DefaultMidiDeviceService.class);
+    private final static Logger logger = LogManager.getLogger(DefaultMidiDeviceInService.class);
 
     private SettingsService settingsService;
     private Midi2DmxConvertService midi2DmxConvertService;
     private DmxService dmxService;
+    private MidiDeviceOutService midiDeviceOutService;
 
-    private Timer connectMidiDevicesTimer;
+    private Timer connectMidiDeviceTimer;
 
-    private javax.sound.midi.MidiDevice midiOutDevice;
     private javax.sound.midi.MidiDevice midiInDevice;
 
     private List<MidiRoutingManager> midiDeviceInRoutingManagerList = new ArrayList<>();
 
     private MidiInDeviceReceiver midiInDeviceReceiver;
 
-    public DefaultMidiDeviceService(SettingsService settingsService, NotificationService notificationService, MidiControlActionExecutionService midiControlActionExecutionService, Midi2DmxConvertService midi2DmxConvertService, DmxService dmxService) {
+    public DefaultMidiDeviceInService(SettingsService settingsService, NotificationService notificationService, MidiControlActionExecutionService midiControlActionExecutionService, Midi2DmxConvertService midi2DmxConvertService, DmxService dmxService, MidiDeviceOutService midiDeviceOutService) {
         this.settingsService = settingsService;
         this.midi2DmxConvertService = midi2DmxConvertService;
         this.dmxService = dmxService;
+        this.midiDeviceOutService = midiDeviceOutService;
 
         // Initialize the MIDI in device receiver to execute MIDI control actions
         midiInDeviceReceiver = new MidiInDeviceReceiver(notificationService, midiControlActionExecutionService);
@@ -44,34 +45,18 @@ public class DefaultMidiDeviceService implements MidiDeviceService {
         try {
             connectMidiDevices();
         } catch (MidiUnavailableException e) {
-            logger.error("Could not initialize the MIDI out device", e);
+            logger.error("Could not initialize the MIDI in device", e);
         }
     }
 
     // Connect to midi in and out devices. Retry, if it failed.
     private void connectMidiDevices() throws MidiUnavailableException {
-        com.ascargon.rocketshow.midi.MidiDevice midiDevice;
+        MidiDevice midiDevice;
 
         // Cancel an eventually existing timer
-        if (connectMidiDevicesTimer != null) {
-            connectMidiDevicesTimer.cancel();
-            connectMidiDevicesTimer = null;
-        }
-
-        if (midiOutDevice == null) {
-            midiDevice = settingsService.getSettings().getMidiOutDevice();
-
-            logger.trace(
-                    "Try connecting to MIDI out device " + midiDevice.getId() + " \"" + midiDevice.getName() + "\"");
-
-            midiOutDevice = MidiUtil.getHardwareMidiDevice(midiDevice, MidiUtil.MidiDirection.OUT);
-
-            if (midiOutDevice == null) {
-                logger.trace("MIDI out device not found. Try again in 10 seconds.");
-            } else {
-                midiOutDevice.open();
-                logger.info("Successfully connected to MIDI out device " + midiOutDevice.getDeviceInfo().getName());
-            }
+        if (connectMidiDeviceTimer != null) {
+            connectMidiDeviceTimer.cancel();
+            connectMidiDeviceTimer = null;
         }
 
         if (midiInDevice == null) {
@@ -90,7 +75,7 @@ public class DefaultMidiDeviceService implements MidiDeviceService {
                 midiDeviceInRoutingManagerList = new ArrayList<>();
 
                 for (MidiRouting midiRouting : settingsService.getSettings().getDeviceInMidiRoutingList()) {
-                    MidiRoutingManager midiRoutingManager = new MidiRoutingManager(settingsService, midi2DmxConvertService, dmxService, this, midiInDevice.getTransmitter(), midiRouting);
+                    MidiRoutingManager midiRoutingManager = new MidiRoutingManager(settingsService, midi2DmxConvertService, dmxService, midiDeviceOutService, midiInDevice.getTransmitter(), midiRouting);
                     this.midiDeviceInRoutingManagerList.add(midiRoutingManager);
                 }
 
@@ -100,38 +85,33 @@ public class DefaultMidiDeviceService implements MidiDeviceService {
             }
         }
 
-        if (midiOutDevice == null || midiInDevice == null) {
+        if (midiInDevice == null) {
             TimerTask timerTask = new TimerTask() {
                 @Override
                 public void run() {
                     try {
                         connectMidiDevices();
                     } catch (Exception e) {
-                        logger.debug("Could not connect to MIDI out device", e);
+                        logger.debug("Could not connect to MIDI in device", e);
                     }
                 }
             };
 
-            connectMidiDevicesTimer = new Timer();
-            connectMidiDevicesTimer.schedule(timerTask, 10000);
+            connectMidiDeviceTimer = new Timer();
+            connectMidiDeviceTimer.schedule(timerTask, 10000);
         } else {
             // We found both, a MIDI in and a MIDI out device
-            if (connectMidiDevicesTimer != null) {
-                connectMidiDevicesTimer.cancel();
-                connectMidiDevicesTimer = null;
+            if (connectMidiDeviceTimer != null) {
+                connectMidiDeviceTimer.cancel();
+                connectMidiDeviceTimer = null;
             }
         }
 
     }
 
     @Override
-    public void reconnectMidiDevices() throws MidiUnavailableException {
+    public void reconnectMidiDevice() throws MidiUnavailableException {
         midiDeviceInRoutingManagerList = new ArrayList<>();
-
-        if (midiOutDevice != null) {
-            midiOutDevice.close();
-            midiOutDevice = null;
-        }
 
         if (midiInDevice != null) {
             midiInDevice.close();
@@ -144,11 +124,6 @@ public class DefaultMidiDeviceService implements MidiDeviceService {
     @Override
     public javax.sound.midi.MidiDevice getMidiInDevice() {
         return midiInDevice;
-    }
-
-    @Override
-    public javax.sound.midi.MidiDevice getMidiOutDevice() {
-        return midiOutDevice;
     }
 
 }

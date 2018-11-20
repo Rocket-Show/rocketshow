@@ -7,8 +7,7 @@ import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.dmx.DmxService;
 import com.ascargon.rocketshow.dmx.Midi2DmxConvertService;
-import com.ascargon.rocketshow.midi.MidiDevice;
-import com.ascargon.rocketshow.midi.MidiDeviceService;
+import com.ascargon.rocketshow.midi.MidiDeviceOutService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.freedesktop.gstreamer.Gst;
@@ -31,13 +30,13 @@ public class DefaultPlayerService implements PlayerService {
     private SessionService sessionService;
     private DmxService dmxService;
     private Midi2DmxConvertService midi2DmxConvertService;
-    private MidiDeviceService midiDeviceService;
+    private MidiDeviceOutService midiDeviceOutService;
 
     private CompositionPlayer defaultCompositionPlayer;
     private CompositionPlayer currentCompositionPlayer;
     private List<CompositionPlayer> sampleCompositionPlayerList = new ArrayList<>();
 
-    public DefaultPlayerService(NotificationService notificationService, SettingsService settingsService, CompositionService compositionService, SetService setService, SessionService sessionService, DmxService dmxService, Midi2DmxConvertService midi2DmxConvertService, MidiDeviceService midiDeviceService) {
+    public DefaultPlayerService(NotificationService notificationService, SettingsService settingsService, CompositionService compositionService, SetService setService, SessionService sessionService, DmxService dmxService, Midi2DmxConvertService midi2DmxConvertService, MidiDeviceOutService midiDeviceOutService) {
         this.notificationService = notificationService;
         this.settingsService = settingsService;
         this.compositionService = compositionService;
@@ -45,7 +44,7 @@ public class DefaultPlayerService implements PlayerService {
         this.sessionService = sessionService;
         this.dmxService = dmxService;
         this.midi2DmxConvertService = midi2DmxConvertService;
-        this.midiDeviceService = midiDeviceService;
+        this.midiDeviceOutService = midiDeviceOutService;
 
         try {
             Gst.init();
@@ -60,7 +59,7 @@ public class DefaultPlayerService implements PlayerService {
             logger.error("Could not play default composition", e);
         }
 
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midi2DmxConvertService, dmxService, midiDeviceService);
+        defaultCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midi2DmxConvertService, dmxService, midiDeviceOutService);
 
         // Load the last set/composition
         try {
@@ -205,7 +204,7 @@ public class DefaultPlayerService implements PlayerService {
         // to share the same instance) and play it
         Composition composition = compositionService
                 .cloneComposition(compositionService.getComposition(compositionName));
-        CompositionPlayer compositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midi2DmxConvertService, dmxService, midiDeviceService);
+        CompositionPlayer compositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midi2DmxConvertService, dmxService, midiDeviceOutService);
         compositionPlayer.setSample(true);
         compositionPlayer.setComposition(composition);
         sampleCompositionPlayerList.add(compositionPlayer);
@@ -296,7 +295,7 @@ public class DefaultPlayerService implements PlayerService {
             return;
         }
 
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midi2DmxConvertService, dmxService, midiDeviceService);
+        defaultCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midi2DmxConvertService, dmxService, midiDeviceOutService);
 
         if (settingsService.getSettings().getDefaultComposition() == null || settingsService.getSettings().getDefaultComposition().length() == 0) {
             return;

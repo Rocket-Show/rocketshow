@@ -8,11 +8,9 @@ import javax.sound.midi.MidiUnavailableException;
  * Handle locally connected MIDI in devices.
  */
 @Service
-public interface MidiDeviceService {
+public interface MidiDeviceOutService {
 
-    void reconnectMidiDevices() throws MidiUnavailableException;
-
-    javax.sound.midi.MidiDevice getMidiInDevice();
+    void reconnectMidiDevice() throws MidiUnavailableException;
 
     javax.sound.midi.MidiDevice getMidiOutDevice();
 
