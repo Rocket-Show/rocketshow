@@ -82,7 +82,7 @@ public class DefaultMidiDeviceOutService implements MidiDeviceOutService {
             connectMidiDeviceTimer = new Timer();
             connectMidiDeviceTimer.schedule(timerTask, 10000);
         } else {
-            // We found both, a MIDI in and a MIDI out device
+            // We found a MIDI out device
             if (connectMidiDeviceTimer != null) {
                 connectMidiDeviceTimer.cancel();
                 connectMidiDeviceTimer = null;
