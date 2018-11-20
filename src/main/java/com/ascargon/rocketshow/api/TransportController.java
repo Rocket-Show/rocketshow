@@ -13,10 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("${spring.data.rest.base-path}/transport")
 public class TransportController {
 
+    private final static Logger logger = LogManager.getLogger(TransportController.class);
+
     //private CompositionPlayerService player;
     private NotificationService notificationService;
-
-    private final static Logger logger = LogManager.getLogger(TransportController.class);
 
     public TransportController(NotificationService notificationService) {
         this.notificationService = notificationService;

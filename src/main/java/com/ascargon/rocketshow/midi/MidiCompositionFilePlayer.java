@@ -1,10 +1,5 @@
 package com.ascargon.rocketshow.midi;
 
-import com.ascargon.rocketshow.SettingsService;
-import com.ascargon.rocketshow.dmx.DmxService;
-import com.ascargon.rocketshow.dmx.Midi2DmxConvertService;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.freedesktop.gstreamer.Pipeline;
 
 import javax.sound.midi.InvalidMidiDataException;
@@ -13,18 +8,10 @@ import java.io.IOException;
 
 public class MidiCompositionFilePlayer {
 
-    private final static Logger logger = LogManager.getLogger(MidiCompositionFilePlayer.class);
-
-    private MidiCompositionFile midiCompositionFile;
-    private String path;
-
     private MidiPlayer midiPlayer;
 
-    public MidiCompositionFilePlayer(SettingsService settingsService, Midi2DmxConvertService midi2DmxConvertService, DmxService dmxService, MidiCompositionFile midiCompositionFile, MidiDeviceOutService midiDeviceOutService, String path, Pipeline syncPipeline, MidiPlayer syncMidiPlayer) throws MidiUnavailableException, InvalidMidiDataException, IOException {
-        this.midiCompositionFile = midiCompositionFile;
-        this.path = path;
-
-        midiPlayer = new MidiPlayer(settingsService, midi2DmxConvertService, dmxService, midiDeviceOutService, path, syncPipeline, syncMidiPlayer, midiCompositionFile.getMidiRoutingList());
+    public MidiCompositionFilePlayer(MidiRoutingService midiRoutingService, MidiCompositionFile midiCompositionFile, String path, Pipeline syncPipeline, MidiPlayer syncMidiPlayer) throws MidiUnavailableException, InvalidMidiDataException, IOException {
+        midiPlayer = new MidiPlayer(midiRoutingService, path, syncPipeline, syncMidiPlayer, midiCompositionFile.getMidiRoutingList());
     }
 
     public void play() {

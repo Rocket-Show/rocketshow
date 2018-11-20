@@ -2,15 +2,11 @@ package com.ascargon.rocketshow.midi;
 
 import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.api.NotificationService;
-import com.ascargon.rocketshow.dmx.DmxService;
-import com.ascargon.rocketshow.dmx.Midi2DmxConvertService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.MidiUnavailableException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -20,23 +16,17 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
     private final static Logger logger = LogManager.getLogger(DefaultMidiDeviceInService.class);
 
     private SettingsService settingsService;
-    private Midi2DmxConvertService midi2DmxConvertService;
-    private DmxService dmxService;
-    private MidiDeviceOutService midiDeviceOutService;
+    private MidiRoutingService midiRoutingService;
 
     private Timer connectMidiDeviceTimer;
 
     private javax.sound.midi.MidiDevice midiInDevice;
 
-    private List<MidiRoutingManager> midiDeviceInRoutingManagerList = new ArrayList<>();
-
     private MidiInDeviceReceiver midiInDeviceReceiver;
 
-    public DefaultMidiDeviceInService(SettingsService settingsService, NotificationService notificationService, MidiControlActionExecutionService midiControlActionExecutionService, Midi2DmxConvertService midi2DmxConvertService, DmxService dmxService, MidiDeviceOutService midiDeviceOutService) {
+    public DefaultMidiDeviceInService(SettingsService settingsService, NotificationService notificationService, MidiControlActionExecutionService midiControlActionExecutionService, MidiRoutingService midiRoutingService) {
         this.settingsService = settingsService;
-        this.midi2DmxConvertService = midi2DmxConvertService;
-        this.dmxService = dmxService;
-        this.midiDeviceOutService = midiDeviceOutService;
+        this.midiRoutingService = midiRoutingService;
 
         // Initialize the MIDI in device receiver to execute MIDI control actions
         midiInDeviceReceiver = new MidiInDeviceReceiver(notificationService, midiControlActionExecutionService);
@@ -72,12 +62,7 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
             } else {
                 midiInDevice.open();
 
-                midiDeviceInRoutingManagerList = new ArrayList<>();
-
-                for (MidiRouting midiRouting : settingsService.getSettings().getDeviceInMidiRoutingList()) {
-                    MidiRoutingManager midiRoutingManager = new MidiRoutingManager(settingsService, midi2DmxConvertService, dmxService, midiDeviceOutService, midiInDevice.getTransmitter(), midiRouting);
-                    this.midiDeviceInRoutingManagerList.add(midiRoutingManager);
-                }
+                midiRoutingService.connectTransmitter(midiInDevice.getTransmitter(), settingsService.getSettings().getDeviceInMidiRoutingList());
 
                 midiInDevice.getTransmitter().setReceiver(midiInDeviceReceiver);
 
@@ -111,8 +96,6 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
 
     @Override
     public void reconnectMidiDevice() throws MidiUnavailableException {
-        midiDeviceInRoutingManagerList = new ArrayList<>();
-
         if (midiInDevice != null) {
             midiInDevice.close();
             midiInDevice = null;

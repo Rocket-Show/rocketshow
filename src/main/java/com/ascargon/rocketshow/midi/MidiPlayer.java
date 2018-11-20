@@ -1,8 +1,5 @@
 package com.ascargon.rocketshow.midi;
 
-import com.ascargon.rocketshow.SettingsService;
-import com.ascargon.rocketshow.dmx.DmxService;
-import com.ascargon.rocketshow.dmx.Midi2DmxConvertService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.freedesktop.gstreamer.GstObject;
@@ -11,7 +8,6 @@ import org.freedesktop.gstreamer.State;
 
 import javax.sound.midi.*;
 import java.io.*;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -22,19 +18,14 @@ public class MidiPlayer {
     private final static Logger logger = LogManager.getLogger(MidiPlayer.class);
 
     private Sequencer sequencer;
-    private List<MidiRouting> midiRoutingList;
     private boolean loop = false;
     private Pipeline syncPipeline;
     private MidiPlayer syncMidiPlayer;
 
-    private List<MidiRoutingManager> midiRoutingManagerList;
-
     // Sync to a master, if available
     private Timer syncTimer;
 
-    MidiPlayer(SettingsService settingsService, Midi2DmxConvertService midi2DmxConvertService, DmxService dmxService, MidiDeviceOutService midiDeviceOutService, String path, Pipeline syncPipeline, MidiPlayer syncMidiPlayer, List<MidiRouting> midiRoutingList) throws MidiUnavailableException, IOException, InvalidMidiDataException {
-        this.midiRoutingList = midiRoutingList;
-
+    MidiPlayer(MidiRoutingService midiRoutingService, String path, Pipeline syncPipeline, MidiPlayer syncMidiPlayer, List<MidiRouting> midiRoutingList) throws MidiUnavailableException, IOException, InvalidMidiDataException {
         this.syncPipeline = syncPipeline;
         this.syncMidiPlayer = syncMidiPlayer;
 
@@ -50,12 +41,7 @@ public class MidiPlayer {
         InputStream is = new BufferedInputStream(new FileInputStream(new File(path)));
         sequencer.setSequence(is);
 
-        midiRoutingManagerList = new ArrayList<>();
-
-        for (MidiRouting midiRouting : midiRoutingList) {
-            MidiRoutingManager midiRoutingManager = new MidiRoutingManager(settingsService, midi2DmxConvertService, dmxService, midiDeviceOutService, sequencer.getTransmitter(), midiRouting);
-            midiRoutingManagerList.add(midiRoutingManager);
-        }
+        midiRoutingService.connectTransmitter(sequencer.getTransmitter(), midiRoutingList);
 
         // Set the sequencer to looped, if necessary
         if (loop) {
