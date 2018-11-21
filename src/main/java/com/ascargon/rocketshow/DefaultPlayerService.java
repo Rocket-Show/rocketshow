@@ -29,12 +29,13 @@ public class DefaultPlayerService implements PlayerService {
     private SessionService sessionService;
     private MidiRoutingService midiRoutingService;
     private DmxService dmxService;
+    private CapabilitiesService capabilitiesService;
 
     private CompositionPlayer defaultCompositionPlayer;
     private CompositionPlayer currentCompositionPlayer;
     private List<CompositionPlayer> sampleCompositionPlayerList = new ArrayList<>();
 
-    public DefaultPlayerService(NotificationService notificationService, SettingsService settingsService, CompositionService compositionService, SetService setService, SessionService sessionService, MidiRoutingService midiRoutingService, DmxService dmxService) {
+    public DefaultPlayerService(NotificationService notificationService, SettingsService settingsService, CompositionService compositionService, SetService setService, SessionService sessionService, MidiRoutingService midiRoutingService, DmxService dmxService, CapabilitiesService capabilitiesService) {
         this.notificationService = notificationService;
         this.settingsService = settingsService;
         this.compositionService = compositionService;
@@ -42,12 +43,14 @@ public class DefaultPlayerService implements PlayerService {
         this.sessionService = sessionService;
         this.midiRoutingService = midiRoutingService;
         this.dmxService = dmxService;
+        this.capabilitiesService = capabilitiesService;
 
         try {
             Gst.init();
         } catch (Exception | UnsatisfiedLinkError e) {
             // Gstreamer might not be installed properly or not be installed at all
             logger.error("Could not initialize Gstreamer", e);
+            this.capabilitiesService.getCapabilities().setGstreamer(false);
         }
 
         try {

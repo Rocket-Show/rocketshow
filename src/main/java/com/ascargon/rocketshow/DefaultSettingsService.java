@@ -4,6 +4,8 @@ import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.midi.MidiDevice;
 import com.ascargon.rocketshow.midi.MidiMapping;
 import com.ascargon.rocketshow.midi.MidiUtil;
+import com.ascargon.rocketshow.util.OperatingSystemInformation;
+import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import com.ascargon.rocketshow.util.ResetUsbService;
 import com.ascargon.rocketshow.util.ShellManager;
 import org.apache.logging.log4j.Level;
@@ -29,6 +31,9 @@ public class DefaultSettingsService implements SettingsService {
 
     private final static Logger logger = LogManager.getLogger(Settings.class);
 
+    private final String FILE_NAME = "settings";
+
+    private OperatingSystemInformationService operatingSystemInformationService;
     private ResetUsbService resetUsbService;
 
     private Settings settings;
@@ -37,7 +42,8 @@ public class DefaultSettingsService implements SettingsService {
 
     private ApplicationHome applicationHome = new ApplicationHome(RocketShowApplication.class);
 
-    public DefaultSettingsService(ResetUsbService resetUsbService) {
+    public DefaultSettingsService(ResetUsbService resetUsbService, OperatingSystemInformationService operatingSystemInformationService) {
+        this.operatingSystemInformationService = operatingSystemInformationService;
         this.resetUsbService = resetUsbService;
 
         initDefaultSettings();
@@ -107,7 +113,10 @@ public class DefaultSettingsService implements SettingsService {
 
         settings.setLoggingLevel(Settings.LoggingLevel.INFO);
 
-        settings.setEnableRaspberryGpio(true);
+        if(OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+            settings.setEnableRaspberryGpio(true);
+            settings.setWlanApEnable(true);
+        }
     }
 
     @Override
@@ -250,6 +259,10 @@ public class DefaultSettingsService implements SettingsService {
         String apConfig = "";
         String statusCommand;
 
+        if(!settings.isWlanApEnable()) {
+            return;
+        }
+
         // Update the access point configuration
         apConfig += "interface=wlan0\n";
         apConfig += "driver=nl80211\n";
@@ -301,10 +314,12 @@ public class DefaultSettingsService implements SettingsService {
     private void updateSystem() {
         // Update all system settings
 
-        try {
-            updateAudioSystem();
-        } catch (Exception e) {
-            logger.error("Could not update the audio system settings", e);
+        if(OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+            try {
+                updateAudioSystem();
+            } catch (Exception e) {
+                logger.error("Could not update the audio system settings", e);
+            }
         }
 
         try {
@@ -321,7 +336,7 @@ public class DefaultSettingsService implements SettingsService {
     }
 
     public void save() throws JAXBException {
-        File file = new File(applicationHome.getDir() + "/settings");
+        File file = new File(applicationHome.getDir() + "/" + FILE_NAME + ".xml");
         JAXBContext jaxbContext = JAXBContext.newInstance(Settings.class);
         Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
@@ -334,7 +349,7 @@ public class DefaultSettingsService implements SettingsService {
     }
 
     private void load() throws Exception {
-        File file = new File(applicationHome.getDir() + "/settings");
+        File file = new File(applicationHome.getDir() + "/" + FILE_NAME + ".xml");
 
         if (!file.exists() || file.isDirectory()) {
             return;

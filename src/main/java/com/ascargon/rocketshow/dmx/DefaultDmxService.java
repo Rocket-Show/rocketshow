@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.dmx;
 
+import com.ascargon.rocketshow.CapabilitiesService;
 import com.ascargon.rocketshow.SettingsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ola.OlaClient;
@@ -49,7 +50,7 @@ public class DefaultDmxService implements DmxService {
 
     private HttpClient httpClient;
 
-    public DefaultDmxService(SettingsService settingsService) {
+    public DefaultDmxService(SettingsService settingsService, CapabilitiesService capabilitiesService) {
         this.settingsService = settingsService;
 
         RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).build();
@@ -59,6 +60,7 @@ public class DefaultDmxService implements DmxService {
             olaClient = new OlaClient();
         } catch (Exception e) {
             logger.error("Could not initialize OLA DMX client", e);
+            capabilitiesService.getCapabilities().setOla(false);
         }
 
         reset();

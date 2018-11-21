@@ -18,6 +18,8 @@ public class DefaultSessionService implements SessionService {
 
     private final static Logger logger = LogManager.getLogger(DefaultSessionService.class);
 
+    private final String FILE_NAME = "session";
+
     private SettingsService settingsService;
     private SetService setService;
     private CompositionService compositionService;
@@ -47,7 +49,7 @@ public class DefaultSessionService implements SessionService {
         }
 
         try {
-            File file = new File(settingsService.getSettings().getBasePath() + "/" + "session");
+            File file = new File(settingsService.getSettings().getBasePath() + "/" + FILE_NAME + ".xml");
             JAXBContext jaxbContext = JAXBContext.newInstance(Session.class);
             Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
@@ -63,7 +65,7 @@ public class DefaultSessionService implements SessionService {
     }
 
     private void loadSession() throws Exception {
-        File file = new File(settingsService.getSettings().getBasePath() + "/" + "session");
+        File file = new File(settingsService.getSettings().getBasePath() + "/" + FILE_NAME+ ".xml");
 
         if (file.exists()) {
             // We already have a session -> restore it from the file
@@ -79,6 +81,7 @@ public class DefaultSessionService implements SessionService {
             }
         } else {
             // There is no session existant -> create a default session
+            session = new Session();
             save();
         }
 

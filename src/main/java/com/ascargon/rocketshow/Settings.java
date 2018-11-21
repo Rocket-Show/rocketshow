@@ -80,7 +80,7 @@ public class Settings {
 
     private List<AudioBus> audioBusList = new ArrayList<>();
 
-    private boolean wlanApEnable = true;
+    private boolean wlanApEnable;
 
     private String wlanApSsid = "Rocket Show";
 
