@@ -7,12 +7,12 @@ import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 public class MidiUtil {
 
-    private final static Logger logger = LogManager.getLogger(MidiUtil.class);
+    private final static Logger logger = LoggerFactory.getLogger(MidiUtil.class);
 
     public enum MidiDirection {
         IN, OUT

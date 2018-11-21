@@ -1,7 +1,7 @@
 package com.ascargon.rocketshow.midi;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.freedesktop.gstreamer.GstObject;
 import org.freedesktop.gstreamer.Pipeline;
 import org.freedesktop.gstreamer.State;
@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 public class MidiPlayer {
 
-    private final static Logger logger = LogManager.getLogger(MidiPlayer.class);
+    private final static Logger logger = LoggerFactory.getLogger(MidiPlayer.class);
 
     private Sequencer sequencer;
     private boolean loop = false;

@@ -3,8 +3,8 @@ package com.ascargon.rocketshow;
 import com.ascargon.rocketshow.api.NotificationService;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import javax.xml.bind.JAXBContext;
@@ -16,7 +16,7 @@ import java.io.File;
 @Service
 public class DefaultSessionService implements SessionService {
 
-    private final static Logger logger = LogManager.getLogger(DefaultSessionService.class);
+    private final static Logger logger = LoggerFactory.getLogger(DefaultSessionService.class);
 
     private final String FILE_NAME = "session";
 

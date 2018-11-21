@@ -2,8 +2,8 @@ package com.ascargon.rocketshow.midi;
 
 import com.ascargon.rocketshow.RemoteDevice;
 import com.ascargon.rocketshow.SettingsService;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
@@ -18,7 +18,7 @@ import java.util.List;
  */
 public class Midi2RemoteReceiver implements Receiver {
 
-    private final static Logger logger = LogManager.getLogger(Midi2RemoteReceiver.class);
+    private final static Logger logger = LoggerFactory.getLogger(Midi2RemoteReceiver.class);
 
     private SettingsService settingsService;
 

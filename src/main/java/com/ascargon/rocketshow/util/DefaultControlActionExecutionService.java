@@ -2,14 +2,14 @@ package com.ascargon.rocketshow.util;
 
 import com.ascargon.rocketshow.*;
 import com.ascargon.rocketshow.composition.SetService;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 @Service
 public class DefaultControlActionExecutionService implements ControlActionExecutionService {
 
-	private final static Logger logger = LogManager.getLogger(DefaultControlActionExecutionService.class);
+	private final static Logger logger = LoggerFactory.getLogger(DefaultControlActionExecutionService.class);
 
 	private PlayerService playerService;
     private SetService setService;

@@ -5,8 +5,8 @@ import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -17,7 +17,7 @@ import java.util.List;
 @Service
 public class DefaultCompositionFileService implements CompositionFileService {
 
-    private final static Logger logger = LogManager.getLogger(DefaultCompositionFileService.class);
+    private final static Logger logger = LoggerFactory.getLogger(DefaultCompositionFileService.class);
 
     private SettingsService settingsService;
 

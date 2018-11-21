@@ -10,14 +10,14 @@ import com.ascargon.rocketshow.raspberry.RaspberryGpioControlActionExecuter;
 import com.ascargon.rocketshow.util.DefaultControlActionExecutionService;
 import com.ascargon.rocketshow.util.ShellManager;
 import com.ascargon.rocketshow.util.Updater;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 
 public class Manager {
 
-    private final static Logger logger = LogManager.getLogger(Manager.class);
+    private final static Logger logger = LoggerFactory.getLogger(Manager.class);
 
     private Updater updater;
 

@@ -7,8 +7,8 @@ import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.dmx.DmxService;
 import com.ascargon.rocketshow.midi.MidiRoutingService;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.freedesktop.gstreamer.Gst;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +20,7 @@ import java.util.concurrent.Executors;
 @Service
 public class DefaultPlayerService implements PlayerService {
 
-    private final static Logger logger = LogManager.getLogger(DefaultPlayerService.class);
+    private final static Logger logger = LoggerFactory.getLogger(DefaultPlayerService.class);
 
     private NotificationService notificationService;
     private SettingsService settingsService;

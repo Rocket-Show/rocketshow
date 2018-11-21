@@ -3,8 +3,8 @@ package com.ascargon.rocketshow.composition;
 import com.ascargon.rocketshow.PlayerService;
 import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.util.FileDurationGetter;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import javax.xml.bind.JAXBContext;
@@ -25,7 +25,7 @@ import java.util.concurrent.Executors;
 @Service
 public class DefaultCompositionService implements CompositionService {
 
-    private final static Logger logger = LogManager.getLogger(DefaultCompositionService.class);
+    private final static Logger logger = LoggerFactory.getLogger(DefaultCompositionService.class);
 
     private final static String COMPOSITIONS_PATH = "compositions";
     private final static String SETS_PATH = "sets";

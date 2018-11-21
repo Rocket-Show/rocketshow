@@ -9,9 +9,9 @@ import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import com.ascargon.rocketshow.util.ResetUsbService;
 import com.ascargon.rocketshow.util.ShellManager;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.boot.system.ApplicationHome;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +29,7 @@ import java.util.List;
 @Service
 public class DefaultSettingsService implements SettingsService {
 
-    private final static Logger logger = LogManager.getLogger(Settings.class);
+    private final static Logger logger = LoggerFactory.getLogger(Settings.class);
 
     private final String FILE_NAME = "settings";
 
@@ -87,8 +87,7 @@ public class DefaultSettingsService implements SettingsService {
                 settings.setMidiInDevice(midiInDeviceList.get(0));
             }
         } catch (MidiUnavailableException e) {
-            logger.error("Could not get any MIDI IN devices");
-            logger.error(e.getStackTrace());
+            logger.error("Could not get any MIDI IN devices", e);
         }
 
         try {
@@ -98,8 +97,7 @@ public class DefaultSettingsService implements SettingsService {
                 settings.setMidiOutDevice(midiOutDeviceList.get(0));
             }
         } catch (MidiUnavailableException e) {
-            logger.error("Could not get any MIDI OUT devices");
-            logger.error(e.getStackTrace());
+            logger.error("Could not get any MIDI OUT devices", e);
         }
 
         settings.setDmxSendDelayMillis(10);
@@ -236,6 +234,7 @@ public class DefaultSettingsService implements SettingsService {
     private void updateLoggingLevel() {
         // Set the proper logging level (map from the log4j enum to our own
         // enum)
+
         switch (settings.getLoggingLevel()) {
             case INFO:
                 Configurator.setRootLevel(Level.INFO);

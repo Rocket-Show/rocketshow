@@ -14,8 +14,8 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 /**
  * Defines a remote RocketShow device to be triggered by the local one one.
@@ -25,7 +25,7 @@ import org.apache.logging.log4j.Logger;
 @XmlRootElement
 public class RemoteDevice {
 
-    private final static Logger logger = LogManager.getLogger(RemoteDevice.class);
+    private final static Logger logger = LoggerFactory.getLogger(RemoteDevice.class);
 
     private HttpClient httpClient;
 

@@ -3,8 +3,8 @@ package com.ascargon.rocketshow.midi;
 import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.dmx.DmxService;
 import com.ascargon.rocketshow.dmx.Midi2DmxConvertService;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.InvalidMidiDataException;
@@ -18,7 +18,7 @@ import java.util.List;
 @Service
 public class DefaultMidiRoutingService implements MidiRoutingService {
 
-    private final static Logger logger = LogManager.getLogger(MidiRouting.class);
+    private final static Logger logger = LoggerFactory.getLogger(MidiRouting.class);
 
     private SettingsService settingsService;
     private Midi2DmxConvertService midi2DmxConvertService;

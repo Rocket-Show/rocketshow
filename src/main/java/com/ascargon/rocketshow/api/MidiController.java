@@ -3,8 +3,8 @@ package com.ascargon.rocketshow.api;
 import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.midi.MidiRoutingService;
 import com.ascargon.rocketshow.midi.MidiSignal;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("${spring.data.rest.base-path}/midi")
 public class MidiController {
 
-    private final static Logger logger = LogManager.getLogger(MidiController.class);
+    private final static Logger logger = LoggerFactory.getLogger(MidiController.class);
 
     private SettingsService settingsService;
     private MidiRoutingService midiRoutingService;

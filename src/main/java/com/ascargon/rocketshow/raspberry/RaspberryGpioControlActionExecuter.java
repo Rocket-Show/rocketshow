@@ -5,14 +5,14 @@ import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.util.ControlActionExecutionService;
 import com.pi4j.io.gpio.*;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 public class RaspberryGpioControlActionExecuter {
 
     private GpioController gpioController;
 
-    private final static Logger logger = LogManager.getLogger(RaspberryGpioControlActionExecuter.class);
+    private final static Logger logger = LoggerFactory.getLogger(RaspberryGpioControlActionExecuter.class);
 
     public RaspberryGpioControlActionExecuter(SettingsService settingsService, ControlActionExecutionService controlActionExecutionService, PlayerService playerService) {
         if (!settingsService.getSettings().isEnableRaspberryGpio()) {

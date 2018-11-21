@@ -4,8 +4,8 @@ import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 /**
  * Receive MIDI messages and send them to the out device.
@@ -14,7 +14,7 @@ import org.apache.logging.log4j.Logger;
  */
 public class Midi2DeviceOutReceiver implements Receiver {
 
-    private final static Logger logger = LogManager.getLogger(Midi2DeviceOutReceiver.class);
+    private final static Logger logger = LoggerFactory.getLogger(Midi2DeviceOutReceiver.class);
 
     private MidiDeviceOutService midiDeviceOutService;
 

@@ -1,8 +1,8 @@
 package com.ascargon.rocketshow.midi;
 
 import com.ascargon.rocketshow.api.NotificationService;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
@@ -17,7 +17,7 @@ import java.util.Timer;
  */
 public class MidiInDeviceReceiver implements Receiver {
 
-    private final static Logger logger = LogManager.getLogger(MidiInDeviceReceiver.class);
+    private final static Logger logger = LoggerFactory.getLogger(MidiInDeviceReceiver.class);
 
     private NotificationService notificationService;
     private MidiControlActionExecutionService midiControlActionExecutionService;

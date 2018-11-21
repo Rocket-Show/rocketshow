@@ -14,8 +14,8 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -27,7 +27,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Service
 public class DefaultDmxService implements DmxService {
 
-    private final static Logger logger = LogManager.getLogger(DefaultDmxService.class);
+    private final static Logger logger = LoggerFactory.getLogger(DefaultDmxService.class);
 
     private SettingsService settingsService;
 

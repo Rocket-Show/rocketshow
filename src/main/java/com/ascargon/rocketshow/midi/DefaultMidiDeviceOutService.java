@@ -4,8 +4,8 @@ import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.api.NotificationService;
 import com.ascargon.rocketshow.dmx.DmxService;
 import com.ascargon.rocketshow.dmx.Midi2DmxConvertService;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.MidiUnavailableException;
@@ -17,7 +17,7 @@ import java.util.TimerTask;
 @Service
 public class DefaultMidiDeviceOutService implements MidiDeviceOutService {
 
-    private final static Logger logger = LogManager.getLogger(DefaultMidiDeviceOutService.class);
+    private final static Logger logger = LoggerFactory.getLogger(DefaultMidiDeviceOutService.class);
 
     private SettingsService settingsService;
     private Midi2DmxConvertService midi2DmxConvertService;

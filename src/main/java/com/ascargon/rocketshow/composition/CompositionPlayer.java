@@ -7,8 +7,8 @@ import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.audio.AudioCompositionFilePlayer;
 import com.ascargon.rocketshow.midi.*;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.freedesktop.gstreamer.*;
 import org.freedesktop.gstreamer.elements.BaseSink;
 import org.freedesktop.gstreamer.elements.PlayBin;
@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class CompositionPlayer {
 
-    private final static Logger logger = LogManager.getLogger(CompositionPlayer.class);
+    private final static Logger logger = LoggerFactory.getLogger(CompositionPlayer.class);
 
     private final String uuid = String.valueOf(UUID.randomUUID());
 
