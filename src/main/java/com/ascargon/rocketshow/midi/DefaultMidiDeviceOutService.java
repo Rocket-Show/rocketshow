@@ -16,13 +16,15 @@ public class DefaultMidiDeviceOutService implements MidiDeviceOutService {
     private final static Logger logger = LoggerFactory.getLogger(DefaultMidiDeviceOutService.class);
 
     private final SettingsService settingsService;
+    private final MidiService midiService;
 
     private Timer connectMidiDeviceTimer;
 
     private javax.sound.midi.MidiDevice midiOutDevice;
 
-    public DefaultMidiDeviceOutService(SettingsService settingsService) {
+    public DefaultMidiDeviceOutService(SettingsService settingsService, MidiService midiService) {
         this.settingsService = settingsService;
+        this.midiService = midiService;
 
         // Try to connect to MIDI in/out devices
         try {
@@ -48,7 +50,7 @@ public class DefaultMidiDeviceOutService implements MidiDeviceOutService {
             logger.trace(
                     "Try connecting to MIDI out device " + midiDevice.getId() + " \"" + midiDevice.getName() + "\"");
 
-            midiOutDevice = DefaultMidiService.getHardwareMidiDevice(midiDevice, DefaultMidiService.MidiDirection.OUT);
+            midiOutDevice = midiService.getHardwareMidiDevice(midiDevice, DefaultMidiService.MidiDirection.OUT);
 
             if (midiOutDevice == null) {
                 logger.trace("MIDI out device not found. Try again in 10 seconds.");

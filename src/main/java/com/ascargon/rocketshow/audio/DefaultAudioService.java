@@ -8,12 +8,14 @@ import java.util.List;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.springframework.stereotype.Service;
 
-public class AudioUtil {
+@Service
+public class DefaultAudioService implements AudioService {
 
-    private final static Logger logger = LoggerFactory.getLogger(AudioUtil.class);
+    private final static Logger logger = LoggerFactory.getLogger(DefaultAudioService.class);
 
-    private static AudioDevice getAudioDeviceFromString(String line) {
+    private AudioDevice getAudioDeviceFromString(String line) {
         AudioDevice audioDevice = new AudioDevice();
 
         audioDevice.setId(Integer.parseInt(line.substring(0, 3).trim()));
@@ -23,7 +25,8 @@ public class AudioUtil {
         return audioDevice;
     }
 
-    public static List<AudioDevice> getAudioDevices() {
+    @Override
+    public List<AudioDevice> getAudioDevices() {
         List<AudioDevice> audioDeviceList = new ArrayList<>();
 
         logger.debug("List audio devices...");

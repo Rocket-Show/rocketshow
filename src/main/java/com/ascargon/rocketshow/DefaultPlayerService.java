@@ -79,7 +79,8 @@ public class DefaultPlayerService implements PlayerService {
         }
     }
 
-    private void loadSetAndComposition(String setName) throws Exception {
+    @Override
+    public void loadSetAndComposition(String setName) throws Exception {
         if (setName.length() > 0) {
             setService.setCurrentSet(compositionService.getSet(setName));
         }

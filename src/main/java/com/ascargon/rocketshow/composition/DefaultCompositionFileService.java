@@ -25,6 +25,7 @@ public class DefaultCompositionFileService implements CompositionFileService {
         this.settingsService = settingsService;
     }
 
+    @Override
     public List<CompositionFile> getAllFiles() {
         List<CompositionFile> returnCompositionFileList = new ArrayList<>();
         File folder;
@@ -77,6 +78,7 @@ public class DefaultCompositionFileService implements CompositionFileService {
         return returnCompositionFileList;
     }
 
+    @Override
     public void deleteFile(String name, String type) {
         String path = settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/";
 
@@ -104,6 +106,7 @@ public class DefaultCompositionFileService implements CompositionFileService {
         }
     }
 
+    @Override
     public CompositionFile saveFile(InputStream uploadedInputStream, String fileName) {
         String[] midiFormats = {"midi", "mid"};
         String[] audioFormats = {"wav", "wave", "mp3", "aac", "ogg", "oga", "mogg", "wma"};

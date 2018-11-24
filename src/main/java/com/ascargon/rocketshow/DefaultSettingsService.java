@@ -377,8 +377,14 @@ public class DefaultSettingsService implements SettingsService {
         logger.info("Settings loaded");
     }
 
+    @Override
     public Settings getSettings() {
         return settings;
+    }
+
+    @Override
+    public void setSettings(Settings settings) {
+        this.settings = settings;
     }
 
 }
