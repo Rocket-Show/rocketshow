@@ -9,25 +9,27 @@ import com.ascargon.rocketshow.SettingsService;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
-import com.ascargon.rocketshow.Manager;
+import org.springframework.stereotype.Service;
 
 /**
  * Prepares the log directory and sends it to the download.
  *
  * @author Moritz A. Vieli
  */
-public class LogDownload {
+@Service
+public class DefaultLogDownloadService implements LogDownloadService {
 
-	private final static Logger logger = LoggerFactory.getLogger(LogDownload.class);
+	private final static Logger logger = LoggerFactory.getLogger(DefaultLogDownloadService.class);
 
-	private SettingsService settingsService;
+	private final SettingsService settingsService;
 
 	private final static String LOGS_FILE_NAME = "logs.zip";
 
-	public LogDownload(SettingsService settingsService) {
+	public DefaultLogDownloadService(SettingsService settingsService) {
 		this.settingsService = settingsService;
 	}
 
+	@Override
 	public File getLogsFile() throws Exception {
 		// Prepare the log directory for download
 		ShellManager shellManager = new ShellManager(new String[] { "bash", "-c",

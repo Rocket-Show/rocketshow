@@ -3,7 +3,7 @@ package com.ascargon.rocketshow.api;
 import com.ascargon.rocketshow.PlayerService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.midi.MidiSignal;
-import com.ascargon.rocketshow.util.Updater;
+import com.ascargon.rocketshow.util.UpdateService;
 import org.springframework.stereotype.Service;
 
 /**
@@ -18,7 +18,7 @@ public interface NotificationService {
 
     // Notify the clients about the current state and include update
     // information, if an update is running
-    void notifyClients(Updater.UpdateState updateState) throws Exception;
+    void notifyClients(UpdateService.UpdateState updateState) throws Exception;
 
     void notifyClients(PlayerService playerService) throws Exception;
 
@@ -27,5 +27,9 @@ public interface NotificationService {
     void notifyClients(boolean isUpdateFinished) throws Exception;
 
     void notifyClients() throws Exception;
+
+    boolean isMidiLearn();
+
+    void setMidiLearn(boolean midiLearn);
 
 }

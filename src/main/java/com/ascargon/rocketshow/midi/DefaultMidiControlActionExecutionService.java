@@ -1,7 +1,7 @@
 package com.ascargon.rocketshow.midi;
 
 import javax.sound.midi.ShortMessage;
-import com.ascargon.rocketshow.Manager;
+
 import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.util.ControlActionExecutionService;
 import org.springframework.stereotype.Service;
@@ -9,8 +9,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class DefaultMidiControlActionExecutionService implements MidiControlActionExecutionService {
 
-    private SettingsService settingsService;
-    private ControlActionExecutionService controlActionExecutionService;
+    private final SettingsService settingsService;
+    private final ControlActionExecutionService controlActionExecutionService;
 
     public DefaultMidiControlActionExecutionService(SettingsService settingsService, ControlActionExecutionService controlActionExecutionService) {
         this.settingsService = settingsService;

@@ -4,12 +4,12 @@ import com.ascargon.rocketshow.SettingsService;
 
 public class AudioCompositionFilePlayer {
 
-    private SettingsService settingsService;
+    private final SettingsService settingsService;
 
-    private AudioCompositionFile audioCompositionFile;
-    private boolean isSample;
+    private final AudioCompositionFile audioCompositionFile;
+    private final boolean isSample;
     private AlsaPlayer alsaPlayer;
-    private String path;
+    private final String path;
 
     public AudioCompositionFilePlayer(SettingsService settingsService, AudioCompositionFile audioCompositionFile, String path, boolean isSample) {
         this.settingsService = settingsService;

@@ -1,5 +1,8 @@
 package com.ascargon.rocketshow.api;
 
+import com.ascargon.rocketshow.PlayerService;
+import com.ascargon.rocketshow.composition.SetService;
+import org.apache.catalina.Manager;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -7,161 +10,112 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController()
 @RequestMapping("${spring.data.rest.base-path}/transport")
-public class TransportController {
+class TransportController {
 
     private final static Logger logger = LoggerFactory.getLogger(TransportController.class);
 
-    //private CompositionPlayerService player;
-    private NotificationService notificationService;
+    private final NotificationService notificationService;
+    private final PlayerService playerService;
+    private final SetService setService;
 
-    public TransportController(NotificationService notificationService) {
+    private TransportController(NotificationService notificationService, PlayerService playerService, SetService setService) {
         this.notificationService = notificationService;
+        this.playerService = playerService;
+        this.setService = setService;
     }
 
-//    @Path("load")
-//    @POST
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public Response load(@QueryParam("name") String compositionName) throws Exception {
-//        logger.info("Received API request for transport/load");
-//
-//        Manager manager = (Manager) context.getAttribute("manager");
-//
-//        if (compositionName.length() > 0) {
-//            if (!manager.getPlayer().getCompositionName().equals(compositionName)) {
-//
-//                // Load the composition with the given name into the player
-//                manager.getPlayer().setComposition(manager.getDefaultCompositionService().getComposition(compositionName),
-//                        false, false);
-//            }
-//        }
-//
-//        // Load the files for the current composition
-//        manager.getPlayer().load();
-//
-//        return Response.status(200).build();
-//    }
+    @PostMapping("load")
+    public ResponseEntity<Void> load(@RequestParam("name") String compositionName) throws Exception {
+        logger.info("Received API request for transport/load");
+
+        playerService.loadCompositionName(compositionName);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 
     @PostMapping("play")
     public ResponseEntity<Void> play() throws Exception {
         logger.info("Received API request for transport/play");
 
-        notificationService.notifyClients();
-
-        return new ResponseEntity<Void>(HttpStatus.OK);
-
-//        Manager manager = (Manager) context.getAttribute("manager");
-//        manager.getPlayer().play();
+        playerService.play();
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
-//    @Path("play-as-sample")
-//    @POST
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public Response playAsSample(@QueryParam("name") String compositionName) throws Exception {
-//        logger.info("Received API request for transport/play-as-sample");
-//
-//        Manager manager = (Manager) context.getAttribute("manager");
-//        manager.getPlayer().playAsSample(compositionName);
-//
-//        return Response.status(200).build();
-//    }
-//
-//    @Path("pause")
-//    @POST
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public Response pause() throws Exception {
-//        logger.info("Received API request for transport/pause");
-//
-//        Manager manager = (Manager) context.getAttribute("manager");
-//        manager.getPlayer().pause();
-//
-//        return Response.status(200).build();
-//    }
-//
-//    @Path("toggle-play")
-//    @POST
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public Response togglePlay() throws Exception {
-//        logger.info("Received API request for transport/toggle-play");
-//
-//        Manager manager = (Manager) context.getAttribute("manager");
-//        manager.getPlayer().togglePlay();
-//
-//        return Response.status(200).build();
-//    }
-//
-//    @Path("stop")
-//    @POST
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public Response stop(@QueryParam("playDefaultComposition") @DefaultValue("true") boolean playDefaultComposition) throws Exception {
-//
-//        logger.info("Received API request for transport/stop");
-//
-//        Manager manager = (Manager) context.getAttribute("manager");
-//        manager.getPlayer().stop(playDefaultComposition);
-//
-//        return Response.status(200).build();
-//    }
-//
-//    @Path("seek")
-//    @POST
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public Response seek(@QueryParam("positionMillis") long positionMillis) throws Exception {
-//        logger.info("Received API request for transport/seek");
-//
-//        Manager manager = (Manager) context.getAttribute("manager");
-//        manager.getPlayer().seek(positionMillis);
-//
-//        return Response.status(200).build();
-//    }
-//
-//    @Path("next-composition")
-//    @POST
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public Response nextComposition() throws Exception {
-//        logger.info("Received API request for transport/next-composition");
-//        playerService.setNextComposition();
-//        return Response.status(200).build();
-//    }
-//
-//    @Path("previous-composition")
-//    @POST
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public Response previousComposition() throws Exception {
-//        logger.info("Received API request for transport/previous-composition");
-////      playerService.setPreviousComposition();
-//        return Response.status(200).build();
-//    }
-//
-//    @Path("set-composition-index")
-//    @POST
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public Response setCompositionIndex(@QueryParam("index") int index) throws Exception {
-//        logger.info("Received API request for transport/set-composition-index");
-//
-//        Manager manager = (Manager) context.getAttribute("manager");
-//        if (manager.getCurrentSet() != null) {
-//            manager.getCurrentSet().setCompositionIndex(index);
-//        }
-//        return Response.status(200).build();
-//    }
-//
-//    @Path("set-composition-name")
-//    @POST
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public Response setCompositionName(@QueryParam("name") String compositionName) throws Exception {
-//        logger.info("Received API request for transport/set-composition-name");
-//
-//        Manager manager = (Manager) context.getAttribute("manager");
-//
-//        if (compositionName.length() > 0) {
-//            manager.getPlayer().setCompositionName(compositionName);
-//        }
-//
-//        return Response.status(200).build();
-//    }
+    @PostMapping("play-as-sample")
+    public ResponseEntity<Void> playAsSample(@RequestParam("name") String compositionName) throws Exception {
+        logger.info("Received API request for transport/play-as-sample");
+
+        playerService.playAsSample(compositionName);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("pause")
+    public ResponseEntity<Void> pause() throws Exception {
+        logger.info("Received API request for transport/pause");
+
+        playerService.pause();
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("toggle-play")
+    public ResponseEntity<Void> togglePlay() throws Exception {
+        logger.info("Received API request for transport/toggle-play");
+
+        playerService.togglePlay();
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("stop")
+    public ResponseEntity<Void> stop(@RequestParam(value = "playDefaultComposition", required = false, defaultValue = "true") boolean playDefaultComposition) throws Exception {
+        logger.info("Received API request for transport/stop");
+
+        playerService.stop(playDefaultComposition);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("seek")
+    public ResponseEntity<Void> seek(@RequestParam("positionMillis") long positionMillis) throws Exception {
+        logger.info("Received API request for transport/seek");
+
+        playerService.seek(positionMillis);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("next-composition")
+    public ResponseEntity<Void> nextComposition() throws Exception {
+        logger.info("Received API request for transport/next-composition");
+
+        playerService.setNextComposition();
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("previous-composition")
+    public ResponseEntity<Void> previousComposition() throws Exception {
+        logger.info("Received API request for transport/previous-composition");
+
+        playerService.setPreviousComposition();
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("set-composition-index")
+    public ResponseEntity<Void> setCompositionIndex(@RequestParam("index") int compositionIndex) throws Exception {
+        logger.info("Received API request for transport/set-composition-index");
+
+        setService.setCurrentCompositionIndex(compositionIndex);
+        playerService.setCompositionName(setService.getCurrentCompositionName());
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("set-composition-name")
+    public ResponseEntity<Void> setCompositionName(@RequestParam("name") String compositionName) throws Exception {
+        logger.info("Received API request for transport/set-composition-name");
+
+        playerService.setCompositionName(compositionName);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 
 }

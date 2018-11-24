@@ -7,11 +7,12 @@ import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.dmx.DmxService;
 import com.ascargon.rocketshow.midi.MidiRoutingService;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 import org.freedesktop.gstreamer.Gst;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -22,18 +23,18 @@ public class DefaultPlayerService implements PlayerService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultPlayerService.class);
 
-    private NotificationService notificationService;
-    private SettingsService settingsService;
-    private CompositionService compositionService;
-    private SetService setService;
-    private SessionService sessionService;
-    private MidiRoutingService midiRoutingService;
-    private DmxService dmxService;
-    private CapabilitiesService capabilitiesService;
+    private final NotificationService notificationService;
+    private final SettingsService settingsService;
+    private final CompositionService compositionService;
+    private final SetService setService;
+    private final SessionService sessionService;
+    private final MidiRoutingService midiRoutingService;
+    private final DmxService dmxService;
+    private final CapabilitiesService capabilitiesService;
 
     private CompositionPlayer defaultCompositionPlayer;
-    private CompositionPlayer currentCompositionPlayer;
-    private List<CompositionPlayer> sampleCompositionPlayerList = new ArrayList<>();
+    private final CompositionPlayer currentCompositionPlayer;
+    private final List<CompositionPlayer> sampleCompositionPlayerList = new ArrayList<>();
 
     public DefaultPlayerService(NotificationService notificationService, SettingsService settingsService, CompositionService compositionService, SetService setService, SessionService sessionService, MidiRoutingService midiRoutingService, DmxService dmxService, CapabilitiesService capabilitiesService) {
         this.notificationService = notificationService;
@@ -45,12 +46,15 @@ public class DefaultPlayerService implements PlayerService {
         this.dmxService = dmxService;
         this.capabilitiesService = capabilitiesService;
 
+        currentCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midiRoutingService, capabilitiesService);
+        defaultCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midiRoutingService, capabilitiesService);
+
         try {
             Gst.init();
         } catch (Exception | UnsatisfiedLinkError e) {
             // Gstreamer might not be installed properly or not be installed at all
             logger.error("Could not initialize Gstreamer", e);
-            this.capabilitiesService.getCapabilities().setGstreamer(false);
+            capabilitiesService.getCapabilities().setGstreamer(false);
         }
 
         try {
@@ -59,7 +63,7 @@ public class DefaultPlayerService implements PlayerService {
             logger.error("Could not play default composition", e);
         }
 
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midiRoutingService);
+        defaultCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midiRoutingService, capabilitiesService);
 
         // Load the last set/composition
         try {
@@ -102,6 +106,15 @@ public class DefaultPlayerService implements PlayerService {
                 logger.error("Could not read current composition", e);
             }
         }
+    }
+
+    @Override
+    public synchronized void loadCompositionName(String compositionName) throws Exception {
+        if (currentCompositionPlayer.getComposition() != null && compositionName.equals(currentCompositionPlayer.getComposition().getName())) {
+            setCompositionName(compositionName);
+        }
+
+        currentCompositionPlayer.loadFiles();
     }
 
     @Override
@@ -204,7 +217,7 @@ public class DefaultPlayerService implements PlayerService {
         // to share the same instance) and play it
         Composition composition = compositionService
                 .cloneComposition(compositionService.getComposition(compositionName));
-        CompositionPlayer compositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midiRoutingService);
+        CompositionPlayer compositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midiRoutingService, capabilitiesService);
         compositionPlayer.setSample(true);
         compositionPlayer.setComposition(composition);
         sampleCompositionPlayerList.add(compositionPlayer);
@@ -295,7 +308,7 @@ public class DefaultPlayerService implements PlayerService {
             return;
         }
 
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midiRoutingService);
+        defaultCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midiRoutingService, capabilitiesService);
 
         if (settingsService.getSettings().getDefaultComposition() == null || settingsService.getSettings().getDefaultComposition().length() == 0) {
             return;
@@ -339,8 +352,10 @@ public class DefaultPlayerService implements PlayerService {
         return currentCompositionPlayer.getComposition().getDurationMillis();
     }
 
+    @PreDestroy
     public void close() throws Exception {
         currentCompositionPlayer.stop();
+        defaultCompositionPlayer.stop();
 
         for (CompositionPlayer sampleCompositionPlayer : sampleCompositionPlayerList) {
             sampleCompositionPlayer.stop();

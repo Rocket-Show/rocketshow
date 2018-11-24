@@ -35,7 +35,7 @@ public class MidiCompositionFilePlayer {
     }
 
     public long getPositionMillis() {
-        return 0;
+        return midiPlayer.getPositionMillis();
     }
 
     public MidiPlayer getMidiPlayer() {

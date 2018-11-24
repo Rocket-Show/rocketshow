@@ -1,20 +1,23 @@
 package com.ascargon.rocketshow.raspberry;
 
-import com.ascargon.rocketshow.PlayerService;
 import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.util.ControlActionExecutionService;
 import com.pi4j.io.gpio.*;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
-public class RaspberryGpioControlActionExecuter {
+import javax.annotation.PreDestroy;
+
+@Service
+public class DefaultRaspberryGpioControlActionExecutionService implements RaspberryGpioControlActionExecutionService {
 
     private GpioController gpioController;
 
-    private final static Logger logger = LoggerFactory.getLogger(RaspberryGpioControlActionExecuter.class);
+    private final static Logger logger = LoggerFactory.getLogger(DefaultRaspberryGpioControlActionExecutionService.class);
 
-    public RaspberryGpioControlActionExecuter(SettingsService settingsService, ControlActionExecutionService controlActionExecutionService, PlayerService playerService) {
+    public DefaultRaspberryGpioControlActionExecutionService(SettingsService settingsService, ControlActionExecutionService controlActionExecutionService) {
         if (!settingsService.getSettings().isEnableRaspberryGpio()) {
             return;
         }
@@ -115,7 +118,8 @@ public class RaspberryGpioControlActionExecuter {
         return null;
     }
 
-    public void close() {
+    @PreDestroy
+    private void close() {
         if (gpioController != null) {
             gpioController.shutdown();
         }

@@ -1,10 +1,9 @@
 package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.PlayerService;
-import com.ascargon.rocketshow.SessionService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.midi.MidiSignal;
-import com.ascargon.rocketshow.util.Updater.UpdateState;
+import com.ascargon.rocketshow.util.UpdateService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.CloseStatus;
@@ -12,6 +11,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -22,9 +22,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Service
 public class DefaultNotificationService extends TextWebSocketHandler implements NotificationService {
 
-    private StateService stateService;
+    private final StateService stateService;
 
-    private List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
+    private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
+
+    private boolean midiLearn = false;
 
     public DefaultNotificationService(StateService stateService) {
         this.stateService = stateService;
@@ -40,7 +42,7 @@ public class DefaultNotificationService extends TextWebSocketHandler implements 
         sessions.remove(session);
     }
 
-    private void notifyClients(PlayerService playerService, SetService setService, MidiSignal midiSignal, UpdateState updateState, Boolean isUpdateFinished) throws IOException {
+    private void notifyClients(PlayerService playerService, SetService setService, MidiSignal midiSignal, UpdateService.UpdateState updateState, Boolean isUpdateFinished) throws IOException {
         State currentState = stateService.getCurrentState(playerService, setService);
         currentState.setMidiSignal(midiSignal);
         currentState.setUpdateState(updateState);
@@ -49,7 +51,6 @@ public class DefaultNotificationService extends TextWebSocketHandler implements 
         ObjectMapper mapper = new ObjectMapper();
         String returnValue = mapper.writeValueAsString(currentState);
 
-        // TODO Async
         for (WebSocketSession webSocketSession : sessions) webSocketSession.sendMessage(new TextMessage(returnValue));
     }
 
@@ -63,7 +64,7 @@ public class DefaultNotificationService extends TextWebSocketHandler implements 
     // Notify the clients about the current state and include update
     // information, if an update is running
     @Override
-    public void notifyClients(UpdateState updateState) throws IOException {
+    public void notifyClients(UpdateService.UpdateState updateState) throws IOException {
         notifyClients(null, null, null, updateState, null);
     }
 
@@ -85,6 +86,21 @@ public class DefaultNotificationService extends TextWebSocketHandler implements 
     @Override
     public void notifyClients() throws IOException {
         notifyClients(null, null, null, null, null);
+    }
+
+    @Override
+    public boolean isMidiLearn() {
+        return midiLearn;
+    }
+
+    @Override
+    public void setMidiLearn(boolean midiLearn) {
+        this.midiLearn = midiLearn;
+    }
+
+    @PreDestroy
+    public void close() throws IOException {
+        for (WebSocketSession webSocketSession : sessions) webSocketSession.close();
     }
 
 }

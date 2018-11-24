@@ -12,11 +12,11 @@ import org.slf4j.Logger;
  *
  * @author Moritz A. Vieli
  */
-public class Midi2DeviceOutReceiver implements Receiver {
+class Midi2DeviceOutReceiver implements Receiver {
 
     private final static Logger logger = LoggerFactory.getLogger(Midi2DeviceOutReceiver.class);
 
-    private MidiDeviceOutService midiDeviceOutService;
+    private final MidiDeviceOutService midiDeviceOutService;
 
     private MidiMapping midiMapping;
 

@@ -9,20 +9,22 @@ import javax.sound.midi.MidiUnavailableException;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.springframework.stereotype.Service;
 
-public class MidiUtil {
+@Service
+public class DefaultMidiService implements MidiService {
 
-    private final static Logger logger = LoggerFactory.getLogger(MidiUtil.class);
+    private final static Logger logger = LoggerFactory.getLogger(DefaultMidiService.class);
 
     public enum MidiDirection {
         IN, OUT
     }
 
-    private static boolean isDeviceAllowed(String name) {
+    private boolean isDeviceAllowed(String name) {
         return !(name.equals("Real Time Sequencer") || name.equals("Gervill"));
     }
 
-    private static boolean midiDeviceHasDirection(MidiDevice midiDevice, MidiDirection midiDirection) {
+    private boolean midiDeviceHasDirection(MidiDevice midiDevice, MidiDirection midiDirection) {
         if (!isDeviceAllowed(midiDevice.getDeviceInfo().getName())) {
             return false;
         }
@@ -31,7 +33,8 @@ public class MidiUtil {
                 || (midiDirection == MidiDirection.OUT && midiDevice.getMaxReceivers() != 0));
     }
 
-    public static MidiDevice getHardwareMidiDevice(com.ascargon.rocketshow.midi.MidiDevice midiDevice,
+    @Override
+    public MidiDevice getHardwareMidiDevice(com.ascargon.rocketshow.midi.MidiDevice midiDevice,
                                                    MidiDirection midiDirection) throws MidiUnavailableException {
 
         // Get a hardware device for a given MIDI device
@@ -91,7 +94,8 @@ public class MidiUtil {
         return null;
     }
 
-    public static List<com.ascargon.rocketshow.midi.MidiDevice> getMidiDevices(MidiDirection midiDirection)
+    @Override
+    public List<com.ascargon.rocketshow.midi.MidiDevice> getMidiDevices(MidiDirection midiDirection)
             throws MidiUnavailableException {
 
         // Get all available MIDI devices

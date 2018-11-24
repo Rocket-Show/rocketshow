@@ -2,7 +2,7 @@ package com.ascargon.rocketshow;
 
 import org.springframework.stereotype.Service;
 
-import javax.sound.midi.Transmitter;
+import javax.xml.bind.JAXBException;
 
 @Service
 public interface SettingsService {
@@ -12,5 +12,9 @@ public interface SettingsService {
     RemoteDevice getRemoteDeviceByName(String name);
 
     String getAlsaDeviceFromOutputBus(String outputBus);
+
+    void load() throws Exception;
+
+    void save() throws JAXBException;
 
 }

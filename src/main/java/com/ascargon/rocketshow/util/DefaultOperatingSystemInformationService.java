@@ -14,7 +14,7 @@ public class DefaultOperatingSystemInformationService implements OperatingSystem
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultOperatingSystemInformationService.class);
 
-    private OperatingSystemInformation operatingSystemInformation = new OperatingSystemInformation();
+    private final OperatingSystemInformation operatingSystemInformation = new OperatingSystemInformation();
 
     public DefaultOperatingSystemInformationService() {
         String operatingSystem = System.getProperty("os.name").toLowerCase();
@@ -64,7 +64,7 @@ public class DefaultOperatingSystemInformationService implements OperatingSystem
             }
 
             if("debian".equals(idLike)) {
-                if("raspbian".equals("id")) {
+                if("raspbian".equals(id)) {
                     operatingSystemInformation.setSubType(OperatingSystemInformation.SubType.RASPBIAN);
                 } else {
                     operatingSystemInformation.setSubType(OperatingSystemInformation.SubType.DEBIAN);

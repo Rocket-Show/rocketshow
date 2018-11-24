@@ -3,8 +3,6 @@ package com.ascargon.rocketshow.util;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
-import com.ascargon.rocketshow.Manager;
-import com.ascargon.rocketshow.Settings;
 import com.ascargon.rocketshow.SettingsService;
 import org.springframework.stereotype.Service;
 

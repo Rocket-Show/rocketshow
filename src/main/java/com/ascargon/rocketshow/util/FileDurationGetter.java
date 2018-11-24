@@ -26,7 +26,7 @@ public class FileDurationGetter implements Runnable {
 
 	private SettingsService settingsService;
 
-	private CompositionFile compositionFile;
+	private final CompositionFile compositionFile;
 
 	public FileDurationGetter(SettingsService settingsService, CompositionFile compositionFile) {
 		this.compositionFile = compositionFile;

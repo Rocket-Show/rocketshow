@@ -9,7 +9,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author Moritz A. Vieli
  */
 @XmlRootElement
-public class ChangeNote {
+class ChangeNote {
 
 	private String version;
 	private String changes;

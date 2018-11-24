@@ -1,22 +1,22 @@
 package com.ascargon.rocketshow;
 
 import com.ascargon.rocketshow.audio.AudioBus;
+import com.ascargon.rocketshow.midi.DefaultMidiService;
 import com.ascargon.rocketshow.midi.MidiDevice;
 import com.ascargon.rocketshow.midi.MidiMapping;
-import com.ascargon.rocketshow.midi.MidiUtil;
+import com.ascargon.rocketshow.midi.MidiService;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import com.ascargon.rocketshow.util.ResetUsbService;
 import com.ascargon.rocketshow.util.ShellManager;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.system.ApplicationHome;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.MidiUnavailableException;
-import javax.sound.midi.Transmitter;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -33,18 +33,18 @@ public class DefaultSettingsService implements SettingsService {
 
     private final String FILE_NAME = "settings";
 
-    private OperatingSystemInformationService operatingSystemInformationService;
-    private ResetUsbService resetUsbService;
+    private final OperatingSystemInformationService operatingSystemInformationService;
+    private final ResetUsbService resetUsbService;
+    private final MidiService midiService;
 
     private Settings settings;
 
-    private Transmitter midiDeviceInTransmitter;
+    private final ApplicationHome applicationHome = new ApplicationHome(RocketShowApplication.class);
 
-    private ApplicationHome applicationHome = new ApplicationHome(RocketShowApplication.class);
-
-    public DefaultSettingsService(ResetUsbService resetUsbService, OperatingSystemInformationService operatingSystemInformationService) {
+    public DefaultSettingsService(ResetUsbService resetUsbService, OperatingSystemInformationService operatingSystemInformationService, MidiService midiService) {
         this.operatingSystemInformationService = operatingSystemInformationService;
         this.resetUsbService = resetUsbService;
+        this.midiService = midiService;
 
         initDefaultSettings();
 
@@ -82,7 +82,7 @@ public class DefaultSettingsService implements SettingsService {
 
         try {
             List<MidiDevice> midiInDeviceList;
-            midiInDeviceList = MidiUtil.getMidiDevices(MidiUtil.MidiDirection.IN);
+            midiInDeviceList = midiService.getMidiDevices(DefaultMidiService.MidiDirection.IN);
             if (midiInDeviceList.size() > 0) {
                 settings.setMidiInDevice(midiInDeviceList.get(0));
             }
@@ -92,7 +92,7 @@ public class DefaultSettingsService implements SettingsService {
 
         try {
             List<MidiDevice> midiOutDeviceList;
-            midiOutDeviceList = MidiUtil.getMidiDevices(MidiUtil.MidiDirection.OUT);
+            midiOutDeviceList = midiService.getMidiDevices(DefaultMidiService.MidiDirection.OUT);
             if (midiOutDeviceList.size() > 0) {
                 settings.setMidiOutDevice(midiOutDeviceList.get(0));
             }
@@ -111,7 +111,7 @@ public class DefaultSettingsService implements SettingsService {
 
         settings.setLoggingLevel(Settings.LoggingLevel.INFO);
 
-        if(OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+        if (OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
             settings.setEnableRaspberryGpio(true);
             settings.setWlanApEnable(true);
         }
@@ -258,7 +258,7 @@ public class DefaultSettingsService implements SettingsService {
         String apConfig = "";
         String statusCommand;
 
-        if(!settings.isWlanApEnable()) {
+        if (!settings.isWlanApEnable()) {
             return;
         }
 
@@ -313,7 +313,7 @@ public class DefaultSettingsService implements SettingsService {
     private void updateSystem() {
         // Update all system settings
 
-        if(OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+        if (OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
             try {
                 updateAudioSystem();
             } catch (Exception e) {
@@ -334,6 +334,7 @@ public class DefaultSettingsService implements SettingsService {
         }
     }
 
+    @Override
     public void save() throws JAXBException {
         File file = new File(applicationHome.getDir() + "/" + FILE_NAME + ".xml");
         JAXBContext jaxbContext = JAXBContext.newInstance(Settings.class);
@@ -347,7 +348,8 @@ public class DefaultSettingsService implements SettingsService {
         logger.info("Settings saved");
     }
 
-    private void load() throws Exception {
+    @Override
+    public void load() throws Exception {
         File file = new File(applicationHome.getDir() + "/" + FILE_NAME + ".xml");
 
         if (!file.exists() || file.isDirectory()) {

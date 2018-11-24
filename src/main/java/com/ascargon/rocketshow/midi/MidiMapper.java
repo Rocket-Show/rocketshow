@@ -2,7 +2,7 @@ package com.ascargon.rocketshow.midi;
 
 import javax.sound.midi.ShortMessage;
 
-public class MidiMapper {
+class MidiMapper {
 
 	private static int getChannelTo(int channelFrom, MidiMapping midiMapping) {
 		// Search the channel map on the current mapping

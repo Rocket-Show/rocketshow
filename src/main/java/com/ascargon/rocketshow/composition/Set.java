@@ -17,7 +17,7 @@ public class Set {
 
     private String name;
     private String notes;
-    private List<SetComposition> setCompositionList = new ArrayList<>();
+    private final List<SetComposition> setCompositionList = new ArrayList<>();
 
     // Return only the set-relevant information of the composition (to save it
     // to a file)

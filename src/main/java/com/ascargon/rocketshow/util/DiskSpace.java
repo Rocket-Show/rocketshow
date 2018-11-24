@@ -1,12 +1,14 @@
 package com.ascargon.rocketshow.util;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * Container for the used and available disc space.
  *
  * @author Moritz A. Vieli
  */
+@XmlRootElement
 public class DiskSpace {
 
 	private double usedMB = 0;

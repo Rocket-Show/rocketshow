@@ -1,10 +1,9 @@
 package com.ascargon.rocketshow;
 
 import com.ascargon.rocketshow.api.NotificationService;
-import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.xml.bind.JAXBContext;
@@ -20,17 +19,15 @@ public class DefaultSessionService implements SessionService {
 
     private final String FILE_NAME = "session";
 
-    private SettingsService settingsService;
-    private SetService setService;
-    private CompositionService compositionService;
-    private NotificationService notificationService;
+    private final SettingsService settingsService;
+    private final SetService setService;
+    private final NotificationService notificationService;
 
     private Session session;
 
-    public DefaultSessionService(SettingsService settingsService, SetService setService, CompositionService compositionService, NotificationService notificationService) {
+    public DefaultSessionService(SettingsService settingsService, SetService setService, NotificationService notificationService) {
         this.settingsService = settingsService;
         this.setService = setService;
-        this.compositionService = compositionService;
         this.notificationService = notificationService;
 
         try {
@@ -65,7 +62,7 @@ public class DefaultSessionService implements SessionService {
     }
 
     private void loadSession() throws Exception {
-        File file = new File(settingsService.getSettings().getBasePath() + "/" + FILE_NAME+ ".xml");
+        File file = new File(settingsService.getSettings().getBasePath() + "/" + FILE_NAME + ".xml");
 
         if (file.exists()) {
             // We already have a session -> restore it from the file

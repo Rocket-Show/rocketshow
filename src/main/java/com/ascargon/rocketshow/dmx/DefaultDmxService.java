@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PreDestroy;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -29,12 +30,13 @@ public class DefaultDmxService implements DmxService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultDmxService.class);
 
-    private SettingsService settingsService;
+    private final SettingsService settingsService;
+    private final CapabilitiesService capabilitiesService;
 
     private final String OLA_URL = "http://localhost:9090/";
 
     // Cache the channel values and send them each time
-    private List<DmxUniverse> dmxUniverseList = new CopyOnWriteArrayList<>();
+    private final List<DmxUniverse> dmxUniverseList = new CopyOnWriteArrayList<>();
 
     private OlaClient olaClient;
 
@@ -46,12 +48,13 @@ public class DefaultDmxService implements DmxService {
     // time, but sent separately)
     private Timer sendUniverseTimer;
 
-    private List<String> standardDeviceNames = new ArrayList<>();
+    private final List<String> standardDeviceNames = new ArrayList<>();
 
-    private HttpClient httpClient;
+    private final HttpClient httpClient;
 
     public DefaultDmxService(SettingsService settingsService, CapabilitiesService capabilitiesService) {
         this.settingsService = settingsService;
+        this.capabilitiesService = capabilitiesService;
 
         RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).build();
         httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
@@ -61,6 +64,10 @@ public class DefaultDmxService implements DmxService {
         } catch (Exception e) {
             logger.error("Could not initialize OLA DMX client", e);
             capabilitiesService.getCapabilities().setOla(false);
+        }
+
+        if(!capabilitiesService.getCapabilities().isOla()) {
+            return;
         }
 
         reset();
@@ -78,6 +85,10 @@ public class DefaultDmxService implements DmxService {
     }
 
     public void reset() {
+        if(!capabilitiesService.getCapabilities().isOla()) {
+            return;
+        }
+
         // Initialize the universe
         for (DmxUniverse dmxUniverse : dmxUniverseList) {
             HashMap<Integer, Integer> universe = dmxUniverse.getUniverse();
@@ -125,6 +136,10 @@ public class DefaultDmxService implements DmxService {
     // the same time. This will cause the OLA rpc stream to break and a restart
     // is required.
     public synchronized void send() {
+        if(!capabilitiesService.getCapabilities().isOla()) {
+            return;
+        }
+
         logger.trace("Sending a DMX value");
 
         // Schedule the specified count of executions in the specified delay
@@ -274,11 +289,14 @@ public class DefaultDmxService implements DmxService {
     }
 
     @Override
+    @PreDestroy
     public void close() {
         if (sendUniverseTimer != null) {
             sendUniverseTimer.cancel();
             sendUniverseTimer = null;
         }
+
+        reset();
     }
 
 }

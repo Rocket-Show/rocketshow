@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @author Moritz A. Vieli
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class OlaPort {
+class OlaPort {
 	private String device;
 	private String id;
 	private boolean isOutput;

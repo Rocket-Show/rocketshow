@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class DefaultCapabilitiesService implements CapabilitiesService {
 
-    private Capabilities capabilities = new Capabilities();
+    private final Capabilities capabilities = new Capabilities();
 
     @Override
     public Capabilities getCapabilities() {

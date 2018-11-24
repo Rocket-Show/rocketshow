@@ -9,7 +9,7 @@ import javax.sound.midi.ShortMessage;
 @Service
 public class DefaultMidi2DmxConvertService implements Midi2DmxConvertService {
 
-    private DefaultDmxService defaultDmxService;
+    private final DefaultDmxService defaultDmxService;
 
     public DefaultMidi2DmxConvertService(DefaultDmxService defaultDmxService) {
         this.defaultDmxService = defaultDmxService;

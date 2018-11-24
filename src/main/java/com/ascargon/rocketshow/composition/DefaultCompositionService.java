@@ -30,11 +30,11 @@ public class DefaultCompositionService implements CompositionService {
     private final static String COMPOSITIONS_PATH = "compositions";
     private final static String SETS_PATH = "sets";
 
-    private SettingsService settingsService;
+    private final SettingsService settingsService;
 
     // All available compositions
-    private List<Composition> compositionCache = new ArrayList<>();
-    private List<Set> compositionSetCache = new ArrayList<>();
+    private final List<Composition> compositionCache = new ArrayList<>();
+    private final List<Set> compositionSetCache = new ArrayList<>();
 
     public DefaultCompositionService(SettingsService settingsService) {
         this.settingsService = settingsService;

@@ -17,4 +17,6 @@ public interface SetService {
 
     SetComposition getPreviousSetComposition();
 
+    String getCurrentCompositionName();
+
 }

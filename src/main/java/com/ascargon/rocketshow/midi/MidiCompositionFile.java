@@ -2,20 +2,11 @@ package com.ascargon.rocketshow.midi;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlTransient;
 
-import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.composition.CompositionFile;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-
-import com.ascargon.rocketshow.Manager;
-import org.freedesktop.gstreamer.Pipeline;
 
 public class MidiCompositionFile extends CompositionFile {
 

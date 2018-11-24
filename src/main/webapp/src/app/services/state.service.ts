@@ -27,7 +27,7 @@ export class StateService {
     if (environment.name == 'dev') {
       this.wsUrl = 'ws://' + environment.localBackend + '/';
     } else {
-      this.wsUrl = 'ws://' + location.hostname + '/';
+      this.wsUrl = 'ws://' + window.location.hostname + ':' + window.location.port + '/';
     }
 
     this.wsUrl += 'api/state';
@@ -69,15 +69,11 @@ export class StateService {
       .map(response => {
         this.currentState = new State(response);
 
-        if(this.currentState.isInitializing) {
-          this.connected = false;
-        } else {
-          if(!this.connected) {
-            this.getsConnected.next();
-          }
-
-          this.connected = true;
+        if(!this.connected) {
+          this.getsConnected.next();
         }
+
+        this.connected = true;
 
         return this.currentState;
       });

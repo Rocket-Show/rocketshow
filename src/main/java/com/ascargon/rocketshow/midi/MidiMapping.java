@@ -11,7 +11,7 @@ public class MidiMapping {
 
 	private MidiMapping parent;
 
-	private List<ChannelMapping> channelMap = new ArrayList<ChannelMapping>();
+	private List<ChannelMapping> channelMap = new ArrayList<>();
 	
 	private Integer channelOffset = 0;
 	private Integer noteOffset = 0;

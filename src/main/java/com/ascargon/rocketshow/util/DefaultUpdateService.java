@@ -3,8 +3,9 @@ package com.ascargon.rocketshow.util;
 import com.ascargon.rocketshow.SessionService;
 import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.api.NotificationService;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
@@ -15,13 +16,10 @@ import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 
-public class Updater {
+@Service
+public class DefaultUpdateService implements UpdateService {
 
-    public enum UpdateState {
-        DOWNLOADING, INSTALLING, REBOOTING
-    }
-
-    private final static Logger logger = LoggerFactory.getLogger(Updater.class);
+    private final static Logger logger = LoggerFactory.getLogger(DefaultUpdateService.class);
 
     private final static String UPDATE_PATH = "update/";
     private final static String BEFORE_SCRIPT_NAME = "before.sh";
@@ -31,16 +29,17 @@ public class Updater {
     private final static String UPDATE_URL = "https://www.rocketshow.net/update/";
     private final static String UPDATE_SCRIPT = "update.sh";
 
-    private NotificationService notificationService;
-    private SettingsService settingsService;
-    private SessionService sessionService;
+    private final NotificationService notificationService;
+    private final SettingsService settingsService;
+    private final SessionService sessionService;
 
-    public Updater(NotificationService notificationService, SettingsService settingsService, SessionService sessionService) {
+    public DefaultUpdateService(NotificationService notificationService, SettingsService settingsService, SessionService sessionService) {
         this.notificationService = notificationService;
         this.settingsService = settingsService;
         this.sessionService = sessionService;
     }
 
+    @Override
     public VersionInfo getCurrentVersionInfo() throws Exception {
         File file = new File(settingsService.getSettings().getBasePath() + "/" + CURRENT_VERSION);
 
@@ -50,6 +49,7 @@ public class Updater {
         return (VersionInfo) jaxbUnmarshaller.unmarshal(file);
     }
 
+    @Override
     public VersionInfo getRemoteVersionInfo() throws Exception {
         URL url = new URL(UPDATE_URL + "currentversion.xml");
         InputStream inputStream = url.openStream();
@@ -74,6 +74,7 @@ public class Updater {
         process.destroy();
     }
 
+    @Override
     public void update() throws Exception {
         logger.info("Updating system...");
 

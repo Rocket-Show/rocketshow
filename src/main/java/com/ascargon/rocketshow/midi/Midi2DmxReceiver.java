@@ -17,14 +17,14 @@ import javax.sound.midi.ShortMessage;
  *
  * @author Moritz A. Vieli
  */
-public class Midi2DmxReceiver implements Receiver {
+class Midi2DmxReceiver implements Receiver {
 
     private MidiMapping midiMapping;
     private Midi2DmxMapping midi2DmxMapping;
-    private Midi2DmxConvertService midi2DmxConvertService;
-    private DmxService dmxService;
+    private final Midi2DmxConvertService midi2DmxConvertService;
+    private final DmxService dmxService;
 
-    private DmxUniverse dmxUniverse;
+    private final DmxUniverse dmxUniverse;
 
     public Midi2DmxReceiver(Midi2DmxConvertService midi2DmxConvertService, DmxService dmxService) {
         this.midi2DmxConvertService = midi2DmxConvertService;

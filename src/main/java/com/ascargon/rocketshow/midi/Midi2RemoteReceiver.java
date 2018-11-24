@@ -16,11 +16,11 @@ import java.util.List;
  *
  * @author Moritz A. Vieli
  */
-public class Midi2RemoteReceiver implements Receiver {
+class Midi2RemoteReceiver implements Receiver {
 
     private final static Logger logger = LoggerFactory.getLogger(Midi2RemoteReceiver.class);
 
-    private SettingsService settingsService;
+    private final SettingsService settingsService;
 
     private MidiMapping midiMapping;
 

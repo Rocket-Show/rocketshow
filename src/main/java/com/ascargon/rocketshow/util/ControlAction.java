@@ -5,8 +5,10 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlRootElement;
 
-public abstract class ControlAction {
+@XmlRootElement
+public class ControlAction {
 
 	// Actions to be executed (e.g. by MIDI control or Raspberry GPIO events)
 	public enum Action {

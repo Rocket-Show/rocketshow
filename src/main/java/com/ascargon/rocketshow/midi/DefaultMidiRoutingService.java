@@ -20,10 +20,10 @@ public class DefaultMidiRoutingService implements MidiRoutingService {
 
     private final static Logger logger = LoggerFactory.getLogger(MidiRouting.class);
 
-    private SettingsService settingsService;
-    private Midi2DmxConvertService midi2DmxConvertService;
-    private DmxService dmxService;
-    private MidiDeviceOutService midiDeviceOutService;
+    private final SettingsService settingsService;
+    private final Midi2DmxConvertService midi2DmxConvertService;
+    private final DmxService dmxService;
+    private final MidiDeviceOutService midiDeviceOutService;
 
     DefaultMidiRoutingService(SettingsService settingsService, Midi2DmxConvertService midi2DmxConvertService, DmxService dmxService, MidiDeviceOutService midiDeviceOutService) {
         this.settingsService = settingsService;

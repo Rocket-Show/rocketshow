@@ -1,13 +1,17 @@
 package com.ascargon.rocketshow.util;
 
+import org.springframework.stereotype.Service;
+
 /**
  * Resets the whole application to its state where it was installed.
  *
  * @author Moritz A. Vieli
  */
-public class FactoryReset {
+@Service
+public class DefaultFactoryResetService implements FactoryResetService {
 
-	public static void reset() throws Exception {
+	@Override
+	public void reset() throws Exception {
 		// Reset the interface
 		ShellManager shellManager = new ShellManager(new String[] { "sudo", "/opt/rocketshow_reset.sh" });
 

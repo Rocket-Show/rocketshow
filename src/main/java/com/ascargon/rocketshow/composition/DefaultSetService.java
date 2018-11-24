@@ -1,18 +1,14 @@
 package com.ascargon.rocketshow.composition;
 
-import com.ascargon.rocketshow.api.NotificationService;
 import org.springframework.stereotype.Service;
 
 @Service
 public class DefaultSetService implements SetService {
 
-    private NotificationService notificationService;
     private Set currentSet;
     private int currentCompositionIndex;
 
-    public DefaultSetService(NotificationService notificationService) {
-        this.notificationService = notificationService;
-
+    public DefaultSetService() {
         currentCompositionIndex = 0;
     }
 
@@ -64,6 +60,15 @@ public class DefaultSetService implements SetService {
         }
 
         return currentSet.getSetCompositionList().get(newIndex);
+    }
+
+    @Override
+    public String getCurrentCompositionName() {
+        if(currentSet == null || currentCompositionIndex >= currentSet.getSetCompositionList().size()) {
+            return null;
+        }
+
+        return currentSet.getSetCompositionList().get(currentCompositionIndex).getName();
     }
 
 }

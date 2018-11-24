@@ -10,8 +10,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import com.ascargon.rocketshow.Manager;
-
 @Path("/session")
 public class Session {
 

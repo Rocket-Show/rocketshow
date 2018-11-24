@@ -19,7 +19,7 @@ public class DefaultCompositionFileService implements CompositionFileService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultCompositionFileService.class);
 
-    private SettingsService settingsService;
+    private final SettingsService settingsService;
 
     public DefaultCompositionFileService(SettingsService settingsService) {
         this.settingsService = settingsService;

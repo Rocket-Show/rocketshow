@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 
 import com.ascargon.rocketshow.util.ShellManager;
 
-public class AlsaPlayer {
+class AlsaPlayer {
 
     private final static Logger logger = LoggerFactory.getLogger(AlsaPlayer.class);
 

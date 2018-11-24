@@ -11,9 +11,9 @@ public class DefaultControlActionExecutionService implements ControlActionExecut
 
 	private final static Logger logger = LoggerFactory.getLogger(DefaultControlActionExecutionService.class);
 
-	private PlayerService playerService;
-    private SetService setService;
-    private SettingsService settingsService;
+	private final PlayerService playerService;
+    private final SetService setService;
+    private final SettingsService settingsService;
 
 	public DefaultControlActionExecutionService(PlayerService playerService, SetService setService, SettingsService settingsService) {
 		this.playerService = playerService;

@@ -1,5 +1,7 @@
 package com.ascargon.rocketshow.util;
 
+import org.springframework.stereotype.Service;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
@@ -8,9 +10,11 @@ import java.io.InputStreamReader;
  *
  * @author Moritz A. Vieli
  */
-public class DiskSpaceUtil {
+@Service
+public class DefaultDiskSpaceService implements DiskSpaceService {
 
-	public static DiskSpace get() throws Exception {
+	@Override
+	public DiskSpace get() throws Exception {
 		DiskSpace diskSpace = new DiskSpace();
 		
 		// Get the used and available space in MB

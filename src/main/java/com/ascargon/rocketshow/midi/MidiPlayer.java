@@ -19,8 +19,8 @@ public class MidiPlayer {
 
     private Sequencer sequencer;
     private boolean loop = false;
-    private Pipeline syncPipeline;
-    private MidiPlayer syncMidiPlayer;
+    private final Pipeline syncPipeline;
+    private final MidiPlayer syncMidiPlayer;
 
     // Sync to a master, if available
     private Timer syncTimer;
@@ -28,12 +28,6 @@ public class MidiPlayer {
     MidiPlayer(MidiRoutingService midiRoutingService, String path, Pipeline syncPipeline, MidiPlayer syncMidiPlayer, List<MidiRouting> midiRoutingList) throws MidiUnavailableException, IOException, InvalidMidiDataException {
         this.syncPipeline = syncPipeline;
         this.syncMidiPlayer = syncMidiPlayer;
-
-        if (sequencer != null) {
-            if (sequencer.isOpen()) {
-                sequencer.close();
-            }
-        }
 
         sequencer = MidiSystem.getSequencer(false);
         sequencer.open();

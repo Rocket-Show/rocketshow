@@ -2,9 +2,6 @@ package com.ascargon.rocketshow.composition;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-
-import com.ascargon.rocketshow.Manager;
 
 @XmlRootElement
 abstract public class CompositionFile {
@@ -15,7 +12,7 @@ abstract public class CompositionFile {
     private boolean loop = false;
     private int offsetMillis = 0;
 
-    public CompositionFile() {
+    protected CompositionFile() {
     }
 
     @XmlElement

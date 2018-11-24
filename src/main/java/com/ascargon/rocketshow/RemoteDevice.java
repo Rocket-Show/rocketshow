@@ -27,7 +27,7 @@ public class RemoteDevice {
 
     private final static Logger logger = LoggerFactory.getLogger(RemoteDevice.class);
 
-    private HttpClient httpClient;
+    private final HttpClient httpClient;
 
     // The name of the remote device
     private String name;
@@ -38,7 +38,7 @@ public class RemoteDevice {
     // Synchronize composition plays/stops with the local device
     private boolean synchronize;
 
-    public RemoteDevice() {
+    private RemoteDevice() {
         // TODO Add this timeout to the settings
         RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).build();
         httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();

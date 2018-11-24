@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PreDestroy;
 import javax.sound.midi.MidiUnavailableException;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -15,18 +16,20 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultMidiDeviceInService.class);
 
-    private SettingsService settingsService;
-    private MidiRoutingService midiRoutingService;
+    private final SettingsService settingsService;
+    private final MidiRoutingService midiRoutingService;
+    private final MidiService midiService;
 
     private Timer connectMidiDeviceTimer;
 
     private javax.sound.midi.MidiDevice midiInDevice;
 
-    private MidiInDeviceReceiver midiInDeviceReceiver;
+    private final MidiInDeviceReceiver midiInDeviceReceiver;
 
-    public DefaultMidiDeviceInService(SettingsService settingsService, NotificationService notificationService, MidiControlActionExecutionService midiControlActionExecutionService, MidiRoutingService midiRoutingService) {
+    public DefaultMidiDeviceInService(SettingsService settingsService, NotificationService notificationService, MidiControlActionExecutionService midiControlActionExecutionService, MidiRoutingService midiRoutingService, MidiService midiService) {
         this.settingsService = settingsService;
         this.midiRoutingService = midiRoutingService;
+        this.midiService = midiService;
 
         // Initialize the MIDI in device receiver to execute MIDI control actions
         midiInDeviceReceiver = new MidiInDeviceReceiver(notificationService, midiControlActionExecutionService);
@@ -55,7 +58,7 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
             logger.trace(
                     "Try connecting to MIDI in device " + midiDevice.getId() + " \"" + midiDevice.getName() + "\"");
 
-            midiInDevice = MidiUtil.getHardwareMidiDevice(midiDevice, MidiUtil.MidiDirection.IN);
+            midiInDevice = midiService.getHardwareMidiDevice(midiDevice, DefaultMidiService.MidiDirection.IN);
 
             if (midiInDevice == null) {
                 logger.trace("MIDI in device not found. Try again in 10 seconds.");
@@ -94,13 +97,17 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
 
     }
 
-    @Override
-    public void reconnectMidiDevice() throws MidiUnavailableException {
+    @PreDestroy
+    private void close() {
         if (midiInDevice != null) {
             midiInDevice.close();
             midiInDevice = null;
         }
+    }
 
+    @Override
+    public void reconnectMidiDevice() throws MidiUnavailableException {
+        close();
         connectMidiDevices();
     }
 

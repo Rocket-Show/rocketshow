@@ -1,16 +1,12 @@
 package com.ascargon.rocketshow.midi;
 
 import com.ascargon.rocketshow.SettingsService;
-import com.ascargon.rocketshow.api.NotificationService;
-import com.ascargon.rocketshow.dmx.DmxService;
-import com.ascargon.rocketshow.dmx.Midi2DmxConvertService;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PreDestroy;
 import javax.sound.midi.MidiUnavailableException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -19,18 +15,14 @@ public class DefaultMidiDeviceOutService implements MidiDeviceOutService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultMidiDeviceOutService.class);
 
-    private SettingsService settingsService;
-    private Midi2DmxConvertService midi2DmxConvertService;
-    private DmxService dmxService;
+    private final SettingsService settingsService;
 
     private Timer connectMidiDeviceTimer;
 
     private javax.sound.midi.MidiDevice midiOutDevice;
 
-    public DefaultMidiDeviceOutService(SettingsService settingsService, Midi2DmxConvertService midi2DmxConvertService, DmxService dmxService) {
+    public DefaultMidiDeviceOutService(SettingsService settingsService) {
         this.settingsService = settingsService;
-        this.midi2DmxConvertService = midi2DmxConvertService;
-        this.dmxService = dmxService;
 
         // Try to connect to MIDI in/out devices
         try {
@@ -56,7 +48,7 @@ public class DefaultMidiDeviceOutService implements MidiDeviceOutService {
             logger.trace(
                     "Try connecting to MIDI out device " + midiDevice.getId() + " \"" + midiDevice.getName() + "\"");
 
-            midiOutDevice = MidiUtil.getHardwareMidiDevice(midiDevice, MidiUtil.MidiDirection.OUT);
+            midiOutDevice = DefaultMidiService.getHardwareMidiDevice(midiDevice, DefaultMidiService.MidiDirection.OUT);
 
             if (midiOutDevice == null) {
                 logger.trace("MIDI out device not found. Try again in 10 seconds.");
@@ -91,13 +83,17 @@ public class DefaultMidiDeviceOutService implements MidiDeviceOutService {
 
     }
 
-    @Override
-    public void reconnectMidiDevice() throws MidiUnavailableException {
+    @PreDestroy
+    private void close() {
         if (midiOutDevice != null) {
             midiOutDevice.close();
             midiOutDevice = null;
         }
+    }
 
+    @Override
+    public void reconnectMidiDevice() throws MidiUnavailableException {
+        close();
         connectMidiDevices();
     }
 

@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.composition;
 
+import com.ascargon.rocketshow.CapabilitiesService;
 import com.ascargon.rocketshow.PlayerService;
 import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.api.NotificationService;
@@ -37,20 +38,21 @@ public class CompositionPlayer {
         LOADED // Has the composition finished loading all files?
     }
 
-    private NotificationService notificationService;
-    private PlayerService playerService;
-    private SettingsService settingsService;
-    private MidiRoutingService midiRoutingService;
+    private final NotificationService notificationService;
+    private final PlayerService playerService;
+    private final SettingsService settingsService;
+    private final MidiRoutingService midiRoutingService;
+    private final CapabilitiesService capabilitiesService;
 
     private Composition composition;
     private PlayState playState = PlayState.STOPPED;
     private Timer autoStopTimer;
     private long startPosition = 0;
 
-    private List<AudioCompositionFilePlayer> audioCompositionFilePlayerList = new ArrayList<>();
-    private List<MidiCompositionFilePlayer> midiCompositionFilePlayerList = new ArrayList<>();
+    private final List<AudioCompositionFilePlayer> audioCompositionFilePlayerList = new ArrayList<>();
+    private final List<MidiCompositionFilePlayer> midiCompositionFilePlayerList = new ArrayList<>();
 
-    private MidiMapping midiMapping = new MidiMapping();
+    private final MidiMapping midiMapping = new MidiMapping();
 
     // Is this the default composition?
     private boolean isDefaultComposition = false;
@@ -61,17 +63,22 @@ public class CompositionPlayer {
     // The gstreamer pipeline, used to sync all files in this composition
     private Pipeline pipeline;
 
-    public CompositionPlayer(NotificationService notificationService, PlayerService playerService, SettingsService settingsService, MidiRoutingService midiRoutingService) {
+    public CompositionPlayer(NotificationService notificationService, PlayerService playerService, SettingsService settingsService, MidiRoutingService midiRoutingService, CapabilitiesService capabilitiesService) {
         this.notificationService = notificationService;
         this.playerService = playerService;
         this.settingsService = settingsService;
         this.midiRoutingService = midiRoutingService;
+        this.capabilitiesService = capabilitiesService;
 
         this.midiMapping.setParent(settingsService.getSettings().getMidiMapping());
     }
 
     // Create a new pipeline, if there is at least one audio- or video file in this composition
     private boolean compositionNeedsPipeline(Composition composition) {
+        if(!capabilitiesService.getCapabilities().isGstreamer()) {
+            return false;
+        }
+
         if (isSample) {
             return false;
         }
@@ -148,7 +155,7 @@ public class CompositionPlayer {
                     if (firstMidiPlayer == null) {
                         firstMidiPlayer = midiCompositionFilePlayer.getMidiPlayer();
                     }
-                } else if (compositionFile instanceof AudioCompositionFile) {
+                } else if (compositionFile instanceof AudioCompositionFile && capabilitiesService.getCapabilities().isGstreamer()) {
                     AudioCompositionFilePlayer audioCompositionFilePlayer = new AudioCompositionFilePlayer(settingsService, (AudioCompositionFile) compositionFile, settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/" + settingsService.getSettings().getAudioPath() + "/" + compositionFile.getName(), isSample);
                     audioCompositionFilePlayerList.add(audioCompositionFilePlayer);
 
@@ -179,7 +186,7 @@ public class CompositionPlayer {
                         convert.link(resample);
                         resample.link(alsaSink);
                     }
-                } else if (compositionFile instanceof VideoCompositionFile) {
+                } else if (compositionFile instanceof VideoCompositionFile && capabilitiesService.getCapabilities().isGstreamer()) {
                     PlayBin playBin = (PlayBin) ElementFactory.make("playbin", "playbin" + i);
                     playBin.set("uri", "file://" + settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/" + settingsService.getSettings().getVideoPath() + "/" + compositionFile.getName());
                     pipeline.add(playBin);
