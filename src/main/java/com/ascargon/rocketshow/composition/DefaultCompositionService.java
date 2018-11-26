@@ -3,8 +3,8 @@ package com.ascargon.rocketshow.composition;
 import com.ascargon.rocketshow.PlayerService;
 import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.util.FileDurationGetter;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.xml.bind.JAXBContext;
@@ -12,6 +12,10 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.util.JAXBSource;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -80,7 +84,7 @@ public class DefaultCompositionService implements CompositionService {
         // Load a composition
         JAXBContext jaxbContext = JAXBContext.newInstance(Composition.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-        composition = (Composition) jaxbUnmarshaller.unmarshal(new File(settingsService.getSettings().getBasePath() + "/" + COMPOSITIONS_PATH + "/" + name));
+        composition = (Composition) jaxbUnmarshaller.unmarshal(new File(settingsService.getSettings().getBasePath() + "/" + COMPOSITIONS_PATH + "/" + name + ".xml"));
 
         finalizeLoadedComposition(composition, name);
 
@@ -97,7 +101,7 @@ public class DefaultCompositionService implements CompositionService {
         // Load a set
         JAXBContext jaxbContext = JAXBContext.newInstance(Set.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-        set = (Set) jaxbUnmarshaller.unmarshal(new File(settingsService.getSettings().getBasePath() + "/" + SETS_PATH + "/" + name));
+        set = (Set) jaxbUnmarshaller.unmarshal(new File(settingsService.getSettings().getBasePath() + "/" + SETS_PATH + "/" + name + ".xml"));
 
         logger.info("Set '" + name + "' successfully loaded");
 
@@ -158,7 +162,7 @@ public class DefaultCompositionService implements CompositionService {
             for (File file : fileList) {
                 if (file.isFile()) {
                     try {
-                        Composition composition = loadComposition(file.getName());
+                        Composition composition = loadComposition(file.getName().substring(0, file.getName().length() - 4));
                         compositionCache.add(composition);
                     } catch (Exception e) {
                         logger.error("Could not load composition '" + file.getName() + "'", e);
@@ -179,7 +183,7 @@ public class DefaultCompositionService implements CompositionService {
             for (File file : fileList) {
                 if (file.isFile()) {
                     Set set = new Set();
-                    set.setName(file.getName());
+                    set.setName(file.getName().substring(0, file.getName().length() - 4));
 
                     compositionSetCache.add(set);
                 }
@@ -187,6 +191,14 @@ public class DefaultCompositionService implements CompositionService {
         }
 
         sortSetCache();
+    }
+
+    private void createDirectoryIfNotExists(String directory) throws IOException {
+        Path path = Paths.get(directory);
+
+        if (Files.notExists(path)) {
+            Files.createDirectories(path);
+        }
     }
 
     @Override
@@ -218,7 +230,10 @@ public class DefaultCompositionService implements CompositionService {
         composition.setDurationMillis(maxDuration);
 
         // Save the composition in XML
-        File file = new File(settingsService.getSettings().getBasePath() + "/" + COMPOSITIONS_PATH + "/" + composition.getName());
+        String directory = settingsService.getSettings().getBasePath() + "/" + COMPOSITIONS_PATH;
+        createDirectoryIfNotExists(directory);
+
+        File file = new File(directory + "/" + composition.getName() + ".xml");
         JAXBContext jaxbContext = JAXBContext.newInstance(Composition.class);
         Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
@@ -268,7 +283,10 @@ public class DefaultCompositionService implements CompositionService {
             }
         }
 
-        File file = new File(settingsService.getSettings().getBasePath() + "/" + SETS_PATH + "/" + set.getName());
+        String directory = settingsService.getSettings().getBasePath() + "/" + SETS_PATH;
+        createDirectoryIfNotExists(directory);
+
+        File file = new File(directory + "/" + set.getName() + ".xml");
         JAXBContext jaxbContext = JAXBContext.newInstance(Set.class);
         Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
@@ -296,7 +314,7 @@ public class DefaultCompositionService implements CompositionService {
     @Override
     public synchronized void deleteComposition(String name, PlayerService playerService) throws Exception {
         // Delete the composition
-        File file = new File(settingsService.getSettings().getBasePath() + "/" + COMPOSITIONS_PATH + "/" + name);
+        File file = new File(settingsService.getSettings().getBasePath() + "/" + COMPOSITIONS_PATH + "/" + name + ".xml");
 
         if (file.exists()) {
             boolean result = file.delete();
@@ -328,7 +346,7 @@ public class DefaultCompositionService implements CompositionService {
     @Override
     public synchronized void deleteSet(String name) {
         // Delete the set
-        File file = new File(settingsService.getSettings().getBasePath() + "/" + SETS_PATH + "/" + name);
+        File file = new File(settingsService.getSettings().getBasePath() + "/" + SETS_PATH + "/" + name + ".xml");
 
         if (file.exists()) {
             boolean result = file.delete();

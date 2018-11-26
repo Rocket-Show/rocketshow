@@ -11,11 +11,12 @@ import java.util.List;
 
 @RestController()
 @RequestMapping("${spring.data.rest.base-path}/file")
-public class FileController {
+@CrossOrigin
+public class CompositionFileController {
 
     private final CompositionFileService compositionFileService;
 
-    public FileController(CompositionFileService compositionFileService) {
+    public CompositionFileController(CompositionFileService compositionFileService) {
         this.compositionFileService = compositionFileService;
     }
 

@@ -2,6 +2,7 @@ package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.PlayerService;
 import com.ascargon.rocketshow.composition.CompositionService;
+import com.ascargon.rocketshow.composition.Set;
 import com.ascargon.rocketshow.composition.SetService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import java.util.List;
 
 @RestController()
 @RequestMapping("${spring.data.rest.base-path}/set")
+@CrossOrigin
 public class SetController {
 
     private final SetService setService;
@@ -24,7 +26,7 @@ public class SetController {
     }
 
     @GetMapping("list")
-    public List<com.ascargon.rocketshow.composition.Set> getAll() {
+    public List<Set> getAll() {
         return compositionService.getAllSets();
     }
 
@@ -35,17 +37,17 @@ public class SetController {
     }
 
     @GetMapping
-    public com.ascargon.rocketshow.composition.Set getCurrent() {
+    public Set getCurrent() {
         return setService.getCurrentSet();
     }
 
     @GetMapping("details")
-    public com.ascargon.rocketshow.composition.Set getByName(@RequestParam("name") String name) {
+    public Set getByName(@RequestParam("name") String name) {
         return compositionService.getSet(name);
     }
 
     @PostMapping
-    public ResponseEntity<Void> save(com.ascargon.rocketshow.composition.Set set) throws Exception {
+    public ResponseEntity<Void> save(@RequestBody Set set) throws Exception {
         compositionService.saveSet(set);
         playerService.loadSetAndComposition(set.getName());
         return new ResponseEntity<>(HttpStatus.OK);

@@ -1,8 +1,10 @@
 package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.PlayerService;
+import com.ascargon.rocketshow.composition.Composition;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
+import com.ascargon.rocketshow.midi.MidiCompositionFile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +13,7 @@ import java.util.List;
 
 @RestController()
 @RequestMapping("${spring.data.rest.base-path}/composition")
+@CrossOrigin
 public class CompositionController {
 
     private final CompositionService compositionService;
@@ -24,17 +27,19 @@ public class CompositionController {
     }
 
     @GetMapping("list")
-    public List<com.ascargon.rocketshow.composition.Composition> getAll() {
+    public List<Composition> getAll() {
         return compositionService.getAllCompositions();
     }
 
     @GetMapping
-    public com.ascargon.rocketshow.composition.Composition get(@RequestParam("name") String name) {
+    public Composition get(@RequestParam("name") String name) {
         return compositionService.getComposition(name);
     }
 
     @PostMapping
-    public ResponseEntity<Void> save(com.ascargon.rocketshow.composition.Composition composition) throws Exception {
+    public ResponseEntity<Void> save(@RequestBody Composition composition) throws Exception {
+        MidiCompositionFile midiCompositionFile = new MidiCompositionFile();
+        composition.getCompositionFileList().add(midiCompositionFile);
         compositionService.saveComposition(composition);
 
         // If this is the current composition, read it again

@@ -7,11 +7,12 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController()
 @RequestMapping("${spring.data.rest.base-path}/session")
-public class Session {
+@CrossOrigin
+public class SessionController {
 
     private final SessionService sessionService;
 
-    public Session(SessionService sessionService) {
+    public SessionController(SessionService sessionService) {
         this.sessionService = sessionService;
     }
 

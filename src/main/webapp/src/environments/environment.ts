@@ -7,13 +7,11 @@ export const environment = {
   production: false,
   name: "dev",
 
-  // Local backend in local Tomcat
-  //localBackend: "localhost:8080/ROOT",
+  // Local backend
+  localBackend: "localhost:8080",
 
-  // Local backend in docker
-  //localBackend: "localhost:8080",
-
-  localBackend: "rocketshow.local",
+  // Backend on a Raspberry Pi
+  //localBackend: "rocketshow.local",
 
   debug: true
 };

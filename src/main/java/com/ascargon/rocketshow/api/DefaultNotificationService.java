@@ -99,8 +99,8 @@ public class DefaultNotificationService extends TextWebSocketHandler implements 
     }
 
     @PreDestroy
-    public void close() throws IOException {
-        for (WebSocketSession webSocketSession : sessions) webSocketSession.close();
+    public void close() {
+        // Don't close the sessions, because the webapp would not automatically reconnect in this case.
     }
 
 }

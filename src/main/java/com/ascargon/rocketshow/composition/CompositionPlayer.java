@@ -370,6 +370,11 @@ public class CompositionPlayer {
         }
 
         playState = PlayState.STOPPED;
+
+        if (!isSample && !isDefaultComposition) {
+            notificationService.notifyClients(playerService);
+        }
+
         logger.info("Composition '" + composition.getName() + "' stopped");
     }
 

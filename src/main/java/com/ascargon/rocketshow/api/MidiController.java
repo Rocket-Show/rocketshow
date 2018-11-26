@@ -10,6 +10,7 @@ import java.util.List;
 
 @RestController()
 @RequestMapping("${spring.data.rest.base-path}/midi")
+@CrossOrigin
 class MidiController {
 
     private final SettingsService settingsService;

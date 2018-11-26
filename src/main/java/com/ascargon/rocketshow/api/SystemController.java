@@ -10,15 +10,14 @@ import com.ascargon.rocketshow.util.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.xml.bind.JAXBException;
 import java.io.File;
 
 @RestController()
 @RequestMapping("${spring.data.rest.base-path}/system")
+@CrossOrigin
 class SystemController {
 
     private final StateService stateService;
@@ -94,8 +93,9 @@ class SystemController {
     }
 
     @PostMapping("settings")
-    public ResponseEntity<Void> saveSettings(Settings settings) {
+    public ResponseEntity<Void> saveSettings(@RequestBody Settings settings) throws JAXBException {
         settingsService.setSettings(settings);
+        settingsService.save();
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

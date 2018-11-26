@@ -20,9 +20,8 @@ public class DefaultStartMessageDisplayService implements StartMessageDisplaySer
 
     @EventListener(ApplicationReadyEvent.class)
     public void show() {
-        logger.info("*************************************************");
-        logger.info("* Rocket Show started. Open http://localhost:" + environment.getProperty("local.server.port") + " with your browser");
-        logger.info("*************************************************");
+        logger.info("");
+        logger.info("* Rocket Show started. Open your browser on http://localhost:" + environment.getProperty("local.server.port") + " *");
     }
 
 }

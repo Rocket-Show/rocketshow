@@ -6,6 +6,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 abstract public class CompositionFile {
 
+    public enum CompositionFileType {
+        MIDI, AUDIO, VIDEO, UNKNOWN
+    }
+
     private String name;
     private boolean active = true;
     private long durationMillis;
@@ -58,6 +62,11 @@ abstract public class CompositionFile {
 
     public void setLoop(boolean loop) {
         this.loop = loop;
+    }
+
+    @XmlElement
+    public CompositionFileType getType() {
+        return CompositionFileType.UNKNOWN;
     }
 
 }

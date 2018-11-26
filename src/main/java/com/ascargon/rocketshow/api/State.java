@@ -18,7 +18,7 @@ public class State {
     private MidiSignal midiSignal;
     private UpdateService.UpdateState updateState;
     private String currentSetName;
-    private boolean updateFinished;
+    private Boolean updateFinished;
 
     @XmlElement
     public int getCurrentCompositionIndex() {
@@ -93,11 +93,11 @@ public class State {
     }
 
     @XmlElement
-    public boolean isUpdateFinished() {
+    public Boolean isUpdateFinished() {
         return updateFinished;
     }
 
-    public void setUpdateFinished(boolean updateFinished) {
+    public void setUpdateFinished(Boolean updateFinished) {
         this.updateFinished = updateFinished;
     }
 

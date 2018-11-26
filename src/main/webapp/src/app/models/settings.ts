@@ -8,6 +8,11 @@ import { RemoteDevice } from "./remote-device";
 import { MidiMapping } from './midi-mapping';
 
 export class Settings {
+    basePath: string;
+    mediaPath: string;
+    midiPath: string;
+    audioPath: string;
+    videoPath: string;
     midiInDevice: MidiDevice;
     midiOutDevice: MidiDevice;
     remoteDeviceList: RemoteDevice[];
@@ -41,6 +46,12 @@ export class Settings {
             return;
         }
 
+        this.basePath = data.basePath;
+        this.mediaPath = data.mediaPath;
+        this.midiPath = data.midiPath;
+        this.audioPath = data.audioPath;
+        this.videoPath = data.videoPath;
+        
         if (data.midiInDevice) {
             this.midiInDevice = new MidiDevice(data.midiInDevice);
         }

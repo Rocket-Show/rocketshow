@@ -3,6 +3,8 @@ package com.ascargon.rocketshow.composition;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
@@ -28,6 +30,7 @@ public class Composition {
     @XmlElements({@XmlElement(type = MidiCompositionFile.class, name = "midiFile"),
             @XmlElement(type = VideoCompositionFile.class, name = "videoFile"),
             @XmlElement(type = AudioCompositionFile.class, name = "audioFile")})
+    @JsonSubTypes({ @JsonSubTypes.Type(name = "midi", value = MidiCompositionFile.class) })
     public List<CompositionFile> getCompositionFileList() {
         return compositionFileList;
     }

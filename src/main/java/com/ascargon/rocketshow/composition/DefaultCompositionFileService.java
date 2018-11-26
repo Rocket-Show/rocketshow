@@ -10,6 +10,9 @@ import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -106,6 +109,15 @@ public class DefaultCompositionFileService implements CompositionFileService {
         }
     }
 
+    private void createDirectoryIfNotExists(String directory) throws IOException {
+        Path path = Paths.get(directory);
+
+        if (Files.notExists(path)) {
+            Files.createDirectories(path);
+        }
+    }
+
+
     @Override
     public CompositionFile saveFile(InputStream uploadedInputStream, String fileName) {
         String[] midiFormats = {"midi", "mid"};
@@ -129,9 +141,17 @@ public class DefaultCompositionFileService implements CompositionFileService {
             compositionFile = new VideoCompositionFile();
         }
 
+        path += "/";
+
         if (compositionFile == null) {
             // We could not determine the file type -> don't store the file
             return null;
+        }
+
+        try {
+            createDirectoryIfNotExists(path);
+        } catch (IOException e) {
+            logger.error("Could not create directory to save the file", e);
         }
 
         compositionFile.setName(fileName);

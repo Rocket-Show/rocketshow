@@ -353,6 +353,7 @@ public class DefaultSettingsService implements SettingsService {
         File file = new File(applicationHome.getDir() + "/" + FILE_NAME + ".xml");
 
         if (!file.exists() || file.isDirectory()) {
+            logger.info("Settings file does not exist");
             return;
         }
 

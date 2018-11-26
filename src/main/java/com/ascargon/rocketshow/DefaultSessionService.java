@@ -11,6 +11,10 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Service
 public class DefaultSessionService implements SessionService {
@@ -37,6 +41,14 @@ public class DefaultSessionService implements SessionService {
         }
     }
 
+    private void createDirectoryIfNotExists(String directory) throws IOException {
+        Path path = Paths.get(directory);
+
+        if (Files.notExists(path)) {
+            Files.createDirectories(path);
+        }
+    }
+
     @Override
     public void save() {
         if (setService.getCurrentSet() == null) {
@@ -46,7 +58,10 @@ public class DefaultSessionService implements SessionService {
         }
 
         try {
-            File file = new File(settingsService.getSettings().getBasePath() + "/" + FILE_NAME + ".xml");
+            String directory = settingsService.getSettings().getBasePath();
+            createDirectoryIfNotExists(directory);
+
+            File file = new File(directory + "/" + FILE_NAME + ".xml");
             JAXBContext jaxbContext = JAXBContext.newInstance(Session.class);
             Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
@@ -56,7 +71,7 @@ public class DefaultSessionService implements SessionService {
             jaxbMarshaller.marshal(session, file);
 
             logger.info("Session saved");
-        } catch (JAXBException e) {
+        } catch (JAXBException | IOException e) {
             e.printStackTrace();
         }
     }
