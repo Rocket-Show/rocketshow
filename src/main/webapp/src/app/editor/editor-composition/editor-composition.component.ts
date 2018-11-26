@@ -10,6 +10,7 @@ import { PendingChangesDialogService } from '../../services/pending-changes-dial
 import { Observable } from 'rxjs/Observable';
 import { ToastrService } from 'ngx-toastr';
 import { TranslateService } from '@ngx-translate/core';
+import { CompositionVideoFile } from '../../models/composition-video-file';
 
 @Component({
   selector: 'app-editor-composition',
@@ -199,19 +200,6 @@ export class EditorCompositionComponent implements OnInit {
     file.active = !file.active;
   }
 
-  private rebuildFileListBasedOnType() {
-    // Ensure, the file objects are of correct instance based on their type.
-    // The type may be changed in the choose file dialog.
-    let newFileList: CompositionFile[] = [];
-
-    for (let file of this.currentComposition.fileList) {
-      let newFile = Composition.getFileObjectByType(file);
-      newFileList.push(newFile);
-    }
-
-    this.currentComposition.fileList = newFileList;
-  }
-
   deleteFile(fileIndex: number) {
     this.currentComposition.fileList.splice(fileIndex, 1);
   }
@@ -238,8 +226,6 @@ export class EditorCompositionComponent implements OnInit {
       if (result === 1) {
         // OK has been pressed -> save
         this.currentComposition.fileList[fileIndex] = (<EditorCompositionFileComponent>fileDialog.content).file;
-
-        this.rebuildFileListBasedOnType();
       }
     });
   }
@@ -256,7 +242,8 @@ export class EditorCompositionComponent implements OnInit {
     }
 
     for(let file of this.currentComposition.fileList) {
-      if(file.type == 'VIDEO' || file.type == 'IMAGE') {
+      // TODO also check image files
+      if(file instanceof CompositionVideoFile) {
         videoImageCount ++;
 
         if(videoImageCount > 1) {

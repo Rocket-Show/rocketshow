@@ -23,39 +23,30 @@ export class Composition {
         this.fileList = this.parseFileList(data);
     }
 
+    // Return a file object based on its type
+    public static getFileObjectByType(data: any) {
+        if (data.midiFile) {
+            let midiFile = new CompositionMidiFile(data.midiFile);
+            return midiFile;
+        } else if (data.audioFile) {
+            let audioFile = new CompositionAudioFile(data.audioFile);
+            return audioFile;
+        } else if (data.videoFile) {
+            let videoFile = new CompositionVideoFile(data.videoFile);
+            return videoFile;
+        }
+    }
+
     private parseFileList(data: any): CompositionFile[] {
         let fileList: CompositionFile[] = [];
 
         if (data.fileList) {
             for (let file of data.fileList) {
-                if (file.midiFile) {
-                    let midiFile = new CompositionMidiFile(file.midiFile);
-                    fileList.push(midiFile);
-                } else if (file.audioFile) {
-                    let audioFile = new CompositionAudioFile(file.audioFile);
-                    fileList.push(audioFile);
-                } else if (file.videoFile) {
-                    let videoFile = new CompositionVideoFile(file.videoFile);
-                    fileList.push(videoFile);
-                }
+                fileList.push(Composition.getFileObjectByType(file));
             }
         }
 
         return fileList;
-    }
-
-    // Return a file object based on its type
-    public static getFileObjectByType(data: any) {
-        if (data.type == 'MIDI') {
-            let midiFile = new CompositionMidiFile(data);
-            return midiFile;
-        } else if (data.type == 'AUDIO') {
-            let audioFile = new CompositionAudioFile(data);
-            return audioFile;
-        } else if (data.type == 'VIDEO') {
-            let videoFile = new CompositionVideoFile(data);
-            return videoFile;
-        }
     }
 
     // Stringify the composition and it's files correct (JSON would ignore the extended file classes by default)

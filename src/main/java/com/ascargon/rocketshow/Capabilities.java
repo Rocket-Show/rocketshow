@@ -1,6 +1,5 @@
 package com.ascargon.rocketshow;
 
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
@@ -9,7 +8,6 @@ public class Capabilities {
     private boolean ola = true;
     private boolean gstreamer = true;
 
-    @XmlElement
     public boolean isOla() {
         return ola;
     }
@@ -18,7 +16,6 @@ public class Capabilities {
         this.ola = ola;
     }
 
-    @XmlElement
     public boolean isGstreamer() {
         return gstreamer;
     }

@@ -1,21 +1,19 @@
 package com.ascargon.rocketshow;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.xml.bind.annotation.XmlRootElement;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 
 /**
  * Defines a remote RocketShow device to be triggered by the local one one.
@@ -140,7 +138,6 @@ public class RemoteDevice {
         doPost("transport/set-composition-index?index=" + compositionIndex, true);
     }
 
-    @XmlElement
     public String getName() {
         return name;
     }
@@ -149,7 +146,6 @@ public class RemoteDevice {
         this.name = name;
     }
 
-    @XmlElement
     public String getHost() {
         return host;
     }
@@ -158,7 +154,6 @@ public class RemoteDevice {
         this.host = host;
     }
 
-    @XmlElement
     public boolean isSynchronize() {
         return synchronize;
     }

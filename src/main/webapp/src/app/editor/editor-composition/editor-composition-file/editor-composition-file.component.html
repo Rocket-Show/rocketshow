@@ -50,8 +50,8 @@
                 </div>
                 <div class="col my-auto">
                   <div class="progress m-0">
-                    <div class="progress-bar progress-bar-striped" role="progressbar" [style.width]="diskSpacePercentage + '%'" aria-valuenow="10" aria-valuemin="0"
-                      aria-valuemax="100"></div>
+                    <div class="progress-bar progress-bar-striped" role="progressbar" [style.width]="diskSpacePercentage + '%'"
+                      aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"></div>
                   </div>
                 </div>
               </div>
@@ -82,24 +82,21 @@
               <div class="card border-secondary" style="height: 300px; overflow-y: scroll;">
                 <div class="card-body p-0">
                   <div class="list-group list-group-flush">
-                    <div *ngFor="let existingFile of filteredExistingFiles" class="list-group-item list-group-item-action" [class.active]="file?.name == existingFile.name && file?.type == existingFile.type">
-
+                    <a *ngFor="let existingFile of filteredExistingFiles" class="list-group-item" [class.active]="file?.name == existingFile.name && file?.type == existingFile.type" href="#">
                       <div class="row">
-                        <a [class.text-white]="file?.name == existingFile.name && file?.type == existingFile.type" href="#" (click)="selectExistingFile(existingFile); false"
-                          class="col-auto my-auto">
+                        <div (click)="selectExistingFile(existingFile); false" class="col-auto my-auto">
                           <i class="fa fa-fw" [ngClass]="existingFile.getFontAwesomeIconClass()" aria-hidden="true"></i>
-                        </a>
+                        </div>
 
-                        <a [class.text-white]="file?.name == existingFile.name && file?.type == existingFile.type" href="#" (click)="selectExistingFile(existingFile); false"
-                          class="col-auto my-auto flex-grow text-break-word pl-0">
+                        <div (click)="selectExistingFile(existingFile); false" class="col-auto my-auto flex-grow text-break-word pl-0">
                           {{ existingFile.name }}
-                        </a>
+                        </div>
 
-                        <a class="col-auto my-auto pl-0 text-danger float-right" href="#" role="button" (click)="deleteFile(existingFile); false">
+                        <div class="col-auto my-auto pl-0 text-danger float-right" (click)="deleteFile(existingFile); false">
                           <i class="fa fa-trash-o" aria-hidden="true"></i>
-                        </a>
+                        </div>
                       </div>
-                    </div>
+                    </a>
                   </div>
                 </div>
               </div>
@@ -121,7 +118,8 @@
               <!-- Active (muted) -->
               <div class="form-group">
                 <div class="form-check">
-                  <input type="checkbox" [ngModel]="!file?.active" (ngModelChange)="file.active = !$event" class="form-check-input" id="active">
+                  <input type="checkbox" [ngModel]="!file?.active" (ngModelChange)="file.active = !$event" class="form-check-input"
+                    id="active">
 
                   <label class="form-check-label" for="active">
                     {{ 'editor.mute' | translate }}
@@ -143,8 +141,8 @@
               <div class="form-group">
                 <label class="col-form-label" for="offsetMillis">{{ 'editor.offset-millis' | translate }}</label>
 
-                <input type="text" class="form-control" [ngModel]="file?.offsetMillis" (ngModelChange)="file.offsetMillis = $event" id="offsetMillis"
-                  placeholder="{{ 'editor.offset-placeholder' | translate }}">
+                <input type="text" class="form-control" [ngModel]="file?.offsetMillis" (ngModelChange)="file.offsetMillis = $event"
+                  id="offsetMillis" placeholder="{{ 'editor.offset-placeholder' | translate }}">
               </div>
 
               <!-- Loop -->

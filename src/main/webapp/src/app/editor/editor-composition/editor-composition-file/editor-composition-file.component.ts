@@ -138,13 +138,13 @@ export class EditorCompositionFileComponent implements OnInit {
 
     // Select this file
     let midiRoutingList;
-    if (this.file && this.file.type == 'MIDI') {
+    if (this.file && this.file instanceof CompositionMidiFile) {
       midiRoutingList = (<CompositionMidiFile>this.file).midiRoutingList;
     }
 
     this.file = Composition.getFileObjectByType(args[1]);
 
-    if (this.file.type == 'MIDI' && midiRoutingList) {
+    if (this.file instanceof CompositionMidiFile && midiRoutingList) {
       (<CompositionMidiFile>this.file).midiRoutingList = midiRoutingList;
     }
   }
@@ -172,13 +172,13 @@ export class EditorCompositionFileComponent implements OnInit {
     }
 
     let midiRoutingList;
-    if (this.file && this.file.type == 'MIDI') {
+    if (this.file && this.file instanceof CompositionMidiFile) {
       midiRoutingList = (<CompositionMidiFile>this.file).midiRoutingList;
     }
 
     this.file = existingFile;
 
-    if (this.file.type == 'MIDI' && midiRoutingList) {
+    if (this.file instanceof CompositionMidiFile && midiRoutingList) {
       (<CompositionMidiFile>this.file).midiRoutingList = midiRoutingList;
     }
   }

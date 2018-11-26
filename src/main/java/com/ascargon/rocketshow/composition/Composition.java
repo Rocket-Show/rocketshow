@@ -4,7 +4,6 @@ import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
@@ -30,7 +29,7 @@ public class Composition {
     @XmlElements({@XmlElement(type = MidiCompositionFile.class, name = "midiFile"),
             @XmlElement(type = VideoCompositionFile.class, name = "videoFile"),
             @XmlElement(type = AudioCompositionFile.class, name = "audioFile")})
-    @JsonSubTypes({ @JsonSubTypes.Type(name = "midi", value = MidiCompositionFile.class) })
+    @JsonProperty("fileList")
     public List<CompositionFile> getCompositionFileList() {
         return compositionFileList;
     }
@@ -39,7 +38,6 @@ public class Composition {
         this.compositionFileList = compositionFileList;
     }
 
-    @XmlElement
     public String getName() {
         return name;
     }
@@ -48,7 +46,6 @@ public class Composition {
         this.name = name;
     }
 
-    @XmlElement
     public long getDurationMillis() {
         return durationMillis;
     }
@@ -57,7 +54,6 @@ public class Composition {
         this.durationMillis = durationMillis;
     }
 
-    @XmlElement
     public String getNotes() {
         return notes;
     }
@@ -66,7 +62,6 @@ public class Composition {
         this.notes = notes;
     }
 
-    @XmlElement
     public boolean isAutoStartNextComposition() {
         return autoStartNextComposition;
     }

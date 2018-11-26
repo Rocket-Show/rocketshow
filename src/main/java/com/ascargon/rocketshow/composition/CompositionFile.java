@@ -1,9 +1,22 @@
 package com.ascargon.rocketshow.composition;
 
-import javax.xml.bind.annotation.XmlElement;
+import com.ascargon.rocketshow.audio.AudioCompositionFile;
+import com.ascargon.rocketshow.midi.MidiCompositionFile;
+import com.ascargon.rocketshow.video.VideoCompositionFile;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.WRAPPER_OBJECT)
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = MidiCompositionFile.class, name = "midiFile"),
+        @JsonSubTypes.Type(value = AudioCompositionFile.class, name = "audioFile"),
+        @JsonSubTypes.Type(value = VideoCompositionFile.class, name = "videoFile")
+})
 abstract public class CompositionFile {
 
     public enum CompositionFileType {
@@ -19,7 +32,6 @@ abstract public class CompositionFile {
     protected CompositionFile() {
     }
 
-    @XmlElement
     public String getName() {
         return name;
     }
@@ -28,7 +40,6 @@ abstract public class CompositionFile {
         this.name = name;
     }
 
-    @XmlElement
     public int getOffsetMillis() {
         return offsetMillis;
     }
@@ -37,7 +48,6 @@ abstract public class CompositionFile {
         this.offsetMillis = offsetMillis;
     }
 
-    @XmlElement
     public boolean isActive() {
         return active;
     }
@@ -46,7 +56,6 @@ abstract public class CompositionFile {
         this.active = active;
     }
 
-    @XmlElement
     public long getDurationMillis() {
         return durationMillis;
     }
@@ -55,7 +64,6 @@ abstract public class CompositionFile {
         this.durationMillis = durationMillis;
     }
 
-    @XmlElement
     public boolean isLoop() {
         return loop;
     }
@@ -64,7 +72,6 @@ abstract public class CompositionFile {
         this.loop = loop;
     }
 
-    @XmlElement
     public CompositionFileType getType() {
         return CompositionFileType.UNKNOWN;
     }

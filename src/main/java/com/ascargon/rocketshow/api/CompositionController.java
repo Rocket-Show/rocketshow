@@ -38,8 +38,6 @@ public class CompositionController {
 
     @PostMapping
     public ResponseEntity<Void> save(@RequestBody Composition composition) throws Exception {
-        MidiCompositionFile midiCompositionFile = new MidiCompositionFile();
-        composition.getCompositionFileList().add(midiCompositionFile);
         compositionService.saveComposition(composition);
 
         // If this is the current composition, read it again

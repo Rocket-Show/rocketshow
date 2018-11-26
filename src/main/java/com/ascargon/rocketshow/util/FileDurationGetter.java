@@ -29,6 +29,8 @@ public class FileDurationGetter implements Runnable {
 	private final CompositionFile compositionFile;
 
 	public FileDurationGetter(SettingsService settingsService, CompositionFile compositionFile) {
+		this.settingsService = settingsService;
+
 		this.compositionFile = compositionFile;
 	}
 
@@ -59,13 +61,13 @@ public class FileDurationGetter implements Runnable {
 		try {
 			if (compositionFile instanceof MidiCompositionFile) {
 				MidiCompositionFile midiFile = (MidiCompositionFile) compositionFile;
-				compositionFile.setDurationMillis(MidiPlayer.getDuration(path + settingsService.getSettings().getMidiPath()));
+				compositionFile.setDurationMillis(MidiPlayer.getDuration(path + settingsService.getSettings().getMidiPath() +  "/" + compositionFile.getName()));
 			} else if (compositionFile instanceof AudioCompositionFile) {
 				AudioCompositionFile audioFile = (AudioCompositionFile) compositionFile;
-				compositionFile.setDurationMillis(getDurationWithMplayer(path + settingsService.getSettings().getAudioPath()));
+				compositionFile.setDurationMillis(getDurationWithMplayer(path + settingsService.getSettings().getAudioPath() + "/" + compositionFile.getName()));
 			} else if (compositionFile instanceof VideoCompositionFile) {
 				VideoCompositionFile videoFile = (VideoCompositionFile) compositionFile;
-				compositionFile.setDurationMillis(getDurationWithMplayer(path + settingsService.getSettings().getVideoPath()));
+				compositionFile.setDurationMillis(getDurationWithMplayer(path + settingsService.getSettings().getVideoPath() + "/" + compositionFile.getName()));
 			}
 		} catch (Exception e) {
 			logger.error("Could not get duration for file '" + compositionFile.getName() + "'", e);
