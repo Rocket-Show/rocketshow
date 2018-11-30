@@ -16,7 +16,6 @@ public class Midi2DmxMapping {
 
 	private MappingType mappingType = MappingType.SIMPLE;
 
-	@XmlElement
     @SuppressWarnings("WeakerAccess")
 	public MappingType getMappingType() {
 		return mappingType;

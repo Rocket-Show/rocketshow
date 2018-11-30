@@ -19,7 +19,6 @@ public class MidiDevice {
 	
 	private String description;
 
-	@XmlElement
 	public int getId() {
 		return id;
 	}
@@ -28,7 +27,6 @@ public class MidiDevice {
 		this.id = id;
 	}
 
-	@XmlElement
 	public String getName() {
 		return name;
 	}
@@ -37,7 +35,6 @@ public class MidiDevice {
 		this.name = name;
 	}
 
-	@XmlElement
 	public String getVendor() {
 		return vendor;
 	}
@@ -46,7 +43,6 @@ public class MidiDevice {
 		this.vendor = vendor;
 	}
 
-	@XmlElement
 	public String getDescription() {
 		return description;
 	}

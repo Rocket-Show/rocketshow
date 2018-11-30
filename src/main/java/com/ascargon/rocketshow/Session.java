@@ -1,50 +1,45 @@
 package com.ascargon.rocketshow;
 
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class Session {
 
-	private String currentSetName;
-	private boolean firstStart = true;
-	private boolean updateFinished = false;
-	private boolean autoSelectNextComposition = false;
-	
-	@XmlElement
-	public String getCurrentSetName() {
-		return currentSetName;
-	}
+    private String currentSetName;
+    private boolean firstStart = true;
+    private boolean updateFinished = false;
+    private boolean autoSelectNextComposition = false;
 
-	public void setCurrentSetName(String currentSetName) {
-		this.currentSetName = currentSetName;
-	}
+    public String getCurrentSetName() {
+        return currentSetName;
+    }
 
-	@XmlElement
-	public boolean isFirstStart() {
-		return firstStart;
-	}
+    public void setCurrentSetName(String currentSetName) {
+        this.currentSetName = currentSetName;
+    }
 
-	public void setFirstStart(boolean firstStart) {
-		this.firstStart = firstStart;
-	}
+    public boolean isFirstStart() {
+        return firstStart;
+    }
 
-	@XmlElement
-	public boolean isUpdateFinished() {
-		return updateFinished;
-	}
+    public void setFirstStart(boolean firstStart) {
+        this.firstStart = firstStart;
+    }
 
-	public void setUpdateFinished(boolean updateFinished) {
-		this.updateFinished = updateFinished;
-	}
+    public boolean isUpdateFinished() {
+        return updateFinished;
+    }
 
-	@XmlElement
-	public boolean isAutoSelectNextComposition() {
-		return autoSelectNextComposition;
-	}
+    public void setUpdateFinished(boolean updateFinished) {
+        this.updateFinished = updateFinished;
+    }
 
-	public void setAutoSelectNextComposition(boolean autoSelectNextComposition) {
-		this.autoSelectNextComposition = autoSelectNextComposition;
-	}
-	
+    public boolean isAutoSelectNextComposition() {
+        return autoSelectNextComposition;
+    }
+
+    public void setAutoSelectNextComposition(boolean autoSelectNextComposition) {
+        this.autoSelectNextComposition = autoSelectNextComposition;
+    }
+
 }

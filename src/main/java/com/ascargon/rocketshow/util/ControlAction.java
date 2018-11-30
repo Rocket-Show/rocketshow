@@ -27,7 +27,6 @@ public class ControlAction {
 	// Should this action apply locally?
 	private boolean executeLocally = true;
 
-	@XmlElement
 	public Action getAction() {
 		return action;
 	}
@@ -36,7 +35,6 @@ public class ControlAction {
 		this.action = action;
 	}
 
-	@XmlElement
 	public String getCompositionName() {
 		return compositionName;
 	}
@@ -45,7 +43,6 @@ public class ControlAction {
 		this.compositionName = compositionName;
 	}
 
-	@XmlElement
 	public boolean isExecuteLocally() {
 		return executeLocally;
 	}

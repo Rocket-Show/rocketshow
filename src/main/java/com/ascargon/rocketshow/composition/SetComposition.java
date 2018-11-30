@@ -16,7 +16,6 @@ public class SetComposition {
 	private long durationMillis;
 	private boolean autoStartNextComposition = false;
 
-	@XmlElement
 	public String getName() {
 		return name;
 	}
@@ -25,7 +24,6 @@ public class SetComposition {
 		this.name = name;
 	}
 
-	@XmlElement
 	public long getDurationMillis() {
 		return durationMillis;
 	}
@@ -34,7 +32,6 @@ public class SetComposition {
 		this.durationMillis = durationMillis;
 	}
 
-	@XmlElement
 	public boolean isAutoStartNextComposition() {
 		return autoStartNextComposition;
 	}

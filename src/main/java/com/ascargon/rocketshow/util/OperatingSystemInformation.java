@@ -22,7 +22,6 @@ public class OperatingSystemInformation {
     private SubType subType = SubType.UNKNOWN;
     private ArchitectureType architectureType = ArchitectureType.UNKNOWN;
 
-    @XmlElement
     public Type getType() {
         return type;
     }
@@ -31,7 +30,6 @@ public class OperatingSystemInformation {
         this.type = type;
     }
 
-    @XmlElement
     public SubType getSubType() {
         return subType;
     }
@@ -40,7 +38,6 @@ public class OperatingSystemInformation {
         this.subType = subType;
     }
 
-    @XmlElement
     public ArchitectureType getArchitectureType() {
         return architectureType;
     }

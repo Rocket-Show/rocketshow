@@ -11,7 +11,6 @@ public class RaspberryGpioControl extends ControlAction {
 	// A GPIO pin
 	private int pinId;
 
-	@XmlElement
 	public int getPinId() {
 		return pinId;
 	}

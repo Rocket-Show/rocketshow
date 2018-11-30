@@ -8,8 +8,7 @@ public class ChannelMapping {
 
 	private int channelFrom;
 	private int channelTo;
-	
-	@XmlElement
+
 	public int getChannelFrom() {
 		return channelFrom;
 	}
@@ -17,8 +16,7 @@ public class ChannelMapping {
 	public void setChannelFrom(int channelFrom) {
 		this.channelFrom = channelFrom;
 	}
-	
-	@XmlElement
+
 	public int getChannelTo() {
 		return channelTo;
 	}

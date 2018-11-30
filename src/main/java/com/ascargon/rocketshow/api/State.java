@@ -20,7 +20,6 @@ public class State {
     private String currentSetName;
     private Boolean updateFinished;
 
-    @XmlElement
     public int getCurrentCompositionIndex() {
         return currentCompositionIndex;
     }
@@ -29,7 +28,6 @@ public class State {
         this.currentCompositionIndex = currentCompositionIndex;
     }
 
-    @XmlElement
     public CompositionPlayer.PlayState getPlayState() {
         return playState;
     }
@@ -38,7 +36,6 @@ public class State {
         this.playState = playState;
     }
 
-    @XmlElement
     public String getCurrentCompositionName() {
         return currentCompositionName;
     }
@@ -47,7 +44,6 @@ public class State {
         this.currentCompositionName = currentCompositionName;
     }
 
-    @XmlElement
     public long getCurrentCompositionDurationMillis() {
         return currentCompositionDurationMillis;
     }
@@ -56,7 +52,6 @@ public class State {
         this.currentCompositionDurationMillis = currentCompositionDurationMillis;
     }
 
-    @XmlElement
     public long getPositionMillis() {
         return positionMillis;
     }
@@ -65,7 +60,6 @@ public class State {
         this.positionMillis = positionMillis;
     }
 
-    @XmlElement
     public MidiSignal getMidiSignal() {
         return midiSignal;
     }
@@ -74,7 +68,6 @@ public class State {
         this.midiSignal = midiSignal;
     }
 
-    @XmlElement
     public UpdateService.UpdateState getUpdateState() {
         return updateState;
     }
@@ -83,7 +76,6 @@ public class State {
         this.updateState = updateState;
     }
 
-    @XmlElement
     public String getCurrentSetName() {
         return currentSetName;
     }
@@ -92,7 +84,6 @@ public class State {
         this.currentSetName = currentSetName;
     }
 
-    @XmlElement
     public Boolean isUpdateFinished() {
         return updateFinished;
     }

@@ -44,7 +44,6 @@ public class MidiSignal {
 		return shortMessage;
 	}
 
-	@XmlElement
 	public int getCommand() {
 		return command;
 	}
@@ -53,7 +52,6 @@ public class MidiSignal {
 		this.command = command;
 	}
 
-	@XmlElement
 	public int getChannel() {
 		return channel;
 	}
@@ -62,7 +60,6 @@ public class MidiSignal {
 		this.channel = channel;
 	}
 
-	@XmlElement
 	public int getNote() {
 		return note;
 	}
@@ -71,7 +68,6 @@ public class MidiSignal {
 		this.note = note;
 	}
 
-	@XmlElement
 	public int getVelocity() {
 		return velocity;
 	}

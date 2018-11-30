@@ -19,7 +19,6 @@ public class MidiControl extends ControlAction {
 	// The note, this action should be triggered. If null -> all notes
 	private Integer noteFrom;
 
-	@XmlElement
 	public Integer getChannelFrom() {
 		return channelFrom;
 	}
@@ -28,7 +27,6 @@ public class MidiControl extends ControlAction {
 		this.channelFrom = channelFrom;
 	}
 
-	@XmlElement
 	public Integer getNoteFrom() {
 		return noteFrom;
 	}

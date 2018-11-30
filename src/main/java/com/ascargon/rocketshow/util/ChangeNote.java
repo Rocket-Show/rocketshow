@@ -17,7 +17,6 @@ class ChangeNote {
 	public ChangeNote() {
 	}
 
-	@XmlElement
 	public String getVersion() {
 		return version;
 	}
@@ -26,7 +25,6 @@ class ChangeNote {
 		this.version = version;
 	}
 
-	@XmlElement
 	public String getChanges() {
 		return changes;
 	}

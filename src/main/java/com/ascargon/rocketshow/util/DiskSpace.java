@@ -13,16 +13,14 @@ public class DiskSpace {
 
 	private double usedMB = 0;
 	private double availableMB = 0;
-	
-	@XmlElement
+
 	public double getUsedMB() {
 		return usedMB;
 	}
 	public void setUsedMB(double usedMB) {
 		this.usedMB = usedMB;
 	}
-	
-	@XmlElement
+
 	public double getAvailableMB() {
 		return availableMB;
 	}

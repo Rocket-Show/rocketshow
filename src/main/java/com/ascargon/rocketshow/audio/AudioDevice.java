@@ -9,8 +9,7 @@ public class AudioDevice {
 	private int id;
 	private String key;
 	private String name;
-	
-	@XmlElement
+
 	public String getKey() {
 		return key;
 	}
@@ -18,8 +17,7 @@ public class AudioDevice {
 	public void setKey(String key) {
 		this.key = key;
 	}
-	
-	@XmlElement
+
 	public String getName() {
 		return name;
 	}
@@ -27,8 +25,7 @@ public class AudioDevice {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
-	@XmlElement
+
 	public int getId() {
 		return id;
 	}

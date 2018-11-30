@@ -17,7 +17,6 @@ public class VersionInfo {
 	public VersionInfo() {
 	}
 
-	@XmlElement
 	public String getVersion() {
 		return version;
 	}
@@ -26,7 +25,6 @@ public class VersionInfo {
 		this.version = version;
 	}
 
-	@XmlElement
 	public Date getDate() {
 		return date;
 	}

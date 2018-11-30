@@ -27,7 +27,6 @@ public class Set {
         return setCompositionList;
     }
 
-    @XmlElement
     public String getName() {
         return name;
     }
@@ -36,7 +35,6 @@ public class Set {
         this.name = name;
     }
 
-    @XmlElement
     public String getNotes() {
         return notes;
     }

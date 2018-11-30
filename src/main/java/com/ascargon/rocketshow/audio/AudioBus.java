@@ -15,7 +15,6 @@ public class AudioBus {
 
 	private int channels = 2;
 
-	@XmlElement
 	public String getName() {
 		return name;
 	}
@@ -24,7 +23,6 @@ public class AudioBus {
 		this.name = name;
 	}
 
-	@XmlElement
 	public int getChannels() {
 		return channels;
 	}

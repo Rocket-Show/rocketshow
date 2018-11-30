@@ -28,7 +28,6 @@ public class MidiRouting {
     // A list of remote device ids in case of destination type = REMOTE
     private List<String> remoteDeviceNameList = new ArrayList<>();
 
-    @XmlElement
     public MidiDestination getMidiDestination() {
         return midiDestination;
     }
@@ -37,7 +36,6 @@ public class MidiRouting {
         this.midiDestination = midiDestination;
     }
 
-    @XmlElement
     public Midi2DmxMapping getMidi2DmxMapping() {
         return midi2DmxMapping;
     }
@@ -56,7 +54,6 @@ public class MidiRouting {
         this.remoteDeviceNameList = remoteDeviceNameList;
     }
 
-    @XmlElement
     public MidiMapping getMidiMapping() {
         return midiMapping;
     }

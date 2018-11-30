@@ -90,7 +90,6 @@ public class Settings {
 
     private boolean enableRaspberryGpio;
 
-    @XmlElement
     public MidiDevice getMidiInDevice() {
         return midiInDevice;
     }
@@ -99,7 +98,6 @@ public class Settings {
         this.midiInDevice = midiInDevice;
     }
 
-    @XmlElement
     public MidiDevice getMidiOutDevice() {
         return midiOutDevice;
     }
@@ -108,7 +106,6 @@ public class Settings {
         this.midiOutDevice = midiOutDevice;
     }
 
-    @XmlElement
     public int getDmxSendDelayMillis() {
         return dmxSendDelayMillis;
     }
@@ -127,7 +124,6 @@ public class Settings {
         this.remoteDeviceList = remoteDeviceList;
     }
 
-    @XmlElement
     public MidiMapping getMidiMapping() {
         return midiMapping;
     }
@@ -176,7 +172,6 @@ public class Settings {
         this.raspberryGpioControlList = raspberryGpioControlList;
     }
 
-    @XmlElement
     public String getDefaultComposition() {
         return defaultComposition;
     }
@@ -185,7 +180,6 @@ public class Settings {
         this.defaultComposition = defaultComposition;
     }
 
-    @XmlElement
     public int getOffsetMillisMidi() {
         return offsetMillisMidi;
     }
@@ -194,7 +188,6 @@ public class Settings {
         this.offsetMillisMidi = offsetMillisMidi;
     }
 
-    @XmlElement
     public int getOffsetMillisAudio() {
         return offsetMillisAudio;
     }
@@ -203,7 +196,6 @@ public class Settings {
         this.offsetMillisAudio = offsetMillisAudio;
     }
 
-    @XmlElement
     public int getOffsetMillisVideo() {
         return offsetMillisVideo;
     }
@@ -212,7 +204,6 @@ public class Settings {
         this.offsetMillisVideo = offsetMillisVideo;
     }
 
-    @XmlElement
     public LoggingLevel getLoggingLevel() {
         return loggingLevel;
     }
@@ -221,7 +212,6 @@ public class Settings {
         this.loggingLevel = loggingLevel;
     }
 
-    @XmlElement
     public String getLanguage() {
         return language;
     }
@@ -230,7 +220,6 @@ public class Settings {
         this.language = language;
     }
 
-    @XmlElement
     public String getDeviceName() {
         return deviceName;
     }
@@ -239,7 +228,6 @@ public class Settings {
         this.deviceName = deviceName;
     }
 
-    @XmlElement
     public boolean isResetUsbAfterBoot() {
         return resetUsbAfterBoot;
     }
@@ -248,7 +236,6 @@ public class Settings {
         this.resetUsbAfterBoot = resetUsbAfterBoot;
     }
 
-    @XmlElement
     public AudioOutput getAudioOutput() {
         return audioOutput;
     }
@@ -267,7 +254,6 @@ public class Settings {
         this.audioBusList = audioBusList;
     }
 
-    @XmlElement
     public int getAudioRate() {
         return audioRate;
     }
@@ -276,7 +262,6 @@ public class Settings {
         this.audioRate = audioRate;
     }
 
-    @XmlElement
     public AudioDevice getAudioDevice() {
         return audioDevice;
     }
@@ -285,7 +270,6 @@ public class Settings {
         this.audioDevice = audioDevice;
     }
 
-    @XmlElement
     public boolean isWlanApEnable() {
         return wlanApEnable;
     }
@@ -294,7 +278,6 @@ public class Settings {
         this.wlanApEnable = wlanApEnable;
     }
 
-    @XmlElement
     public String getWlanApSsid() {
         return wlanApSsid;
     }
@@ -303,7 +286,6 @@ public class Settings {
         this.wlanApSsid = wlanApSsid;
     }
 
-    @XmlElement
     public String getWlanApPassphrase() {
         return wlanApPassphrase;
     }
@@ -312,7 +294,6 @@ public class Settings {
         this.wlanApPassphrase = wlanApPassphrase;
     }
 
-    @XmlElement
     public boolean isWlanApSsidHide() {
         return wlanApSsidHide;
     }
@@ -321,7 +302,6 @@ public class Settings {
         this.wlanApSsidHide = wlanApSsidHide;
     }
 
-    @XmlElement
     public boolean isEnableRaspberryGpio() {
         return enableRaspberryGpio;
     }
@@ -330,7 +310,6 @@ public class Settings {
         this.enableRaspberryGpio = enableRaspberryGpio;
     }
 
-    @XmlElement
     public String getBasePath() {
         return basePath;
     }
@@ -339,7 +318,6 @@ public class Settings {
         this.basePath = basePath;
     }
 
-    @XmlElement
     public String getMidiPath() {
         return midiPath;
     }
@@ -348,7 +326,6 @@ public class Settings {
         this.midiPath = midiPath;
     }
 
-    @XmlElement
     public String getAudioPath() {
         return audioPath;
     }
@@ -357,7 +334,6 @@ public class Settings {
         this.audioPath = audioPath;
     }
 
-    @XmlElement
     public String getVideoPath() {
         return videoPath;
     }
