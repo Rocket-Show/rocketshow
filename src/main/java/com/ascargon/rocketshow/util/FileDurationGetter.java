@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.composition.CompositionFile;
+import com.ascargon.rocketshow.gstreamer.GstDiscoverer;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,7 @@ public class FileDurationGetter implements Runnable {
 	private static final String DURATION = "ID_LENGTH=";
 
 	private SettingsService settingsService;
+    private GstDiscoverer gstDiscoverer;
 
 	private final CompositionFile compositionFile;
 
@@ -32,6 +34,7 @@ public class FileDurationGetter implements Runnable {
 		this.settingsService = settingsService;
 
 		this.compositionFile = compositionFile;
+		this.gstDiscoverer = new GstDiscoverer();
 	}
 
 	private static boolean isDurationLine(String line) {
@@ -54,19 +57,25 @@ public class FileDurationGetter implements Runnable {
 		return 0;
 	}
 
+	private long getDurationWithGstreamer(String path) {
+        path = "file:///Users/vio/git/RocketShow/target/media/audio/head_smashed_far_away.wav";
+
+
+
+        return 0;
+    }
+
 	@Override
 	public void run() {
 	    String path = settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/";
 
 		try {
 			if (compositionFile instanceof MidiCompositionFile) {
-				MidiCompositionFile midiFile = (MidiCompositionFile) compositionFile;
 				compositionFile.setDurationMillis(MidiPlayer.getDuration(path + settingsService.getSettings().getMidiPath() +  "/" + compositionFile.getName()));
 			} else if (compositionFile instanceof AudioCompositionFile) {
-				AudioCompositionFile audioFile = (AudioCompositionFile) compositionFile;
-				compositionFile.setDurationMillis(getDurationWithMplayer(path + settingsService.getSettings().getAudioPath() + "/" + compositionFile.getName()));
+				//compositionFile.setDurationMillis(getDurationWithMplayer(path + settingsService.getSettings().getAudioPath() + "/" + compositionFile.getName()));
+			    logger.info("Duration: " + getDurationWithGstreamer(path + settingsService.getSettings().getAudioPath() + "/" + compositionFile.getName()));
 			} else if (compositionFile instanceof VideoCompositionFile) {
-				VideoCompositionFile videoFile = (VideoCompositionFile) compositionFile;
 				compositionFile.setDurationMillis(getDurationWithMplayer(path + settingsService.getSettings().getVideoPath() + "/" + compositionFile.getName()));
 			}
 		} catch (Exception e) {
