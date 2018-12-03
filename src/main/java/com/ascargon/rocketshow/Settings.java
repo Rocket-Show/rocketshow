@@ -90,6 +90,14 @@ public class Settings {
 
     private boolean enableRaspberryGpio;
 
+    private int raspberryGpioDebounceMillis = 500;
+
+    private boolean raspberryGpioNoHardwareTrigger = false;
+
+    private int raspberryGpioTimerPeriodMillis = 2;
+
+    private int raspberryGpioCyclesHigh = 3;
+
     public MidiDevice getMidiInDevice() {
         return midiInDevice;
     }
@@ -340,6 +348,38 @@ public class Settings {
 
     public void setVideoPath(String videoPath) {
         this.videoPath = videoPath;
+    }
+
+    public int getRaspberryGpioDebounceMillis() {
+        return raspberryGpioDebounceMillis;
+    }
+
+    public void setRaspberryGpioDebounceMillis(int raspberryGpioDebounceMillis) {
+        this.raspberryGpioDebounceMillis = raspberryGpioDebounceMillis;
+    }
+
+    public boolean isRaspberryGpioNoHardwareTrigger() {
+        return raspberryGpioNoHardwareTrigger;
+    }
+
+    public void setRaspberryGpioNoHardwareTrigger(boolean raspberryGpioNoHardwareTrigger) {
+        this.raspberryGpioNoHardwareTrigger = raspberryGpioNoHardwareTrigger;
+    }
+
+    public int getRaspberryGpioTimerPeriodMillis() {
+        return raspberryGpioTimerPeriodMillis;
+    }
+
+    public void setRaspberryGpioTimerPeriodMillis(int raspberryGpioTimerPeriodMillis) {
+        this.raspberryGpioTimerPeriodMillis = raspberryGpioTimerPeriodMillis;
+    }
+
+    public int getRaspberryGpioCyclesHigh() {
+        return raspberryGpioCyclesHigh;
+    }
+
+    public void setRaspberryGpioCyclesHigh(int raspberryGpioCyclesHigh) {
+        this.raspberryGpioCyclesHigh = raspberryGpioCyclesHigh;
     }
 
 }

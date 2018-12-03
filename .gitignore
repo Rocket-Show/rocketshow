@@ -1,3 +1,4 @@
+/WebContent/*
 src/main/resources/static/*
 /target/
 !.mvn/wrapper/maven-wrapper.jar

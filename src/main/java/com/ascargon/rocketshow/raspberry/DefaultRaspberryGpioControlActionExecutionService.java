@@ -9,6 +9,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 @Service
 public class DefaultRaspberryGpioControlActionExecutionService implements RaspberryGpioControlActionExecutionService {
@@ -16,6 +20,8 @@ public class DefaultRaspberryGpioControlActionExecutionService implements Raspbe
     private GpioController gpioController;
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultRaspberryGpioControlActionExecutionService.class);
+
+    private List<RaspberryGpioControlButton> raspberryGpioControlButtonList = new ArrayList<>();
 
     public DefaultRaspberryGpioControlActionExecutionService(SettingsService settingsService, ControlActionExecutionService controlActionExecutionService) {
         if (!settingsService.getSettings().isEnableRaspberryGpio()) {
@@ -31,26 +37,61 @@ public class DefaultRaspberryGpioControlActionExecutionService implements Raspbe
                     getPinFromId(raspberryGpioControl.getPinId()), PinPullResistance.PULL_DOWN);
 
             button.setShutdownOptions(true);
+            button.setDebounce(settingsService.getSettings().getRaspberryGpioDebounceMillis());
 
-            GpioPinListenerDigital listener = event -> {
-                if (event.getState().isHigh()) {
-                    logger.debug("Input high from GPIO " + event.getPin() + " recognized");
+            if (settingsService.getSettings().isRaspberryGpioNoHardwareTrigger()) {
+                RaspberryGpioControlButton raspberryGpioControlButton = new RaspberryGpioControlButton();
+                raspberryGpioControlButton.setRaspberryGpioControl(raspberryGpioControl);
+                raspberryGpioControlButton.setButton(button);
 
-                    try {
-                        controlActionExecutionService.execute(raspberryGpioControl);
-                    } catch (Exception e) {
-                        logger.error("Could not execute action from Raspberry GPIO", e);
+                raspberryGpioControlButtonList.add(raspberryGpioControlButton);
+            } else {
+                GpioPinListenerDigital listener = event -> {
+                    if (event.getState().isHigh()) {
+                        logger.debug("Input high from GPIO " + event.getPin() + " recognized");
+
+                        try {
+                            controlActionExecutionService.execute(raspberryGpioControl);
+                        } catch (Exception e) {
+                            logger.error("Could not execute action from Raspberry GPIO", e);
+                        }
+                    }
+                };
+
+                // Add the same listener for all pins, because a no-class-def found
+                // error will raise, when
+                // added
+                button.addListener(listener);
+            }
+        }
+
+        if (settingsService.getSettings().isRaspberryGpioNoHardwareTrigger()) {
+            // Use a timer instead of a hardware listener for state changes. This might
+            // be more reliable in cases where the hardware listener is too sensitive.
+            TimerTask timerTask = new TimerTask() {
+                public void run() {
+                    for (RaspberryGpioControlButton raspberryGpioControlButton : raspberryGpioControlButtonList) {
+                        if (raspberryGpioControlButton.getButton().getState() == PinState.HIGH) {
+                            raspberryGpioControlButton.setCyclesHigh(raspberryGpioControlButton.getCyclesHigh() + 1);
+
+                            if (raspberryGpioControlButton.getCyclesHigh() >= settingsService.getSettings().getRaspberryGpioCyclesHigh()) {
+                                try {
+                                    controlActionExecutionService.execute(raspberryGpioControlButton.getRaspberryGpioControl());
+                                } catch (Exception e) {
+                                    logger.error("Could not execute action from Raspberry GPIO", e);
+                                }
+
+                                raspberryGpioControlButton.setCyclesHigh(0);
+                            }
+                        } else {
+                            raspberryGpioControlButton.setCyclesHigh(0);
+                        }
                     }
                 }
             };
 
-            // Add the same listener for all pins, because a no-class-def found
-            // error will raise, when
-            // added
-            button.addListener(listener);
-
-            // TODO Make debounce time configurable
-            button.setDebounce(500);
+            Timer detectTimer = new Timer();
+            detectTimer.schedule(timerTask, 0, settingsService.getSettings().getRaspberryGpioTimerPeriodMillis());
         }
     }
 
@@ -119,7 +160,7 @@ public class DefaultRaspberryGpioControlActionExecutionService implements Raspbe
     }
 
     @PreDestroy
-    private void close() {
+    public void close() {
         if (gpioController != null) {
             gpioController.shutdown();
         }
