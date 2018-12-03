@@ -220,7 +220,7 @@ public class DefaultCompositionService implements CompositionService {
     public synchronized void saveComposition(Composition composition) throws Exception {
         // Set the duration for each file
         for (CompositionFile compositionFile : composition.getCompositionFileList()) {
-            String path = settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/";
+            String path = settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + "/";
 
             if (compositionFile instanceof MidiCompositionFile) {
                 compositionFile.setDurationMillis(MidiPlayer.getDuration(path + settingsService.getSettings().getMidiPath() +  "/" + compositionFile.getName()));

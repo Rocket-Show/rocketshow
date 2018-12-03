@@ -31,7 +31,7 @@ public class DefaultGstDiscovererService implements GstDiscovererService {
             // Unfortunately, error.message is always null. Don't know why. And
             // getting the message from domain and code also does not work.
 
-            throw new Exception("Could not discover file " + path + ". Result: " + PB_UTILS_API.gst_discoverer_info_get_result(info).toString());
+            throw new Exception("Could not get media information for file " + path + ". Result: " + PB_UTILS_API.gst_discoverer_info_get_result(info).toString());
         }
 
         ClockTime time = PB_UTILS_API.gst_discoverer_info_get_duration(info);

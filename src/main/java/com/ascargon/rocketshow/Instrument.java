@@ -1,9 +1,11 @@
 package com.ascargon.rocketshow;
 
+import com.ascargon.rocketshow.composition.DefaultCompositionService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.apache.log4j.Logger;
 
 /**
  * Defines an instrument played in the band.
@@ -13,29 +15,29 @@ import org.apache.log4j.Logger;
 @XmlRootElement
 public class Instrument {
 
-	final static Logger logger = Logger.getLogger(Instrument.class);
+    private final static Logger logger = LoggerFactory.getLogger(DefaultCompositionService.class);
 
-	private String uuid;
-	
-	// The name of the instrument
-	private String name;
+    private String uuid;
 
-	@XmlElement
-	public String getName() {
-		return name;
-	}
+    // The name of the instrument
+    private String name;
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    @XmlElement
+    public String getName() {
+        return name;
+    }
 
-	@XmlElement
-	public String getUuid() {
-		return uuid;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public void setUuid(String uuid) {
-		this.uuid = uuid;
-	}
+    @XmlElement
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
+    }
 
 }
