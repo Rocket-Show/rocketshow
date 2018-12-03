@@ -384,9 +384,7 @@ public class DefaultSettingsService implements SettingsService {
         JAXBContext jaxbContext = JAXBContext.newInstance(Settings.class);
 
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-        settings = (Settings) jaxbUnmarshaller.unmarshal(file);
-
-        updateSystem();
+        this.setSettings((Settings) jaxbUnmarshaller.unmarshal(file));
 
         // Reset the USB interface, if needed
         try {
@@ -409,6 +407,7 @@ public class DefaultSettingsService implements SettingsService {
     @Override
     public void setSettings(Settings settings) {
         this.settings = settings;
+        updateSystem();
     }
 
 }

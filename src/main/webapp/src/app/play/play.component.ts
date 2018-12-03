@@ -9,6 +9,7 @@ import { State } from '../models/state';
 import { TransportService } from '../services/transport.service';
 import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
+import { ToastGeneralErrorService } from '../services/toast-general-error.service';
 
 @Component({
   selector: 'app-play',
@@ -42,7 +43,8 @@ export class PlayComponent implements OnInit {
     public stateService: StateService,
     private compositionService: CompositionService,
     private transportService: TransportService,
-    private sessionService: SessionService) {
+    private sessionService: SessionService,
+    private toastGeneralErrorService: ToastGeneralErrorService) {
   }
 
   ngOnInit() {
@@ -210,7 +212,12 @@ export class PlayComponent implements OnInit {
 
   play() {
     this.currentState.playState = 'LOADING';
-    this.transportService.play().subscribe();
+    this.transportService.play()
+    .catch((err) => {
+      this.stop();
+      return this.toastGeneralErrorService.show(err);
+    })
+    .subscribe();
   }
 
   stop() {

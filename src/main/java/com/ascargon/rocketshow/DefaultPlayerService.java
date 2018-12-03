@@ -7,6 +7,7 @@ import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.dmx.DmxService;
 import com.ascargon.rocketshow.midi.MidiRoutingService;
+import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import org.freedesktop.gstreamer.Gst;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,12 +32,13 @@ public class DefaultPlayerService implements PlayerService {
     private final MidiRoutingService midiRoutingService;
     private final DmxService dmxService;
     private final CapabilitiesService capabilitiesService;
+    private final OperatingSystemInformationService operatingSystemInformationService;
 
     private CompositionPlayer defaultCompositionPlayer;
     private final CompositionPlayer currentCompositionPlayer;
     private final List<CompositionPlayer> sampleCompositionPlayerList = new ArrayList<>();
 
-    public DefaultPlayerService(NotificationService notificationService, SettingsService settingsService, CompositionService compositionService, SetService setService, SessionService sessionService, MidiRoutingService midiRoutingService, DmxService dmxService, CapabilitiesService capabilitiesService) {
+    public DefaultPlayerService(NotificationService notificationService, SettingsService settingsService, CompositionService compositionService, SetService setService, SessionService sessionService, MidiRoutingService midiRoutingService, DmxService dmxService, CapabilitiesService capabilitiesService, OperatingSystemInformationService operatingSystemInformationService) {
         this.notificationService = notificationService;
         this.settingsService = settingsService;
         this.compositionService = compositionService;
@@ -45,9 +47,10 @@ public class DefaultPlayerService implements PlayerService {
         this.midiRoutingService = midiRoutingService;
         this.dmxService = dmxService;
         this.capabilitiesService = capabilitiesService;
+        this.operatingSystemInformationService = operatingSystemInformationService;
 
-        currentCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midiRoutingService, capabilitiesService);
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midiRoutingService, capabilitiesService);
+        currentCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService);
+        defaultCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService);
 
         try {
             Gst.init();
@@ -63,7 +66,7 @@ public class DefaultPlayerService implements PlayerService {
             logger.error("Could not play default composition", e);
         }
 
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midiRoutingService, capabilitiesService);
+        defaultCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService);
 
         // Load the last set/composition
         try {
@@ -143,15 +146,6 @@ public class DefaultPlayerService implements PlayerService {
             }
         }
 
-        // Also load the local composition files
-        playExecutor.execute(() -> {
-            try {
-                currentCompositionPlayer.loadFiles();
-            } catch (Exception e) {
-                logger.error("Could not load the composition files", e);
-            }
-        });
-
         logger.debug("Wait for all devices to be loaded...");
 
         // Wait for the compositions on all devices to be loaded
@@ -160,6 +154,9 @@ public class DefaultPlayerService implements PlayerService {
         while (!playExecutor.isTerminated()) {
             Thread.sleep(50);
         }
+
+        // Load the local files outside the executor for better error handling
+        currentCompositionPlayer.loadFiles();
 
         logger.debug("All devices loaded");
 
@@ -218,7 +215,7 @@ public class DefaultPlayerService implements PlayerService {
         // to share the same instance) and play it
         Composition composition = compositionService
                 .cloneComposition(compositionService.getComposition(compositionName));
-        CompositionPlayer compositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midiRoutingService, capabilitiesService);
+        CompositionPlayer compositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService);
         compositionPlayer.setSample(true);
         compositionPlayer.setComposition(composition);
         sampleCompositionPlayerList.add(compositionPlayer);
@@ -309,7 +306,7 @@ public class DefaultPlayerService implements PlayerService {
             return;
         }
 
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midiRoutingService, capabilitiesService);
+        defaultCompositionPlayer = new CompositionPlayer(notificationService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService);
 
         if (settingsService.getSettings().getDefaultComposition() == null || settingsService.getSettings().getDefaultComposition().length() == 0) {
             return;

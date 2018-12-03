@@ -47,8 +47,10 @@ public class DefaultMidiDeviceOutService implements MidiDeviceOutService {
         if (midiOutDevice == null) {
             midiDevice = settingsService.getSettings().getMidiOutDevice();
 
-            logger.trace(
-                    "Try connecting to MIDI out device " + midiDevice.getId() + " \"" + midiDevice.getName() + "\"");
+            if(midiDevice != null) {
+                logger.trace(
+                        "Try connecting to MIDI out device " + midiDevice.getId() + " \"" + midiDevice.getName() + "\"");
+            }
 
             midiOutDevice = midiService.getHardwareMidiDevice(midiDevice, DefaultMidiService.MidiDirection.OUT);
 

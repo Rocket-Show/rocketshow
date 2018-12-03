@@ -7,13 +7,15 @@ import com.ascargon.rocketshow.api.NotificationService;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.audio.AudioCompositionFilePlayer;
 import com.ascargon.rocketshow.midi.*;
+import com.ascargon.rocketshow.util.OperatingSystemInformation;
+import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 import org.freedesktop.gstreamer.*;
 import org.freedesktop.gstreamer.elements.BaseSink;
 import org.freedesktop.gstreamer.elements.PlayBin;
 import org.freedesktop.gstreamer.elements.URIDecodeBin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -43,6 +45,7 @@ public class CompositionPlayer {
     private final SettingsService settingsService;
     private final MidiRoutingService midiRoutingService;
     private final CapabilitiesService capabilitiesService;
+    private final OperatingSystemInformationService operatingSystemInformationService;
 
     private Composition composition;
     private PlayState playState = PlayState.STOPPED;
@@ -63,19 +66,20 @@ public class CompositionPlayer {
     // The gstreamer pipeline, used to sync all files in this composition
     private Pipeline pipeline;
 
-    public CompositionPlayer(NotificationService notificationService, PlayerService playerService, SettingsService settingsService, MidiRoutingService midiRoutingService, CapabilitiesService capabilitiesService) {
+    public CompositionPlayer(NotificationService notificationService, PlayerService playerService, SettingsService settingsService, MidiRoutingService midiRoutingService, CapabilitiesService capabilitiesService, OperatingSystemInformationService operatingSystemInformationService) {
         this.notificationService = notificationService;
         this.playerService = playerService;
         this.settingsService = settingsService;
         this.midiRoutingService = midiRoutingService;
         this.capabilitiesService = capabilitiesService;
+        this.operatingSystemInformationService = operatingSystemInformationService;
 
         this.midiMapping.setParent(settingsService.getSettings().getMidiMapping());
     }
 
     // Create a new pipeline, if there is at least one audio- or video file in this composition
     private boolean compositionNeedsPipeline(Composition composition) {
-        if(!capabilitiesService.getCapabilities().isGstreamer()) {
+        if (!capabilitiesService.getCapabilities().isGstreamer()) {
             return false;
         }
 
@@ -161,6 +165,8 @@ public class CompositionPlayer {
 
                     // Samples are played with the AlsaPlayer
                     if (!isSample) {
+                        logger.debug("Add audio file to pipeline");
+
                         URIDecodeBin audioSource = (URIDecodeBin) ElementFactory.make("uridecodebin", "uridecodebin" + i);
                         audioSource.set("uri", "file://" + settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/" + settingsService.getSettings().getAudioPath() + "/" + compositionFile.getName());
                         pipeline.add(audioSource);
@@ -178,15 +184,26 @@ public class CompositionPlayer {
                         Element resample = ElementFactory.make("audioresample", "audioresample" + i);
                         pipeline.add(resample);
 
-                        BaseSink alsaSink = (BaseSink) ElementFactory.make("alsasink", "alsasink" + i);
-                        //alsaSink.set("device", this.getManager().getSettings().getAlsaDeviceFromOutputBus(audioFile.getOutputBus()));
-                        alsaSink.set("device", "bus1");
-                        pipeline.add(alsaSink);
+                        String sinkName = "alsasink";
+
+                        if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+                            sinkName = "osxaudiosink";
+                        }
+                        BaseSink sink = (BaseSink) ElementFactory.make(sinkName, "sink" + i);
+
+                        if (!OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+                            sink.set("device", settingsService.getAlsaDeviceFromOutputBus(((AudioCompositionFile) compositionFile).getOutputBus()));
+                        }
+                        pipeline.add(sink);
 
                         convert.link(resample);
-                        resample.link(alsaSink);
+                        resample.link(sink);
                     }
                 } else if (compositionFile instanceof VideoCompositionFile && capabilitiesService.getCapabilities().isGstreamer()) {
+                    logger.debug("Add video file to pipeline");
+
+                    // TODO Does not work on OS X
+
                     PlayBin playBin = (PlayBin) ElementFactory.make("playbin", "playbin" + i);
                     playBin.set("uri", "file://" + settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/" + settingsService.getSettings().getVideoPath() + "/" + compositionFile.getName());
                     pipeline.add(playBin);

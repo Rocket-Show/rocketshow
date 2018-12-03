@@ -55,8 +55,10 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
         if (midiInDevice == null) {
             midiDevice = settingsService.getSettings().getMidiInDevice();
 
-            logger.trace(
-                    "Try connecting to MIDI in device " + midiDevice.getId() + " \"" + midiDevice.getName() + "\"");
+            if(midiDevice != null) {
+                logger.trace(
+                        "Try connecting to MIDI in device " + midiDevice.getId() + " \"" + midiDevice.getName() + "\"");
+            }
 
             midiInDevice = midiService.getHardwareMidiDevice(midiDevice, DefaultMidiService.MidiDirection.IN);
 

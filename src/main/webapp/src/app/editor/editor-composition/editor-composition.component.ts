@@ -183,8 +183,8 @@ export class EditorCompositionComponent implements OnInit {
             this.toastrService.success(result['editor.toast-composition-delete-success'], result['editor.toast-delete-success-title']);
           });
         })
-          .catch(() => {
-            return this.toastGeneralErrorService.show();
+          .catch((err) => {
+            return this.toastGeneralErrorService.show(err);
           })
           .subscribe();
       }
@@ -247,10 +247,10 @@ export class EditorCompositionComponent implements OnInit {
       return false;
     }
 
-    for(let file of this.currentComposition.fileList) {
+    for (let file of this.currentComposition.fileList) {
       // TODO also check image files
-      if(file instanceof CompositionVideoFile) {
-        videoImageCount ++;
+      if (file instanceof CompositionVideoFile) {
+        videoImageCount++;
 
         if (videoImageCount > 1) {
           return true;
