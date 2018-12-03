@@ -1,8 +1,13 @@
 package com.ascargon.rocketshow.composition;
 
+import com.ascargon.rocketshow.CapabilitiesService;
 import com.ascargon.rocketshow.PlayerService;
 import com.ascargon.rocketshow.SettingsService;
-import com.ascargon.rocketshow.util.FileDurationGetter;
+import com.ascargon.rocketshow.audio.AudioCompositionFile;
+import com.ascargon.rocketshow.gstreamer.GstDiscovererService;
+import com.ascargon.rocketshow.midi.MidiCompositionFile;
+import com.ascargon.rocketshow.midi.MidiPlayer;
+import com.ascargon.rocketshow.video.VideoCompositionFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -20,8 +25,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Handle storage, sorting, etc. of compositions and sets.
@@ -35,13 +38,17 @@ public class DefaultCompositionService implements CompositionService {
     private final static String SETS_PATH = "sets";
 
     private final SettingsService settingsService;
+    private final CapabilitiesService capabilitiesService;
+    private final GstDiscovererService gstDiscovererService;
 
     // All available compositions
     private final List<Composition> compositionCache = new ArrayList<>();
     private final List<Set> compositionSetCache = new ArrayList<>();
 
-    public DefaultCompositionService(SettingsService settingsService) {
+    public DefaultCompositionService(SettingsService settingsService, CapabilitiesService capabilitiesService, GstDiscovererService gstDiscovererService) {
         this.settingsService = settingsService;
+        this.capabilitiesService = capabilitiesService;
+        this.gstDiscovererService = gstDiscovererService;
 
         // Initialize the cache
         this.loadAllCompositions();
@@ -201,21 +208,27 @@ public class DefaultCompositionService implements CompositionService {
         }
     }
 
-    @Override
-    public synchronized void saveComposition(Composition composition) throws Exception {
-        // Get the duration of each file
-        ExecutorService executor = Executors.newFixedThreadPool(30);
-
-        for (CompositionFile compositionFile : composition.getCompositionFileList()) {
-            Runnable fileDurationGetter = new FileDurationGetter(settingsService, compositionFile);
-            executor.execute(fileDurationGetter);
+    private long getDurationWithGstreamer(String path) throws Exception {
+        if(!capabilitiesService.getCapabilities().isGstreamer()) {
+            throw new Exception("Gstreamer is not available");
         }
 
-        executor.shutdown();
+        return gstDiscovererService.getDurationMillis(path);
+    }
 
-        // Wait until all threads are finished
-        while (!executor.isTerminated()) {
-            Thread.sleep(100);
+    @Override
+    public synchronized void saveComposition(Composition composition) throws Exception {
+        // Set the duration for each file
+        for (CompositionFile compositionFile : composition.getCompositionFileList()) {
+            String path = settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/";
+
+            if (compositionFile instanceof MidiCompositionFile) {
+                compositionFile.setDurationMillis(MidiPlayer.getDuration(path + settingsService.getSettings().getMidiPath() +  "/" + compositionFile.getName()));
+            } else if (compositionFile instanceof AudioCompositionFile) {
+                compositionFile.setDurationMillis(getDurationWithGstreamer(path + settingsService.getSettings().getAudioPath() + "/" + compositionFile.getName()));
+            } else if (compositionFile instanceof VideoCompositionFile) {
+                compositionFile.setDurationMillis(getDurationWithGstreamer(path + settingsService.getSettings().getVideoPath() + "/" + compositionFile.getName()));
+            }
         }
 
         // Set the duration of the composition to the maximum duration of the
