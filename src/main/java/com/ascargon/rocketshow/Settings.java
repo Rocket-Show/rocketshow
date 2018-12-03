@@ -180,6 +180,8 @@ public class Settings {
         this.raspberryGpioControlList = raspberryGpioControlList;
     }
 
+    private List<Instrument> instrumentList = new ArrayList<Instrument>();
+
     public String getDefaultComposition() {
         return defaultComposition;
     }
@@ -381,5 +383,13 @@ public class Settings {
     public void setRaspberryGpioCyclesHigh(int raspberryGpioCyclesHigh) {
         this.raspberryGpioCyclesHigh = raspberryGpioCyclesHigh;
     }
+
+	public List<Instrument> getInstrumentList() {
+		return instrumentList;
+	}
+
+	public void setInstrumentList(List<Instrument> instrumentList) {
+		this.instrumentList = instrumentList;
+	}
 
 }

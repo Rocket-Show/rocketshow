@@ -6,7 +6,6 @@ import { MidiDevice } from './../models/midi-device';
 import { Subject, Observable } from 'rxjs/Rx';
 import { Settings } from './../models/settings';
 import { Injectable } from '@angular/core';
-import { Response } from '@angular/http';
 import { Language } from '../models/language';
 
 @Injectable()

@@ -1,6 +1,5 @@
 import { Session } from './../models/session';
 import { SessionService } from './../services/session.service';
-import { HttpClient } from '@angular/common/http';
 import { Composition } from './../models/composition';
 import { CompositionService } from './../services/composition.service';
 import { StateService } from './../services/state.service';
@@ -40,7 +39,6 @@ export class PlayComponent implements OnInit {
   loadingSet: boolean = false;
 
   constructor(
-    private http: HttpClient,
     public stateService: StateService,
     private compositionService: CompositionService,
     private transportService: TransportService,

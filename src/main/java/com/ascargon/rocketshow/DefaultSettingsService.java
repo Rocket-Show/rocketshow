@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class DefaultSettingsService implements SettingsService {
@@ -115,6 +116,28 @@ public class DefaultSettingsService implements SettingsService {
             settings.setEnableRaspberryGpio(true);
             settings.setWlanApEnable(true);
         }
+
+        Instrument instrument;
+
+        instrument = new Instrument();
+        instrument.setName("Vocals");
+        instrument.setUuid(UUID.randomUUID().toString());
+        settings.getInstrumentList().add(instrument);
+
+        instrument = new Instrument();
+        instrument.setName("Guitar");
+        instrument.setUuid(UUID.randomUUID().toString());
+        settings.getInstrumentList().add(instrument);
+
+        instrument = new Instrument();
+        instrument.setName("Bass");
+        instrument.setUuid(UUID.randomUUID().toString());
+        settings.getInstrumentList().add(instrument);
+
+        instrument = new Instrument();
+        instrument.setName("Horns");
+        instrument.setUuid(UUID.randomUUID().toString());
+        settings.getInstrumentList().add(instrument);
     }
 
     @Override

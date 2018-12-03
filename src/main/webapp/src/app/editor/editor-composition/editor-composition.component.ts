@@ -11,6 +11,7 @@ import { Observable } from 'rxjs/Observable';
 import { ToastrService } from 'ngx-toastr';
 import { TranslateService } from '@ngx-translate/core';
 import { CompositionVideoFile } from '../../models/composition-video-file';
+import { EditorCompositionLeadSheetComponent } from './editor-composition-lead-sheet/editor-composition-lead-sheet.component';
 
 @Component({
   selector: 'app-editor-composition',
@@ -137,20 +138,20 @@ export class EditorCompositionComponent implements OnInit {
         this.toastrService.success(result['editor.toast-composition-save-success'], result['editor.toast-save-success-title']);
       });
     })
-    .catch((err) => {
-      return this.toastGeneralErrorService.show(err);
-    })
-    .finally(() => {
-      this.savingComposition = false;
-    })
-    .subscribe();
+      .catch((err) => {
+        return this.toastGeneralErrorService.show(err);
+      })
+      .finally(() => {
+        this.savingComposition = false;
+      })
+      .subscribe();
   }
 
   // Save a new composition
   save(composition: Composition) {
     composition.name = composition.name.replace(/\//g, '').replace(/\\/g, '');
 
-    if(composition.name.length < 1) {
+    if (composition.name.length < 1) {
       return;
     }
 
@@ -159,10 +160,10 @@ export class EditorCompositionComponent implements OnInit {
       this.compositionService.deleteComposition(this.initialComposition.name).map(() => {
         this.saveApi(composition);
       })
-      .catch((err) => {
-        return this.toastGeneralErrorService.show(err);
-      })
-      .subscribe();
+        .catch((err) => {
+          return this.toastGeneralErrorService.show(err);
+        })
+        .subscribe();
     } else {
       this.saveApi(composition);
     }
@@ -182,10 +183,10 @@ export class EditorCompositionComponent implements OnInit {
             this.toastrService.success(result['editor.toast-composition-delete-success'], result['editor.toast-delete-success-title']);
           });
         })
-        .catch(() => {
-          return this.toastGeneralErrorService.show();
-        })
-        .subscribe();
+          .catch(() => {
+            return this.toastGeneralErrorService.show();
+          })
+          .subscribe();
       }
     }).subscribe();
   }
@@ -193,6 +194,11 @@ export class EditorCompositionComponent implements OnInit {
   // Add a new file to the composition
   addCompositionFile() {
     this.editCompositionFileDetails(0, true);
+  }
+
+  // Add a new lead sheet to the composition
+  addLeadSheet() {
+    this.editLeadSheet(0, true);
   }
 
   // Toggle the active state (mute)
@@ -233,11 +239,11 @@ export class EditorCompositionComponent implements OnInit {
   multipleVideoImage(): boolean {
     let videoImageCount: number = 0;
 
-    if(!this.currentComposition) {
+    if (!this.currentComposition) {
       return false;
     }
 
-    if(!this.currentComposition.fileList) {
+    if (!this.currentComposition.fileList) {
       return false;
     }
 
@@ -246,13 +252,30 @@ export class EditorCompositionComponent implements OnInit {
       if(file instanceof CompositionVideoFile) {
         videoImageCount ++;
 
-        if(videoImageCount > 1) {
+        if (videoImageCount > 1) {
           return true;
         }
       }
     }
 
     return false;
+  }
+
+  editLeadSheet(fileIndex: number, addNew: boolean = false) {
+    // Create a backup of the current composition
+    let compositionCopy: Composition = new Composition(JSON.parse(this.currentComposition.stringify()));
+
+    // Show the lead sheet details dialog
+    let leadSheetDialog = this.modalService.show(EditorCompositionLeadSheetComponent, { keyboard: true, ignoreBackdropClick: true });
+    (<EditorCompositionFileComponent>leadSheetDialog.content).composition = compositionCopy;
+
+    (<EditorCompositionFileComponent>leadSheetDialog.content).onClose.subscribe(result => {
+      if (result === 1) {
+        // OK has been pressed -> save
+        // TODO
+        //this.currentComposition.fileList[fileIndex] = (<EditorCompositionFileComponent>fileDialog.content).file;
+      }
+    });
   }
 
 }

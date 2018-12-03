@@ -1,11 +1,10 @@
+import { LeadSheetService } from './services/lead-sheet.service';
 import { StateService } from './services/state.service';
 import { CompositionService } from './services/composition.service';
-import { Component, OnChanges, Input, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
-import { trigger, state, animate, transition, style, query } from '@angular/animations';
 import { Router, NavigationEnd } from '@angular/router';
 import { Observable } from 'rxjs/Rx';
-import { environment } from '../environments/environment';
 import { SessionService } from './services/session.service';
 import { SettingsService } from './services/settings.service';
 import { Settings } from './models/settings';
@@ -20,6 +19,7 @@ import { Title } from '@angular/platform-browser';
 export class AppComponent implements OnInit {
 
   isIntro: boolean = false;
+  isPlay: boolean = false;
   loaded: boolean = false;
   settings: Settings;
 
@@ -30,7 +30,8 @@ export class AppComponent implements OnInit {
     private compositionService: CompositionService,
     private sessionService: SessionService,
     private settingsService: SettingsService,
-    private titleService: Title) {
+    private titleService: Title,
+    private leadSheetService: LeadSheetService) {
 
     translateService.setDefaultLang('en');
   }
@@ -46,11 +47,23 @@ export class AppComponent implements OnInit {
   ngOnInit() {
     this.router.events.subscribe((e) => {
       if (e instanceof NavigationEnd) {
-        if (e.url == '/intro') {
-          this.isIntro = true;
-        } else {
-          this.isIntro = false;
-        }
+        this.isIntro = false;
+        this.isPlay = false;
+
+        switch(e.url) { 
+          case '/intro': { 
+             this.isIntro = true;
+             break; 
+          } 
+          case '/play': { 
+             this.isPlay = true;
+             break; 
+          }
+          case '/': { 
+            this.isPlay = true;
+            break; 
+         }
+       } 
       }
     });
 
@@ -79,6 +92,10 @@ export class AppComponent implements OnInit {
         this.copySettings(settings);
       });
     });
+  }
+
+  showLeadSheet() {
+    this.leadSheetService.show();
   }
 
 }

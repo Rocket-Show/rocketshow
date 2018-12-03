@@ -1,7 +1,8 @@
 import { MidiDevice } from './../models/midi-device';
 import { AudioDevice } from './../models/audio-device';
+import { SettingsPersonalService } from './../services/settings-personal.service';
 import { ToastGeneralErrorService } from './../services/toast-general-error.service';
-import { Component, OnInit, Directive, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import { Settings } from '../models/settings';
 import { SettingsService } from '../services/settings.service';
@@ -25,6 +26,7 @@ export class SettingsComponent implements OnInit {
 
   constructor(
     private settingsService: SettingsService,
+    private settingsPersonalService: SettingsPersonalService,
     private pendingChangesDialogService: PendingChangesDialogService,
     private translateService: TranslateService,
     private toastrService: ToastrService,
@@ -132,6 +134,9 @@ export class SettingsComponent implements OnInit {
         this.toastrService.success(result['settings.toast-discard-success'], result['settings.toast-discard-success-title']);
       });
     }).subscribe();
+
+    this.settingsPersonalService.getSettings(true);
+    this.settingsPersonalService.settingsChanged.next();
   }
 
   private settingsError(errorKey: string) {
@@ -147,6 +152,10 @@ export class SettingsComponent implements OnInit {
 
     this.settingsService.getSettings().map(result => {
       this.translateService.get(['intro.default-unit-name', 'settings.remote-device-name-placeholder']).subscribe((translations) => {
+        // Save the personal settings
+        this.settingsPersonalService.save(this.settingsPersonalService.getSettings());
+        this.settingsPersonalService.settingsChanged.next();
+        
         // Set some default settings
         if (!result.deviceName) {
           result.deviceName = translations['intro.default-unit-name'];

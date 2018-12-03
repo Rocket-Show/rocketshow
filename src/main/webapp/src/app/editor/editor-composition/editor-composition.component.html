@@ -41,16 +41,50 @@
       </div>
       <div class="card-body">
 
+        <!-- Name -->
         <div class="form-group">
           <label for="compositionName">{{ 'editor.composition-name' | translate }}</label>
           <input type="text" class="form-control" maxlength="50" [(ngModel)]="currentComposition.name" id="compositionName" placeholder="{{ 'editor.default-composition-name' | translate }}">
         </div>
 
+        <!-- Notes -->
         <div class="form-group">
           <label for="compositionNotes">{{ 'editor.notes' | translate }}</label>
-          <textarea [(ngModel)]="currentComposition.notes" class="form-control" id="compositionNotes" rows="3"></textarea>
+          <textarea [(ngModel)]="currentComposition.notes" class="form-control" id="compositionNotes" rows="2"></textarea>
         </div>
 
+        <!-- Lead sheets -->
+        <div class="form-group">
+          <label>{{ 'editor.lead-sheets' | translate }}</label>
+
+          <div class="list-group">
+            <div class="list-group-item" *ngFor="let leadSheet of currentComposition?.leadSheetList; let i = index">
+              <div class="row">
+                <a href="#" class="col-auto col-auto my-auto pl-0" (click)="toggleActive(file); false" [class.text-white]="!file.active">
+                  <i class="fa fa-fw" [ngClass]="file.getFontAwesomeIconClass()" aria-hidden="true"></i>
+                </a>
+                <div class="col-auto flex-grow text-break-word my-auto pl-0">
+                  <a href="#" (click)="editCompositionFileDetails(i); false">
+                    <p class="mb-0">{{ file.name }}</p>
+                  </a>
+                </div>
+                <div class="col-auto my-auto pl-0 pr-0">
+                  <a class="text-danger float-right" href="#" role="button" (click)="deleteLeadSheet(i); false">
+                    <i class="fa fa-trash-o" aria-hidden="true"></i>
+                  </a>
+                </div>
+                <div class="col-auto my-auto">
+                  <a class="btn btn-secondary btn-sm float-right" href="#" role="button" (click)="editLeadSheet(i); false">...</a>
+                </div>
+              </div>
+            </div>
+            <a href="#" (click)="addLeadSheet(); false" class="no-sortjs list-group-item text-center">
+              <i class="fa fa-plus" aria-hidden="true"></i> {{ 'editor.lead-sheets-add' | translate }}
+            </a>
+          </div>
+        </div>
+
+        <!-- Files -->
         <div class="form-group">
           <label>{{ 'editor.files' | translate }}</label>
 
@@ -87,7 +121,9 @@
         <!-- More than one video/image -->
         <div *ngIf="multipleVideoImage()" class="alert alert-danger mb-0 text-center" role="alert">
           <h3>
-            <i class="fa fa-exclamation-circle" aria-hidden="true"></i> {{ 'editor.error-multiple-video-images-title' | translate }}</h3>
+            <i class="fa fa-exclamation-circle" aria-hidden="true"></i> {{ 'editor.error-multiple-video-images-title' | translate
+            }}
+          </h3>
           <p class="mb-0">{{ 'editor.error-multiple-video-images' | translate }}</p>
         </div>
 
@@ -106,7 +142,8 @@
             role="button">
 
             <i *ngIf="savingComposition" class="fa fa-spinner fa-pulse fa-fw" aria-hidden="true"></i>
-            <i *ngIf="!savingComposition" class="fa fa-floppy-o fa-fw" aria-hidden="true"></i> {{ 'misc.save' | translate }}
+            <i *ngIf="!savingComposition" class="fa fa-floppy-o fa-fw" aria-hidden="true"></i> {{ 'misc.save' | translate
+            }}
           </button>
         </div>
       </div>

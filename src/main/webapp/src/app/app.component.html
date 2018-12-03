@@ -1,6 +1,9 @@
 <!-- Connectivity indicator -->
 <app-connection *ngIf="loaded"></app-connection>
 
+<!-- Lead sheet display-->
+<app-lead-sheet></app-lead-sheet>
+
 <!-- Initial loading -->
 <div class="container d-flex h-100" *ngIf="!loaded">
   <div class="row justify-content-center align-self-center mx-auto">
@@ -10,8 +13,8 @@
           <h4 class="card-title">{{ 'loading.title' | translate }}</h4>
           <p class="card-text">{{ 'loading.description' | translate }}</p>
           <div class="progress">
-            <div class="progress-bar progress-bar-striped progress-bar-animated w-100" role="progressbar" aria-valuenow="10"
-              aria-valuemin="0" aria-valuemax="100"></div>
+            <div class="progress-bar progress-bar-striped progress-bar-animated w-100" role="progressbar" aria-valuenow="10" aria-valuemin="0"
+              aria-valuemax="100"></div>
           </div>
         </div>
       </div>
@@ -20,31 +23,40 @@
 </div>
 
 <!-- Navigation -->
-<nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light border-secondary" style="border-bottom: 1px solid #444;" *ngIf="loaded && !isIntro">
+<nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light border-secondary" style="border-bottom: 1px solid #444;"
+  *ngIf="loaded && !isIntro">
   <a class="navbar-brand d-flex" href="#" routerLink="/">
     <img class="my-auto d-none d-sm-block" src="assets/img/logo.png?v=1.4" height="30px" style="margin-right: 0px;">
     <span class="my-auto d-none d-sm-block">&nbsp;|&nbsp;</span>
     <span class="my-auto">{{ settings.deviceName }}</span>
   </a>
 
-  <button class="navbar-toggler navbar-toggler-left" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-
+  <!-- Menu buttons -->
   <div class="collapse navbar-collapse" id="navbarSupportedContent">
     <ul class="navbar-nav mr-auto">
-      <li class="nav-item">
+      <li class="nav-item" data-toggle="collapse" data-target=".navbar-collapse.show">
         <a class="nav-link" routerLink="/play" routerLinkActive="active">{{ 'navigation.start' | translate }}</a>
       </li>
-      <li class="nav-item">
+      <li class="nav-item" data-toggle="collapse" data-target=".navbar-collapse.show">
         <a class="nav-link" routerLink="/editor" routerLinkActive="active">{{ 'navigation.compositions' | translate }}</a>
       </li>
-      <li class="nav-item">
+      <li class="nav-item" data-toggle="collapse" data-target=".navbar-collapse.show">
         <a class="nav-link" routerLink="/settings" routerLinkActive="active">{{ 'navigation.settings' | translate }}</a>
       </li>
     </ul>
   </div>
+
+  <!-- Show the leadsheet -->
+  <div class="ml-auto">&nbsp;
+    <a *ngIf="isPlay" href="#" (click)="showLeadSheet(); false;" class="btn btn-primary">
+      <i class="fa fa-file-text-o" aria-hidden="true"></i></a>
+  </div>
+
+  <!-- Hamburger -->
+  <button class="navbar-toggler navbar-toggler-left ml-3" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
 </nav>
 
 <!-- Main content -->
