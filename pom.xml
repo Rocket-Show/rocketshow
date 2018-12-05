@@ -2,7 +2,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.ascargon</groupId>
-    <artifactId>RocketShow</artifactId>
+    <artifactId>rocketshow</artifactId>
     <version>1.4.2</version>
     <packaging>jar</packaging>
 
@@ -35,7 +35,7 @@
     </repositories>
 
     <build>
-        <finalName>RocketShow</finalName>
+        <finalName>rocketshow</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
