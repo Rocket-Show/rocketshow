@@ -30,7 +30,7 @@ public class MidiCompositionFilePlayer {
         midiPlayer.stop();
     }
 
-    public void seek(long positionMillis) {
+    public void seek(long positionMillis) throws MidiUnavailableException {
         midiPlayer.seek(positionMillis);
     }
 

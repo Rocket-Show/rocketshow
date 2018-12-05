@@ -11,6 +11,7 @@ import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
 import org.freedesktop.gstreamer.*;
+import org.freedesktop.gstreamer.elements.AppSink;
 import org.freedesktop.gstreamer.elements.BaseSink;
 import org.freedesktop.gstreamer.elements.PlayBin;
 import org.freedesktop.gstreamer.elements.URIDecodeBin;
@@ -159,6 +160,18 @@ public class CompositionPlayer {
                     if (firstMidiPlayer == null) {
                         firstMidiPlayer = midiCompositionFilePlayer.getMidiPlayer();
                     }
+
+                    // AAAAAAA
+                    Element midiFileSource = ElementFactory.make("filesrc", "midifilesrc" + i);
+                    midiFileSource.set("location", settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/" + settingsService.getSettings().getMidiPath() + "/" + compositionFile.getName());
+                    pipeline.add(midiFileSource);
+
+                    Element midiParse = ElementFactory.make("midiparse", "midiparse" + i);
+                    pipeline.add(midiParse);
+
+                    AppSink midiSink = (AppSink)ElementFactory.make("appsink", "midisink" + i);
+                    midiSink.set("emit-signals", true);
+                    
                 } else if (compositionFile instanceof AudioCompositionFile && capabilitiesService.getCapabilities().isGstreamer()) {
                     AudioCompositionFilePlayer audioCompositionFilePlayer = new AudioCompositionFilePlayer(settingsService, (AudioCompositionFile) compositionFile, settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/" + settingsService.getSettings().getAudioPath() + "/" + compositionFile.getName(), isSample);
                     audioCompositionFilePlayerList.add(audioCompositionFilePlayer);
@@ -167,7 +180,7 @@ public class CompositionPlayer {
                     if (!isSample) {
                         logger.debug("Add audio file to pipeline");
 
-                        URIDecodeBin audioSource = (URIDecodeBin) ElementFactory.make("uridecodebin", "uridecodebin" + i);
+                        URIDecodeBin audioSource = (URIDecodeBin) ElementFactory.make("uridecodebin", "audiouridecodebin" + i);
                         audioSource.set("uri", "file://" + settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/" + settingsService.getSettings().getAudioPath() + "/" + compositionFile.getName());
                         pipeline.add(audioSource);
 

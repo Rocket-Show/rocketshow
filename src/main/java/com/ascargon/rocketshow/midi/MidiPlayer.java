@@ -1,10 +1,10 @@
 package com.ascargon.rocketshow.midi;
 
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 import org.freedesktop.gstreamer.GstObject;
 import org.freedesktop.gstreamer.Pipeline;
 import org.freedesktop.gstreamer.State;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sound.midi.*;
 import java.io.*;
@@ -22,7 +22,7 @@ public class MidiPlayer {
     private final Pipeline syncPipeline;
     private final MidiPlayer syncMidiPlayer;
 
-    // Sync to a master, if available
+    // Sync to a master Gstreamer pipeline or MIDI player, if available
     private Timer syncTimer;
 
     MidiPlayer(MidiRoutingService midiRoutingService, String path, Pipeline syncPipeline, MidiPlayer syncMidiPlayer, List<MidiRouting> midiRoutingList) throws MidiUnavailableException, IOException, InvalidMidiDataException {
@@ -45,10 +45,10 @@ public class MidiPlayer {
         if (syncPipeline != null) {
             syncPipeline.getBus().connect((GstObject source, State old, State newState, State pending) -> {
                 if (source.getTypeName().equals("GstPipeline")) {
-                    if (newState == State.PLAYING) {
+                    if (newState == State.PLAYING && sequencer.isOpen()) {
                         sequencer.start();
                         startSyncTimer();
-                    } else if (newState == State.PAUSED) {
+                    } else if (newState == State.PAUSED && sequencer.isOpen()) {
                         sequencer.stop();
                         stopSyncTimer();
                     }
@@ -59,27 +59,31 @@ public class MidiPlayer {
         logger.debug("File '" + path + "' loaded");
     }
 
-    public void seek(long positionMillis) {
-        sequencer.setMicrosecondPosition(positionMillis * 1000);
-    }
+    private void syncToMaster() throws MidiUnavailableException {
+        if (!sequencer.isOpen()) {
+            // We reached the end of the file -> also stop the sync
+            stopSyncTimer();
+        }
 
-    private void syncToMaster() {
-        Long masterPositionMillis = null;
+        Long masterPositionMicros = null;
 
         // The millis we allow to diff to the master, before syncing
-        long syncDifferenceThresholdMillis = 10;
+        // TODO increase until stable
+        long syncDifferenceThresholdMicros = 20000;
 
         // Sync to a master source, if available
         if (syncPipeline != null) {
-            masterPositionMillis = syncPipeline.queryPosition(TimeUnit.MILLISECONDS);
+            masterPositionMicros = syncPipeline.queryPosition(TimeUnit.MICROSECONDS);
         } else if (syncMidiPlayer != null) {
-            masterPositionMillis = syncMidiPlayer.getPositionMillis();
+            masterPositionMicros = syncMidiPlayer.getPositionMicros();
         }
 
-        if (masterPositionMillis != null) {
-            if (Math.abs(masterPositionMillis - getPositionMillis()) > syncDifferenceThresholdMillis && masterPositionMillis < sequencer.getMicrosecondLength() / 1000) {
-                logger.trace("Syncing MIDI player with a difference of " + Math.abs(masterPositionMillis - getPositionMillis()) + " to the master (master position = " + masterPositionMillis + ", slave position = " + getPositionMillis() + ")...");
-                seek(masterPositionMillis);
+        if (masterPositionMicros >  0) {
+            long slavePositionMicros = getPositionMicros();
+
+            if (Math.abs(masterPositionMicros - slavePositionMicros) > syncDifferenceThresholdMicros && masterPositionMicros < sequencer.getMicrosecondLength()) {
+                seekMicros(masterPositionMicros);
+                logger.trace("Synced MIDI player with a difference of " + Math.abs(masterPositionMicros - slavePositionMicros) / 1000 + " milliseconds to the master (master position = " + masterPositionMicros + ", slave position = " + slavePositionMicros + ")...");
             }
         }
     }
@@ -88,7 +92,11 @@ public class MidiPlayer {
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                syncToMaster();
+                try {
+                    syncToMaster();
+                } catch (MidiUnavailableException e) {
+                    logger.error("Could not sync MIDI player to master", e);
+                }
             }
         };
 
@@ -123,6 +131,7 @@ public class MidiPlayer {
         logger.debug("Starting MIDI player");
 
         if (syncPipeline == null) {
+            // If we sync to a pipeline, we listen to events from the bus and don't use this function
             sequencer.start();
 
             if (syncMidiPlayer != null) {
@@ -132,7 +141,8 @@ public class MidiPlayer {
     }
 
     public void pause() {
-        if (syncPipeline != null) {
+        if (syncPipeline != null && sequencer.isOpen()) {
+            // If we sync to a pipeline, we listen to events from the bus and don't use this function
             sequencer.stop();
         }
 
@@ -145,12 +155,31 @@ public class MidiPlayer {
         stopSyncTimer();
     }
 
-    public long getPositionMillis() {
+    public void seekMicros(long positionMicros) throws MidiUnavailableException {
+        sequencer.setMicrosecondPosition(positionMicros);
+
+        if (positionMicros < sequencer.getMicrosecondLength() && !sequencer.isOpen()) {
+            // Open the sequencer again, because it might be closed due to a past seek
+            // past the sequencer length.
+            sequencer.open();
+            startSyncTimer();
+        }
+    }
+
+    public void seek(long positionMillis) throws MidiUnavailableException {
+        seek(positionMillis * 1000);
+    }
+
+    public long getPositionMicros() {
         if (sequencer != null) {
-            return sequencer.getMicrosecondPosition() / 1000;
+            return sequencer.getMicrosecondPosition();
         }
 
         return 0;
+    }
+
+    public long getPositionMillis() {
+        return getPositionMicros() / 1000;
     }
 
     public boolean isLoop() {
