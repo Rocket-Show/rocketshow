@@ -37,7 +37,7 @@ class MidiController {
         return midiService.getMidiDevices(DefaultMidiService.MidiDirection.OUT);
     }
 
-    @PostMapping("play")
+    @PostMapping("send-message")
     public ResponseEntity<Void> sendMessage(@RequestParam("command") int command, @RequestParam("channel") int channel,
                                             @RequestParam("note") int note, @RequestParam("velocity") int velocity) {
 

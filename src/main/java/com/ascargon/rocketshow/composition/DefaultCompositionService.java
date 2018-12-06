@@ -6,12 +6,14 @@ import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.gstreamer.GstDiscovererService;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
-import com.ascargon.rocketshow.midi.MidiPlayer;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import javax.sound.midi.MidiSystem;
+import javax.sound.midi.Sequence;
+import javax.sound.midi.Sequencer;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
@@ -209,11 +211,24 @@ public class DefaultCompositionService implements CompositionService {
     }
 
     private long getDurationWithGstreamer(String path) throws Exception {
-        if(!capabilitiesService.getCapabilities().isGstreamer()) {
+        if (!capabilitiesService.getCapabilities().isGstreamer()) {
             throw new Exception("Gstreamer is not available");
         }
 
         return gstDiscovererService.getDurationMillis(path);
+    }
+
+    private long getMidiDuration(String path) throws Exception {
+        long duration;
+
+        Sequence sequence = MidiSystem.getSequence(new File(path));
+        Sequencer sequencer = MidiSystem.getSequencer();
+        sequencer.open();
+        sequencer.setSequence(sequence);
+        duration = sequencer.getMicrosecondLength() / 1000;
+        sequencer.close();
+
+        return duration;
     }
 
     @Override
@@ -223,7 +238,7 @@ public class DefaultCompositionService implements CompositionService {
             String path = settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + "/";
 
             if (compositionFile instanceof MidiCompositionFile) {
-                compositionFile.setDurationMillis(MidiPlayer.getDuration(path + settingsService.getSettings().getMidiPath() +  "/" + compositionFile.getName()));
+                compositionFile.setDurationMillis(getMidiDuration(path + settingsService.getSettings().getMidiPath() + "/" + compositionFile.getName()));
             } else if (compositionFile instanceof AudioCompositionFile) {
                 compositionFile.setDurationMillis(getDurationWithGstreamer(path + settingsService.getSettings().getAudioPath() + "/" + compositionFile.getName()));
             } else if (compositionFile instanceof VideoCompositionFile) {
@@ -382,16 +397,14 @@ public class DefaultCompositionService implements CompositionService {
     @Override
     public Composition getNextComposition(Composition currentComposition) {
         // Get the next composition (not set based)
-        if (currentComposition != null) {
-            return null;
-        }
-
-        for (int i = 0; i < compositionCache.size(); i++) {
-            if (compositionCache.get(i).getName().equals(currentComposition.getName())) {
-                if (compositionCache.size() > i + 1) {
-                    return compositionCache.get(i + 1);
-                } else {
-                    return null;
+        if(currentComposition != null) {
+            for (int i = 0; i < compositionCache.size(); i++) {
+                if (compositionCache.get(i).getName().equals(currentComposition.getName())) {
+                    if (compositionCache.size() > i + 1) {
+                        return compositionCache.get(i + 1);
+                    } else {
+                        return null;
+                    }
                 }
             }
         }
