@@ -238,6 +238,7 @@ public class DefaultCompositionService implements CompositionService {
             String path = settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + "/";
 
             if (compositionFile instanceof MidiCompositionFile) {
+                // Getting duration with Gstreamer does not work (missing plugins)
                 compositionFile.setDurationMillis(getMidiDuration(path + settingsService.getSettings().getMidiPath() + "/" + compositionFile.getName()));
             } else if (compositionFile instanceof AudioCompositionFile) {
                 compositionFile.setDurationMillis(getDurationWithGstreamer(path + settingsService.getSettings().getAudioPath() + "/" + compositionFile.getName()));

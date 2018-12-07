@@ -20,8 +20,6 @@ import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -53,7 +51,6 @@ public class CompositionPlayer {
 
     private Composition composition;
     private PlayState playState = PlayState.STOPPED;
-    private Timer autoStopTimer;
     private long startPosition = 0;
 
     private final MidiMapping midiMapping = new MidiMapping();
@@ -145,10 +142,12 @@ public class CompositionPlayer {
 
             pipeline = new Pipeline();
 
-            pipeline.getBus().connect((Bus.ERROR) (GstObject source, int code, String message) -> logger.error("GST: " + message));
-            pipeline.getBus().connect((Bus.WARNING) (GstObject source, int code, String message) -> logger.warn("GST: " + message));
-            pipeline.getBus().connect((Bus.INFO) (GstObject source, int code, String message) -> logger.warn("GST: " + message));
-            pipeline.getBus().connect((GstObject source, State old, State newState, State pending) -> {
+            Bus bus = pipeline.getBus();
+
+            bus.connect((Bus.ERROR) (GstObject source, int code, String message) -> logger.error("GST: " + message));
+            bus.connect((Bus.WARNING) (GstObject source, int code, String message) -> logger.warn("GST: " + message));
+            bus.connect((Bus.INFO) (GstObject source, int code, String message) -> logger.warn("GST: " + message));
+            bus.connect((GstObject source, State old, State newState, State pending) -> {
                 if (source.getTypeName().equals("GstPipeline") && newState == State.PLAYING) {
                     // We changed to playing, maybe we need to seek to the start position (not possible before playing)
                     if (startPosition > 0) {
@@ -159,6 +158,13 @@ public class CompositionPlayer {
                         }
                         startPosition = 0;
                     }
+                }
+            });
+            bus.connect((Bus.EOS) source -> {
+                try {
+                    playerService.compositionPlayerFinishedPlaying(this);
+                } catch (Exception e) {
+                    logger.error("Could not stop the composition after end of stream", e);
                 }
             });
         }
@@ -262,68 +268,6 @@ public class CompositionPlayer {
         }
     }
 
-    private void startAutoStopTimer() {
-        // Start the autostop timer, to automatically stop the composition, as
-        // soon as the last file (the longest one, which has the most offset)
-        // has been finished)
-        long maxDurationAndOffset = 0;
-        long positionMillis = getPositionMillis();
-
-        if (autoStopTimer != null) {
-            autoStopTimer.cancel();
-            autoStopTimer = null;
-        }
-
-        for (CompositionFile compositionFile : composition.getCompositionFileList()) {
-            if (compositionFile.isActive()) {
-                int fileOffset = compositionFile.getOffsetMillis();
-
-                if (compositionFile.isLoop()) {
-                    // At least one file is looped -> don't stop the composition
-                    // automatically
-                    return;
-                }
-
-                if (compositionFile instanceof MidiCompositionFile) {
-                    fileOffset += settingsService.getSettings().getOffsetMillisMidi();
-                } else if (compositionFile instanceof AudioCompositionFile) {
-                    fileOffset += settingsService.getSettings().getOffsetMillisAudio();
-                } else if (compositionFile instanceof VideoCompositionFile) {
-                    fileOffset += settingsService.getSettings().getOffsetMillisVideo();
-                }
-
-                if (compositionFile.getDurationMillis() + fileOffset > maxDurationAndOffset) {
-                    maxDurationAndOffset = compositionFile.getDurationMillis() + fileOffset;
-                }
-            }
-        }
-
-        maxDurationAndOffset -= positionMillis;
-
-        logger.debug("Scheduled the auto-stop timer in " + maxDurationAndOffset + " millis");
-
-        CompositionPlayer thisCompositionPlayer = this;
-
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                try {
-                    logger.debug("Automatically stopping the composition...");
-
-                    timer.cancel();
-                    autoStopTimer = null;
-
-                    playerService.compositionPlayerFinishedPlaying(thisCompositionPlayer);
-                } catch (Exception e) {
-                    logger.error("Could not automatically stop composition '" + composition.getName() + "'", e);
-                }
-            }
-        }, maxDurationAndOffset);
-
-        autoStopTimer = timer;
-    }
-
     public void play() throws Exception {
         if (composition == null) {
             return;
@@ -339,8 +283,6 @@ public class CompositionPlayer {
             pipeline.play();
         }
 
-        startAutoStopTimer();
-
         playState = PlayState.PLAYING;
 
         if (!isDefaultComposition && !isSample) {
@@ -349,12 +291,6 @@ public class CompositionPlayer {
     }
 
     public void pause() throws Exception {
-        // Cancel the auto-stop timer
-        if (autoStopTimer != null) {
-            autoStopTimer.cancel();
-            autoStopTimer = null;
-        }
-
         if (playState == PlayState.PAUSED) {
             return;
         }
@@ -394,12 +330,6 @@ public class CompositionPlayer {
 
         startPosition = 0;
 
-        // Cancel the auto-stop timer
-        if (autoStopTimer != null) {
-            autoStopTimer.cancel();
-            autoStopTimer = null;
-        }
-
         logger.info("Stopping composition '" + composition.getName() + "'");
 
         // Stop the composition
@@ -426,8 +356,6 @@ public class CompositionPlayer {
         if (pipeline != null) {
             pipeline.seek(positionMillis, TimeUnit.MILLISECONDS);
         }
-
-        startAutoStopTimer();
 
         if (!isSample) {
             notificationService.notifyClients(playerService);
