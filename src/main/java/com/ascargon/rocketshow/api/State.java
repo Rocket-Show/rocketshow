@@ -1,10 +1,8 @@
 package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.composition.CompositionPlayer;
-import com.ascargon.rocketshow.midi.MidiSignal;
 import com.ascargon.rocketshow.util.UpdateService;
 
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
@@ -15,7 +13,6 @@ public class State {
     private String currentCompositionName;
     private long currentCompositionDurationMillis;
     private long positionMillis;
-    private MidiSignal midiSignal;
     private UpdateService.UpdateState updateState;
     private String currentSetName;
     private Boolean updateFinished;
@@ -58,14 +55,6 @@ public class State {
 
     public void setPositionMillis(long positionMillis) {
         this.positionMillis = positionMillis;
-    }
-
-    public MidiSignal getMidiSignal() {
-        return midiSignal;
-    }
-
-    public void setMidiSignal(MidiSignal midiSignal) {
-        this.midiSignal = midiSignal;
     }
 
     public UpdateService.UpdateState getUpdateState() {

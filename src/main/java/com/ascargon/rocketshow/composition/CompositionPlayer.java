@@ -3,6 +3,8 @@ package com.ascargon.rocketshow.composition;
 import com.ascargon.rocketshow.CapabilitiesService;
 import com.ascargon.rocketshow.PlayerService;
 import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.api.ActivityMidi;
+import com.ascargon.rocketshow.api.ActivityNotificationMidiService;
 import com.ascargon.rocketshow.api.NotificationService;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.midi.*;
@@ -18,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.UUID;
@@ -43,6 +46,7 @@ public class CompositionPlayer {
     }
 
     private final NotificationService notificationService;
+    private final ActivityNotificationMidiService activityNotificationMidiService;
     private final PlayerService playerService;
     private final SettingsService settingsService;
     private final MidiRoutingService midiRoutingService;
@@ -64,8 +68,9 @@ public class CompositionPlayer {
     // The gstreamer pipeline, used to sync all files in this composition
     private Pipeline pipeline;
 
-    public CompositionPlayer(NotificationService notificationService, PlayerService playerService, SettingsService settingsService, MidiRoutingService midiRoutingService, CapabilitiesService capabilitiesService, OperatingSystemInformationService operatingSystemInformationService) {
+    public CompositionPlayer(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, PlayerService playerService, SettingsService settingsService, MidiRoutingService midiRoutingService, CapabilitiesService capabilitiesService, OperatingSystemInformationService operatingSystemInformationService) {
         this.notificationService = notificationService;
+        this.activityNotificationMidiService = activityNotificationMidiService;
         this.playerService = playerService;
         this.settingsService = settingsService;
         this.midiRoutingService = midiRoutingService;
@@ -73,26 +78,6 @@ public class CompositionPlayer {
         this.operatingSystemInformationService = operatingSystemInformationService;
 
         this.midiMapping.setParent(settingsService.getSettings().getMidiMapping());
-    }
-
-    // Create a new pipeline, if there is at least one audio- or video file in this composition
-    private boolean compositionNeedsPipeline(Composition composition) {
-        if (!capabilitiesService.getCapabilities().isGstreamer()) {
-            return false;
-        }
-
-        if (isSample) {
-            return false;
-        }
-
-        // At least one active file
-        for (CompositionFile compositionFile : composition.getCompositionFileList()) {
-            if (compositionFile.isActive()) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     // Taken from gstreamers gstfluiddec.c -> handle_buffer
@@ -114,12 +99,33 @@ public class CompositionPlayer {
             midiSignal.setVelocity(velocity);
 
             midiRoutingService.sendSignal(midiSignal, midiRoutingList);
+
+            activityNotificationMidiService.notifyClients(midiSignal, ActivityMidi.MidiSource.MIDI_FILE);
         }
     }
 
     // Load all files and construct the complete GST pipeline
     public void loadFiles() throws Exception {
         if (playState != PlayState.STOPPED) {
+            return;
+        }
+
+        if (!capabilitiesService.getCapabilities().isGstreamer()) {
+            throw new Exception("Gstreamer is not available");
+        }
+
+        // At least one active file
+        boolean hasActiveFile = false;
+
+        for (CompositionFile compositionFile : composition.getCompositionFileList()) {
+            if (compositionFile.isActive()) {
+                hasActiveFile = true;
+                break;
+            }
+        }
+
+        if (!hasActiveFile) {
+            // No need to play anything
             return;
         }
 
@@ -132,42 +138,37 @@ public class CompositionPlayer {
         logger.debug(
                 "Loading composition '" + composition.getName() + "...");
 
-        if (compositionNeedsPipeline(composition)) {
-            logger.trace(
-                    "Pipeline required");
-
-            if (pipeline != null) {
-                pipeline.stop();
-            }
-
-            pipeline = new Pipeline();
-
-            Bus bus = pipeline.getBus();
-
-            bus.connect((Bus.ERROR) (GstObject source, int code, String message) -> logger.error("GST: " + message));
-            bus.connect((Bus.WARNING) (GstObject source, int code, String message) -> logger.warn("GST: " + message));
-            bus.connect((Bus.INFO) (GstObject source, int code, String message) -> logger.warn("GST: " + message));
-            bus.connect((GstObject source, State old, State newState, State pending) -> {
-                if (source.getTypeName().equals("GstPipeline") && newState == State.PLAYING) {
-                    // We changed to playing, maybe we need to seek to the start position (not possible before playing)
-                    if (startPosition > 0) {
-                        try {
-                            seek(startPosition);
-                        } catch (Exception e) {
-                            logger.error("Could not set start position when changed to playing", e);
-                        }
-                        startPosition = 0;
-                    }
-                }
-            });
-            bus.connect((Bus.EOS) source -> {
-                try {
-                    playerService.compositionPlayerFinishedPlaying(this);
-                } catch (Exception e) {
-                    logger.error("Could not stop the composition after end of stream", e);
-                }
-            });
+        if (pipeline != null) {
+            pipeline.stop();
         }
+
+        pipeline = new Pipeline();
+
+        Bus bus = pipeline.getBus();
+
+        bus.connect((Bus.ERROR) (GstObject source, int code, String message) -> logger.error("GST: " + message));
+        bus.connect((Bus.WARNING) (GstObject source, int code, String message) -> logger.warn("GST: " + message));
+        bus.connect((Bus.INFO) (GstObject source, int code, String message) -> logger.warn("GST: " + message));
+        bus.connect((GstObject source, State old, State newState, State pending) -> {
+            if (source.getTypeName().equals("GstPipeline") && newState == State.PLAYING) {
+                // We changed to playing, maybe we need to seek to the start position (not possible before playing)
+                if (startPosition > 0) {
+                    try {
+                        seek(startPosition);
+                    } catch (Exception e) {
+                        logger.error("Could not set start position when changed to playing", e);
+                    }
+                    startPosition = 0;
+                }
+            }
+        });
+        bus.connect((Bus.EOS) source -> {
+            try {
+                playerService.compositionPlayerFinishedPlaying(this);
+            } catch (Exception e) {
+                logger.error("Could not stop the composition after end of stream", e);
+            }
+        });
 
         // Load all files, create the pipeline and handle exceptions to pipeline-playing
         for (int i = 0; i < composition.getCompositionFileList().size(); i++) {
@@ -211,49 +212,46 @@ public class CompositionPlayer {
                     midiFileSource.link(midiParse);
                     midiParse.link(midiSink);
                 } else if (compositionFile instanceof AudioCompositionFile && capabilitiesService.getCapabilities().isGstreamer()) {
-                    // Samples are played with the AlsaPlayer
-                    if (!isSample) {
-                        logger.debug("Add audio file to pipeline");
+                    logger.debug("Add audio file to pipeline");
 
-                        URIDecodeBin audioSource = (URIDecodeBin) ElementFactory.make("uridecodebin", "audiouridecodebin" + i);
-                        audioSource.set("uri", "file://" + settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/" + settingsService.getSettings().getAudioPath() + "/" + compositionFile.getName());
-                        pipeline.add(audioSource);
+                    URIDecodeBin audioSource = (URIDecodeBin) ElementFactory.make("uridecodebin", "audiouridecodebin" + i);
+                    audioSource.set("uri", "file://" + settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getAudioPath() + File.separator + compositionFile.getName());
+                    pipeline.add(audioSource);
 
-                        Element convert = ElementFactory.make("audioconvert", "audioconvert" + i);
-                        audioSource.connect((Element.PAD_ADDED) (Element element, Pad pad) -> {
-                            String name = pad.getCaps().getStructure(0).getName();
+                    Element convert = ElementFactory.make("audioconvert", "audioconvert" + i);
+                    audioSource.connect((Element.PAD_ADDED) (Element element, Pad pad) -> {
+                        String name = pad.getCaps().getStructure(0).getName();
 
-                            if ("audio/x-raw-float".equals(name) || "audio/x-raw-int".equals(name) || "audio/x-raw".equals(name)) {
-                                pad.link(convert.getSinkPads().get(0));
-                            }
-                        });
-                        pipeline.add(convert);
-
-                        Element resample = ElementFactory.make("audioresample", "audioresample" + i);
-                        pipeline.add(resample);
-
-                        String sinkName = "alsasink";
-
-                        if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
-                            sinkName = "osxaudiosink";
+                        if ("audio/x-raw-float".equals(name) || "audio/x-raw-int".equals(name) || "audio/x-raw".equals(name)) {
+                            pad.link(convert.getSinkPads().get(0));
                         }
-                        BaseSink sink = (BaseSink) ElementFactory.make(sinkName, "sink" + i);
+                    });
+                    pipeline.add(convert);
 
-                        if (!OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
-                            sink.set("device", settingsService.getAlsaDeviceFromOutputBus(((AudioCompositionFile) compositionFile).getOutputBus()));
-                        }
-                        pipeline.add(sink);
+                    Element resample = ElementFactory.make("audioresample", "audioresample" + i);
+                    pipeline.add(resample);
 
-                        convert.link(resample);
-                        resample.link(sink);
+                    String sinkName = "alsasink";
+
+                    if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+                        sinkName = "osxaudiosink";
                     }
+                    BaseSink sink = (BaseSink) ElementFactory.make(sinkName, "sink" + i);
+
+                    if (!OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+                        sink.set("device", settingsService.getAlsaDeviceFromOutputBus(((AudioCompositionFile) compositionFile).getOutputBus()));
+                    }
+                    pipeline.add(sink);
+
+                    convert.link(resample);
+                    resample.link(sink);
                 } else if (compositionFile instanceof VideoCompositionFile && capabilitiesService.getCapabilities().isGstreamer()) {
                     logger.debug("Add video file to pipeline");
 
                     // TODO Does not work on OS X
 
                     PlayBin playBin = (PlayBin) ElementFactory.make("playbin", "playbin" + i);
-                    playBin.set("uri", "file://" + settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/" + settingsService.getSettings().getVideoPath() + "/" + compositionFile.getName());
+                    playBin.set("uri", "file://" + settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getVideoPath() + File.separator + compositionFile.getName());
                     pipeline.add(playBin);
                 }
             }

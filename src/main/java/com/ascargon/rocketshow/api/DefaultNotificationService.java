@@ -26,8 +26,6 @@ public class DefaultNotificationService extends TextWebSocketHandler implements 
 
     private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
 
-    private boolean midiLearn = false;
-
     public DefaultNotificationService(StateService stateService) {
         this.stateService = stateService;
     }
@@ -42,9 +40,8 @@ public class DefaultNotificationService extends TextWebSocketHandler implements 
         sessions.remove(session);
     }
 
-    private void notifyClients(PlayerService playerService, SetService setService, MidiSignal midiSignal, UpdateService.UpdateState updateState, Boolean isUpdateFinished) throws IOException {
+    private synchronized void notifyClients(PlayerService playerService, SetService setService, UpdateService.UpdateState updateState, Boolean isUpdateFinished) throws IOException {
         State currentState = stateService.getCurrentState(playerService, setService);
-        currentState.setMidiSignal(midiSignal);
         currentState.setUpdateState(updateState);
         currentState.setUpdateFinished(isUpdateFinished);
 
@@ -54,48 +51,31 @@ public class DefaultNotificationService extends TextWebSocketHandler implements 
         for (WebSocketSession webSocketSession : sessions) webSocketSession.sendMessage(new TextMessage(returnValue));
     }
 
-    // Notify the clients about the current state and include a midi signal, if
-    // midi learn is activated
-    @Override
-    public void notifyClients(MidiSignal midiSignal) throws IOException {
-        notifyClients(null, null, midiSignal, null, null);
-    }
-
     // Notify the clients about the current state and include update
     // information, if an update is running
     @Override
     public void notifyClients(UpdateService.UpdateState updateState) throws IOException {
-        notifyClients(null, null, null, updateState, null);
+        notifyClients(null, null, updateState, null);
     }
 
     @Override
     public void notifyClients(PlayerService playerService) throws IOException {
-        notifyClients(playerService, null, null, null, null);
+        notifyClients(playerService, null, null, null);
     }
 
     @Override
     public void notifyClients(SetService setService) throws IOException {
-        notifyClients(null, setService, null, null, null);
+        notifyClients(null, setService, null, null);
     }
 
     @Override
     public void notifyClients(boolean isUpdateFinished) throws IOException {
-        notifyClients(null, null, null, null, isUpdateFinished);
+        notifyClients(null, null, null, isUpdateFinished);
     }
 
     @Override
     public void notifyClients() throws IOException {
-        notifyClients(null, null, null, null, null);
-    }
-
-    @Override
-    public boolean isMidiLearn() {
-        return midiLearn;
-    }
-
-    @Override
-    public void setMidiLearn(boolean midiLearn) {
-        this.midiLearn = midiLearn;
+        notifyClients(null, null, null, null);
     }
 
     @PreDestroy

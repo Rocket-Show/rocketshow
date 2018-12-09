@@ -1,9 +1,9 @@
 package com.ascargon.rocketshow.midi;
 
 import com.ascargon.rocketshow.SettingsService;
-import com.ascargon.rocketshow.api.NotificationService;
-import org.slf4j.LoggerFactory;
+import com.ascargon.rocketshow.api.ActivityNotificationMidiService;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
@@ -26,13 +26,13 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
 
     private final MidiInDeviceReceiver midiInDeviceReceiver;
 
-    public DefaultMidiDeviceInService(SettingsService settingsService, NotificationService notificationService, MidiControlActionExecutionService midiControlActionExecutionService, MidiRoutingService midiRoutingService, MidiService midiService) {
+    public DefaultMidiDeviceInService(SettingsService settingsService, ActivityNotificationMidiService activityNotificationMidiService, MidiControlActionExecutionService midiControlActionExecutionService, MidiRoutingService midiRoutingService, MidiService midiService) {
         this.settingsService = settingsService;
         this.midiRoutingService = midiRoutingService;
         this.midiService = midiService;
 
         // Initialize the MIDI in device receiver to execute MIDI control actions
-        midiInDeviceReceiver = new MidiInDeviceReceiver(notificationService, midiControlActionExecutionService);
+        midiInDeviceReceiver = new MidiInDeviceReceiver(activityNotificationMidiService, midiControlActionExecutionService);
 
         // Try to connect to MIDI in/out devices
         try {
@@ -55,7 +55,7 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
         if (midiInDevice == null) {
             midiDevice = settingsService.getSettings().getMidiInDevice();
 
-            if(midiDevice != null) {
+            if (midiDevice != null) {
                 logger.trace(
                         "Try connecting to MIDI in device " + midiDevice.getId() + " \"" + midiDevice.getName() + "\"");
             }

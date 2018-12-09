@@ -14,14 +14,14 @@ import java.util.List;
 class MidiController {
 
     private final SettingsService settingsService;
-    private final NotificationService notificationService;
+    private final ActivityNotificationMidiService activityNotificationMidiService;
     private final MidiRoutingService midiRoutingService;
     private final MidiService midiService;
     private final MidiControlActionExecutionService midiControlActionExecutionService;
 
-    private MidiController(SettingsService settingsService, NotificationService notificationService, MidiRoutingService midiRoutingService, MidiService midiService, MidiControlActionExecutionService midiControlActionExecutionService) {
+    private MidiController(SettingsService settingsService, ActivityNotificationMidiService activityNotificationMidiService, MidiRoutingService midiRoutingService, MidiService midiService, MidiControlActionExecutionService midiControlActionExecutionService) {
         this.settingsService = settingsService;
-        this.notificationService = notificationService;
+        this.activityNotificationMidiService = activityNotificationMidiService;
         this.midiRoutingService = midiRoutingService;
         this.midiService = midiService;
         this.midiControlActionExecutionService = midiControlActionExecutionService;
@@ -50,6 +50,8 @@ class MidiController {
 
         midiRoutingService.sendSignal(midiSignal, settingsService.getSettings().getRemoteMidiRoutingList());
 
+        activityNotificationMidiService.notifyClients(midiSignal, ActivityMidi.MidiSource.REMOTE_DEVICE);
+
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -66,18 +68,6 @@ class MidiController {
 
         midiControlActionExecutionService.processMidiSignal(midiSignal);
 
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @PostMapping("activate-midi-learn")
-    public ResponseEntity<Void> activateMidiLearn() {
-        notificationService.setMidiLearn(true);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @PostMapping("deactivate-midi-learn")
-    public ResponseEntity<Void> deactivateMidiLearn() {
-        notificationService.setMidiLearn(false);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

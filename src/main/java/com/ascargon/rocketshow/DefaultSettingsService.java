@@ -69,7 +69,7 @@ public class DefaultSettingsService implements SettingsService {
 
         settings = new Settings();
 
-        settings.setBasePath(applicationHome.getDir().toString() + "/");
+        settings.setBasePath(applicationHome.getDir().toString() + File.separator);
         settings.setMediaPath("media");
         settings.setAudioPath("audio");
         settings.setMidiPath("midi");
@@ -242,6 +242,7 @@ public class DefaultSettingsService implements SettingsService {
         } else if (settings.getAudioOutput() == Settings.AudioOutput.DEVICE) {
             // Write the audio settings to /home/.asoundrc and use ALSA to
             // output audio on the selected device name
+            // TODO Does not work when not running as user rocketshow
             File alsaSettings = new File("/home/rocketshow/.asoundrc");
 
             try {
@@ -359,7 +360,7 @@ public class DefaultSettingsService implements SettingsService {
 
     @Override
     public void save() throws JAXBException {
-        File file = new File(applicationHome.getDir() + "/" + FILE_NAME + ".xml");
+        File file = new File(applicationHome.getDir() + File.separator + FILE_NAME + ".xml");
         JAXBContext jaxbContext = JAXBContext.newInstance(Settings.class);
         Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
@@ -373,7 +374,7 @@ public class DefaultSettingsService implements SettingsService {
 
     @Override
     public void load() throws Exception {
-        File file = new File(applicationHome.getDir() + "/" + FILE_NAME + ".xml");
+        File file = new File(applicationHome.getDir() + File.separator + FILE_NAME + ".xml");
 
         if (!file.exists() || file.isDirectory()) {
             logger.info("Settings file does not exist");

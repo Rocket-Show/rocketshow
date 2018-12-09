@@ -36,7 +36,7 @@ public class DefaultCompositionFileService implements CompositionFileService {
 
         // Audio files
         folder = new File(
-                settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/" + settingsService.getSettings().getAudioPath());
+                settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getAudioPath());
         fileList = folder.listFiles();
 
         if (fileList != null) {
@@ -50,7 +50,7 @@ public class DefaultCompositionFileService implements CompositionFileService {
         }
 
         // MIDI files
-        folder = new File(settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/" + settingsService.getSettings().getMidiPath());
+        folder = new File(settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getMidiPath());
         fileList = folder.listFiles();
 
         if (fileList != null) {
@@ -65,7 +65,7 @@ public class DefaultCompositionFileService implements CompositionFileService {
 
         // Video files
         folder = new File(
-                settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/" + settingsService.getSettings().getVideoPath());
+                settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getVideoPath());
         fileList = folder.listFiles();
 
         if (fileList != null) {
@@ -83,7 +83,7 @@ public class DefaultCompositionFileService implements CompositionFileService {
 
     @Override
     public void deleteFile(String name, String type) {
-        String path = settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/";
+        String path = settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getMediaPath() + File.separator;
 
         // Audio files
         if ("MIDI".equals(type)) {
@@ -128,7 +128,7 @@ public class DefaultCompositionFileService implements CompositionFileService {
 
         // Compute the path according to the file extension
         String extension = FilenameUtils.getExtension(fileName).toLowerCase().trim();
-        String path = settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/";
+        String path = settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getMediaPath() + File.separator;
 
         if (Arrays.asList(midiFormats).contains(extension)) {
             path += settingsService.getSettings().getMidiPath();
@@ -141,7 +141,7 @@ public class DefaultCompositionFileService implements CompositionFileService {
             compositionFile = new VideoCompositionFile();
         }
 
-        path += "/";
+        path += File.separator;
 
         if (compositionFile == null) {
             // We could not determine the file type -> don't store the file

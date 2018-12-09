@@ -61,7 +61,7 @@ public class DefaultSessionService implements SessionService {
             String directory = settingsService.getSettings().getBasePath();
             createDirectoryIfNotExists(directory);
 
-            File file = new File(directory + "/" + FILE_NAME + ".xml");
+            File file = new File(directory + File.separator + FILE_NAME + ".xml");
             JAXBContext jaxbContext = JAXBContext.newInstance(Session.class);
             Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
@@ -77,7 +77,7 @@ public class DefaultSessionService implements SessionService {
     }
 
     private void loadSession() throws Exception {
-        File file = new File(settingsService.getSettings().getBasePath() + "/" + FILE_NAME + ".xml");
+        File file = new File(settingsService.getSettings().getBasePath() + File.separator + FILE_NAME + ".xml");
 
         if (file.exists()) {
             // We already have a session -> restore it from the file

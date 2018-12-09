@@ -93,7 +93,7 @@ public class DefaultCompositionService implements CompositionService {
         // Load a composition
         JAXBContext jaxbContext = JAXBContext.newInstance(Composition.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-        composition = (Composition) jaxbUnmarshaller.unmarshal(new File(settingsService.getSettings().getBasePath() + "/" + COMPOSITIONS_PATH + "/" + name + ".xml"));
+        composition = (Composition) jaxbUnmarshaller.unmarshal(new File(settingsService.getSettings().getBasePath() + File.separator + COMPOSITIONS_PATH + File.separator + name + ".xml"));
 
         finalizeLoadedComposition(composition, name);
 
@@ -110,7 +110,7 @@ public class DefaultCompositionService implements CompositionService {
         // Load a set
         JAXBContext jaxbContext = JAXBContext.newInstance(Set.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-        set = (Set) jaxbUnmarshaller.unmarshal(new File(settingsService.getSettings().getBasePath() + "/" + SETS_PATH + "/" + name + ".xml"));
+        set = (Set) jaxbUnmarshaller.unmarshal(new File(settingsService.getSettings().getBasePath() + File.separator + SETS_PATH + File.separator + name + ".xml"));
 
         logger.info("Set '" + name + "' successfully loaded");
 
@@ -164,7 +164,7 @@ public class DefaultCompositionService implements CompositionService {
 
     @Override
     public synchronized void loadAllCompositions() {
-        File folder = new File(settingsService.getSettings().getBasePath() + "/" + COMPOSITIONS_PATH);
+        File folder = new File(settingsService.getSettings().getBasePath() + File.separator + COMPOSITIONS_PATH);
         File[] fileList = folder.listFiles();
 
         if (fileList != null) {
@@ -185,7 +185,7 @@ public class DefaultCompositionService implements CompositionService {
 
     @Override
     public synchronized void loadAllSets() {
-        File folder = new File(settingsService.getSettings().getBasePath() + "/" + SETS_PATH);
+        File folder = new File(settingsService.getSettings().getBasePath() + File.separator + SETS_PATH);
         File[] fileList = folder.listFiles();
 
         if (fileList != null) {
@@ -235,15 +235,15 @@ public class DefaultCompositionService implements CompositionService {
     public synchronized void saveComposition(Composition composition) throws Exception {
         // Set the duration for each file
         for (CompositionFile compositionFile : composition.getCompositionFileList()) {
-            String path = settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + "/";
+            String path = settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator;
 
             if (compositionFile instanceof MidiCompositionFile) {
                 // Getting duration with Gstreamer does not work (missing plugins)
-                compositionFile.setDurationMillis(getMidiDuration(path + settingsService.getSettings().getMidiPath() + "/" + compositionFile.getName()));
+                compositionFile.setDurationMillis(getMidiDuration(path + settingsService.getSettings().getMidiPath() + File.separator + compositionFile.getName()));
             } else if (compositionFile instanceof AudioCompositionFile) {
-                compositionFile.setDurationMillis(getDurationWithGstreamer(path + settingsService.getSettings().getAudioPath() + "/" + compositionFile.getName()));
+                compositionFile.setDurationMillis(getDurationWithGstreamer(path + settingsService.getSettings().getAudioPath() + File.separator + compositionFile.getName()));
             } else if (compositionFile instanceof VideoCompositionFile) {
-                compositionFile.setDurationMillis(getDurationWithGstreamer(path + settingsService.getSettings().getVideoPath() + "/" + compositionFile.getName()));
+                compositionFile.setDurationMillis(getDurationWithGstreamer(path + settingsService.getSettings().getVideoPath() + File.separator + compositionFile.getName()));
             }
         }
 
@@ -259,10 +259,10 @@ public class DefaultCompositionService implements CompositionService {
         composition.setDurationMillis(maxDuration);
 
         // Save the composition in XML
-        String directory = settingsService.getSettings().getBasePath() + "/" + COMPOSITIONS_PATH;
+        String directory = settingsService.getSettings().getBasePath() + File.separator + COMPOSITIONS_PATH;
         createDirectoryIfNotExists(directory);
 
-        File file = new File(directory + "/" + composition.getName() + ".xml");
+        File file = new File(directory + File.separator + composition.getName() + ".xml");
         JAXBContext jaxbContext = JAXBContext.newInstance(Composition.class);
         Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
@@ -312,10 +312,10 @@ public class DefaultCompositionService implements CompositionService {
             }
         }
 
-        String directory = settingsService.getSettings().getBasePath() + "/" + SETS_PATH;
+        String directory = settingsService.getSettings().getBasePath() + File.separator + SETS_PATH;
         createDirectoryIfNotExists(directory);
 
-        File file = new File(directory + "/" + set.getName() + ".xml");
+        File file = new File(directory + File.separator + set.getName() + ".xml");
         JAXBContext jaxbContext = JAXBContext.newInstance(Set.class);
         Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
@@ -343,7 +343,7 @@ public class DefaultCompositionService implements CompositionService {
     @Override
     public synchronized void deleteComposition(String name, PlayerService playerService) throws Exception {
         // Delete the composition
-        File file = new File(settingsService.getSettings().getBasePath() + "/" + COMPOSITIONS_PATH + "/" + name + ".xml");
+        File file = new File(settingsService.getSettings().getBasePath() + File.separator + COMPOSITIONS_PATH + File.separator + name + ".xml");
 
         if (file.exists()) {
             boolean result = file.delete();
@@ -375,7 +375,7 @@ public class DefaultCompositionService implements CompositionService {
     @Override
     public synchronized void deleteSet(String name) {
         // Delete the set
-        File file = new File(settingsService.getSettings().getBasePath() + "/" + SETS_PATH + "/" + name + ".xml");
+        File file = new File(settingsService.getSettings().getBasePath() + File.separator + SETS_PATH + File.separator + name + ".xml");
 
         if (file.exists()) {
             boolean result = file.delete();

@@ -11,15 +11,18 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @Controller
 class WebSocketConfig implements WebSocketConfigurer {
 
-    private final DefaultNotificationService webSocketClientNotifier;
+    private final DefaultNotificationService defaultNotificationService;
+    private final DefaultActivityNotificationMidiService defaultActivityNotificationMidiService;
 
-    public WebSocketConfig(DefaultNotificationService webSocketClientNotifier) {
-        this.webSocketClientNotifier = webSocketClientNotifier;
+    public WebSocketConfig(DefaultNotificationService defaultNotificationService, DefaultActivityNotificationMidiService defaultActivityNotificationMidiService) {
+        this.defaultNotificationService = defaultNotificationService;
+        this.defaultActivityNotificationMidiService = defaultActivityNotificationMidiService;
     }
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(webSocketClientNotifier, "/api/state").setAllowedOrigins("*");
+        registry.addHandler(defaultNotificationService, "/api/state").setAllowedOrigins("*");
+        registry.addHandler(defaultActivityNotificationMidiService, "/api/activity/midi").setAllowedOrigins("*");
     }
 
 }

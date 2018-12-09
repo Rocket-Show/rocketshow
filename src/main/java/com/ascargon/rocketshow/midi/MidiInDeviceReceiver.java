@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.midi;
 
-import com.ascargon.rocketshow.api.NotificationService;
+import com.ascargon.rocketshow.api.ActivityMidi;
+import com.ascargon.rocketshow.api.ActivityNotificationMidiService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,11 +18,11 @@ class MidiInDeviceReceiver implements Receiver {
 
     private final static Logger logger = LoggerFactory.getLogger(MidiInDeviceReceiver.class);
 
-    private final NotificationService notificationService;
+    private final ActivityNotificationMidiService activityNotificationMidiService;
     private final MidiControlActionExecutionService midiControlActionExecutionService;
 
-    MidiInDeviceReceiver(NotificationService notificationService, MidiControlActionExecutionService midiControlActionExecutionService) {
-        this.notificationService = notificationService;
+    MidiInDeviceReceiver(ActivityNotificationMidiService activityNotificationMidiService, MidiControlActionExecutionService midiControlActionExecutionService) {
+        this.activityNotificationMidiService = activityNotificationMidiService;
         this.midiControlActionExecutionService = midiControlActionExecutionService;
     }
 
@@ -34,13 +35,7 @@ class MidiInDeviceReceiver implements Receiver {
         MidiSignal midiSignal = new MidiSignal((ShortMessage) message);
 
         // Notify the frontend, if midi learn is activated
-        if (notificationService.isMidiLearn()) {
-            try {
-                notificationService.notifyClients(midiSignal);
-            } catch (Exception e) {
-                logger.error("Could not notify the clients about a MIDI learn event", e);
-            }
-        }
+        activityNotificationMidiService.notifyClients(midiSignal, ActivityMidi.MidiSource.DEVICE_IN);
 
         // Process MIDI events as actions according to the settings
         try {
