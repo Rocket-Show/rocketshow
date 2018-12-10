@@ -224,6 +224,7 @@
             "SELECT_COMPOSITION_BY_NAME_AND_PLAY": "Komposition auswählen und abspielen"
         },
         "audio-output-enum": {
+            "DEFAULT": "Standard",
             "HEADPHONES": "Kopfhörerbuchse",
             "HDMI": "HDMI Ausgang",
             "DEVICE": "USB Audio Gerät"

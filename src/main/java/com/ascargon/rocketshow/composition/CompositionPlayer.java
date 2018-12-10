@@ -16,6 +16,9 @@ import org.freedesktop.gstreamer.elements.AppSink;
 import org.freedesktop.gstreamer.elements.BaseSink;
 import org.freedesktop.gstreamer.elements.PlayBin;
 import org.freedesktop.gstreamer.elements.URIDecodeBin;
+import org.freedesktop.gstreamer.lowlevel.GValueAPI;
+import org.freedesktop.gstreamer.lowlevel.GstBusAPI;
+import org.freedesktop.gstreamer.lowlevel.GstMessageAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,6 +28,8 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+
+import static org.freedesktop.gstreamer.lowlevel.GstBusAPI.GSTBUS_API;
 
 /**
  * Handle the playing of a single composition.
@@ -169,6 +174,23 @@ public class CompositionPlayer {
                 logger.error("Could not stop the composition after end of stream", e);
             }
         });
+        bus.connect((Bus.MESSAGE) (Bus bus1, Message message) -> {
+            if(message.getType().equals(MessageType.ELEMENT)) {
+                Structure structure = message.getStructure();
+
+                if(structure.getName().equals("level")) {
+                    // We got a level message
+                    double[] rmsDbs = structure.getDoubles("rms");
+
+                    // Process each channel
+                    for(int i = 0; i < rmsDbs.length; i++){
+                        // Normalize to get a value between 0.0 and 1.0
+                        double rms = Math.pow(rmsDbs[i] / 20, 10);
+                        logger.info("Source: " + message.getSource().getName() + ", Channel " + (i + 1) + ": " + rms);
+                    }
+                }
+            }
+        });
 
         // Load all files, create the pipeline and handle exceptions to pipeline-playing
         for (int i = 0; i < composition.getCompositionFileList().size(); i++) {
@@ -228,6 +250,15 @@ public class CompositionPlayer {
                     });
                     pipeline.add(convert);
 
+                    Element level = null;
+                    if (!isSample) {
+                        level = ElementFactory.make("level", "level" + i);
+                        // 1 Second
+                        level.set("interval", 1 * 1000000000);
+                        level.set("post-messages", true);
+                        pipeline.add(level);
+                    }
+
                     Element resample = ElementFactory.make("audioresample", "audioresample" + i);
                     pipeline.add(resample);
 
@@ -243,7 +274,12 @@ public class CompositionPlayer {
                     }
                     pipeline.add(sink);
 
-                    convert.link(resample);
+                    if (isSample) {
+                        convert.link(resample);
+                    } else {
+                        convert.link(level);
+                        level.link(resample);
+                    }
                     resample.link(sink);
                 } else if (compositionFile instanceof VideoCompositionFile && capabilitiesService.getCapabilities().isGstreamer()) {
                     logger.debug("Add video file to pipeline");
@@ -321,12 +357,11 @@ public class CompositionPlayer {
         }
 
         playState = PlayState.STOPPING;
+        startPosition = 0;
 
         if (!isDefaultComposition && !isSample) {
             notificationService.notifyClients(playerService);
         }
-
-        startPosition = 0;
 
         logger.info("Stopping composition '" + composition.getName() + "'");
 

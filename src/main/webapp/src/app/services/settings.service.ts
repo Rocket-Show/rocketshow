@@ -63,6 +63,10 @@ export class SettingsService {
   }
 
   saveSettings(settings: Settings): Observable<Object> {
+    for(let audioBus of settings.audioBusList) {
+      audioBus.initVolumes();
+    }
+
     return this.http.post('system/settings', JSON.stringify(settings));
   }
 

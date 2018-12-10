@@ -9,6 +9,7 @@ import { SessionService } from './services/session.service';
 import { SettingsService } from './services/settings.service';
 import { Settings } from './models/settings';
 import { Title } from '@angular/platform-browser';
+import { OperatingSystemInformationService } from './services/operating-system-information.service';
 
 @Component({
   selector: 'body',
@@ -31,7 +32,8 @@ export class AppComponent implements OnInit {
     private sessionService: SessionService,
     private settingsService: SettingsService,
     private titleService: Title,
-    private leadSheetService: LeadSheetService) {
+    private leadSheetService: LeadSheetService,
+    private operatingSystemInformationService: OperatingSystemInformationService) {
 
     translateService.setDefaultLang('en');
   }
@@ -73,7 +75,8 @@ export class AppComponent implements OnInit {
       this.compositionService.getCompositions(),
       this.compositionService.getSets(),
       this.sessionService.getSession(),
-      this.settingsService.getSettings()
+      this.settingsService.getSettings(),
+      this.operatingSystemInformationService.getOperatingSystemInformation()
     ).subscribe((result) => {
       this.loaded = true;
       this.copySettings(result[4]);

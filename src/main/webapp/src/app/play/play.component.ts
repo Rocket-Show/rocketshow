@@ -10,6 +10,12 @@ import { TransportService } from '../services/transport.service';
 import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
 import { ToastGeneralErrorService } from '../services/toast-general-error.service';
+import { ActivityMidiService } from '../services/activity-midi.service';
+import { ActivityMidi } from '../models/activity-midi';
+import { timeout } from 'rxjs/operators';
+import { SettingsService } from '../services/settings.service';
+import { settings } from 'cluster';
+import { Settings } from '../models/settings';
 
 @Component({
   selector: 'app-play',
@@ -39,12 +45,31 @@ export class PlayComponent implements OnInit {
 
   loadingSet: boolean = false;
 
+  activityMidi: boolean = false;
+  activityMidiStopTimeout: any;
+
+  settings: Settings;
+
   constructor(
     public stateService: StateService,
     private compositionService: CompositionService,
     private transportService: TransportService,
     private sessionService: SessionService,
-    private toastGeneralErrorService: ToastGeneralErrorService) {
+    private toastGeneralErrorService: ToastGeneralErrorService,
+    private activityMidiService: ActivityMidiService,
+    public settingsService: SettingsService) {
+
+    this.loadSettings();
+
+    this.settingsService.settingsChanged.subscribe(() => {
+      this.loadSettings();
+    });
+  }
+
+  private loadSettings() {
+    this.settingsService.getSettings().map(result => {
+      this.settings = result;
+    }).subscribe();
   }
 
   ngOnInit() {
@@ -72,6 +97,20 @@ export class PlayComponent implements OnInit {
 
     this.loadAllSets();
     this.loadCurrentSet();
+
+    // Subscribe to MIDI activities
+    this.activityMidiService.subject.subscribe((activityMidi: ActivityMidi) => {
+      this.activityMidi = true;
+
+      if (!this.activityMidiStopTimeout) {
+        clearTimeout(this.activityMidiStopTimeout);
+      }
+
+      this.activityMidiStopTimeout = setTimeout(() => {
+        this.activityMidiStopTimeout = undefined;
+        this.activityMidi = false;
+      }, 50);
+    });
   }
 
   private loadAllSets() {
@@ -213,23 +252,15 @@ export class PlayComponent implements OnInit {
   play() {
     this.currentState.playState = 'LOADING';
     this.transportService.play()
-    .catch((err) => {
-      this.stop();
-      return this.toastGeneralErrorService.show(err);
-    })
-    .subscribe();
+      .catch((err) => {
+        this.stop();
+        return this.toastGeneralErrorService.show(err);
+      })
+      .subscribe();
   }
 
   stop() {
-    if(this.currentState.playState == 'STOPPED') {
-      this.lastPlayTime = new Date();
-      this.currentState.positionMillis = 0;
-      this.playTime = this.msToTime(0);
-      this.transportService.seek(0).subscribe();
-    } else {
-      this.currentState.playState = 'STOPPING';
-      this.transportService.stop().subscribe();
-    }
+    this.transportService.stop().subscribe();
   }
 
   pause() {

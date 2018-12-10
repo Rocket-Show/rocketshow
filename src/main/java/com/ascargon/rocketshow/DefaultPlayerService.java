@@ -248,10 +248,6 @@ public class DefaultPlayerService implements PlayerService {
 
     @Override
     public synchronized void stop(boolean playDefaultComposition) throws Exception {
-        if (currentCompositionPlayer.getPlayState() == CompositionPlayer.PlayState.STOPPED || currentCompositionPlayer.getPlayState() == CompositionPlayer.PlayState.STOPPING) {
-            return;
-        }
-
         ExecutorService executor = Executors.newFixedThreadPool(30);
 
         // Reset the DMX universe to clear left out signals
@@ -379,6 +375,11 @@ public class DefaultPlayerService implements PlayerService {
 
     @Override
     public void setPreviousComposition() throws Exception {
+        // Rewind current composition instead of selecting the previous one
+        if(currentCompositionPlayer.getPositionMillis() > 0) {
+            stop(true);
+        }
+
         if (setService.getCurrentSet() == null) {
             if (setService.getPreviousSetComposition() != null) {
                 stop(true);

@@ -24,7 +24,7 @@ public class Settings {
 
     // Possible audio outputs
     public enum AudioOutput {
-        HEADPHONES, HDMI, DEVICE
+        DEFAULT, HEADPHONES, HDMI, DEVICE
     }
 
     private String basePath;

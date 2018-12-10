@@ -224,6 +224,7 @@
             "SELECT_COMPOSITION_BY_NAME_AND_PLAY": "Select composition and play"
         },
         "audio-output-enum": {
+            "DEFAULT": "Default",
             "HEADPHONES": "Headphone jack",
             "HDMI": "HDMI output",
             "DEVICE": "USB audio device"

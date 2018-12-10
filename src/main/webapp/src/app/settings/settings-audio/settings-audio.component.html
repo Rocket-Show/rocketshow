@@ -26,15 +26,15 @@
 
 <div class="form-group row" *ngIf="settings?.audioOutput == 'DEVICE'">
   <label class="col-lg-3 col-form-label">{{ 'settings.audio-device' | translate }}</label>
-  <div class="col-lg-9">
-    <div *ngIf="audioDeviceList?.length == 0">- {{ 'settings.no-audio-devices' | translate }} -</div>
+  <div class="col-lg-9 d-flex">
+    <div class="my-auto" *ngIf="audioDeviceList?.length == 0">- {{ 'settings.no-audio-devices' | translate }} -</div>
     <select *ngIf="audioDeviceList?.length > 0" class="custom-select" [ngModel]="settings?.audioDevice?.id" (ngModelChange)="settings.audioDevice = $event">
       <option *ngFor="let audioDevice of audioDeviceList" [ngValue]="audioDevice.id">{{ audioDevice.name }}</option>
     </select>
   </div>
 </div>
 
-<div class="form-group row" *ngIf="settings?.audioOutput == 'DEVICE' && settings?.audioDevice?.id">
+<div class="form-group row" *ngIf="(settings?.audioOutput == 'DEVICE' && settings?.audioDevice?.id) || settings?.audioOutput == 'DEFAULT'">
   <label class="col-lg-3 col-form-label">{{ 'settings.audio-buses' | translate }}</label>
   <div class="col-lg-9">
     <div class="list-group" [sortablejs]="settings?.audioBusList" [sortablejsOptions]="{ onMove: sortMove }">

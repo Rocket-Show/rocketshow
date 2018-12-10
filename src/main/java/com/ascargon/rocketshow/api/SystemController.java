@@ -31,8 +31,9 @@ class SystemController {
     private final FactoryResetService factoryResetService;
     private final LogDownloadService logDownloadService;
     private final DiskSpaceService diskSpaceService;
+    private final OperatingSystemInformationService operatingSystemInformationService;
 
-    public SystemController(StateService stateService, SetService setService, PlayerService playerService, RebootService rebootService, SettingsService settingsService, MidiDeviceInService midiDeviceInService, MidiDeviceOutService midiDeviceOutService, UpdateService updateService, FactoryResetService factoryResetService, LogDownloadService logDownloadService, DiskSpaceService diskSpaceService) {
+    public SystemController(StateService stateService, SetService setService, PlayerService playerService, RebootService rebootService, SettingsService settingsService, MidiDeviceInService midiDeviceInService, MidiDeviceOutService midiDeviceOutService, UpdateService updateService, FactoryResetService factoryResetService, LogDownloadService logDownloadService, DiskSpaceService diskSpaceService, OperatingSystemInformationService operatingSystemInformationService) {
         this.stateService = stateService;
         this.setService = setService;
         this.playerService = playerService;
@@ -44,6 +45,7 @@ class SystemController {
         this.factoryResetService = factoryResetService;
         this.logDownloadService = logDownloadService;
         this.diskSpaceService = diskSpaceService;
+        this.operatingSystemInformationService = operatingSystemInformationService;
     }
 
     @PostMapping("reboot")
@@ -116,6 +118,11 @@ class SystemController {
     @GetMapping("disk-space")
     public DiskSpace getDiskSpace() throws Exception {
         return diskSpaceService.get();
+    }
+
+    @GetMapping("operating-system-information")
+    public OperatingSystemInformation getOperatingSystemInformation() {
+        return operatingSystemInformationService.getOperatingSystemInformation();
     }
 
 }

@@ -1,7 +1,7 @@
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{ 'settings.midi-device-in' | translate }}</label>
-  <div class="col-lg-9">
-    <div *ngIf="midiInDevices?.length == 0">- {{ 'settings.no-midi-devices' | translate }} -</div>
+  <div class="col-lg-9 d-flex">
+    <div class="my-auto" *ngIf="midiInDevices?.length == 0">- {{ 'settings.no-midi-devices' | translate }} -</div>
     <select *ngIf="midiInDevices?.length > 0" class="custom-select" [ngModel]="settings?.midiInDevice?.id" (ngModelChange)="settings.midiInDevice = $event">
       <option *ngFor="let midiDevice of midiInDevices" [ngValue]="midiDevice.id">{{ midiDevice.name }}</option>
     </select>
@@ -10,8 +10,8 @@
 
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{ 'settings.midi-device-out' | translate }}</label>
-  <div class="col-lg-9">
-    <div *ngIf="midiOutDevices?.length == 0">- {{ 'settings.no-midi-devices' | translate }} -</div>
+  <div class="col-lg-9 d-flex">
+    <div class="my-auto" *ngIf="midiOutDevices?.length == 0">- {{ 'settings.no-midi-devices' | translate }} -</div>
     <select *ngIf="midiOutDevices?.length > 0" class="custom-select" [ngModel]="settings?.midiOutDevice?.id" (ngModelChange)="settings.midiOutDevice = $event">
       <option *ngFor="let midiDevice of midiOutDevices" [ngValue]="midiDevice.id">{{ midiDevice.name }}</option>
     </select>

@@ -4,7 +4,6 @@ import { Composition } from './../models/composition';
 import { Observable } from 'rxjs/Rx';
 import { Set } from './../models/set';
 import { Injectable } from '@angular/core';
-import { Response } from '@angular/http';
 
 @Injectable()
 export class CompositionService {

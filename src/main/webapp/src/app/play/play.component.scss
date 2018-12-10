@@ -32,3 +32,18 @@
 .list-group-item.active {
     z-index: 0;
 }
+
+.activity-indicator {
+    width: 10px;
+    height: 10px;
+    border: 1px solid white;
+    border-radius: 5px;
+    background-color: black;
+    transition: all ease-in-out 0.5s;
+}
+
+.activity-indicator-received {
+    background-color: #fd7e14 !important;
+    transition: all 0s;
+    box-shadow: 0px 0px 17px 0px white;
+}

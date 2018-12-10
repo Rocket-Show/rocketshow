@@ -107,7 +107,14 @@ public class DefaultSettingsService implements SettingsService {
         settings.setOffsetMillisMidi(0);
         settings.setOffsetMillisVideo(0);
 
-        settings.setAudioOutput(Settings.AudioOutput.HEADPHONES);
+        if (OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+            settings.setAudioOutput(Settings.AudioOutput.HEADPHONES);
+        } else if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+            settings.setAudioOutput(Settings.AudioOutput.DEFAULT);
+        } else if (OperatingSystemInformation.Type.LINUX.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+            settings.setAudioOutput(Settings.AudioOutput.DEVICE);
+        }
+
         settings.setAudioRate(44100 /* or 48000 */);
 
         settings.setLoggingLevel(Settings.LoggingLevel.INFO);
