@@ -1,10 +1,7 @@
 package com.ascargon.rocketshow;
 
 import com.ascargon.rocketshow.audio.AudioBus;
-import com.ascargon.rocketshow.midi.DefaultMidiService;
-import com.ascargon.rocketshow.midi.MidiDevice;
-import com.ascargon.rocketshow.midi.MidiMapping;
-import com.ascargon.rocketshow.midi.MidiService;
+import com.ascargon.rocketshow.midi.*;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import com.ascargon.rocketshow.util.ResetUsbService;
@@ -89,7 +86,7 @@ public class DefaultSettingsService implements SettingsService {
 
         try {
             List<MidiDevice> midiInDeviceList;
-            midiInDeviceList = midiService.getMidiDevices(DefaultMidiService.MidiDirection.IN);
+            midiInDeviceList = midiService.getMidiDevices(MidiSignal.MidiDirection.IN);
             if (midiInDeviceList.size() > 0) {
                 settings.setMidiInDevice(midiInDeviceList.get(0));
             }
@@ -99,7 +96,7 @@ public class DefaultSettingsService implements SettingsService {
 
         try {
             List<MidiDevice> midiOutDeviceList;
-            midiOutDeviceList = midiService.getMidiDevices(DefaultMidiService.MidiDirection.OUT);
+            midiOutDeviceList = midiService.getMidiDevices(MidiSignal.MidiDirection.OUT);
             if (midiOutDeviceList.size() > 0) {
                 settings.setMidiOutDevice(midiOutDeviceList.get(0));
             }

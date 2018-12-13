@@ -3,7 +3,6 @@ package com.ascargon.rocketshow.composition;
 import com.ascargon.rocketshow.CapabilitiesService;
 import com.ascargon.rocketshow.PlayerService;
 import com.ascargon.rocketshow.SettingsService;
-import com.ascargon.rocketshow.api.ActivityMidi;
 import com.ascargon.rocketshow.api.ActivityNotificationAudioService;
 import com.ascargon.rocketshow.api.ActivityNotificationMidiService;
 import com.ascargon.rocketshow.api.NotificationService;
@@ -104,7 +103,7 @@ public class CompositionPlayer {
 
             midiRoutingService.sendSignal(midiSignal, midiRoutingList);
 
-            activityNotificationMidiService.notifyClients(midiSignal, ActivityMidi.MidiSource.MIDI_FILE);
+            activityNotificationMidiService.notifyClients(midiSignal, MidiSignal.MidiDirection.IN, MidiSignal.MidiSource.MIDI_FILE, null);
         }
     }
 
@@ -173,7 +172,7 @@ public class CompositionPlayer {
                 logger.error("Could not stop the composition after end of stream", e);
             }
         });
-        bus.connect((Bus.MESSAGE) (Bus bus1, Message message) -> {
+        bus.connect((Bus bus1, Message message) -> {
             if (message.getType().equals(MessageType.ELEMENT)) {
                 Structure structure = message.getStructure();
 
@@ -190,9 +189,6 @@ public class CompositionPlayer {
                         // Process each channel
                         for (int i = 0; i < rmsDbs.length; i++) {
                             activityNotificationAudioService.notifyClients(audioBus, i, rmsDbs[i]);
-
-                            // Normalize to get a value between 0.0 and 1.0
-                            double rms = Math.pow(rmsDbs[i] / 20, 10);
                         }
                     } catch (Exception e) {
                         logger.error("Could not process level message", e);
@@ -288,7 +284,9 @@ public class CompositionPlayer {
                         convert.link(resample);
                     } else {
                         convert.link(level);
-                        level.link(resample);
+                        if(level != null) {
+                            level.link(resample);
+                        }
                     }
                     resample.link(sink);
                 } else if (compositionFile instanceof VideoCompositionFile && capabilitiesService.getCapabilities().isGstreamer()) {

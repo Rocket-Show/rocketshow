@@ -16,11 +16,7 @@ import java.util.List;
 @XmlRootElement
 public class MidiRouting {
 
-    public enum MidiDestination {
-        OUT_DEVICE, DMX, REMOTE
-    }
-
-    private MidiDestination midiDestination = MidiDestination.OUT_DEVICE;
+    private MidiSignal.MidiDestination midiDestination = MidiSignal.MidiDestination.OUT_DEVICE;
 
     private MidiMapping midiMapping = new MidiMapping();
     private Midi2DmxMapping midi2DmxMapping = new Midi2DmxMapping();
@@ -28,11 +24,11 @@ public class MidiRouting {
     // A list of remote device ids in case of destination type = REMOTE
     private List<String> remoteDeviceNameList = new ArrayList<>();
 
-    public MidiDestination getMidiDestination() {
+    public MidiSignal.MidiDestination getMidiDestination() {
         return midiDestination;
     }
 
-    public void setMidiDestination(MidiDestination midiDestination) {
+    public void setMidiDestination(MidiSignal.MidiDestination midiDestination) {
         this.midiDestination = midiDestination;
     }
 

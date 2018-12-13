@@ -60,7 +60,7 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
                         "Try connecting to MIDI in device " + midiDevice.getId() + " \"" + midiDevice.getName() + "\"");
             }
 
-            midiInDevice = midiService.getHardwareMidiDevice(midiDevice, DefaultMidiService.MidiDirection.IN);
+            midiInDevice = midiService.getHardwareMidiDevice(midiDevice, MidiSignal.MidiDirection.IN);
 
             if (midiInDevice == null) {
                 logger.trace("MIDI in device not found. Try again in 10 seconds.");

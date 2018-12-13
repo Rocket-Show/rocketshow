@@ -48,12 +48,13 @@ export class PlayComponent implements OnInit, OnDestroy {
 
   loadingSet: boolean = false;
 
-  activityMidi: boolean = false;
-  activityMidiStopTimeout: any;
-
-  activityAudioStopTimeout: any;
+  activityMidiIn: boolean = false;
+  activityMidiInStopTimeout: any;
+  activityMidiOut: boolean = false;
+  activityMidiOutStopTimeout: any;
 
   activityAudio: ActivityAudio;
+  activityAudioStopTimeout: any;
 
   constructor(
     public stateService: StateService,
@@ -127,17 +128,35 @@ export class PlayComponent implements OnInit, OnDestroy {
 
     // Subscribe to MIDI activities
     this.activityMidiService.subject.subscribe((activityMidi: ActivityMidi) => {
-      this.activityMidi = true;
+      let decayMillis = 50;
 
-      if (this.activityMidiStopTimeout) {
-        clearTimeout(this.activityMidiStopTimeout);
-        this.activityMidiStopTimeout = undefined;
+      if(activityMidi.midiDirection == 'IN') {
+        this.activityMidiIn = true;
+
+        if (this.activityMidiInStopTimeout) {
+          clearTimeout(this.activityMidiInStopTimeout);
+          this.activityMidiInStopTimeout = undefined;
+        }
+
+        this.activityMidiInStopTimeout = setTimeout(() => {
+          this.activityMidiInStopTimeout = undefined;
+          this.activityMidiIn = false;
+        }, decayMillis);
+      } else if(activityMidi.midiDirection == 'OUT' && activityMidi.midiDestination != 'DMX') {
+        // DMX is monitored separately
+
+        this.activityMidiOut = true;
+
+        if (this.activityMidiOutStopTimeout) {
+          clearTimeout(this.activityMidiOutStopTimeout);
+          this.activityMidiOutStopTimeout = undefined;
+        }
+
+        this.activityMidiOutStopTimeout = setTimeout(() => {
+          this.activityMidiOutStopTimeout = undefined;
+          this.activityMidiOut = false;
+        }, decayMillis);
       }
-
-      this.activityMidiStopTimeout = setTimeout(() => {
-        this.activityMidiStopTimeout = undefined;
-        this.activityMidi = false;
-      }, 50);
     });
     this.activityMidiService.startMonitor();
 
@@ -164,6 +183,7 @@ export class PlayComponent implements OnInit, OnDestroy {
             for (let settingsChannel of settingsBus.activityAudioChannelList) {
               for (let activityChannel of activityBus.activityAudioChannelList) {
                 if(settingsChannel.index == activityChannel.index) {
+                  // Increase the sensitivity by factor 5 to make also more silent tracks visible
                   settingsChannel.volumeDb = activityChannel.volumeDb / 5;
                 }
               }

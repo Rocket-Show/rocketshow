@@ -1,24 +1,19 @@
 package com.ascargon.rocketshow.api;
 
-import com.ascargon.rocketshow.composition.CompositionPlayer;
 import com.ascargon.rocketshow.midi.MidiSignal;
-import com.ascargon.rocketshow.util.UpdateService;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.transform.Source;
 
 @XmlRootElement
 public class ActivityMidi {
 
-    public enum MidiSource {
-        DEVICE_IN,
-        MIDI_FILE,
-        REMOTE_DEVICE
-    }
-
     private MidiSignal midiSignal;
 
-    private MidiSource midiSource;
+    private MidiSignal.MidiDirection midiDirection;
+
+    private MidiSignal.MidiSource midiSource;
+
+    private MidiSignal.MidiDestination midiDestination;
 
     public MidiSignal getMidiSignal() {
         return midiSignal;
@@ -28,11 +23,27 @@ public class ActivityMidi {
         this.midiSignal = midiSignal;
     }
 
-    public MidiSource getMidiSource() {
+    public MidiSignal.MidiDirection getMidiDirection() {
+        return midiDirection;
+    }
+
+    public void setMidiDirection(MidiSignal.MidiDirection midiDirection) {
+        this.midiDirection = midiDirection;
+    }
+
+    public MidiSignal.MidiDestination getMidiDestination() {
+        return midiDestination;
+    }
+
+    public void setMidiDestination(MidiSignal.MidiDestination midiDestination) {
+        this.midiDestination = midiDestination;
+    }
+
+    public MidiSignal.MidiSource getMidiSource() {
         return midiSource;
     }
 
-    public void setMidiSource(MidiSource midiSource) {
+    public void setMidiSource(MidiSignal.MidiSource midiSource) {
         this.midiSource = midiSource;
     }
 

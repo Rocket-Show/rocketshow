@@ -35,11 +35,13 @@ public class DefaultActivityNotificationMidiService extends TextWebSocketHandler
         sessions.remove(session);
     }
 
-    private synchronized void sendWebsocketMessage(MidiSignal midiSignal, ActivityMidi.MidiSource midiSource) throws IOException {
+    private synchronized void sendWebsocketMessage(MidiSignal midiSignal, MidiSignal.MidiDirection midiDirection, MidiSignal.MidiSource midiSource, MidiSignal.MidiDestination midiDestination) throws IOException {
         ActivityMidi activityMidi = new ActivityMidi();
 
         activityMidi.setMidiSignal(midiSignal);
+        activityMidi.setMidiDirection(midiDirection);
         activityMidi.setMidiSource(midiSource);
+        activityMidi.setMidiDestination(midiDestination);
 
         ObjectMapper mapper = new ObjectMapper();
         String returnValue = mapper.writeValueAsString(activityMidi);
@@ -50,16 +52,16 @@ public class DefaultActivityNotificationMidiService extends TextWebSocketHandler
             } catch (Exception e) {
                 sessions.remove(webSocketSession);
             }
-        };
+        }
     }
 
     @Override
-    public void notifyClients(MidiSignal midiSignal, ActivityMidi.MidiSource midiSource) {
+    public void notifyClients(MidiSignal midiSignal, MidiSignal.MidiDirection midiDirection, MidiSignal.MidiSource midiSource, MidiSignal.MidiDestination midiDestination) {
         // Wrap in a thread, to not block the main thread and make synchronized calls
         // to websocket (two writes to the same session from different threads is not allowed)
         Thread thread = new Thread(() -> {
             try {
-                sendWebsocketMessage(midiSignal, midiSource);
+                sendWebsocketMessage(midiSignal, midiDirection, midiSource, midiDestination);
             } catch (IOException e) {
                 logger.error("Could not send MIDI activity message", e);
             }

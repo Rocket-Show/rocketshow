@@ -29,12 +29,12 @@ class MidiController {
 
     @GetMapping("in-devices")
     public List<MidiDevice> getInDevices() throws Exception {
-        return midiService.getMidiDevices(DefaultMidiService.MidiDirection.IN);
+        return midiService.getMidiDevices(MidiSignal.MidiDirection.IN);
     }
 
     @GetMapping("out-devices")
     public List<MidiDevice> getOutDevices() throws Exception {
-        return midiService.getMidiDevices(DefaultMidiService.MidiDirection.OUT);
+        return midiService.getMidiDevices(MidiSignal.MidiDirection.OUT);
     }
 
     @PostMapping("send-message")
@@ -50,7 +50,7 @@ class MidiController {
 
         midiRoutingService.sendSignal(midiSignal, settingsService.getSettings().getRemoteMidiRoutingList());
 
-        activityNotificationMidiService.notifyClients(midiSignal, ActivityMidi.MidiSource.REMOTE_DEVICE);
+        activityNotificationMidiService.notifyClients(midiSignal, MidiSignal.MidiDirection.IN, MidiSignal.MidiSource.REMOTE, null);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

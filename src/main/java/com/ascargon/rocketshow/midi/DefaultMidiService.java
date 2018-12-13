@@ -16,26 +16,22 @@ public class DefaultMidiService implements MidiService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultMidiService.class);
 
-    public enum MidiDirection {
-        IN, OUT
-    }
-
     private boolean isDeviceAllowed(String name) {
         return !(name.equals("Real Time Sequencer") || name.equals("Gervill"));
     }
 
-    private boolean midiDeviceHasDirection(MidiDevice midiDevice, MidiDirection midiDirection) {
+    private boolean midiDeviceHasDirection(MidiDevice midiDevice, MidiSignal.MidiDirection midiDirection) {
         if (!isDeviceAllowed(midiDevice.getDeviceInfo().getName())) {
             return false;
         }
 
-        return ((midiDirection == MidiDirection.IN && midiDevice.getMaxTransmitters() != 0)
-                || (midiDirection == MidiDirection.OUT && midiDevice.getMaxReceivers() != 0));
+        return ((midiDirection == MidiSignal.MidiDirection.IN && midiDevice.getMaxTransmitters() != 0)
+                || (midiDirection == MidiSignal.MidiDirection.OUT && midiDevice.getMaxReceivers() != 0));
     }
 
     @Override
     public MidiDevice getHardwareMidiDevice(com.ascargon.rocketshow.midi.MidiDevice midiDevice,
-                                                   MidiDirection midiDirection) throws MidiUnavailableException {
+                                                   MidiSignal.MidiDirection midiDirection) throws MidiUnavailableException {
 
         // Get a hardware device for a given MIDI device
         MidiDevice.Info[] midiDeviceInfos = MidiSystem.getMidiDeviceInfo();
@@ -95,7 +91,7 @@ public class DefaultMidiService implements MidiService {
     }
 
     @Override
-    public List<com.ascargon.rocketshow.midi.MidiDevice> getMidiDevices(MidiDirection midiDirection)
+    public List<com.ascargon.rocketshow.midi.MidiDevice> getMidiDevices(MidiSignal.MidiDirection midiDirection)
             throws MidiUnavailableException {
 
         // Get all available MIDI devices
