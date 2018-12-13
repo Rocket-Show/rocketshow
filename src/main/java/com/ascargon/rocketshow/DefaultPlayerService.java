@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow;
 
+import com.ascargon.rocketshow.api.ActivityNotificationAudioService;
 import com.ascargon.rocketshow.api.ActivityNotificationMidiService;
 import com.ascargon.rocketshow.api.NotificationService;
 import com.ascargon.rocketshow.composition.Composition;
@@ -35,12 +36,13 @@ public class DefaultPlayerService implements PlayerService {
     private final DmxService dmxService;
     private final CapabilitiesService capabilitiesService;
     private final OperatingSystemInformationService operatingSystemInformationService;
+    private final ActivityNotificationAudioService activityNotificationAudioService;
 
     private CompositionPlayer defaultCompositionPlayer;
     private final CompositionPlayer currentCompositionPlayer;
     private final List<CompositionPlayer> sampleCompositionPlayerList = new ArrayList<>();
 
-    public DefaultPlayerService(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, SettingsService settingsService, CompositionService compositionService, SetService setService, SessionService sessionService, MidiRoutingService midiRoutingService, DmxService dmxService, CapabilitiesService capabilitiesService, OperatingSystemInformationService operatingSystemInformationService) {
+    public DefaultPlayerService(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, SettingsService settingsService, CompositionService compositionService, SetService setService, SessionService sessionService, MidiRoutingService midiRoutingService, DmxService dmxService, CapabilitiesService capabilitiesService, OperatingSystemInformationService operatingSystemInformationService, ActivityNotificationAudioService activityNotificationAudioService) {
         this.notificationService = notificationService;
         this.activityNotificationMidiService = activityNotificationMidiService;
         this.settingsService = settingsService;
@@ -51,9 +53,10 @@ public class DefaultPlayerService implements PlayerService {
         this.dmxService = dmxService;
         this.capabilitiesService = capabilitiesService;
         this.operatingSystemInformationService = operatingSystemInformationService;
+        this.activityNotificationAudioService = activityNotificationAudioService;
 
-        currentCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService);
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService);
+        currentCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService, activityNotificationAudioService);
+        defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService, activityNotificationAudioService);
 
         try {
             Gst.init();
@@ -69,7 +72,7 @@ public class DefaultPlayerService implements PlayerService {
             logger.error("Could not play default composition", e);
         }
 
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService);
+        defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService, activityNotificationAudioService);
 
         // Load the last set/composition
         try {
@@ -217,7 +220,7 @@ public class DefaultPlayerService implements PlayerService {
         // to share the same instance) and play it
         Composition composition = compositionService
                 .cloneComposition(compositionService.getComposition(compositionName));
-        CompositionPlayer compositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService);
+        CompositionPlayer compositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService, activityNotificationAudioService);
         compositionPlayer.setSample(true);
         compositionPlayer.setComposition(composition);
         sampleCompositionPlayerList.add(compositionPlayer);
@@ -304,7 +307,7 @@ public class DefaultPlayerService implements PlayerService {
             return;
         }
 
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService);
+        defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService, activityNotificationAudioService);
 
         if (settingsService.getSettings().getDefaultComposition() == null || settingsService.getSettings().getDefaultComposition().length() == 0) {
             return;

@@ -227,7 +227,7 @@
             "DEFAULT": "Default",
             "HEADPHONES": "Headphone jack",
             "HDMI": "HDMI output",
-            "DEVICE": "USB audio device"
+            "DEVICE": "Audio device (ALSA)"
         },
         "logging-level-enum": {
             "INFO": "Info (default)",

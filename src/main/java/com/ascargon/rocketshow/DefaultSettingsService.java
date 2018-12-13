@@ -78,6 +78,12 @@ public class DefaultSettingsService implements SettingsService {
         settings.setMidiInDevice(new MidiDevice());
         settings.setMidiOutDevice(new MidiDevice());
 
+        // Add the default audio bus
+        AudioBus audioBus = new AudioBus();
+        audioBus.setName("My audio bus 1");
+        audioBus.setChannels(2);
+        settings.getAudioBusList().add(audioBus);
+
         // Global MIDI mapping
         settings.setMidiMapping(new MidiMapping());
 
@@ -178,9 +184,32 @@ public class DefaultSettingsService implements SettingsService {
     }
 
     @Override
-    public String getAlsaDeviceFromOutputBus(String outputBus) {
-        logger.debug("Find ALSA device for bus name '" + outputBus + "'...");
+    public AudioBus getAudioBusFromName(String outputBus) {
+        if(outputBus == null) {
+            if (settings.getAudioBusList().size() > 0) {
+                return settings.getAudioBusList().get(0);
+            } else {
+                return null;
+            }
+        }
 
+        // Get an alsa device name from a bus name
+        for (AudioBus audioBus : settings.getAudioBusList()) {
+            if (outputBus.equals(audioBus.getName())) {
+                return audioBus;
+            }
+        }
+
+        // Return a default bus, if none is found
+        if (settings.getAudioBusList().size() > 0) {
+            return settings.getAudioBusList().get(0);
+        }
+
+        return null;
+    }
+
+    @Override
+    public String getAlsaDeviceFromOutputBus(String outputBus) {
         // Get an alsa device name from a bus name
         for (int i = 0; i < settings.getAudioBusList().size(); i++) {
             AudioBus audioBus = settings.getAudioBusList().get(i);

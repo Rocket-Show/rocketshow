@@ -44,7 +44,13 @@ public class DefaultActivityNotificationMidiService extends TextWebSocketHandler
         ObjectMapper mapper = new ObjectMapper();
         String returnValue = mapper.writeValueAsString(activityMidi);
 
-        for (WebSocketSession webSocketSession : sessions) webSocketSession.sendMessage(new TextMessage(returnValue));
+        for (WebSocketSession webSocketSession : sessions) {
+            try {
+                webSocketSession.sendMessage(new TextMessage(returnValue));
+            } catch (Exception e) {
+                sessions.remove(webSocketSession);
+            }
+        };
     }
 
     @Override

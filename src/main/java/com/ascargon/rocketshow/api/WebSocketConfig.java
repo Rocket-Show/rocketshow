@@ -13,16 +13,19 @@ class WebSocketConfig implements WebSocketConfigurer {
 
     private final DefaultNotificationService defaultNotificationService;
     private final DefaultActivityNotificationMidiService defaultActivityNotificationMidiService;
+    private final DefaultActivityNotificationAudioService defaultActivityNotificationAudioService;
 
-    public WebSocketConfig(DefaultNotificationService defaultNotificationService, DefaultActivityNotificationMidiService defaultActivityNotificationMidiService) {
+    public WebSocketConfig(DefaultNotificationService defaultNotificationService, DefaultActivityNotificationMidiService defaultActivityNotificationMidiService, DefaultActivityNotificationAudioService defaultActivityNotificationAudioService) {
         this.defaultNotificationService = defaultNotificationService;
         this.defaultActivityNotificationMidiService = defaultActivityNotificationMidiService;
+        this.defaultActivityNotificationAudioService = defaultActivityNotificationAudioService;
     }
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(defaultNotificationService, "/api/state").setAllowedOrigins("*");
         registry.addHandler(defaultActivityNotificationMidiService, "/api/activity/midi").setAllowedOrigins("*");
+        registry.addHandler(defaultActivityNotificationAudioService, "/api/activity/audio").setAllowedOrigins("*");
     }
 
 }

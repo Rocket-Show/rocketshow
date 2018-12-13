@@ -227,7 +227,7 @@
             "DEFAULT": "Standard",
             "HEADPHONES": "Kopfhörerbuchse",
             "HDMI": "HDMI Ausgang",
-            "DEVICE": "USB Audio Gerät"
+            "DEVICE": "Audio Gerät (ALSA)"
         },
         "logging-level-enum": {
             "INFO": "Info (Standard)",

@@ -4,8 +4,10 @@ import com.ascargon.rocketshow.CapabilitiesService;
 import com.ascargon.rocketshow.PlayerService;
 import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.api.ActivityMidi;
+import com.ascargon.rocketshow.api.ActivityNotificationAudioService;
 import com.ascargon.rocketshow.api.ActivityNotificationMidiService;
 import com.ascargon.rocketshow.api.NotificationService;
+import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.midi.*;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
@@ -16,9 +18,6 @@ import org.freedesktop.gstreamer.elements.AppSink;
 import org.freedesktop.gstreamer.elements.BaseSink;
 import org.freedesktop.gstreamer.elements.PlayBin;
 import org.freedesktop.gstreamer.elements.URIDecodeBin;
-import org.freedesktop.gstreamer.lowlevel.GValueAPI;
-import org.freedesktop.gstreamer.lowlevel.GstBusAPI;
-import org.freedesktop.gstreamer.lowlevel.GstMessageAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -28,8 +27,6 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-
-import static org.freedesktop.gstreamer.lowlevel.GstBusAPI.GSTBUS_API;
 
 /**
  * Handle the playing of a single composition.
@@ -57,6 +54,7 @@ public class CompositionPlayer {
     private final MidiRoutingService midiRoutingService;
     private final CapabilitiesService capabilitiesService;
     private final OperatingSystemInformationService operatingSystemInformationService;
+    private final ActivityNotificationAudioService activityNotificationAudioService;
 
     private Composition composition;
     private PlayState playState = PlayState.STOPPED;
@@ -73,7 +71,7 @@ public class CompositionPlayer {
     // The gstreamer pipeline, used to sync all files in this composition
     private Pipeline pipeline;
 
-    public CompositionPlayer(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, PlayerService playerService, SettingsService settingsService, MidiRoutingService midiRoutingService, CapabilitiesService capabilitiesService, OperatingSystemInformationService operatingSystemInformationService) {
+    public CompositionPlayer(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, PlayerService playerService, SettingsService settingsService, MidiRoutingService midiRoutingService, CapabilitiesService capabilitiesService, OperatingSystemInformationService operatingSystemInformationService, ActivityNotificationAudioService activityNotificationAudioService) {
         this.notificationService = notificationService;
         this.activityNotificationMidiService = activityNotificationMidiService;
         this.playerService = playerService;
@@ -81,6 +79,7 @@ public class CompositionPlayer {
         this.midiRoutingService = midiRoutingService;
         this.capabilitiesService = capabilitiesService;
         this.operatingSystemInformationService = operatingSystemInformationService;
+        this.activityNotificationAudioService = activityNotificationAudioService;
 
         this.midiMapping.setParent(settingsService.getSettings().getMidiMapping());
     }
@@ -175,18 +174,28 @@ public class CompositionPlayer {
             }
         });
         bus.connect((Bus.MESSAGE) (Bus bus1, Message message) -> {
-            if(message.getType().equals(MessageType.ELEMENT)) {
+            if (message.getType().equals(MessageType.ELEMENT)) {
                 Structure structure = message.getStructure();
 
-                if(structure.getName().equals("level")) {
-                    // We got a level message
-                    double[] rmsDbs = structure.getDoubles("rms");
+                if (structure.getName().equals("level")) {
+                    try {
+                        // We got a level message
+                        double[] rmsDbs = structure.getDoubles("peak");
 
-                    // Process each channel
-                    for(int i = 0; i < rmsDbs.length; i++){
-                        // Normalize to get a value between 0.0 and 1.0
-                        double rms = Math.pow(rmsDbs[i] / 20, 10);
-                        logger.info("Source: " + message.getSource().getName() + ", Channel " + (i + 1) + ": " + rms);
+                        // Get the corresponding audio file ID
+                        int levelElementIndex = Integer.parseInt(message.getSource().getName().substring(5));
+                        AudioCompositionFile audioCompositionFile = (AudioCompositionFile) composition.getCompositionFileList().get(levelElementIndex);
+                        AudioBus audioBus = settingsService.getAudioBusFromName(audioCompositionFile.getOutputBus());
+
+                        // Process each channel
+                        for (int i = 0; i < rmsDbs.length; i++) {
+                            activityNotificationAudioService.notifyClients(audioBus, i, rmsDbs[i]);
+
+                            // Normalize to get a value between 0.0 and 1.0
+                            double rms = Math.pow(rmsDbs[i] / 20, 10);
+                        }
+                    } catch (Exception e) {
+                        logger.error("Could not process level message", e);
                     }
                 }
             }
@@ -248,13 +257,14 @@ public class CompositionPlayer {
                             pad.link(convert.getSinkPads().get(0));
                         }
                     });
+                    // TODO
                     pipeline.add(convert);
 
                     Element level = null;
                     if (!isSample) {
                         level = ElementFactory.make("level", "level" + i);
-                        // 1 Second
-                        level.set("interval", 1 * 1000000000);
+                        // 50 Milliseconds
+                        level.set("interval", 100 * 1000000);
                         level.set("post-messages", true);
                         pipeline.add(level);
                     }

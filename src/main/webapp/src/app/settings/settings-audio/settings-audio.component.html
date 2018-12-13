@@ -40,7 +40,7 @@
     <div class="list-group" [sortablejs]="settings?.audioBusList" [sortablejsOptions]="{ onMove: sortMove }">
       <div class="list-group-item" *ngFor="let audioBus of settings?.audioBusList; let i = index">
 
-        <div class="form-group row" style="margin-top: 10px; margin-bottom: -30px;">
+        <div *ngIf="i > 0" class="form-group row" style="margin-top: 10px; margin-bottom: -30px;">
           <div class="col d-flex">
             <a class="my-auto ml-auto text-danger" href="#" role="button" (click)="deleteAudioBus(i); false">
               <i class="fa fa-trash-o" aria-hidden="true"></i>
@@ -59,8 +59,8 @@
             <select class="custom-select" [ngModel]="audioBus.channels" (ngModelChange)="audioBus.channels = $event">
               <option value="1">1 {{ 'settings.audio-bus-mono' | translate }}</option>
               <option value="2">2 {{ 'settings.audio-bus-stereo' | translate }}</option>
-              <option value="4">4 {{ 'settings.audio-bus-quadro' | translate }}</option>
               <option value="3">3 {{ 'settings.audio-bus-surround' | translate }} 2.1</option>
+              <option value="4">4 {{ 'settings.audio-bus-quadro' | translate }}</option>
               <option value="6">6 {{ 'settings.audio-bus-surround' | translate }} 5.1</option>
               <option value="7">7 {{ 'settings.audio-bus-surround' | translate }} 6.1</option>
               <option value="8">8 {{ 'settings.audio-bus-surround' | translate }} 7.1</option>

@@ -80,25 +80,33 @@
 
             <div class="col col-auto pl-1 pr-1 d-flex">
               <div class="d-flex pr-2">
-                <small class="my-auto"><i class="fa fa-music" aria-hidden="true"></i></small>
+                <small class="my-auto"><i class="fa fa-sign-in" aria-hidden="true"></i></small>
               </div>
               <div class="pr-2 d-flex">
-                <div class="my-auto activity-indicator" [class.activity-indicator-received]="activityMidi"></div>
+                <div class="my-auto activity-indicator" [class.activity-indicator-received]="activityMidiIn"></div>
+              </div>
+
+              <div class="d-flex pr-2">
+                <small class="my-auto"><i class="fa fa-sign-out" aria-hidden="true"></i></small>
+              </div>
+              <div class="pr-2 d-flex">
+                <div class="my-auto activity-indicator" [class.activity-indicator-received]="activityMidiOut"></div>
               </div>
 
               <div class="d-flex pr-2">
                 <small class="my-auto"><i class="fa fa-microphone" aria-hidden="true"></i></small>
               </div>
               <div class="d-flex">
-                <div *ngFor="let audioBus of settings?.audioBusList" class="d-flex pr-2 my-auto">
-                  <div *ngFor="let channel of audioBus.volumes" class="d-flex my-auto pr-1">
+                <div *ngFor="let audioBus of activityAudio.activityAudioBusList" class="d-flex pr-2 my-auto">
+                  <div *ngFor="let channel of audioBus.activityAudioChannelList" class="d-flex my-auto pr-1">
                     <div class="my-auto activity-indicator"></div>
+                    <div class="my-auto activity-indicator activity-indicator-received" style="margin-left: -10px;" [style.opacity]="audioActivityOpacity(channel.volumeDb)"></div>
                   </div>
                 </div>
               </div>
 
               <div class="d-flex pr-2">
-                <small class="my-auto"><i class="fa fa-film" aria-hidden="true"></i></small>
+                <small class="my-auto"><i class="fa fa-lightbulb-o" aria-hidden="true"></i></small>
               </div>
               <div class="d-flex">
                 <div class="my-auto activity-indicator"></div>

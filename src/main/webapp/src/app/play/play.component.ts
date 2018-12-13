@@ -4,7 +4,7 @@ import { Composition } from './../models/composition';
 import { CompositionService } from './../services/composition.service';
 import { StateService } from './../services/state.service';
 import { Set } from './../models/set';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { State } from '../models/state';
 import { TransportService } from '../services/transport.service';
 import { Observable } from 'rxjs/Observable';
@@ -12,17 +12,20 @@ import { Subscription } from 'rxjs/Subscription';
 import { ToastGeneralErrorService } from '../services/toast-general-error.service';
 import { ActivityMidiService } from '../services/activity-midi.service';
 import { ActivityMidi } from '../models/activity-midi';
-import { timeout } from 'rxjs/operators';
+
 import { SettingsService } from '../services/settings.service';
-import { settings } from 'cluster';
 import { Settings } from '../models/settings';
+import { ActivityAudioService } from '../services/activity-audio.service';
+import { ActivityAudio } from '../models/activity-audio';
+import { ActivityAudioBus } from '../models/activity-audio-bus';
+import { ActivityAudioChannel } from '../models/activity-audio-channel';
 
 @Component({
   selector: 'app-play',
   templateUrl: './play.component.html',
   styleUrls: ['./play.component.scss']
 })
-export class PlayComponent implements OnInit {
+export class PlayComponent implements OnInit, OnDestroy {
 
   currentSet: Set;
   currentState: State = new State();
@@ -48,7 +51,9 @@ export class PlayComponent implements OnInit {
   activityMidi: boolean = false;
   activityMidiStopTimeout: any;
 
-  settings: Settings;
+  activityAudioStopTimeout: any;
+
+  activityAudio: ActivityAudio;
 
   constructor(
     public stateService: StateService,
@@ -57,6 +62,7 @@ export class PlayComponent implements OnInit {
     private sessionService: SessionService,
     private toastGeneralErrorService: ToastGeneralErrorService,
     private activityMidiService: ActivityMidiService,
+    public activityAudioService: ActivityAudioService,
     public settingsService: SettingsService) {
 
     this.loadSettings();
@@ -67,9 +73,30 @@ export class PlayComponent implements OnInit {
   }
 
   private loadSettings() {
-    this.settingsService.getSettings().map(result => {
-      this.settings = result;
+    this.settingsService.getSettings().map(settings => {
+      this.activityAudio = new ActivityAudio();
+
+      for (let audioBus of settings.audioBusList) {
+        let activityAudioBus = new ActivityAudioBus();
+        activityAudioBus.name = audioBus.name;
+        this.activityAudio.activityAudioBusList.push(activityAudioBus);
+
+        for (var i = 0; i < audioBus.channels; i++) {
+          let activityAudioChannel = new ActivityAudioChannel();
+          activityAudioChannel.index = i;
+          activityAudioBus.activityAudioChannelList.push(activityAudioChannel);
+        }
+      }
     }).subscribe();
+  }
+
+  resetChannelVolumes() {
+    // Set all volumes to 0
+    for (let bus of this.activityAudio.activityAudioBusList) {
+      for (let channel of bus.activityAudioChannelList) {
+        channel.volumeDb = -500;
+      }
+    }
   }
 
   ngOnInit() {
@@ -102,8 +129,9 @@ export class PlayComponent implements OnInit {
     this.activityMidiService.subject.subscribe((activityMidi: ActivityMidi) => {
       this.activityMidi = true;
 
-      if (!this.activityMidiStopTimeout) {
+      if (this.activityMidiStopTimeout) {
         clearTimeout(this.activityMidiStopTimeout);
+        this.activityMidiStopTimeout = undefined;
       }
 
       this.activityMidiStopTimeout = setTimeout(() => {
@@ -111,6 +139,45 @@ export class PlayComponent implements OnInit {
         this.activityMidi = false;
       }, 50);
     });
+    this.activityMidiService.startMonitor();
+
+    // Subscribe to audio activities
+    this.activityAudioService.subject.subscribe((activityAudio: ActivityAudio) => {
+      if (this.activityAudioStopTimeout) {
+        clearTimeout(this.activityAudioStopTimeout);
+        this.activityAudioStopTimeout = undefined;
+      }
+
+      this.activityAudioStopTimeout = setTimeout(() => {
+        this.activityAudioStopTimeout = undefined;
+        this.resetChannelVolumes();
+      }, 200);
+
+      // Map the audio activity from the backend into the frontend monitoring activity,
+      // based on the settings (e.g. if more channels are played than specified in the settings,
+      // they will not be shown)
+      this.resetChannelVolumes()
+
+      for (let settingsBus of this.activityAudio.activityAudioBusList) {
+        for (let activityBus of activityAudio.activityAudioBusList) {
+          if (settingsBus.name == activityBus.name) {
+            for (let settingsChannel of settingsBus.activityAudioChannelList) {
+              for (let activityChannel of activityBus.activityAudioChannelList) {
+                if(settingsChannel.index == activityChannel.index) {
+                  settingsChannel.volumeDb = activityChannel.volumeDb / 5;
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+    this.activityAudioService.startMonitor();
+  }
+
+  ngOnDestroy() {
+    this.activityMidiService.stopMonitor();
+    this.activityAudioService.stopMonitor();
   }
 
   private loadAllSets() {
@@ -309,6 +376,11 @@ export class PlayComponent implements OnInit {
     this.session.autoSelectNextComposition = !this.session.autoSelectNextComposition;
 
     this.sessionService.setAutoSelectNextComposition(this.session.autoSelectNextComposition).subscribe();
+  }
+
+  audioActivityOpacity(volumeDb: number): number {
+    // Normalize the DB value to a value between 0.0 and 1.0
+    return Math.pow(10, volumeDb / 20);
   }
 
 }
