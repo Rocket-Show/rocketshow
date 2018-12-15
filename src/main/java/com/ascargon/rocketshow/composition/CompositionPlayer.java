@@ -8,6 +8,7 @@ import com.ascargon.rocketshow.api.ActivityNotificationMidiService;
 import com.ascargon.rocketshow.api.NotificationService;
 import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
+import com.ascargon.rocketshow.gstreamer.GstAPI;
 import com.ascargon.rocketshow.midi.*;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
@@ -17,6 +18,8 @@ import org.freedesktop.gstreamer.elements.AppSink;
 import org.freedesktop.gstreamer.elements.BaseSink;
 import org.freedesktop.gstreamer.elements.PlayBin;
 import org.freedesktop.gstreamer.elements.URIDecodeBin;
+import org.freedesktop.gstreamer.lowlevel.GType;
+import org.freedesktop.gstreamer.lowlevel.GValueAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -253,7 +256,33 @@ public class CompositionPlayer {
                             pad.link(convert.getSinkPads().get(0));
                         }
                     });
+
                     // TODO
+                    GValueAPI.GValue mixMatrix = new GValueAPI.GValue();
+                    GValueAPI.GVALUE_API.g_value_init(mixMatrix, GstAPI.GST_API.gst_value_array_get_type());
+
+                    // Repeat for each output channel
+                    // TODO has to be the exact output channel count
+                    for (int j = 0; j < 2; j++) {
+                        GValueAPI.GValue outputChannel = new GValueAPI.GValue();
+                        GValueAPI.GVALUE_API.g_value_init(outputChannel, GstAPI.GST_API.gst_value_array_get_type());
+
+                        // Fill the channel with the input channels
+                        // TODO has to be the exact input channel count
+                        for (int k = 0; k < 2; k++) {
+                            GValueAPI.GValue inputChannel = new GValueAPI.GValue(GType.FLOAT);
+                            inputChannel.setValue(1.0f);
+                            GstAPI.GST_API.gst_value_array_append_value(outputChannel, inputChannel.getPointer());
+                            GValueAPI.GVALUE_API.g_value_unset(inputChannel);
+                        }
+
+                        GstAPI.GST_API.gst_value_array_append_value(mixMatrix, outputChannel.getPointer());
+                        GValueAPI.GVALUE_API.g_value_unset(outputChannel);
+                    }
+
+                    GstAPI.GST_API.g_object_set_property(convert, "mix-matrix", mixMatrix.getPointer());
+                    GValueAPI.GVALUE_API.g_value_unset(mixMatrix);
+
                     pipeline.add(convert);
 
                     Element level = null;
@@ -284,7 +313,7 @@ public class CompositionPlayer {
                         convert.link(resample);
                     } else {
                         convert.link(level);
-                        if(level != null) {
+                        if (level != null) {
                             level.link(resample);
                         }
                     }
