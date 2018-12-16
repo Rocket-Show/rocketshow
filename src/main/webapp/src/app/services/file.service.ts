@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Composition } from './../models/composition';
-import { Observable } from 'rxjs/Rx';
+import { Observable } from 'rxjs';
+import { map } from "rxjs/operators";
 import { Injectable } from '@angular/core';
 import { Response } from '@angular/http';
 import { CompositionFile } from '../models/composition-file';
@@ -12,7 +13,7 @@ export class FileService {
 
   getFiles(): Observable<CompositionFile[]> {
     return this.http.get('file/list')
-      .map((response: Array<Object>) => {
+      .pipe(map((response: Array<Object>) => {
         let files: CompositionFile[] = [];
 
         for (let file of response) {
@@ -20,13 +21,13 @@ export class FileService {
         }
 
         return files;
-      });
+      }));
   }
 
   deleteFile(file: CompositionFile): Observable<void> {
-    return this.http.post('file/delete?name=' + file.name + '&type=' + file.type, undefined).map((response: Response) => {
+    return this.http.post('file/delete?name=' + file.name + '&type=' + file.type, undefined).pipe(map((response: Response) => {
       return null;
-    });
+    }));
   }
 
 }

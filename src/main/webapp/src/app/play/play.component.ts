@@ -7,14 +7,12 @@ import { Set } from './../models/set';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { State } from '../models/state';
 import { TransportService } from '../services/transport.service';
-import { Observable } from 'rxjs/Observable';
-import { Subscription } from 'rxjs/Subscription';
+import { Subscription, timer } from 'rxjs';
+import { map, finalize, catchError } from 'rxjs/operators';
 import { ToastGeneralErrorService } from '../services/toast-general-error.service';
 import { ActivityMidiService } from '../services/activity-midi.service';
 import { ActivityMidi } from '../models/activity-midi';
-
 import { SettingsService } from '../services/settings.service';
-import { Settings } from '../models/settings';
 import { ActivityAudioService } from '../services/activity-audio.service';
 import { ActivityAudio } from '../models/activity-audio';
 import { ActivityAudioBus } from '../models/activity-audio-bus';
@@ -74,7 +72,7 @@ export class PlayComponent implements OnInit, OnDestroy {
   }
 
   private loadSettings() {
-    this.settingsService.getSettings().map(settings => {
+    this.settingsService.getSettings().pipe(map(settings => {
       this.activityAudio = new ActivityAudio();
 
       for (let audioBus of settings.audioBusList) {
@@ -88,7 +86,7 @@ export class PlayComponent implements OnInit, OnDestroy {
           activityAudioBus.activityAudioChannelList.push(activityAudioChannel);
         }
       }
-    }).subscribe();
+    })).subscribe();
   }
 
   resetChannelVolumes() {
@@ -201,9 +199,9 @@ export class PlayComponent implements OnInit, OnDestroy {
   }
 
   private loadAllSets() {
-    this.compositionService.getSets().map(result => {
+    this.compositionService.getSets().pipe(map(result => {
       this.sets = result;
-    }).subscribe();
+    })).subscribe();
   }
 
   private updateTotalDuration() {
@@ -220,9 +218,9 @@ export class PlayComponent implements OnInit, OnDestroy {
     // Load the current set
     this.loadingSet = true;
 
-    this.compositionService.getCurrentSet(true).finally(() => {
+    this.compositionService.getCurrentSet(true).pipe(finalize(() => {
       this.loadingSet = false;
-    }).subscribe((set: Set) => {
+    })).subscribe((set: Set) => {
       this.currentSet = undefined;
 
       if (set) {
@@ -290,7 +288,7 @@ export class PlayComponent implements OnInit, OnDestroy {
       // Save the last time, we started the composition. Don't use device time, as it may be wrong.
       this.lastPlayTime = new Date();
 
-      let playUpdater = Observable.timer(0, 10);
+      let playUpdater = timer(0, 10);
       this.playUpdateSubscription = playUpdater.subscribe(() => {
         let currentTime = new Date();
         let positionMillis = currentTime.getTime() - this.lastPlayTime.getTime() + this.currentState.positionMillis;
@@ -339,10 +337,10 @@ export class PlayComponent implements OnInit, OnDestroy {
   play() {
     this.currentState.playState = 'LOADING';
     this.transportService.play()
-      .catch((err) => {
+      .pipe(catchError((err) => {
         this.stop();
         return this.toastGeneralErrorService.show(err);
-      })
+      }))
       .subscribe();
   }
 

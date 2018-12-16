@@ -1,8 +1,7 @@
 import { MidiRouting } from './../models/midi-routing';
 import { Component, OnInit } from '@angular/core';
-import { BsModalService } from 'ngx-bootstrap/modal';
 import { BsModalRef } from 'ngx-bootstrap';
-import { Subject } from 'rxjs/Subject';
+import { Subject } from 'rxjs';
 import { RemoteDevice } from '../models/remote-device';
 import { SettingsService } from '../services/settings.service';
 

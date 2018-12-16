@@ -2,8 +2,8 @@ import { AudioDevice } from './../../models/audio-device';
 import { Settings } from './../../models/settings';
 import { SettingsService } from './../../services/settings.service';
 import { Component, OnInit } from '@angular/core';
-import { OperatingSystemInformation } from '../../models/operating-system-information';
 import { OperatingSystemInformationService } from '../../services/operating-system-information.service';
+import { map } from "rxjs/operators";
 
 @Component({
   selector: 'app-settings-audio',
@@ -36,13 +36,13 @@ export class SettingsAudioComponent implements OnInit {
   }
 
   private loadSettings() {
-    this.settingsService.getSettings().map(result => {
+    this.settingsService.getSettings().pipe(map(result => {
       this.settings = result;
 
       this.settingsService.getAudioDevices().subscribe((response) => {
         this.audioDeviceList = response;
       });
-    }).subscribe();
+    })).subscribe();
   }
 
   ngOnInit() {

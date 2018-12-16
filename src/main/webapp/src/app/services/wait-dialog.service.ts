@@ -1,8 +1,8 @@
-import { Observable } from 'rxjs/Observable';
 import { TranslateService } from '@ngx-translate/core';
 import { BsModalService } from 'ngx-bootstrap/modal';
 import { Injectable } from '@angular/core';
 import { WaitDialogComponent } from '../wait-dialog/wait-dialog.component';
+import { map } from 'rxjs/operators';
 
 @Injectable()
 export class WaitDialogService {
@@ -14,10 +14,10 @@ export class WaitDialogService {
 
   // Show a wait dialog
   show(message: string): void {
-    this.translateService.get(message).map(result => {
+    this.translateService.get(message).pipe(map(result => {
       let fileDialog = this.modalService.show(WaitDialogComponent, { keyboard: false, ignoreBackdropClick: true });
       (<WaitDialogComponent>fileDialog.content).message = result;
-    }).subscribe();
+    })).subscribe();
   }
 
 }

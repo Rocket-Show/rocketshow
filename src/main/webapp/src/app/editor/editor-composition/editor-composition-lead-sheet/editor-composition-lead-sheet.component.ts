@@ -1,9 +1,10 @@
 import { TranslateService } from '@ngx-translate/core';
 import { DropzoneConfigInterface } from 'ngx-dropzone-wrapper/dist/lib/dropzone.interfaces';
 import { AppHttpInterceptor } from './../../../app-http-interceptor/app-http-interceptor';
-import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
+import { BsModalRef } from 'ngx-bootstrap';
 import { Composition } from './../../../models/composition';
-import { Subject } from 'rxjs/Subject';
+import { Subject } from 'rxjs';
+import { map } from "rxjs/operators";
 import { Component, OnInit } from '@angular/core';
 
 @Component({
@@ -49,9 +50,9 @@ export class EditorCompositionLeadSheetComponent implements OnInit {
       `
     };
 
-    this.translateService.get('editor.dropzone-message').map(result => {
+    this.translateService.get('editor.dropzone-message').pipe(map(result => {
       this.uploadMessage = '<h3 class="mb-0"><i class="fa fa-cloud-upload"></i></h3>' + result;
-    }).subscribe();
+    })).subscribe();
   }
 
   ngOnInit() {

@@ -3,6 +3,7 @@ import { SettingsService } from './../services/settings.service';
 import { Settings } from './../models/settings';
 import { RemoteDevice } from './../models/remote-device';
 import { Component, OnInit, Input } from '@angular/core';
+import { map } from "rxjs/operators";
 
 @Component({
   selector: 'app-remote-device-selection',
@@ -26,9 +27,9 @@ export class RemoteDeviceSelectionComponent implements OnInit {
   }
 
   private loadSettings() {
-    this.settingsService.getSettings().map(result => {
+    this.settingsService.getSettings().pipe(map(result => {
       this.settings = result;
-    }).subscribe();
+    })).subscribe();
   }
 
   ngOnInit() {

@@ -1,8 +1,9 @@
 import { StateService } from './../services/state.service';
 import { UpdateService } from './../services/update.service';
-import { Subject } from 'rxjs/Subject';
+import { Subject } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { Component, OnInit } from '@angular/core';
-import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
+import { BsModalRef } from 'ngx-bootstrap';
 import { State } from '../models/state';
 import { Version } from '../models/version';
 
@@ -73,10 +74,10 @@ export class UpdateDialogComponent implements OnInit {
     this.errorRetreiveRemoteVersion = false;
     this.remoteVersionNewer = false;
 
-    this.updateService.getRemoteVersion().catch(() => {
+    this.updateService.getRemoteVersion().pipe(catchError(() => {
       this.errorRetreiveRemoteVersion = true;
       return undefined;
-    })
+    }))
       .subscribe((version: Version) => {
         this.remoteVersion = version;
 

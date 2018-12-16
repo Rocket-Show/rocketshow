@@ -3,13 +3,12 @@ import { TranslateService } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
 import { CompositionService } from './../../services/composition.service';
 import { Composition } from './../../models/composition';
-import { RemoteDevice } from './../../models/remote-device';
 import { MidiControl } from './../../models/midi-control';
-import { Subject } from 'rxjs/Subject';
 import { SettingsService } from './../../services/settings.service';
 import { MidiDevice } from './../../models/midi-device';
 import { Component, OnInit } from '@angular/core';
 import { Settings } from '../../models/settings';
+import { map } from "rxjs/operators";
 
 @Component({
   selector: 'app-settings-midi',
@@ -191,7 +190,7 @@ export class SettingsMidiComponent implements OnInit {
   }
 
   private loadSettings() {
-    this.settingsService.getSettings().map(result => {
+    this.settingsService.getSettings().pipe(map(result => {
       this.settings = result;
 
       this.settingsService.getMidiInDevices().subscribe((response) => {
@@ -201,7 +200,7 @@ export class SettingsMidiComponent implements OnInit {
       this.settingsService.getMidiOutDevices().subscribe((response) => {
         this.midiOutDevices = response;
       });
-    }).subscribe();
+    })).subscribe();
   }
 
   ngOnInit() {

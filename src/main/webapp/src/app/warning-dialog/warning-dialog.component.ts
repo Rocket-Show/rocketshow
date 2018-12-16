@@ -1,5 +1,5 @@
-import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
-import { Subject } from 'rxjs/Subject';
+import { BsModalRef } from 'ngx-bootstrap';
+import { Subject } from 'rxjs';
 import { Component, OnInit } from '@angular/core';
 
 @Component({

@@ -1,6 +1,5 @@
 import { LeadSheetService } from './../services/lead-sheet.service';
-import { Subscription } from 'rxjs/Subscription';
-import { Observable } from 'rxjs/Rx';
+import { Subscription, timer } from 'rxjs';
 import { State } from './../models/state';
 import { StateService } from './../services/state.service';
 import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
@@ -89,7 +88,7 @@ export class LeadSheetComponent implements OnInit {
       // Save the last time, we started the composition. Don't use device time, as it may be wrong.
       this.lastPlayTime = new Date();
 
-      let playUpdater = Observable.timer(0, 10);
+      let playUpdater = timer(0, 10);
       this.playUpdateSubscription = playUpdater.subscribe(() => {
         this.update();
       });

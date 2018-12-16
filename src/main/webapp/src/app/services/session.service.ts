@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs/Observable';
+import { Observable, of } from 'rxjs';
+import { map } from "rxjs/operators";
 import { Injectable } from '@angular/core';
 import { Session } from './../models/session';
 
@@ -18,7 +19,7 @@ export class SessionService {
     }
 
     if (this.session) {
-      return Observable.of(this.session);
+      return of(this.session);
     }
 
     if(this.observable) {
@@ -26,12 +27,12 @@ export class SessionService {
     }
 
     this.observable = this.http.get('session')
-    .map(result => {
+    .pipe(map(result => {
       this.session = new Session(result);
       this.observable = undefined;
 
       return this.session;
-    });
+    }));
 
     return this.observable;
   }

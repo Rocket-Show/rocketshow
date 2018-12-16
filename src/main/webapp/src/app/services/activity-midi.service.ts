@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { $WebSocket, WebSocketConfig } from 'angular2-websocket/angular2-websocket';
 import { Subject } from 'rxjs';
-import * as Rx from 'rxjs/Rx';
 import { HttpClient } from '@angular/common/http';
 import { ActivityMidi } from '../models/activity-midi';
 import { environment } from '../../environments/environment';
@@ -11,7 +10,7 @@ import { environment } from '../../environments/environment';
 })
 export class ActivityMidiService {
 
-  public subject: Subject<ActivityMidi> = new Rx.Subject();
+  public subject: Subject<ActivityMidi> = new Subject();
 
   // The websocket endpoint url
   private wsUrl: string;

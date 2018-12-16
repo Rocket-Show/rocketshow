@@ -10,7 +10,8 @@ import { TranslateService } from '@ngx-translate/core';
 import { CompositionFile } from './../../../models/composition-file';
 import { Component, OnInit } from '@angular/core';
 import { BsModalRef } from 'ngx-bootstrap';
-import { Subject } from 'rxjs/Subject';
+import { Subject } from 'rxjs';
+import { map, catchError, finalize } from "rxjs/operators";
 import { Composition } from '../../../models/composition';
 import { DropzoneConfigInterface } from 'ngx-dropzone-wrapper/dist/lib/dropzone.interfaces';
 
@@ -73,36 +74,36 @@ export class EditorCompositionFileComponent implements OnInit {
       `
     };
 
-    this.translateService.get('editor.dropzone-message').map(result => {
+    this.translateService.get('editor.dropzone-message').pipe(map(result => {
       this.uploadMessage = '<h3 class="mb-0"><i class="fa fa-cloud-upload"></i></h3>' + result;
-    }).subscribe();
+    })).subscribe();
 
     this.loadFiles();
     this.loadDiskSpace();
   }
 
   private loadDiskSpace() {
-    this.diskSpaceService.getDiskSpace().map(diskSpace => {
+    this.diskSpaceService.getDiskSpace().pipe(map(diskSpace => {
       this.diskSpaceUsedGB = Math.round(diskSpace.usedMB / 10) / 100;
       this.diskSpaceAvailableGB = Math.round(diskSpace.availableMB / 10) / 100;
 
       if(diskSpace.usedMB != 0) {
         this.diskSpacePercentage = Math.round(diskSpace.availableMB / diskSpace.usedMB);
       }
-    }).subscribe();
+    })).subscribe();
   }
 
   private loadSettings() {
-    this.settingsService.getSettings().map(result => {
+    this.settingsService.getSettings().pipe(map(result => {
       this.settings = result;
-    }).subscribe();
+    })).subscribe();
   }
 
   private loadFiles() {
-    this.fileService.getFiles().map(result => {
+    this.fileService.getFiles().pipe(map(result => {
       this.existingFiles = result;
       this.filterExistingFiles();
-    }).subscribe();
+    })).subscribe();
   }
 
   ngOnInit() {
@@ -184,14 +185,14 @@ export class EditorCompositionFileComponent implements OnInit {
   }
 
   deleteFile(existingFile: CompositionFile) {
-    this.warningDialogService.show('editor.warning-delete-file').map(result => {
+    this.warningDialogService.show('editor.warning-delete-file').pipe(map(result => {
       if (result) {
         this.fileService.deleteFile(existingFile).subscribe(() => {
           this.loadFiles();
           this.loadDiskSpace();
         });
       }
-    }).subscribe();
+    })).subscribe();
   }
 
 }

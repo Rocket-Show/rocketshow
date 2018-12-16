@@ -7,7 +7,8 @@ import { CompositionService } from './../../services/composition.service';
 import { Component, OnInit } from '@angular/core';
 import { BsModalService } from 'ngx-bootstrap/modal';
 import { PendingChangesDialogService } from '../../services/pending-changes-dialog.service';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
+import { map, catchError, finalize } from "rxjs/operators";
 import { ToastrService } from 'ngx-toastr';
 import { TranslateService } from '@ngx-translate/core';
 import { CompositionVideoFile } from '../../models/composition-video-file';
@@ -98,7 +99,7 @@ export class EditorCompositionComponent implements OnInit {
       return;
     }
 
-    this.checkPendingChanges().map(result => {
+    this.checkPendingChanges().pipe(map(result => {
       if (result) {
         // Load the details of the selected composition
         this.loadingComposition = true;
@@ -110,7 +111,7 @@ export class EditorCompositionComponent implements OnInit {
           this.loadingComposition = false;
         });
       }
-    }).subscribe();
+    })).subscribe();
   }
 
   // Unselect a composition
@@ -128,7 +129,7 @@ export class EditorCompositionComponent implements OnInit {
   private saveApi(composition: Composition) {
     this.savingComposition = true;
 
-    this.compositionService.saveComposition(composition).map(() => {
+    this.compositionService.saveComposition(composition).pipe(map(() => {
       this.loadCompositions();
       this.copyInitialComposition();
 
@@ -137,13 +138,13 @@ export class EditorCompositionComponent implements OnInit {
       this.translateService.get(['editor.toast-composition-save-success', 'editor.toast-save-success-title']).subscribe(result => {
         this.toastrService.success(result['editor.toast-composition-save-success'], result['editor.toast-save-success-title']);
       });
-    })
-      .catch((err) => {
+    }),
+      catchError((err) => {
         return this.toastGeneralErrorService.show(err);
       })
-      .finally(() => {
+      ,finalize(() => {
         this.savingComposition = false;
-      })
+      }))
       .subscribe();
   }
 
@@ -157,12 +158,12 @@ export class EditorCompositionComponent implements OnInit {
 
     // Delete the old composition, if the name changed
     if (this.initialComposition && this.initialComposition.name && this.initialComposition.name != composition.name && this.initialComposition.name.length > 0) {
-      this.compositionService.deleteComposition(this.initialComposition.name).map(() => {
+      this.compositionService.deleteComposition(this.initialComposition.name).pipe(map(() => {
         this.saveApi(composition);
       })
-        .catch((err) => {
+        ,catchError((err) => {
           return this.toastGeneralErrorService.show(err);
-        })
+        }))
         .subscribe();
     } else {
       this.saveApi(composition);
@@ -171,9 +172,9 @@ export class EditorCompositionComponent implements OnInit {
 
   // Delete the composition
   delete(composition: Composition) {
-    this.warningDialogService.show('editor.warning-delete-composition').map(result => {
+    this.warningDialogService.show('editor.warning-delete-composition').pipe(map(result => {
       if (result) {
-        this.compositionService.deleteComposition(this.initialComposition.name).map(() => {
+        this.compositionService.deleteComposition(this.initialComposition.name).pipe(map(() => {
           this.unselect();
           this.loadCompositions();
 
@@ -183,12 +184,12 @@ export class EditorCompositionComponent implements OnInit {
             this.toastrService.success(result['editor.toast-composition-delete-success'], result['editor.toast-delete-success-title']);
           });
         })
-          .catch((err) => {
+          ,catchError((err) => {
             return this.toastGeneralErrorService.show(err);
-          })
+          }))
           .subscribe();
       }
-    }).subscribe();
+    })).subscribe();
   }
 
   // Add a new file to the composition

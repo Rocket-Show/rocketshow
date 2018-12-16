@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
-import { Subject } from 'rxjs/Subject';
+import { Subject, Observable, of } from 'rxjs';
+import { map } from "rxjs/operators";
 import { Composition } from './../models/composition';
-import { Observable } from 'rxjs/Rx';
 import { Set } from './../models/set';
 import { Injectable } from '@angular/core';
 
@@ -20,23 +20,23 @@ export class CompositionService {
 
   getCurrentSet(clearCache: boolean = false): Observable<Set> {
     if (this.currentSet && !clearCache) {
-      return Observable.of(this.currentSet);
+      return of(this.currentSet);
     }
 
     return this.http.get('set')
-      .map(response => {
+      .pipe(map(response => {
         this.currentSet = new Set(response);
         return this.currentSet;
-      });
+      }));
   }
 
   getCompositions(clearCache: boolean = false): Observable<Composition[]> {
     if (this.compositions && !clearCache) {
-      return Observable.of(this.compositions);
+      return of(this.compositions);
     }
 
     return this.http.get('composition/list')
-      .map((response: Array<Object>) => {
+      .pipe(map((response: Array<Object>) => {
         this.compositions = [];
 
         for (let composition of response) {
@@ -44,16 +44,16 @@ export class CompositionService {
         }
 
         return this.compositions;
-      });
+      }));
   }
 
   getSets(clearCache: boolean = false): Observable<Set[]> {
     if (this.sets && !clearCache) {
-      return Observable.of(this.sets);
+      return of(this.sets);
     }
 
     return this.http.get('set/list')
-      .map((response: Array<Object>) => {
+      .pipe(map((response: Array<Object>) => {
         this.sets = [];
 
         for (let set of response) {
@@ -61,14 +61,14 @@ export class CompositionService {
         }
 
         return this.sets;
-      });
+      }));
   }
 
   getComposition(compositionName: string): Observable<Composition> {
     return this.http.get('composition?name=' + compositionName)
-      .map(response => {
+      .pipe(map(response => {
         return new Composition(response);
-      });
+      }));
   }
 
   // Load a set on the device
@@ -79,9 +79,9 @@ export class CompositionService {
   // Get a set from the device
   getSet(setName: string): Observable<Set> {
     return this.http.get('set/details?name=' + setName)
-      .map(response => {
+      .pipe(map(response => {
         return new Set(response);
-      });
+      }));
   }
 
   saveComposition(composition: Composition): Observable<Object> {

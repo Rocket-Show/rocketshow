@@ -8,7 +8,7 @@
 apt-get update
 apt-get upgrade
 
-apt-get -y install oracle-java8-jdk fbi ola mplayer libnss-mdns dnsmasq hostapd authbind zip
+apt-get -y install default-jre fbi ola libnss-mdns dnsmasq hostapd authbind
 
 # Install the gstreamer packages, built by Rocket Show for the Raspberry Pi to make 
 # accelerated video playback on Raspberry Pi possible. The versions on the official repos did not work until
@@ -86,87 +86,13 @@ wget https://rocketshow.net/install/directory.tar.gz
 tar xvzf ./directory.tar.gz
 rm directory.tar.gz
 
-# Create the directories (only, if not included in the initial directory seed)
-cd /opt/rocketshow
-mkdir -p bin
-mkdir -p log
-mkdir -p media
-mkdir -p media/midi
-mkdir -p media/audio
-mkdir -p media/video
-mkdir -p sets
-mkdir -p compositions
-mkdir -p tomcat
-mkdir -p update
-
 # Add execution permissions on the update script
 chmod +x /opt/rocketshow/update.sh
-
-# Install Tomcat (credits to https://wolfpaulus.com/java/tomcat-jessie/)
-mkdir -p ~/tmp
-cd ~/tmp
-wget https://rocketshow.net/install/tomcat/apache-tomcat-8.5.24.tar.gz
-tar xvzf ./apache-tomcat-8.5.24.tar.gz
-rm apache-tomcat-8.5.24.tar.gz
-mv ./apache-tomcat-8.5.24 ./tomcat
-mv tomcat /opt/rocketshow
-chown -R rocketshow:rocketshow /opt/rocketshow/tomcat/*
-chmod +x /opt/rocketshow/tomcat/bin/*.sh
-
-# Create the init script for tomcat
-cat <<'EOF' >/etc/init.d/tomcat
-#!/bin/bash
-#
-### BEGIN INIT INFO
-# Provides:        tomcat
-# Required-Start:  $network
-# Required-Stop:   $network
-# Default-Start:   2 3 4 5
-# Default-Stop:    0 1 6
-# Short-Description: Start/Stop Tomcat server
-### END INIT INFO
- 
-PATH=/sbin:/bin:/usr/sbin:/usr/bin
- 
-start() {
- /bin/su - rocketshow -c /opt/rocketshow/tomcat/bin/startup.sh
-}
- 
-stop() {
- /bin/su - rocketshow -c /opt/rocketshow/tomcat/bin/shutdown.sh 
-}
- 
-case $1 in
-  start|stop) $1;;
-  restart) stop; start;;
-  *) echo "Run as $0 &lt;start|stop|restart&gt;"; exit 1;;
-esac
-EOF
-
-chmod 755 /etc/init.d/tomcat
-update-rc.d tomcat defaults
-
-# Get Tomcat some memory (add this line at the beginning)
-sed -i '2iCATALINA_OPTS="-Djava.awt.headless=true -Dfile.encoding=UTF-8 -server -Xms500m -Xmx500m"\n' /opt/rocketshow/tomcat/bin/catalina.sh
-
-# Speedup tomcat start (add this line at the beginning)
-sed -i '2iJAVA_OPTS="-Djava.security.egd=file:/dev/urandom"\n' /opt/rocketshow/tomcat/bin/catalina.sh
-
-# Set default port to 80
-touch /etc/authbind/byport/{443,80}
-chmod 500 /etc/authbind/byport/{443,80}
-chown rocketshow:rocketshow /etc/authbind/byport/{443,80}
-
-sed -i 's/8080/80/g' /opt/rocketshow/tomcat/conf/server.xml
-sed -i 's/8443/443/g' /opt/rocketshow/tomcat/conf/server.xml
-
-# Make tomcat use authbind
-sed -i 's/exec "$PRGDIR"/exec authbind --deep "$PRGDIR"/g' /opt/rocketshow/tomcat/bin/startup.sh
 
 # Install an USB interface reset according to
 # https://raspberrypi.stackexchange.com/questions/9264/how-do-i-reset-a-usb-device-using-a-script
 cd /opt/rocketshow/bin
-chmod +x usbreset
+chmod +x raspberry-usbreset
 
 # Overclock the raspberry to sustain streams without underruns
 # - Set more memory for the GPU to play larger video files with omx
@@ -177,9 +103,6 @@ sed -i '1i# ROCKETSHOWSTART\ngpu_mem=256\nforce_turbo=1\nboot_delay=1\ndtparam=s
 
 # Set rocketshows nice priority to 10
 sed -i '1irocketshow soft priority 10' /etc/security/limits.conf
-
-# Remove the default webapps
-rm -rf /opt/rocketshow/tomcat/webapps/*
 
 # Download current war and versioninfo
 cd /opt/rocketshow/tomcat/webapps

@@ -3,7 +3,8 @@ import { TranslateService } from '@ngx-translate/core';
 import { BsModalService } from 'ngx-bootstrap/modal';
 import { CompositionService } from './../../services/composition.service';
 import { Set } from './../../models/set';
-import { Observable } from 'rxjs/Rx';
+import { Observable } from 'rxjs';
+import { map, catchError, finalize } from "rxjs/operators";
 import { PendingChangesDialogService } from './../../services/pending-changes-dialog.service';
 import { Component, OnInit } from '@angular/core';
 import { WarningDialogService } from '../../services/warning-dialog.service';
@@ -126,7 +127,7 @@ export class EditorSetComponent implements OnInit {
       return;
     }
 
-    this.checkPendingChanges().map(result => {
+    this.checkPendingChanges().pipe(map(result => {
       if (result) {
         // Load the details of the selected set
         this.loadingSet = true;
@@ -138,7 +139,7 @@ export class EditorSetComponent implements OnInit {
           this.loadingSet = false;
         });
       }
-    }).subscribe();
+    })).subscribe();
   }
 
   // Unselect a set
@@ -156,20 +157,20 @@ export class EditorSetComponent implements OnInit {
   private saveApi(set: Set) {
     this.savingSet = true;
 
-    this.compositionService.saveSet(set).map(() => {
+    this.compositionService.saveSet(set).pipe(map(() => {
       this.loadSets();
       this.copyInitialSet();
 
       this.translateService.get(['editor.toast-set-save-success', 'editor.toast-save-success-title']).subscribe(result => {
         this.toastrService.success(result['editor.toast-set-save-success'], result['editor.toast-save-success-title']);
       });
-    })
-    .catch((err) => {
+    }),
+    catchError((err) => {
       return this.toastGeneralErrorService.show(err);
-    })
-    .finally(() => {
+    }),
+    finalize(() => {
       this.savingSet = false;
-    })
+    }))
     .subscribe();
   }
 
@@ -183,12 +184,12 @@ export class EditorSetComponent implements OnInit {
 
     // Delete the old set, if the name changed
     if (this.initialSet && this.initialSet.name && this.initialSet.name != set.name && this.initialSet.name.length > 0) {
-      this.compositionService.deleteSet(this.initialSet.name).map(() => {
+      this.compositionService.deleteSet(this.initialSet.name).pipe(map(() => {
         this.saveApi(set);
       })
-      .catch((err) => {
+      ,catchError((err) => {
         return this.toastGeneralErrorService.show(err);
-      })
+      }))
       .subscribe();
     } else {
       this.saveApi(set);
@@ -197,22 +198,22 @@ export class EditorSetComponent implements OnInit {
 
   // Delete the set
   delete(set: Set) {
-    this.warningDialogService.show('editor.warning-delete-set').map(result => {
+    this.warningDialogService.show('editor.warning-delete-set').pipe(map(result => {
       if (result) {
-        this.compositionService.deleteSet(this.initialSet.name).map(() => {
+        this.compositionService.deleteSet(this.initialSet.name).pipe(map(() => {
           this.unselect();
           this.loadSets();
 
           this.translateService.get(['editor.toast-set-delete-success', 'editor.toast-delete-success-title']).subscribe(result => {
             this.toastrService.success(result['editor.toast-set-delete-success'], result['editor.toast-delete-success-title']);
           });
-        })
-        .catch((err) => {
+        }),
+        catchError((err) => {
           return this.toastGeneralErrorService.show(err);
-        })
+        }))
         .subscribe();
       }
-    }).subscribe();
+    })).subscribe();
   }
 
   showAvailableComposition(composition: Composition): boolean {

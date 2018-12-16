@@ -1,6 +1,7 @@
 import { Settings } from './../../models/settings';
 import { SettingsService } from './../../services/settings.service';
 import { Component, OnInit } from '@angular/core';
+import { map } from "rxjs/operators";
 
 @Component({
   selector: 'app-settings-dmx',
@@ -16,9 +17,9 @@ export class SettingsDmxComponent implements OnInit {
   ) { }
 
   private loadSettings() {
-    this.settingsService.getSettings().map(result => {
+    this.settingsService.getSettings().pipe(map(result => {
       this.settings = result;
-    }).subscribe();
+    })).subscribe();
   }
 
   ngOnInit() {

@@ -4,7 +4,7 @@ import { CompositionService } from './services/composition.service';
 import { Component, OnInit } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { Router, NavigationEnd } from '@angular/router';
-import { Observable } from 'rxjs/Rx';
+import { Observable, forkJoin } from 'rxjs';
 import { SessionService } from './services/session.service';
 import { SettingsService } from './services/settings.service';
 import { Settings } from './models/settings';
@@ -70,7 +70,7 @@ export class AppComponent implements OnInit {
     });
 
     // Load some required data
-    Observable.forkJoin(
+    forkJoin(
       this.stateService.getState(),
       this.compositionService.getCompositions(),
       this.compositionService.getSets(),

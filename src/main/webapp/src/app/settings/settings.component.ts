@@ -3,7 +3,8 @@ import { AudioDevice } from './../models/audio-device';
 import { SettingsPersonalService } from './../services/settings-personal.service';
 import { ToastGeneralErrorService } from './../services/toast-general-error.service';
 import { Component, OnInit } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
+import { Observable, forkJoin } from 'rxjs';
+import { map, flatMap, catchError, finalize } from 'rxjs/operators';
 import { Settings } from '../models/settings';
 import { SettingsService } from '../services/settings.service';
 import { PendingChangesDialogService } from '../services/pending-changes-dialog.service';
@@ -59,45 +60,49 @@ export class SettingsComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.settingsService.getSettings(true).map(result => {
-      Observable.forkJoin(
+    this.settingsService.getSettings(true).pipe(map(result => {
+      forkJoin(
         this.settingsService.getMidiInDevices(),
         this.settingsService.getMidiOutDevices(),
         this.settingsService.getAudioDevices()
-      ).subscribe((devices) => {
+      ).pipe(map(data => {
+        let midiInDevices = <MidiDevice[]>data[0];
+        let midiOutDevices = <MidiDevice[]>data[1];
+        let audioDevices = <AudioDevice[]>data[2];
+
         // Set the initial devices where none are set
-        if((!result.midiInDevice || result.midiInDevice && result.midiInDevice.id == 0) && devices[0].length > 0) {
-          result.midiInDevice = devices[0][0];
+        if((!result.midiInDevice || result.midiInDevice && result.midiInDevice.id == 0) && midiInDevices.length > 0) {
+          result.midiInDevice = midiInDevices[0];
         }
 
-        if((!result.midiOutDevice || result.midiOutDevice && result.midiOutDevice.id == 0) && devices[1].length > 0) {
-          result.midiOutDevice = devices[1][0];
+        if((!result.midiOutDevice || result.midiOutDevice && result.midiOutDevice.id == 0) && midiOutDevices.length > 0) {
+          result.midiOutDevice = midiOutDevices[0];
         }
 
-        if((!result.audioDevice || result.audioDevice && result.audioDevice.id == 0) && devices[2].length > 0) {
-          result.audioDevice = devices[2][0];
+        if((!result.audioDevice || result.audioDevice && result.audioDevice.id == 0) && audioDevices.length > 0) {
+          result.audioDevice = audioDevices[0];
         }
 
         // Remove/change the devices, if they current ones are not available anymore
-        if(result.midiInDevice && !this.midiDeviceAvailable(result.midiInDevice, devices[0])) {
-          if(devices[0].length > 0) {
-            result.midiInDevice = devices[0][0];
+        if(result.midiInDevice && !this.midiDeviceAvailable(result.midiInDevice, midiInDevices)) {
+          if(midiInDevices.length > 0) {
+            result.midiInDevice = midiInDevices[0];
           } else {
             result.midiInDevice = undefined;
           }
         }
 
-        if(result.midiOutDevice && !this.midiDeviceAvailable(result.midiOutDevice, devices[1])) {
-          if(devices[1].length > 0) {
-            result.midiOutDevice = devices[1][0];
+        if(result.midiOutDevice && !this.midiDeviceAvailable(result.midiOutDevice, midiOutDevices)) {
+          if(midiOutDevices.length > 0) {
+            result.midiOutDevice = midiOutDevices[0];
           } else {
             result.midiOutDevice = undefined;
           }
         }
         
-        if(result.audioDevice && !this.audioDeviceAvailable(result.audioDevice, devices[2])) {
-          if(devices[2].length > 0) {
-            result.audioDevice = devices[2][0];
+        if(result.audioDevice && !this.audioDeviceAvailable(result.audioDevice, audioDevices)) {
+          if(audioDevices.length > 0) {
+            result.audioDevice = audioDevices[0];
           } else {
             result.audioDevice = undefined;
           }
@@ -111,8 +116,8 @@ export class SettingsComponent implements OnInit {
         } else {
           this.finishInit(result);
         }
-      });
-    }).subscribe();
+      })).subscribe();
+    })).subscribe();
   }
 
   private copyInitialSettings(settings: Settings) {
@@ -120,20 +125,20 @@ export class SettingsComponent implements OnInit {
   }
 
   canDeactivate(): Observable<boolean> {
-    return this.settingsService.getSettings().flatMap(result => {
+    return this.settingsService.getSettings().pipe(flatMap(result => {
       return this.pendingChangesDialogService.check(this.initialSettings, result, 'settings.warning-settings-changes');
-    });
+    }));
   }
 
   discard() {
-    this.settingsService.getSettings(true).map(result => {
+    this.settingsService.getSettings(true).pipe(map(result => {
       this.copyInitialSettings(result);
       this.settingsService.settingsChanged.next();
 
       this.translateService.get(['settings.toast-discard-success', 'settings.toast-discard-success-title']).subscribe(result => {
         this.toastrService.success(result['settings.toast-discard-success'], result['settings.toast-discard-success-title']);
       });
-    }).subscribe();
+    })).subscribe();
 
     this.settingsPersonalService.getSettings(true);
     this.settingsPersonalService.settingsChanged.next();
@@ -150,7 +155,7 @@ export class SettingsComponent implements OnInit {
   save() {
     this.savingSettings = true;
 
-    this.settingsService.getSettings().map(result => {
+    this.settingsService.getSettings().pipe(map(result => {
       this.translateService.get(['intro.default-unit-name', 'settings.remote-device-name-placeholder']).subscribe((translations) => {
         // Save the personal settings
         this.settingsPersonalService.save(this.settingsPersonalService.getSettings());
@@ -183,7 +188,7 @@ export class SettingsComponent implements OnInit {
         }
 
         // Save the settings on the device
-        this.settingsService.saveSettings(result).map(() => {
+        this.settingsService.saveSettings(result).pipe(map(() => {
           this.copyInitialSettings(result);
           this.translateService.use(result.language);
 
@@ -192,16 +197,16 @@ export class SettingsComponent implements OnInit {
           this.translateService.get(['settings.toast-save-success', 'settings.toast-save-success-title']).subscribe(result => {
             this.toastrService.success(result['settings.toast-save-success'], result['settings.toast-save-success-title']);
           });
-        })
-          .catch((err) =>  {
+        }),
+          catchError((err) =>  {
             return this.toastGeneralErrorService.show(err);
           })
-          .finally(() => {
+          ,finalize(() => {
             this.savingSettings = false;
-          })
+          }))
           .subscribe();
       });
-    }).subscribe();
+    })).subscribe();
   }
   
 }

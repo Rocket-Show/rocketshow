@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { $WebSocket, WebSocketConfig } from 'angular2-websocket/angular2-websocket';
 import { Subject } from 'rxjs';
-import * as Rx from 'rxjs/Rx';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { SettingsService } from './settings.service';
@@ -12,7 +11,7 @@ import { ActivityAudio } from '../models/activity-audio';
 })
 export class ActivityAudioService {
 
-  public subject: Subject<ActivityAudio> = new Rx.Subject();
+  public subject: Subject<ActivityAudio> = new Subject();
 
   // The websocket endpoint url
   private wsUrl: string;

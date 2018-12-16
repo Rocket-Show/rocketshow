@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { Settings } from '../models/settings';
 import { SettingsService } from '../services/settings.service';
 import { TranslateService } from '@ngx-translate/core';
+import { map } from "rxjs/operators";
 
 @Component({
   selector: 'app-intro',
@@ -39,9 +40,9 @@ export class IntroComponent implements OnInit {
     private sessionService: SessionService) { }
 
   ngOnInit() {
-    this.settingsService.getSettings().map(result => {
+    this.settingsService.getSettings().pipe(map(result => {
       this.settings = result;
-    }).subscribe();
+    })).subscribe();
   }
 
   switchLanguage(language: string) {

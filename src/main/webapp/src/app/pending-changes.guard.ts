@@ -1,4 +1,4 @@
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 import {CanDeactivate} from '@angular/router';
 
 export interface ComponentCanDeactivate {

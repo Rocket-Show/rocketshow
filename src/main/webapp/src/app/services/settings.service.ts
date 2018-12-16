@@ -3,7 +3,8 @@ import { AudioBus } from './../models/audio-bus';
 import { TranslateService } from '@ngx-translate/core';
 import { AudioDevice } from './../models/audio-device';
 import { MidiDevice } from './../models/midi-device';
-import { Subject, Observable } from 'rxjs/Rx';
+import { Subject, Observable, of } from 'rxjs';
+import { map } from "rxjs/operators";
 import { Settings } from './../models/settings';
 import { Injectable } from '@angular/core';
 import { Language } from '../models/language';
@@ -42,7 +43,7 @@ export class SettingsService {
     }
 
     if (this.settings) {
-      return Observable.of(this.settings);
+      return of(this.settings);
     }
 
     if (this.observable) {
@@ -50,14 +51,14 @@ export class SettingsService {
     }
 
     this.observable = this.http.get('system/settings')
-      .map(response => {
+      .pipe(map(response => {
         if (!this.settings) {
           this.settings = new Settings(response);
         }
         this.observable = undefined;
 
         return this.settings;
-      });
+      }));
 
     return this.observable;
   }
@@ -68,7 +69,7 @@ export class SettingsService {
 
   private apiGetMidiDevices(url: string) {
     return this.http.get('midi/' + url)
-      .map((response: Array<Object>) => {
+      .pipe(map((response: Array<Object>) => {
         let deviceList: MidiDevice[] = [];
 
         for (let midiDevice of response) {
@@ -76,7 +77,7 @@ export class SettingsService {
         }
 
         return deviceList;
-      });
+      }));
   }
 
   getMidiInDevices(): Observable<MidiDevice[]> {
@@ -89,7 +90,7 @@ export class SettingsService {
 
   getAudioDevices(): Observable<AudioDevice[]> {
     return this.http.get('audio/devices')
-      .map((response: Array<Object>) => {
+      .pipe(map((response: Array<Object>) => {
         let deviceList: AudioDevice[] = [];
 
         for (let audioDevice of response) {
@@ -97,15 +98,15 @@ export class SettingsService {
         }
 
         return deviceList;
-      });
+      }));
   }
 
   addAudioBus(settings: Settings): Observable<void> {
-    return this.translateService.get('settings.audio-bus-name-placeholder').map(result => {
+    return this.translateService.get('settings.audio-bus-name-placeholder').pipe(map(result => {
       let audioBus: AudioBus = new AudioBus();
       audioBus.name = result + ' ' + (settings.audioBusList.length + 1);
       settings.audioBusList.push(audioBus);
-    });
+    }));
   }
 
 }

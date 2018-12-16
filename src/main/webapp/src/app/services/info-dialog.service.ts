@@ -1,9 +1,9 @@
 import { InfoDialogComponent } from './../info-dialog/info-dialog.component';
-import { Observable } from 'rxjs/Observable';
+import { Observable, of } from 'rxjs';
+import { map, flatMap } from "rxjs/operators";
 import { TranslateService } from '@ngx-translate/core';
 import { Injectable } from '@angular/core';
-import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
-import { BsModalService } from 'ngx-bootstrap/modal/bs-modal.service';
+import { BsModalService } from 'ngx-bootstrap';
 
 @Injectable()
 export class InfoDialogService {
@@ -17,12 +17,12 @@ export class InfoDialogService {
   show(message: string): Observable<void> {
     let fileDialog
 
-    return this.translateService.get(message).map(result => {
+    return this.translateService.get(message).pipe(map(result => {
       fileDialog = this.modalService.show(InfoDialogComponent, { keyboard: true, ignoreBackdropClick: true });
       (<InfoDialogComponent>fileDialog.content).message = result;
-    }).flatMap(() => {
+    }),flatMap(() => {
       return (<InfoDialogComponent>fileDialog.content).onClose;
-    });
+    }));
   }
 
 }

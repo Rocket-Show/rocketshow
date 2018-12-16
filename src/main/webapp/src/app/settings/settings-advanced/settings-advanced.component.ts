@@ -1,4 +1,3 @@
-import { Response, ResponseContentType } from '@angular/http';
 import { InfoDialogService } from './../../services/info-dialog.service';
 import { WaitDialogService } from './../../services/wait-dialog.service';
 import { StateService } from './../../services/state.service';
@@ -11,6 +10,7 @@ import { saveAs } from 'file-saver/FileSaver';
 import { HttpClient } from '@angular/common/http';
 import { OperatingSystemInformation } from '../../models/operating-system-information';
 import { OperatingSystemInformationService } from '../../services/operating-system-information.service';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-settings-advanced',
@@ -44,9 +44,9 @@ export class SettingsAdvancedComponent implements OnInit {
   }
 
   private loadSettings() {
-    this.settingsService.getSettings().map(result => {
+    this.settingsService.getSettings().pipe(map(result => {
       this.settings = result;
-    }).subscribe();
+    })).subscribe();
   }
 
   ngOnInit() {
@@ -62,21 +62,21 @@ export class SettingsAdvancedComponent implements OnInit {
         // -> the device has been resetted
         this.isResettingToFactory = false;
 
-        this.infoDialogService.show('settings.factory-reset-done').map(() => {
+        this.infoDialogService.show('settings.factory-reset-done').pipe(map(() => {
           location.reload();
-        }).subscribe();
+        })).subscribe();
       }
     });
   }
 
   factoryReset() {
-    this.warningDialogService.show('settings.warning-factory-reset').map(result => {
+    this.warningDialogService.show('settings.warning-factory-reset').pipe(map(result => {
       if (result) {
         this.waitDialogService.show('settings.wait-factory-reset');
         this.isResettingToFactory = true;
         this.http.post('system/factory-reset', undefined).subscribe();
       }
-    }).subscribe();
+    })).subscribe();
   }
 
   private downloadFile(blob: Blob) {

@@ -1,7 +1,6 @@
 import { RoutingDetailsComponent } from './../routing-details/routing-details.component';
-import { BsModalService } from 'ngx-bootstrap/modal/bs-modal.service';
+import { BsModalService } from 'ngx-bootstrap';
 import { MidiRouting } from './../models/midi-routing';
-import { CompositionMidiFile } from './../models/composition-midi-file';
 import { Component, OnInit, Input } from '@angular/core';
 
 @Component({

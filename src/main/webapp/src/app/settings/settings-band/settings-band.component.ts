@@ -3,6 +3,7 @@ import { Instrument } from './../../models/instrument';
 import { SettingsService } from './../../services/settings.service';
 import { Settings } from './../../models/settings';
 import { Component, OnInit } from '@angular/core';
+import { map } from "rxjs/operators";
 
 @Component({
   selector: 'app-settings-band',
@@ -19,9 +20,9 @@ export class SettingsBandComponent implements OnInit {
   ) { }
 
   private loadSettings() {
-    this.settingsService.getSettings().map(result => {
+    this.settingsService.getSettings().pipe(map(result => {
       this.settings = result;
-    }).subscribe();
+    })).subscribe();
   }
 
   ngOnInit() {

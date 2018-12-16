@@ -1,5 +1,6 @@
 import { DiskSpace } from './../models/disk-space';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
+import { map } from "rxjs/operators";
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
@@ -12,9 +13,9 @@ export class DiskSpaceService {
 
   getDiskSpace(): Observable<DiskSpace> {
     return this.http.get('system/disk-space')
-    .map(result => {
+    .pipe(map(result => {
       return new DiskSpace(result);
-    });
+    }));
   }
 
 }

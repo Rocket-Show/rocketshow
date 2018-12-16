@@ -9,6 +9,7 @@ import { SettingsService } from '../../services/settings.service';
 import { CompositionService } from '../../services/composition.service';
 import { Composition } from '../../models/composition';
 import { Version } from '../../models/version';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-settings-system',
@@ -32,9 +33,9 @@ export class SettingsSystemComponent implements OnInit {
     private modalService: BsModalService) { }
 
   private loadSettings() {
-    this.settingsService.getSettings().map(result => {
+    this.settingsService.getSettings().pipe(map(result => {
       this.settings = result;
-    }).subscribe();
+    })).subscribe();
   }
 
   ngOnInit() {
@@ -58,11 +59,11 @@ export class SettingsSystemComponent implements OnInit {
   }
 
   reboot() {
-    this.warningDialogService.show('settings.warning-reboot').map(result => {
+    this.warningDialogService.show('settings.warning-reboot').pipe(map(result => {
       if (result) {
         this.http.post('system/reboot', undefined).subscribe();
       }
-    }).subscribe();
+    })).subscribe();
   }
 
   checkVersion() {

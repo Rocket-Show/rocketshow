@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { $WebSocket, WebSocketConfig } from 'angular2-websocket/angular2-websocket';
-import * as Rx from 'rxjs/Rx';
-import { Observable, Subject } from 'rxjs/Rx';
+import { map } from "rxjs/operators";
+import { Observable, Subject } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { State } from '../models/state';
 import { HttpClient } from '@angular/common/http';
@@ -9,7 +9,7 @@ import { HttpClient } from '@angular/common/http';
 @Injectable()
 export class StateService {
 
-  public state: Subject<State> = new Rx.Subject();
+  public state: Subject<State> = new Subject();
   private currentState: State;
 
   // The websocket endpoint url
@@ -19,7 +19,7 @@ export class StateService {
   websocket: $WebSocket;
 
   connected: boolean = false;
-  public getsConnected: Subject<void> = new Rx.Subject();
+  public getsConnected: Subject<void> = new Subject();
 
   constructor(private http: HttpClient
   ) {
@@ -66,7 +66,7 @@ export class StateService {
 
   getState(): Observable<State> {
     return this.http.get('system/state')
-      .map(response => {
+      .pipe(map(response => {
         this.currentState = new State(response);
 
         if(!this.connected) {
@@ -76,7 +76,7 @@ export class StateService {
         this.connected = true;
 
         return this.currentState;
-      });
+      }));
   }
 
 }

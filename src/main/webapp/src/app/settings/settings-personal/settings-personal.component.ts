@@ -3,6 +3,7 @@ import { SettingsPersonal } from './../../models/settings-personal';
 import { SettingsPersonalService } from './../../services/settings-personal.service';
 import { Component, OnInit } from '@angular/core';
 import { Settings } from '../../models/settings';
+import { map } from "rxjs/operators";
 
 @Component({
   selector: 'app-settings-personal',
@@ -19,9 +20,9 @@ export class SettingsPersonalComponent implements OnInit {
   instrumentUuid: string;
 
   private loadSettings() {
-    this.settingsService.getSettings().map(result => {
+    this.settingsService.getSettings().pipe(map(result => {
       this.settings = result;
-    }).subscribe();
+    })).subscribe();
   }
 
   private loadSettingsPersonal() {

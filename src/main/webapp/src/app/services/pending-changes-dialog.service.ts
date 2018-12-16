@@ -1,5 +1,5 @@
 import { WarningDialogService } from './warning-dialog.service';
-import { Observable } from 'rxjs/Observable';
+import { Observable, of } from 'rxjs';
 import { BsModalService } from 'ngx-bootstrap/modal';
 import { Injectable } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
@@ -17,12 +17,12 @@ export class PendingChangesDialogService {
   check(objectOld: any, objectNew: any, message: string): Observable<boolean> {
     if(!objectOld) {
       // There is no old object (e.g. the user created a new one)
-      return Observable.of(true);
+      return of(true);
     }
 
     if(JSON.stringify(objectOld) === JSON.stringify(objectNew)) {
       // The two objects match (no changes detected)
-      return Observable.of(true);
+      return of(true);
     }
 
     return this.warningDialogService.show(message);
