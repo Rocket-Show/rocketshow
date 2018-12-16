@@ -9,6 +9,8 @@ import { WarningDialogService } from '../../services/warning-dialog.service';
 import { State } from '../../models/state';
 import { saveAs } from 'file-saver/FileSaver';
 import { HttpClient } from '@angular/common/http';
+import { OperatingSystemInformation } from '../../models/operating-system-information';
+import { OperatingSystemInformationService } from '../../services/operating-system-information.service';
 
 @Component({
   selector: 'app-settings-advanced',
@@ -19,6 +21,7 @@ export class SettingsAdvancedComponent implements OnInit {
 
   settings: Settings;
   private isResettingToFactory: boolean = false;
+  operatingSystemInformation: OperatingSystemInformation;
 
   loggingLevelList: string[] = [];
 
@@ -28,11 +31,16 @@ export class SettingsAdvancedComponent implements OnInit {
     private waitDialogService: WaitDialogService,
     private http: HttpClient,
     private stateService: StateService,
-    private infoDialogService: InfoDialogService) {
+    private infoDialogService: InfoDialogService,
+    private operatingSystemInformationService: OperatingSystemInformationService) {
 
     this.loggingLevelList.push('INFO');
     this.loggingLevelList.push('DEBUG');
     this.loggingLevelList.push('TRACE');
+
+    this.operatingSystemInformationService.getOperatingSystemInformation().subscribe(operatingSystemInformation => {
+      this.operatingSystemInformation = operatingSystemInformation;
+    });
   }
 
   private loadSettings() {

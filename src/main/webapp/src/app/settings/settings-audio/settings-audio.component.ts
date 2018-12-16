@@ -15,8 +15,7 @@ export class SettingsAudioComponent implements OnInit {
   settings: Settings;
   audioDeviceList: AudioDevice[];
   audioOutputList: string[] = [];
-  operatingSystemInformation: OperatingSystemInformation;
-
+  
   constructor(
     private settingsService: SettingsService,
     private operatingSystemInformationService: OperatingSystemInformationService

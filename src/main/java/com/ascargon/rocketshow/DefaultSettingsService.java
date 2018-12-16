@@ -4,7 +4,7 @@ import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.midi.*;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
-import com.ascargon.rocketshow.util.ResetUsbService;
+import com.ascargon.rocketshow.raspberry.RaspberryResetUsbService;
 import com.ascargon.rocketshow.util.ShellManager;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
@@ -32,16 +32,16 @@ public class DefaultSettingsService implements SettingsService {
     private final String FILE_NAME = "settings";
 
     private final OperatingSystemInformationService operatingSystemInformationService;
-    private final ResetUsbService resetUsbService;
+    private final RaspberryResetUsbService raspberryResetUsbService;
     private final MidiService midiService;
 
     private Settings settings;
 
     private final ApplicationHome applicationHome = new ApplicationHome(RocketShowApplication.class);
 
-    public DefaultSettingsService(ResetUsbService resetUsbService, OperatingSystemInformationService operatingSystemInformationService, MidiService midiService) {
+    public DefaultSettingsService(RaspberryResetUsbService raspberryResetUsbService, OperatingSystemInformationService operatingSystemInformationService, MidiService midiService) {
         this.operatingSystemInformationService = operatingSystemInformationService;
-        this.resetUsbService = resetUsbService;
+        this.raspberryResetUsbService = raspberryResetUsbService;
         this.midiService = midiService;
 
         initDefaultSettings();
@@ -166,7 +166,8 @@ public class DefaultSettingsService implements SettingsService {
         shellManager.getProcess().waitFor();
     }
 
-    private int getTotalAudioChannels() {
+    @Override
+    public int getTotalAudioChannels() {
         int total = 0;
 
         for (AudioBus audioBus : settings.getAudioBusList()) {
@@ -424,7 +425,7 @@ public class DefaultSettingsService implements SettingsService {
         try {
             if (settings.isResetUsbAfterBoot()) {
                 logger.info("Resetting all USB devices");
-                resetUsbService.resetAllInterfaces(settings.getBasePath());
+                raspberryResetUsbService.resetAllInterfaces(settings.getBasePath());
             }
         } catch (Exception e) {
             logger.error("Could not reset the USB devices", e);

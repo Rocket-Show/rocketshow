@@ -7,6 +7,7 @@ import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.gstreamer.GstDiscovererService;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
+import com.sun.jna.Pointer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -210,14 +211,6 @@ public class DefaultCompositionService implements CompositionService {
         }
     }
 
-    private long getDurationWithGstreamer(String path) throws Exception {
-        if (!capabilitiesService.getCapabilities().isGstreamer()) {
-            throw new Exception("Gstreamer is not available");
-        }
-
-        return gstDiscovererService.getDurationMillis(path);
-    }
-
     private long getMidiDuration(String path) throws Exception {
         long duration;
 
@@ -233,7 +226,7 @@ public class DefaultCompositionService implements CompositionService {
 
     @Override
     public synchronized void saveComposition(Composition composition) throws Exception {
-        // Set the duration for each file
+        // Set additional information for each file
         for (CompositionFile compositionFile : composition.getCompositionFileList()) {
             String path = settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator;
 
@@ -241,9 +234,22 @@ public class DefaultCompositionService implements CompositionService {
                 // Getting duration with Gstreamer does not work (missing plugins)
                 compositionFile.setDurationMillis(getMidiDuration(path + settingsService.getSettings().getMidiPath() + File.separator + compositionFile.getName()));
             } else if (compositionFile instanceof AudioCompositionFile) {
-                compositionFile.setDurationMillis(getDurationWithGstreamer(path + settingsService.getSettings().getAudioPath() + File.separator + compositionFile.getName()));
+                if (!capabilitiesService.getCapabilities().isGstreamer()) {
+                    throw new Exception("Gstreamer is not available");
+                }
+
+                AudioCompositionFile audioCompositionFile = ((AudioCompositionFile) compositionFile);
+
+                Pointer discovererInformation = gstDiscovererService.getDiscovererInformation(path + settingsService.getSettings().getAudioPath() + File.separator + compositionFile.getName());
+                audioCompositionFile.setDurationMillis(gstDiscovererService.getDurationMillis(discovererInformation));
+                audioCompositionFile.setChannels(gstDiscovererService.getChannels(discovererInformation));
             } else if (compositionFile instanceof VideoCompositionFile) {
-                compositionFile.setDurationMillis(getDurationWithGstreamer(path + settingsService.getSettings().getVideoPath() + File.separator + compositionFile.getName()));
+                if (!capabilitiesService.getCapabilities().isGstreamer()) {
+                    throw new Exception("Gstreamer is not available");
+                }
+
+                Pointer discovererInformation = gstDiscovererService.getDiscovererInformation(path + settingsService.getSettings().getVideoPath() + File.separator + compositionFile.getName());
+                compositionFile.setDurationMillis(gstDiscovererService.getDurationMillis(discovererInformation));
             }
         }
 

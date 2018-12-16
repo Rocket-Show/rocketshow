@@ -1,9 +1,10 @@
-package com.ascargon.rocketshow.util;
+package com.ascargon.rocketshow.raspberry;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
 import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.util.ShellManager;
 import org.springframework.stereotype.Service;
 
 /**
@@ -13,7 +14,7 @@ import org.springframework.stereotype.Service;
  * @author Moritz A. Vieli
  */
 @Service
-public class DefaultResetUsbService implements ResetUsbService {
+public class DefaultRaspberryResetUsbService implements RaspberryResetUsbService {
 
     private SettingsService settingsService;
 
@@ -33,7 +34,7 @@ public class DefaultResetUsbService implements ResetUsbService {
 
             if (!name.startsWith("Standard Microsystems Corp") && !name.startsWith("Linux Foundation 2.0")) {
                 // Reset the interface
-                ShellManager shellManager = new ShellManager(new String[]{"sudo", basePath + "/" + "bin/usbreset",
+                ShellManager shellManager = new ShellManager(new String[]{"sudo", basePath + "/" + "bin/raspberry-usbreset",
                         "/dev/bus/usb/" + bus + "/" + device});
 
                 shellManager.getProcess().waitFor();

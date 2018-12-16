@@ -10,9 +10,9 @@ import org.freedesktop.gstreamer.lowlevel.GstNative;
 /**
  * Added a function to append an array to an array
  */
-public interface GstAPI extends Library {
+public interface GstApi extends Library {
 
-    GstAPI GST_API = GstNative.load(GstAPI.class);
+    GstApi GST_API = GstNative.load(GstApi.class);
 
     // Get the Gstreamer GType "GST_TYPE_ARRAY"
     GType gst_value_array_get_type();

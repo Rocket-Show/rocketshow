@@ -128,7 +128,7 @@
               </div>
 
               <!-- Audio Bus -->
-              <div class="form-group" *ngIf="file?.type == 'AUDIO' && settings && settings.audioOutput == 'DEVICE'">
+              <div class="form-group" *ngIf="file?.type == 'AUDIO' && settings && (settings.audioOutput == 'DEVICE' || settings.audioOutput == 'DEFAULT')">
                 <label class="col-form-label">{{ 'settings.audio-bus' | translate }}</label>
 
                 <select class="custom-select form-control" [ngModel]="file?.outputBus" (ngModelChange)="file.outputBus = $event">

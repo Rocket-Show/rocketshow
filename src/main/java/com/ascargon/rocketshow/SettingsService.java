@@ -18,6 +18,8 @@ public interface SettingsService {
 
     String getAlsaDeviceFromOutputBus(String outputBus);
 
+    int getTotalAudioChannels();
+
     void load() throws Exception;
 
     void save() throws JAXBException;
