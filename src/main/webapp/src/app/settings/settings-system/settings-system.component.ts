@@ -10,6 +10,8 @@ import { CompositionService } from '../../services/composition.service';
 import { Composition } from '../../models/composition';
 import { Version } from '../../models/version';
 import { map } from 'rxjs/operators';
+import { OperatingSystemInformation } from '../../models/operating-system-information';
+import { OperatingSystemInformationService } from '../../services/operating-system-information.service';
 
 @Component({
   selector: 'app-settings-system',
@@ -23,6 +25,7 @@ export class SettingsSystemComponent implements OnInit {
   settings: Settings;
   compositions: Composition[];
   currentVersion: Version;
+  operatingSystemInformation: OperatingSystemInformation;
 
   constructor(
     public settingsService: SettingsService,
@@ -30,7 +33,13 @@ export class SettingsSystemComponent implements OnInit {
     private http: HttpClient,
     private compositionService: CompositionService,
     private updateService: UpdateService,
-    private modalService: BsModalService) { }
+    private modalService: BsModalService,
+    private operatingSystemInformationService: OperatingSystemInformationService) {
+
+    this.operatingSystemInformationService.getOperatingSystemInformation().subscribe(operatingSystemInformation => {
+      this.operatingSystemInformation = operatingSystemInformation;
+    });
+  }
 
   private loadSettings() {
     this.settingsService.getSettings().pipe(map(result => {

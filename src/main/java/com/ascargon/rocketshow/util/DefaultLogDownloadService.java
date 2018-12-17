@@ -1,15 +1,14 @@
 package com.ascargon.rocketshow.util;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-
 import com.ascargon.rocketshow.SettingsService;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-
 import org.springframework.stereotype.Service;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Prepares the log directory and sends it to the download.
@@ -19,36 +18,67 @@ import org.springframework.stereotype.Service;
 @Service
 public class DefaultLogDownloadService implements LogDownloadService {
 
-	private final static Logger logger = LoggerFactory.getLogger(DefaultLogDownloadService.class);
+    private final SettingsService settingsService;
 
-	private final SettingsService settingsService;
+    private final static String LOGS_FILE_NAME = "logs.zip";
 
-	private final static String LOGS_FILE_NAME = "logs.zip";
+    public DefaultLogDownloadService(SettingsService settingsService) {
+        this.settingsService = settingsService;
+    }
 
-	public DefaultLogDownloadService(SettingsService settingsService) {
-		this.settingsService = settingsService;
-	}
+    // Taken from https://www.baeldung.com/java-compress-and-uncompress
+    private void zipFile(File fileToZip, String fileName, ZipOutputStream zipOut) throws IOException {
+        if (fileToZip.isHidden()) {
+            return;
+        }
 
-	@Override
-	public File getLogsFile() throws Exception {
-		// Prepare the log directory for download
-		ShellManager shellManager = new ShellManager(new String[] { "bash", "-c",
-				"zip -r -j " + settingsService.getSettings().getBasePath() + "/" + LOGS_FILE_NAME + " " + settingsService.getSettings().getBasePath() + "log/*" });
+        if (fileToZip.isDirectory()) {
+            if (fileName.endsWith("/")) {
+                zipOut.putNextEntry(new ZipEntry(fileName));
+                zipOut.closeEntry();
+            } else {
+                zipOut.putNextEntry(new ZipEntry(fileName + "/"));
+                zipOut.closeEntry();
+            }
 
-		BufferedReader reader = new BufferedReader(new InputStreamReader(shellManager.getInputStream()));
-		String line;
-		try {
-			while ((line = reader.readLine()) != null) {
-				logger.debug("Output from log prepare process: " + line);
-			}
-		} catch (IOException e) {
-			logger.error("Could not read log prepare process output", e);
-		}
+            File[] children = fileToZip.listFiles();
 
-		shellManager.getProcess().waitFor();
+            if (children != null) {
+                for (File childFile : children) {
+                    zipFile(childFile, fileName + "/" + childFile.getName(), zipOut);
+                }
+            }
 
-		// Return the prepared zip
-		return new File(settingsService.getSettings().getBasePath() + "/" + LOGS_FILE_NAME);
-	}
+            return;
+        }
+
+        FileInputStream fis = new FileInputStream(fileToZip);
+        ZipEntry zipEntry = new ZipEntry(fileName);
+        zipOut.putNextEntry(zipEntry);
+
+        byte[] bytes = new byte[1024];
+        int length;
+
+        while ((length = fis.read(bytes)) >= 0) {
+            zipOut.write(bytes, 0, length);
+        }
+
+        fis.close();
+    }
+
+    @Override
+    public File getLogsFile() throws Exception {
+        // Zip the logfile directory
+        FileOutputStream fileOutputStream = new FileOutputStream(LOGS_FILE_NAME);
+        ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream);
+        File fileToZip = new File(settingsService.getSettings().getBasePath() + "log");
+
+        zipFile(fileToZip, fileToZip.getName(), zipOutputStream);
+        zipOutputStream.close();
+        fileOutputStream.close();
+
+        // Return the prepared zip
+        return new File(settingsService.getSettings().getBasePath() + "/" + LOGS_FILE_NAME);
+    }
 
 }

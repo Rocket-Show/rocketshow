@@ -224,10 +224,7 @@ export class EditorCompositionComponent implements OnInit {
     }
 
     // Show the file details dialog
-    let fileDialog = this.modalService.show(EditorCompositionFileComponent, { keyboard: true, ignoreBackdropClick: true, class: 'modal-lg' });
-    (<EditorCompositionFileComponent>fileDialog.content).fileIndex = fileIndex;
-    (<EditorCompositionFileComponent>fileDialog.content).file = compositionCopy.fileList[fileIndex];
-    (<EditorCompositionFileComponent>fileDialog.content).composition = compositionCopy;
+    let fileDialog = this.modalService.show(EditorCompositionFileComponent, { keyboard: true, ignoreBackdropClick: true, class: 'modal-lg', initialState: { fileIndex: fileIndex, file: compositionCopy.fileList[fileIndex], composition: compositionCopy } });
 
     (<EditorCompositionFileComponent>fileDialog.content).onClose.subscribe(result => {
       if (result === 1) {

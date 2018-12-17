@@ -7,6 +7,8 @@ import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.midi.MidiDeviceInService;
 import com.ascargon.rocketshow.midi.MidiDeviceOutService;
 import com.ascargon.rocketshow.util.*;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.xml.bind.JAXBException;
 import java.io.File;
+import java.io.FileInputStream;
 
 @RestController()
 @RequestMapping("${spring.data.rest.base-path}/system")
@@ -108,11 +111,12 @@ class SystemController {
     }
 
     @GetMapping("download-logs")
-    public ResponseEntity<File> downloadLogs() throws Exception {
+    public ResponseEntity<Resource> downloadLogs() throws Exception {
+        InputStreamResource resource = new InputStreamResource(new FileInputStream(logDownloadService.getLogsFile()));
+
         return ResponseEntity
                 .ok()
-                .contentType(new MediaType("application/zip"))
-                .body(logDownloadService.getLogsFile());
+                .body(resource);
     }
 
     @GetMapping("disk-space")

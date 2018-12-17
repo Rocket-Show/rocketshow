@@ -82,7 +82,7 @@
               <div class="card border-secondary" style="height: 300px; overflow-y: scroll;">
                 <div class="card-body p-0">
                   <div class="list-group list-group-flush">
-                    <a *ngFor="let existingFile of filteredExistingFiles" class="list-group-item" [class.active]="file?.name == existingFile.name && file?.type == existingFile.type" href="#">
+                    <a *ngFor="let existingFile of filteredExistingFiles | sort:'name'" class="list-group-item" [class.active]="file?.name == existingFile.name && file?.type == existingFile.type" href="#">
                       <div class="row">
                         <div (click)="selectExistingFile(existingFile); false" class="col-auto my-auto">
                           <i class="fa fa-fw" [ngClass]="existingFile.getFontAwesomeIconClass()" aria-hidden="true"></i>
@@ -132,7 +132,6 @@
                 <label class="col-form-label">{{ 'settings.audio-bus' | translate }}</label>
 
                 <select class="custom-select form-control" [ngModel]="file?.outputBus" (ngModelChange)="file.outputBus = $event">
-                  <option [ngValue]="selectUndefinedOptionValue">- {{ 'settings.no-audio-bus' | translate }} -</option>
                   <option *ngFor="let audioBus of settings.audioBusList" [ngValue]="audioBus.name">{{ audioBus.name }}</option>
                 </select>
               </div>

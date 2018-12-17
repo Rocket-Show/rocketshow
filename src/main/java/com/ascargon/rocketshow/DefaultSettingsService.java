@@ -1,10 +1,13 @@
 package com.ascargon.rocketshow;
 
 import com.ascargon.rocketshow.audio.AudioBus;
-import com.ascargon.rocketshow.midi.*;
+import com.ascargon.rocketshow.midi.MidiDevice;
+import com.ascargon.rocketshow.midi.MidiMapping;
+import com.ascargon.rocketshow.midi.MidiService;
+import com.ascargon.rocketshow.midi.MidiSignal;
+import com.ascargon.rocketshow.raspberry.RaspberryResetUsbService;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
-import com.ascargon.rocketshow.raspberry.RaspberryResetUsbService;
 import com.ascargon.rocketshow.util.ShellManager;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
@@ -183,7 +186,7 @@ public class DefaultSettingsService implements SettingsService {
 
     @Override
     public AudioBus getAudioBusFromName(String outputBus) {
-        if(outputBus == null) {
+        if (outputBus == null) {
             if (settings.getAudioBusList().size() > 0) {
                 return settings.getAudioBusList().get(0);
             } else {
@@ -385,10 +388,12 @@ public class DefaultSettingsService implements SettingsService {
             logger.error("Could not update the logging level system settings", e);
         }
 
-        try {
-            updateWlanAp();
-        } catch (Exception e) {
-            logger.error("Could not update the wireless access point settings", e);
+        if (OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+            try {
+                updateWlanAp();
+            } catch (Exception e) {
+                logger.error("Could not update the wireless access point settings", e);
+            }
         }
     }
 

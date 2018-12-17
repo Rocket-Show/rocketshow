@@ -1,4 +1,3 @@
-import { DiskSpace } from './../../../models/disk-space';
 import { DiskSpaceService } from './../../../services/disk-space.service';
 import { AppHttpInterceptor } from './../../../app-http-interceptor/app-http-interceptor';
 import { Settings } from './../../../models/settings';
@@ -11,9 +10,11 @@ import { CompositionFile } from './../../../models/composition-file';
 import { Component, OnInit } from '@angular/core';
 import { BsModalRef } from 'ngx-bootstrap';
 import { Subject } from 'rxjs';
-import { map, catchError, finalize } from "rxjs/operators";
+import { map } from "rxjs/operators";
 import { Composition } from '../../../models/composition';
 import { DropzoneConfigInterface } from 'ngx-dropzone-wrapper/dist/lib/dropzone.interfaces';
+import { CompositionAudioFile } from '../../../models/composition-audio-file';
+import { AudioBus } from '../../../models/audio-bus';
 
 @Component({
   selector: 'app-editor-composition-file',
@@ -21,8 +22,6 @@ import { DropzoneConfigInterface } from 'ngx-dropzone-wrapper/dist/lib/dropzone.
   styleUrls: ['./editor-composition-file.component.scss'],
 })
 export class EditorCompositionFileComponent implements OnInit {
-
-  selectUndefinedOptionValue: any;
 
   fileIndex: number;
   file: CompositionFile;
@@ -93,9 +92,30 @@ export class EditorCompositionFileComponent implements OnInit {
     })).subscribe();
   }
 
+  private audioBusListContainsBus(audioBusList: AudioBus[], name: string): boolean {
+    for(let audioBus of audioBusList) {
+      if(audioBus.name == name) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   private loadSettings() {
     this.settingsService.getSettings().pipe(map(result => {
       this.settings = result;
+
+      // Set the default bus, if the chosen one is not available anymore (e.g. due to changed settings)
+      if(this.file && this.file instanceof CompositionAudioFile) {
+        let compositionAudioFile = <CompositionAudioFile>this.file;
+
+        if(compositionAudioFile.outputBus && this.settings && this.settings.audioBusList) {
+          if(!this.audioBusListContainsBus(this.settings.audioBusList, compositionAudioFile.outputBus)) {
+            compositionAudioFile.outputBus = this.settings.audioBusList[0].name;
+          }
+        }
+      }
     })).subscribe();
   }
 
@@ -130,6 +150,12 @@ export class EditorCompositionFileComponent implements OnInit {
     console.log('Upload error', args);
   }
 
+  private setDefaultOutputBus(compositionAudioFile : CompositionAudioFile) {
+    if (this.settings && this.settings.audioBusList) {
+      compositionAudioFile.outputBus = this.settings.audioBusList[0].name;
+    }
+  }
+
   public onUploadSuccess(args: any) {
     this.loadFiles();
     this.loadDiskSpace();
@@ -144,6 +170,8 @@ export class EditorCompositionFileComponent implements OnInit {
     }
 
     this.file = Composition.getFileObjectByType(args[1]);
+
+    this.setDefaultOutputBus((<CompositionAudioFile>this.file));
 
     if (this.file instanceof CompositionMidiFile && midiRoutingList) {
       (<CompositionMidiFile>this.file).midiRoutingList = midiRoutingList;
@@ -178,6 +206,8 @@ export class EditorCompositionFileComponent implements OnInit {
     }
 
     this.file = existingFile;
+
+    this.setDefaultOutputBus((<CompositionAudioFile>this.file));
 
     if (this.file instanceof CompositionMidiFile && midiRoutingList) {
       (<CompositionMidiFile>this.file).midiRoutingList = midiRoutingList;

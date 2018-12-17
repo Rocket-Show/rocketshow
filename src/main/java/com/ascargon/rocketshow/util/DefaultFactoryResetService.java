@@ -10,12 +10,22 @@ import org.springframework.stereotype.Service;
 @Service
 public class DefaultFactoryResetService implements FactoryResetService {
 
-	@Override
-	public void reset() throws Exception {
-		// Reset the interface
-		ShellManager shellManager = new ShellManager(new String[] { "sudo", "/opt/rocketshow_reset.sh" });
+    private final OperatingSystemInformationService operatingSystemInformationService;
 
-		shellManager.getProcess().waitFor();
-	}
+    public DefaultFactoryResetService(OperatingSystemInformationService operatingSystemInformationService) {
+        this.operatingSystemInformationService = operatingSystemInformationService;
+    }
+
+    @Override
+    public void reset() throws Exception {
+        if (!OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+            return;
+        }
+
+        // Reset the interface
+        ShellManager shellManager = new ShellManager(new String[]{"sudo", "/opt/rocketshow_reset.sh"});
+
+        shellManager.getProcess().waitFor();
+    }
 
 }

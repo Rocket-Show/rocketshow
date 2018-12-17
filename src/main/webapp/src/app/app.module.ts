@@ -7,6 +7,7 @@ import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
+import { ArraySortPipe } from './array-sort-pipe';
 import { SortablejsModule } from 'angular-sortablejs';
 import { AlertModule } from 'ngx-bootstrap';
 import { ModalModule } from 'ngx-bootstrap';
@@ -79,6 +80,7 @@ const DROPZONE_CONFIG: DropzoneConfigInterface = {
 
 @NgModule({
   declarations: [
+    ArraySortPipe,
     AppComponent,
     IntroComponent,
     PlayComponent,
