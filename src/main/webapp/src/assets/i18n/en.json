@@ -171,7 +171,7 @@
         "update-install": "Installing...",
         "update-reboot": "Rebooting...",
         "update-finished": "Hooray! The update has finished successfully.",
-        "reboot-device": "Reboot device",
+        "reboot-device": "Reboot",
         "default-composition": "Default composition",
         "no-default-composition": "None",
         "audio-buses": "Audio buses",

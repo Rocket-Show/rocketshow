@@ -24,19 +24,21 @@ public class DefaultUpdateService implements UpdateService {
     private final static String UPDATE_PATH = "update/";
     private final static String BEFORE_SCRIPT_NAME = "before.sh";
     private final static String AFTER_SCRIPT_NAME = "after.sh";
-    private final static String WAR_NAME = "current.war";
-    private final static String CURRENT_VERSION = "currentversion.xml";
+    private final static String JAR_NAME = "rocketshow.jar";
+    private final static String CURRENT_VERSION = "currentversion2.xml";
     private final static String UPDATE_URL = "https://www.rocketshow.net/update/";
     private final static String UPDATE_SCRIPT = "update.sh";
 
     private final NotificationService notificationService;
     private final SettingsService settingsService;
     private final SessionService sessionService;
+    private final RebootService rebootService;
 
-    public DefaultUpdateService(NotificationService notificationService, SettingsService settingsService, SessionService sessionService) {
+    public DefaultUpdateService(NotificationService notificationService, SettingsService settingsService, SessionService sessionService, RebootService rebootService) {
         this.notificationService = notificationService;
         this.settingsService = settingsService;
         this.sessionService = sessionService;
+        this.rebootService = rebootService;
     }
 
     @Override
@@ -51,7 +53,7 @@ public class DefaultUpdateService implements UpdateService {
 
     @Override
     public VersionInfo getRemoteVersionInfo() throws Exception {
-        URL url = new URL(UPDATE_URL + "currentversion.xml");
+        URL url = new URL(UPDATE_URL + "currentversion2.xml");
         InputStream inputStream = url.openStream();
 
         JAXBContext jaxbContext = JAXBContext.newInstance(VersionInfo.class);
@@ -87,7 +89,7 @@ public class DefaultUpdateService implements UpdateService {
 
         // Download the new version
         downloadUpdateFile(CURRENT_VERSION);
-        downloadUpdateFile(WAR_NAME);
+        downloadUpdateFile(JAR_NAME);
         downloadUpdateFile(BEFORE_SCRIPT_NAME);
         downloadUpdateFile(AFTER_SCRIPT_NAME);
 
@@ -104,8 +106,7 @@ public class DefaultUpdateService implements UpdateService {
         sessionService.getSession().setUpdateFinished(true);
         sessionService.save();
 
-        // TODO
-        //manager.reboot();
+        rebootService.reboot();
     }
 
 }

@@ -171,7 +171,7 @@
         "update-install": "Installieren...",
         "update-reboot": "Neu starten...",
         "update-finished": "Hurrah! Die Aktualisierung wurde erfolgreich abgeschlossen.",
-        "reboot-device": "Gerät neu starten",
+        "reboot-device": "Neu starten",
         "default-composition": "Standard-Komposition",
         "no-default-composition": "Keine",
         "audio-buses": "Audio Busse",

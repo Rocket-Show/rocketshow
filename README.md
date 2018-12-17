@@ -61,20 +61,20 @@ chmod +x ./stage2/99-rocket-show/00-run-chroot.sh
 ```
 
 #### Update process
-- Add the release notes in update/currentversion.xml and build the war ("mvn install")
+- Add the release notes in update/currentversion2.xml and build the war ("mvn install")
 - Copy seed directory directory.tar.gz to rocketshow.net/install, if updated
-- Copy target/ROOT.war to rocketshow.net/update/current.war
+- Copy target/rocketshow.jar to rocketshow.net/update/rocketshow.jar
 - Copy install/install.sh to rocketshow.net/install/script/install.sh, if updated
-- Copy update/currentversion.xml to rocketshow.net/update/currentversion.xml
+- Copy update/currentversion2.xml to rocketshow.net/update/currentversion2.xml
 - Copy update/before.sh, update/after.sh to rocketshow.net/update/xy.sh, if updated
 - Copy the new complete image to rocketshow.net/install/images and change the file latest.php to link the new version
 - GIT merge DEV branch to MASTER
 - GIT tag with the current version
-- Switch to DEV and update POM and update/currentversion.xml versions
+- Switch to DEV and update POM and update/currentversion2.xml versions
 - Set a new version in the file WebContent/index.jsp -> url=app?v=x.y to prevent Chrome from caching the app's index.html.
 
 #### Application
-The built application should be uploaded to rocketshow.net/update and be named "current.war". The file "currentversion.xml" can be modified accordingly.
+The built application should be uploaded to rocketshow.net/update and be named "rocketshow.jar". The file "currentversion2.xml" can be modified accordingly.
 
 #### Installation on a Raspberry Pi
 These commands can be used to install Rocket Show on a Raspberry Pi with Raspbian Lite installed:

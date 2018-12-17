@@ -8,7 +8,7 @@
 apt-get update
 apt-get upgrade
 
-apt-get -y install default-jre fbi ola libnss-mdns dnsmasq hostapd authbind
+apt-get -y install default-jre fbi ola libnss-mdns dnsmasq hostapd authbind wiringpi
 
 # Install the gstreamer packages, built by Rocket Show for the Raspberry Pi to make 
 # accelerated video playback on Raspberry Pi possible. The versions on the official repos did not work until
@@ -65,6 +65,7 @@ echo rocketshow:thisrocks | chpasswd
 usermod -a -G video rocketshow
 usermod -a -G audio rocketshow
 usermod -a -G plugdev rocketshow
+usermod -a -G gpio rocketshow
 
 # Add the sudoers permission (visudo)
 insert="rocketshow      ALL=(ALL) NOPASSWD: ALL"
@@ -85,14 +86,14 @@ cd /opt
 wget https://rocketshow.net/install/directory.tar.gz
 tar xvzf ./directory.tar.gz
 rm directory.tar.gz
+cd rocketshow
 
 # Add execution permissions on the update script
-chmod +x /opt/rocketshow/update.sh
+chmod +x update.sh
 
 # Install an USB interface reset according to
 # https://raspberrypi.stackexchange.com/questions/9264/how-do-i-reset-a-usb-device-using-a-script
-cd /opt/rocketshow/bin
-chmod +x raspberry-usbreset
+chmod +x ./bin/raspberry-usbreset
 
 # Overclock the raspberry to sustain streams without underruns
 # - Set more memory for the GPU to play larger video files with omx
@@ -105,10 +106,8 @@ sed -i '1i# ROCKETSHOWSTART\ngpu_mem=256\nforce_turbo=1\nboot_delay=1\ndtparam=s
 sed -i '1irocketshow soft priority 10' /etc/security/limits.conf
 
 # Download current war and versioninfo
-cd /opt/rocketshow/tomcat/webapps
-wget -O ROOT.war https://www.rocketshow.net/update/current.war
-cd /opt/rocketshow
-wget https://www.rocketshow.net/update/currentversion.xml
+wget https://www.rocketshow.net/update/rocketshow.jar
+wget https://www.rocketshow.net/update/currentversion2.xml
 
 # Set the user rocketshow as owner and add execution permissions
 # on the update script
@@ -151,6 +150,30 @@ systemctl start hostapd
 systemctl start dnsmasq
 
 printf "\n# ROCKETSHOWSTART\nnet.ipv4.ip_forward=1\n# ROCKETSHOWEND\n" | tee -a /etc/sysctl.conf
+
+# Install pi4j
+curl -s get.pi4j.com | bash
+
+# Add a service to automatically start the app
+cat <<'EOF' >/etc/init.d/rocketshow
+#!/bin/bash
+# Rocket Show
+#
+# description:rocketshow util service
+
+case $1 in
+    start)
+        /bin/bash /opt/rocketshow/start.sh
+    ;;
+    stop)
+        # Not implemented
+    ;;
+    restart)
+        # Not implemented
+    ;;
+esac
+exit 0
+EOF
 
 # Keep the whole directory in its current state for the factory reset
 cd /opt

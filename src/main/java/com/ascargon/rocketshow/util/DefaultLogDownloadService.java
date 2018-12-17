@@ -68,6 +68,8 @@ public class DefaultLogDownloadService implements LogDownloadService {
 
     @Override
     public File getLogsFile() throws Exception {
+        // TODO It would be better to return an input stream instead of writing
+
         // Zip the logfile directory
         FileOutputStream fileOutputStream = new FileOutputStream(LOGS_FILE_NAME);
         ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream);

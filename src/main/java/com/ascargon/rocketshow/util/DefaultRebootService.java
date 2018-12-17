@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.util;
 
 import com.ascargon.rocketshow.RemoteDevice;
+import com.ascargon.rocketshow.RocketShowApplication;
 import com.ascargon.rocketshow.SettingsService;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +26,18 @@ public class DefaultRebootService implements RebootService {
             }
         }
 
-        if(!OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+        if (!OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+            // Restart the app instead of a complete system reboot. Restarting
+            // the app should be enough, because all the additional settings
+            // (access point, etc.) do not work anyway on systems other than
+            // Raspbian.
+
+            Thread restartThread = new Thread(() -> {
+                RocketShowApplication.restart();
+            });
+            restartThread.setDaemon(false);
+            restartThread.start();
+
             return;
         }
 

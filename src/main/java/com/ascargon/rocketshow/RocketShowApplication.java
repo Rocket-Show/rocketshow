@@ -22,6 +22,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 @SpringBootApplication
 public class RocketShowApplication {
 
+    private static String[] args;
+    private static ConfigurableApplicationContext context;
+
     public static void main(String[] args) {
         ConfigurableApplicationContext context = SpringApplication.run(RocketShowApplication.class, args);
 
@@ -45,6 +48,18 @@ public class RocketShowApplication {
 
         // Connect to the MIDI out device, if available
         context.getBean(MidiDeviceOutService.class);
+
+        RocketShowApplication.args = args;
+        RocketShowApplication.context = context;
+    }
+
+    public static void restart() {
+        // close previous context
+        context.close();
+
+        // and build new one
+        RocketShowApplication.context = SpringApplication.run(RocketShowApplication.class, args);
+
     }
 
 }
