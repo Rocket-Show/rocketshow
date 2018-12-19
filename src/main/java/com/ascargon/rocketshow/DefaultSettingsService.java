@@ -21,9 +21,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,6 +31,9 @@ public class DefaultSettingsService implements SettingsService {
     private final static Logger logger = LoggerFactory.getLogger(Settings.class);
 
     private final String FILE_NAME = "settings";
+
+    private final String ROCKET_SHOW_SETTINGS_START = "# ROCKETSHOWSTART";
+    private final String ROCKET_SHOW_SETTINGS_END = "# ROCKETSHOWEND";
 
     private final OperatingSystemInformationService operatingSystemInformationService;
     private final RaspberryResetUsbService raspberryResetUsbService;
@@ -165,6 +166,10 @@ public class DefaultSettingsService implements SettingsService {
     }
 
     private void setSystemAudioOutput(int id) throws Exception {
+        if (!OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+            return;
+        }
+
         ShellManager shellManager = new ShellManager(new String[]{"amixer", "cset", "numid=3", String.valueOf(id)});
         shellManager.getProcess().waitFor();
     }
@@ -242,6 +247,8 @@ public class DefaultSettingsService implements SettingsService {
             return "";
         }
 
+        alsaSettings.append(ROCKET_SHOW_SETTINGS_START + System.lineSeparator());
+
         // Build the general device settings
         alsaSettings.append("pcm.dshare {\n" + "  type dmix\n" + "  ipc_key 2048\n" + "  slave {\n" + "    pcm \"hw:").append(settings.getAudioDevice().getKey()).append("\"\n").append("    rate ").append(settings.getAudioRate()).append("\n").append("    channels ").append(getTotalAudioChannels()).append("\n").append("  }\n").append("  bindings {\n");
 
@@ -268,6 +275,8 @@ public class DefaultSettingsService implements SettingsService {
             alsaSettings.append("}\n");
         }
 
+        alsaSettings.append(ROCKET_SHOW_SETTINGS_END);
+
         return alsaSettings.toString();
     }
 
@@ -279,12 +288,47 @@ public class DefaultSettingsService implements SettingsService {
         } else if (settings.getAudioOutput() == Settings.AudioOutput.DEVICE) {
             // Write the audio settings to /home/.asoundrc and use ALSA to
             // output audio on the selected device name
-            // TODO Does not work when not running as user rocketshow
-            File alsaSettings = new File("/home/rocketshow/.asoundrc");
+            logger.debug("Write ALSA settings");
 
+            String alsaSettingsPath = System.getProperty("user.home") + "/.asoundrc";
+            String existingAlsaSettings = "";
+            File alsaSettings = new File(alsaSettingsPath);
+            boolean isInRocketShowSection = false;
+
+            // Read the existing .asoundrc (without existing Rocket Show settings)
+            if(alsaSettings.exists()) {
+                BufferedReader bufferedReader;
+                try {
+                    bufferedReader = new BufferedReader(new FileReader(alsaSettingsPath));
+                    String line = bufferedReader.readLine();
+                    while (line != null) {
+                        if(ROCKET_SHOW_SETTINGS_START.equals(line)) {
+                            isInRocketShowSection = true;
+                        } else if(ROCKET_SHOW_SETTINGS_END.equals(line)) {
+                            isInRocketShowSection = false;
+                        } else {
+                            if(!isInRocketShowSection) {
+                                existingAlsaSettings += line + System.lineSeparator();
+                            }
+                        }
+
+                        // Read the next line
+                        line = bufferedReader.readLine();
+                    }
+                    bufferedReader.close();
+                } catch (IOException e) {
+                    logger.error("Could not read ALSA settings on '" + alsaSettingsPath + "'", e);
+                }
+
+                if(existingAlsaSettings.length() > 0) {
+                    existingAlsaSettings += System.lineSeparator();
+                }
+            }
+
+            // Create a new file containing the old settings and the new Rocket Show settings
             try {
-                FileWriter fileWriter = new FileWriter(alsaSettings, false);
-                fileWriter.write(getAlsaSettings());
+                FileWriter fileWriter = new FileWriter(new File(alsaSettingsPath), false);
+                fileWriter.write(existingAlsaSettings + getAlsaSettings());
                 fileWriter.close();
             } catch (IOException e) {
                 logger.error("Could not write .asoundrc", e);
@@ -374,7 +418,7 @@ public class DefaultSettingsService implements SettingsService {
     private void updateSystem() {
         // Update all system settings
 
-        if (OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+        if (OperatingSystemInformation.Type.LINUX.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
             try {
                 updateAudioSystem();
             } catch (Exception e) {
