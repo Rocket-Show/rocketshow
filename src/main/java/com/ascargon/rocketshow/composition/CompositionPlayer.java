@@ -344,7 +344,7 @@ public class CompositionPlayer {
                     BaseSink sink = (BaseSink) ElementFactory.make(sinkName, "sink" + i);
 
                     if (!OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
-                        sink.set("device", settingsService.getAlsaDeviceFromOutputBus(audioCompositionFile.getOutputBus()));
+                        sink.set("device", "rocketshow");
                     }
                     pipeline.add(sink);
 

@@ -12,11 +12,9 @@ public interface SettingsService {
 
     void setSettings(Settings settings);
 
-    RemoteDevice getRemoteDeviceByName(String name);
-
     AudioBus getAudioBusFromName(String outputBus);
 
-    String getAlsaDeviceFromOutputBus(String outputBus);
+    RemoteDevice getRemoteDeviceByName(String name);
 
     int getTotalAudioChannels();
 

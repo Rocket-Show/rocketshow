@@ -155,6 +155,31 @@ public class DefaultSettingsService implements SettingsService {
     }
 
     @Override
+    public AudioBus getAudioBusFromName(String outputBus) {
+        if (outputBus == null) {
+            if (settings.getAudioBusList().size() > 0) {
+                return settings.getAudioBusList().get(0);
+            } else {
+                return null;
+            }
+        }
+
+        // Get an alsa device name from a bus name
+        for (AudioBus audioBus : settings.getAudioBusList()) {
+            if (outputBus.equals(audioBus.getName())) {
+                return audioBus;
+            }
+        }
+
+        // Return a default bus, if none is found
+        if (settings.getAudioBusList().size() > 0) {
+            return settings.getAudioBusList().get(0);
+        }
+
+        return null;
+    }
+
+    @Override
     public RemoteDevice getRemoteDeviceByName(String name) {
         for (RemoteDevice remoteDevice : settings.getRemoteDeviceList()) {
             if (remoteDevice.getName().equals(name)) {
@@ -189,54 +214,6 @@ public class DefaultSettingsService implements SettingsService {
         return "bus" + (id + 1);
     }
 
-    @Override
-    public AudioBus getAudioBusFromName(String outputBus) {
-        if (outputBus == null) {
-            if (settings.getAudioBusList().size() > 0) {
-                return settings.getAudioBusList().get(0);
-            } else {
-                return null;
-            }
-        }
-
-        // Get an alsa device name from a bus name
-        for (AudioBus audioBus : settings.getAudioBusList()) {
-            if (outputBus.equals(audioBus.getName())) {
-                return audioBus;
-            }
-        }
-
-        // Return a default bus, if none is found
-        if (settings.getAudioBusList().size() > 0) {
-            return settings.getAudioBusList().get(0);
-        }
-
-        return null;
-    }
-
-    @Override
-    public String getAlsaDeviceFromOutputBus(String outputBus) {
-        // Get an alsa device name from a bus name
-        for (int i = 0; i < settings.getAudioBusList().size(); i++) {
-            AudioBus audioBus = settings.getAudioBusList().get(i);
-
-            logger.debug("Got bus '" + audioBus.getName() + "'");
-
-            if (outputBus != null && outputBus.equals(audioBus.getName())) {
-                logger.debug("Found device '" + getBusNameFromId(i) + "'");
-
-                return getBusNameFromId(i);
-            }
-        }
-
-        // Return a default bus, if none is found
-        if (settings.getAudioBusList().size() > 0) {
-            return getBusNameFromId(0);
-        }
-
-        return "";
-    }
-
     private String getAlsaSettings() {
         // Generate the ALSA settings
         StringBuilder alsaSettings = new StringBuilder();
@@ -247,10 +224,11 @@ public class DefaultSettingsService implements SettingsService {
             return "";
         }
 
-        alsaSettings.append(ROCKET_SHOW_SETTINGS_START + System.lineSeparator());
+        alsaSettings.append(ROCKET_SHOW_SETTINGS_START);
+        alsaSettings.append(System.lineSeparator());
 
         // Build the general device settings
-        alsaSettings.append("pcm.dshare {\n" + "  type dmix\n" + "  ipc_key 2048\n" + "  slave {\n" + "    pcm \"hw:").append(settings.getAudioDevice().getKey()).append("\"\n").append("    rate ").append(settings.getAudioRate()).append("\n").append("    channels ").append(getTotalAudioChannels()).append("\n").append("  }\n").append("  bindings {\n");
+        alsaSettings.append("pcm.rocketshow {\n" + "  type dmix\n" + "  ipc_key 2048\n" + "  slave {\n" + "    pcm \"hw:").append(settings.getAudioDevice().getKey()).append("\"\n").append("    rate ").append(settings.getAudioRate()).append("\n").append("    channels ").append(getTotalAudioChannels()).append("\n");
 
         // Add all channels
         for (int i = 0; i < getTotalAudioChannels(); i++) {
@@ -260,20 +238,20 @@ public class DefaultSettingsService implements SettingsService {
         alsaSettings.append("  }\n" + "}\n");
 
         // List each bus
-        for (int i = 0; i < settings.getAudioBusList().size(); i++) {
-            AudioBus audioBus = settings.getAudioBusList().get(i);
-
-            alsaSettings.append("\n" + "pcm.").append(getBusNameFromId(i)).append(" {\n").append("  type plug\n").append("  slave {\n").append("    pcm \"dshare\"\n").append("    channels ").append(getTotalAudioChannels()).append("\n").append("  }\n");
-
-            // Add each channel to the bus
-            for (int j = 0; j < audioBus.getChannels(); j++) {
-                alsaSettings.append("  ttable.").append(j).append(".").append(currentChannel).append(" 1\n");
-
-                currentChannel++;
-            }
-
-            alsaSettings.append("}\n");
-        }
+//        for (int i = 0; i < settings.getAudioBusList().size(); i++) {
+//            AudioBus audioBus = settings.getAudioBusList().get(i);
+//
+//            alsaSettings.append("\n" + "pcm.").append(getBusNameFromId(i)).append(" {\n").append("  type plug\n").append("  slave {\n").append("    pcm \"dshare\"\n").append("    channels ").append(getTotalAudioChannels()).append("\n").append("  }\n");
+//
+//            // Add each channel to the bus
+//            for (int j = 0; j < audioBus.getChannels(); j++) {
+//                alsaSettings.append("  ttable.").append(j).append(".").append(currentChannel).append(" 1\n");
+//
+//                currentChannel++;
+//            }
+//
+//            alsaSettings.append("}\n");
+//        }
 
         alsaSettings.append(ROCKET_SHOW_SETTINGS_END);
 
@@ -291,24 +269,25 @@ public class DefaultSettingsService implements SettingsService {
             logger.debug("Write ALSA settings");
 
             String alsaSettingsPath = System.getProperty("user.home") + "/.asoundrc";
-            String existingAlsaSettings = "";
+            StringBuilder existingAlsaSettings = new StringBuilder();
             File alsaSettings = new File(alsaSettingsPath);
             boolean isInRocketShowSection = false;
 
             // Read the existing .asoundrc (without existing Rocket Show settings)
-            if(alsaSettings.exists()) {
+            if (alsaSettings.exists()) {
                 BufferedReader bufferedReader;
                 try {
                     bufferedReader = new BufferedReader(new FileReader(alsaSettingsPath));
                     String line = bufferedReader.readLine();
                     while (line != null) {
-                        if(ROCKET_SHOW_SETTINGS_START.equals(line)) {
+                        if (ROCKET_SHOW_SETTINGS_START.equals(line)) {
                             isInRocketShowSection = true;
-                        } else if(ROCKET_SHOW_SETTINGS_END.equals(line)) {
+                        } else if (ROCKET_SHOW_SETTINGS_END.equals(line)) {
                             isInRocketShowSection = false;
                         } else {
-                            if(!isInRocketShowSection) {
-                                existingAlsaSettings += line + System.lineSeparator();
+                            if (!isInRocketShowSection) {
+                                existingAlsaSettings.append(line);
+                                existingAlsaSettings.append(System.lineSeparator());
                             }
                         }
 
@@ -320,15 +299,15 @@ public class DefaultSettingsService implements SettingsService {
                     logger.error("Could not read ALSA settings on '" + alsaSettingsPath + "'", e);
                 }
 
-                if(existingAlsaSettings.length() > 0) {
-                    existingAlsaSettings += System.lineSeparator();
+                if (existingAlsaSettings.length() > 0) {
+                    existingAlsaSettings.append(System.lineSeparator());
                 }
             }
 
             // Create a new file containing the old settings and the new Rocket Show settings
             try {
                 FileWriter fileWriter = new FileWriter(new File(alsaSettingsPath), false);
-                fileWriter.write(existingAlsaSettings + getAlsaSettings());
+                fileWriter.write(existingAlsaSettings.toString() + getAlsaSettings());
                 fileWriter.close();
             } catch (IOException e) {
                 logger.error("Could not write .asoundrc", e);

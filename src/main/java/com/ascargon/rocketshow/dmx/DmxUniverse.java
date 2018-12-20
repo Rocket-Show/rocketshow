@@ -1,8 +1,10 @@
 package com.ascargon.rocketshow.dmx;
 
+import javax.xml.bind.annotation.XmlRootElement;
 import java.util.HashMap;
 import java.util.UUID;
 
+@XmlRootElement
 public class DmxUniverse {
 
 	private HashMap<Integer, Integer> universe;

@@ -2,6 +2,7 @@ package com.ascargon.rocketshow.dmx;
 
 import com.ascargon.rocketshow.CapabilitiesService;
 import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.api.ActivityNotificationDmxService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ola.OlaClient;
 import ola.proto.Ola.UniverseInfoReply;
@@ -14,8 +15,8 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
@@ -32,6 +33,7 @@ public class DefaultDmxService implements DmxService {
 
     private final SettingsService settingsService;
     private final CapabilitiesService capabilitiesService;
+    private final ActivityNotificationDmxService activityNotificationDmxService;
 
     private final String OLA_URL = "http://localhost:9090/";
 
@@ -52,9 +54,10 @@ public class DefaultDmxService implements DmxService {
 
     private final HttpClient httpClient;
 
-    public DefaultDmxService(SettingsService settingsService, CapabilitiesService capabilitiesService) {
+    public DefaultDmxService(SettingsService settingsService, CapabilitiesService capabilitiesService, ActivityNotificationDmxService activityNotificationDmxService) {
         this.settingsService = settingsService;
         this.capabilitiesService = capabilitiesService;
+        this.activityNotificationDmxService = activityNotificationDmxService;
 
         RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).build();
         httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
@@ -102,10 +105,6 @@ public class DefaultDmxService implements DmxService {
     }
 
     private void sendUniverse() {
-        if (olaClient == null) {
-            return;
-        }
-
         logger.trace("Send the DMX universe");
 
         // Mix all current universes into one -> highest value per channel wins
@@ -128,7 +127,17 @@ public class DefaultDmxService implements DmxService {
             mixedUniverse[i] = (short) highestValue;
         }
 
-        olaClient.streamDmx(1, mixedUniverse);
+        if(olaClient != null) {
+            olaClient.streamDmx(1, mixedUniverse);
+        }
+
+        HashMap<Integer, Integer> mixedActivityUniverse = new HashMap<>();
+        for (int i = 0; i < 512; i++) {
+            mixedActivityUniverse.put(i, (int) mixedUniverse[i]);
+        }
+        DmxUniverse activityUniverse = new DmxUniverse();
+        activityUniverse.setUniverse(mixedActivityUniverse);
+        activityNotificationDmxService.notifyClients(activityUniverse);
     }
 
     // Make sure, this method is synchronized. Otherwise it may happen, that
@@ -136,10 +145,6 @@ public class DefaultDmxService implements DmxService {
     // the same time. This will cause the OLA rpc stream to break and a restart
     // is required.
     public synchronized void send() {
-        if(!capabilitiesService.getCapabilities().isOla()) {
-            return;
-        }
-
         logger.trace("Sending a DMX value");
 
         // Schedule the specified count of executions in the specified delay

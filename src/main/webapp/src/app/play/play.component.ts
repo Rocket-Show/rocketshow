@@ -17,6 +17,8 @@ import { ActivityAudioService } from '../services/activity-audio.service';
 import { ActivityAudio } from '../models/activity-audio';
 import { ActivityAudioBus } from '../models/activity-audio-bus';
 import { ActivityAudioChannel } from '../models/activity-audio-channel';
+import { ActivityDmxService } from '../services/activity-dmx.service';
+import { ActivityDmx } from '../models/activity-dmx';
 
 @Component({
   selector: 'app-play',
@@ -54,6 +56,9 @@ export class PlayComponent implements OnInit, OnDestroy {
   activityAudio: ActivityAudio;
   activityAudioStopTimeout: any;
 
+  activityDmx: boolean = false;
+  activityDmxStopTimeout: any;
+
   constructor(
     public stateService: StateService,
     private compositionService: CompositionService,
@@ -62,6 +67,7 @@ export class PlayComponent implements OnInit, OnDestroy {
     private toastGeneralErrorService: ToastGeneralErrorService,
     private activityMidiService: ActivityMidiService,
     public activityAudioService: ActivityAudioService,
+    public activityDmxService: ActivityDmxService,
     public settingsService: SettingsService) {
 
     this.loadSettings();
@@ -128,7 +134,7 @@ export class PlayComponent implements OnInit, OnDestroy {
     this.activityMidiService.subject.subscribe((activityMidi: ActivityMidi) => {
       let decayMillis = 50;
 
-      if(activityMidi.midiDirection == 'IN') {
+      if (activityMidi.midiDirection == 'IN') {
         this.activityMidiIn = true;
 
         if (this.activityMidiInStopTimeout) {
@@ -140,7 +146,7 @@ export class PlayComponent implements OnInit, OnDestroy {
           this.activityMidiInStopTimeout = undefined;
           this.activityMidiIn = false;
         }, decayMillis);
-      } else if(activityMidi.midiDirection == 'OUT' && activityMidi.midiDestination != 'DMX') {
+      } else if (activityMidi.midiDirection == 'OUT' && activityMidi.midiDestination != 'DMX') {
         // DMX is monitored separately
 
         this.activityMidiOut = true;
@@ -180,7 +186,7 @@ export class PlayComponent implements OnInit, OnDestroy {
           if (settingsBus.name == activityBus.name) {
             for (let settingsChannel of settingsBus.activityAudioChannelList) {
               for (let activityChannel of activityBus.activityAudioChannelList) {
-                if(settingsChannel.index == activityChannel.index) {
+                if (settingsChannel.index == activityChannel.index) {
                   // Increase the sensitivity by factor 5 to make also more silent tracks visible
                   settingsChannel.volumeDb = activityChannel.volumeDb / 5;
                 }
@@ -191,11 +197,30 @@ export class PlayComponent implements OnInit, OnDestroy {
       }
     });
     this.activityAudioService.startMonitor();
+
+    // Subscribe to MIDI activities
+    this.activityDmxService.subject.subscribe((activityDmx: ActivityDmx) => {
+      let decayMillis = 50;
+
+      this.activityDmx = true;
+
+      if (this.activityDmxStopTimeout) {
+        clearTimeout(this.activityDmxStopTimeout);
+        this.activityDmxStopTimeout = undefined;
+      }
+
+      this.activityDmxStopTimeout = setTimeout(() => {
+        this.activityDmxStopTimeout = undefined;
+        this.activityDmx = false;
+      }, decayMillis);
+    });
+    this.activityDmxService.startMonitor();
   }
 
   ngOnDestroy() {
     this.activityMidiService.stopMonitor();
     this.activityAudioService.stopMonitor();
+    this.activityDmxService.stopMonitor();
   }
 
   private loadAllSets() {
