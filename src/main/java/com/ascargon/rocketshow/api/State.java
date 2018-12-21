@@ -16,6 +16,7 @@ public class State {
     private UpdateService.UpdateState updateState;
     private String currentSetName;
     private Boolean updateFinished;
+    private String error;
 
     public int getCurrentCompositionIndex() {
         return currentCompositionIndex;
@@ -79,6 +80,14 @@ public class State {
 
     public void setUpdateFinished(Boolean updateFinished) {
         this.updateFinished = updateFinished;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
     }
 
 }

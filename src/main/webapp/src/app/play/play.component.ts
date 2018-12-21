@@ -305,6 +305,10 @@ export class PlayComponent implements OnInit, OnDestroy {
     this.positionMillis = newState.positionMillis;
     this.playTime = this.msToTime(this.positionMillis);
 
+    if (newState.error) {
+      this.toastGeneralErrorService.showMessage(newState.error);
+    }
+
     if (newState.playState == 'PLAYING' && this.currentState.playState != 'PLAYING') {
       if (this.playUpdateSubscription) {
         this.playUpdateSubscription.unsubscribe;
@@ -356,7 +360,9 @@ export class PlayComponent implements OnInit, OnDestroy {
       this.loadCurrentSet();
     }
 
-    this.currentState = newState;
+    if (!newState.error) {
+      this.currentState = newState;
+    }
   }
 
   play() {

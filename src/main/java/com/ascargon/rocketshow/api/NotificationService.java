@@ -21,6 +21,8 @@ public interface NotificationService {
 
     void notifyClients(boolean isUpdateFinished) throws Exception;
 
+    void notifyClients(String error) throws Exception;
+
     void notifyClients() throws Exception;
 
 }

@@ -11,24 +11,30 @@ export class ToastGeneralErrorService {
     private translateService: TranslateService,
     private toastrService: ToastrService) { }
 
-  show(error?: Error): any {
+  showMessage(message: string): any {
     this.translateService.get(['settings.toast-general-error', 'settings.toast-general-error-title']).subscribe(result => {
       let text = result['settings.toast-general-error'];
 
-      if(error) {
-        let message: string;
-
-        if(error instanceof HttpErrorResponse) {
-          message = (<HttpErrorResponse>error).error.message;
-        } else {
-          message = error.message;
-        }
-
+      if(message) {
         text += '<hr /><small>' + message + '</small>';
       }
 
       this.toastrService.error(text, result['settings.toast-general-error-title'], {timeOut: 0, extendedTimeOut: 0, enableHtml: true});
     });
+  }
+
+  show(error?: Error): any {
+    let message: string;
+
+    if(error) {
+      if(error instanceof HttpErrorResponse) {
+        message = (<HttpErrorResponse>error).error.message;
+      } else {
+        message = error.message;
+      }
+    }
+
+    this.showMessage(message);
 
     return Observable.throw(error);
   }

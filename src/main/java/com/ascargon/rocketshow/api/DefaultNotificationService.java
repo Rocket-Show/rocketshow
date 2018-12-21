@@ -2,7 +2,6 @@ package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.PlayerService;
 import com.ascargon.rocketshow.composition.SetService;
-import com.ascargon.rocketshow.midi.MidiSignal;
 import com.ascargon.rocketshow.util.UpdateService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
@@ -40,10 +39,11 @@ public class DefaultNotificationService extends TextWebSocketHandler implements 
         sessions.remove(session);
     }
 
-    private synchronized void notifyClients(PlayerService playerService, SetService setService, UpdateService.UpdateState updateState, Boolean isUpdateFinished) throws IOException {
+    private synchronized void notifyClients(PlayerService playerService, SetService setService, UpdateService.UpdateState updateState, Boolean isUpdateFinished, String error) throws IOException {
         State currentState = stateService.getCurrentState(playerService, setService);
         currentState.setUpdateState(updateState);
         currentState.setUpdateFinished(isUpdateFinished);
+        currentState.setError(error);
 
         ObjectMapper mapper = new ObjectMapper();
         String returnValue = mapper.writeValueAsString(currentState);
@@ -54,34 +54,39 @@ public class DefaultNotificationService extends TextWebSocketHandler implements 
             } catch (Exception e) {
                 sessions.remove(webSocketSession);
             }
-        };
+        }
     }
 
     // Notify the clients about the current state and include update
     // information, if an update is running
     @Override
     public void notifyClients(UpdateService.UpdateState updateState) throws IOException {
-        notifyClients(null, null, updateState, null);
+        notifyClients(null, null, updateState, null, null);
     }
 
     @Override
     public void notifyClients(PlayerService playerService) throws IOException {
-        notifyClients(playerService, null, null, null);
+        notifyClients(playerService, null, null, null, null);
     }
 
     @Override
     public void notifyClients(SetService setService) throws IOException {
-        notifyClients(null, setService, null, null);
+        notifyClients(null, setService, null, null, null);
     }
 
     @Override
     public void notifyClients(boolean isUpdateFinished) throws IOException {
-        notifyClients(null, null, null, isUpdateFinished);
+        notifyClients(null, null, null, isUpdateFinished, null);
+    }
+
+    @Override
+    public void notifyClients(String error) throws IOException {
+        notifyClients(null, null, null, null, error);
     }
 
     @Override
     public void notifyClients() throws IOException {
-        notifyClients(null, null, null, null);
+        notifyClients(null, null, null, null, null);
     }
 
     @PreDestroy

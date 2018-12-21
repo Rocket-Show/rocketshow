@@ -185,7 +185,19 @@ public class CompositionPlayer {
 
         Bus bus = pipeline.getBus();
 
-        bus.connect((Bus.ERROR) (GstObject source, int code, String message) -> logger.error("GST: " + message));
+        bus.connect((Bus.ERROR) (GstObject source, int code, String message) -> {
+            logger.error("GST: " + message);
+            try {
+                notificationService.notifyClients(message + " Please check your audio buses.");
+            } catch (Exception e) {
+                logger.error("Could not notify clients about an error", e);
+            }
+            try {
+                stop();
+            } catch (Exception e) {
+                logger.error("Could not stop compostion triggered by an error", e);
+            }
+        });
         bus.connect((Bus.WARNING) (GstObject source, int code, String message) -> logger.warn("GST: " + message));
         bus.connect((Bus.INFO) (GstObject source, int code, String message) -> logger.warn("GST: " + message));
         bus.connect((GstObject source, State old, State newState, State pending) -> {
@@ -308,7 +320,6 @@ public class CompositionPlayer {
                             GValueAPI.GValue inputChannel = new GValueAPI.GValue(GType.FLOAT);
 
                             float channelVolume = getChannelVolume(audioBus, j, k);
-                            logger.info("Volume: " + channelVolume);
 
                             inputChannel.setValue(channelVolume);
                             GstApi.GST_API.gst_value_array_append_value(outputChannel, inputChannel.getPointer());
@@ -363,7 +374,7 @@ public class CompositionPlayer {
                     // TODO Does not work on OS X
 
                     PlayBin playBin = (PlayBin) ElementFactory.make("playbin", "playbin" + i);
-                    playBin.set("uri", "file://" + settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getVideoPath() + File.separator + compositionFile.getName());
+                    playBin.set("uri", "file://" + settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getVideoPath() + File.separator + compositionFile.getName());
                     pipeline.add(playBin);
                 }
             }
