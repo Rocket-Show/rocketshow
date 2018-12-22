@@ -6,9 +6,35 @@
 
 # Install all required packages (libnss-mdns installs the Bonjour service, if not already installed)
 apt-get update
-apt-get upgrade
+apt-get upgrade -y
 
-apt-get -y install default-jre fbi ola libnss-mdns dnsmasq hostapd authbind wiringpi
+# Install step-by-step because it does not work alltogether.
+# Also see https://raspberrypi.stackexchange.com/questions/74798/raspbian-stretch-getting-error-missing-server-jvm-at-usr-lib-jvm-java-8-op
+apt-get -y install openjdk-9-jre-headless fbi ola libnss-mdns dnsmasq hostapd authbind wiringpi
+
+# Install packages to play media for Gstreamer
+sudo apt-get install -y libxml2-dev zlib1g-dev libglib2.0-dev \
+    pkg-config bison flex python3 wget tar gtk-doc-tools libasound2-dev \
+    libgudev-1.0-dev libvorbis-dev libcdparanoia-dev \
+    libtheora-dev libvisual-0.4-dev iso-codes \
+    libraw1394-dev libiec61883-dev libavc1394-dev \
+    libv4l-dev libcaca-dev libspeex-dev libpng-dev \
+    libshout3-dev libjpeg-dev libflac-dev libdv4-dev \
+    libtag1-dev libwavpack-dev libsoup2.4-dev libbz2-dev \
+    libcdaudio-dev libdc1394-22-dev ladspa-sdk libass-dev \
+    libcurl4-gnutls-dev libdca-dev libdirac-dev libdvdnav-dev \
+    libexempi-dev libexif-dev libfaad-dev libgme-dev libgsm1-dev \
+    libiptcdata0-dev libkate-dev libmimic-dev libmms-dev \
+    libmodplug-dev libmpcdec-dev libofa0-dev libopus-dev \
+    librtmp-dev libschroedinger-dev libslv2-dev \
+    libsndfile1-dev libsoundtouch-dev libspandsp-dev \
+    libxvidcore-dev libzvbi-dev liba52-0.7.4-dev \
+    libcdio-dev libdvdread-dev libmad0-dev libmp3lame-dev \
+    libmpeg2-4-dev libopencore-amrnb-dev libopencore-amrwb-dev \
+    libsidplay1-dev libtwolame-dev libx264-dev libusb-1.0 \
+    python-gi-dev yasm python3-dev libgirepository1.0-dev \
+    freeglut3 libgles2-mesa-dev libgl1-mesa-dri \
+    weston wayland-protocols pulseaudio libpulse-dev libssl-dev
 
 # Install the gstreamer packages, built by Rocket Show for the Raspberry Pi to make 
 # accelerated video playback on Raspberry Pi possible. The versions on the official repos did not work until
@@ -102,10 +128,7 @@ chmod +x ./bin/raspberry-usbreset
 # - Hide warnings (e.g. temperature icon)
 sed -i '1i# ROCKETSHOWSTART\ngpu_mem=256\nforce_turbo=1\nboot_delay=1\ndtparam=sd_overclock=100\navoid_warnings=1\n# ROCKETSHOWEND\n' /boot/config.txt
 
-# Set rocketshows nice priority to 10
-sed -i '1irocketshow soft priority 10' /etc/security/limits.conf
-
-# Download current war and versioninfo
+# Download current JAR and version info
 wget https://www.rocketshow.net/update/rocketshow.jar
 wget https://www.rocketshow.net/update/currentversion2.xml
 
@@ -154,24 +177,16 @@ printf "\n# ROCKETSHOWSTART\nnet.ipv4.ip_forward=1\n# ROCKETSHOWEND\n" | tee -a 
 # Install pi4j
 curl -s get.pi4j.com | bash
 
-# Add a service to automatically start the app
-cat <<'EOF' >/etc/init.d/rocketshow
-#!/bin/bash
-# Rocket Show
-#
-# description:rocketshow util service
+# Add execution permissions on the update script
+chmod +x start.sh
 
-case $1 in
-    start)
-        /bin/bash /opt/rocketshow/start.sh
-    ;;
-    stop)
-        # Not implemented
-    ;;
-    restart)
-        # Not implemented
-    ;;
-esac
+# Add a service to automatically start the app on boot and redirect port 80 to 8080
+cat <<'EOF' >/etc/rc.local
+#!/bin/sh -e
+#
+iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
+cd /opt/rocketshow
+su rocketshow -c '/opt/rocketshow/start.sh &'
 exit 0
 EOF
 
@@ -196,8 +211,3 @@ sed -i '/127.0.1.1/d' /etc/hosts
 sed -i "\$a127.0.1.1\tRocketShow" /etc/hosts
 
 sed -i 's/raspberrypi/RocketShow/g' /etc/hostname
-
-# Give the setup some time during image creation, because umount won't work afterwards if called
-# too fast ("umount: device is busy")
-echo "Wait 30 seconds..."
-sleep 30s

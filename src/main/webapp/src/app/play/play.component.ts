@@ -386,7 +386,7 @@ export class PlayComponent implements OnInit, OnDestroy {
     this.transportService.pause().subscribe();
   }
 
-  slideStart() {
+  slideStart(event: any) {
     this.sliding = true;
   }
 

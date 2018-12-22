@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.ascargon</groupId>
     <artifactId>rocketshow</artifactId>
-    <version>1.4.2</version>
+    <version>2.1.0</version>
     <packaging>jar</packaging>
 
     <name>Rocket Show</name>
@@ -47,48 +47,48 @@
             </plugin>
 
             <!-- Compile the webapp -->
-            <!--<plugin>-->
-                <!--<groupId>org.codehaus.mojo</groupId>-->
-                <!--<artifactId>exec-maven-plugin</artifactId>-->
-                <!--<version>1.6.0</version>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<id>exec-npm-install</id>-->
-                        <!--<phase>generate-sources</phase>-->
-                        <!--<configuration>-->
-                            <!--<workingDirectory>${project.basedir}/src/main/webapp</workingDirectory>-->
-                            <!--<executable>npm</executable>-->
-                            <!--<arguments>-->
-                                <!--<argument>install</argument>-->
-                            <!--</arguments>-->
-                        <!--</configuration>-->
-                        <!--<goals>-->
-                            <!--<goal>exec</goal>-->
-                        <!--</goals>-->
-                    <!--</execution>-->
-                    <!--<execution>-->
-                        <!--<id>exec-npm-ng-build</id>-->
-                        <!--<phase>generate-sources</phase>-->
-                        <!--<configuration>-->
-                            <!--<workingDirectory>${project.basedir}/src/main/webapp</workingDirectory>-->
-                            <!--<executable>npx</executable>-->
-                            <!--<arguments>-->
-                                <!--<argument>ng</argument>-->
-                                <!--<argument>build</argument>-->
-                                <!--<argument>&#45;&#45;prod</argument>-->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <executions>
+                    <execution>
+                        <id>exec-npm-install</id>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <workingDirectory>${project.basedir}/src/main/webapp</workingDirectory>
+                            <executable>npm</executable>
+                            <arguments>
+                                <argument>install</argument>
+                            </arguments>
+                        </configuration>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>exec-npm-ng-build</id>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <workingDirectory>${project.basedir}/src/main/webapp</workingDirectory>
+                            <executable>npx</executable>
+                            <arguments>
+                                <argument>ng</argument>
+                                <argument>build</argument>
+                                <argument>--prod</argument>
 
-                                <!--&lt;!&ndash; No caching to make sure, the newest version will always be loaded-->
-                                <!--(e.g. after an update). Caching anyways only has a small impact, because-->
-                                <!--the devices are most probably run in an internal network. &ndash;&gt;-->
-                                <!--<argument>&#45;&#45;output-hashing=all</argument>-->
-                            <!--</arguments>-->
-                        <!--</configuration>-->
-                        <!--<goals>-->
-                            <!--<goal>exec</goal>-->
-                        <!--</goals>-->
-                    <!--</execution>-->
-                <!--</executions>-->
-            <!--</plugin>-->
+                                <!-- No caching to make sure, the newest version will always be loaded
+                                (e.g. after an update). Caching anyways only has a small impact, because
+                                the devices are most probably run in an internal network. -->
+                                <argument>--output-hashing=all</argument>
+                            </arguments>
+                        </configuration>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -126,6 +126,28 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-websocket</artifactId>
             <version>5.1.2.RELEASE</version>
+        </dependency>
+
+        <!-- Java EE dependencies according to https://stackoverflow.com/questions/43574426/how-to-resolve-java-lang-noclassdeffounderror-javax-xml-bind-jaxbexception-in-j -->
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>2.2.11</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-core</artifactId>
+            <version>2.2.11</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-impl</artifactId>
+            <version>2.2.11</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.activation</groupId>
+            <artifactId>activation</artifactId>
+            <version>1.1.1</version>
         </dependency>
 
         <!-- Common dependencies -->

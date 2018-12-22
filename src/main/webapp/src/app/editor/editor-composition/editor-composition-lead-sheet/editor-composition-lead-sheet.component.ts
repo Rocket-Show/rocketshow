@@ -6,6 +6,7 @@ import { Composition } from './../../../models/composition';
 import { Subject } from 'rxjs';
 import { map } from "rxjs/operators";
 import { Component, OnInit } from '@angular/core';
+import { CompositionFile } from '../../../models/composition-file';
 
 @Component({
   selector: 'app-editor-composition-lead-sheet',
@@ -14,8 +15,14 @@ import { Component, OnInit } from '@angular/core';
 })
 export class EditorCompositionLeadSheetComponent implements OnInit {
 
+  fileIndex: number;
+  file: CompositionFile;
+
   onClose: Subject<number>;
   composition: Composition;
+
+  existingFiles: CompositionFile[] = [];
+  filteredExistingFiles: CompositionFile[] = [];
 
   dropzoneConfig: DropzoneConfigInterface;
 
@@ -78,6 +85,22 @@ export class EditorCompositionLeadSheetComponent implements OnInit {
   public cancel(): void {
     this.onClose.next(2);
     this.bsModalRef.hide();
+  }
+
+  // Filter the existing files
+  filterExistingFiles(searchValue?: string) {
+    if (!searchValue) {
+      this.filteredExistingFiles = this.existingFiles;
+      return;
+    }
+
+    this.filteredExistingFiles = [];
+
+    for (let file of this.existingFiles) {
+      if (file.name.toLowerCase().indexOf(searchValue.toLowerCase()) !== -1) {
+        this.filteredExistingFiles.push(file);
+      }
+    }
   }
 
 }
