@@ -174,7 +174,7 @@ export class PlayComponent implements OnInit, OnDestroy {
       this.activityAudioStopTimeout = setTimeout(() => {
         this.activityAudioStopTimeout = undefined;
         this.resetChannelVolumes();
-      }, 200);
+      }, 300);
 
       // Map the audio activity from the backend into the frontend monitoring activity,
       // based on the settings (e.g. if more channels are played than specified in the settings,

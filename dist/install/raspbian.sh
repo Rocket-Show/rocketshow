@@ -185,8 +185,7 @@ cat <<'EOF' >/etc/rc.local
 #!/bin/sh -e
 #
 iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
-cd /opt/rocketshow
-su rocketshow -c '/opt/rocketshow/start.sh &'
+su - rocketshow -c 'cd /opt/rocketshow && /opt/rocketshow/start.sh &'
 exit 0
 EOF
 

@@ -144,12 +144,12 @@ public class DefaultCompositionService implements CompositionService {
         // Update all sets (remove deleted files, update playing times),
         // when a composition has been changed/deleted
 
-        List<Set> compositionSets = getAllSets();
+        List<Set> sets = new ArrayList<>(getAllSets());
 
-        for (Set set : compositionSets) {
+        for (Set set : sets) {
             // Load the full set
-            Set fullCompositionSet = loadSet(set.getName());
-            saveSet(fullCompositionSet);
+            Set loadedSet = loadSet(set.getName());
+            saveSet(loadedSet);
         }
     }
 
