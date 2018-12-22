@@ -23,8 +23,6 @@ public class Composition {
 
     private List<CompositionFile> compositionFileList = new ArrayList<>();
 
-    private boolean autoStartNextComposition = false;
-
     @XmlElementWrapper(name = "fileList")
     @XmlElements({@XmlElement(type = MidiCompositionFile.class, name = "midiFile"),
             @XmlElement(type = VideoCompositionFile.class, name = "videoFile"),
@@ -62,11 +60,4 @@ public class Composition {
         this.notes = notes;
     }
 
-    public boolean isAutoStartNextComposition() {
-        return autoStartNextComposition;
-    }
-
-    public void setAutoStartNextComposition(boolean autoStartNextComposition) {
-        this.autoStartNextComposition = autoStartNextComposition;
-    }
 }

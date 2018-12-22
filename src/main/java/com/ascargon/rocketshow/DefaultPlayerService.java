@@ -413,11 +413,16 @@ public class DefaultPlayerService implements PlayerService {
             return;
         }
 
-        if (currentCompositionPlayer.getComposition().isAutoStartNextComposition() && setService.getNextSetComposition() != null) {
+        if (setService.getCurrentSet() != null
+                && setService.getCurrentSet().getSetCompositionList() != null
+                && setService.getCurrentSet().getSetCompositionList().size() > setService.getCurrentCompositionIndex()
+                && setService.getCurrentSet().getSetCompositionList().get(setService.getCurrentCompositionIndex()).isAutoStartNextComposition()
+                && setService.getNextSetComposition() != null) {
             // Stop the current composition, don't play the default composition but start
             // playing the next composition
-
+            logger.info("Automatically start the next composition");
             setNextComposition();
+            play();
         } else if (sessionService.getSession().isAutoSelectNextComposition()) {
             // Stop the current composition, play the default composition and select the
             // next composition automatically (if there is one)
