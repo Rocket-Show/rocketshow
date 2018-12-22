@@ -437,7 +437,9 @@ public class DefaultPlayerService implements PlayerService {
                 }
             } else {
                 // Set the next composition without a set
-                setComposition(compositionService.getNextComposition(currentCompositionPlayer.getComposition()));
+                if (compositionService.getNextComposition(currentCompositionPlayer.getComposition()) != null) {
+                    setComposition(compositionService.getNextComposition(currentCompositionPlayer.getComposition()));
+                }
             }
         } else {
             stop(true);
