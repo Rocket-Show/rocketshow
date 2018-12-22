@@ -371,7 +371,8 @@ public class CompositionPlayer {
                 } else if (compositionFile instanceof VideoCompositionFile && capabilitiesService.getCapabilities().isGstreamer()) {
                     logger.debug("Add video file to pipeline");
 
-                    // TODO Does not work on OS X
+                    // Does not work on OS X
+                    // See http://gstreamer-devel.966125.n4.nabble.com/OpenGL-renderer-window-td4686092.html
 
                     PlayBin playBin = (PlayBin) ElementFactory.make("playbin", "playbin" + i);
                     playBin.set("uri", "file://" + settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getVideoPath() + File.separator + compositionFile.getName());

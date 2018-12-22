@@ -94,15 +94,16 @@ export class LeadSheetComponent implements OnInit {
       });
     }
 
-    if (newState.playState == 'STOPPING' || newState.playState == 'STOPPING' || newState.playState == 'PAUSED') {
+    if (newState.playState == 'STOPPING' || newState.playState == 'STOPPPED' || newState.playState == 'PAUSED') {
       if (this.playUpdateSubscription) {
+        this.lastPlayTime = undefined;
         this.playUpdateSubscription.unsubscribe();
       }
     }
 
-    this.update();
-
     this.currentState = newState;
+
+    this.update();
   }
 
   close() {
