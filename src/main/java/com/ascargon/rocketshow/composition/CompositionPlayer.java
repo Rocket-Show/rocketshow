@@ -57,6 +57,7 @@ public class CompositionPlayer {
     private final CapabilitiesService capabilitiesService;
     private final OperatingSystemInformationService operatingSystemInformationService;
     private final ActivityNotificationAudioService activityNotificationAudioService;
+    private final SetService setService;
 
     private Composition composition;
     private PlayState playState = PlayState.STOPPED;
@@ -73,7 +74,7 @@ public class CompositionPlayer {
     // The gstreamer pipeline, used to sync all files in this composition
     private Pipeline pipeline;
 
-    public CompositionPlayer(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, PlayerService playerService, SettingsService settingsService, MidiRoutingService midiRoutingService, CapabilitiesService capabilitiesService, OperatingSystemInformationService operatingSystemInformationService, ActivityNotificationAudioService activityNotificationAudioService) {
+    public CompositionPlayer(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, PlayerService playerService, SettingsService settingsService, MidiRoutingService midiRoutingService, CapabilitiesService capabilitiesService, OperatingSystemInformationService operatingSystemInformationService, ActivityNotificationAudioService activityNotificationAudioService, SetService setService) {
         this.notificationService = notificationService;
         this.activityNotificationMidiService = activityNotificationMidiService;
         this.playerService = playerService;
@@ -82,6 +83,7 @@ public class CompositionPlayer {
         this.capabilitiesService = capabilitiesService;
         this.operatingSystemInformationService = operatingSystemInformationService;
         this.activityNotificationAudioService = activityNotificationAudioService;
+        this.setService = setService;
 
         this.midiMapping.setParent(settingsService.getSettings().getMidiMapping());
     }
@@ -171,7 +173,7 @@ public class CompositionPlayer {
         playState = PlayState.LOADING;
 
         if (!isDefaultComposition && !isSample) {
-            notificationService.notifyClients(playerService);
+            notificationService.notifyClients(playerService, setService);
         }
 
         logger.debug(
@@ -386,7 +388,7 @@ public class CompositionPlayer {
         // Maybe we are stopping meanwhile
         if (playState == PlayState.LOADING && !isDefaultComposition && !isSample) {
             playState = PlayState.LOADED;
-            notificationService.notifyClients(playerService);
+            notificationService.notifyClients(playerService, setService);
         }
     }
 
@@ -408,7 +410,7 @@ public class CompositionPlayer {
         playState = PlayState.PLAYING;
 
         if (!isDefaultComposition && !isSample) {
-            notificationService.notifyClients(playerService);
+            notificationService.notifyClients(playerService, setService);
         }
     }
 
@@ -427,7 +429,7 @@ public class CompositionPlayer {
         playState = PlayState.PAUSED;
 
         if (!isDefaultComposition && !isSample) {
-            notificationService.notifyClients(playerService);
+            notificationService.notifyClients(playerService, setService);
         }
     }
 
@@ -448,7 +450,7 @@ public class CompositionPlayer {
         startPosition = 0;
 
         if (!isDefaultComposition && !isSample) {
-            notificationService.notifyClients(playerService);
+            notificationService.notifyClients(playerService, setService);
         }
 
         logger.info("Stopping composition '" + composition.getName() + "'");
@@ -462,7 +464,7 @@ public class CompositionPlayer {
         playState = PlayState.STOPPED;
 
         if (!isSample && !isDefaultComposition) {
-            notificationService.notifyClients(playerService);
+            notificationService.notifyClients(playerService, setService);
         }
 
         logger.info("Composition '" + composition.getName() + "' stopped");
@@ -479,7 +481,7 @@ public class CompositionPlayer {
         }
 
         if (!isSample) {
-            notificationService.notifyClients(playerService);
+            notificationService.notifyClients(playerService, setService);
         }
     }
 
@@ -526,7 +528,7 @@ public class CompositionPlayer {
         this.composition = composition;
 
         if (!isSample && !isDefaultComposition) {
-            notificationService.notifyClients(playerService);
+            notificationService.notifyClients(playerService, setService);
         }
     }
 

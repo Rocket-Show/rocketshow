@@ -192,10 +192,14 @@ public class DefaultCompositionService implements CompositionService {
         if (fileList != null) {
             for (File file : fileList) {
                 if (file.isFile()) {
-                    Set set = new Set();
-                    set.setName(file.getName().substring(0, file.getName().length() - 4));
-
-                    compositionSetCache.add(set);
+                    String setName = file.getName().substring(0, file.getName().length() - 4);
+                    try {
+                        Set set = loadSet(setName);
+                        set.setName(setName);
+                        compositionSetCache.add(set);
+                    } catch (Exception e) {
+                        logger.error("Could not load composition '" + file.getName() + "'", e);
+                    }
                 }
             }
         }

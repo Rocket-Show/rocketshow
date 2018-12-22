@@ -55,8 +55,8 @@ public class DefaultPlayerService implements PlayerService {
         this.operatingSystemInformationService = operatingSystemInformationService;
         this.activityNotificationAudioService = activityNotificationAudioService;
 
-        currentCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService, activityNotificationAudioService);
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService, activityNotificationAudioService);
+        currentCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService, activityNotificationAudioService, setService);
+        defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService, activityNotificationAudioService, setService);
 
         try {
             Gst.init();
@@ -72,7 +72,7 @@ public class DefaultPlayerService implements PlayerService {
             logger.error("Could not play default composition", e);
         }
 
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService, activityNotificationAudioService);
+        defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService, activityNotificationAudioService, setService);
 
         // Load the last set/composition
         try {
@@ -118,6 +118,8 @@ public class DefaultPlayerService implements PlayerService {
                 setComposition(null);
             }
         }
+
+        setService.setCurrentCompositionIndex(0);
 
         // Persist the selected set in the session
         sessionService.getSession().setCurrentSetName(setName);
@@ -228,7 +230,7 @@ public class DefaultPlayerService implements PlayerService {
         // to share the same instance) and play it
         Composition composition = compositionService
                 .cloneComposition(compositionService.getComposition(compositionName));
-        CompositionPlayer compositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService, activityNotificationAudioService);
+        CompositionPlayer compositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService, activityNotificationAudioService, setService);
         compositionPlayer.setSample(true);
         compositionPlayer.setComposition(composition);
         sampleCompositionPlayerList.add(compositionPlayer);
@@ -315,7 +317,7 @@ public class DefaultPlayerService implements PlayerService {
             return;
         }
 
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService, activityNotificationAudioService);
+        defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, midiRoutingService, capabilitiesService, operatingSystemInformationService, activityNotificationAudioService, setService);
 
         if (settingsService.getSettings().getDefaultComposition() == null || settingsService.getSettings().getDefaultComposition().length() == 0) {
             return;
@@ -426,6 +428,7 @@ public class DefaultPlayerService implements PlayerService {
                 // Set the next composition in the set
                 if (setService.getNextSetComposition() != null) {
                     setService.setCurrentCompositionIndex(setService.getCurrentCompositionIndex() + 1);
+                    setCompositionName(setService.getCurrentCompositionName());
                 }
             } else {
                 // Set the next composition without a set
