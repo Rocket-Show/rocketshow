@@ -92,6 +92,8 @@ public class DefaultPlayerService implements PlayerService {
     public void loadSetAndComposition(String setName) throws Exception {
         if (setName.length() > 0) {
             setService.setCurrentSet(compositionService.getSet(setName));
+        } else {
+            setService.setCurrentSet(null);
         }
 
         // Read the current composition file
@@ -105,17 +107,23 @@ public class DefaultPlayerService implements PlayerService {
                 logger.debug("Set initial composition '" + compositions.get(0).getName() + "'...");
 
                 setComposition(compositions.get(0));
+            } else {
+                setComposition(null);
             }
         } else {
             // We got a set loaded
-            try {
-                if (setService.getCurrentSet().getSetCompositionList().size() > 0) {
-                    setCompositionName(setService.getCurrentSet().getSetCompositionList().get(0).getName());
-                }
-            } catch (Exception e) {
-                logger.error("Could not read current composition", e);
+            if (setService.getCurrentSet().getSetCompositionList().size() > 0) {
+                setCompositionName(setService.getCurrentSet().getSetCompositionList().get(0).getName());
+            } else {
+                setComposition(null);
             }
         }
+
+        // Persist the selected set in the session
+        sessionService.getSession().setCurrentSetName(setName);
+        sessionService.save();
+
+        notificationService.notifyClients(this, setService);
     }
 
     @Override
@@ -379,7 +387,7 @@ public class DefaultPlayerService implements PlayerService {
     @Override
     public void setPreviousComposition() throws Exception {
         // Rewind current composition instead of selecting the previous one
-        if(currentCompositionPlayer.getPositionMillis() > 0) {
+        if (currentCompositionPlayer.getPositionMillis() > 0) {
             stop(true);
         }
 
@@ -435,11 +443,7 @@ public class DefaultPlayerService implements PlayerService {
     public void setComposition(Composition composition, boolean playDefaultCompositionWhenStoppingComposition,
                                boolean forceLoad) throws Exception {
 
-        if (composition == null) {
-            return;
-        }
-
-        if (composition.getName().equals(this.getCompositionName()) && !forceLoad) {
+        if (composition != null && composition.getName().equals(this.getCompositionName()) && !forceLoad) {
             // This composition is already loaded, don't stop/load again
             return;
         }

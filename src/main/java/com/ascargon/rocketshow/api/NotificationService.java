@@ -19,6 +19,8 @@ public interface NotificationService {
 
     void notifyClients(SetService setService) throws Exception;
 
+    void notifyClients(PlayerService playerService, SetService setService) throws Exception;
+
     void notifyClients(boolean isUpdateFinished) throws Exception;
 
     void notifyClients(String error) throws Exception;

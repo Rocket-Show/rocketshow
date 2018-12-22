@@ -75,6 +75,11 @@ public class DefaultNotificationService extends TextWebSocketHandler implements 
     }
 
     @Override
+    public void notifyClients(PlayerService playerService, SetService setService) throws IOException {
+        notifyClients(playerService, setService, null, null, null);
+    }
+
+    @Override
     public void notifyClients(boolean isUpdateFinished) throws IOException {
         notifyClients(null, null, null, isUpdateFinished, null);
     }

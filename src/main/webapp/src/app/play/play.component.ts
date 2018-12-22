@@ -302,8 +302,11 @@ export class PlayComponent implements OnInit, OnDestroy {
   }
 
   private stateChanged(newState: State) {
-    this.positionMillis = newState.positionMillis;
-    this.playTime = this.msToTime(this.positionMillis);
+    setTimeout(() => {
+      this.positionMillis = newState.positionMillis;
+    }, 0);
+
+    this.playTime = this.msToTime(newState.positionMillis);
 
     if (newState.error) {
       this.toastGeneralErrorService.showMessage(newState.error);
@@ -388,6 +391,10 @@ export class PlayComponent implements OnInit, OnDestroy {
   }
 
   slideStop(positionMillis: number) {
+    if(!this.currentState || !this.currentState.currentCompositionName) {
+      return;
+    }
+
     this.lastPlayTime = new Date();
     this.currentState.positionMillis = positionMillis;
     this.playTime = this.msToTime(positionMillis);

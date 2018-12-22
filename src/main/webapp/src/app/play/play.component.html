@@ -56,8 +56,8 @@
 
           <!-- The slider -->
           <div class="row d-flex mb-2">
-            <div class="col-sm my-auto" *ngIf="currentState?.currentCompositionName">
-              <mv-slider min="0" tooltip="hide" [max]="currentState.currentCompositionDurationMillis" [(value)]="positionMillis"
+            <div class="col-sm my-auto">
+              <mv-slider min="0" [enabled]="currentState?.currentCompositionName" tooltip="hide" [max]="currentState?.currentCompositionDurationMillis" [(value)]="positionMillis"
                 (slideStart)="slideStart($event)" (slideStop)="slideStop($event)" (change)="slideChange($event)"></mv-slider>
             </div>
           </div>
@@ -67,7 +67,7 @@
             <div class="col my-auto py-0 px-2 d-flex">
               <h5 class="mx-auto mb-0" style="text-align: center;">
                 <span style="width: 100px; text-align: left; display: inline-block; margin-left: 5px;">{{ playTime }}</span>
-                <span style="display: inline-block;"> - {{ currentState?.currentCompositionName }}</span>
+                <span *ngIf="currentState?.currentCompositionName" style="display: inline-block;"> - {{ currentState?.currentCompositionName }}</span>
               </h5>
             </div>
           </div>
@@ -97,7 +97,7 @@
                 <small class="my-auto"><i class="fa fa-microphone" aria-hidden="true"></i></small>
               </div>
               <div class="d-flex">
-                <div *ngFor="let audioBus of activityAudio.activityAudioBusList" class="d-flex pr-2 my-auto">
+                <div *ngFor="let audioBus of activityAudio?.activityAudioBusList" class="d-flex pr-2 my-auto">
                   <div *ngFor="let channel of audioBus.activityAudioChannelList" class="d-flex my-auto pr-1">
                     <div class="my-auto activity-indicator"></div>
                     <div class="my-auto activity-indicator activity-indicator-received" style="margin-left: -10px;" [style.opacity]="audioActivityOpacity(channel.volumeDb)"></div>
