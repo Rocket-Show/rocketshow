@@ -150,7 +150,10 @@ public class CompositionPlayer {
     }
 
     private void applyMixMatrix() {
-        int totalAvailableChannels = sink.getSinkPads().get(0).getAllowedCaps().getStructure(0).getInteger("channels");
+        //int totalAvailableChannels = sink.getSinkPads().get(0).getAllowedCaps().getStructure(0).getInteger("channels");
+        int totalAvailableChannels = 6;
+
+        logger.info("Apply the mix matrix for " + totalAvailableChannels + " channels");
 
         for (Map.Entry<Integer, Element> entry : audioconverts.entrySet()) {
             GValueAPI.GValue mixMatrix = new GValueAPI.GValue();
@@ -248,7 +251,7 @@ public class CompositionPlayer {
                     // Apply the mix matrix as soon as the pipeline is ready. There is no possibility
                     // to query the really available channels in the sink caps. Before playing,
                     // the query will always return the template (range).
-                    applyMixMatrix();
+                    //applyMixMatrix();
                 } else if (newState == State.PLAYING) {
                     // We changed to playing, maybe we need to seek to the start position (not possible before playing)
                     if (startPosition > 0) {
@@ -401,6 +404,8 @@ public class CompositionPlayer {
                 }
             }
         }
+
+        applyMixMatrix();
 
         logger.debug("Composition '" + composition.getName() + "' loaded");
 
