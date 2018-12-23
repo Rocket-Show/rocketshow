@@ -265,6 +265,16 @@ public class CompositionPlayer {
                         }
                         startPosition = 0;
                     }
+
+                    playState = PlayState.PLAYING;
+
+                    if (!isDefaultComposition && !isSample) {
+                        try {
+                            notificationService.notifyClients(playerService, setService);
+                        } catch (Exception e) {
+                            logger.error("Could not notify clients about a playing event", e);
+                        }
+                    }
                 }
             }
         });
@@ -443,12 +453,6 @@ public class CompositionPlayer {
 
         if (pipeline != null) {
             pipeline.play();
-        }
-
-        playState = PlayState.PLAYING;
-
-        if (!isDefaultComposition && !isSample) {
-            notificationService.notifyClients(playerService, setService);
         }
     }
 

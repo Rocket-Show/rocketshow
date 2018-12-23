@@ -22,7 +22,7 @@
 
               <!-- Play -->
               <button type="button" [disabled]="!currentState?.currentCompositionName" (click)="play()" class="btn btn-transport btn-transport-main"
-                *ngIf="currentState?.playState == 'STOPPED' || currentState?.playState == 'LOADED' || currentState?.playState == 'PAUSED'">
+                *ngIf="currentState?.playState == 'STOPPED' || currentState?.playState == 'PAUSED'">
 
                 <i class="fa fa-play fa-fw" aria-hidden="true"></i>
               </button>
@@ -35,7 +35,7 @@
               </button>
 
               <!-- Loading -->
-              <button type="button" class="btn btn-transport btn-transport-main" *ngIf="currentState?.playState == 'LOADING' || currentState?.playState == 'STOPPING'"
+              <button type="button" class="btn btn-transport btn-transport-main" *ngIf="currentState?.playState == 'LOADING' || currentState?.playState == 'LOADED' || currentState?.playState == 'STOPPING'"
                 style="cursor: default;">
                 <i class="fa fa-circle-o-notch fa-spin fa-fw" aria-hidden="true"></i>
               </button>
