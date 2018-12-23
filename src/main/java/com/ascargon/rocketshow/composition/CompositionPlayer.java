@@ -150,8 +150,7 @@ public class CompositionPlayer {
     }
 
     private void applyMixMatrix() {
-        //int totalAvailableChannels = sink.getSinkPads().get(0).getAllowedCaps().getStructure(0).getInteger("channels");
-        int totalAvailableChannels = 6;
+        int totalAvailableChannels = sink.getSinkPads().get(0).getAllowedCaps().getStructure(0).getInteger("channels");
 
         logger.info("Apply the mix matrix for " + totalAvailableChannels + " channels");
 
@@ -251,7 +250,11 @@ public class CompositionPlayer {
                     // Apply the mix matrix as soon as the pipeline is ready. There is no possibility
                     // to query the really available channels in the sink caps. Before playing,
                     // the query will always return the template (range).
-                    //applyMixMatrix();
+                    if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+                        // Only use a mix-matrix on OS X, because it's much more inefficient than different
+                        // ALSA devices. It's too slow for the Raspberry Pi 3 B too.
+                        applyMixMatrix();
+                    }
                 } else if (newState == State.PLAYING) {
                     // We changed to playing, maybe we need to seek to the start position (not possible before playing)
                     if (startPosition > 0) {
@@ -285,7 +288,16 @@ public class CompositionPlayer {
                         int levelElementIndex = Integer.parseInt(message.getSource().getName().substring(5));
                         AudioCompositionFile audioCompositionFile = (AudioCompositionFile) composition.getCompositionFileList().get(levelElementIndex);
                         AudioBus audioBus = settingsService.getAudioBusFromName(audioCompositionFile.getOutputBus());
-                        int audioBusStartChannel = getAudioBusStartChannel(audioBus);
+                        int audioBusStartChannel;
+
+                        if(OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+                            // We have a mix matrix in audioconvert and convert each
+                            // input to max output
+                            audioBusStartChannel = getAudioBusStartChannel(audioBus);
+                        } else {
+                            // We have different ALSA devices and start each bus by channel 0
+                            audioBusStartChannel = 0;
+                        }
 
                         // Process each channel
                         for (int i = audioBusStartChannel; i < rmsDbs.length; i++) {
@@ -322,7 +334,7 @@ public class CompositionPlayer {
                     midiSink.set("emit-signals", true);
                     pipeline.add(midiSink);
 
-                    // Sometimes preroll and sometimes new-sample events happen. We have
+                    // Sometimes preroll and sometimes new-sample events get fired. We have
                     // to process both.
                     midiSink.connect((AppSink.NEW_SAMPLE) element -> {
                         Sample sample = element.pullSample();
@@ -342,6 +354,8 @@ public class CompositionPlayer {
                 } else if (compositionFile instanceof AudioCompositionFile && capabilitiesService.getCapabilities().isGstreamer()) {
                     logger.debug("Add audio file to pipeline");
 
+                    AudioCompositionFile audioCompositionFile = (AudioCompositionFile) compositionFile;
+
                     URIDecodeBin audioSource = (URIDecodeBin) ElementFactory.make("uridecodebin", "audiouridecodebin" + i);
                     audioSource.set("uri", "file://" + settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getAudioPath() + File.separator + compositionFile.getName());
                     pipeline.add(audioSource);
@@ -356,14 +370,13 @@ public class CompositionPlayer {
                     });
 
                     pipeline.add(audioconvert);
-
                     audioconverts.put(i, audioconvert);
 
                     Element level = null;
                     if (!isSample) {
                         level = ElementFactory.make("level", "level" + i);
-                        // 50 Milliseconds
-                        level.set("interval", 200 * 1000000);
+                        // 500 Milliseconds
+                        level.set("interval", 500 * 1000000);
                         level.set("post-messages", true);
                         pipeline.add(level);
                     }
@@ -379,17 +392,15 @@ public class CompositionPlayer {
                     sink = (BaseSink) ElementFactory.make(sinkName, "sink" + i);
 
                     if (!OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
-                        sink.set("device", "rocketshow");
+                        sink.set("device", settingsService.getAlsaDeviceFromOutputBus(audioCompositionFile.getOutputBus()));
                     }
                     pipeline.add(sink);
 
-                    if (isSample) {
+                    if (level == null) {
                         audioconvert.link(resample);
                     } else {
                         audioconvert.link(level);
-                        if (level != null) {
-                            level.link(resample);
-                        }
+                        level.link(resample);
                     }
                     resample.link(sink);
                 } else if (compositionFile instanceof VideoCompositionFile && capabilitiesService.getCapabilities().isGstreamer()) {
@@ -404,8 +415,6 @@ public class CompositionPlayer {
                 }
             }
         }
-
-        applyMixMatrix();
 
         logger.debug("Composition '" + composition.getName() + "' loaded");
 

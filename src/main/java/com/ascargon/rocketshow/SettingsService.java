@@ -14,6 +14,8 @@ public interface SettingsService {
 
     AudioBus getAudioBusFromName(String outputBus);
 
+    String getAlsaDeviceFromOutputBus(String outputBus);
+
     RemoteDevice getRemoteDeviceByName(String name);
 
     int getTotalAudioChannels();

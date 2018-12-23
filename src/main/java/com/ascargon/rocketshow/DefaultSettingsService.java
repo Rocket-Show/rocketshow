@@ -214,6 +214,29 @@ public class DefaultSettingsService implements SettingsService {
         return "bus" + (id + 1);
     }
 
+    @Override
+    public String getAlsaDeviceFromOutputBus(String outputBus) {
+        // Get an alsa device name from a bus name
+        for (int i = 0; i < settings.getAudioBusList().size(); i++) {
+            AudioBus audioBus = settings.getAudioBusList().get(i);
+
+            logger.debug("Got bus '" + audioBus.getName() + "'");
+
+            if (outputBus != null && outputBus.equals(audioBus.getName())) {
+                logger.debug("Found device '" + getBusNameFromId(i) + "'");
+
+                return getBusNameFromId(i);
+            }
+        }
+
+        // Return a default bus, if none is found
+        if (settings.getAudioBusList().size() > 0) {
+            return getBusNameFromId(0);
+        }
+
+        return "";
+    }
+
     private String getAlsaSettings() {
         // Generate the ALSA settings
         StringBuilder alsaSettings = new StringBuilder();
@@ -228,9 +251,30 @@ public class DefaultSettingsService implements SettingsService {
         alsaSettings.append(System.lineSeparator());
 
         // Build the general device settings
-        alsaSettings.append("pcm.rocketshow {\n" + "  type dmix\n" + "  ipc_key 2048\n" + "  slave {\n" + "    pcm \"hw:").append(settings.getAudioDevice().getKey()).append("\"\n").append("    rate ").append(settings.getAudioRate()).append("\n").append("    channels ").append(getTotalAudioChannels()).append("\n");
+        alsaSettings.append("pcm.dshare {\n" + "  type dmix\n" + "  ipc_key 2048\n" + "  slave {\n" + "    pcm \"hw:").append(settings.getAudioDevice().getKey()).append("\"\n").append("    rate ").append(settings.getAudioRate()).append("\n").append("    channels ").append(getTotalAudioChannels()).append("\n").append("  }\n").append("  bindings {\n");
+
+        // Add all channels
+        for (int i = 0; i < getTotalAudioChannels(); i++) {
+            alsaSettings.append("    ").append(i).append(" ").append(i).append("\n");
+        }
 
         alsaSettings.append("  }\n" + "}\n");
+
+        // List each bus
+        for (int i = 0; i < settings.getAudioBusList().size(); i++) {
+            AudioBus audioBus = settings.getAudioBusList().get(i);
+
+            alsaSettings.append("\n" + "pcm.").append(getBusNameFromId(i)).append(" {\n").append("  type plug\n").append("  slave {\n").append("    pcm \"dshare\"\n").append("    channels ").append(getTotalAudioChannels()).append("\n").append("  }\n");
+
+            // Add each channel to the bus
+            for (int j = 0; j < audioBus.getChannels(); j++) {
+                alsaSettings.append("  ttable.").append(j).append(".").append(currentChannel).append(" 1\n");
+
+                currentChannel++;
+            }
+
+            alsaSettings.append("}\n");
+        }
 
         alsaSettings.append(ROCKET_SHOW_SETTINGS_END);
 
