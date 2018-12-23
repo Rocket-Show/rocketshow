@@ -360,16 +360,21 @@ public class CompositionPlayer {
                     audioSource.set("uri", "file://" + settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getAudioPath() + File.separator + compositionFile.getName());
                     pipeline.add(audioSource);
 
-                    Element audioconvert = ElementFactory.make("audioconvert", "audioconvert" + i);
+                    // Add a queue after reading the source to make use of multithreading and
+                    // queue reading from possibly slow sources.
+                    Element audioqueue = ElementFactory.make("queue", "audioqueue" + i);
                     audioSource.connect((Element.PAD_ADDED) (Element element, Pad pad) -> {
                         String name = pad.getCaps().getStructure(0).getName();
 
                         if ("audio/x-raw-float".equals(name) || "audio/x-raw-int".equals(name) || "audio/x-raw".equals(name)) {
-                            pad.link(audioconvert.getSinkPads().get(0));
+                            pad.link(audioqueue.getSinkPads().get(0));
                         }
                     });
+                    pipeline.add(audioqueue);
 
+                    Element audioconvert = ElementFactory.make("audioconvert", "audioconvert" + i);
                     pipeline.add(audioconvert);
+                    audioqueue.link(audioconvert);
                     audioconverts.put(i, audioconvert);
 
                     Element level = null;
