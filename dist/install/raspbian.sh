@@ -16,8 +16,6 @@ apt-get upgrade -y
 apt-get -y install oracle-java8-jdk fbi ola libnss-mdns dnsmasq hostapd wiringpi
 
 # Install packages to play media for Gstreamer
-# TODO Dev packages are wrong
-# maybe we still need pulsedaudio here before installing gstreamer...
 sudo apt-get install -y libxml2-dev zlib1g-dev libglib2.0-dev \
     pkg-config bison flex python3 wget tar gtk-doc-tools libasound2-dev \
     libgudev-1.0-dev libvorbis-dev libcdparanoia-dev \
@@ -41,7 +39,7 @@ sudo apt-get install -y libxml2-dev zlib1g-dev libglib2.0-dev \
     freeglut3 libgles2-mesa-dev libgl1-mesa-dri \
     weston wayland-protocols libssl-dev
 
-# Install the gstreamer packages, built by Rocket Show for the Raspberry Pi to make 
+# Install the gstreamer packages, built by Rocket Show for the Raspberry Pi to make
 # accelerated video playback on Raspberry Pi possible. The versions on the official repos did not work until
 # now (version 1.14.3). The script used to compile the custom gst-version is available here:
 # https://gist.github.com/moritzvieli/417de950209a24a4f7a57ce1bb5bfeb7
@@ -110,7 +108,7 @@ passwd --lock pi
 # Set the required config files to writeable for the rocketshow user
 # chmod 777 /boot/config.txt -> Does not work
 chmod 777 /etc/wpa_supplicant/wpa_supplicant.conf
-chmod 777 /etc/dhcpcd.conf 
+chmod 777 /etc/dhcpcd.conf
 
 # Download the initial directory structure including samples
 cd /opt

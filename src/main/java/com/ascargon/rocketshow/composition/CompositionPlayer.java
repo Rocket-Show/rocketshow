@@ -280,11 +280,6 @@ public class CompositionPlayer {
 
             audioMixer.link(capsFilter);
 
-            Element queue = ElementFactory.make("queue", "sinkqueue");
-            pipeline.add(queue);
-
-            capsFilter.link(queue);
-
             String sinkName = "alsasink";
 
             if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
@@ -306,11 +301,22 @@ public class CompositionPlayer {
                 pipeline.add(level);
             }
 
+            Element queue = ElementFactory.make("queue", "sinkqueue");
+            pipeline.add(queue);
+
+            // Add a 10 seconds of buffertime to make the playback more stable and
+            // avoid buffer underruns in the sink (usually ALSA) in case the sources are too slow
+            // TODO Make this time configurable
+            // Seems not really necessary
+            //queue.set("min-threshold-time", 10000000000d);
+
+            queue.link(sink);
+
             if (level == null) {
-                queue.link(sink);
+                capsFilter.link(queue);
             } else {
-                queue.link(level);
-                level.link(sink);
+                capsFilter.link(level);
+                level.link(queue);
             }
         }
 
@@ -327,7 +333,7 @@ public class CompositionPlayer {
                     }
 
                     Element midiFileSource = ElementFactory.make("filesrc", "midifilesrc" + i);
-                    midiFileSource.set("location", settingsService.getSettings().getBasePath() + "/" + settingsService.getSettings().getMediaPath() + "/" + settingsService.getSettings().getMidiPath() + "/" + compositionFile.getName());
+                    midiFileSource.set("location", settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getMidiPath() + "/" + compositionFile.getName());
                     pipeline.add(midiFileSource);
 
                     Element midiParse = ElementFactory.make("midiparse", "midiparse" + i);
@@ -361,7 +367,7 @@ public class CompositionPlayer {
                     AudioCompositionFile audioCompositionFile = (AudioCompositionFile) compositionFile;
 
                     URIDecodeBin audioSource = (URIDecodeBin) ElementFactory.make("uridecodebin", "audiouridecodebin" + i);
-                    audioSource.set("uri", "file://" + settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getAudioPath() + File.separator + compositionFile.getName());
+                    audioSource.set("uri", "file://" + settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getAudioPath() + File.separator + compositionFile.getName());
                     pipeline.add(audioSource);
 
                     // Add a queue after reading the source to make use of multithreading and

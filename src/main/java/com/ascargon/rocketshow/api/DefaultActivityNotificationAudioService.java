@@ -42,21 +42,7 @@ public class DefaultActivityNotificationAudioService extends TextWebSocketHandle
         sessions.remove(session);
     }
 
-    private synchronized void sendWebsocketMessage(ActivityAudio activityAudio) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        String returnValue = mapper.writeValueAsString(activityAudio);
-
-        for (WebSocketSession webSocketSession : sessions) {
-            try {
-                webSocketSession.sendMessage(new TextMessage(returnValue));
-            } catch (Exception e) {
-                sessions.remove(webSocketSession);
-            }
-        }
-    }
-
-    @Override
-    public synchronized void notifyClients(double[] volumeDbs) {
+    private synchronized void sendWebsocketMessage(double[] volumeDbs) throws IOException {
         ActivityAudio activityAudio = new ActivityAudio();
 
         int currentAudioBusIndex = -1;
@@ -83,21 +69,33 @@ public class DefaultActivityNotificationAudioService extends TextWebSocketHandle
             }
 
             // Add this channel to the current activity-bus
-            if (currentActivityAudioBus != null) {
-                ActivityAudioChannel activityAudioChannel = new ActivityAudioChannel();
-                activityAudioChannel.setIndex(currentChannel);
-                activityAudioChannel.setVolumeDb(volumeDb);
-                currentActivityAudioBus.getActivityAudioChannelList().add(activityAudioChannel);
-            }
+            ActivityAudioChannel activityAudioChannel = new ActivityAudioChannel();
+            activityAudioChannel.setIndex(currentChannel);
+            activityAudioChannel.setVolumeDb(volumeDb);
+            currentActivityAudioBus.getActivityAudioChannelList().add(activityAudioChannel);
 
             currentChannel++;
         }
 
+        ObjectMapper mapper = new ObjectMapper();
+        String returnValue = mapper.writeValueAsString(activityAudio);
+
+        for (WebSocketSession webSocketSession : sessions) {
+            try {
+                webSocketSession.sendMessage(new TextMessage(returnValue));
+            } catch (Exception e) {
+                sessions.remove(webSocketSession);
+            }
+        }
+    }
+
+    @Override
+    public void notifyClients(double[] volumeDbs) {
         // Wrap in a thread, to not block the main thread and make synchronized calls
         // to websocket (two writes to the same session from different threads is not allowed)
         Thread thread = new Thread(() -> {
             try {
-                sendWebsocketMessage(activityAudio);
+                sendWebsocketMessage(volumeDbs);
             } catch (IOException e) {
                 logger.error("Could not send audio activity message", e);
             }

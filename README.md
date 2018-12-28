@@ -80,3 +80,4 @@ chmod +x raspbian.sh
 ./raspbian.sh
 rm -rf raspbian.sh
 ```
+You should reboot after installing Rocket Show.
