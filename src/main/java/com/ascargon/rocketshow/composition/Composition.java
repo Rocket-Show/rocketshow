@@ -21,6 +21,8 @@ public class Composition {
 
     private long durationMillis;
 
+    private boolean loop = false;
+
     private List<CompositionFile> compositionFileList = new ArrayList<>();
 
     @XmlElementWrapper(name = "fileList")
@@ -58,6 +60,14 @@ public class Composition {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public boolean isLoop() {
+        return loop;
+    }
+
+    public void setLoop(boolean loop) {
+        this.loop = loop;
     }
 
 }

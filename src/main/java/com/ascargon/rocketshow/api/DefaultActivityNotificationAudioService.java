@@ -42,7 +42,7 @@ public class DefaultActivityNotificationAudioService extends TextWebSocketHandle
         sessions.remove(session);
     }
 
-    private void sendWebsocketMessage(ActivityAudio activityAudio) throws IOException {
+    private synchronized void sendWebsocketMessage(ActivityAudio activityAudio) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         String returnValue = mapper.writeValueAsString(activityAudio);
 

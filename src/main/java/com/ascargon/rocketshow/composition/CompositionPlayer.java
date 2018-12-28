@@ -13,7 +13,6 @@ import com.ascargon.rocketshow.midi.*;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
-import com.sun.jna.Pointer;
 import org.freedesktop.gstreamer.*;
 import org.freedesktop.gstreamer.elements.AppSink;
 import org.freedesktop.gstreamer.elements.BaseSink;
@@ -21,7 +20,6 @@ import org.freedesktop.gstreamer.elements.PlayBin;
 import org.freedesktop.gstreamer.elements.URIDecodeBin;
 import org.freedesktop.gstreamer.lowlevel.GType;
 import org.freedesktop.gstreamer.lowlevel.GValueAPI;
-import org.freedesktop.gstreamer.lowlevel.GstStructureAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -245,10 +243,14 @@ public class CompositionPlayer {
             }
         });
         bus.connect((Bus.EOS) source -> {
-            try {
-                playerService.compositionPlayerFinishedPlaying(this);
-            } catch (Exception e) {
-                logger.error("Could not stop the composition after end of stream", e);
+            if (composition.isLoop()) {
+                pipeline.seek(0, TimeUnit.MILLISECONDS);
+            } else {
+                try {
+                    playerService.compositionPlayerFinishedPlaying(this);
+                } catch (Exception e) {
+                    logger.error("Could not stop the composition after end of stream", e);
+                }
             }
         });
         bus.connect((Bus bus1, Message message) -> {
@@ -271,12 +273,17 @@ public class CompositionPlayer {
             pipeline.add(audioMixer);
 
             // Add a capsfilter to enforce multi-channel out. Otherwise only 2 will be mixed
-            Element capsFilter  = ElementFactory.make("capsfilter", "capsfilter");
+            Element capsFilter = ElementFactory.make("capsfilter", "capsfilter");
             Caps caps = GstApi.GST_API.gst_caps_from_string("audio/x-raw,channels=" + settingsService.getTotalAudioChannels());
             capsFilter.set("caps", caps);
             pipeline.add(capsFilter);
 
             audioMixer.link(capsFilter);
+
+            Element queue = ElementFactory.make("queue", "sinkqueue");
+            pipeline.add(queue);
+
+            capsFilter.link(queue);
 
             String sinkName = "alsasink";
 
@@ -293,16 +300,16 @@ public class CompositionPlayer {
             Element level = null;
             if (!isSample) {
                 level = ElementFactory.make("level", "level");
-                // 500 Milliseconds
+                // 100 Milliseconds
                 level.set("interval", 500 * 1000000);
                 level.set("post-messages", true);
                 pipeline.add(level);
             }
 
             if (level == null) {
-                capsFilter.link(sink);
+                queue.link(sink);
             } else {
-                capsFilter.link(level);
+                queue.link(level);
                 level.link(sink);
             }
         }

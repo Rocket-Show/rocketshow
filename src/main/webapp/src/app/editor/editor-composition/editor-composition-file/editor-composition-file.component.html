@@ -82,13 +82,13 @@
               <div class="card border-secondary" style="height: 300px; overflow-y: scroll;">
                 <div class="card-body p-0">
                   <div class="list-group list-group-flush">
-                    <a *ngFor="let existingFile of filteredExistingFiles | sort:'name'" class="list-group-item" [class.active]="file?.name == existingFile.name && file?.type == existingFile.type" href="#">
+                    <a *ngFor="let existingFile of filteredExistingFiles | sort:'name'" class="list-group-item" [class.active]="file?.name == existingFile.name && file?.type == existingFile.type" href="#" (click)="selectExistingFile(existingFile); false">
                       <div class="row">
-                        <div (click)="selectExistingFile(existingFile); false" class="col-auto my-auto">
+                        <div class="col-auto my-auto">
                           <i class="fa fa-fw" [ngClass]="existingFile.getFontAwesomeIconClass()" aria-hidden="true"></i>
                         </div>
 
-                        <div (click)="selectExistingFile(existingFile); false" class="col-auto my-auto flex-grow text-break-word pl-0">
+                        <div class="col-auto my-auto flex-grow text-break-word pl-0">
                           {{ existingFile.name }}
                         </div>
 
