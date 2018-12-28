@@ -13,6 +13,7 @@ import com.ascargon.rocketshow.midi.*;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
+import com.sun.jna.Pointer;
 import org.freedesktop.gstreamer.*;
 import org.freedesktop.gstreamer.elements.AppSink;
 import org.freedesktop.gstreamer.elements.BaseSink;
@@ -20,15 +21,14 @@ import org.freedesktop.gstreamer.elements.PlayBin;
 import org.freedesktop.gstreamer.elements.URIDecodeBin;
 import org.freedesktop.gstreamer.lowlevel.GType;
 import org.freedesktop.gstreamer.lowlevel.GValueAPI;
+import org.freedesktop.gstreamer.lowlevel.GstStructureAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -75,8 +75,6 @@ public class CompositionPlayer {
 
     // The gstreamer pipeline, used to sync all files in this composition
     private Pipeline pipeline;
-    private BaseSink sink;
-    private HashMap<Integer, Element> audioconverts;
 
     public CompositionPlayer(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, PlayerService playerService, SettingsService settingsService, MidiRoutingService midiRoutingService, CapabilitiesService capabilitiesService, OperatingSystemInformationService operatingSystemInformationService, ActivityNotificationAudioService activityNotificationAudioService, SetService setService) {
         this.notificationService = notificationService;
@@ -149,45 +147,10 @@ public class CompositionPlayer {
         }
     }
 
-    private void applyMixMatrix() {
-        int totalAvailableChannels = sink.getSinkPads().get(0).getAllowedCaps().getStructure(0).getInteger("channels");
-
-        logger.info("Apply the mix matrix for " + totalAvailableChannels + " channels");
-
-        for (Map.Entry<Integer, Element> entry : audioconverts.entrySet()) {
-            GValueAPI.GValue mixMatrix = new GValueAPI.GValue();
-            GValueAPI.GVALUE_API.g_value_init(mixMatrix, GstApi.GST_API.gst_value_array_get_type());
-
-            AudioCompositionFile audioCompositionFile = (AudioCompositionFile) composition.getCompositionFileList().get(entry.getKey());
-            AudioBus audioBus = settingsService.getAudioBusFromName(audioCompositionFile.getOutputBus());
-
-            // Repeat for each output channel
-            for (int j = 0; j < totalAvailableChannels; j++) {
-                GValueAPI.GValue outputChannel = new GValueAPI.GValue();
-                GValueAPI.GVALUE_API.g_value_init(outputChannel, GstApi.GST_API.gst_value_array_get_type());
-
-                // Fill the channel with the input channels
-                for (int k = 0; k < audioCompositionFile.getChannels(); k++) {
-                    GValueAPI.GValue inputChannel = new GValueAPI.GValue(GType.FLOAT);
-
-                    float channelVolume = getChannelVolume(audioBus, j, k);
-
-                    inputChannel.setValue(channelVolume);
-                    GstApi.GST_API.gst_value_array_append_value(outputChannel, inputChannel.getPointer());
-                    GValueAPI.GVALUE_API.g_value_unset(inputChannel);
-                }
-
-                GstApi.GST_API.gst_value_array_append_value(mixMatrix, outputChannel.getPointer());
-                GValueAPI.GVALUE_API.g_value_unset(outputChannel);
-            }
-
-            GstApi.GST_API.g_object_set_property(entry.getValue(), "mix-matrix", mixMatrix.getPointer());
-            GValueAPI.GVALUE_API.g_value_unset(mixMatrix);
-        }
-    }
-
     // Load all files and construct the complete GST pipeline
     public void loadFiles() throws Exception {
+        boolean hasAudioFile = false;
+
         if (playState != PlayState.STOPPED) {
             return;
         }
@@ -225,9 +188,21 @@ public class CompositionPlayer {
         }
 
         pipeline = new Pipeline();
-        audioconverts = new HashMap<>();
 
         Bus bus = pipeline.getBus();
+
+        Element audioMixer = null;
+
+        // Create an audiomixer, if at least one audiosource is present
+        for (int i = 0; i < composition.getCompositionFileList().size(); i++) {
+            CompositionFile compositionFile = composition.getCompositionFileList().get(i);
+
+            if (compositionFile.isActive() && compositionFile instanceof AudioCompositionFile) {
+                hasAudioFile = true;
+                break;
+            }
+        }
+
 
         bus.connect((Bus.ERROR) (GstObject source, int code, String message) -> {
             logger.error("GST: " + message);
@@ -246,16 +221,7 @@ public class CompositionPlayer {
         bus.connect((Bus.INFO) (GstObject source, int code, String message) -> logger.warn("GST: " + message));
         bus.connect((GstObject source, State old, State newState, State pending) -> {
             if (source.getTypeName().equals("GstPipeline")) {
-                if (newState == State.READY) {
-                    // Apply the mix matrix as soon as the pipeline is ready. There is no possibility
-                    // to query the really available channels in the sink caps. Before playing,
-                    // the query will always return the template (range).
-                    if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
-                        // Only use a mix-matrix on OS X, because it's much more inefficient than different
-                        // ALSA devices. It's too slow for the Raspberry Pi 3 B too.
-                        applyMixMatrix();
-                    }
-                } else if (newState == State.PLAYING) {
+                if (newState == State.PLAYING) {
                     // We changed to playing, maybe we need to seek to the start position (not possible before playing)
                     if (startPosition > 0) {
                         try {
@@ -292,33 +258,54 @@ public class CompositionPlayer {
                 if (structure.getName().equals("level")) {
                     try {
                         // We got a level message
-                        double[] rmsDbs = structure.getDoubles("peak");
-
-                        // Get the corresponding audio file ID
-                        int levelElementIndex = Integer.parseInt(message.getSource().getName().substring(5));
-                        AudioCompositionFile audioCompositionFile = (AudioCompositionFile) composition.getCompositionFileList().get(levelElementIndex);
-                        AudioBus audioBus = settingsService.getAudioBusFromName(audioCompositionFile.getOutputBus());
-                        int audioBusStartChannel;
-
-                        if(OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
-                            // We have a mix matrix in audioconvert and convert each
-                            // input to max output
-                            audioBusStartChannel = getAudioBusStartChannel(audioBus);
-                        } else {
-                            // We have different ALSA devices and start each bus by channel 0
-                            audioBusStartChannel = 0;
-                        }
-
-                        // Process each channel
-                        for (int i = audioBusStartChannel; i < rmsDbs.length; i++) {
-                            activityNotificationAudioService.notifyClients(audioBus, i - audioBusStartChannel, rmsDbs[i]);
-                        }
+                        activityNotificationAudioService.notifyClients(structure.getDoubles("peak"));
                     } catch (Exception e) {
                         logger.error("Could not process level message", e);
                     }
                 }
             }
         });
+
+        if (hasAudioFile) {
+            audioMixer = ElementFactory.make("audiomixer", "audiomixer");
+            pipeline.add(audioMixer);
+
+            // Add a capsfilter to enforce multi-channel out. Otherwise only 2 will be mixed
+            Element capsFilter  = ElementFactory.make("capsfilter", "capsfilter");
+            Caps caps = GstApi.GST_API.gst_caps_from_string("audio/x-raw,channels=" + settingsService.getTotalAudioChannels());
+            capsFilter.set("caps", caps);
+            pipeline.add(capsFilter);
+
+            audioMixer.link(capsFilter);
+
+            String sinkName = "alsasink";
+
+            if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+                sinkName = "osxaudiosink";
+            }
+            BaseSink sink = (BaseSink) ElementFactory.make(sinkName, "audiosink");
+
+            if (!OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+                sink.set("device", "rocketshow");
+            }
+            pipeline.add(sink);
+
+            Element level = null;
+            if (!isSample) {
+                level = ElementFactory.make("level", "level");
+                // 500 Milliseconds
+                level.set("interval", 500 * 1000000);
+                level.set("post-messages", true);
+                pipeline.add(level);
+            }
+
+            if (level == null) {
+                capsFilter.link(sink);
+            } else {
+                capsFilter.link(level);
+                level.link(sink);
+            }
+        }
 
         // Load all files, create the pipeline and handle exceptions to pipeline-playing
         for (int i = 0; i < composition.getCompositionFileList().size(); i++) {
@@ -385,39 +372,40 @@ public class CompositionPlayer {
                     Element audioconvert = ElementFactory.make("audioconvert", "audioconvert" + i);
                     pipeline.add(audioconvert);
                     audioqueue.link(audioconvert);
-                    audioconverts.put(i, audioconvert);
 
-                    Element level = null;
-                    if (!isSample) {
-                        level = ElementFactory.make("level", "level" + i);
-                        // 500 Milliseconds
-                        level.set("interval", 500 * 1000000);
-                        level.set("post-messages", true);
-                        pipeline.add(level);
+                    // Apply the mix matrix
+                    GValueAPI.GValue mixMatrix = new GValueAPI.GValue();
+                    GValueAPI.GVALUE_API.g_value_init(mixMatrix, GstApi.GST_API.gst_value_array_get_type());
+
+                    AudioBus audioBus = settingsService.getAudioBusFromName(audioCompositionFile.getOutputBus());
+
+                    // Repeat for each output channel
+                    for (int j = 0; j < settingsService.getTotalAudioChannels(); j++) {
+                        GValueAPI.GValue outputChannel = new GValueAPI.GValue();
+                        GValueAPI.GVALUE_API.g_value_init(outputChannel, GstApi.GST_API.gst_value_array_get_type());
+
+                        // Fill the channel with the input channels
+                        for (int k = 0; k < audioCompositionFile.getChannels(); k++) {
+                            GValueAPI.GValue inputChannel = new GValueAPI.GValue(GType.FLOAT);
+
+                            float channelVolume = getChannelVolume(audioBus, j, k);
+
+                            inputChannel.setValue(channelVolume);
+                            GstApi.GST_API.gst_value_array_append_value(outputChannel, inputChannel.getPointer());
+                            GValueAPI.GVALUE_API.g_value_unset(inputChannel);
+                        }
+
+                        GstApi.GST_API.gst_value_array_append_value(mixMatrix, outputChannel.getPointer());
+                        GValueAPI.GVALUE_API.g_value_unset(outputChannel);
                     }
 
-                    Element resample = ElementFactory.make("audioresample", "audioresample" + i);
-                    pipeline.add(resample);
+                    logger.debug("Mix-matrix for " + audioCompositionFile.getName() + ": " + mixMatrix.toString());
 
-                    String sinkName = "alsasink";
+                    GstApi.GST_API.g_object_set_property(audioconvert, "mix-matrix", mixMatrix.getPointer());
+                    GValueAPI.GVALUE_API.g_value_unset(mixMatrix);
 
-                    if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
-                        sinkName = "osxaudiosink";
-                    }
-                    sink = (BaseSink) ElementFactory.make(sinkName, "sink" + i);
-
-                    if (!OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
-                        sink.set("device", settingsService.getAlsaDeviceFromOutputBus(audioCompositionFile.getOutputBus()));
-                    }
-                    pipeline.add(sink);
-
-                    if (level == null) {
-                        audioconvert.link(resample);
-                    } else {
-                        audioconvert.link(level);
-                        level.link(resample);
-                    }
-                    resample.link(sink);
+                    // Link the converter to the mixer
+                    audioconvert.link(audioMixer);
                 } else if (compositionFile instanceof VideoCompositionFile && capabilitiesService.getCapabilities().isGstreamer()) {
                     logger.debug("Add video file to pipeline");
 

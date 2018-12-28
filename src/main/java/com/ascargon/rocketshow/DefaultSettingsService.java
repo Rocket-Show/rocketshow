@@ -250,7 +250,7 @@ public class DefaultSettingsService implements SettingsService {
         alsaSettings.append(ROCKET_SHOW_SETTINGS_START);
         alsaSettings.append(System.lineSeparator());
 
-        // Build the general device settings
+        // Build the dshare device
         alsaSettings.append("pcm.dshare {\n" + "  type dmix\n" + "  ipc_key 2048\n" + "  slave {\n" + "    pcm \"hw:").append(settings.getAudioDevice().getKey()).append("\"\n").append("    rate ").append(settings.getAudioRate()).append("\n").append("    channels ").append(getTotalAudioChannels()).append("\n").append("  }\n").append("  bindings {\n");
 
         // Add all channels
@@ -260,21 +260,16 @@ public class DefaultSettingsService implements SettingsService {
 
         alsaSettings.append("  }\n" + "}\n");
 
-        // List each bus
-        for (int i = 0; i < settings.getAudioBusList().size(); i++) {
-            AudioBus audioBus = settings.getAudioBusList().get(i);
+        // Create the default bus
+        alsaSettings.append("\n" + "pcm.").append("rocketshow").append(" {\n").append("  type plug\n").append("  slave {\n").append("    pcm \"dshare\"\n").append("    channels ").append(getTotalAudioChannels()).append("\n").append("  }\n");
 
-            alsaSettings.append("\n" + "pcm.").append(getBusNameFromId(i)).append(" {\n").append("  type plug\n").append("  slave {\n").append("    pcm \"dshare\"\n").append("    channels ").append(getTotalAudioChannels()).append("\n").append("  }\n");
-
-            // Add each channel to the bus
-            for (int j = 0; j < audioBus.getChannels(); j++) {
-                alsaSettings.append("  ttable.").append(j).append(".").append(currentChannel).append(" 1\n");
-
-                currentChannel++;
-            }
-
-            alsaSettings.append("}\n");
+        // Add each channel to the bus
+        for (int j = 0; j < getTotalAudioChannels(); j++) {
+            alsaSettings.append("  ttable.").append(j).append(".").append(currentChannel).append(" 1\n");
+            currentChannel++;
         }
+
+        alsaSettings.append("}\n");
 
         alsaSettings.append(ROCKET_SHOW_SETTINGS_END);
 
@@ -322,7 +317,7 @@ public class DefaultSettingsService implements SettingsService {
                     logger.error("Could not read ALSA settings on '" + alsaSettingsPath + "'", e);
                 }
 
-                if (existingAlsaSettings.length() > 0) {
+                if (existingAlsaSettings.length() > 0 && !existingAlsaSettings.toString().endsWith(System.lineSeparator())) {
                     existingAlsaSettings.append(System.lineSeparator());
                 }
             }

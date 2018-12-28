@@ -117,7 +117,7 @@
         "band": "Band",
         "advanced": "Advanced",
         "info": "Information",
-        "restart-required": "Please restart the device for this settings to take effect.",
+        "restart-required": "Please restart the device for these settings to take effect.",
         "wlan-ap": "Wireless access point",
         "wlan-ap-status": "Access point",
         "wlan-ap-enable": "Enable",

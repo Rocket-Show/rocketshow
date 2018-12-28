@@ -2,6 +2,7 @@ package com.ascargon.rocketshow.gstreamer;
 
 import com.sun.jna.Library;
 import com.sun.jna.Pointer;
+import org.freedesktop.gstreamer.Caps;
 import org.freedesktop.gstreamer.GObject;
 import org.freedesktop.gstreamer.lowlevel.GType;
 import org.freedesktop.gstreamer.lowlevel.GValueAPI;
@@ -22,5 +23,8 @@ public interface GstApi extends Library {
 
     // Set a pointer property to an object, like a GST_TYPE_ARRAY
     void g_object_set_property (GObject object, String property, Pointer value);
+
+    // Get the caps from a string (e.g. "audio/x-raw,channels=4")
+    Caps gst_caps_from_string(String string);
 
 }

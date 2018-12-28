@@ -13,9 +13,11 @@ apt-get upgrade -y
 # Currently still using Oracle JDK 8 instead of OpenJDK 9 because of the following reasons:
 # - MIDI does not work with openjdk 9 (midi unavailable exceptions)
 # - General playback with Gstreamer is much slower and not unstable
-apt-get -y install oracle-java8-jdk fbi ola libnss-mdns dnsmasq hostapd authbind wiringpi
+apt-get -y install oracle-java8-jdk fbi ola libnss-mdns dnsmasq hostapd wiringpi
 
 # Install packages to play media for Gstreamer
+# TODO Dev packages are wrong
+# maybe we still need pulsedaudio here before installing gstreamer...
 sudo apt-get install -y libxml2-dev zlib1g-dev libglib2.0-dev \
     pkg-config bison flex python3 wget tar gtk-doc-tools libasound2-dev \
     libgudev-1.0-dev libvorbis-dev libcdparanoia-dev \
@@ -37,7 +39,7 @@ sudo apt-get install -y libxml2-dev zlib1g-dev libglib2.0-dev \
     libsidplay1-dev libtwolame-dev libx264-dev libusb-1.0 \
     python-gi-dev yasm python3-dev libgirepository1.0-dev \
     freeglut3 libgles2-mesa-dev libgl1-mesa-dri \
-    weston wayland-protocols pulseaudio libpulse-dev libssl-dev
+    weston wayland-protocols libssl-dev
 
 # Install the gstreamer packages, built by Rocket Show for the Raspberry Pi to make 
 # accelerated video playback on Raspberry Pi possible. The versions on the official repos did not work until
@@ -130,6 +132,9 @@ chmod +x ./bin/raspberry-usbreset
 # - Overclock the sdcard a little bit to prevent bufferunderruns with ALSA
 # - Hide warnings (e.g. temperature icon)
 sed -i '1i# ROCKETSHOWSTART\ngpu_mem=256\nforce_turbo=1\nboot_delay=1\ndtparam=sd_overclock=100\navoid_warnings=1\n# ROCKETSHOWEND\n' /boot/config.txt
+
+# Set rocketshows nice priority to 10
+sed -i '1irocketshow soft priority 10' /etc/security/limits.conf
 
 # Download current JAR and version info
 wget https://www.rocketshow.net/update/rocketshow.jar

@@ -41,6 +41,12 @@ export class SettingsAudioComponent implements OnInit {
 
       this.settingsService.getAudioDevices().subscribe((response) => {
         this.audioDeviceList = response;
+
+        for(let audioDevice of this.audioDeviceList) {
+          if(this.settings.audioDevice && audioDevice.key == this.settings.audioDevice.key) {
+            this.settings.audioDevice = audioDevice;
+          }
+        }
       });
     })).subscribe();
   }

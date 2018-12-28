@@ -7,6 +7,6 @@ import org.springframework.stereotype.Service;
 @Service
 public interface ActivityNotificationAudioService {
 
-    void notifyClients(AudioBus audioBus, int channel, double volumeDb);
+    void notifyClients(double[] volumeDbs);
 
 }

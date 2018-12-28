@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.api;
 
+import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.audio.AudioBus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -13,8 +14,6 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -25,12 +24,13 @@ public class DefaultActivityNotificationAudioService extends TextWebSocketHandle
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultActivityNotificationAudioService.class);
 
-    // Collect all activity before sending it
-    private Timer sendActivityTimer;
-
-    private ActivityAudio activityAudio;
+    private final SettingsService settingsService;
 
     private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
+
+    public DefaultActivityNotificationAudioService(SettingsService settingsService) {
+        this.settingsService = settingsService;
+    }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
@@ -42,7 +42,7 @@ public class DefaultActivityNotificationAudioService extends TextWebSocketHandle
         sessions.remove(session);
     }
 
-    private void sendWebsocketMessage() throws IOException {
+    private void sendWebsocketMessage(ActivityAudio activityAudio) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         String returnValue = mapper.writeValueAsString(activityAudio);
 
@@ -52,76 +52,57 @@ public class DefaultActivityNotificationAudioService extends TextWebSocketHandle
             } catch (Exception e) {
                 sessions.remove(webSocketSession);
             }
-        };
-
-        activityAudio = null;
+        }
     }
 
     @Override
-    public synchronized void notifyClients(AudioBus audioBus, int channelIndex, double volumeDb) {
-        if(activityAudio == null) {
-            activityAudio = new ActivityAudio();
-        }
+    public synchronized void notifyClients(double[] volumeDbs) {
+        ActivityAudio activityAudio = new ActivityAudio();
 
-        // Merge this activity into the existing one
-        ActivityAudioBus mergeActivityAudioBus = null;
+        int currentAudioBusIndex = -1;
+        AudioBus currentAudioBus = settingsService.getSettings().getAudioBusList().get(0);
+        ActivityAudioBus currentActivityAudioBus = null;
+        int currentChannel = Integer.MAX_VALUE;
 
-        for(ActivityAudioBus activityAudioBus : activityAudio.getActivityAudioBusList()) {
-            if(activityAudioBus.getName().equals(audioBus.getName())) {
-                mergeActivityAudioBus = activityAudioBus;
-                break;
-            }
-        }
+        // Fill all volumes into the corresponding buses
+        for (double volumeDb : volumeDbs) {
+            if (currentChannel >= currentAudioBus.getChannels()) {
+                currentAudioBusIndex++;
 
-        if(mergeActivityAudioBus == null) {
-            mergeActivityAudioBus = new ActivityAudioBus();
-            mergeActivityAudioBus.setName(audioBus.getName());
-            activityAudio.getActivityAudioBusList().add(mergeActivityAudioBus);
-        }
-
-        ActivityAudioChannel mergeActivityAudioChannel = null;
-
-        for(ActivityAudioChannel activityAudioChannel : mergeActivityAudioBus.getActivityAudioChannelList()) {
-            if(activityAudioChannel.getIndex() == channelIndex) {
-                mergeActivityAudioChannel = activityAudioChannel;
-                break;
-            }
-        }
-
-        if(mergeActivityAudioChannel == null) {
-            mergeActivityAudioChannel = new ActivityAudioChannel();
-            mergeActivityAudioChannel.setIndex(channelIndex);
-            mergeActivityAudioBus.getActivityAudioChannelList().add(mergeActivityAudioChannel);
-        }
-
-        mergeActivityAudioChannel.setVolumeDb(volumeDb);
-
-        // Schedule the specified count of executions in the specified delay
-        if (sendActivityTimer != null) {
-            // There is already a timer running -> let it finish
-            return;
-        }
-
-        TimerTask timerTask = new TimerTask() {
-            @Override
-            public void run() {
-                try {
-                    // Send the universe
-                    sendWebsocketMessage();
-                } catch (Exception e) {
-                    logger.error("Could not send the DMX universe", e);
+                if (settingsService.getSettings().getAudioBusList().size() > currentAudioBusIndex) {
+                    // Create a new activity channel
+                    currentAudioBus = settingsService.getSettings().getAudioBusList().get(currentAudioBusIndex);
+                    currentActivityAudioBus = new ActivityAudioBus();
+                    currentActivityAudioBus.setName(currentAudioBus.getName());
+                    activityAudio.getActivityAudioBusList().add(currentActivityAudioBus);
+                    currentChannel = 0;
+                } else {
+                    // More channels present than defined in the audio buses
+                    break;
                 }
-
-                if (sendActivityTimer != null) {
-                    sendActivityTimer.cancel();
-                }
-
-                sendActivityTimer = null;
             }
-        };
 
-        sendActivityTimer = new Timer();
-        sendActivityTimer.schedule(timerTask,50);
+            // Add this channel to the current activity-bus
+            if (currentActivityAudioBus != null) {
+                ActivityAudioChannel activityAudioChannel = new ActivityAudioChannel();
+                activityAudioChannel.setIndex(currentChannel);
+                activityAudioChannel.setVolumeDb(volumeDb);
+                currentActivityAudioBus.getActivityAudioChannelList().add(activityAudioChannel);
+            }
+
+            currentChannel++;
+        }
+
+        // Wrap in a thread, to not block the main thread and make synchronized calls
+        // to websocket (two writes to the same session from different threads is not allowed)
+        Thread thread = new Thread(() -> {
+            try {
+                sendWebsocketMessage(activityAudio);
+            } catch (IOException e) {
+                logger.error("Could not send audio activity message", e);
+            }
+        });
+        thread.start();
     }
 
     @PreDestroy
