@@ -280,6 +280,11 @@ public class CompositionPlayer {
 
             audioMixer.link(capsFilter);
 
+            Element queue = ElementFactory.make("queue", "audiosinkqueue");
+            pipeline.add(queue);
+
+            capsFilter.link(queue);
+
             String sinkName = "alsasink";
 
             if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
@@ -295,28 +300,17 @@ public class CompositionPlayer {
             Element level = null;
             if (!isSample) {
                 level = ElementFactory.make("level", "level");
-                // 100 Milliseconds
+                // 500 Milliseconds
                 level.set("interval", 500 * 1000000);
                 level.set("post-messages", true);
                 pipeline.add(level);
             }
 
-            Element queue = ElementFactory.make("queue", "sinkqueue");
-            pipeline.add(queue);
-
-            // Add a 10 seconds of buffertime to make the playback more stable and
-            // avoid buffer underruns in the sink (usually ALSA) in case the sources are too slow
-            // TODO Make this time configurable
-            // Seems not really necessary
-            //queue.set("min-threshold-time", 10000000000d);
-
-            queue.link(sink);
-
             if (level == null) {
-                capsFilter.link(queue);
+                queue.link(sink);
             } else {
-                capsFilter.link(level);
-                level.link(queue);
+                queue.link(level);
+                level.link(sink);
             }
         }
 
@@ -339,6 +333,9 @@ public class CompositionPlayer {
                     Element midiParse = ElementFactory.make("midiparse", "midiparse" + i);
                     pipeline.add(midiParse);
 
+                    Element queue = ElementFactory.make("queue", "midisinkqueue" + i);
+                    pipeline.add(queue);
+
                     AppSink midiSink = (AppSink) ElementFactory.make("appsink", "midisink" + i);
                     // Required to actually send the signals
                     midiSink.set("emit-signals", true);
@@ -360,7 +357,8 @@ public class CompositionPlayer {
                     });
 
                     midiFileSource.link(midiParse);
-                    midiParse.link(midiSink);
+                    midiParse.link(queue);
+                    queue.link(midiSink);
                 } else if (compositionFile instanceof AudioCompositionFile && capabilitiesService.getCapabilities().isGstreamer()) {
                     logger.debug("Add audio file to pipeline");
 
@@ -370,21 +368,15 @@ public class CompositionPlayer {
                     audioSource.set("uri", "file://" + settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getAudioPath() + File.separator + compositionFile.getName());
                     pipeline.add(audioSource);
 
-                    // Add a queue after reading the source to make use of multithreading and
-                    // queue reading from possibly slow sources.
-                    Element audioqueue = ElementFactory.make("queue", "audioqueue" + i);
+                    Element audioconvert = ElementFactory.make("audioconvert", "audioconvert" + i);
                     audioSource.connect((Element.PAD_ADDED) (Element element, Pad pad) -> {
                         String name = pad.getCaps().getStructure(0).getName();
 
                         if ("audio/x-raw-float".equals(name) || "audio/x-raw-int".equals(name) || "audio/x-raw".equals(name)) {
-                            pad.link(audioqueue.getSinkPads().get(0));
+                            pad.link(audioconvert.getSinkPads().get(0));
                         }
                     });
-                    pipeline.add(audioqueue);
-
-                    Element audioconvert = ElementFactory.make("audioconvert", "audioconvert" + i);
                     pipeline.add(audioconvert);
-                    audioqueue.link(audioconvert);
 
                     // Apply the mix matrix
                     GValueAPI.GValue mixMatrix = new GValueAPI.GValue();
@@ -495,7 +487,6 @@ public class CompositionPlayer {
         if (!isDefaultComposition && !isSample) {
             notificationService.notifyClients(playerService, setService);
         }
-
         logger.info("Stopping composition '" + composition.getName() + "'");
 
         // Stop the composition
