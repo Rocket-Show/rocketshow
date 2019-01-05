@@ -98,6 +98,8 @@ public class CompositionPlayer {
             int channel = event & 0x0f;
             int command = event & 0xf0;
             int note = byteBuffer.get(1) & 0x7f;
+
+            // TODO Can result in index out of bounds exception
             int velocity = byteBuffer.get(2) & 0x7f;
 
             MidiSignal midiSignal = new MidiSignal();

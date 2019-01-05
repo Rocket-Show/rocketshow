@@ -42,6 +42,8 @@ class MidiInDeviceReceiver implements Receiver {
         } catch (Exception e) {
             logger.error("Could not execute action from live MIDI", e);
         }
+
+        // TODO Process the MIDI events through the defined routings
     }
 
     @Override

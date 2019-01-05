@@ -69,8 +69,8 @@ public class DefaultMidiRoutingService implements MidiRoutingService {
             return;
         }
 
-        if(midi2MonitorReceiverList != null) {
-            for(Midi2MonitorReceiver midi2MonitorReceiver : midi2MonitorReceiverList) {
+        if (midi2MonitorReceiverList != null) {
+            for (Midi2MonitorReceiver midi2MonitorReceiver : midi2MonitorReceiverList) {
                 midi2MonitorReceiver.close();
             }
         }
@@ -91,6 +91,8 @@ public class DefaultMidiRoutingService implements MidiRoutingService {
     }
 
     public void sendSignal(MidiSignal midiSignal, List<MidiRouting> midiRoutingList) {
+        // TODO Don't create a new receiver and close it for each signal but preserve it
+        // maybe in the caller and pass the receiver here instead of the midiRoutingList?
         for (MidiRouting midiRouting : midiRoutingList) {
             Receiver receiver = getReceiver(midiRouting);
 
@@ -103,6 +105,8 @@ public class DefaultMidiRoutingService implements MidiRoutingService {
             }
 
             activityNotificationMidiService.notifyClients(midiSignal, MidiSignal.MidiDirection.OUT, null, midiRouting.getMidiDestination());
+
+            receiver.close();
         }
     }
 

@@ -92,7 +92,7 @@ public class DefaultDmxService implements DmxService {
             return;
         }
 
-        // Initialize the universe
+        // Initialize the universes
         for (DmxUniverse dmxUniverse : dmxUniverseList) {
             HashMap<Integer, Integer> universe = dmxUniverse.getUniverse();
 

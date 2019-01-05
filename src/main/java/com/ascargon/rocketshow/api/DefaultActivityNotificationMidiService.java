@@ -57,6 +57,8 @@ public class DefaultActivityNotificationMidiService extends TextWebSocketHandler
 
     @Override
     public void notifyClients(MidiSignal midiSignal, MidiSignal.MidiDirection midiDirection, MidiSignal.MidiSource midiSource, MidiSignal.MidiDestination midiDestination) {
+        // TODO Collect events before sending each
+
         // Wrap in a thread, to not block the main thread and make synchronized calls
         // to websocket (two writes to the same session from different threads is not allowed)
         Thread thread = new Thread(() -> {
