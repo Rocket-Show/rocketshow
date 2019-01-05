@@ -52,7 +52,7 @@ public class Settings {
 
     private List<RaspberryGpioControl> raspberryGpioControlList = new ArrayList<>();
 
-    private int dmxSendDelayMillis;
+    private int lightingSendDelayMillis;
 
     // Global play offset on file types
     private int offsetMillisMidi;
@@ -114,12 +114,12 @@ public class Settings {
         this.midiOutDevice = midiOutDevice;
     }
 
-    public int getDmxSendDelayMillis() {
-        return dmxSendDelayMillis;
+    public int getLightingSendDelayMillis() {
+        return lightingSendDelayMillis;
     }
 
-    public void setDmxSendDelayMillis(int dmxSendDelayMillis) {
-        this.dmxSendDelayMillis = dmxSendDelayMillis;
+    public void setLightingSendDelayMillis(int lightingSendDelayMillis) {
+        this.lightingSendDelayMillis = lightingSendDelayMillis;
     }
 
     @XmlElement(name = "remoteDevice")

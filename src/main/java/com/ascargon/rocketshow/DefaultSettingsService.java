@@ -108,7 +108,7 @@ public class DefaultSettingsService implements SettingsService {
             logger.error("Could not get any MIDI OUT devices", e);
         }
 
-        settings.setDmxSendDelayMillis(10);
+        settings.setLightingSendDelayMillis(10);
 
         settings.setOffsetMillisAudio(0);
         settings.setOffsetMillisMidi(0);
@@ -417,7 +417,7 @@ public class DefaultSettingsService implements SettingsService {
 
         if (OperatingSystemInformation.Type.LINUX.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
             try {
-                updateAudioSystem();
+                //updateAudioSystem();
             } catch (Exception e) {
                 logger.error("Could not update the audio system settings", e);
             }

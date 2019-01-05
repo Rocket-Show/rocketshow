@@ -23,7 +23,7 @@ export class RoutingDetailsComponent implements OnInit {
     private settingsService: SettingsService) {
 
     this.midiDestinationList.push('OUT_DEVICE');
-    this.midiDestinationList.push('DMX');
+    this.midiDestinationList.push('LIGHTING');
     this.midiDestinationList.push('REMOTE');
   }
 

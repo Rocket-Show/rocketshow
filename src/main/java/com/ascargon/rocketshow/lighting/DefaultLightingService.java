@@ -1,8 +1,8 @@
-package com.ascargon.rocketshow.dmx;
+package com.ascargon.rocketshow.lighting;
 
 import com.ascargon.rocketshow.CapabilitiesService;
 import com.ascargon.rocketshow.SettingsService;
-import com.ascargon.rocketshow.api.ActivityNotificationDmxService;
+import com.ascargon.rocketshow.api.ActivityNotificationLightingService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ola.OlaClient;
 import ola.proto.Ola.UniverseInfoReply;
@@ -27,18 +27,18 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
-public class DefaultDmxService implements DmxService {
+public class DefaultLightingService implements LightingService {
 
-    private final static Logger logger = LoggerFactory.getLogger(DefaultDmxService.class);
+    private final static Logger logger = LoggerFactory.getLogger(DefaultLightingService.class);
 
     private final SettingsService settingsService;
     private final CapabilitiesService capabilitiesService;
-    private final ActivityNotificationDmxService activityNotificationDmxService;
+    private final ActivityNotificationLightingService activityNotificationLightingService;
 
     private final String OLA_URL = "http://localhost:9090/";
 
     // Cache the channel values and send them each time
-    private final List<DmxUniverse> dmxUniverseList = new CopyOnWriteArrayList<>();
+    private final List<LightingUniverse> lightingUniverseList = new CopyOnWriteArrayList<>();
 
     private OlaClient olaClient;
 
@@ -54,10 +54,10 @@ public class DefaultDmxService implements DmxService {
 
     private final HttpClient httpClient;
 
-    public DefaultDmxService(SettingsService settingsService, CapabilitiesService capabilitiesService, ActivityNotificationDmxService activityNotificationDmxService) {
+    public DefaultLightingService(SettingsService settingsService, CapabilitiesService capabilitiesService, ActivityNotificationLightingService activityNotificationLightingService) {
         this.settingsService = settingsService;
         this.capabilitiesService = capabilitiesService;
-        this.activityNotificationDmxService = activityNotificationDmxService;
+        this.activityNotificationLightingService = activityNotificationLightingService;
 
         RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).build();
         httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
@@ -65,7 +65,7 @@ public class DefaultDmxService implements DmxService {
         try {
             olaClient = new OlaClient();
         } catch (Exception e) {
-            logger.error("Could not initialize OLA DMX client", e);
+            logger.error("Could not initialize OLA client", e);
             capabilitiesService.getCapabilities().setOla(false);
         }
 
@@ -93,8 +93,8 @@ public class DefaultDmxService implements DmxService {
         }
 
         // Initialize the universes
-        for (DmxUniverse dmxUniverse : dmxUniverseList) {
-            HashMap<Integer, Integer> universe = dmxUniverse.getUniverse();
+        for (LightingUniverse lightingUniverse : lightingUniverseList) {
+            HashMap<Integer, Integer> universe = lightingUniverse.getUniverse();
 
             for (int i = 0; i < 512; i++) {
                 universe.put(i, 0);
@@ -105,19 +105,19 @@ public class DefaultDmxService implements DmxService {
     }
 
     private void sendUniverse() {
-        logger.trace("Send the DMX universe");
+        logger.trace("Send the lighting universe");
 
         // Mix all current universes into one -> highest value per channel wins
         short[] mixedUniverse = new short[512];
 
         // Copy the list to protect against changes while mixing
-        List<DmxUniverse> dmxUniverseListCopy = new CopyOnWriteArrayList<>(dmxUniverseList);
+        List<LightingUniverse> lightingUniverseListCopy = new CopyOnWriteArrayList<>(lightingUniverseList);
 
         for (int i = 0; i < 512; i++) {
             int highestValue = 0;
 
-            for (DmxUniverse dmxUniverse : dmxUniverseListCopy) {
-                HashMap<Integer, Integer> universe = dmxUniverse.getUniverse();
+            for (LightingUniverse lightingUniverse : lightingUniverseListCopy) {
+                HashMap<Integer, Integer> universe = lightingUniverse.getUniverse();
 
                 if (universe.get(i) != null && universe.get(i) > highestValue) {
                     highestValue = universe.get(i);
@@ -135,9 +135,9 @@ public class DefaultDmxService implements DmxService {
         for (int i = 0; i < 512; i++) {
             mixedActivityUniverse.put(i, (int) mixedUniverse[i]);
         }
-        DmxUniverse activityUniverse = new DmxUniverse();
+        LightingUniverse activityUniverse = new LightingUniverse();
         activityUniverse.setUniverse(mixedActivityUniverse);
-        activityNotificationDmxService.notifyClients(activityUniverse);
+        activityNotificationLightingService.notifyClients(activityUniverse);
     }
 
     // Make sure, this method is synchronized. Otherwise it may happen, that
@@ -145,7 +145,7 @@ public class DefaultDmxService implements DmxService {
     // the same time. This will cause the OLA rpc stream to break and a restart
     // is required.
     public synchronized void send() {
-        logger.trace("Sending a DMX value");
+        logger.trace("Sending a lighting value");
 
         // Schedule the specified count of executions in the specified delay
         if (sendUniverseTimer != null) {
@@ -160,7 +160,7 @@ public class DefaultDmxService implements DmxService {
                     // Send the universe
                     sendUniverse();
                 } catch (Exception e) {
-                    logger.error("Could not send the DMX universe", e);
+                    logger.error("Could not send the lighting universe", e);
                 }
 
                 if (sendUniverseTimer != null) {
@@ -172,7 +172,7 @@ public class DefaultDmxService implements DmxService {
         };
 
         sendUniverseTimer = new Timer();
-        sendUniverseTimer.schedule(timerTask, settingsService.getSettings().getDmxSendDelayMillis());
+        sendUniverseTimer.schedule(timerTask, settingsService.getSettings().getLightingSendDelayMillis());
     }
 
     private boolean isStandardDevice(String name) {
@@ -194,7 +194,7 @@ public class DefaultDmxService implements DmxService {
         ObjectMapper mapper = new ObjectMapper();
         OlaPort[] olaPortList = mapper.readValue(response.getEntity().getContent(), OlaPort[].class);
 
-        // Search for any non-default ports (e.g. a connected DMX USB device)
+        // Search for any non-default ports (e.g. a connected lighting USB device)
         for (OlaPort olaPort : olaPortList) {
             if (olaPort.isOutput() && !isStandardDevice(olaPort.getDevice())) {
                 return olaPort.getId();
@@ -255,7 +255,7 @@ public class DefaultDmxService implements DmxService {
             }
         }
 
-        logger.debug("Initializing DMX universe on OLA...");
+        logger.debug("Initializing lighting universe on OLA...");
 
         String portId = null;
 
@@ -266,8 +266,8 @@ public class DefaultDmxService implements DmxService {
         }
 
         if (portId == null || portId.length() == 0) {
-            // No connected DMX device-port found
-            logger.trace("No connected DMX output device found");
+            // No connected lighting device-port found
+            logger.trace("No connected lighting output device found");
             return;
         }
 
@@ -280,17 +280,17 @@ public class DefaultDmxService implements DmxService {
             logger.error("Could not create a new universe on OLA", e);
         }
 
-        logger.debug("DMX universe on OLA initialized");
+        logger.debug("Lighting universe on OLA initialized");
     }
 
     @Override
-    public void addDmxUniverse(DmxUniverse dmxUniverse) {
-        dmxUniverseList.add(dmxUniverse);
+    public void addLightingUniverse(LightingUniverse lightingUniverse) {
+        lightingUniverseList.add(lightingUniverse);
     }
 
     @Override
-    public void removeDmxUniverse(DmxUniverse dmxUniverse) {
-        dmxUniverseList.remove(dmxUniverse);
+    public void removeLightingUniverse(LightingUniverse lightingUniverse) {
+        lightingUniverseList.remove(lightingUniverse);
     }
 
     @Override

@@ -1,14 +1,14 @@
-import { Settings } from './../../models/settings';
-import { SettingsService } from './../../services/settings.service';
+import { Settings } from '../../models/settings';
+import { SettingsService } from '../../services/settings.service';
 import { Component, OnInit } from '@angular/core';
 import { map } from "rxjs/operators";
 
 @Component({
-  selector: 'app-settings-dmx',
-  templateUrl: './settings-dmx.component.html',
-  styleUrls: ['./settings-dmx.component.scss']
+  selector: 'app-settings-lighting',
+  templateUrl: './settings-lighting.component.html',
+  styleUrls: ['./settings-lighting.component.scss']
 })
-export class SettingsDmxComponent implements OnInit {
+export class SettingsLightingComponent implements OnInit {
 
   settings: Settings;
 

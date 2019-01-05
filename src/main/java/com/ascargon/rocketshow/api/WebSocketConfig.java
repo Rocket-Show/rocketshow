@@ -14,13 +14,13 @@ class WebSocketConfig implements WebSocketConfigurer {
     private final DefaultNotificationService defaultNotificationService;
     private final DefaultActivityNotificationMidiService defaultActivityNotificationMidiService;
     private final DefaultActivityNotificationAudioService defaultActivityNotificationAudioService;
-    private final DefaultActivityNotificationDmxService defaultActivityNotificationDmxService;
+    private final DefaultActivityNotificationLightingService defaultActivityNotificationLightingService;
 
-    public WebSocketConfig(DefaultNotificationService defaultNotificationService, DefaultActivityNotificationMidiService defaultActivityNotificationMidiService, DefaultActivityNotificationAudioService defaultActivityNotificationAudioService, DefaultActivityNotificationDmxService defaultActivityNotificationDmxService) {
+    public WebSocketConfig(DefaultNotificationService defaultNotificationService, DefaultActivityNotificationMidiService defaultActivityNotificationMidiService, DefaultActivityNotificationAudioService defaultActivityNotificationAudioService, DefaultActivityNotificationLightingService defaultActivityNotificationLightingService) {
         this.defaultNotificationService = defaultNotificationService;
         this.defaultActivityNotificationMidiService = defaultActivityNotificationMidiService;
         this.defaultActivityNotificationAudioService = defaultActivityNotificationAudioService;
-        this.defaultActivityNotificationDmxService = defaultActivityNotificationDmxService;
+        this.defaultActivityNotificationLightingService = defaultActivityNotificationLightingService;
     }
 
     @Override
@@ -28,7 +28,7 @@ class WebSocketConfig implements WebSocketConfigurer {
         registry.addHandler(defaultNotificationService, "/api/state").setAllowedOrigins("*");
         registry.addHandler(defaultActivityNotificationMidiService, "/api/activity/midi").setAllowedOrigins("*");
         registry.addHandler(defaultActivityNotificationAudioService, "/api/activity/audio").setAllowedOrigins("*");
-        registry.addHandler(defaultActivityNotificationDmxService, "/api/activity/dmx").setAllowedOrigins("*");
+        registry.addHandler(defaultActivityNotificationLightingService, "/api/activity/lighting").setAllowedOrigins("*");
     }
 
 }

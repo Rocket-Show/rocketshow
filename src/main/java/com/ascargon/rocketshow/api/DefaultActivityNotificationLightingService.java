@@ -1,7 +1,6 @@
 package com.ascargon.rocketshow.api;
 
-import com.ascargon.rocketshow.dmx.DmxUniverse;
-import com.ascargon.rocketshow.midi.MidiSignal;
+import com.ascargon.rocketshow.lighting.LightingUniverse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,9 +19,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Notify all connected websocket clients about a MIDI event.
  */
 @Service
-public class DefaultActivityNotificationDmxService extends TextWebSocketHandler implements ActivityNotificationDmxService {
+public class DefaultActivityNotificationLightingService extends TextWebSocketHandler implements ActivityNotificationLightingService {
 
-    private final static Logger logger = LoggerFactory.getLogger(DefaultActivityNotificationDmxService.class);
+    private final static Logger logger = LoggerFactory.getLogger(DefaultActivityNotificationLightingService.class);
 
     private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
 
@@ -36,9 +35,9 @@ public class DefaultActivityNotificationDmxService extends TextWebSocketHandler 
         sessions.remove(session);
     }
 
-    private synchronized void sendWebsocketMessage(DmxUniverse dmxUniverse) throws IOException {
+    private synchronized void sendWebsocketMessage(LightingUniverse lightingUniverse) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        String returnValue = mapper.writeValueAsString(dmxUniverse);
+        String returnValue = mapper.writeValueAsString(lightingUniverse);
 
         for (WebSocketSession webSocketSession : sessions) {
             try {
@@ -50,14 +49,14 @@ public class DefaultActivityNotificationDmxService extends TextWebSocketHandler 
     }
 
     @Override
-    public void notifyClients(DmxUniverse dmxUniverse) {
+    public void notifyClients(LightingUniverse lightingUniverse) {
         // TODO Collect events before sending each
 
         // Wrap in a thread, to not block the main thread and make synchronized calls
         // to websocket (two writes to the same session from different threads is not allowed)
         Thread thread = new Thread(() -> {
             try {
-                sendWebsocketMessage(dmxUniverse);
+                sendWebsocketMessage(lightingUniverse);
             } catch (IOException e) {
                 logger.error("Could not send MIDI activity message", e);
             }

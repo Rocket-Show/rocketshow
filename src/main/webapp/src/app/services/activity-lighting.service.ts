@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
-import { ActivityDmx } from '../models/activity-dmx';
+import { ActivityLighting } from '../models/activity-lighting';
 import { $WebSocket, WebSocketConfig } from 'angular2-websocket';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
@@ -8,9 +8,9 @@ import { environment } from '../../environments/environment';
 @Injectable({
   providedIn: 'root'
 })
-export class ActivityDmxService {
+export class ActivityLightingService {
 
-  public subject: Subject<ActivityDmx> = new Subject();
+  public subject: Subject<ActivityLighting> = new Subject();
 
   // The websocket endpoint url
   private wsUrl: string;
@@ -29,7 +29,7 @@ export class ActivityDmxService {
       this.wsUrl = 'ws://' + window.location.hostname + ':' + window.location.port + '/';
     }
 
-    this.wsUrl += 'api/activity/dmx';
+    this.wsUrl += 'api/activity/lighting';
   }
 
   startMonitor() {
@@ -42,7 +42,7 @@ export class ActivityDmxService {
 
     this.websocket.onMessage(
       (msg: MessageEvent) => {
-        this.subject.next(new ActivityDmx(JSON.parse(msg.data)));
+        this.subject.next(new ActivityLighting(JSON.parse(msg.data)));
       },
       { autoApply: false }
     );

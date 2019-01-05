@@ -6,8 +6,8 @@
       </div>
       <a href="#" class="col-auto flex-grow text-break-word my-auto pl-0" (click)="editRouting(i); false">
         <div class="col col-auto pl-0">
-          <span *ngIf="routing.midiDestination == 'DMX'">
-            <i class="fa fa-lightbulb-o fa-fw" aria-hidden="true"></i> {{ 'settings.midi-destination-enum.DMX' | translate }}</span>
+          <span *ngIf="routing.midiDestination == 'LIGHTING'">
+            <i class="fa fa-lightbulb-o fa-fw" aria-hidden="true"></i> {{ 'settings.midi-destination-enum.LIGHTING' | translate }}</span>
           <span *ngIf="routing.midiDestination == 'OUT_DEVICE'">
             <i class="fa fa fa-sign-out fa-fw" aria-hidden="true"></i> {{ 'settings.midi-destination-enum.OUT_DEVICE' | translate }}</span>
           <span *ngIf="routing.midiDestination == 'REMOTE'">

@@ -1,0 +1,14 @@
+<div class="form-group row">
+  <label class="col-lg-3 col-form-label">{{ 'settings.lighting-send-delay' | translate }}</label>
+  <div class="col-lg-9">
+    <input type="text" class="form-control" [ngModel]="settings?.lightingSendDelayMillis" (ngModelChange)="settings.lightingSendDelayMillis = $event">
+  </div>
+</div>
+
+<div class="form-group row">
+  <label class="col-lg-3 col-form-label">{{ 'settings.lighting-console' | translate }}</label>
+  <div class="col-lg-9 d-flex">
+    <a class="my-auto" href="/" onclick="javascript:event.target.port=9090" target="_blank">
+      <i class="fa fa-external-link"></i> {{ 'settings.lighting-console-open' | translate }}</a>
+  </div>
+</div>

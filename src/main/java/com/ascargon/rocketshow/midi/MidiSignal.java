@@ -25,7 +25,7 @@ public class MidiSignal {
     }
 
     public enum MidiDestination {
-        OUT_DEVICE, DMX, REMOTE
+        OUT_DEVICE, LIGHTING, REMOTE
     }
 
     private int command;

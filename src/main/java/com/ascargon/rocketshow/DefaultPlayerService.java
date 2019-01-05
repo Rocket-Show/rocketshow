@@ -7,7 +7,7 @@ import com.ascargon.rocketshow.composition.Composition;
 import com.ascargon.rocketshow.composition.CompositionPlayer;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
-import com.ascargon.rocketshow.dmx.DmxService;
+import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.midi.MidiRoutingService;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import org.freedesktop.gstreamer.Gst;
@@ -33,7 +33,7 @@ public class DefaultPlayerService implements PlayerService {
     private final SetService setService;
     private final SessionService sessionService;
     private final MidiRoutingService midiRoutingService;
-    private final DmxService dmxService;
+    private final LightingService lightingService;
     private final CapabilitiesService capabilitiesService;
     private final OperatingSystemInformationService operatingSystemInformationService;
     private final ActivityNotificationAudioService activityNotificationAudioService;
@@ -42,7 +42,7 @@ public class DefaultPlayerService implements PlayerService {
     private final CompositionPlayer currentCompositionPlayer;
     private final List<CompositionPlayer> sampleCompositionPlayerList = new ArrayList<>();
 
-    public DefaultPlayerService(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, SettingsService settingsService, CompositionService compositionService, SetService setService, SessionService sessionService, MidiRoutingService midiRoutingService, DmxService dmxService, CapabilitiesService capabilitiesService, OperatingSystemInformationService operatingSystemInformationService, ActivityNotificationAudioService activityNotificationAudioService) {
+    public DefaultPlayerService(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, SettingsService settingsService, CompositionService compositionService, SetService setService, SessionService sessionService, MidiRoutingService midiRoutingService, LightingService lightingService, CapabilitiesService capabilitiesService, OperatingSystemInformationService operatingSystemInformationService, ActivityNotificationAudioService activityNotificationAudioService) {
         this.notificationService = notificationService;
         this.activityNotificationMidiService = activityNotificationMidiService;
         this.settingsService = settingsService;
@@ -50,7 +50,7 @@ public class DefaultPlayerService implements PlayerService {
         this.setService = setService;
         this.sessionService = sessionService;
         this.midiRoutingService = midiRoutingService;
-        this.dmxService = dmxService;
+        this.lightingService = lightingService;
         this.capabilitiesService = capabilitiesService;
         this.operatingSystemInformationService = operatingSystemInformationService;
         this.activityNotificationAudioService = activityNotificationAudioService;
@@ -263,8 +263,8 @@ public class DefaultPlayerService implements PlayerService {
     public synchronized void stop(boolean playDefaultComposition) throws Exception {
         ExecutorService executor = Executors.newFixedThreadPool(30);
 
-        // Reset the DMX universe to clear left out signals
-        dmxService.reset();
+        // Reset the LIGHTING universe to clear left out signals
+        lightingService.reset();
 
         // Stop all remote devices
         for (RemoteDevice remoteDevice : settingsService.getSettings().getRemoteDeviceList()) {

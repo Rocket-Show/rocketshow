@@ -1,6 +1,6 @@
 package com.ascargon.rocketshow.midi;
 
-import com.ascargon.rocketshow.dmx.Midi2DmxMapping;
+import com.ascargon.rocketshow.lighting.Midi2LightingMapping;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
@@ -19,7 +19,7 @@ public class MidiRouting {
     private MidiSignal.MidiDestination midiDestination = MidiSignal.MidiDestination.OUT_DEVICE;
 
     private MidiMapping midiMapping = new MidiMapping();
-    private Midi2DmxMapping midi2DmxMapping = new Midi2DmxMapping();
+    private Midi2LightingMapping midi2LightingMapping = new Midi2LightingMapping();
 
     // A list of remote device ids in case of destination type = REMOTE
     private List<String> remoteDeviceNameList = new ArrayList<>();
@@ -32,12 +32,12 @@ public class MidiRouting {
         this.midiDestination = midiDestination;
     }
 
-    public Midi2DmxMapping getMidi2DmxMapping() {
-        return midi2DmxMapping;
+    public Midi2LightingMapping getMidi2LightingMapping() {
+        return midi2LightingMapping;
     }
 
-    public void setMidi2DmxMapping(Midi2DmxMapping midi2DmxMapping) {
-        this.midi2DmxMapping = midi2DmxMapping;
+    public void setMidi2LightingMapping(Midi2LightingMapping midi2LightingMapping) {
+        this.midi2LightingMapping = midi2LightingMapping;
     }
 
     @XmlElement(name = "remoteDevice")

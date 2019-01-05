@@ -1,6 +1,6 @@
 package com.ascargon.rocketshow.api;
 
-import com.ascargon.rocketshow.dmx.DmxService;
+import com.ascargon.rocketshow.lighting.LightingService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -9,19 +9,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController()
-@RequestMapping("${spring.data.rest.base-path}/dmx")
+@RequestMapping("${spring.data.rest.base-path}/lighting")
 @CrossOrigin
-public class DmxController {
+public class LightingController {
 
-    private final DmxService dmxService;
+    private final LightingService lightingService;
 
-    public DmxController(DmxService dmxService) {
-        this.dmxService = dmxService;
+    public LightingController(LightingService lightingService) {
+        this.lightingService = lightingService;
     }
 
     @PostMapping("reset")
     public ResponseEntity<Void> reset() {
-        dmxService.reset();
+        lightingService.reset();
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

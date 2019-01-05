@@ -17,8 +17,8 @@ import { ActivityAudioService } from '../services/activity-audio.service';
 import { ActivityAudio } from '../models/activity-audio';
 import { ActivityAudioBus } from '../models/activity-audio-bus';
 import { ActivityAudioChannel } from '../models/activity-audio-channel';
-import { ActivityDmxService } from '../services/activity-dmx.service';
-import { ActivityDmx } from '../models/activity-dmx';
+import { ActivityLightingService } from '../services/activity-lighting.service';
+import { ActivityLighting } from '../models/activity-lighting';
 
 @Component({
   selector: 'app-play',
@@ -56,8 +56,8 @@ export class PlayComponent implements OnInit, OnDestroy {
   activityAudio: ActivityAudio;
   activityAudioStopTimeout: any;
 
-  activityDmx: boolean = false;
-  activityDmxStopTimeout: any;
+  activityLighting: boolean = false;
+  activityLightingStopTimeout: any;
 
   constructor(
     public stateService: StateService,
@@ -67,7 +67,7 @@ export class PlayComponent implements OnInit, OnDestroy {
     private toastGeneralErrorService: ToastGeneralErrorService,
     private activityMidiService: ActivityMidiService,
     public activityAudioService: ActivityAudioService,
-    public activityDmxService: ActivityDmxService,
+    public activityLightingService: ActivityLightingService,
     public settingsService: SettingsService) {
 
     this.loadSettings();
@@ -146,8 +146,8 @@ export class PlayComponent implements OnInit, OnDestroy {
           this.activityMidiInStopTimeout = undefined;
           this.activityMidiIn = false;
         }, decayMillis);
-      } else if (activityMidi.midiDirection == 'OUT' && activityMidi.midiDestination != 'DMX') {
-        // DMX is monitored separately
+      } else if (activityMidi.midiDirection == 'OUT' && activityMidi.midiDestination != 'LIGHTING') {
+        // Lighting is monitored separately
 
         this.activityMidiOut = true;
 
@@ -199,28 +199,28 @@ export class PlayComponent implements OnInit, OnDestroy {
     this.activityAudioService.startMonitor();
 
     // Subscribe to MIDI activities
-    this.activityDmxService.subject.subscribe((activityDmx: ActivityDmx) => {
+    this.activityLightingService.subject.subscribe((activityLighting: ActivityLighting) => {
       let decayMillis = 50;
 
-      this.activityDmx = true;
+      this.activityLighting = true;
 
-      if (this.activityDmxStopTimeout) {
-        clearTimeout(this.activityDmxStopTimeout);
-        this.activityDmxStopTimeout = undefined;
+      if (this.activityLightingStopTimeout) {
+        clearTimeout(this.activityLightingStopTimeout);
+        this.activityLightingStopTimeout = undefined;
       }
 
-      this.activityDmxStopTimeout = setTimeout(() => {
-        this.activityDmxStopTimeout = undefined;
-        this.activityDmx = false;
+      this.activityLightingStopTimeout = setTimeout(() => {
+        this.activityLightingStopTimeout = undefined;
+        this.activityLighting = false;
       }, decayMillis);
     });
-    this.activityDmxService.startMonitor();
+    this.activityLightingService.startMonitor();
   }
 
   ngOnDestroy() {
     this.activityMidiService.stopMonitor();
     this.activityAudioService.stopMonitor();
-    this.activityDmxService.stopMonitor();
+    this.activityLightingService.stopMonitor();
   }
 
   private loadAllSets() {

@@ -31,17 +31,17 @@
       </div>
     </div>
 
-    <!-- DMX mapping -->
-    <div class="form-group row" *ngIf="midiRouting?.midiDestination == 'DMX'">
-      <label class="col-sm-4 col-form-label">{{ 'routing.dmx-mapping' | translate }}</label>
+    <!-- LIGHTING mapping -->
+    <div class="form-group row" *ngIf="midiRouting?.midiDestination == 'LIGHTING'">
+      <label class="col-sm-4 col-form-label">{{ 'routing.lighting-mapping' | translate }}</label>
       <div class="col-sm-8">
         <div class="card border-secondary">
           <div class="card-body">
             <div class="form-group row mb-0">
-              <label class="col-sm-6 col-form-label">{{ 'routing.dmx-mapping-type' | translate }}</label>
+              <label class="col-sm-6 col-form-label">{{ 'routing.lighting-mapping-type' | translate }}</label>
               <div class="col-sm-6">
                 <select class="custom-select">
-                  <option value="simple" selected>{{ 'routing.dmx-mapping-type-simple' | translate }}</option>
+                  <option value="simple" selected>{{ 'routing.lighting-mapping-type-simple' | translate }}</option>
                 </select>
               </div>
             </div>

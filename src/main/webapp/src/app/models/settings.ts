@@ -22,7 +22,7 @@ export class Settings {
     midiControlList: MidiControl[];
     midiMapping: MidiMapping;
     raspberryGpioControlList: RaspberryGpioControl[];
-    dmxSendDelayMillis: number;
+    lightingSendDelayMillis: number;
     defaultComposition: string;
     offsetMillisMidi: number;
     offsetMillisAudio: number;
@@ -106,7 +106,7 @@ export class Settings {
             }
         }
 
-        this.dmxSendDelayMillis = data.dmxSendDelayMillis;
+        this.lightingSendDelayMillis = data.lightingSendDelayMillis;
         this.defaultComposition = data.defaultComposition;
         this.offsetMillisMidi = data.offsetMillisMidi;
         this.offsetMillisAudio = data.offsetMillisAudio;

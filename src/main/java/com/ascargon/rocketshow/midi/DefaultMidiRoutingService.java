@@ -2,8 +2,8 @@ package com.ascargon.rocketshow.midi;
 
 import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.api.ActivityNotificationMidiService;
-import com.ascargon.rocketshow.dmx.DmxService;
-import com.ascargon.rocketshow.dmx.Midi2DmxConvertService;
+import com.ascargon.rocketshow.lighting.LightingService;
+import com.ascargon.rocketshow.lighting.Midi2LightingConvertService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -23,17 +23,17 @@ public class DefaultMidiRoutingService implements MidiRoutingService {
     private final static Logger logger = LoggerFactory.getLogger(MidiRouting.class);
 
     private final SettingsService settingsService;
-    private final Midi2DmxConvertService midi2DmxConvertService;
-    private final DmxService dmxService;
+    private final Midi2LightingConvertService midi2LightingConvertService;
+    private final LightingService lightingService;
     private final MidiDeviceOutService midiDeviceOutService;
     private final ActivityNotificationMidiService activityNotificationMidiService;
 
     private List<Midi2MonitorReceiver> midi2MonitorReceiverList;
 
-    DefaultMidiRoutingService(SettingsService settingsService, Midi2DmxConvertService midi2DmxConvertService, DmxService dmxService, MidiDeviceOutService midiDeviceOutService, ActivityNotificationMidiService activityNotificationMidiService) {
+    DefaultMidiRoutingService(SettingsService settingsService, Midi2LightingConvertService midi2LightingConvertService, LightingService lightingService, MidiDeviceOutService midiDeviceOutService, ActivityNotificationMidiService activityNotificationMidiService) {
         this.settingsService = settingsService;
-        this.midi2DmxConvertService = midi2DmxConvertService;
-        this.dmxService = dmxService;
+        this.midi2LightingConvertService = midi2LightingConvertService;
+        this.lightingService = lightingService;
         this.midiDeviceOutService = midiDeviceOutService;
         this.activityNotificationMidiService = activityNotificationMidiService;
     }
@@ -45,13 +45,13 @@ public class DefaultMidiRoutingService implements MidiRoutingService {
             midi2DeviceOutReceiver.setMidiMapping(midiRouting.getMidiMapping());
 
             return midi2DeviceOutReceiver;
-        } else if (midiRouting.getMidiDestination() == MidiSignal.MidiDestination.DMX) {
-            // Connect the transmitter to the DMX receiver
-            Midi2DmxReceiver midi2DmxReceiver = new Midi2DmxReceiver(midi2DmxConvertService, dmxService);
-            midi2DmxReceiver.setMidiMapping(midiRouting.getMidiMapping());
-            midi2DmxReceiver.setMidi2DmxMapping(midiRouting.getMidi2DmxMapping());
+        } else if (midiRouting.getMidiDestination() == MidiSignal.MidiDestination.LIGHTING) {
+            // Connect the transmitter to the LIGHTING receiver
+            Midi2LightingReceiver midi2LightingReceiver = new Midi2LightingReceiver(midi2LightingConvertService, lightingService);
+            midi2LightingReceiver.setMidiMapping(midiRouting.getMidiMapping());
+            midi2LightingReceiver.setMidi2LightingMapping(midiRouting.getMidi2LightingMapping());
 
-            return midi2DmxReceiver;
+            return midi2LightingReceiver;
         } else if (midiRouting.getMidiDestination() == MidiSignal.MidiDestination.REMOTE) {
             // Connect the transmitter to the remote receiver
             Midi2RemoteReceiver midi2RemoteReceiver = new Midi2RemoteReceiver(settingsService);

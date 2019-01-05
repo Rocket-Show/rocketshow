@@ -44,7 +44,7 @@ import { SettingsMidiComponent } from './settings/settings-midi/settings-midi.co
 import { SettingsNetworkComponent } from './settings/settings-network/settings-network.component';
 import { SettingsAudioComponent } from './settings/settings-audio/settings-audio.component';
 import { SettingsVideoComponent } from './settings/settings-video/settings-video.component';
-import { SettingsDmxComponent } from './settings/settings-dmx/settings-dmx.component';
+import { SettingsLightingComponent } from './settings/settings-lighting/settings-lighting.component';
 import { EditorComponent } from './editor/editor.component';
 import { EditorCompositionComponent } from './editor/editor-composition/editor-composition.component';
 import { EditorSetComponent } from './editor/editor-set/editor-set.component';
@@ -103,7 +103,7 @@ const DROPZONE_CONFIG: DropzoneConfigInterface = {
     SettingsAudioComponent,
     SettingsVideoComponent,
     RemoteDeviceSelectionComponent,
-    SettingsDmxComponent,
+    SettingsLightingComponent,
     MidiRoutingComponent,
     MidiMappingComponent,
     SettingsInfoComponent,

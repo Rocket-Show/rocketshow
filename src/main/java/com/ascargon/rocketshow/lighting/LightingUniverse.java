@@ -1,25 +1,25 @@
-package com.ascargon.rocketshow.dmx;
+package com.ascargon.rocketshow.lighting;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.HashMap;
 import java.util.UUID;
 
 @XmlRootElement
-public class DmxUniverse {
+public class LightingUniverse {
 
 	private HashMap<Integer, Integer> universe;
 
 	private final String uuid = String.valueOf(UUID.randomUUID());
 
-	public DmxUniverse() {
+	public LightingUniverse() {
 		universe = new HashMap<>();
 	}
 
 	@Override
 	public boolean equals(Object object) {
-		if (object instanceof DmxUniverse) {
-			DmxUniverse dmxUniverse = (DmxUniverse) object;
-			return this.uuid.equals(dmxUniverse.uuid);
+		if (object instanceof LightingUniverse) {
+			LightingUniverse lightingUniverse = (LightingUniverse) object;
+			return this.uuid.equals(lightingUniverse.uuid);
 		}
 
 		return false;
