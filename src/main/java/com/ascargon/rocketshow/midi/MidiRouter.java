@@ -43,22 +43,20 @@ public class MidiRouter {
         }
     }
 
+    // Get the correct receiver based on the routing
     private Receiver getReceiver(MidiRouting midiRouting) {
         if (midiRouting.getMidiDestination() == MidiSignal.MidiDestination.OUT_DEVICE) {
-            // Connect the transmitter to the out device
             Midi2DeviceOutReceiver midi2DeviceOutReceiver = new Midi2DeviceOutReceiver(midiDeviceOutService);
             midi2DeviceOutReceiver.setMidiMapping(midiRouting.getMidiMapping());
 
             return midi2DeviceOutReceiver;
         } else if (midiRouting.getMidiDestination() == MidiSignal.MidiDestination.LIGHTING) {
-            // Connect the transmitter to the lighting receiver
             Midi2LightingReceiver midi2LightingReceiver = new Midi2LightingReceiver(midi2LightingConvertService, lightingService);
             midi2LightingReceiver.setMidiMapping(midiRouting.getMidiMapping());
             midi2LightingReceiver.setMidi2LightingMapping(midiRouting.getMidi2LightingMapping());
 
             return midi2LightingReceiver;
         } else if (midiRouting.getMidiDestination() == MidiSignal.MidiDestination.REMOTE) {
-            // Connect the transmitter to the remote receiver
             Midi2RemoteReceiver midi2RemoteReceiver = new Midi2RemoteReceiver(settingsService);
             midi2RemoteReceiver.setMidiMapping(midiRouting.getMidiMapping());
             midi2RemoteReceiver.setRemoteDeviceNameList(midiRouting.getRemoteDeviceIdList());
