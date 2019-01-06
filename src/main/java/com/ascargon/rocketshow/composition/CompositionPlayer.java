@@ -9,6 +9,8 @@ import com.ascargon.rocketshow.api.NotificationService;
 import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.gstreamer.GstApi;
+import com.ascargon.rocketshow.lighting.LightingService;
+import com.ascargon.rocketshow.lighting.Midi2LightingConvertService;
 import com.ascargon.rocketshow.midi.*;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
@@ -24,8 +26,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import javax.sound.midi.InvalidMidiDataException;
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -53,11 +57,13 @@ public class CompositionPlayer {
     private final ActivityNotificationMidiService activityNotificationMidiService;
     private final PlayerService playerService;
     private final SettingsService settingsService;
-    private final MidiRoutingService midiRoutingService;
     private final CapabilitiesService capabilitiesService;
     private final OperatingSystemInformationService operatingSystemInformationService;
     private final ActivityNotificationAudioService activityNotificationAudioService;
     private final SetService setService;
+    private final Midi2LightingConvertService midi2LightingConvertService;
+    private final LightingService lightingService;
+    private final MidiDeviceOutService midiDeviceOutService;
 
     private Composition composition;
     private PlayState playState = PlayState.STOPPED;
@@ -74,22 +80,27 @@ public class CompositionPlayer {
     // The gstreamer pipeline, used to sync all files in this composition
     private Pipeline pipeline;
 
-    public CompositionPlayer(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, PlayerService playerService, SettingsService settingsService, MidiRoutingService midiRoutingService, CapabilitiesService capabilitiesService, OperatingSystemInformationService operatingSystemInformationService, ActivityNotificationAudioService activityNotificationAudioService, SetService setService) {
+    // All MIDI routers
+    private List<MidiRouter> midiRouterList = new ArrayList<>();
+
+    public CompositionPlayer(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, PlayerService playerService, SettingsService settingsService, CapabilitiesService capabilitiesService, OperatingSystemInformationService operatingSystemInformationService, ActivityNotificationAudioService activityNotificationAudioService, SetService setService, Midi2LightingConvertService midi2LightingConvertService, LightingService lightingService, MidiDeviceOutService midiDeviceOutService) {
         this.notificationService = notificationService;
         this.activityNotificationMidiService = activityNotificationMidiService;
         this.playerService = playerService;
         this.settingsService = settingsService;
-        this.midiRoutingService = midiRoutingService;
         this.capabilitiesService = capabilitiesService;
         this.operatingSystemInformationService = operatingSystemInformationService;
         this.activityNotificationAudioService = activityNotificationAudioService;
         this.setService = setService;
+        this.midi2LightingConvertService = midi2LightingConvertService;
+        this.lightingService = lightingService;
+        this.midiDeviceOutService = midiDeviceOutService;
 
         this.midiMapping.setParent(settingsService.getSettings().getMidiMapping());
     }
 
     // Taken from gstreamers gstfluiddec.c -> handle_buffer
-    private void processMidiBuffer(ByteBuffer byteBuffer, List<MidiRouting> midiRoutingList) {
+    private void processMidiBuffer(ByteBuffer byteBuffer, MidiRouter midiRouter) {
         int event = byteBuffer.get(0);
         int type = event & 0xf0;
 
@@ -108,7 +119,11 @@ public class CompositionPlayer {
             midiSignal.setNote(note);
             midiSignal.setVelocity(velocity);
 
-            midiRoutingService.sendSignal(midiSignal, midiRoutingList);
+            try {
+                midiRouter.sendSignal(midiSignal);
+            } catch (InvalidMidiDataException e) {
+                logger.error("Could not send MIDI signal from MIDI file", e);
+            }
 
             activityNotificationMidiService.notifyClients(midiSignal, MidiSignal.MidiDirection.IN, MidiSignal.MidiSource.MIDI_FILE, null);
         }
@@ -323,6 +338,9 @@ public class CompositionPlayer {
             if (compositionFile.isActive()) {
                 if (compositionFile instanceof MidiCompositionFile) {
                     MidiCompositionFile midiCompositionFile = (MidiCompositionFile) compositionFile;
+                    MidiRouter midiRouter = new MidiRouter(settingsService, midi2LightingConvertService, lightingService, midiDeviceOutService, activityNotificationMidiService, midiCompositionFile.getMidiRoutingList());
+
+                    midiRouterList.add(midiRouter);
 
                     for (MidiRouting midiRouting : midiCompositionFile.getMidiRoutingList()) {
                         midiRouting.getMidiMapping().setParent(midiMapping);
@@ -347,13 +365,13 @@ public class CompositionPlayer {
                     // to process both.
                     midiSink.connect((AppSink.NEW_SAMPLE) element -> {
                         Sample sample = element.pullSample();
-                        processMidiBuffer(sample.getBuffer().map(false), midiCompositionFile.getMidiRoutingList());
+                        processMidiBuffer(sample.getBuffer().map(false), midiRouter);
                         sample.dispose();
                         return FlowReturn.OK;
                     });
                     midiSink.connect((AppSink.NEW_PREROLL) elem -> {
                         Sample sample = elem.pullPreroll();
-                        processMidiBuffer(sample.getBuffer().map(false), midiCompositionFile.getMidiRoutingList());
+                        processMidiBuffer(sample.getBuffer().map(false), midiRouter);
                         sample.dispose();
                         return FlowReturn.OK;
                     });
@@ -495,6 +513,11 @@ public class CompositionPlayer {
         if (pipeline != null) {
             pipeline.stop();
             pipeline = null;
+        }
+
+        // Close all MIDI routers
+        for (MidiRouter midiRouter : midiRouterList) {
+            midiRouter.close();
         }
 
         playState = PlayState.STOPPED;

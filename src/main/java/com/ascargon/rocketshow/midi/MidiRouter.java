@@ -4,23 +4,21 @@ import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.api.ActivityNotificationMidiService;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.Midi2LightingConvertService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.Transmitter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
- * Wire the MIDI input to the mapped output.
+ * Route the MIDI input to the correct output based on a MIDI routing list.
  */
 @Service
-public class DefaultMidiRoutingService implements MidiRoutingService {
-
-    private final static Logger logger = LoggerFactory.getLogger(MidiRouting.class);
+public class MidiRouter {
 
     private final SettingsService settingsService;
     private final Midi2LightingConvertService midi2LightingConvertService;
@@ -28,14 +26,21 @@ public class DefaultMidiRoutingService implements MidiRoutingService {
     private final MidiDeviceOutService midiDeviceOutService;
     private final ActivityNotificationMidiService activityNotificationMidiService;
 
-    private List<Midi2MonitorReceiver> midi2MonitorReceiverList;
+    private Map<MidiRouting, Receiver> receiverList = new HashMap<>();
 
-    DefaultMidiRoutingService(SettingsService settingsService, Midi2LightingConvertService midi2LightingConvertService, LightingService lightingService, MidiDeviceOutService midiDeviceOutService, ActivityNotificationMidiService activityNotificationMidiService) {
+    private List<Midi2MonitorReceiver> midi2MonitorReceiverList = new ArrayList<>();
+
+    public MidiRouter(SettingsService settingsService, Midi2LightingConvertService midi2LightingConvertService, LightingService lightingService, MidiDeviceOutService midiDeviceOutService, ActivityNotificationMidiService activityNotificationMidiService, List<MidiRouting> midiRoutingList) {
         this.settingsService = settingsService;
         this.midi2LightingConvertService = midi2LightingConvertService;
         this.lightingService = lightingService;
         this.midiDeviceOutService = midiDeviceOutService;
         this.activityNotificationMidiService = activityNotificationMidiService;
+
+        // Create a receiver for each routing
+        for (MidiRouting midirouting : midiRoutingList) {
+            receiverList.put(midirouting, getReceiver(midirouting));
+        }
     }
 
     private Receiver getReceiver(MidiRouting midiRouting) {
@@ -46,7 +51,7 @@ public class DefaultMidiRoutingService implements MidiRoutingService {
 
             return midi2DeviceOutReceiver;
         } else if (midiRouting.getMidiDestination() == MidiSignal.MidiDestination.LIGHTING) {
-            // Connect the transmitter to the LIGHTING receiver
+            // Connect the transmitter to the lighting receiver
             Midi2LightingReceiver midi2LightingReceiver = new Midi2LightingReceiver(midi2LightingConvertService, lightingService);
             midi2LightingReceiver.setMidiMapping(midiRouting.getMidiMapping());
             midi2LightingReceiver.setMidi2LightingMapping(midiRouting.getMidi2LightingMapping());
@@ -64,49 +69,36 @@ public class DefaultMidiRoutingService implements MidiRoutingService {
         return null;
     }
 
-    public void connectTransmitter(Transmitter transmitter, List<MidiRouting> midiRoutingList) {
-        if (transmitter == null) {
-            return;
-        }
+    // Connect two transmitters, the processing one and another one to monitor the signals to all routings
+    void connectTransmitter(Transmitter processingTransmitter, Transmitter monitoringTransmmitter) {
+        for (Map.Entry<MidiRouting, Receiver> entry : receiverList.entrySet()) {
+            // Connect the processing transmitter
+            processingTransmitter.setReceiver(entry.getValue());
 
-        if (midi2MonitorReceiverList != null) {
-            for (Midi2MonitorReceiver midi2MonitorReceiver : midi2MonitorReceiverList) {
-                midi2MonitorReceiver.close();
-            }
-        }
-
-        midi2MonitorReceiverList = new ArrayList<>();
-
-        for (MidiRouting midiRouting : midiRoutingList) {
-            Receiver receiver = getReceiver(midiRouting);
-
-            if (receiver != null) {
-                transmitter.setReceiver(receiver);
-            }
-
-            Midi2MonitorReceiver midi2MonitorReceiver = new Midi2MonitorReceiver(activityNotificationMidiService, midiRouting);
-            transmitter.setReceiver(midi2MonitorReceiver);
+            // Connect the monitoring transmitter
+            Midi2MonitorReceiver midi2MonitorReceiver = new Midi2MonitorReceiver(activityNotificationMidiService, entry.getKey());
+            monitoringTransmmitter.setReceiver(midi2MonitorReceiver);
             midi2MonitorReceiverList.add(midi2MonitorReceiver);
         }
     }
 
-    public void sendSignal(MidiSignal midiSignal, List<MidiRouting> midiRoutingList) {
-        // TODO Don't create a new receiver and close it for each signal but preserve it
-        // maybe in the caller and pass the receiver here instead of the midiRoutingList?
-        for (MidiRouting midiRouting : midiRoutingList) {
-            Receiver receiver = getReceiver(midiRouting);
+    public void sendSignal(MidiSignal midiSignal) throws InvalidMidiDataException {
+        // Send the signal to each receiver
+        for (Map.Entry<MidiRouting, Receiver> entry : receiverList.entrySet()) {
+            entry.getValue().send(midiSignal.getShortMessage(), -1);
 
-            if (receiver != null) {
-                try {
-                    receiver.send(midiSignal.getShortMessage(), -1);
-                } catch (InvalidMidiDataException e) {
-                    logger.error("Could not send MIDI signal", e);
-                }
-            }
+            activityNotificationMidiService.notifyClients(midiSignal, MidiSignal.MidiDirection.OUT, null, entry.getKey().getMidiDestination());
+        }
+    }
 
-            activityNotificationMidiService.notifyClients(midiSignal, MidiSignal.MidiDirection.OUT, null, midiRouting.getMidiDestination());
+    public void close() {
+        // Close all receivers
+        for (Map.Entry<MidiRouting, Receiver> entry : receiverList.entrySet()) {
+            entry.getValue().close();
+        }
 
-            receiver.close();
+        for (Midi2MonitorReceiver midi2MonitorReceiver : midi2MonitorReceiverList) {
+            midi2MonitorReceiver.close();
         }
     }
 

@@ -6,10 +6,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class Midi2LightingMapping {
 
 	public enum MappingType {
-		SIMPLE, // The MIDI values 0-126 are mapped to a LIGHTING channel and the
+		SIMPLE, // The MIDI values 0-126 are mapped to a DMX channel and the
 				// value
 				// is composed by the velocity multiplied by 2
-		EXACT // MIDI channels 0-16 are mapped to a LIGHTING channel and the value is
+		EXACT // MIDI channels 0-16 are mapped to a DMX channel and the value is
 				// composed by adding the value and the velocity
 	}
 

@@ -1,11 +1,14 @@
 package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.lighting.LightingService;
+import com.ascargon.rocketshow.lighting.Midi2LightingConvertService;
 import com.ascargon.rocketshow.midi.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.sound.midi.InvalidMidiDataException;
 import java.util.List;
 
 @RestController()
@@ -13,18 +16,18 @@ import java.util.List;
 @CrossOrigin
 class MidiController {
 
-    private final SettingsService settingsService;
     private final ActivityNotificationMidiService activityNotificationMidiService;
-    private final MidiRoutingService midiRoutingService;
     private final MidiService midiService;
     private final MidiControlActionExecutionService midiControlActionExecutionService;
 
-    private MidiController(SettingsService settingsService, ActivityNotificationMidiService activityNotificationMidiService, MidiRoutingService midiRoutingService, MidiService midiService, MidiControlActionExecutionService midiControlActionExecutionService) {
-        this.settingsService = settingsService;
+    private MidiRouter midiRouter;
+
+    private MidiController(SettingsService settingsService, ActivityNotificationMidiService activityNotificationMidiService, MidiService midiService, MidiControlActionExecutionService midiControlActionExecutionService, Midi2LightingConvertService midi2LightingConvertService, LightingService lightingService, MidiDeviceOutService midiDeviceOutService) {
         this.activityNotificationMidiService = activityNotificationMidiService;
-        this.midiRoutingService = midiRoutingService;
         this.midiService = midiService;
         this.midiControlActionExecutionService = midiControlActionExecutionService;
+
+        midiRouter = new MidiRouter(settingsService, midi2LightingConvertService, lightingService, midiDeviceOutService, activityNotificationMidiService, settingsService.getSettings().getRemoteMidiRoutingList());
     }
 
     @GetMapping("in-devices")
@@ -39,7 +42,7 @@ class MidiController {
 
     @PostMapping("send-message")
     public ResponseEntity<Void> sendMessage(@RequestParam("command") int command, @RequestParam("channel") int channel,
-                                            @RequestParam("note") int note, @RequestParam("velocity") int velocity) {
+                                            @RequestParam("note") int note, @RequestParam("velocity") int velocity) throws InvalidMidiDataException {
 
         MidiSignal midiSignal = new MidiSignal();
 
@@ -48,7 +51,7 @@ class MidiController {
         midiSignal.setNote(note);
         midiSignal.setVelocity(velocity);
 
-        midiRoutingService.sendSignal(midiSignal, settingsService.getSettings().getRemoteMidiRoutingList());
+        midiRouter.sendSignal(midiSignal);
 
         activityNotificationMidiService.notifyClients(midiSignal, MidiSignal.MidiDirection.IN, MidiSignal.MidiSource.REMOTE, null);
 

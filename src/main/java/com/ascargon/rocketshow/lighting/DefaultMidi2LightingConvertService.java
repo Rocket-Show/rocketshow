@@ -41,7 +41,7 @@ public class DefaultMidi2LightingConvertService implements Midi2LightingConvertS
 
     @Override
     public void processMidiEvent(MidiSignal midiSignal, Midi2LightingMapping midi2LightingMapping, LightingUniverse lightingUniverse) {
-        // Map the MIDI event and send the appropriate LIGHTING signal
+        // Map the MIDI event and send the appropriate lighting signal
 
         // Only react to NOTE_ON/NOTE_OFF events
         if (midiSignal.getCommand() != ShortMessage.NOTE_ON && midiSignal.getCommand() != ShortMessage.NOTE_OFF) {

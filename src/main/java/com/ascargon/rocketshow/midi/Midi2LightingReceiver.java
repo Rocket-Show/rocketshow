@@ -10,7 +10,7 @@ import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
 
 /**
- * Receive MIDI messages and map them to LIGHTING signals.
+ * Receive MIDI messages and map them to lighting signals.
  *
  * @author Moritz A. Vieli
  */
@@ -34,7 +34,7 @@ class Midi2LightingReceiver implements Receiver {
 
     @Override
     public void send(MidiMessage message, long timeStamp) {
-        // Map the midi to LIGHTING out
+        // Map the MIDI message to a lighting signal
         if (!(message instanceof ShortMessage)) {
             return;
         }

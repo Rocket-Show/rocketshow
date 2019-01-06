@@ -26,7 +26,7 @@ public class DefaultMidiDeviceOutService implements MidiDeviceOutService {
         this.settingsService = settingsService;
         this.midiService = midiService;
 
-        // Try to connect to MIDI in/out devices
+        // Try to connect to MIDI out devices
         try {
             connectMidiDevices();
         } catch (MidiUnavailableException e) {
@@ -34,7 +34,7 @@ public class DefaultMidiDeviceOutService implements MidiDeviceOutService {
         }
     }
 
-    // Connect to midi in and out devices. Retry, if it failed.
+    // Connect to out devices. Retry, if it failed.
     private void connectMidiDevices() throws MidiUnavailableException {
         com.ascargon.rocketshow.midi.MidiDevice midiDevice;
 
