@@ -162,6 +162,10 @@ public class CompositionPlayer {
         }
     }
 
+    private void call() {
+
+    }
+
     // Load all files and construct the complete GST pipeline
     public void loadFiles() throws Exception {
         boolean hasAudioFile = false;
@@ -298,9 +302,14 @@ public class CompositionPlayer {
             audioMixer.link(capsFilter);
 
             Element queue = ElementFactory.make("queue", "audiosinkqueue");
-            pipeline.add(queue);
 
-            capsFilter.link(queue);
+            // Disable max buffers to prevent underruns -> mem does not look bad with this settings.
+            // Maybe a setting to disable it?
+            queue.set("max-size-buffers", 0);
+            queue.set("max-size-bytes", 0);
+            queue.set("max-size-time", 0);
+
+            pipeline.add(queue);
 
             String sinkName = "alsasink";
 
@@ -324,11 +333,13 @@ public class CompositionPlayer {
             }
 
             if (level == null) {
-                queue.link(sink);
+                capsFilter.link(queue);
             } else {
-                queue.link(level);
-                level.link(sink);
+                capsFilter.link(level);
+                level.link(queue);
             }
+
+            queue.link(sink);
         }
 
         // Load all files, create the pipeline and handle exceptions to pipeline-playing
@@ -605,6 +616,17 @@ public class CompositionPlayer {
 
     public void setSample(boolean sample) {
         isSample = sample;
+    }
+
+}
+
+
+class UnderrunClosure implements Closure {
+
+    private final static Logger logger = LoggerFactory.getLogger(UnderrunClosure.class);
+
+    void invoke() {
+        logger.info("UNDERRUN");
     }
 
 }

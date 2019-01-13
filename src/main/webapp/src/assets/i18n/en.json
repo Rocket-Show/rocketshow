@@ -107,6 +107,7 @@
         "remote-devices-hint": "You can configure the remote devices in the network-settings."
     },
     "settings": {
+        "default": "Default",
         "system": "System",
         "personal": "Personal",
         "network": "Network",
@@ -196,6 +197,9 @@
         "remote-midi-routing": "Remote MIDI routing",
         "global-midi-mapping": "Global MIDI transformation",
         "audio-sample-rate": "Sample rate",
+        "alsa-period-size": "ALSA period size",
+        "alsa-buffer-size": "ALSA buffer in periods",
+        "alsa-period-time": "ALSA period time",
         "lighting-console": "Lighting console",
         "lighting-console-open": "Open lighting console",
         "instruments": "Instruments",

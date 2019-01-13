@@ -134,6 +134,9 @@ sed -i '1i# ROCKETSHOWSTART\ngpu_mem=256\nforce_turbo=1\nboot_delay=1\ndtparam=s
 # Set rocketshows nice priority to 10
 sed -i '1irocketshow soft priority 10' /etc/security/limits.conf
 
+# Add realtime permissions to the audio group
+sed -i '1i@audio   -  rtprio     99\n@audio   -  memlock    unlimited' /etc/security/limits.d/audio.conf
+
 # Download current JAR and version info
 wget https://www.rocketshow.net/update/rocketshow.jar
 wget https://www.rocketshow.net/update/currentversion2.xml

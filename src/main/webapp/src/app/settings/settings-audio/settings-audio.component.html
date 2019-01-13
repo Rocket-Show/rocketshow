@@ -9,21 +9,58 @@
   </div>
 </div>
 
-<!-- <div class="form-group row">
+<div class="form-group row">
   <label class="col-sm-3 col-form-label">{{ 'settings.audio-sample-rate' | translate }}</label>
   <div class="col-sm-9">
     <select class="custom-select" [ngModel]="settings?.audioRate" (ngModelChange)="settings.audioRate = $event">
+      <option [ngValue]="selectUndefinedOptionValue">{{ 'settings.default' | translate }}</option>
       <option [ngValue]="44100">44100</option>
       <option [ngValue]="48000">48000</option>
     </select>
   </div>
-</div> -->
+</div>
+
+<div class="form-group row">
+  <label class="col-sm-3 col-form-label">{{ 'settings.alsa-period-size' | translate }}</label>
+  <div class="col-sm-9">
+    <select class="custom-select" [ngModel]="settings?.alsaPeriodSize" (ngModelChange)="settings.alsaPeriodSize = $event">
+      <option [ngValue]="selectUndefinedOptionValue">{{ 'settings.default' | translate }}</option>
+      <option [ngValue]="1024">1'024</option>
+      <option [ngValue]="2048">2'048</option>
+      <option [ngValue]="4096">4'096</option>
+      <option [ngValue]="8192">8'192</option>
+      <option [ngValue]="16384">16'384</option>
+      <option [ngValue]="32768">32'768</option>
+      <option [ngValue]="65536">65'536</option>
+    </select>
+  </div>
+</div>
+
+<div class="form-group row">
+  <label class="col-sm-3 col-form-label">{{ 'settings.alsa-buffer-size' | translate }}</label>
+  <div class="col-sm-9">
+    <select class="custom-select" [ngModel]="settings?.alsaBufferSize" (ngModelChange)="settings.alsaBufferSize = $event">
+      <option [ngValue]="selectUndefinedOptionValue">{{ 'settings.default' | translate }}</option>
+      <option [ngValue]="1">1</option>
+      <option [ngValue]="2">2</option>
+      <option [ngValue]="3">3</option>
+      <option [ngValue]="4">4</option>
+      <option [ngValue]="5">5</option>
+      <option [ngValue]="6">6</option>
+      <option [ngValue]="7">7</option>
+      <option [ngValue]="8">8</option>
+      <option [ngValue]="9">9</option>
+      <option [ngValue]="10">10</option>
+    </select>
+  </div>
+</div>
 
 <div class="form-group row" *ngIf="audioOutputList.length > 1">
   <label class="col-sm-3 col-form-label">{{ 'settings.audio-output' | translate }}</label>
   <div class="col-sm-9">
     <select class="custom-select" [ngModel]="settings?.audioOutput" (ngModelChange)="settings.audioOutput = $event">
-      <option *ngFor="let audioOutput of audioOutputList" [ngValue]="audioOutput">{{ 'settings.audio-output-enum.' + audioOutput | translate }}</option>
+      <option *ngFor="let audioOutput of audioOutputList" [ngValue]="audioOutput">{{ 'settings.audio-output-enum.' +
+        audioOutput | translate }}</option>
     </select>
   </div>
 </div>

@@ -251,7 +251,28 @@ public class DefaultSettingsService implements SettingsService {
         alsaSettings.append(System.lineSeparator());
 
         // Build the dshare device
-        alsaSettings.append("pcm.dshare {\n" + "  type dmix\n" + "  ipc_key 2048\n" + "  slave {\n" + "    pcm \"hw:").append(settings.getAudioDevice().getKey()).append("\"\n").append("    channels ").append(getTotalAudioChannels()).append("\n").append("  }\n").append("  bindings {\n");
+        alsaSettings.append(
+                "pcm.dshare {\n" +
+                        "  type dmix\n" +
+                        "  ipc_key 2048\n" +
+                        "  slave {\n" +
+                        "    pcm \"hw:").append(settings.getAudioDevice().getKey()).append("\"\n")
+                .append("    channels ").append(getTotalAudioChannels()).append("\n");
+
+        if (settings.getAlsaPeriodTime() != null) {
+            alsaSettings.append("    period_time ").append(settings.getAlsaPeriodTime()).append("\n");
+        }
+
+        if (settings.getAlsaPeriodSize() != null) {
+            alsaSettings.append("    period_size ").append(settings.getAlsaPeriodSize()).append("\n");
+        }
+
+        if (settings.getAlsaBufferSize() != null && settings.getAlsaPeriodSize() != null) {
+            alsaSettings.append("    buffer_size ").append(settings.getAlsaBufferSize() * settings.getAlsaPeriodSize()).append("\n");
+        }
+
+        alsaSettings.append("  }\n")
+                .append("  bindings {\n");
 
         // Add all channels
         for (int i = 0; i < getTotalAudioChannels(); i++) {
@@ -277,9 +298,9 @@ public class DefaultSettingsService implements SettingsService {
     }
 
     private void updateAudioSystem() throws Exception {
-        if (settings.getAudioOutput() == Settings.AudioOutput.HEADPHONES) {
+        if (settings.getAudioOutput() == Settings.AudioOutput.HEADPHONES && OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
             setSystemAudioOutput(1);
-        } else if (settings.getAudioOutput() == Settings.AudioOutput.HDMI) {
+        } else if (settings.getAudioOutput() == Settings.AudioOutput.HDMI && OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
             setSystemAudioOutput(2);
         } else if (settings.getAudioOutput() == Settings.AudioOutput.DEVICE) {
             // Write the audio settings to /home/.asoundrc and use ALSA to
@@ -417,7 +438,7 @@ public class DefaultSettingsService implements SettingsService {
 
         if (OperatingSystemInformation.Type.LINUX.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
             try {
-                //updateAudioSystem();
+                updateAudioSystem();
             } catch (Exception e) {
                 logger.error("Could not update the audio system settings", e);
             }

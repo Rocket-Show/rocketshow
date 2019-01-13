@@ -73,10 +73,11 @@ public class Settings {
     private boolean resetUsbAfterBoot = false;
 
     private AudioOutput audioOutput;
-
-    private int audioRate;
-
     private AudioDevice audioDevice;
+    private int audioRate;
+    private Integer alsaPeriodSize;
+    private Integer alsaBufferSize;
+    private Integer alsaPeriodTime;
 
     private List<AudioBus> audioBusList = new ArrayList<>();
 
@@ -180,7 +181,7 @@ public class Settings {
         this.raspberryGpioControlList = raspberryGpioControlList;
     }
 
-    private List<Instrument> instrumentList = new ArrayList<Instrument>();
+    private List<Instrument> instrumentList = new ArrayList<>();
 
     public String getDefaultComposition() {
         return defaultComposition;
@@ -391,5 +392,29 @@ public class Settings {
 	public void setInstrumentList(List<Instrument> instrumentList) {
 		this.instrumentList = instrumentList;
 	}
+
+    public Integer getAlsaBufferSize() {
+        return alsaBufferSize;
+    }
+
+    public void setAlsaBufferSize(Integer alsaBufferSize) {
+        this.alsaBufferSize = alsaBufferSize;
+    }
+
+    public Integer getAlsaPeriodSize() {
+        return alsaPeriodSize;
+    }
+
+    public void setAlsaPeriodSize(Integer alsaPeriodSize) {
+        this.alsaPeriodSize = alsaPeriodSize;
+    }
+
+    public Integer getAlsaPeriodTime() {
+        return alsaPeriodTime;
+    }
+
+    public void setAlsaPeriodTime(Integer alsaPeriodTime) {
+        this.alsaPeriodTime = alsaPeriodTime;
+    }
 
 }

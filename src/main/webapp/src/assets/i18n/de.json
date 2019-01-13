@@ -107,6 +107,7 @@
         "remote-devices-hint": "Du kannst die entfernten Geräte in den Netzwerk-Einstellungen konfigurieren."
     },
     "settings": {
+        "default": "Standard",
         "system": "System",
         "personal": "Persönlich",
         "network": "Netzwerk",
@@ -196,6 +197,9 @@
         "remote-midi-routing": "Netzwerk MIDI Ausgang",
         "global-midi-mapping": "Globale MIDI Transformation",
         "audio-sample-rate": "Sample Rate",
+        "alsa-period-size": "ALSA Perioden-Grösse",
+        "alsa-buffer-size": "ALSA Buffer in Perioden",
+        "alsa-period-time": "ALSA Periodenzeit",
         "lighting-console": "Lichtsteuerungs-Konsole",
         "lighting-console-open": "Lichtsteuerungs-Konsole öffnen",
         "instruments": "Instrumente",

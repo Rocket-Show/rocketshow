@@ -12,6 +12,8 @@ import { map } from "rxjs/operators";
 })
 export class SettingsAudioComponent implements OnInit {
 
+  selectUndefinedOptionValue: any;
+
   settings: Settings;
   audioDeviceList: AudioDevice[];
   audioOutputList: string[] = [];
@@ -26,8 +28,9 @@ export class SettingsAudioComponent implements OnInit {
       } else if(operatingSystemInformation.type == 'OS_X') {
         this.audioOutputList.push('DEFAULT');
       } else if(operatingSystemInformation.subType == 'RASPBIAN') {
-        this.audioOutputList.push('HEADPHONES');
-        this.audioOutputList.push('HDMI');
+        // Currently disabled
+        //this.audioOutputList.push('HEADPHONES');
+        //this.audioOutputList.push('HDMI');
         this.audioOutputList.push('DEVICE');
       } else if(operatingSystemInformation.type == 'LINUX') {
         this.audioOutputList.push('DEVICE');

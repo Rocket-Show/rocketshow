@@ -33,8 +33,11 @@ export class Settings {
     deviceName: string;
     resetUsbAfterBoot: boolean;
     audioOutput: string;
-    audioRate: number;
     audioDevice: AudioDevice;
+    audioRate: number;
+    alsaBufferSize: number;
+    alsaPeriodSize: number;
+    alsaPeriodTime: number;
     audioBusList: AudioBus[];
     wlanApEnable: boolean;
     wlanApSsid: string;
@@ -118,6 +121,9 @@ export class Settings {
         this.resetUsbAfterBoot = data.resetUsbAfterBoot;
         this.audioOutput = data.audioOutput;
         this.audioRate = data.audioRate;
+        this.alsaPeriodSize = data.alsaPeriodSize;
+        this.alsaBufferSize = data.alsaBufferSize;
+        this.alsaPeriodTime = data.alsaPeriodTime;
 
         if (data.audioDevice) {
             this.audioDevice = new AudioDevice(data.audioDevice);
