@@ -619,14 +619,3 @@ public class CompositionPlayer {
     }
 
 }
-
-
-class UnderrunClosure implements Closure {
-
-    private final static Logger logger = LoggerFactory.getLogger(UnderrunClosure.class);
-
-    void invoke() {
-        logger.info("UNDERRUN");
-    }
-
-}

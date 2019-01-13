@@ -171,7 +171,9 @@ export class EditorCompositionFileComponent implements OnInit {
 
     this.file = Composition.getFileObjectByType(args[1]);
 
-    this.setDefaultOutputBus((<CompositionAudioFile>this.file));
+    if (this.file && this.file instanceof CompositionAudioFile) {
+      this.setDefaultOutputBus((<CompositionAudioFile>this.file));
+    }
 
     if (this.file instanceof CompositionMidiFile && midiRoutingList) {
       (<CompositionMidiFile>this.file).midiRoutingList = midiRoutingList;

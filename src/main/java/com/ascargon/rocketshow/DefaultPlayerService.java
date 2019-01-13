@@ -377,14 +377,15 @@ public class DefaultPlayerService implements PlayerService {
     @Override
     public void setNextComposition() throws Exception {
         if (setService.getCurrentSet() == null) {
-            if (setService.getNextSetComposition() != null) {
+            if (compositionService.getNextComposition(currentCompositionPlayer.getComposition()) != null) {
                 stop(true);
-                setCompositionName(setService.getNextSetComposition().getName());
+                setComposition(compositionService.getNextComposition(currentCompositionPlayer.getComposition()));
             }
         } else {
-            if (compositionService.getNextComposition(currentCompositionPlayer.getComposition()) != null) {
-                stop(false);
-                setComposition(compositionService.getNextComposition(currentCompositionPlayer.getComposition()));
+            if (setService.getNextSetComposition() != null) {
+                stop(true);
+                setService.setCurrentCompositionIndex(setService.getCurrentCompositionIndex() + 1);
+                setCompositionName(setService.getCurrentCompositionName());
             }
         }
     }
@@ -397,14 +398,15 @@ public class DefaultPlayerService implements PlayerService {
         }
 
         if (setService.getCurrentSet() == null) {
-            if (setService.getPreviousSetComposition() != null) {
-                stop(true);
-                setCompositionName(setService.getPreviousSetComposition().getName());
-            }
-        } else {
             if (compositionService.getPreviousComposition(currentCompositionPlayer.getComposition()) != null) {
                 stop(true);
                 setComposition(compositionService.getPreviousComposition(currentCompositionPlayer.getComposition()));
+            }
+        } else {
+            if (setService.getPreviousSetComposition() != null) {
+                stop(true);
+                setService.setCurrentCompositionIndex(setService.getCurrentCompositionIndex() - 1);
+                setCompositionName(setService.getCurrentCompositionName());
             }
         }
     }
@@ -424,26 +426,13 @@ public class DefaultPlayerService implements PlayerService {
             // Stop the current composition, don't play the default composition but start
             // playing the next composition
             logger.info("Automatically start the next composition");
+            stop(false);
             setNextComposition();
             play();
         } else if (sessionService.getSession().isAutoSelectNextComposition()) {
             // Stop the current composition, play the default composition and select the
             // next composition automatically (if there is one)
-
-            stop(true);
-
-            if (setService.getCurrentSet() != null) {
-                // Set the next composition in the set
-                if (setService.getNextSetComposition() != null) {
-                    setService.setCurrentCompositionIndex(setService.getCurrentCompositionIndex() + 1);
-                    setCompositionName(setService.getCurrentCompositionName());
-                }
-            } else {
-                // Set the next composition without a set
-                if (compositionService.getNextComposition(currentCompositionPlayer.getComposition()) != null) {
-                    setComposition(compositionService.getNextComposition(currentCompositionPlayer.getComposition()));
-                }
-            }
+            setNextComposition();
         } else {
             stop(true);
         }

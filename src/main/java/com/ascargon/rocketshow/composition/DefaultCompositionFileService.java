@@ -83,7 +83,7 @@ public class DefaultCompositionFileService implements CompositionFileService {
 
     @Override
     public void deleteFile(String name, String type) {
-        String path = settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getMediaPath() + File.separator;
+        String path = settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator;
 
         // Audio files
         if ("MIDI".equals(type)) {
@@ -94,7 +94,9 @@ public class DefaultCompositionFileService implements CompositionFileService {
             path += settingsService.getSettings().getVideoPath();
         }
 
-        path += name;
+        path += File.separator + name;
+
+        logger.info("Delete file '" + path + "'");
 
         File systemFile = new File(path);
 

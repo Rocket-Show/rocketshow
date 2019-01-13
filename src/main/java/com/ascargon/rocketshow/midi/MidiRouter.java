@@ -92,7 +92,9 @@ public class MidiRouter {
     public void close() {
         // Close all receivers
         for (Map.Entry<MidiRouting, Receiver> entry : receiverList.entrySet()) {
-            entry.getValue().close();
+            if(entry.getValue() != null) {
+                entry.getValue().close();
+            }
         }
 
         for (Midi2MonitorReceiver midi2MonitorReceiver : midi2MonitorReceiverList) {
