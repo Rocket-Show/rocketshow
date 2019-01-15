@@ -27,6 +27,8 @@ import { ActivityLighting } from '../models/activity-lighting';
 })
 export class PlayComponent implements OnInit, OnDestroy {
 
+  stateServiceSubscription: Subscription;
+
   currentSet: Set;
   currentState: State = new State();
 
@@ -47,6 +49,10 @@ export class PlayComponent implements OnInit, OnDestroy {
   totalPlayTime: string = '';
 
   loadingSet: boolean = false;
+
+  activityMidiSubscription: Subscription;
+  activityAudioSubscription: Subscription;
+  activityLightingSubscription: Subscription;
 
   activityMidiIn: boolean = false;
   activityMidiInStopTimeout: any;
@@ -106,7 +112,7 @@ export class PlayComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     // Subscribe to the state-changed service
-    this.stateService.state.subscribe((state: State) => {
+    this.stateServiceSubscription = this.stateService.state.subscribe((state: State) => {
       this.stateChanged(state);
     });
 
@@ -131,7 +137,7 @@ export class PlayComponent implements OnInit, OnDestroy {
     this.loadCurrentSet();
 
     // Subscribe to MIDI activities
-    this.activityMidiService.subject.subscribe((activityMidi: ActivityMidi) => {
+    this.activityMidiSubscription = this.activityMidiService.subject.subscribe((activityMidi: ActivityMidi) => {
       let decayMillis = 50;
 
       if (activityMidi.midiDirection == 'IN') {
@@ -165,7 +171,7 @@ export class PlayComponent implements OnInit, OnDestroy {
     this.activityMidiService.startMonitor();
 
     // Subscribe to audio activities
-    this.activityAudioService.subject.subscribe((activityAudio: ActivityAudio) => {
+    this.activityAudioSubscription = this.activityAudioService.subject.subscribe((activityAudio: ActivityAudio) => {
       if (this.activityAudioStopTimeout) {
         clearTimeout(this.activityAudioStopTimeout);
         this.activityAudioStopTimeout = undefined;
@@ -198,8 +204,8 @@ export class PlayComponent implements OnInit, OnDestroy {
     });
     this.activityAudioService.startMonitor();
 
-    // Subscribe to MIDI activities
-    this.activityLightingService.subject.subscribe((activityLighting: ActivityLighting) => {
+    // Subscribe to lighting activities
+    this.activityLightingSubscription = this.activityLightingService.subject.subscribe((activityLighting: ActivityLighting) => {
       let decayMillis = 50;
 
       this.activityLighting = true;
@@ -218,6 +224,12 @@ export class PlayComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.stateServiceSubscription.unsubscribe();
+
+    this.activityMidiSubscription.unsubscribe();
+    this.activityAudioSubscription.unsubscribe();
+    this.activityLightingSubscription.unsubscribe();
+
     this.activityMidiService.stopMonitor();
     this.activityAudioService.stopMonitor();
     this.activityLightingService.stopMonitor();
@@ -309,6 +321,7 @@ export class PlayComponent implements OnInit, OnDestroy {
     this.playTime = this.msToTime(newState.positionMillis);
 
     if (newState.error) {
+      console.log('ERROR', newState);
       this.toastGeneralErrorService.showMessage(newState.error);
     }
 
