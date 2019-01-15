@@ -321,7 +321,6 @@ export class PlayComponent implements OnInit, OnDestroy {
     this.playTime = this.msToTime(newState.positionMillis);
 
     if (newState.error) {
-      console.log('ERROR', newState);
       this.toastGeneralErrorService.showMessage(newState.error);
     }
 
