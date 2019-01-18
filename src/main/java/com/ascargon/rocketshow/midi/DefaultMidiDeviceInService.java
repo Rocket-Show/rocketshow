@@ -34,7 +34,7 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
         this.midiService = midiService;
 
         // Initialize the MIDI in device receiver to execute MIDI control actions
-        midiInDeviceReceiver = new MidiInDeviceReceiver(activityNotificationMidiService, midiControlActionExecutionService);
+        midiInDeviceReceiver = new MidiInDeviceReceiver(activityNotificationMidiService, midiControlActionExecutionService, settingsService, midi2LightingConvertService, lightingService, midiDeviceOutService);
 
         // Initialize the MIDI router
         midiRouter = new MidiRouter(settingsService, midi2LightingConvertService, lightingService, midiDeviceOutService, activityNotificationMidiService, settingsService.getSettings().getDeviceInMidiRoutingList());

@@ -162,10 +162,6 @@ public class CompositionPlayer {
         }
     }
 
-    private void call() {
-
-    }
-
     // Load all files and construct the complete GST pipeline
     public void loadFiles() throws Exception {
         boolean hasAudioFile = false;
@@ -204,11 +200,13 @@ public class CompositionPlayer {
 
         if (pipeline != null) {
             pipeline.stop();
+            pipeline.dispose();
+            pipeline = null;
         }
 
         pipeline = new Pipeline();
 
-        Bus bus = pipeline.getBus();
+        Bus bus = GstApi.GST_API.gst_element_get_bus(pipeline);
 
         Element audioMixer = null;
 
@@ -289,6 +287,8 @@ public class CompositionPlayer {
             }
         });
 
+        GstApi.GST_API.gst_object_unref(bus);
+
         if (hasAudioFile) {
             audioMixer = ElementFactory.make("audiomixer", "audiomixer");
             pipeline.add(audioMixer);
@@ -302,13 +302,6 @@ public class CompositionPlayer {
             audioMixer.link(capsFilter);
 
             Element queue = ElementFactory.make("queue", "audiosinkqueue");
-
-            // Disable max buffers to prevent underruns -> mem does not look bad with this settings.
-            // Maybe a setting to disable it?
-            queue.set("max-size-buffers", 0);
-            queue.set("max-size-bytes", 0);
-            queue.set("max-size-time", 0);
-
             pipeline.add(queue);
 
             String sinkName = "alsasink";
@@ -372,17 +365,23 @@ public class CompositionPlayer {
                     midiSink.set("emit-signals", true);
                     pipeline.add(midiSink);
 
+                    midiParse.getSrcPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisMidi() + compositionFile.getOffsetMillis()) * 1000000);
+
                     // Sometimes preroll and sometimes new-sample events get fired. We have
                     // to process both.
                     midiSink.connect((AppSink.NEW_SAMPLE) element -> {
                         Sample sample = element.pullSample();
-                        processMidiBuffer(sample.getBuffer().map(false), midiRouter);
+                        Buffer buffer = sample.getBuffer();
+                        processMidiBuffer(buffer.map(false), midiRouter);
+                        buffer.unmap();
                         sample.dispose();
                         return FlowReturn.OK;
                     });
-                    midiSink.connect((AppSink.NEW_PREROLL) elem -> {
-                        Sample sample = elem.pullPreroll();
-                        processMidiBuffer(sample.getBuffer().map(false), midiRouter);
+                    midiSink.connect((AppSink.NEW_PREROLL) element -> {
+                        Sample sample = element.pullPreroll();
+                        Buffer buffer = sample.getBuffer();
+                        processMidiBuffer(buffer.map(false), midiRouter);
+                        buffer.unmap();
                         sample.dispose();
                         return FlowReturn.OK;
                     });
@@ -401,12 +400,17 @@ public class CompositionPlayer {
 
                     Element audioconvert = ElementFactory.make("audioconvert", "audioconvert" + i);
                     audioSource.connect((Element.PAD_ADDED) (Element element, Pad pad) -> {
-                        String name = pad.getCaps().getStructure(0).getName();
+                        Caps caps = pad.getCaps();
+
+                        String name = caps.getStructure(0).getName();
 
                         if ("audio/x-raw-float".equals(name) || "audio/x-raw-int".equals(name) || "audio/x-raw".equals(name)) {
                             pad.link(audioconvert.getSinkPads().get(0));
                         }
                     });
+
+                    //audioconvert.getSinkPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisMidi() + compositionFile.getOffsetMillis()) * 1000000);
+
                     pipeline.add(audioconvert);
 
                     // Apply the mix matrix
@@ -447,6 +451,8 @@ public class CompositionPlayer {
 
                     // Does not work on OS X
                     // See http://gstreamer-devel.966125.n4.nabble.com/OpenGL-renderer-window-td4686092.html
+
+                    // TODO Add offset to a video file
 
                     PlayBin playBin = (PlayBin) ElementFactory.make("playbin", "playbin" + i);
                     playBin.set("uri", "file://" + settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getVideoPath() + File.separator + compositionFile.getName());
@@ -523,12 +529,18 @@ public class CompositionPlayer {
         // Stop the composition
         if (pipeline != null) {
             pipeline.stop();
+            pipeline.dispose();
             pipeline = null;
         }
 
         // Close all MIDI routers
         for (MidiRouter midiRouter : midiRouterList) {
             midiRouter.close();
+        }
+
+        // Now would be a good moment to run the GC
+        if(!isSample) {
+            System.gc();
         }
 
         playState = PlayState.STOPPED;

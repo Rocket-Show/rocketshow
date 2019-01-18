@@ -13,6 +13,8 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -24,6 +26,8 @@ public class DefaultActivityNotificationMidiService extends TextWebSocketHandler
     private final static Logger logger = LoggerFactory.getLogger(DefaultActivityNotificationMidiService.class);
 
     private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
+
+    private Timer sendActivityTimer;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
@@ -57,18 +61,31 @@ public class DefaultActivityNotificationMidiService extends TextWebSocketHandler
 
     @Override
     public void notifyClients(MidiSignal midiSignal, MidiSignal.MidiDirection midiDirection, MidiSignal.MidiSource midiSource, MidiSignal.MidiDestination midiDestination) {
-        // TODO Collect events before sending each
+        if (sendActivityTimer != null) {
+            // There is already a timer running -> let it finish and ignore this event for performance reasons
+            return;
+        }
 
-        // Wrap in a thread, to not block the main thread and make synchronized calls
-        // to websocket (two writes to the same session from different threads is not allowed)
-        Thread thread = new Thread(() -> {
-            try {
-                sendWebsocketMessage(midiSignal, midiDirection, midiSource, midiDestination);
-            } catch (IOException e) {
-                logger.error("Could not send MIDI activity message", e);
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    // Send the universe
+                    sendWebsocketMessage(midiSignal, midiDirection, midiSource, midiDestination);
+                } catch (Exception e) {
+                    logger.error("Could not send the MIDI activity", e);
+                }
+
+                if (sendActivityTimer != null) {
+                    sendActivityTimer.cancel();
+                }
+
+                sendActivityTimer = null;
             }
-        });
-        thread.start();
+        };
+
+        sendActivityTimer = new Timer();
+        sendActivityTimer.schedule(timerTask, 50);
     }
 
     @PreDestroy

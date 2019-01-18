@@ -14,11 +14,13 @@ public class DefaultControlActionExecutionService implements ControlActionExecut
 	private final PlayerService playerService;
     private final SetService setService;
     private final SettingsService settingsService;
+    private final RebootService rebootService;
 
-	public DefaultControlActionExecutionService(PlayerService playerService, SetService setService, SettingsService settingsService) {
+	public DefaultControlActionExecutionService(PlayerService playerService, SetService setService, SettingsService settingsService, RebootService rebootService) {
 		this.playerService = playerService;
 		this.setService = setService;
 		this.settingsService = settingsService;
+		this.rebootService = rebootService;
 	}
 
 	private void executeActionOnRemoteDevice(ControlAction controlAction, RemoteDevice remoteDevice) {
@@ -98,8 +100,7 @@ public class DefaultControlActionExecutionService implements ControlActionExecut
 			playerService.play();
 			break;
 		case REBOOT:
-		    // TODO
-			//manager.reboot();
+            rebootService.reboot();
 			break;
 		default:
 			logger.warn(

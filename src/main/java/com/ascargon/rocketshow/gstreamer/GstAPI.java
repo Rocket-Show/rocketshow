@@ -2,11 +2,14 @@ package com.ascargon.rocketshow.gstreamer;
 
 import com.sun.jna.Library;
 import com.sun.jna.Pointer;
-import org.freedesktop.gstreamer.Caps;
-import org.freedesktop.gstreamer.GObject;
+import com.sun.jna.ptr.PointerByReference;
+import org.freedesktop.gstreamer.*;
+import org.freedesktop.gstreamer.elements.BaseSink;
 import org.freedesktop.gstreamer.lowlevel.GType;
 import org.freedesktop.gstreamer.lowlevel.GValueAPI;
 import org.freedesktop.gstreamer.lowlevel.GstNative;
+
+import java.awt.*;
 
 /**
  * Added a function to append an array to an array
@@ -26,5 +29,11 @@ public interface GstApi extends Library {
 
     // Get the caps from a string (e.g. "audio/x-raw,channels=4")
     Caps gst_caps_from_string(String string);
+
+    // Unref an object
+    void gst_object_unref(Object object);
+
+    // Get the bus from an element (usually the pipeline)
+    Bus gst_element_get_bus(Element element);
 
 }
