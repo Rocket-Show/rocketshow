@@ -12,7 +12,7 @@ import org.freedesktop.gstreamer.lowlevel.GstNative;
 import java.awt.*;
 
 /**
- * Added a function to append an array to an array
+ * Functions for Gstreamer not provided in the official Java Gstreamer bindings.
  */
 public interface GstApi extends Library {
 
