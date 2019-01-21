@@ -365,7 +365,7 @@ public class CompositionPlayer {
                     midiSink.set("emit-signals", true);
                     pipeline.add(midiSink);
 
-                    midiParse.getSrcPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisMidi() + compositionFile.getOffsetMillis()) * 1000000);
+                    midiParse.getSrcPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisMidi() + compositionFile.getOffsetMillis()) * 1000000l);
 
                     // Sometimes preroll and sometimes new-sample events get fired. We have
                     // to process both.
@@ -409,7 +409,7 @@ public class CompositionPlayer {
                         }
                     });
 
-                    //audioconvert.getSinkPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisMidi() + compositionFile.getOffsetMillis()) * 1000000);
+                    audioconvert.getSrcPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisAudio() + compositionFile.getOffsetMillis()) * 1000000l);
 
                     pipeline.add(audioconvert);
 
