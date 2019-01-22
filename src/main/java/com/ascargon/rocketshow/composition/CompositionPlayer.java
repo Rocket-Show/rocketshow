@@ -201,7 +201,6 @@ public class CompositionPlayer {
         if (pipeline != null) {
             pipeline.stop();
             pipeline.dispose();
-            pipeline = null;
         }
 
         pipeline = new Pipeline();
@@ -398,20 +397,22 @@ public class CompositionPlayer {
                     audioSource.set("uri", "file://" + settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getAudioPath() + File.separator + compositionFile.getName());
                     pipeline.add(audioSource);
 
-                    Element audioconvert = ElementFactory.make("audioconvert", "audioconvert" + i);
+                    Element audioConvert = ElementFactory.make("audioconvert", "audioconvert" + i);
                     audioSource.connect((Element.PAD_ADDED) (Element element, Pad pad) -> {
                         Caps caps = pad.getCaps();
 
                         String name = caps.getStructure(0).getName();
 
                         if ("audio/x-raw-float".equals(name) || "audio/x-raw-int".equals(name) || "audio/x-raw".equals(name)) {
-                            pad.link(audioconvert.getSinkPads().get(0));
+                            pad.link(audioConvert.getSinkPads().get(0));
                         }
                     });
 
-                    audioconvert.getSrcPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisAudio() + compositionFile.getOffsetMillis()) * 1000000l);
+                    audioConvert.getSrcPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisAudio() + compositionFile.getOffsetMillis()) * 1000000l);
+                    pipeline.add(audioConvert);
 
-                    pipeline.add(audioconvert);
+                    Element audioResample = ElementFactory.make("audioresample", "audioresample" + i);
+                    pipeline.add(audioResample);
 
                     // Apply the mix matrix
                     GValueAPI.GValue mixMatrix = new GValueAPI.GValue();
@@ -441,11 +442,12 @@ public class CompositionPlayer {
 
                     logger.debug("Mix-matrix for " + audioCompositionFile.getName() + ": " + mixMatrix.toString());
 
-                    GstApi.GST_API.g_object_set_property(audioconvert, "mix-matrix", mixMatrix.getPointer());
+                    GstApi.GST_API.g_object_set_property(audioConvert, "mix-matrix", mixMatrix.getPointer());
                     GValueAPI.GVALUE_API.g_value_unset(mixMatrix);
 
-                    // Link the converter to the mixer
-                    audioconvert.link(audioMixer);
+                    // Link the converter/resampler to the mixer
+                    audioConvert.link(audioResample);
+                    audioResample.link(audioMixer);
                 } else if (compositionFile instanceof VideoCompositionFile && capabilitiesService.getCapabilities().isGstreamer()) {
                     logger.debug("Add video file to pipeline");
 
@@ -530,7 +532,6 @@ public class CompositionPlayer {
         if (pipeline != null) {
             pipeline.stop();
             pipeline.dispose();
-            pipeline = null;
         }
 
         // Close all MIDI routers

@@ -140,7 +140,7 @@ export class PlayComponent implements OnInit, OnDestroy {
     this.activityMidiSubscription = this.activityMidiService.subject.subscribe((activityMidi: ActivityMidi) => {
       let decayMillis = 50;
 
-      if (activityMidi.midiDirection == 'IN') {
+      if (activityMidi.midiDirection == 'IN' || activityMidi.midiDirection == 'IN_OUT') {
         this.activityMidiIn = true;
 
         if (this.activityMidiInStopTimeout) {
@@ -152,7 +152,9 @@ export class PlayComponent implements OnInit, OnDestroy {
           this.activityMidiInStopTimeout = undefined;
           this.activityMidiIn = false;
         }, decayMillis);
-      } else if (activityMidi.midiDirection == 'OUT' && activityMidi.midiDestination != 'LIGHTING') {
+      }
+      
+      if ((activityMidi.midiDirection == 'OUT' || activityMidi.midiDirection == 'IN_OUT') && activityMidi.midiDestinations.indexOf('LIGHTING') == -1) {
         // Lighting is monitored separately
 
         this.activityMidiOut = true;

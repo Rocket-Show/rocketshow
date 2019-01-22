@@ -54,6 +54,8 @@ public class DefaultActivityNotificationLightingService extends TextWebSocketHan
 
     @Override
     public void notifyClients(LightingUniverse lightingUniverse) {
+        // Mix all pending events into one instead of dropping information
+
         if (sendActivityTimer != null) {
             // There is already a timer running -> let it finish and ignore this event for performance reasons
             return;

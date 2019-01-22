@@ -29,6 +29,8 @@ public class DefaultActivityNotificationMidiService extends TextWebSocketHandler
 
     private Timer sendActivityTimer;
 
+    private ActivityMidi activityMidi;
+
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
         sessions.add(session);
@@ -39,13 +41,10 @@ public class DefaultActivityNotificationMidiService extends TextWebSocketHandler
         sessions.remove(session);
     }
 
-    private synchronized void sendWebsocketMessage(MidiSignal midiSignal, MidiSignal.MidiDirection midiDirection, MidiSignal.MidiSource midiSource, MidiSignal.MidiDestination midiDestination) throws IOException {
-        ActivityMidi activityMidi = new ActivityMidi();
-
-        activityMidi.setMidiSignal(midiSignal);
-        activityMidi.setMidiDirection(midiDirection);
-        activityMidi.setMidiSource(midiSource);
-        activityMidi.setMidiDestination(midiDestination);
+    private synchronized void sendWebsocketMessage() throws IOException {
+        if (activityMidi == null) {
+            return;
+        }
 
         ObjectMapper mapper = new ObjectMapper();
         String returnValue = mapper.writeValueAsString(activityMidi);
@@ -57,10 +56,42 @@ public class DefaultActivityNotificationMidiService extends TextWebSocketHandler
                 sessions.remove(webSocketSession);
             }
         }
+
+        activityMidi = null;
     }
 
     @Override
     public void notifyClients(MidiSignal midiSignal, MidiSignal.MidiDirection midiDirection, MidiSignal.MidiSource midiSource, MidiSignal.MidiDestination midiDestination) {
+        // Mix the current event into the pending activity or create a new one
+        if (activityMidi == null) {
+            // Create a new MIDI activity
+            activityMidi = new ActivityMidi();
+
+            activityMidi.setMidiSignal(midiSignal);
+            activityMidi.setMidiDirection(midiDirection);
+            if (midiSource != null) {
+                activityMidi.getMidiSources().add(midiSource);
+            }
+            if (midiDestination != null) {
+                activityMidi.getMidiDestinations().add(midiDestination);
+            }
+        } else {
+            // Mix the current MIDI event into the pending activity
+            // TODO mix the signal
+
+            if (!activityMidi.getMidiDirection().equals(midiDirection)) {
+                activityMidi.setMidiDirection(MidiSignal.MidiDirection.IN_OUT);
+            }
+
+            if (midiSource != null && !activityMidi.getMidiSources().contains(midiSource)) {
+                activityMidi.getMidiSources().add(midiSource);
+            }
+
+            if (midiDestination != null && !activityMidi.getMidiDestinations().contains(midiDestination)) {
+                activityMidi.getMidiDestinations().add(midiDestination);
+            }
+        }
+
         if (sendActivityTimer != null) {
             // There is already a timer running -> let it finish and ignore this event for performance reasons
             return;
@@ -71,7 +102,7 @@ public class DefaultActivityNotificationMidiService extends TextWebSocketHandler
             public void run() {
                 try {
                     // Send the universe
-                    sendWebsocketMessage(midiSignal, midiDirection, midiSource, midiDestination);
+                    sendWebsocketMessage();
                 } catch (Exception e) {
                     logger.error("Could not send the MIDI activity", e);
                 }

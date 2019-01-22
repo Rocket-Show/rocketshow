@@ -17,7 +17,8 @@ public class MidiSignal {
 
     public enum MidiDirection {
         IN,
-        OUT
+        OUT,
+        IN_OUT
     }
 
     public enum MidiSource {

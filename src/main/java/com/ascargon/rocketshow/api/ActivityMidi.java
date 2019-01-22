@@ -3,6 +3,8 @@ package com.ascargon.rocketshow.api;
 import com.ascargon.rocketshow.midi.MidiSignal;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.ArrayList;
+import java.util.List;
 
 @XmlRootElement
 public class ActivityMidi {
@@ -11,9 +13,9 @@ public class ActivityMidi {
 
     private MidiSignal.MidiDirection midiDirection;
 
-    private MidiSignal.MidiSource midiSource;
+    private List<MidiSignal.MidiSource> midiSources = new ArrayList<>();
 
-    private MidiSignal.MidiDestination midiDestination;
+    private List<MidiSignal.MidiDestination> midiDestinations = new ArrayList<>();
 
     public MidiSignal getMidiSignal() {
         return midiSignal;
@@ -31,20 +33,19 @@ public class ActivityMidi {
         this.midiDirection = midiDirection;
     }
 
-    public MidiSignal.MidiDestination getMidiDestination() {
-        return midiDestination;
+    public List<MidiSignal.MidiSource> getMidiSources() {
+        return midiSources;
     }
 
-    public void setMidiDestination(MidiSignal.MidiDestination midiDestination) {
-        this.midiDestination = midiDestination;
+    public void setMidiSources(List<MidiSignal.MidiSource> midiSources) {
+        this.midiSources = midiSources;
     }
 
-    public MidiSignal.MidiSource getMidiSource() {
-        return midiSource;
+    public List<MidiSignal.MidiDestination> getMidiDestinations() {
+        return midiDestinations;
     }
 
-    public void setMidiSource(MidiSignal.MidiSource midiSource) {
-        this.midiSource = midiSource;
+    public void setMidiDestinations(List<MidiSignal.MidiDestination> midiDestinations) {
+        this.midiDestinations = midiDestinations;
     }
-
 }
