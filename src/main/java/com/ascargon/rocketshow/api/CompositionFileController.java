@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.api;
 
+import com.ascargon.rocketshow.composition.CompositionFile;
 import com.ascargon.rocketshow.composition.CompositionFileService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,12 +22,12 @@ public class CompositionFileController {
     }
 
     @GetMapping("list")
-    public List<com.ascargon.rocketshow.composition.CompositionFile> getAll() {
+    public List<CompositionFile> getAll() {
         return compositionFileService.getAllFiles();
     }
 
     @PostMapping("upload")
-    public com.ascargon.rocketshow.composition.CompositionFile upload(@RequestParam("file") MultipartFile file) throws IOException {
+    public CompositionFile upload(@RequestParam("file") MultipartFile file) throws IOException {
         return compositionFileService.saveFile(file.getInputStream(), file.getOriginalFilename());
     }
 

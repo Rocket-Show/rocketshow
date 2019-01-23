@@ -6,6 +6,10 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.ascargon.rocketshow.Settings;
+import com.ascargon.rocketshow.composition.CompositionPlayer;
+import com.ascargon.rocketshow.gstreamer.GstApi;
+import org.freedesktop.gstreamer.*;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
@@ -78,6 +82,42 @@ public class DefaultAudioService implements AudioService {
         logger.debug("Audio devices listed");
 
         return audioDeviceList;
+    }
+
+    @Override
+    public boolean isAudioChannelCountCompatible(Settings settings, int channelCount) {
+        // Build a test Gstreamer pipeline and query the channel count from the sink
+//        final Pipeline pipeline = new Pipeline();
+//
+//        Element audioTestSrc = ElementFactory.make("audiotestsrc", "audiotestsrc");
+//        audioTestSrc.set("volume", 0d);
+//        pipeline.add(audioTestSrc);
+//
+//        Element audioConvert = ElementFactory.make("audioconvert", "audioconvert");
+//        pipeline.add(audioConvert);
+//
+//        final Element osxAudioSink = ElementFactory.make("osxaudiosink", "osxaudiosink");
+//        pipeline.add(osxAudioSink);
+//
+//        audioTestSrc.link(audioConvert);
+//        audioConvert.link(osxAudioSink);
+//
+//        Bus bus = GstApi.GST_API.gst_element_get_bus(pipeline);
+//        bus.connect((GstObject source, State old, State newState, State pending) -> {
+//            if (source.getTypeName().equals("GstPipeline")) {
+//                if (newState == State.PLAYING) {
+//                    logger.info("Channels: " + osxAudioSink.getSinkPads().get(0).getNegotiatedCaps().getStructure(0).getInteger("channels"));
+//
+//                    pipeline.stop();
+//                    pipeline.dispose();
+//                }
+//            }
+//        });
+//        GstApi.GST_API.gst_object_unref(bus);
+//
+//        pipeline.play();
+
+        return true;
     }
 
 }

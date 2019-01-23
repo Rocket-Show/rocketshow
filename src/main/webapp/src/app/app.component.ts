@@ -4,7 +4,7 @@ import { CompositionService } from './services/composition.service';
 import { Component, OnInit } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { Router, NavigationEnd } from '@angular/router';
-import { Observable, forkJoin } from 'rxjs';
+import { forkJoin } from 'rxjs';
 import { SessionService } from './services/session.service';
 import { SettingsService } from './services/settings.service';
 import { Settings } from './models/settings';
@@ -99,6 +99,10 @@ export class AppComponent implements OnInit {
 
   showLeadSheet() {
     this.leadSheetService.show();
+  }
+
+  leadSheetButtonVisible(): boolean  {
+    return this.leadSheetService.leadSheetButtonVisible;
   }
 
 }

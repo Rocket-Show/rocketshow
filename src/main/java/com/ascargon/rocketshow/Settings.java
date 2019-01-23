@@ -41,6 +41,7 @@ public class Settings {
     private String midiPath;
     private String audioPath;
     private String videoPath;
+    private String leadSheetPath;
 
     private MidiDevice midiInDevice;
     private MidiDevice midiOutDevice;
@@ -353,10 +354,20 @@ public class Settings {
         this.videoPath = videoPath;
     }
 
+    public String getLeadSheetPath() {
+        return leadSheetPath;
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    public void setLeadSheetPath(String leadSheetPath) {
+        this.leadSheetPath = leadSheetPath;
+    }
+
     public int getRaspberryGpioDebounceMillis() {
         return raspberryGpioDebounceMillis;
     }
 
+    @SuppressWarnings("unused")
     public void setRaspberryGpioDebounceMillis(int raspberryGpioDebounceMillis) {
         this.raspberryGpioDebounceMillis = raspberryGpioDebounceMillis;
     }
@@ -365,6 +376,7 @@ public class Settings {
         return raspberryGpioNoHardwareTrigger;
     }
 
+    @SuppressWarnings("unused")
     public void setRaspberryGpioNoHardwareTrigger(boolean raspberryGpioNoHardwareTrigger) {
         this.raspberryGpioNoHardwareTrigger = raspberryGpioNoHardwareTrigger;
     }
@@ -373,6 +385,7 @@ public class Settings {
         return raspberryGpioTimerPeriodMillis;
     }
 
+    @SuppressWarnings("unused")
     public void setRaspberryGpioTimerPeriodMillis(int raspberryGpioTimerPeriodMillis) {
         this.raspberryGpioTimerPeriodMillis = raspberryGpioTimerPeriodMillis;
     }
@@ -381,38 +394,45 @@ public class Settings {
         return raspberryGpioCyclesHigh;
     }
 
+    @SuppressWarnings("unused")
     public void setRaspberryGpioCyclesHigh(int raspberryGpioCyclesHigh) {
         this.raspberryGpioCyclesHigh = raspberryGpioCyclesHigh;
     }
 
-	public List<Instrument> getInstrumentList() {
-		return instrumentList;
-	}
+    public List<Instrument> getInstrumentList() {
+        return instrumentList;
+    }
 
-	public void setInstrumentList(List<Instrument> instrumentList) {
-		this.instrumentList = instrumentList;
-	}
+    public void setInstrumentList(List<Instrument> instrumentList) {
+        this.instrumentList = instrumentList;
+    }
 
+    @SuppressWarnings("WeakerAccess")
     public Integer getAlsaBufferSize() {
         return alsaBufferSize;
     }
 
+    @SuppressWarnings("unused")
     public void setAlsaBufferSize(Integer alsaBufferSize) {
         this.alsaBufferSize = alsaBufferSize;
     }
 
+    @SuppressWarnings("WeakerAccess")
     public Integer getAlsaPeriodSize() {
         return alsaPeriodSize;
     }
 
+    @SuppressWarnings("unused")
     public void setAlsaPeriodSize(Integer alsaPeriodSize) {
         this.alsaPeriodSize = alsaPeriodSize;
     }
 
+    @SuppressWarnings("WeakerAccess")
     public Integer getAlsaPeriodTime() {
         return alsaPeriodTime;
     }
 
+    @SuppressWarnings("unused")
     public void setAlsaPeriodTime(Integer alsaPeriodTime) {
         this.alsaPeriodTime = alsaPeriodTime;
     }

@@ -22,8 +22,8 @@
             </p>
           </a>
 
-          <a *ngFor="let composition of filteredCompositions" (click)="selectComposition(composition); false" href="#" class="list-group-item flex-column align-items-start"
-            [class.active]="initialComposition?.name == composition.name">
+          <a *ngFor="let composition of filteredCompositions" (click)="selectComposition(composition); false" href="#"
+            class="list-group-item flex-column align-items-start" [class.active]="initialComposition?.name == composition.name">
 
             <p class="mb-0">{{ composition.name }}</p>
           </a>
@@ -44,7 +44,20 @@
         <!-- Name -->
         <div class="form-group">
           <label for="compositionName">{{ 'editor.composition-name' | translate }}</label>
-          <input type="text" class="form-control" maxlength="50" [(ngModel)]="currentComposition.name" id="compositionName" placeholder="{{ 'editor.default-composition-name' | translate }}">
+          <input type="text" class="form-control" maxlength="50" [(ngModel)]="currentComposition.name" id="compositionName"
+            placeholder="{{ 'editor.default-composition-name' | translate }}">
+        </div>
+
+        <!-- Loop -->
+        <div class="form-group">
+          <div class="form-check">
+            <input type="checkbox" [ngModel]="currentComposition.loop" (ngModelChange)="currentComposition.loop = $event"
+              class="form-check-input" id="loop">
+
+            <label class="form-check-label" for="loop">
+              {{ 'editor.loop' | translate }}
+            </label>
+          </div>
         </div>
 
         <!-- Notes -->
@@ -54,18 +67,15 @@
         </div>
 
         <!-- Lead sheets -->
-        <!-- <div class="form-group">
+        <div class="form-group">
           <label>{{ 'editor.lead-sheets' | translate }}</label>
 
           <div class="list-group">
             <div class="list-group-item" *ngFor="let leadSheet of currentComposition?.leadSheetList; let i = index">
               <div class="row">
-                <a href="#" class="col-auto col-auto my-auto pl-0" (click)="toggleActive(file); false" [class.text-white]="!file.active">
-                  <i class="fa fa-fw" [ngClass]="file.getFontAwesomeIconClass()" aria-hidden="true"></i>
-                </a>
                 <div class="col-auto flex-grow text-break-word my-auto pl-0">
-                  <a href="#" (click)="editCompositionFileDetails(i); false">
-                    <p class="mb-0">{{ file.name }}</p>
+                  <a href="#" (click)="editLeadSheet(i); false">
+                    <p class="mb-0 ml-3"><i class="fa fa-fw fa-file-text-o" aria-hidden="true"></i> {{ leadSheet.name }} - {{ instrumentNameFromUuid(leadSheet.instrumentUuid) }}</p>
                   </a>
                 </div>
                 <div class="col-auto my-auto pl-0 pr-0">
@@ -82,7 +92,7 @@
               <i class="fa fa-plus" aria-hidden="true"></i> {{ 'editor.lead-sheets-add' | translate }}
             </a>
           </div>
-        </div> -->
+        </div>
 
         <!-- Files -->
         <div class="form-group">
@@ -94,12 +104,13 @@
                 <div class="col-auto list-sort-handle my-auto" style="cursor: move; cursor: -webkit-grabbing;">
                   <i class="fa fa-bars" aria-hidden="true"></i>
                 </div>
-                <a href="#" class="col-auto col-auto my-auto pl-0" (click)="toggleActive(file); false" [class.text-white]="!file.active">
+                <a href="#" class="col-auto col-auto my-auto pl-0" (click)="toggleActive(file); false"
+                  [class.text-white]="!file.active">
                   <i class="fa fa-fw" [ngClass]="file.getFontAwesomeIconClass()" aria-hidden="true"></i>
                 </a>
                 <div class="col-auto flex-grow text-break-word my-auto pl-0">
                   <a href="#" (click)="editCompositionFileDetails(i); false">
-                    <p class="mb-0">{{ file.name }}</p>
+                    <p class="mb-0">{{ file.name }}<span *ngIf="file.type == 'AUDIO'"> - {{ file.outputBus }}</span></p>
                   </a>
                 </div>
                 <div class="col-auto my-auto pl-0 pr-0">
@@ -121,7 +132,9 @@
         <!-- More than one video/image -->
         <div *ngIf="multipleVideoImage()" class="alert alert-danger mb-0 text-center" role="alert">
           <h3>
-            <i class="fa fa-exclamation-circle" aria-hidden="true"></i> {{ 'editor.error-multiple-video-images-title' | translate
+            <i class="fa fa-exclamation-circle" aria-hidden="true"></i> {{ 'editor.error-multiple-video-images-title'
+            |
+            translate
             }}
           </h3>
           <p class="mb-0">{{ 'editor.error-multiple-video-images' | translate }}</p>
@@ -142,7 +155,8 @@
             role="button">
 
             <i *ngIf="savingComposition" class="fa fa-spinner fa-pulse fa-fw" aria-hidden="true"></i>
-            <i *ngIf="!savingComposition" class="fa fa-floppy-o fa-fw" aria-hidden="true"></i> {{ 'misc.save' | translate
+            <i *ngIf="!savingComposition" class="fa fa-floppy-o fa-fw" aria-hidden="true"></i> {{ 'misc.save' |
+            translate
             }}
           </button>
         </div>

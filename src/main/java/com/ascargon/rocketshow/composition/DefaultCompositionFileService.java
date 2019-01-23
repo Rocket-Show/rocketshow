@@ -85,7 +85,6 @@ public class DefaultCompositionFileService implements CompositionFileService {
     public void deleteFile(String name, String type) {
         String path = settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator;
 
-        // Audio files
         if ("MIDI".equals(type)) {
             path += settingsService.getSettings().getMidiPath();
         } else if ("AUDIO".equals(type)) {

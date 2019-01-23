@@ -80,7 +80,7 @@ public class DefaultLogDownloadService implements LogDownloadService {
         fileOutputStream.close();
 
         // Return the prepared zip
-        return new File(settingsService.getSettings().getBasePath() + "/" + LOGS_FILE_NAME);
+        return new File(settingsService.getSettings().getBasePath() + File.separator + LOGS_FILE_NAME);
     }
 
 }

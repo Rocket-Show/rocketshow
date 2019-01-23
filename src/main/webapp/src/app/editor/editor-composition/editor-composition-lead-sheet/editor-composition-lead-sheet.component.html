@@ -5,81 +5,78 @@
     </div>
 
     <div class="card-body">
-
-      <!-- Selected file -->
-      <div class="card mb-3 border-secondary">
-        <div class="card-body">
-          <!-- No file selected -->
-          <div *ngIf="!file?.name">
-            {{ 'editor.no-file-selected' | translate }}
-          </div>
-
-          <!-- A file is selected -->
-          <div *ngIf="file?.name">
-            <i class="fa fa-fw" [ngClass]="file.getFontAwesomeIconClass()" aria-hidden="true"></i>
-            {{ file?.name }}
-          </div>
-        </div>
-      </div>
-
-      <!-- Choose file -->
-      <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
-        <li class="nav-item">
-          <a class="nav-link active" id="upload-tab" data-toggle="tab" href="#upload" role="tab">
-            <i class="fa fa-upload" aria-hidden="true"></i> {{ 'editor.upload' | translate }}
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" id="media-library-tab" data-toggle="tab" href="#media-library" role="tab">
-            <i class="fa fa-folder-o" aria-hidden="true"></i> {{ 'editor.lead-sheets-library' | translate }}
-          </a>
-        </li>
-      </ul>
-
-      <div class="tab-content mb-3" id="myTabContent">
-
-        <!-- Upload -->
-        <div class="tab-pane fade show active" id="upload" role="tabpanel">
-          <dropzone [config]="dropzoneConfig" [useDropzoneClass]="'false'" [message]="uploadMessage" (error)="onUploadError($event)"
-            (success)="onUploadSuccess($event)"></dropzone>
-
-          <div id="dz-preview-template" class="dz-preview dz-file-preview">
-            <div class="dz-details">
-              <div class="dz-filename">
-                <span data-dz-name></span>
+      <div class="row">
+        <div class="col-lg-6">
+          <!-- Selected file -->
+          <div class="card mb-3 border-secondary">
+            <div class="card-body">
+              <!-- No file selected -->
+              <div *ngIf="!leadSheet?.name">
+                {{ 'editor.no-file-selected' | translate }}
               </div>
-              <div class="dz-size" data-dz-size></div>
-              <img data-dz-thumbnail />
-            </div>
-            <div class="dz-progress">
-              <span class="dz-upload" data-dz-uploadprogress></span>
+
+              <!-- A file is selected -->
+              <div *ngIf="leadSheet?.name">
+                <i class="fa fa-fw fa-file-text-o" aria-hidden="true"></i> {{ leadSheet?.name }}
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Library -->
-        <div class="tab-pane fade" id="media-library" role="tabpanel">
-          <input type="text" class="form-control input-block mb-3" id="searchFileList" placeholder="{{ 'editor.search-files' | translate }}"
-            (input)="filterExistingFiles($event.target.value)">
+          <!-- Choose file -->
+          <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+            <li class="nav-item">
+              <a class="nav-link active" id="upload-tab" data-toggle="tab" href="#upload" role="tab">
+                <i class="fa fa-upload" aria-hidden="true"></i> {{ 'editor.upload' | translate }}
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" id="media-library-tab" data-toggle="tab" href="#media-library" role="tab">
+                <i class="fa fa-folder-o" aria-hidden="true"></i> {{ 'editor.lead-sheets-library' | translate }}
+              </a>
+            </li>
+          </ul>
 
-          <div class="card border-secondary" style="height: 300px; overflow-y: scroll;">
-            <div class="card-body p-0">
-              <div class="list-group list-group-flush">
-                <div *ngFor="let existingFile of filteredExistingFiles" class="list-group-item list-group-item-action" [class.active]="file?.name == existingFile.name && file?.type == existingFile.type">
+          <div class="tab-content mb-3" id="myTabContent">
 
-                  <div class="row">
-                    <a [class.text-white]="file?.name == existingFile.name && file?.type == existingFile.type" href="#" (click)="selectExistingFile(existingFile); false"
-                      class="col-auto my-auto">
-                      <i class="fa fa-fw" [ngClass]="existingFile.getFontAwesomeIconClass()" aria-hidden="true"></i>
-                    </a>
+            <!-- Upload -->
+            <div class="tab-pane fade show active" id="upload" role="tabpanel">
+              <dropzone [config]="dropzoneConfig" [useDropzoneClass]="'false'" [message]="uploadMessage" (error)="onUploadError($event)"
+                (success)="onUploadSuccess($event)"></dropzone>
 
-                    <a [class.text-white]="file?.name == existingFile.name && file?.type == existingFile.type" href="#" (click)="selectExistingFile(existingFile); false"
-                      class="col-auto my-auto flex-grow text-break-word pl-0">
-                      {{ existingFile.name }}
-                    </a>
+              <div id="dz-preview-template" class="dz-preview dz-file-preview">
+                <div class="dz-details">
+                  <div class="dz-filename">
+                    <span data-dz-name></span>
+                  </div>
+                  <div class="dz-size" data-dz-size></div>
+                  <img data-dz-thumbnail />
+                </div>
+                <div class="dz-progress">
+                  <span class="dz-upload" data-dz-uploadprogress></span>
+                </div>
+              </div>
+            </div>
 
-                    <a class="col-auto my-auto pl-0 text-danger float-right" href="#" role="button" (click)="deleteFile(existingFile); false">
-                      <i class="fa fa-trash-o" aria-hidden="true"></i>
+            <!-- Library -->
+            <div class="tab-pane fade" id="media-library" role="tabpanel">
+              <input type="text" class="form-control input-block mb-3" id="searchFileList" placeholder="{{ 'editor.search-files' | translate }}"
+                (input)="filterExistingFiles($event.target.value)">
+
+              <div class="card border-secondary" style="height: 300px; overflow-y: scroll;">
+                <div class="card-body p-0">
+                  <div class="list-group list-group-flush">
+                    <a *ngFor="let existingLeadSheet of filteredExistingLeadSheets | sort:'name'" class="list-group-item"
+                      [class.active]="leadSheet?.name == existingLeadSheet.name" href="#" (click)="selectExistingLeadSheet(existingLeadSheet); false">
+
+                      <div class="row">
+                        <div class="col-auto my-auto flex-grow text-break-word">
+                          <i class="fa fa-fw fa-file-text-o" aria-hidden="true"></i> {{ existingLeadSheet.name }}
+                        </div>
+
+                        <div class="col-auto my-auto pl-0 text-danger float-right" (click)="deleteLeadSheet(existingLeadSheet); false">
+                          <i class="fa fa-trash-o" aria-hidden="true"></i>
+                        </div>
+                      </div>
                     </a>
                   </div>
                 </div>
@@ -88,8 +85,32 @@
           </div>
         </div>
 
-      </div>
+        <hr />
 
+        <div class="col-lg-6">
+          <div class="card border-secondary">
+            <div class="card-header">
+              {{ 'editor.file-settings' | translate }}
+            </div>
+
+            <div class="card-body">
+
+              <!-- Instrument -->
+              <div class="form-group">
+                <label class="col-form-label">{{ 'settings.instrument' | translate }}</label>
+
+                <select class="custom-select form-control" [ngModel]="leadSheet?.instrumentUuid" (ngModelChange)="leadSheet.instrumentUuid = $event">
+                  <option [ngValue]="selectUndefinedOptionValue">- {{ 'settings.no-instrument' | translate }} -</option>
+                  <option *ngFor="let instrument of settings.instrumentList" [ngValue]="instrument.uuid">{{
+                    instrument.name }}</option>
+                </select>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
     </div>
 
     <div class="card-footer">
@@ -102,6 +123,6 @@
         </button>
       </div>
     </div>
-
   </div>
+
 </div>

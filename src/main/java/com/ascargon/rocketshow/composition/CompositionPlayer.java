@@ -201,6 +201,7 @@ public class CompositionPlayer {
         if (pipeline != null) {
             pipeline.stop();
             pipeline.dispose();
+            pipeline = null;
         }
 
         pipeline = new Pipeline();
@@ -532,6 +533,7 @@ public class CompositionPlayer {
         if (pipeline != null) {
             pipeline.stop();
             pipeline.dispose();
+            pipeline = null;
         }
 
         // Close all MIDI routers

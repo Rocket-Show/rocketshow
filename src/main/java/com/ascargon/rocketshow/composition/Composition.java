@@ -25,15 +25,19 @@ public class Composition {
 
     private List<CompositionFile> compositionFileList = new ArrayList<>();
 
+    private List<LeadSheet> leadSheetList = new ArrayList<>();
+
     @XmlElementWrapper(name = "fileList")
     @XmlElements({@XmlElement(type = MidiCompositionFile.class, name = "midiFile"),
             @XmlElement(type = VideoCompositionFile.class, name = "videoFile"),
             @XmlElement(type = AudioCompositionFile.class, name = "audioFile")})
     @JsonProperty("fileList")
+    @SuppressWarnings("WeakerAccess")
     public List<CompositionFile> getCompositionFileList() {
         return compositionFileList;
     }
 
+    @SuppressWarnings("unused")
     public void setCompositionFileList(List<CompositionFile> compositionFileList) {
         this.compositionFileList = compositionFileList;
     }
@@ -70,4 +74,11 @@ public class Composition {
         this.loop = loop;
     }
 
+    public List<LeadSheet> getLeadSheetList() {
+        return leadSheetList;
+    }
+
+    public void setLeadSheetList(List<LeadSheet> leadSheetList) {
+        this.leadSheetList = leadSheetList;
+    }
 }

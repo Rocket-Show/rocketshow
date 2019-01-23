@@ -23,6 +23,8 @@ import { AudioBus } from '../../../models/audio-bus';
 })
 export class EditorCompositionFileComponent implements OnInit {
 
+  selectUndefinedOptionValue: any = undefined;
+
   fileIndex: number;
   file: CompositionFile;
   composition: Composition;

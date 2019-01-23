@@ -11,6 +11,7 @@ export class Composition {
     notes: string;
     autoStartNextComposition: boolean = false;
     leadSheetList: LeadSheet[] = [];
+    loop: boolean;
 
     constructor(data?: any) {
         if (!data) {
@@ -29,6 +30,8 @@ export class Composition {
                 this.leadSheetList.push(new LeadSheet(leadSheet));
             }
         }
+
+        this.loop = data.loop;
     }
 
     // Return a file object based on its type

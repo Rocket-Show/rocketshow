@@ -187,6 +187,7 @@
         "audio-bus-surround": "Surround",
         "no-audio-bus": "None",
         "no-composition": "None",
+        "no-instrument": "None",
         "audio-output": "Output",
         "audio-device": "USB audio device",
         "no-audio-devices": "No USB audio devices available",

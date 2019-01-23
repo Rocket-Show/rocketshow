@@ -13,6 +13,9 @@ import { ToastrService } from 'ngx-toastr';
 import { TranslateService } from '@ngx-translate/core';
 import { CompositionVideoFile } from '../../models/composition-video-file';
 import { EditorCompositionLeadSheetComponent } from './editor-composition-lead-sheet/editor-composition-lead-sheet.component';
+import { LeadSheet } from '../../models/lead-sheet';
+import { Settings } from '../../models/settings';
+import { SettingsService } from '../../services/settings.service';
 
 @Component({
   selector: 'app-editor-composition',
@@ -22,6 +25,8 @@ import { EditorCompositionLeadSheetComponent } from './editor-composition-lead-s
 export class EditorCompositionComponent implements OnInit {
 
   searchName: string = '';
+
+  settings: Settings;
 
   loadingComposition: boolean = false;
   savingComposition: boolean = false;
@@ -42,11 +47,24 @@ export class EditorCompositionComponent implements OnInit {
     private pendingChangesDialogService: PendingChangesDialogService,
     private toastrService: ToastrService,
     private translateService: TranslateService,
-    private toastGeneralErrorService: ToastGeneralErrorService) {
+    private toastGeneralErrorService: ToastGeneralErrorService,
+    private settingsService: SettingsService) {
+  }
+
+  private loadSettings() {
+    this.settingsService.getSettings().pipe(map(result => {
+      this.settings = result;
+    })).subscribe();
   }
 
   ngOnInit() {
     this.loadCompositions();
+
+    this.loadSettings();
+
+    this.settingsService.settingsChanged.subscribe(() => {
+      this.loadSettings();
+    });
   }
 
   private loadCompositions() {
@@ -234,6 +252,29 @@ export class EditorCompositionComponent implements OnInit {
     });
   }
 
+  // Edit a lead sheet's details
+  editLeadSheet(leadSheetIndex: number, addNew: boolean = false) {
+    // Create a backup of the current composition
+    let compositionCopy: Composition = new Composition(JSON.parse(this.currentComposition.stringify()));
+
+    if (addNew) {
+      // Add a new lead sheez, if necessary
+      let newLeadSheet: LeadSheet = new LeadSheet();
+      compositionCopy.leadSheetList.push(newLeadSheet);
+      leadSheetIndex = compositionCopy.leadSheetList.length - 1;
+    }
+
+    // Show the lead sheet details dialog
+    let leadSheetDialog = this.modalService.show(EditorCompositionLeadSheetComponent, { keyboard: true, ignoreBackdropClick: true, class: 'modal-lg', initialState: { leadSheetIndex: leadSheetIndex, leadSheet: compositionCopy.leadSheetList[leadSheetIndex], composition: compositionCopy }});
+
+    (<EditorCompositionLeadSheetComponent>leadSheetDialog.content).onClose.subscribe(result => {
+      if (result === 1) {
+        // OK has been pressed -> save
+        this.currentComposition.leadSheetList[leadSheetIndex] = (<EditorCompositionLeadSheetComponent>leadSheetDialog.content).leadSheet;
+      }
+    });
+  }
+
   multipleVideoImage(): boolean {
     let videoImageCount: number = 0;
 
@@ -259,21 +300,18 @@ export class EditorCompositionComponent implements OnInit {
     return false;
   }
 
-  editLeadSheet(fileIndex: number, addNew: boolean = false) {
-    // Create a backup of the current composition
-    let compositionCopy: Composition = new Composition(JSON.parse(this.currentComposition.stringify()));
+  instrumentNameFromUuid(uuid: string): string {
+    if(!this.settings) {
+      return undefined;
+    }
 
-    // Show the lead sheet details dialog
-    let leadSheetDialog = this.modalService.show(EditorCompositionLeadSheetComponent, { keyboard: true, ignoreBackdropClick: true });
-    (<EditorCompositionFileComponent>leadSheetDialog.content).composition = compositionCopy;
-
-    (<EditorCompositionFileComponent>leadSheetDialog.content).onClose.subscribe(result => {
-      if (result === 1) {
-        // OK has been pressed -> save
-        // TODO
-        //this.currentComposition.fileList[fileIndex] = (<EditorCompositionFileComponent>fileDialog.content).file;
+    for(let instrument of this.settings.instrumentList) {
+      if(instrument.uuid == uuid) {
+        return instrument.name
       }
-    });
+    }
+
+    return undefined;
   }
 
 }

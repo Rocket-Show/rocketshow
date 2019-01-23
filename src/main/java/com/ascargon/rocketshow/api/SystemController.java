@@ -3,10 +3,13 @@ package com.ascargon.rocketshow.api;
 import com.ascargon.rocketshow.PlayerService;
 import com.ascargon.rocketshow.Settings;
 import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.audio.AudioService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.midi.MidiDeviceInService;
 import com.ascargon.rocketshow.midi.MidiDeviceOutService;
 import com.ascargon.rocketshow.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -23,6 +26,8 @@ import java.io.FileInputStream;
 @CrossOrigin
 class SystemController {
 
+    private final static Logger logger = LoggerFactory.getLogger(SystemController.class);
+
     private final StateService stateService;
     private final SetService setService;
     private final PlayerService playerService;
@@ -35,8 +40,9 @@ class SystemController {
     private final LogDownloadService logDownloadService;
     private final DiskSpaceService diskSpaceService;
     private final OperatingSystemInformationService operatingSystemInformationService;
+    private final AudioService audioService;
 
-    public SystemController(StateService stateService, SetService setService, PlayerService playerService, RebootService rebootService, SettingsService settingsService, MidiDeviceInService midiDeviceInService, MidiDeviceOutService midiDeviceOutService, UpdateService updateService, FactoryResetService factoryResetService, LogDownloadService logDownloadService, DiskSpaceService diskSpaceService, OperatingSystemInformationService operatingSystemInformationService) {
+    public SystemController(StateService stateService, SetService setService, PlayerService playerService, RebootService rebootService, SettingsService settingsService, MidiDeviceInService midiDeviceInService, MidiDeviceOutService midiDeviceOutService, UpdateService updateService, FactoryResetService factoryResetService, LogDownloadService logDownloadService, DiskSpaceService diskSpaceService, OperatingSystemInformationService operatingSystemInformationService, AudioService audioService) {
         this.stateService = stateService;
         this.setService = setService;
         this.playerService = playerService;
@@ -49,6 +55,7 @@ class SystemController {
         this.logDownloadService = logDownloadService;
         this.diskSpaceService = diskSpaceService;
         this.operatingSystemInformationService = operatingSystemInformationService;
+        this.audioService = audioService;
     }
 
     @PostMapping("reboot")
@@ -99,8 +106,26 @@ class SystemController {
 
     @PostMapping("settings")
     public ResponseEntity<Void> saveSettings(@RequestBody Settings settings) throws JAXBException {
+        Settings oldSettings = settingsService.getSettings();
+        int totalAudioChannelsOld = settingsService.getTotalAudioChannels();
+
         settingsService.setSettings(settings);
+
+        int totalAudioChannelsNew = settingsService.getTotalAudioChannels();
+
+        if(totalAudioChannelsOld != totalAudioChannelsNew) {
+            // Total channels have changed -> check whether this count is supported by
+            // the selected audio interface
+            logger.info("Total channels have changed. Check compatibility with audio interface...");
+
+            if(!audioService.isAudioChannelCountCompatible(settings, totalAudioChannelsNew)) {
+                // TODO Return error
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+        }
+
         settingsService.save();
+
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

@@ -75,6 +75,7 @@ public class DefaultSettingsService implements SettingsService {
         settings.setAudioPath("audio");
         settings.setMidiPath("midi");
         settings.setVideoPath("video");
+        settings.setLeadSheetPath("leadsheet");
 
         settings.setMidiInDevice(new MidiDevice());
         settings.setMidiOutDevice(new MidiDevice());
