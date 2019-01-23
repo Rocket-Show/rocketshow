@@ -102,7 +102,11 @@ export class AppComponent implements OnInit {
   }
 
   leadSheetButtonVisible(): boolean  {
-    return this.leadSheetService.leadSheetButtonVisible;
+    if(this.leadSheetService.currentLeadSheetUrl) {
+      return true;
+    }
+
+    return false;
   }
 
 }

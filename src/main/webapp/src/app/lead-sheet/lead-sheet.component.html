@@ -6,7 +6,7 @@
     <div class="row justify-content-center align-self-center p-3 h-100 w-100 mx-auto">
       <div class="col p-0" style="overflow: hidden;">
         <div class="justify-content-center align-self-center h-100 w-100">
-          <img #img src="assets/cda.jpg" width="100%" [ngStyle]="imgStyle" (load)="imgLoaded()">
+          <img *ngIf="leadSheetService.currentLeadSheetUrl" #img [src]="leadSheetService.currentLeadSheetUrl" width="100%" [ngStyle]="imgStyle" (load)="imgLoaded()">
         </div>
       </div>
     </div>

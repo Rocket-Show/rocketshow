@@ -65,6 +65,7 @@ export class CompositionService {
   }
 
   getComposition(compositionName: string): Observable<Composition> {
+    // TODO Cache the composition and reload on change
     return this.http.get('composition?name=' + compositionName)
       .pipe(map(response => {
         return new Composition(response);

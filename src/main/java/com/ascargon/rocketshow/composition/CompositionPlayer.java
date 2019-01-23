@@ -365,7 +365,7 @@ public class CompositionPlayer {
                     midiSink.set("emit-signals", true);
                     pipeline.add(midiSink);
 
-                    midiParse.getSrcPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisMidi() + compositionFile.getOffsetMillis()) * 1000000l);
+                    midiParse.getSrcPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisMidi() + compositionFile.getOffsetMillis()) * 1000000L);
 
                     // Sometimes preroll and sometimes new-sample events get fired. We have
                     // to process both.
@@ -409,7 +409,7 @@ public class CompositionPlayer {
                         }
                     });
 
-                    audioConvert.getSrcPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisAudio() + compositionFile.getOffsetMillis()) * 1000000l);
+                    audioConvert.getSrcPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisAudio() + compositionFile.getOffsetMillis()) * 1000000L);
                     pipeline.add(audioConvert);
 
                     Element audioResample = ElementFactory.make("audioresample", "audioresample" + i);
@@ -517,12 +517,13 @@ public class CompositionPlayer {
     }
 
     public void stop() throws Exception {
-        if (composition == null) {
+        startPosition = 0;
+
+        if (composition == null || playState == PlayState.STOPPED) {
             return;
         }
 
         playState = PlayState.STOPPING;
-        startPosition = 0;
 
         if (!isDefaultComposition && !isSample) {
             notificationService.notifyClients(playerService, setService);
@@ -542,7 +543,7 @@ public class CompositionPlayer {
         }
 
         // Now would be a good moment to run the GC
-        if(!isSample) {
+        if (!isSample) {
             System.gc();
         }
 

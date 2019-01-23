@@ -8,6 +8,8 @@ import { LeadSheet } from '../models/lead-sheet';
 import { StateService } from './state.service';
 import { State } from '../models/state';
 import { SettingsPersonalService } from './settings-personal.service';
+import { CompositionService } from './composition.service';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -15,16 +17,16 @@ import { SettingsPersonalService } from './settings-personal.service';
 export class LeadSheetService {
 
   showLeadSheet: boolean = false;
-  leadSheetButtonVisible: boolean = false;
   doShow: Subject<void> = new Subject<void>();
   currentCompositionName: string;
   currentInstrumentUuid: string;
-  currentLeadSheetImageBase64: string;
+  currentLeadSheetUrl: string;
 
   constructor(
     private http: HttpClient,
     public stateService: StateService,
-    private settingsPersonalService: SettingsPersonalService
+    private settingsPersonalService: SettingsPersonalService,
+    private compositionService: CompositionService
   ) {
     this.stateService.state.subscribe((state: State) => {
       this.updateCurrentLeadSheet();
@@ -38,12 +40,27 @@ export class LeadSheetService {
   }
 
   private loadCurrentLeadSheet(compositionName: string, instrumentUuid: string) {
+    this.currentLeadSheetUrl = undefined;
+    
+    this.compositionService.getComposition(compositionName).subscribe(composition => {
+      // Check, whether this composition has a lead sheet with the user's instrument UUID
+      for(let leadSheet of composition.leadSheetList) {
+        if(leadSheet.instrumentUuid == instrumentUuid) {
+          // There is a lead sheet for the user available
+          if (environment.name == 'dev') {
+            this.currentLeadSheetUrl = 'http://' + environment.localBackend + '/';
+          } else {
+            this.currentLeadSheetUrl = '/'
+          }
 
+          this.currentLeadSheetUrl += 'api/lead-sheet/image?name=' + leadSheet.name;
+          break;
+        }
+      }
+    });
 
     this.currentCompositionName = compositionName;
     this.currentInstrumentUuid = instrumentUuid;
-
-    console.log(compositionName, instrumentUuid);
   }
 
   private updateCurrentLeadSheet() {

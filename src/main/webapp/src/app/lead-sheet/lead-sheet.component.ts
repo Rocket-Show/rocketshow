@@ -3,6 +3,7 @@ import { Subscription, timer } from 'rxjs';
 import { State } from './../models/state';
 import { StateService } from './../services/state.service';
 import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-lead-sheet',
