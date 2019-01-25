@@ -108,11 +108,15 @@
             </select>
           </div>
         </div>
-
       </div>
       <a href="#" (click)="addAudioBus(); false" class="no-sortjs list-group-item text-center">
         <i class="fa fa-plus" aria-hidden="true"></i> {{ 'settings.audio-bus-add' | translate }}
       </a>
     </div>
   </div>
+</div>
+
+<!-- More channels specified than supported -->
+<div *ngIf="currentAudioChannels > maxAudioChannels" class="alert alert-danger" role="alert">
+  <i class="fa fa-exclamation-circle" aria-hidden="true"></i> {{ 'settings.error-max-audio-channels-exceeded' | translate:{max: maxAudioChannels, current: currentAudioChannels} }}
 </div>

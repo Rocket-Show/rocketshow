@@ -1,7 +1,7 @@
 import { InfoDialogService } from './../../services/info-dialog.service';
 import { WaitDialogService } from './../../services/wait-dialog.service';
 import { StateService } from './../../services/state.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { SettingsService } from '../../services/settings.service';
 import { Settings } from '../../models/settings';
 import { WarningDialogService } from '../../services/warning-dialog.service';
@@ -11,13 +11,17 @@ import { HttpClient } from '@angular/common/http';
 import { OperatingSystemInformation } from '../../models/operating-system-information';
 import { OperatingSystemInformationService } from '../../services/operating-system-information.service';
 import { map } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-settings-advanced',
   templateUrl: './settings-advanced.component.html',
   styleUrls: ['./settings-advanced.component.scss']
 })
-export class SettingsAdvancedComponent implements OnInit {
+export class SettingsAdvancedComponent implements OnInit, OnDestroy {
+
+  private settingsChangedSubscription: Subscription;
+  private stateChangedSubscription: Subscription;
 
   settings: Settings;
   private isResettingToFactory: boolean = false;
@@ -52,11 +56,11 @@ export class SettingsAdvancedComponent implements OnInit {
   ngOnInit() {
     this.loadSettings();
 
-    this.settingsService.settingsChanged.subscribe(() => {
+    this.settingsChangedSubscription = this.settingsService.settingsChanged.subscribe(() => {
       this.loadSettings();
     });
 
-    this.stateService.state.subscribe((state: State) => {
+    this.stateChangedSubscription = this.stateService.state.subscribe((state: State) => {
       if (this.isResettingToFactory) {
         // We got a new state after resetting to factory defaults
         // -> the device has been resetted
@@ -67,6 +71,11 @@ export class SettingsAdvancedComponent implements OnInit {
         })).subscribe();
       }
     });
+  }
+
+  ngOnDestroy() {
+    this.settingsChangedSubscription.unsubscribe();
+    this.stateChangedSubscription.unsubscribe();
   }
 
   factoryReset() {

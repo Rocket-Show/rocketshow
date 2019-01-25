@@ -6,16 +6,19 @@ import { Composition } from './../../models/composition';
 import { MidiControl } from './../../models/midi-control';
 import { SettingsService } from './../../services/settings.service';
 import { MidiDevice } from './../../models/midi-device';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Settings } from '../../models/settings';
 import { map } from "rxjs/operators";
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-settings-midi',
   templateUrl: './settings-midi.component.html',
   styleUrls: ['./settings-midi.component.scss']
 })
-export class SettingsMidiComponent implements OnInit {
+export class SettingsMidiComponent implements OnInit, OnDestroy {
+
+  private settingsChangedSubscription: Subscription;
 
   selectUndefinedOptionValue: any;
 
@@ -206,9 +209,13 @@ export class SettingsMidiComponent implements OnInit {
   ngOnInit() {
     this.loadSettings();
 
-    this.settingsService.settingsChanged.subscribe(() => {
+    this.settingsChangedSubscription = this.settingsService.settingsChanged.subscribe(() => {
       this.loadSettings();
     });
+  }
+
+  ngOnDestroy() {
+    this.settingsChangedSubscription.unsubscribe();
   }
 
   // Prevent the last item in the file-list to be draggable.

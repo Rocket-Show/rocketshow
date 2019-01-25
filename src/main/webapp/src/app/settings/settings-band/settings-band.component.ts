@@ -2,15 +2,18 @@ import { UuidService } from './../../services/uuid.service';
 import { Instrument } from './../../models/instrument';
 import { SettingsService } from './../../services/settings.service';
 import { Settings } from './../../models/settings';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { map } from "rxjs/operators";
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-settings-band',
   templateUrl: './settings-band.component.html',
   styleUrls: ['./settings-band.component.scss']
 })
-export class SettingsBandComponent implements OnInit {
+export class SettingsBandComponent implements OnInit, OnDestroy {
+
+  private settingsChangedSubscription: Subscription;
 
   settings: Settings;
 
@@ -28,9 +31,13 @@ export class SettingsBandComponent implements OnInit {
   ngOnInit() {
     this.loadSettings();
 
-    this.settingsService.settingsChanged.subscribe(() => {
+    this.settingsChangedSubscription = this.settingsService.settingsChanged.subscribe(() => {
       this.loadSettings();
     });
+  }
+
+  ngOnDestroy() {
+    this.settingsChangedSubscription.unsubscribe();
   }
 
   addInstrument() {

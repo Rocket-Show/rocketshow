@@ -1,16 +1,20 @@
 import { SettingsService } from './../../services/settings.service';
 import { SettingsPersonal } from './../../models/settings-personal';
 import { SettingsPersonalService } from './../../services/settings-personal.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Settings } from '../../models/settings';
 import { map } from "rxjs/operators";
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-settings-personal',
   templateUrl: './settings-personal.component.html',
   styleUrls: ['./settings-personal.component.scss']
 })
-export class SettingsPersonalComponent implements OnInit {
+export class SettingsPersonalComponent implements OnInit, OnDestroy {
+
+  private settingsChangedSubscription: Subscription;
+  private settingsPersonalChangedSubscription: Subscription;
 
   selectUndefinedOptionValue: any;
 
@@ -37,15 +41,20 @@ export class SettingsPersonalComponent implements OnInit {
   ngOnInit() {
     this.loadSettings();
 
-    this.settingsService.settingsChanged.subscribe(() => {
+    this.settingsChangedSubscription = this.settingsService.settingsChanged.subscribe(() => {
       this.loadSettings();
     });
 
     this.loadSettingsPersonal();
 
-    this.settingsPersonalService.settingsChanged.subscribe(() => {
+    this.settingsPersonalChangedSubscription = this.settingsPersonalService.settingsChanged.subscribe(() => {
       this.loadSettingsPersonal();
     });
+  }
+
+  ngOnDestroy() {
+    this.settingsChangedSubscription.unsubscribe();
+    this.settingsPersonalChangedSubscription.unsubscribe();
   }
 
 }

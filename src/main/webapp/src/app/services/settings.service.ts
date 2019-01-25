@@ -101,6 +101,13 @@ export class SettingsService {
       }));
   }
 
+  getMaxAudioChannels(): Observable<number> {
+    return this.http.get('audio/max-channels')
+      .pipe(map((response: number) => {
+        return response;
+      }));
+  }
+
   addAudioBus(settings: Settings): Observable<void> {
     return this.translateService.get('settings.audio-bus-name-placeholder').pipe(map(result => {
       let audioBus: AudioBus = new AudioBus();

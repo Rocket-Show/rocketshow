@@ -2,15 +2,18 @@ import { TranslateService } from '@ngx-translate/core';
 import { RemoteDevice } from './../../models/remote-device';
 import { Settings } from './../../models/settings';
 import { SettingsService } from './../../services/settings.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { map } from "rxjs/operators";
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-settings-network',
   templateUrl: './settings-network.component.html',
   styleUrls: ['./settings-network.component.scss']
 })
-export class SettingsNetworkComponent implements OnInit {
+export class SettingsNetworkComponent implements OnInit, OnDestroy {
+
+  private settingsChangedSubscription: Subscription;
 
   settings: Settings;
 
@@ -28,9 +31,13 @@ export class SettingsNetworkComponent implements OnInit {
   ngOnInit() {
     this.loadSettings();
 
-    this.settingsService.settingsChanged.subscribe(() => {
+    this.settingsChangedSubscription = this.settingsService.settingsChanged.subscribe(() => {
       this.loadSettings();
     });
+  }
+
+  ngOnDestroy() {
+    this.settingsChangedSubscription.unsubscribe();
   }
 
   addRemoteDevice() {

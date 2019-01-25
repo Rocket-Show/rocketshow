@@ -79,25 +79,17 @@ public class Settings {
     private Integer alsaPeriodSize;
     private Integer alsaBufferSize;
     private Integer alsaPeriodTime;
-
     private List<AudioBus> audioBusList = new ArrayList<>();
 
     private boolean wlanApEnable;
-
     private String wlanApSsid = "Rocket Show";
-
     private String wlanApPassphrase = "";
-
     private boolean wlanApSsidHide = false;
 
     private boolean enableRaspberryGpio;
-
     private int raspberryGpioDebounceMillis = 500;
-
     private boolean raspberryGpioNoHardwareTrigger = false;
-
     private int raspberryGpioTimerPeriodMillis = 2;
-
     private int raspberryGpioCyclesHigh = 3;
 
     public MidiDevice getMidiInDevice() {

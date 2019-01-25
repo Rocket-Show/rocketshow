@@ -25,4 +25,9 @@ public class AudioController {
         return audioService.getAudioDevices();
     }
 
+    @GetMapping("max-channels")
+    public int maxChannels() {
+        return audioService.getMaxAvailableSinkChannels();
+    }
+
 }

@@ -3,6 +3,7 @@ package com.ascargon.rocketshow;
 import com.ascargon.rocketshow.api.ActivityNotificationAudioService;
 import com.ascargon.rocketshow.api.ActivityNotificationMidiService;
 import com.ascargon.rocketshow.api.NotificationService;
+import com.ascargon.rocketshow.audio.AudioService;
 import com.ascargon.rocketshow.composition.Composition;
 import com.ascargon.rocketshow.composition.CompositionPlayer;
 import com.ascargon.rocketshow.composition.CompositionService;
@@ -10,7 +11,6 @@ import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.Midi2LightingConvertService;
 import com.ascargon.rocketshow.midi.MidiDeviceOutService;
-import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import org.freedesktop.gstreamer.Gst;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,16 +35,16 @@ public class DefaultPlayerService implements PlayerService {
     private final SessionService sessionService;
     private final LightingService lightingService;
     private final CapabilitiesService capabilitiesService;
-    private final OperatingSystemInformationService operatingSystemInformationService;
     private final ActivityNotificationAudioService activityNotificationAudioService;
     private final Midi2LightingConvertService midi2LightingConvertService;
     private final MidiDeviceOutService midiDeviceOutService;
+    private final AudioService audioService;
 
     private CompositionPlayer defaultCompositionPlayer;
     private final CompositionPlayer currentCompositionPlayer;
     private final List<CompositionPlayer> sampleCompositionPlayerList = new ArrayList<>();
 
-    public DefaultPlayerService(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, SettingsService settingsService, CompositionService compositionService, SetService setService, SessionService sessionService, LightingService lightingService, CapabilitiesService capabilitiesService, OperatingSystemInformationService operatingSystemInformationService, ActivityNotificationAudioService activityNotificationAudioService, Midi2LightingConvertService midi2LightingConvertService, MidiDeviceOutService midiDeviceOutService) {
+    public DefaultPlayerService(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, SettingsService settingsService, CompositionService compositionService, SetService setService, SessionService sessionService, LightingService lightingService, CapabilitiesService capabilitiesService, ActivityNotificationAudioService activityNotificationAudioService, Midi2LightingConvertService midi2LightingConvertService, MidiDeviceOutService midiDeviceOutService, AudioService audioService) {
         this.notificationService = notificationService;
         this.activityNotificationMidiService = activityNotificationMidiService;
         this.settingsService = settingsService;
@@ -53,13 +53,13 @@ public class DefaultPlayerService implements PlayerService {
         this.sessionService = sessionService;
         this.lightingService = lightingService;
         this.capabilitiesService = capabilitiesService;
-        this.operatingSystemInformationService = operatingSystemInformationService;
         this.activityNotificationAudioService = activityNotificationAudioService;
         this.midi2LightingConvertService = midi2LightingConvertService;
         this.midiDeviceOutService = midiDeviceOutService;
+        this.audioService = audioService;
 
-        currentCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, capabilitiesService, operatingSystemInformationService, activityNotificationAudioService, setService, midi2LightingConvertService, lightingService, midiDeviceOutService);
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, capabilitiesService, operatingSystemInformationService, activityNotificationAudioService, setService, midi2LightingConvertService, lightingService, midiDeviceOutService);
+        currentCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, capabilitiesService, activityNotificationAudioService, setService, midi2LightingConvertService, lightingService, midiDeviceOutService, audioService);
+        defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, capabilitiesService, activityNotificationAudioService, setService, midi2LightingConvertService, lightingService, midiDeviceOutService, audioService);
 
         try {
             Gst.init();
@@ -75,7 +75,7 @@ public class DefaultPlayerService implements PlayerService {
             logger.error("Could not play default composition", e);
         }
 
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, capabilitiesService, operatingSystemInformationService, activityNotificationAudioService, setService, midi2LightingConvertService, lightingService, midiDeviceOutService);
+        defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, capabilitiesService, activityNotificationAudioService, setService, midi2LightingConvertService, lightingService, midiDeviceOutService, audioService);
 
         // Load the last set/composition
         try {
@@ -233,7 +233,7 @@ public class DefaultPlayerService implements PlayerService {
         // to share the same instance) and play it
         Composition composition = compositionService
                 .cloneComposition(compositionService.getComposition(compositionName));
-        CompositionPlayer compositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, capabilitiesService, operatingSystemInformationService, activityNotificationAudioService, setService, midi2LightingConvertService, lightingService, midiDeviceOutService);
+        CompositionPlayer compositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, capabilitiesService, activityNotificationAudioService, setService, midi2LightingConvertService, lightingService, midiDeviceOutService, audioService);
         compositionPlayer.setSample(true);
         compositionPlayer.setComposition(composition);
         sampleCompositionPlayerList.add(compositionPlayer);
@@ -320,7 +320,7 @@ public class DefaultPlayerService implements PlayerService {
             return;
         }
 
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, capabilitiesService, operatingSystemInformationService, activityNotificationAudioService, setService, midi2LightingConvertService, lightingService, midiDeviceOutService);
+        defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, capabilitiesService, activityNotificationAudioService, setService, midi2LightingConvertService, lightingService, midiDeviceOutService, audioService);
 
         if (settingsService.getSettings().getDefaultComposition() == null || settingsService.getSettings().getDefaultComposition().length() == 0) {
             return;

@@ -1,22 +1,27 @@
 import { AudioDevice } from './../../models/audio-device';
 import { Settings } from './../../models/settings';
 import { SettingsService } from './../../services/settings.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { OperatingSystemInformationService } from '../../services/operating-system-information.service';
 import { map } from "rxjs/operators";
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-settings-audio',
   templateUrl: './settings-audio.component.html',
   styleUrls: ['./settings-audio.component.scss']
 })
-export class SettingsAudioComponent implements OnInit {
+export class SettingsAudioComponent implements OnInit, OnDestroy {
 
   selectUndefinedOptionValue: any;
+
+  private settingsChangedSubscription: Subscription;
 
   settings: Settings;
   audioDeviceList: AudioDevice[];
   audioOutputList: string[] = [];
+  maxAudioChannels: number = 9999;
+  currentAudioChannels: number = 0;
   
   constructor(
     private settingsService: SettingsService,
@@ -51,23 +56,49 @@ export class SettingsAudioComponent implements OnInit {
           }
         }
       });
+
+      this.updateCurrentAudioChannels();
     })).subscribe();
+
+    this.settingsService.getMaxAudioChannels().subscribe(channels => {
+      this.maxAudioChannels = channels;
+    });
   }
 
   ngOnInit() {
     this.loadSettings();
 
-    this.settingsService.settingsChanged.subscribe(() => {
+    this.settingsChangedSubscription = this.settingsService.settingsChanged.subscribe(() => {
       this.loadSettings();
     });
   }
 
+  private updateCurrentAudioChannels() {
+    this.currentAudioChannels = 0;
+
+    for(let audioBus of this.settings.audioBusList) {
+      this.currentAudioChannels += audioBus.channels;
+    }
+
+    // Audiochannels may be prefixed with 0 if changed from option element.
+    // -> Remove the 0
+    let text: string = this.currentAudioChannels.toString();
+    this.currentAudioChannels = Number.parseInt(text);
+  }
+
+  ngOnDestroy() {
+    this.settingsChangedSubscription.unsubscribe();
+  }
+
   addAudioBus() {
-    this.settingsService.addAudioBus(this.settings).subscribe();
+    this.settingsService.addAudioBus(this.settings).subscribe(() => {
+      this.updateCurrentAudioChannels();
+    });
   }
 
   deleteAudioBus(audioBusIndex: number) {
     this.settings.audioBusList.splice(audioBusIndex, 1);
+    this.updateCurrentAudioChannels();
   }
 
 }

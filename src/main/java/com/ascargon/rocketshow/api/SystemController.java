@@ -106,24 +106,7 @@ class SystemController {
 
     @PostMapping("settings")
     public ResponseEntity<Void> saveSettings(@RequestBody Settings settings) throws JAXBException {
-        Settings oldSettings = settingsService.getSettings();
-        int totalAudioChannelsOld = settingsService.getTotalAudioChannels();
-
         settingsService.setSettings(settings);
-
-        int totalAudioChannelsNew = settingsService.getTotalAudioChannels();
-
-        if(totalAudioChannelsOld != totalAudioChannelsNew) {
-            // Total channels have changed -> check whether this count is supported by
-            // the selected audio interface
-            logger.info("Total channels have changed. Check compatibility with audio interface...");
-
-            if(!audioService.isAudioChannelCountCompatible(settings, totalAudioChannelsNew)) {
-                // TODO Return error
-                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-            }
-        }
-
         settingsService.save();
 
         return new ResponseEntity<>(HttpStatus.OK);

@@ -4,7 +4,7 @@ import { BsModalService } from 'ngx-bootstrap/modal';
 import { UpdateService } from './../../services/update.service';
 import { WarningDialogService } from './../../services/warning-dialog.service';
 import { Settings } from './../../models/settings';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { SettingsService } from '../../services/settings.service';
 import { CompositionService } from '../../services/composition.service';
 import { Composition } from '../../models/composition';
@@ -12,13 +12,16 @@ import { Version } from '../../models/version';
 import { map } from 'rxjs/operators';
 import { OperatingSystemInformation } from '../../models/operating-system-information';
 import { OperatingSystemInformationService } from '../../services/operating-system-information.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-settings-system',
   templateUrl: './settings-system.component.html',
   styleUrls: ['./settings-system.component.scss']
 })
-export class SettingsSystemComponent implements OnInit {
+export class SettingsSystemComponent implements OnInit, OnDestroy {
+
+  private settingsChangedSubscription: Subscription;
 
   selectUndefinedOptionValue: any = undefined;
 
@@ -50,7 +53,7 @@ export class SettingsSystemComponent implements OnInit {
   ngOnInit() {
     this.loadSettings();
 
-    this.settingsService.settingsChanged.subscribe(() => {
+    this.settingsChangedSubscription = this.settingsService.settingsChanged.subscribe(() => {
       this.loadSettings();
     });
 
@@ -61,6 +64,10 @@ export class SettingsSystemComponent implements OnInit {
     this.updateService.getCurrentVersion().subscribe((version: Version) => {
       this.currentVersion = version;
     });
+  }
+
+  ngOnDestroy() {
+    this.settingsChangedSubscription.unsubscribe();
   }
 
   switchLanguage(language: string) {

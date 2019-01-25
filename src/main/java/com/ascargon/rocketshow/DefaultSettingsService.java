@@ -124,6 +124,8 @@ public class DefaultSettingsService implements SettingsService {
         }
 
         settings.setAudioRate(44100 /* or 48000 */);
+        settings.setAlsaPeriodSize(16384);
+        settings.setAlsaBufferSize(5);
 
         settings.setLoggingLevel(Settings.LoggingLevel.INFO);
 

@@ -38,6 +38,11 @@ public class CompositionController {
 
     @PostMapping
     public ResponseEntity<Void> save(@RequestBody Composition composition) throws Exception {
+        // Stop the current composition, because we cannot determine the MIDI duration
+        // if a MIDI file is already playing. Also, the composition will be stopped anyway, if we need
+        // to read it again because it changed.
+        playerService.stop();
+
         compositionService.saveComposition(composition);
 
         // If this is the current composition, read it again

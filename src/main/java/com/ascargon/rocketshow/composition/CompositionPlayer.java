@@ -8,12 +8,11 @@ import com.ascargon.rocketshow.api.ActivityNotificationMidiService;
 import com.ascargon.rocketshow.api.NotificationService;
 import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
+import com.ascargon.rocketshow.audio.AudioService;
 import com.ascargon.rocketshow.gstreamer.GstApi;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.Midi2LightingConvertService;
 import com.ascargon.rocketshow.midi.*;
-import com.ascargon.rocketshow.util.OperatingSystemInformation;
-import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
 import org.freedesktop.gstreamer.*;
 import org.freedesktop.gstreamer.elements.AppSink;
@@ -58,12 +57,12 @@ public class CompositionPlayer {
     private final PlayerService playerService;
     private final SettingsService settingsService;
     private final CapabilitiesService capabilitiesService;
-    private final OperatingSystemInformationService operatingSystemInformationService;
     private final ActivityNotificationAudioService activityNotificationAudioService;
     private final SetService setService;
     private final Midi2LightingConvertService midi2LightingConvertService;
     private final LightingService lightingService;
     private final MidiDeviceOutService midiDeviceOutService;
+    private final AudioService audioService;
 
     private Composition composition;
     private PlayState playState = PlayState.STOPPED;
@@ -83,18 +82,18 @@ public class CompositionPlayer {
     // All MIDI routers
     private List<MidiRouter> midiRouterList = new ArrayList<>();
 
-    public CompositionPlayer(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, PlayerService playerService, SettingsService settingsService, CapabilitiesService capabilitiesService, OperatingSystemInformationService operatingSystemInformationService, ActivityNotificationAudioService activityNotificationAudioService, SetService setService, Midi2LightingConvertService midi2LightingConvertService, LightingService lightingService, MidiDeviceOutService midiDeviceOutService) {
+    public CompositionPlayer(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, PlayerService playerService, SettingsService settingsService, CapabilitiesService capabilitiesService, ActivityNotificationAudioService activityNotificationAudioService, SetService setService, Midi2LightingConvertService midi2LightingConvertService, LightingService lightingService, MidiDeviceOutService midiDeviceOutService, AudioService audioService) {
         this.notificationService = notificationService;
         this.activityNotificationMidiService = activityNotificationMidiService;
         this.playerService = playerService;
         this.settingsService = settingsService;
         this.capabilitiesService = capabilitiesService;
-        this.operatingSystemInformationService = operatingSystemInformationService;
         this.activityNotificationAudioService = activityNotificationAudioService;
         this.setService = setService;
         this.midi2LightingConvertService = midi2LightingConvertService;
         this.lightingService = lightingService;
         this.midiDeviceOutService = midiDeviceOutService;
+        this.audioService = audioService;
 
         this.midiMapping.setParent(settingsService.getSettings().getMidiMapping());
     }
@@ -224,7 +223,7 @@ public class CompositionPlayer {
         bus.connect((Bus.ERROR) (GstObject source, int code, String message) -> {
             logger.error("GST: " + message);
             try {
-                notificationService.notifyClients(message);
+                notificationService.notifyClients(message + " Please check your audio settings.");
             } catch (Exception e) {
                 logger.error("Could not notify clients about an error", e);
             }
@@ -304,16 +303,7 @@ public class CompositionPlayer {
             Element queue = ElementFactory.make("queue", "audiosinkqueue");
             pipeline.add(queue);
 
-            String sinkName = "alsasink";
-
-            if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
-                sinkName = "osxaudiosink";
-            }
-            BaseSink sink = (BaseSink) ElementFactory.make(sinkName, "audiosink");
-
-            if (!OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
-                sink.set("device", "rocketshow");
-            }
+            BaseSink sink = audioService.getGstAudioSink();
             pipeline.add(sink);
 
             Element level = null;
