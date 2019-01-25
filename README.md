@@ -18,41 +18,23 @@ The seed directory structure '/dist/rocketshow' can be packed on a mac with this
 COPYFILE_DISABLE=true tar -c --exclude='.DS_Store' -zf directory.tar.gz rocketshow
 ```
 
-#### Image building
-This script is used to build the image (may take about 45 minutes). Preparation should be done according to the readme in the GIT repo.
+#### Raspberry Pi Image building
+These steps describe how to build a Raspberry Pi image based on the DietPi distribution on a Mac OS X.
 
-```shell
-git clone https://github.com/RPi-distro/pi-gen.git
-cd pi-gen
-git checkout tags/2018-03-13-raspbian-stretch
-
-echo "IMG_NAME='RocketShow'" > config
-
-touch ./stage3/SKIP ./stage4/SKIP ./stage5/SKIP
-rm stage4/EXPORT* stage5/EXPORT*
-
-# Enhance stage2 with rocketshow
-mkdir ./stage2/99-rocket-show
-
-cat <<'EOF' >./stage2/99-rocket-show/00-run-chroot.sh
-#!/bin/bash
-#
-cd /tmp
-wget https://rocketshow.net/install/script/raspbian.sh
-chmod +x raspbian.sh
-./raspbian.sh
-rm -rf raspbian.sh
-
-# Give the setup some time during image creation, because umount won't work afterwards if called
-# too fast ("umount: device is busy")
-echo "Wait 30 seconds..."
-sleep 30s
-EOF
-
-chmod +x ./stage2/99-rocket-show/00-run-chroot.sh
-
-./build.sh
-```
+1. Flash an image with DietPi 6.17 ARMv6-Stretch to an SD card.
+2. Remove the card from the Mac and add it again.
+3. There should now be a directory /Volumes/boot available
+4. Execute the shell script dist/install/prepare_dietpi_raspberry_image.sh
+5. This script prepared the configuration for Rocket Show.
+6. Safely remove the SD card and use a Raspberry Pi to boot it. According to DietPi, unfortunately there is currently no possibility to build the image without a Raspberry Pi.
+7. Let the Raspberry Pi finish its boot process and install all required software. It should shutdown as soon as it's finished.
+8. Add the SD card back to the Mac.
+9. Find its drive name with diskutil ```list```.
+10. Unmount the disk. E.g. ```diskutil umountDisk /dev/disk2```.
+11. Create an image of the card. E.g. ```sudo dd if=/dev/disk2 of=/Users/vio/sdcard.img bs=512```.
+12. Transfer the image to a Linux (e.g. VirtualBox), because gparted is needed for the next steps.
+13. Use https://raw.githubusercontent.com/Drewsif/PiShrink/master/pishrink.sh to shrink the image.
+14. Zip the image using ```gzip -9 rocketshow.img```.
 
 #### Update process
 - Add the release notes in update/currentversion2.xml and build the war ("mvn install")

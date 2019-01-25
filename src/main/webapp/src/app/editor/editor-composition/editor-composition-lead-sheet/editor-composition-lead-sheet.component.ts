@@ -20,6 +20,8 @@ import { SettingsService } from '../../../services/settings.service';
 })
 export class EditorCompositionLeadSheetComponent implements OnInit {
 
+  selectUndefinedOptionValue: any = undefined;
+
   leadSheetIndex: number;
   leadSheet: LeadSheet;
   settings: Settings;
