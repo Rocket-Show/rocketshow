@@ -26,7 +26,7 @@ These steps describe how to build a Raspberry Pi image based on the DietPi distr
 3. There should now be a directory /Volumes/boot available
 4. Execute the shell script dist/install/prepare_dietpi_raspberry_image.sh
 5. This script prepared the configuration for Rocket Show.
-6. Safely remove the SD card and use a Raspberry Pi to boot it. According to DietPi, unfortunately there is currently no possibility to build the image without a Raspberry Pi.
+6. Safely remove the SD card and use a Raspberry Pi *connected to the internet* to boot it. According to DietPi, unfortunately there is currently no possibility to build the image without a Raspberry Pi.
 7. Let the Raspberry Pi finish its boot process and install all required software. It should shutdown as soon as it's finished.
 8. Add the SD card back to the Mac.
 9. Find its drive name with diskutil ```list```.

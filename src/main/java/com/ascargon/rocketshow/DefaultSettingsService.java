@@ -116,7 +116,7 @@ public class DefaultSettingsService implements SettingsService {
         settings.setOffsetMillisVideo(0);
 
         if (OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
-            settings.setAudioOutput(Settings.AudioOutput.HEADPHONES);
+            settings.setAudioOutput(Settings.AudioOutput.DEVICE);
         } else if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
             settings.setAudioOutput(Settings.AudioOutput.DEFAULT);
         } else if (OperatingSystemInformation.Type.LINUX.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
@@ -198,8 +198,9 @@ public class DefaultSettingsService implements SettingsService {
             return;
         }
 
-        ShellManager shellManager = new ShellManager(new String[]{"amixer", "cset", "numid=3", String.valueOf(id)});
-        shellManager.getProcess().waitFor();
+        // TODO Not supported currently
+        //ShellManager shellManager = new ShellManager(new String[]{"amixer", "cset", "numid=3", String.valueOf(id)});
+        //shellManager.getProcess().waitFor();
     }
 
     @Override
@@ -310,7 +311,7 @@ public class DefaultSettingsService implements SettingsService {
             // output audio on the selected device name
             logger.debug("Write ALSA settings");
 
-            String alsaSettingsPath = System.getProperty("user.home") + "/.asoundrc";
+            String alsaSettingsPath = System.getProperty("user.home") + File.separator + ".asoundrc";
             StringBuilder existingAlsaSettings = new StringBuilder();
             File alsaSettings = new File(alsaSettingsPath);
             boolean isInRocketShowSection = false;
