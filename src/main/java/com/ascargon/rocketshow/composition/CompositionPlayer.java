@@ -221,7 +221,7 @@ public class CompositionPlayer {
 
 
         bus.connect((Bus.ERROR) (GstObject source, int code, String message) -> {
-            logger.error("GST: " + message);
+            logger.error("GST error: " + message);
             try {
                 notificationService.notifyClients(message + " Please check your audio settings.");
             } catch (Exception e) {

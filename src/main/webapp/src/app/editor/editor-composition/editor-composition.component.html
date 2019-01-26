@@ -110,7 +110,7 @@
                 </a>
                 <div class="col-auto flex-grow text-break-word my-auto pl-0">
                   <a href="#" (click)="editCompositionFileDetails(i); false">
-                    <p class="mb-0">{{ file.name }}<span *ngIf="file.type == 'AUDIO'"> - {{ file.outputBus }}</span></p>
+                    <p class="mb-0">{{ file.name }}<span *ngIf="file.type == 'AUDIO' && file.outputBus"> - {{ file.outputBus }}</span></p>
                   </a>
                 </div>
                 <div class="col-auto my-auto pl-0 pr-0">

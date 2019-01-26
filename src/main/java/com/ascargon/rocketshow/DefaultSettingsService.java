@@ -112,7 +112,7 @@ public class DefaultSettingsService implements SettingsService {
         settings.setLightingSendDelayMillis(10);
 
         settings.setOffsetMillisAudio(0);
-        settings.setOffsetMillisMidi(0);
+        settings.setOffsetMillisMidi(150);
         settings.setOffsetMillisVideo(0);
 
         if (OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
