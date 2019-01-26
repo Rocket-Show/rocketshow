@@ -27,14 +27,21 @@ These steps describe how to build a Raspberry Pi image based on the DietPi distr
 4. Execute the shell script dist/install/prepare_dietpi_raspberry_image.sh
 5. This script prepared the configuration for Rocket Show.
 6. Safely remove the SD card and use a Raspberry Pi *connected to the internet* to boot it. According to DietPi, unfortunately there is currently no possibility to build the image without a Raspberry Pi.
-7. Let the Raspberry Pi finish its boot process and install all required software. It should shutdown as soon as it's finished.
-8. Add the SD card back to the Mac.
-9. Find its drive name with diskutil ```list```.
-10. Unmount the disk. E.g. ```diskutil umountDisk /dev/disk2```.
-11. Create an image of the card. E.g. ```sudo dd if=/dev/disk2 of=/Users/vio/sdcard.img bs=512```.
-12. Transfer the image to a Linux (e.g. VirtualBox), because gparted is needed for the next steps.
-13. Use https://raw.githubusercontent.com/Drewsif/PiShrink/master/pishrink.sh to shrink the image.
-14. Zip the image using ```gzip -9 rocketshow.img```.
+7. Let the Raspberry Pi finish its boot process and install all required software.
+8. SSH into it (username = root, password = dietpi) and run the following code. The Raspberry Pi will shut down as soon as it's finished:
+```
+cd /tmp
+wget https://rocketshow.net/install/script/dietpi_raspberry.sh
+chmod +x dietpi_raspberry.sh
+./dietpi_raspberry.sh
+```
+9. Add the SD card back to the Mac.
+10. Find its drive name with diskutil ```list```.
+11. Unmount the disk. E.g. ```diskutil umountDisk /dev/disk2```.
+12 Create an image of the card. E.g. ```sudo dd if=/dev/disk2 of=/Users/vio/sdcard.img bs=512```.
+13. Transfer the image to a Linux (e.g. VirtualBox), because gparted is needed for the next steps.
+14. Use https://raw.githubusercontent.com/Drewsif/PiShrink/master/pishrink.sh to shrink the image.
+15. Zip the image using ```gzip -9 rocketshow.img```.
 
 #### Update process
 - Add the release notes in update/currentversion2.xml and build the war ("mvn install")

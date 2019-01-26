@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<versionInfo>
+    <version>2.1.0</version>
+    <date>2018-12-15</date>
+    <changeNoteList>
+        <changeNote>
+            <version>2.1.0</version>
+            <changes>Major update. Better sync, faster plays, many bugfixes.</changes>
+        </changeNote>
+        <changeNote>
+            <version>1.4.1</version>
+            <changes>Minor bugfixes</changes>
+        </changeNote>
+        <changeNote>
+            <version>1.4.0</version>
+            <changes>Ability to seek through compositions, pause/resume, dark design, performance improvements and bugfixes</changes>
+        </changeNote>
+        <changeNote>
+            <version>1.3.0</version>
+            <changes>Added wireless access point feature, select specific compositions by MIDI control, minor enhancements and bugfixes</changes>
+        </changeNote>
+        <changeNote>
+            <version>1.2.0</version>
+            <changes>Added DMX lighting</changes>
+        </changeNote>
+    </changeNoteList>
+</versionInfo>

@@ -22,6 +22,5 @@ src/main/resources/static/*
 /nbproject/private/
 /build/
 /nbbuild/
-/dist/
 /nbdist/
 /.nb-gradle/
