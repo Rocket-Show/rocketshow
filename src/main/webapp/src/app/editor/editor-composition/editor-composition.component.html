@@ -66,34 +66,6 @@
           <textarea [(ngModel)]="currentComposition.notes" class="form-control" id="compositionNotes" rows="2"></textarea>
         </div>
 
-        <!-- Lead sheets -->
-        <div class="form-group">
-          <label>{{ 'editor.lead-sheets' | translate }}</label>
-
-          <div class="list-group">
-            <div class="list-group-item" *ngFor="let leadSheet of currentComposition?.leadSheetList; let i = index">
-              <div class="row">
-                <div class="col-auto flex-grow text-break-word my-auto pl-0">
-                  <a href="#" (click)="editLeadSheet(i); false">
-                    <p class="mb-0 ml-3"><i class="fa fa-fw fa-file-text-o" aria-hidden="true"></i> {{ leadSheet.name }} - {{ instrumentNameFromUuid(leadSheet.instrumentUuid) }}</p>
-                  </a>
-                </div>
-                <div class="col-auto my-auto pl-0 pr-0">
-                  <a class="text-danger float-right" href="#" role="button" (click)="deleteLeadSheet(i); false">
-                    <i class="fa fa-trash-o" aria-hidden="true"></i>
-                  </a>
-                </div>
-                <div class="col-auto my-auto">
-                  <a class="btn btn-secondary btn-sm float-right" href="#" role="button" (click)="editLeadSheet(i); false">...</a>
-                </div>
-              </div>
-            </div>
-            <a href="#" (click)="addLeadSheet(); false" class="no-sortjs list-group-item text-center">
-              <i class="fa fa-plus" aria-hidden="true"></i> {{ 'editor.lead-sheets-add' | translate }}
-            </a>
-          </div>
-        </div>
-
         <!-- Files -->
         <div class="form-group">
           <label>{{ 'editor.files' | translate }}</label>
@@ -125,6 +97,34 @@
             </div>
             <a href="#" (click)="addCompositionFile(); false" class="no-sortjs list-group-item text-center">
               <i class="fa fa-plus" aria-hidden="true"></i> {{ 'editor.add-file' | translate }}
+            </a>
+          </div>
+        </div>
+
+        <!-- Lead sheets -->
+        <div class="form-group">
+          <label>{{ 'editor.lead-sheets' | translate }}</label>
+
+          <div class="list-group">
+            <div class="list-group-item" *ngFor="let leadSheet of currentComposition?.leadSheetList; let i = index">
+              <div class="row">
+                <div class="col-auto flex-grow text-break-word my-auto pl-0">
+                  <a href="#" (click)="editLeadSheet(i); false">
+                    <p class="mb-0 ml-3"><i class="fa fa-fw fa-file-text-o" aria-hidden="true"></i> {{ leadSheet.name }} - {{ instrumentNameFromUuid(leadSheet.instrumentUuid) }}</p>
+                  </a>
+                </div>
+                <div class="col-auto my-auto pl-0 pr-0">
+                  <a class="text-danger float-right" href="#" role="button" (click)="deleteLeadSheet(i); false">
+                    <i class="fa fa-trash-o" aria-hidden="true"></i>
+                  </a>
+                </div>
+                <div class="col-auto my-auto">
+                  <a class="btn btn-secondary btn-sm float-right" href="#" role="button" (click)="editLeadSheet(i); false">...</a>
+                </div>
+              </div>
+            </div>
+            <a href="#" (click)="addLeadSheet(); false" class="no-sortjs list-group-item text-center">
+              <i class="fa fa-plus" aria-hidden="true"></i> {{ 'editor.lead-sheets-add' | translate }}
             </a>
           </div>
         </div>
