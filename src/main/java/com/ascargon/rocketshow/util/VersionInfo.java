@@ -1,5 +1,7 @@
 package com.ascargon.rocketshow.util;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Date;
 import java.util.List;
 
@@ -35,6 +37,7 @@ public class VersionInfo {
 
 	@XmlElement(name = "changeNote")
 	@XmlElementWrapper(name = "changeNoteList")
+    @JsonProperty("changeNoteList")
 	@SuppressWarnings("unused")
 	public List<ChangeNote> getChangeNotes() {
 		return changeNotes;

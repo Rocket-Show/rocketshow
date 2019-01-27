@@ -11,10 +11,14 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Service
 public class DefaultUpdateService implements UpdateService {
@@ -76,12 +80,22 @@ public class DefaultUpdateService implements UpdateService {
         process.destroy();
     }
 
+    private void createDirectoryIfNotExists(String directory) throws IOException {
+        Path path = Paths.get(directory);
+
+        if (Files.notExists(path)) {
+            Files.createDirectories(path);
+        }
+    }
+
     @Override
     public void update() throws Exception {
         logger.info("Updating system...");
 
         sessionService.getSession().setUpdateFinished(false);
         sessionService.save();
+
+        createDirectoryIfNotExists(settingsService.getSettings().getBasePath() + "/" + UPDATE_PATH);
 
         logger.info("Downloading new version...");
 

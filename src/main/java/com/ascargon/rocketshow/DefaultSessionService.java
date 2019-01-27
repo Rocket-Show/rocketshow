@@ -96,8 +96,6 @@ public class DefaultSessionService implements SessionService {
             session = new Session();
             save();
         }
-
-        notificationService.notifyClients(session.isUpdateFinished());
     }
 
     @Override

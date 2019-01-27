@@ -5,6 +5,8 @@ import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.util.UpdateService;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+
 /**
  * Notify clients about the current state of the device.
  */
@@ -21,7 +23,7 @@ public interface NotificationService {
 
     void notifyClients(PlayerService playerService, SetService setService) throws Exception;
 
-    void notifyClients(boolean isUpdateFinished) throws Exception;
+    void notifyClients(PlayerService playerService, SetService setService, boolean isUpdateFinished) throws IOException;
 
     void notifyClients(String error) throws Exception;
 

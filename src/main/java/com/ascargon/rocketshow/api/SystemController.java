@@ -1,32 +1,26 @@
 package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.PlayerService;
+import com.ascargon.rocketshow.SessionService;
 import com.ascargon.rocketshow.Settings;
 import com.ascargon.rocketshow.SettingsService;
-import com.ascargon.rocketshow.audio.AudioService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.midi.MidiDeviceInService;
 import com.ascargon.rocketshow.midi.MidiDeviceOutService;
 import com.ascargon.rocketshow.util.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.xml.bind.JAXBException;
-import java.io.File;
 import java.io.FileInputStream;
 
 @RestController()
 @RequestMapping("${spring.data.rest.base-path}/system")
 @CrossOrigin
 class SystemController {
-
-    private final static Logger logger = LoggerFactory.getLogger(SystemController.class);
 
     private final StateService stateService;
     private final SetService setService;
@@ -40,9 +34,9 @@ class SystemController {
     private final LogDownloadService logDownloadService;
     private final DiskSpaceService diskSpaceService;
     private final OperatingSystemInformationService operatingSystemInformationService;
-    private final AudioService audioService;
+    private final SessionService sessionService;
 
-    public SystemController(StateService stateService, SetService setService, PlayerService playerService, RebootService rebootService, SettingsService settingsService, MidiDeviceInService midiDeviceInService, MidiDeviceOutService midiDeviceOutService, UpdateService updateService, FactoryResetService factoryResetService, LogDownloadService logDownloadService, DiskSpaceService diskSpaceService, OperatingSystemInformationService operatingSystemInformationService, AudioService audioService) {
+    public SystemController(StateService stateService, SetService setService, PlayerService playerService, RebootService rebootService, SettingsService settingsService, MidiDeviceInService midiDeviceInService, MidiDeviceOutService midiDeviceOutService, UpdateService updateService, FactoryResetService factoryResetService, LogDownloadService logDownloadService, DiskSpaceService diskSpaceService, OperatingSystemInformationService operatingSystemInformationService, SessionService sessionService) {
         this.stateService = stateService;
         this.setService = setService;
         this.playerService = playerService;
@@ -55,7 +49,7 @@ class SystemController {
         this.logDownloadService = logDownloadService;
         this.diskSpaceService = diskSpaceService;
         this.operatingSystemInformationService = operatingSystemInformationService;
-        this.audioService = audioService;
+        this.sessionService = sessionService;
     }
 
     @PostMapping("reboot")
@@ -96,7 +90,9 @@ class SystemController {
 
     @GetMapping("state")
     public com.ascargon.rocketshow.api.State getState() {
-        return stateService.getCurrentState(playerService, setService);
+        State state = stateService.getCurrentState(playerService, setService);
+        state.setUpdateFinished(sessionService.getSession().isUpdateFinished());
+        return state;
     }
 
     @GetMapping("settings")

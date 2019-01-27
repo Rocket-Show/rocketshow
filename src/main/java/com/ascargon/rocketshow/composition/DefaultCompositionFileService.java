@@ -118,7 +118,6 @@ public class DefaultCompositionFileService implements CompositionFileService {
         }
     }
 
-
     @Override
     public CompositionFile saveFile(InputStream uploadedInputStream, String fileName) {
         String[] midiFormats = {"midi", "mid"};
