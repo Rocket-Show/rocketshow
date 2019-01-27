@@ -54,7 +54,6 @@ chmod +x dietpi_raspberry.sh
 - GIT merge DEV branch to MASTER
 - GIT tag with the current version
 - Switch to DEV and update POM and update/currentversion2.xml versions
-- Set a new version in the file WebContent/index.jsp -> url=app?v=x.y to prevent Chrome from caching the app's index.html.
 
 #### Application
 The built application should be uploaded to rocketshow.net/update and be named "rocketshow.jar". The file "currentversion2.xml" can be modified accordingly.
