@@ -19,7 +19,7 @@ COPYFILE_DISABLE=true tar -c --exclude='.DS_Store' -zf directory.tar.gz rocketsh
 ```
 
 #### Raspberry Pi Image building
-These steps describe how to build a Raspberry Pi image based on the DietPi distribution on a Mac OS X.
+These steps describe how to build a Raspberry Pi image based on the DietPi distribution on a Mac OS X. Raspbian Light is not supported, because audio playback is laggy.
 
 1. Flash an image with DietPi 6.17 ARMv6-Stretch to an SD card.
 2. Remove the card from the Mac and add it again.
@@ -36,7 +36,7 @@ chmod +x dietpi_raspberry.sh
 ./dietpi_raspberry.sh
 ```
 9. Add the SD card back to the Mac.
-10. Find its drive name with diskutil ```list```.
+10. Find its drive name with ```diskutil list```.
 11. Unmount the disk. E.g. ```diskutil umountDisk /dev/disk2```.
 12 Create an image of the card. E.g. ```sudo dd if=/dev/disk2 of=/Users/vio/sdcard.img bs=512```.
 13. Transfer the image to a Linux (e.g. VirtualBox), because gparted is needed for the next steps.
@@ -58,15 +58,3 @@ chmod +x dietpi_raspberry.sh
 
 #### Application
 The built application should be uploaded to rocketshow.net/update and be named "rocketshow.jar". The file "currentversion2.xml" can be modified accordingly.
-
-#### Installation on a Raspberry Pi
-These commands can be used to install Rocket Show on a Raspberry Pi with Raspbian Lite installed:
-```shell
-sudo su - root
-cd /tmp
-wget https://rocketshow.net/install/script/raspbian.sh
-chmod +x raspbian.sh
-./raspbian.sh
-rm -rf raspbian.sh
-```
-You should reboot after installing Rocket Show.

@@ -11,7 +11,7 @@ chmod +x ./update/after.sh
 /bin/bash ./update/before.sh
 
 cp ./update/currentversion2.xml ./currentversion2.xml
-cp ./update/rocketshow.jar ./rocketshow.war
+cp ./update/rocketshow.jar ./rocketshow.jar
 
 # Execute the after script
 /bin/bash ./update/after.sh
