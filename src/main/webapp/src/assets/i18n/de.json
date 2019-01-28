@@ -190,6 +190,7 @@
         "no-instrument": "Keines",
         "audio-output": "Ausgang",
         "audio-device": "Audio Gerät",
+        "no-audio-device": "Keines",
         "no-audio-devices": "Keine Audio Geräte verfügbar",
         "logging-level": "Logging Level",
         "lighting-send-delay": "Sendeverzögerung in Millisekunden",

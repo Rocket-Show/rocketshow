@@ -169,6 +169,15 @@ public class CompositionPlayer {
             return;
         }
 
+        if(composition.getCompositionFileList().size() == 0) {
+            // No files to be played (maybe a lead sheet)
+            if (!isDefaultComposition && !isSample) {
+                notificationService.notifyClients(playerService, setService);
+            }
+
+            return;
+        }
+
         if (!capabilitiesService.getCapabilities().isGstreamer()) {
             throw new Exception("Gstreamer is not available");
         }

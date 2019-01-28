@@ -1,8 +1,8 @@
 import { StateService } from './../services/state.service';
 import { UpdateService } from './../services/update.service';
-import { Subject } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { BsModalRef } from 'ngx-bootstrap';
 import { State } from '../models/state';
 import { Version } from '../models/version';
@@ -12,7 +12,7 @@ import { Version } from '../models/version';
   templateUrl: './update-dialog.component.html',
   styleUrls: ['./update-dialog.component.scss']
 })
-export class UpdateDialogComponent implements OnInit {
+export class UpdateDialogComponent implements OnInit, OnDestroy {
   onClose: Subject<number>;
   currentVersion: Version;
   remoteVersion: Version;
@@ -24,6 +24,8 @@ export class UpdateDialogComponent implements OnInit {
   waitReboot: boolean = false;
   updateFinished: boolean = false;
 
+  stateServiceSubscription: Subscription;
+
   constructor(
     private bsModalRef: BsModalRef,
     public updateService: UpdateService,
@@ -32,7 +34,7 @@ export class UpdateDialogComponent implements OnInit {
   ngOnInit() {
     this.onClose = new Subject();
 
-    this.stateService.state.subscribe((state: State) => {
+    this.stateServiceSubscription =  this.stateService.state.subscribe((state: State) => {
       switch (state.updateState) {
         case 'DOWNLOADING': {
           this.updateStep = 'settings.update-download';
@@ -94,6 +96,10 @@ export class UpdateDialogComponent implements OnInit {
           }
         }
       });
+  }
+
+  ngOnDestroy() {
+    this.stateServiceSubscription.unsubscribe();
   }
 
   public update() {

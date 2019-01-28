@@ -28,11 +28,11 @@ export class LeadSheetService {
     private settingsPersonalService: SettingsPersonalService,
     private compositionService: CompositionService
   ) {
+    this.updateCurrentLeadSheet();
+
     this.stateService.state.subscribe((state: State) => {
       this.updateCurrentLeadSheet();
     });
-
-    this.updateCurrentLeadSheet();
 
     this.settingsPersonalService.settingsChanged.subscribe(() => {
       this.updateCurrentLeadSheet();

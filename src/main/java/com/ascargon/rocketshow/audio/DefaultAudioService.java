@@ -1,9 +1,8 @@
 package com.ascargon.rocketshow.audio;
 
-import com.ascargon.rocketshow.gstreamer.GstApi;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
-import org.freedesktop.gstreamer.*;
+import org.freedesktop.gstreamer.ElementFactory;
 import org.freedesktop.gstreamer.elements.BaseSink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +14,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
@@ -62,12 +60,14 @@ public class DefaultAudioService implements AudioService {
                         if (readLine) {
                             readLine = false;
 
-                            AudioDevice audioDevice = getAudioDeviceFromString(line);
+                            if (!line.startsWith("---")) {
+                                AudioDevice audioDevice = getAudioDeviceFromString(line);
 
-                            if (audioDevice.getName() != null && audioDevice.getName().length() > 0
-                                    && !audioDevice.getKey().equals("ALSA")) {
+                                if (audioDevice.getName() != null && audioDevice.getName().length() > 0
+                                        && !audioDevice.getKey().equals("ALSA")) {
 
-                                audioDeviceList.add(audioDevice);
+                                    audioDeviceList.add(audioDevice);
+                                }
                             }
                         } else {
                             readLine = true;

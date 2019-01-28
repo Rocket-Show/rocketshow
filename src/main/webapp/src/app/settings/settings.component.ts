@@ -79,10 +79,6 @@ export class SettingsComponent implements OnInit {
           result.midiOutDevice = midiOutDevices[0];
         }
 
-        if((!result.audioDevice || result.audioDevice && result.audioDevice.id == 0) && audioDevices.length > 0) {
-          result.audioDevice = audioDevices[0];
-        }
-
         // Remove/change the devices, if they current ones are not available anymore
         if(result.midiInDevice && !this.midiDeviceAvailable(result.midiInDevice, midiInDevices)) {
           if(midiInDevices.length > 0) {
@@ -97,14 +93,6 @@ export class SettingsComponent implements OnInit {
             result.midiOutDevice = midiOutDevices[0];
           } else {
             result.midiOutDevice = undefined;
-          }
-        }
-        
-        if(result.audioDevice && !this.audioDeviceAvailable(result.audioDevice, audioDevices)) {
-          if(audioDevices.length > 0) {
-            result.audioDevice = audioDevices[0];
-          } else {
-            result.audioDevice = undefined;
           }
         }
 
@@ -191,6 +179,7 @@ export class SettingsComponent implements OnInit {
           this.translateService.use(result.language);
 
           this.settingsService.settingsChanged.next();
+          this.settingsPersonalService.settingsChanged.next();
 
           this.translateService.get(['settings.toast-save-success', 'settings.toast-save-success-title']).subscribe(result => {
             this.toastrService.success(result['settings.toast-save-success'], result['settings.toast-save-success-title']);

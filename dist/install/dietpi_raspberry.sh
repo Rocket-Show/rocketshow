@@ -153,10 +153,7 @@ chown -R rocketshow:rocketshow /opt/rocketshow
 
 # Install the wireless access point feature
 # https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
-systemctl stop dnsmasq
 systemctl stop hostapd
-
-printf "\n# ROCKETSHOWSTART\ninterface=wlan0\naddress=/rocketshow.net/192.168.42.1\n# ROCKETSHOWEND\n" | tee -a /etc/dnsmasq.conf
 
 touch /etc/hostapd/hostapd.conf
 
@@ -181,7 +178,6 @@ EOF
 printf "\n# ROCKETSHOWSTART\nDAEMON_CONF=\"/etc/hostapd/hostapd.conf\"\n# ROCKETSHOWEND\n" | tee -a /etc/default/hostapd
 
 systemctl start hostapd
-systemctl start dnsmasq
 
 printf "\n# ROCKETSHOWSTART\nnet.ipv4.ip_forward=1\n# ROCKETSHOWEND\n" | tee -a /etc/sysctl.conf
 

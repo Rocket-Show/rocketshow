@@ -70,6 +70,7 @@
   <div class="col-lg-9 d-flex">
     <div class="my-auto" *ngIf="audioDeviceList?.length == 0">- {{ 'settings.no-audio-devices' | translate }} -</div>
     <select *ngIf="audioDeviceList?.length > 0" class="custom-select" [ngModel]="settings?.audioDevice" (ngModelChange)="settings.audioDevice = $event">
+      <option [ngValue]="selectUndefinedOptionValue">- {{ 'settings.no-audio-device' | translate }} -</option>
       <option *ngFor="let audioDevice of audioDeviceList" [ngValue]="audioDevice">{{ audioDevice.name }}</option>
     </select>
   </div>
