@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <versionInfo>
-    <version>2.1.0</version>
-    <date>2018-12-15</date>
+    <version>2.2.0</version>
+    <date>2019-02-02</date>
     <changeNoteList>
+        <changeNote>
+            <version>2.2.0</version>
+            <changes>TODO</changes>
+        </changeNote>
         <changeNote>
             <version>2.1.0</version>
             <changes>Major update. Better sync, faster plays, many bugfixes.</changes>
