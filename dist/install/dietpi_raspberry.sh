@@ -230,5 +230,3 @@ pcm.!default {
 EOF
 
 chown -R rocketshow:rocketshow /home/rocketshow
-
-shutdown -h now
