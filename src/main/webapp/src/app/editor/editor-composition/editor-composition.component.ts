@@ -275,6 +275,10 @@ export class EditorCompositionComponent implements OnInit {
     });
   }
 
+  deleteLeadSheet(leadSheetIndex: number) {
+    this.currentComposition.leadSheetList.splice(leadSheetIndex, 1);
+  }
+
   multipleVideoImage(): boolean {
     let videoImageCount: number = 0;
 
