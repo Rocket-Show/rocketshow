@@ -8,6 +8,10 @@
             <changes>TODO</changes>
         </changeNote>
         <changeNote>
+            <version>2.1.1</version>
+            <changes>Allow uploads up to 10 GB, show correct space left on device</changes>
+        </changeNote>
+        <changeNote>
             <version>2.1.0</version>
             <changes>Major update. Better sync, faster plays, many bugfixes.</changes>
         </changeNote>

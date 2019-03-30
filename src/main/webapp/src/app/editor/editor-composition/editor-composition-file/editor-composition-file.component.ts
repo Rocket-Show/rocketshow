@@ -85,11 +85,14 @@ export class EditorCompositionFileComponent implements OnInit {
 
   private loadDiskSpace() {
     this.diskSpaceService.getDiskSpace().pipe(map(diskSpace => {
-      this.diskSpaceUsedGB = Math.round(diskSpace.usedMB / 10) / 100;
-      this.diskSpaceAvailableGB = Math.round(diskSpace.availableMB / 10) / 100;
+      this.diskSpaceUsedGB = diskSpace.usedMB / 1024;
+      this.diskSpaceAvailableGB = (diskSpace.availableMB + diskSpace.availableMB) / 1024;
+
+      this.diskSpaceUsedGB = Math.round(this.diskSpaceUsedGB * 100) / 100;
+      this.diskSpaceAvailableGB = Math.round(this.diskSpaceAvailableGB * 100) / 100;
 
       if(diskSpace.usedMB != 0) {
-        this.diskSpacePercentage = Math.round(diskSpace.availableMB / diskSpace.usedMB);
+        this.diskSpacePercentage = Math.round(100 * diskSpace.usedMB / (diskSpace.usedMB + diskSpace.availableMB));
       }
     })).subscribe();
   }

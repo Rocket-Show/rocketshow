@@ -119,10 +119,10 @@ public class DefaultCompositionFileService implements CompositionFileService {
     }
 
     @Override
-    public CompositionFile saveFile(InputStream uploadedInputStream, String fileName) {
+    public CompositionFile saveFile(InputStream uploadedInputStream, String fileName) throws Exception {
         String[] midiFormats = {"midi", "mid"};
         String[] audioFormats = {"wav", "wave", "mp3", "aac", "ogg", "oga", "mogg", "wma"};
-        String[] videoFormats = {"avi", "mpg", "mpeg", "mkv", "mp4", "mov", "m4a"};
+        String[] videoFormats = {"avi", "mpg", "mpeg", "mkv", "mp4", "mov", "m4a", "m4v"};
 
         CompositionFile compositionFile = null;
 
@@ -139,6 +139,8 @@ public class DefaultCompositionFileService implements CompositionFileService {
         } else if (Arrays.asList(videoFormats).contains(extension)) {
             path += settingsService.getSettings().getVideoPath();
             compositionFile = new VideoCompositionFile();
+        } else {
+            throw new Exception("No valid file format");
         }
 
         path += File.separator;
@@ -158,6 +160,8 @@ public class DefaultCompositionFileService implements CompositionFileService {
 
         path += fileName;
 
+        logger.info("Uploading file " + fileName + "...");
+
         try {
             OutputStream out;
             int read;
@@ -173,7 +177,12 @@ public class DefaultCompositionFileService implements CompositionFileService {
             out.close();
         } catch (IOException e) {
             logger.error("Could not save file '" + fileName + "'", e);
+
+            // Delete the temporary file, if necessary
+            deleteFile(fileName, compositionFile.getType().toString());
         }
+
+        logger.info("File " + fileName + " successfully uploaded");
 
         return compositionFile;
     }

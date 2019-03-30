@@ -2,12 +2,16 @@ package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.composition.CompositionFile;
 import com.ascargon.rocketshow.composition.CompositionFileService;
+import org.apache.commons.fileupload.FileItemIterator;
+import org.apache.commons.fileupload.FileItemStream;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
+import javax.servlet.http.HttpServletRequest;
+import java.io.InputStream;
 import java.util.List;
 
 @RestController()
@@ -27,8 +31,26 @@ public class CompositionFileController {
     }
 
     @PostMapping("upload")
-    public CompositionFile upload(@RequestParam("file") MultipartFile file) throws IOException {
-        return compositionFileService.saveFile(file.getInputStream(), file.getOriginalFilename());
+    public CompositionFile upload(HttpServletRequest request) throws Exception {
+        ServletFileUpload upload = new ServletFileUpload();
+        FileItemIterator itemIterator = upload.getItemIterator(request);
+
+        while (itemIterator.hasNext()) {
+            FileItemStream item = itemIterator.next();
+            String fileName = item.getName();
+
+            if (fileName != null) {
+                fileName = FilenameUtils.getName(fileName);
+            }
+
+            InputStream stream = item.openStream();
+
+            if (!item.isFormField()) {
+                return compositionFileService.saveFile(stream, fileName);
+            }
+        }
+
+        return null;
     }
 
     @PostMapping("delete")
