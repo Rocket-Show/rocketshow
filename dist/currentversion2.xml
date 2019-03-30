@@ -5,7 +5,7 @@
     <changeNoteList>
         <changeNote>
             <version>2.1.1</version>
-            <changes>Allow uploads up to 10 GB, show correct space left on device</changes>
+            <changes>Allow uploads up to 10 GB, show correct space left on device. Minor bugfixes.</changes>
         </changeNote>
         <changeNote>
             <version>2.1.0</version>

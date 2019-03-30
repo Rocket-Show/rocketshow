@@ -59,7 +59,9 @@ public class DefaultPlayerService implements PlayerService {
         this.audioService = audioService;
 
         currentCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, capabilitiesService, activityNotificationAudioService, setService, midi2LightingConvertService, lightingService, midiDeviceOutService, audioService);
+
         defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, capabilitiesService, activityNotificationAudioService, setService, midi2LightingConvertService, lightingService, midiDeviceOutService, audioService);
+        defaultCompositionPlayer.setDefaultComposition(true);
 
         try {
             Gst.init();
@@ -74,8 +76,6 @@ public class DefaultPlayerService implements PlayerService {
         } catch (Exception e) {
             logger.error("Could not play default composition", e);
         }
-
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, capabilitiesService, activityNotificationAudioService, setService, midi2LightingConvertService, lightingService, midiDeviceOutService, audioService);
 
         // Load the last set/composition
         try {
@@ -320,15 +320,12 @@ public class DefaultPlayerService implements PlayerService {
             return;
         }
 
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, capabilitiesService, activityNotificationAudioService, setService, midi2LightingConvertService, lightingService, midiDeviceOutService, audioService);
-
         if (settingsService.getSettings().getDefaultComposition() == null || settingsService.getSettings().getDefaultComposition().length() == 0) {
             return;
         }
 
         logger.info("Play default composition");
 
-        defaultCompositionPlayer.setDefaultComposition(true);
         defaultCompositionPlayer.setComposition(compositionService.getComposition(settingsService.getSettings().getDefaultComposition()));
         defaultCompositionPlayer.play();
     }
