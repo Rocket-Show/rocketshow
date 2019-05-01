@@ -120,6 +120,8 @@ export class EditorCompositionLeadSheetComponent implements OnInit {
   }
 
   public onUploadSuccess(args: any) {
+    this.loadLeadSheets();
+
     // Hide the preview element
     args[0].previewElement.hidden = true;
 

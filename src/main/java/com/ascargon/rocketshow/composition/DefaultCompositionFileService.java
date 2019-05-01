@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 @Service
@@ -75,6 +76,16 @@ public class DefaultCompositionFileService implements CompositionFileService {
                     videoFile.setName(file.getName());
                     returnCompositionFileList.add(videoFile);
                 }
+            }
+        }
+
+        // Filter some files
+        Iterator<CompositionFile> compositionFileIterator = returnCompositionFileList.iterator();
+        while (compositionFileIterator.hasNext()) {
+            CompositionFile compositionFile = compositionFileIterator.next();
+
+            if(".DS_Store".equals(compositionFile.getName())) {
+                compositionFileIterator.remove();
             }
         }
 
