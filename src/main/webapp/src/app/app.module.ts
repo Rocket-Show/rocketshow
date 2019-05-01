@@ -15,6 +15,7 @@ import { DropzoneModule } from 'ngx-dropzone-wrapper';
 import { DropzoneConfigInterface } from 'ngx-dropzone-wrapper';
 import { ToastrModule } from 'ngx-toastr';
 import { NgxBootstrapSliderModule } from 'ngx-bootstrap-slider';
+import { DesignerModule  } from '@rocketshow/designer';
 
 import { PendingChangesGuard } from './pending-changes.guard';
 
@@ -61,11 +62,13 @@ import { LeadSheetComponent } from './lead-sheet/lead-sheet.component';
 import { EditorCompositionLeadSheetComponent } from './editor/editor-composition/editor-composition-lead-sheet/editor-composition-lead-sheet.component';
 import { SettingsBandComponent } from './settings/settings-band/settings-band.component';
 import { SettingsPersonalComponent } from './settings/settings-personal/settings-personal.component';
+import { DesignerComponent } from './designer/designer.component';
 
 const appRoutes: Routes = [
   { path: 'intro', component: IntroComponent },
   { path: 'play', component: PlayComponent },
   { path: 'editor', component: EditorComponent, canDeactivate: [PendingChangesGuard] },
+  { path: 'designer', component: DesignerComponent, canDeactivate: [PendingChangesGuard] },
   { path: 'settings', component: SettingsComponent, canDeactivate: [PendingChangesGuard] },
   {
     path: '',
@@ -110,7 +113,8 @@ const DROPZONE_CONFIG: DropzoneConfigInterface = {
     LeadSheetComponent,
     EditorCompositionLeadSheetComponent,
     SettingsBandComponent,
-    SettingsPersonalComponent
+    SettingsPersonalComponent,
+    DesignerComponent
   ],
   imports: [
     BrowserModule,
@@ -138,7 +142,8 @@ const DROPZONE_CONFIG: DropzoneConfigInterface = {
     ToastrModule.forRoot({
       newestOnTop: true
     }),
-    NgxBootstrapSliderModule
+    NgxBootstrapSliderModule,
+    DesignerModule
   ],
   providers: [
     AppHttpInterceptor,

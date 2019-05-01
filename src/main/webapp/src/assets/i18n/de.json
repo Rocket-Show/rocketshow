@@ -35,6 +35,7 @@
     "navigation": {
         "start": "Start",
         "compositions": "Kompositionen",
+        "designer": "Designer",
         "settings": "Einstellungen" 
     },
     "editor": {
