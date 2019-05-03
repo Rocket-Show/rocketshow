@@ -12,17 +12,9 @@ $theme-colors: (
 /* Add bootstrap */
 @import '../node_modules/bootstrap/scss/bootstrap';
 
-/* Add designer css */
-@import 'src/assets/designer/style/styles.scss';
-
 /* To vertically center some parts (like the intro wizard) */
 html, body {
     height: 100%;
-}
-
-/* Better navbar spacing for elements below */
-.navbar {
-    margin-bottom: 15px;
 }
 
 /* Better spacing for container */
@@ -83,7 +75,7 @@ dropzone.dz-wrapper>.dropzone {
     width: 100%;
 }
 
-.slider-track {
+.slider-horizontal .slider-track {
     background-image: none;
     background-color: #e9ecef;
     box-shadow: none;
