@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule, Routes } from '@angular/router';
 import { HttpClientModule, HttpClient, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
-import { TranslateHttpLoader } from '@ngx-translate/http-loader';
+import { MultiTranslateHttpLoader } from "ngx-translate-multi-http-loader";
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { ArraySortPipe } from './array-sort-pipe';
@@ -15,7 +15,7 @@ import { DropzoneModule } from 'ngx-dropzone-wrapper';
 import { DropzoneConfigInterface } from 'ngx-dropzone-wrapper';
 import { ToastrModule } from 'ngx-toastr';
 import { NgxBootstrapSliderModule } from 'ngx-bootstrap-slider';
-import { DesignerModule  } from '@rocketshow/designer';
+import { DesignerModule } from '@rocketshow/designer';
 
 import { PendingChangesGuard } from './pending-changes.guard';
 
@@ -182,5 +182,8 @@ const DROPZONE_CONFIG: DropzoneConfigInterface = {
 export class AppModule { }
 
 export function HttpLoaderFactory(http: HttpClient) {
-  return new TranslateHttpLoader(http, "./assets/i18n/", ".json");
+  return new MultiTranslateHttpLoader(http, [
+    { prefix: "./assets/i18n/", suffix: ".json" },
+    { prefix: "./assets/designer/i18n/", suffix: ".json" },
+  ]);
 }

@@ -8,7 +8,8 @@
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e",
+    "prepare": "rmdir-cli src/assets/designer && ncp node_modules/@rocketshow/designer/assets src/assets/designer"
   },
   "private": true,
   "dependencies": {
@@ -23,7 +24,7 @@
     "@angular/router": "^6.0.3",
     "@ngx-translate/core": "^10.0.2",
     "@ngx-translate/http-loader": "^3.0.1",
-    "@rocketshow/designer": "^1.5.0",
+    "@rocketshow/designer": "^1.9.0",
     "angular-sortablejs": "^2.5.2",
     "angular2-websocket": "^0.9.7",
     "bootstrap": "^4.1.2",
@@ -35,6 +36,7 @@
     "ngx-bootstrap-slider": "^1.6.0",
     "ngx-dropzone-wrapper": "^4.9.0",
     "ngx-toastr": "^8.9.1",
+    "ngx-translate-multi-http-loader": "^3.0.0",
     "rxjs": "^6.2.2",
     "sortablejs": "^1.7.0",
     "tether": "^1.4.4",
@@ -59,8 +61,10 @@
     "karma-coverage-istanbul-reporter": "^1.4.3",
     "karma-jasmine": "^1.1.2",
     "karma-jasmine-html-reporter": "^0.2.2",
+    "ncp": "^2.0.0",
     "node-sass": "^4.9.2",
     "protractor": "~5.3.0",
+    "rmdir-cli": "^2.0.6",
     "ts-node": "~5.0.1",
     "tslint": "~5.9.1",
     "typescript": "^2.8.1"

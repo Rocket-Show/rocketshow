@@ -30,7 +30,9 @@
               "node_modules/jquery/dist/jquery.js",
               "node_modules/tether/dist/js/tether.js",
               "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js",
-              "node_modules/bootstrap-slider/dist/bootstrap-slider.min.js"
+              "node_modules/bootstrap-slider/dist/bootstrap-slider.min.js",
+
+              "src/assets/designer/js/iro.js"
             ]
           },
           "configurations": {
