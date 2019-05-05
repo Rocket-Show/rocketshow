@@ -89,6 +89,10 @@ public class DefaultSettingsService implements SettingsService {
             settings.setVideoPath("video");
         }
 
+        if (settings.getFixturePath() == null) {
+            settings.setFixturePath("fixtures");
+        }
+
         if (settings.getDesignerPath() == null) {
             settings.setDesignerPath("designer");
         }
@@ -192,27 +196,29 @@ public class DefaultSettingsService implements SettingsService {
             }
         }
 
-        Instrument instrument;
+        if(settings.getInstrumentList().size() == 0) {
+            Instrument instrument;
 
-        instrument = new Instrument();
-        instrument.setName("Vocals");
-        instrument.setUuid(UUID.randomUUID().toString());
-        settings.getInstrumentList().add(instrument);
+            instrument = new Instrument();
+            instrument.setName("Vocals");
+            instrument.setUuid(UUID.randomUUID().toString());
+            settings.getInstrumentList().add(instrument);
 
-        instrument = new Instrument();
-        instrument.setName("Guitar");
-        instrument.setUuid(UUID.randomUUID().toString());
-        settings.getInstrumentList().add(instrument);
+            instrument = new Instrument();
+            instrument.setName("Guitar");
+            instrument.setUuid(UUID.randomUUID().toString());
+            settings.getInstrumentList().add(instrument);
 
-        instrument = new Instrument();
-        instrument.setName("Bass");
-        instrument.setUuid(UUID.randomUUID().toString());
-        settings.getInstrumentList().add(instrument);
+            instrument = new Instrument();
+            instrument.setName("Bass");
+            instrument.setUuid(UUID.randomUUID().toString());
+            settings.getInstrumentList().add(instrument);
 
-        instrument = new Instrument();
-        instrument.setName("Horns");
-        instrument.setUuid(UUID.randomUUID().toString());
-        settings.getInstrumentList().add(instrument);
+            instrument = new Instrument();
+            instrument.setName("Horns");
+            instrument.setUuid(UUID.randomUUID().toString());
+            settings.getInstrumentList().add(instrument);
+        }
     }
 
     @Override

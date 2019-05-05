@@ -42,7 +42,9 @@ public class Settings {
     private String audioPath;
     private String videoPath;
 
+    private String fixturePath;
     private String designerPath;
+
     private String leadSheetPath;
 
     private MidiDevice midiInDevice;
@@ -349,6 +351,14 @@ public class Settings {
         this.videoPath = videoPath;
     }
 
+    public String getFixturePath() {
+        return fixturePath;
+    }
+
+    public void setFixturePath(String fixturePath) {
+        this.fixturePath = fixturePath;
+    }
+
     public String getDesignerPath() {
         return designerPath;
     }
@@ -403,6 +413,8 @@ public class Settings {
         this.raspberryGpioCyclesHigh = raspberryGpioCyclesHigh;
     }
 
+    @XmlElement(name = "instrument")
+    @XmlElementWrapper(name = "instrumentList")
     public List<Instrument> getInstrumentList() {
         return instrumentList;
     }

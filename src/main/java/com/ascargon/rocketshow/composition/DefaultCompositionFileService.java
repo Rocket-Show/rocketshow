@@ -3,6 +3,7 @@ package com.ascargon.rocketshow.composition;
 import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
+import com.ascargon.rocketshow.util.FileFilterService;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.LoggerFactory;
@@ -24,9 +25,11 @@ public class DefaultCompositionFileService implements CompositionFileService {
     private final static Logger logger = LoggerFactory.getLogger(DefaultCompositionFileService.class);
 
     private final SettingsService settingsService;
+    private final FileFilterService fileFilterService;
 
-    public DefaultCompositionFileService(SettingsService settingsService) {
+    public DefaultCompositionFileService(SettingsService settingsService, FileFilterService fileFilterService) {
         this.settingsService = settingsService;
+        this.fileFilterService = fileFilterService;
     }
 
     @Override
@@ -42,7 +45,7 @@ public class DefaultCompositionFileService implements CompositionFileService {
 
         if (fileList != null) {
             for (File file : fileList) {
-                if (file.isFile()) {
+                if (file.isFile() && !fileFilterService.filterFile(file.getName())) {
                     AudioCompositionFile audioFile = new AudioCompositionFile();
                     audioFile.setName(file.getName());
                     returnCompositionFileList.add(audioFile);
@@ -56,7 +59,7 @@ public class DefaultCompositionFileService implements CompositionFileService {
 
         if (fileList != null) {
             for (File file : fileList) {
-                if (file.isFile()) {
+                if (file.isFile() && !fileFilterService.filterFile(file.getName())) {
                     MidiCompositionFile midiFile = new MidiCompositionFile();
                     midiFile.setName(file.getName());
                     returnCompositionFileList.add(midiFile);
@@ -71,21 +74,11 @@ public class DefaultCompositionFileService implements CompositionFileService {
 
         if (fileList != null) {
             for (File file : fileList) {
-                if (file.isFile()) {
+                if (file.isFile() && !fileFilterService.filterFile(file.getName())) {
                     VideoCompositionFile videoFile = new VideoCompositionFile();
                     videoFile.setName(file.getName());
                     returnCompositionFileList.add(videoFile);
                 }
-            }
-        }
-
-        // Filter some files
-        Iterator<CompositionFile> compositionFileIterator = returnCompositionFileList.iterator();
-        while (compositionFileIterator.hasNext()) {
-            CompositionFile compositionFile = compositionFileIterator.next();
-
-            if(".DS_Store".equals(compositionFile.getName())) {
-                compositionFileIterator.remove();
             }
         }
 
