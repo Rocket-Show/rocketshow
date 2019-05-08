@@ -216,6 +216,8 @@
         "toast-general-error-title": "Error",
         "toast-general-error": "Whoops! An error occured. Please try again or contact the support.",
         "error-max-audio-channels-exceeded": "The current configuration is not valid: The selected audio device supports only {{ max }} channels, but {{ current }} channels have been specified. Please reduce the channel count.",
+        "monitoring": "Monitoring",
+        "monitoring-enable": "Enable",
         "midi-destination-enum": {
             "OUT_DEVICE": "MIDI out",
             "LIGHTING": "Lighting",

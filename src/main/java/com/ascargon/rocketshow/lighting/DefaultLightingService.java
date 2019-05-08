@@ -69,7 +69,7 @@ public class DefaultLightingService implements LightingService {
             capabilitiesService.getCapabilities().setOla(false);
         }
 
-        if(!capabilitiesService.getCapabilities().isOla()) {
+        if (!capabilitiesService.getCapabilities().isOla()) {
             return;
         }
 
@@ -88,7 +88,7 @@ public class DefaultLightingService implements LightingService {
     }
 
     public void reset() {
-        if(!capabilitiesService.getCapabilities().isOla()) {
+        if (!capabilitiesService.getCapabilities().isOla()) {
             return;
         }
 
@@ -127,17 +127,19 @@ public class DefaultLightingService implements LightingService {
             mixedUniverse[i] = (short) highestValue;
         }
 
-        if(olaClient != null) {
+        if (olaClient != null) {
             olaClient.streamDmx(1, mixedUniverse);
         }
 
-        HashMap<Integer, Integer> mixedActivityUniverse = new HashMap<>();
-        for (int i = 0; i < 512; i++) {
-            mixedActivityUniverse.put(i, (int) mixedUniverse[i]);
+        if (settingsService.getSettings().getEnableMonitor()) {
+            HashMap<Integer, Integer> mixedActivityUniverse = new HashMap<>();
+            for (int i = 0; i < 512; i++) {
+                mixedActivityUniverse.put(i, (int) mixedUniverse[i]);
+            }
+            LightingUniverse activityUniverse = new LightingUniverse();
+            activityUniverse.setUniverse(mixedActivityUniverse);
+            activityNotificationLightingService.notifyClients(activityUniverse);
         }
-        LightingUniverse activityUniverse = new LightingUniverse();
-        activityUniverse.setUniverse(mixedActivityUniverse);
-        activityNotificationLightingService.notifyClients(activityUniverse);
     }
 
     // Make sure, this method is synchronized. Otherwise it may happen, that

@@ -159,8 +159,8 @@ export class EditorCompositionComponent implements OnInit {
     }),
       catchError((err) => {
         return this.toastGeneralErrorService.show(err);
-      })
-      ,finalize(() => {
+      }),
+      finalize(() => {
         this.savingComposition = false;
       }))
       .subscribe();
@@ -179,7 +179,7 @@ export class EditorCompositionComponent implements OnInit {
       this.compositionService.deleteComposition(this.initialComposition.name).pipe(map(() => {
         this.saveApi(composition);
       })
-        ,catchError((err) => {
+        , catchError((err) => {
           return this.toastGeneralErrorService.show(err);
         }))
         .subscribe();
@@ -202,7 +202,7 @@ export class EditorCompositionComponent implements OnInit {
             this.toastrService.success(result['editor.toast-composition-delete-success'], result['editor.toast-delete-success-title']);
           });
         })
-          ,catchError((err) => {
+          , catchError((err) => {
             return this.toastGeneralErrorService.show(err);
           }))
           .subscribe();
@@ -265,7 +265,7 @@ export class EditorCompositionComponent implements OnInit {
     }
 
     // Show the lead sheet details dialog
-    let leadSheetDialog = this.modalService.show(EditorCompositionLeadSheetComponent, { keyboard: true, ignoreBackdropClick: true, class: 'modal-lg', initialState: { leadSheetIndex: leadSheetIndex, leadSheet: compositionCopy.leadSheetList[leadSheetIndex], composition: compositionCopy }});
+    let leadSheetDialog = this.modalService.show(EditorCompositionLeadSheetComponent, { keyboard: true, ignoreBackdropClick: true, class: 'modal-lg', initialState: { leadSheetIndex: leadSheetIndex, leadSheet: compositionCopy.leadSheetList[leadSheetIndex], composition: compositionCopy } });
 
     (<EditorCompositionLeadSheetComponent>leadSheetDialog.content).onClose.subscribe(result => {
       if (result === 1) {
@@ -305,12 +305,12 @@ export class EditorCompositionComponent implements OnInit {
   }
 
   instrumentNameFromUuid(uuid: string): string {
-    if(!this.settings) {
+    if (!this.settings) {
       return undefined;
     }
 
-    for(let instrument of this.settings.instrumentList) {
-      if(instrument.uuid == uuid) {
+    for (let instrument of this.settings.instrumentList) {
+      if (instrument.uuid == uuid) {
         return instrument.name
       }
     }

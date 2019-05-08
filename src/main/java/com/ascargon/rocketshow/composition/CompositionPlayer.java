@@ -124,7 +124,9 @@ public class CompositionPlayer {
                 logger.error("Could not send MIDI signal from MIDI file", e);
             }
 
-            activityNotificationMidiService.notifyClients(midiSignal, MidiSignal.MidiDirection.IN, MidiSignal.MidiSource.MIDI_FILE, null);
+            if (settingsService.getSettings().getEnableMonitor()) {
+                activityNotificationMidiService.notifyClients(midiSignal, MidiSignal.MidiDirection.IN, MidiSignal.MidiSource.MIDI_FILE, null);
+            }
         }
     }
 
@@ -169,7 +171,7 @@ public class CompositionPlayer {
             return;
         }
 
-        if(composition.getCompositionFileList().size() == 0) {
+        if (composition.getCompositionFileList().size() == 0) {
             // No files to be played (maybe a lead sheet)
             if (!isDefaultComposition && !isSample) {
                 notificationService.notifyClients(playerService, setService);
@@ -316,10 +318,10 @@ public class CompositionPlayer {
             pipeline.add(sink);
 
             Element level = null;
-            if (!isSample) {
+            if (!isSample && settingsService.getSettings().getEnableMonitor()) {
                 level = ElementFactory.make("level", "level");
-                // 500 Milliseconds
-                level.set("interval", 500 * 1000000);
+                // 1000 Milliseconds
+                level.set("interval", 1000 * 1000000);
                 level.set("post-messages", true);
                 pipeline.add(level);
             }

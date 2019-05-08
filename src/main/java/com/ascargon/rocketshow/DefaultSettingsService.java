@@ -48,14 +48,15 @@ public class DefaultSettingsService implements SettingsService {
         this.raspberryResetUsbService = raspberryResetUsbService;
         this.midiService = midiService;
 
-        initDefaultSettings();
-
         // Load the settings
         try {
             load();
         } catch (Exception e) {
             logger.error("Could not load the settings", e);
         }
+
+        // Apply default settings (if not loaded)
+        initDefaultSettings();
 
         // Save the settings (in case none were already existant)
         try {
@@ -68,93 +69,164 @@ public class DefaultSettingsService implements SettingsService {
     private void initDefaultSettings() {
         // Initialize default settings
 
-        settings = new Settings();
+        if(settings == null) {
+            settings = new Settings();
+        }
 
-        settings.setBasePath(applicationHome.getDir().toString() + File.separator);
-        settings.setMediaPath("media");
-        settings.setAudioPath("audio");
-        settings.setMidiPath("midi");
-        settings.setVideoPath("video");
-        settings.setLeadSheetPath("leadsheet");
+        if (settings.getBasePath() == null) {
+            settings.setBasePath(applicationHome.getDir().toString() + File.separator);
+        }
 
-        settings.setMidiInDevice(new MidiDevice());
-        settings.setMidiOutDevice(new MidiDevice());
+        if (settings.getMediaPath() == null) {
+            settings.setMediaPath("media");
+        }
+
+        if (settings.getAudioPath() == null) {
+            settings.setAudioPath("audio");
+        }
+
+        if (settings.getMidiPath() == null) {
+            settings.setMidiPath("midi");
+        }
+
+        if (settings.getVideoPath() == null) {
+            settings.setVideoPath("video");
+        }
+
+        if (settings.getFixturePath() == null) {
+            settings.setFixturePath("fixtures");
+        }
+
+        if (settings.getDesignerPath() == null) {
+            settings.setDesignerPath("designer");
+        }
+
+        if (settings.getLeadSheetPath() == null) {
+            settings.setLeadSheetPath("leadsheet");
+        }
+
+        if (settings.getMidiInDevice() == null) {
+            settings.setMidiInDevice(new MidiDevice());
+
+            try {
+                List<MidiDevice> midiInDeviceList;
+                midiInDeviceList = midiService.getMidiDevices(MidiSignal.MidiDirection.IN);
+                if (midiInDeviceList.size() > 0) {
+                    settings.setMidiInDevice(midiInDeviceList.get(0));
+                }
+            } catch (MidiUnavailableException e) {
+                logger.error("Could not get any MIDI IN devices", e);
+            }
+        }
+
+        if (settings.getMidiOutDevice() == null) {
+            settings.setMidiOutDevice(new MidiDevice());
+
+            try {
+                List<MidiDevice> midiOutDeviceList;
+                midiOutDeviceList = midiService.getMidiDevices(MidiSignal.MidiDirection.OUT);
+                if (midiOutDeviceList.size() > 0) {
+                    settings.setMidiOutDevice(midiOutDeviceList.get(0));
+                }
+            } catch (MidiUnavailableException e) {
+                logger.error("Could not get any MIDI OUT devices", e);
+            }
+        }
 
         // Add the default audio bus
-        AudioBus audioBus = new AudioBus();
-        audioBus.setName("My audio bus 1");
-        audioBus.setChannels(2);
-        settings.getAudioBusList().add(audioBus);
+        if (settings.getAudioBusList().size() == 0) {
+            AudioBus audioBus = new AudioBus();
+            audioBus.setName("My audio bus 1");
+            audioBus.setChannels(2);
+            settings.getAudioBusList().add(audioBus);
+        }
 
         // Global MIDI mapping
-        settings.setMidiMapping(new MidiMapping());
-
-        try {
-            List<MidiDevice> midiInDeviceList;
-            midiInDeviceList = midiService.getMidiDevices(MidiSignal.MidiDirection.IN);
-            if (midiInDeviceList.size() > 0) {
-                settings.setMidiInDevice(midiInDeviceList.get(0));
-            }
-        } catch (MidiUnavailableException e) {
-            logger.error("Could not get any MIDI IN devices", e);
+        if (settings.getMidiMapping() == null) {
+            settings.setMidiMapping(new MidiMapping());
         }
 
-        try {
-            List<MidiDevice> midiOutDeviceList;
-            midiOutDeviceList = midiService.getMidiDevices(MidiSignal.MidiDirection.OUT);
-            if (midiOutDeviceList.size() > 0) {
-                settings.setMidiOutDevice(midiOutDeviceList.get(0));
-            }
-        } catch (MidiUnavailableException e) {
-            logger.error("Could not get any MIDI OUT devices", e);
+        if (settings.getLightingSendDelayMillis() == null) {
+            settings.setLightingSendDelayMillis(10);
         }
 
-        settings.setLightingSendDelayMillis(10);
+        if (settings.getOffsetMillisAudio() == null) {
+            settings.setOffsetMillisAudio(0);
+        }
 
-        settings.setOffsetMillisAudio(0);
-        settings.setOffsetMillisMidi(150);
-        settings.setOffsetMillisVideo(0);
+        if (settings.getOffsetMillisMidi() == null) {
+            settings.setOffsetMillisMidi(150);
+        }
+
+        if (settings.getOffsetMillisVideo() == null) {
+            settings.setOffsetMillisVideo(0);
+        }
+
+        if (settings.getAudioOutput() == null) {
+            if (OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+                settings.setAudioOutput(Settings.AudioOutput.DEVICE);
+            } else if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+                settings.setAudioOutput(Settings.AudioOutput.DEFAULT);
+            } else if (OperatingSystemInformation.Type.LINUX.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+                settings.setAudioOutput(Settings.AudioOutput.DEVICE);
+            }
+        }
+
+        if (settings.getAudioRate() == null) {
+            settings.setAudioRate(44100 /* or 48000 */);
+        }
+
+        if (settings.getAlsaPeriodSize() == null) {
+            settings.setAlsaPeriodSize(16384);
+        }
+
+        if (settings.getAlsaBufferSize() == null) {
+            settings.setAlsaBufferSize(5);
+        }
+
+        if (settings.getLoggingLevel() == null) {
+            settings.setLoggingLevel(Settings.LoggingLevel.INFO);
+        }
 
         if (OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
-            settings.setAudioOutput(Settings.AudioOutput.DEVICE);
-        } else if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
-            settings.setAudioOutput(Settings.AudioOutput.DEFAULT);
-        } else if (OperatingSystemInformation.Type.LINUX.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
-            settings.setAudioOutput(Settings.AudioOutput.DEVICE);
+            // Raspbian-specific settings
+
+            if (settings.isEnableRaspberryGpio() == null) {
+                settings.setEnableRaspberryGpio(true);
+            }
+
+            if (settings.isWlanApEnable() == null) {
+                settings.setWlanApEnable(true);
+            }
         }
 
-        settings.setAudioRate(44100 /* or 48000 */);
-        settings.setAlsaPeriodSize(16384);
-        settings.setAlsaBufferSize(5);
+        if (settings.getInstrumentList().size() == 0) {
+            Instrument instrument;
 
-        settings.setLoggingLevel(Settings.LoggingLevel.INFO);
+            instrument = new Instrument();
+            instrument.setName("Vocals");
+            instrument.setUuid(UUID.randomUUID().toString());
+            settings.getInstrumentList().add(instrument);
 
-        if (OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
-            settings.setEnableRaspberryGpio(true);
-            settings.setWlanApEnable(true);
+            instrument = new Instrument();
+            instrument.setName("Guitar");
+            instrument.setUuid(UUID.randomUUID().toString());
+            settings.getInstrumentList().add(instrument);
+
+            instrument = new Instrument();
+            instrument.setName("Bass");
+            instrument.setUuid(UUID.randomUUID().toString());
+            settings.getInstrumentList().add(instrument);
+
+            instrument = new Instrument();
+            instrument.setName("Horns");
+            instrument.setUuid(UUID.randomUUID().toString());
+            settings.getInstrumentList().add(instrument);
         }
 
-        Instrument instrument;
-
-        instrument = new Instrument();
-        instrument.setName("Vocals");
-        instrument.setUuid(UUID.randomUUID().toString());
-        settings.getInstrumentList().add(instrument);
-
-        instrument = new Instrument();
-        instrument.setName("Guitar");
-        instrument.setUuid(UUID.randomUUID().toString());
-        settings.getInstrumentList().add(instrument);
-
-        instrument = new Instrument();
-        instrument.setName("Bass");
-        instrument.setUuid(UUID.randomUUID().toString());
-        settings.getInstrumentList().add(instrument);
-
-        instrument = new Instrument();
-        instrument.setName("Horns");
-        instrument.setUuid(UUID.randomUUID().toString());
-        settings.getInstrumentList().add(instrument);
+        if (settings.getEnableMonitor() == null) {
+            settings.setEnableMonitor(false);
+        }
     }
 
     @Override

@@ -4,6 +4,7 @@ import com.ascargon.rocketshow.PlayerService;
 import com.ascargon.rocketshow.SessionService;
 import com.ascargon.rocketshow.Settings;
 import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.midi.MidiDeviceInService;
 import com.ascargon.rocketshow.midi.MidiDeviceOutService;
@@ -35,8 +36,9 @@ class SystemController {
     private final DiskSpaceService diskSpaceService;
     private final OperatingSystemInformationService operatingSystemInformationService;
     private final SessionService sessionService;
+    private final CompositionService compositionService;
 
-    public SystemController(StateService stateService, SetService setService, PlayerService playerService, RebootService rebootService, SettingsService settingsService, MidiDeviceInService midiDeviceInService, MidiDeviceOutService midiDeviceOutService, UpdateService updateService, FactoryResetService factoryResetService, LogDownloadService logDownloadService, DiskSpaceService diskSpaceService, OperatingSystemInformationService operatingSystemInformationService, SessionService sessionService) {
+    public SystemController(StateService stateService, SetService setService, PlayerService playerService, RebootService rebootService, SettingsService settingsService, MidiDeviceInService midiDeviceInService, MidiDeviceOutService midiDeviceOutService, UpdateService updateService, FactoryResetService factoryResetService, LogDownloadService logDownloadService, DiskSpaceService diskSpaceService, OperatingSystemInformationService operatingSystemInformationService, SessionService sessionService, CompositionService compositionService) {
         this.stateService = stateService;
         this.setService = setService;
         this.playerService = playerService;
@@ -50,6 +52,7 @@ class SystemController {
         this.diskSpaceService = diskSpaceService;
         this.operatingSystemInformationService = operatingSystemInformationService;
         this.sessionService = sessionService;
+        this.compositionService = compositionService;
     }
 
     @PostMapping("reboot")
@@ -90,7 +93,7 @@ class SystemController {
 
     @GetMapping("state")
     public com.ascargon.rocketshow.api.State getState() {
-        State state = stateService.getCurrentState(playerService, setService);
+        State state = stateService.getCurrentState(playerService, setService, compositionService);
         state.setUpdateFinished(sessionService.getSession().isUpdateFinished());
         return state;
     }

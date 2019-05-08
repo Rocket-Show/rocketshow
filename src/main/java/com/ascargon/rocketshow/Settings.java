@@ -41,6 +41,10 @@ public class Settings {
     private String midiPath;
     private String audioPath;
     private String videoPath;
+
+    private String fixturePath;
+    private String designerPath;
+
     private String leadSheetPath;
 
     private MidiDevice midiInDevice;
@@ -53,12 +57,12 @@ public class Settings {
 
     private List<RaspberryGpioControl> raspberryGpioControlList = new ArrayList<>();
 
-    private int lightingSendDelayMillis;
+    private Integer lightingSendDelayMillis;
 
     // Global play offset on file types
-    private int offsetMillisMidi;
-    private int offsetMillisAudio;
-    private int offsetMillisVideo;
+    private Integer offsetMillisMidi;
+    private Integer offsetMillisAudio;
+    private Integer offsetMillisVideo;
 
     private List<MidiRouting> deviceInMidiRoutingList = new ArrayList<>();
     private List<MidiRouting> remoteMidiRoutingList = new ArrayList<>();
@@ -75,22 +79,24 @@ public class Settings {
 
     private AudioOutput audioOutput;
     private AudioDevice audioDevice;
-    private int audioRate;
+    private Integer audioRate;
     private Integer alsaPeriodSize;
     private Integer alsaBufferSize;
     private Integer alsaPeriodTime;
     private List<AudioBus> audioBusList = new ArrayList<>();
 
-    private boolean wlanApEnable;
+    private Boolean wlanApEnable;
     private String wlanApSsid = "Rocket Show";
     private String wlanApPassphrase = "";
     private boolean wlanApSsidHide = false;
 
-    private boolean enableRaspberryGpio;
+    private Boolean enableRaspberryGpio = false;
     private int raspberryGpioDebounceMillis = 500;
     private boolean raspberryGpioNoHardwareTrigger = false;
     private int raspberryGpioTimerPeriodMillis = 2;
     private int raspberryGpioCyclesHigh = 3;
+
+    private Boolean enableMonitor;
 
     public MidiDevice getMidiInDevice() {
         return midiInDevice;
@@ -108,11 +114,11 @@ public class Settings {
         this.midiOutDevice = midiOutDevice;
     }
 
-    public int getLightingSendDelayMillis() {
+    public Integer getLightingSendDelayMillis() {
         return lightingSendDelayMillis;
     }
 
-    public void setLightingSendDelayMillis(int lightingSendDelayMillis) {
+    public void setLightingSendDelayMillis(Integer lightingSendDelayMillis) {
         this.lightingSendDelayMillis = lightingSendDelayMillis;
     }
 
@@ -184,27 +190,27 @@ public class Settings {
         this.defaultComposition = defaultComposition;
     }
 
-    public int getOffsetMillisMidi() {
+    public Integer getOffsetMillisMidi() {
         return offsetMillisMidi;
     }
 
-    public void setOffsetMillisMidi(int offsetMillisMidi) {
+    public void setOffsetMillisMidi(Integer offsetMillisMidi) {
         this.offsetMillisMidi = offsetMillisMidi;
     }
 
-    public int getOffsetMillisAudio() {
+    public Integer getOffsetMillisAudio() {
         return offsetMillisAudio;
     }
 
-    public void setOffsetMillisAudio(int offsetMillisAudio) {
+    public void setOffsetMillisAudio(Integer offsetMillisAudio) {
         this.offsetMillisAudio = offsetMillisAudio;
     }
 
-    public int getOffsetMillisVideo() {
+    public Integer getOffsetMillisVideo() {
         return offsetMillisVideo;
     }
 
-    public void setOffsetMillisVideo(int offsetMillisVideo) {
+    public void setOffsetMillisVideo(Integer offsetMillisVideo) {
         this.offsetMillisVideo = offsetMillisVideo;
     }
 
@@ -258,11 +264,11 @@ public class Settings {
         this.audioBusList = audioBusList;
     }
 
-    public int getAudioRate() {
+    public Integer getAudioRate() {
         return audioRate;
     }
 
-    public void setAudioRate(int audioRate) {
+    public void setAudioRate(Integer audioRate) {
         this.audioRate = audioRate;
     }
 
@@ -274,11 +280,12 @@ public class Settings {
         this.audioDevice = audioDevice;
     }
 
-    public boolean isWlanApEnable() {
+    @SuppressWarnings("WeakerAccess")
+    public Boolean isWlanApEnable() {
         return wlanApEnable;
     }
 
-    public void setWlanApEnable(boolean wlanApEnable) {
+    public void setWlanApEnable(Boolean wlanApEnable) {
         this.wlanApEnable = wlanApEnable;
     }
 
@@ -306,11 +313,11 @@ public class Settings {
         this.wlanApSsidHide = wlanApSsidHide;
     }
 
-    public boolean isEnableRaspberryGpio() {
+    public Boolean isEnableRaspberryGpio() {
         return enableRaspberryGpio;
     }
 
-    public void setEnableRaspberryGpio(boolean enableRaspberryGpio) {
+    public void setEnableRaspberryGpio(Boolean enableRaspberryGpio) {
         this.enableRaspberryGpio = enableRaspberryGpio;
     }
 
@@ -344,6 +351,23 @@ public class Settings {
 
     public void setVideoPath(String videoPath) {
         this.videoPath = videoPath;
+    }
+
+    public String getFixturePath() {
+        return fixturePath;
+    }
+
+    public void setFixturePath(String fixturePath) {
+        this.fixturePath = fixturePath;
+    }
+
+    public String getDesignerPath() {
+        return designerPath;
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    public void setDesignerPath(String designerPath) {
+        this.designerPath = designerPath;
     }
 
     public String getLeadSheetPath() {
@@ -391,6 +415,8 @@ public class Settings {
         this.raspberryGpioCyclesHigh = raspberryGpioCyclesHigh;
     }
 
+    @XmlElement(name = "instrument")
+    @XmlElementWrapper(name = "instrumentList")
     public List<Instrument> getInstrumentList() {
         return instrumentList;
     }
@@ -427,6 +453,14 @@ public class Settings {
     @SuppressWarnings("unused")
     public void setAlsaPeriodTime(Integer alsaPeriodTime) {
         this.alsaPeriodTime = alsaPeriodTime;
+    }
+
+    public Boolean getEnableMonitor() {
+        return enableMonitor;
+    }
+
+    public void setEnableMonitor(Boolean enableMonitor) {
+        this.enableMonitor = enableMonitor;
     }
 
 }

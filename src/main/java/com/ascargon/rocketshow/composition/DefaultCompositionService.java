@@ -405,19 +405,30 @@ public class DefaultCompositionService implements CompositionService {
         logger.info("Set '" + name + "' deleted");
     }
 
+    // Get the index of a composition outside a set, based on its name
+    // or -1, if it has not been found
+    @Override
+    public int getCompositionIndex(String compositionName) {
+        for (int i = 0; i < compositionCache.size(); i++) {
+            if (compositionCache.get(i).getName().equals(compositionName)) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
     @Override
     public Composition getNextComposition(Composition currentComposition) {
         // Get the next composition (not set based)
-        if(currentComposition != null) {
-            for (int i = 0; i < compositionCache.size(); i++) {
-                if (compositionCache.get(i).getName().equals(currentComposition.getName())) {
-                    if (compositionCache.size() > i + 1) {
-                        return compositionCache.get(i + 1);
-                    } else {
-                        return null;
-                    }
-                }
-            }
+        if (currentComposition == null) {
+            return null;
+        }
+
+        int currentIndex = getCompositionIndex(currentComposition.getName());
+
+        if (currentIndex >= 0 && compositionCache.size() > currentIndex + 1) {
+            return compositionCache.get(currentIndex + 1);
         }
 
         return null;
@@ -425,19 +436,15 @@ public class DefaultCompositionService implements CompositionService {
 
     @Override
     public Composition getPreviousComposition(Composition currentComposition) {
-        // Get the next composition (not set based)
+        // Get the previous composition (not set based)
         if (currentComposition == null) {
             return null;
         }
 
-        for (int i = 0; i < compositionCache.size(); i++) {
-            if (compositionCache.get(i).getName().equals(currentComposition.getName())) {
-                if (i - 1 >= 0) {
-                    return compositionCache.get(i - 1);
-                } else {
-                    return null;
-                }
-            }
+        int currentIndex = getCompositionIndex(currentComposition.getName());
+
+        if (currentIndex >= 0 && currentIndex - 1 >= 0) {
+            return compositionCache.get(currentIndex - 1);
         }
 
         return null;
