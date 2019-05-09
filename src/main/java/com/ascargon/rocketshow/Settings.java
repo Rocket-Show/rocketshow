@@ -90,11 +90,13 @@ public class Settings {
     private String wlanApPassphrase = "";
     private boolean wlanApSsidHide = false;
 
-    private Boolean enableRaspberryGpio;
+    private Boolean enableRaspberryGpio = false;
     private int raspberryGpioDebounceMillis = 500;
     private boolean raspberryGpioNoHardwareTrigger = false;
     private int raspberryGpioTimerPeriodMillis = 2;
     private int raspberryGpioCyclesHigh = 3;
+
+    private Boolean enableMonitor;
 
     public MidiDevice getMidiInDevice() {
         return midiInDevice;
@@ -451,6 +453,14 @@ public class Settings {
     @SuppressWarnings("unused")
     public void setAlsaPeriodTime(Integer alsaPeriodTime) {
         this.alsaPeriodTime = alsaPeriodTime;
+    }
+
+    public Boolean getEnableMonitor() {
+        return enableMonitor;
+    }
+
+    public void setEnableMonitor(Boolean enableMonitor) {
+        this.enableMonitor = enableMonitor;
     }
 
 }

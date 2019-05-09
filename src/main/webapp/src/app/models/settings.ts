@@ -45,6 +45,7 @@ export class Settings {
     wlanApSsidHide: boolean;
     enableRaspberryGpio: boolean;
     instrumentList: Instrument[] = [];
+    enableMonitor: boolean;
 
     constructor(data?: any) {
         if (!data) {
@@ -150,6 +151,8 @@ export class Settings {
                 this.instrumentList.push(new Instrument(instrument));
             }
         }
+
+        this.enableMonitor = data.enableMonitor;
     }
 
 }

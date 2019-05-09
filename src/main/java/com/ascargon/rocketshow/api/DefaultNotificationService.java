@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.PlayerService;
+import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.util.UpdateService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,11 +23,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class DefaultNotificationService extends TextWebSocketHandler implements NotificationService {
 
     private final StateService stateService;
+    private final CompositionService compositionService;
 
     private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
 
-    public DefaultNotificationService(StateService stateService) {
+    public DefaultNotificationService(StateService stateService, CompositionService compositionService) {
         this.stateService = stateService;
+        this.compositionService = compositionService;
     }
 
     @Override
@@ -40,7 +43,7 @@ public class DefaultNotificationService extends TextWebSocketHandler implements 
     }
 
     private synchronized void notifyClients(PlayerService playerService, SetService setService, UpdateService.UpdateState updateState, Boolean isUpdateFinished, String error) throws IOException {
-        State currentState = stateService.getCurrentState(playerService, setService);
+        State currentState = stateService.getCurrentState(playerService, setService, compositionService);
         currentState.setUpdateState(updateState);
         currentState.setUpdateFinished(isUpdateFinished);
         currentState.setError(error);

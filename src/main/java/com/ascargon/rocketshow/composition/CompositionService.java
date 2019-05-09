@@ -36,6 +36,8 @@ public interface CompositionService {
 
     void deleteSet(String name);
 
+    int getCompositionIndex(String compositionName);
+
     Composition getNextComposition(Composition currentComposition);
 
     Composition getPreviousComposition(Composition currentComposition);

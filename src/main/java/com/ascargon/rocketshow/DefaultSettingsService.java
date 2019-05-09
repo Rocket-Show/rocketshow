@@ -69,6 +69,10 @@ public class DefaultSettingsService implements SettingsService {
     private void initDefaultSettings() {
         // Initialize default settings
 
+        if (settings == null) {
+            settings = new Settings();
+        }
+
         if (settings.getBasePath() == null) {
             settings.setBasePath(applicationHome.getDir().toString() + File.separator);
         }
@@ -180,7 +184,7 @@ public class DefaultSettingsService implements SettingsService {
             settings.setAlsaBufferSize(5);
         }
 
-        if(settings.getLoggingLevel() == null) {
+        if (settings.getLoggingLevel() == null) {
             settings.setLoggingLevel(Settings.LoggingLevel.INFO);
         }
 
@@ -196,7 +200,7 @@ public class DefaultSettingsService implements SettingsService {
             }
         }
 
-        if(settings.getInstrumentList().size() == 0) {
+        if (settings.getInstrumentList().size() == 0) {
             Instrument instrument;
 
             instrument = new Instrument();
@@ -218,6 +222,10 @@ public class DefaultSettingsService implements SettingsService {
             instrument.setName("Horns");
             instrument.setUuid(UUID.randomUUID().toString());
             settings.getInstrumentList().add(instrument);
+        }
+
+        if (settings.getEnableMonitor() == null) {
+            settings.setEnableMonitor(false);
         }
     }
 

@@ -217,6 +217,8 @@
         "toast-general-error-title": "Fehler",
         "toast-general-error": "Huch! Ein Fehler ist aufgetreten. Bitte versuche es erneut oder wende dich an den Support.",
         "error-max-audio-channels-exceeded": "Die aktuelle Konfiguration ist ungültig: Das ausgewählte Audio Gerät unterstützt maximal {{ max }} Kanäle, es wurden aber {{ current }} eingestellt. Bitte reduziere die Anzahl Kanäle.",
+        "monitoring": "Monitoring",
+        "monitoring-enable": "Aktivieren",
         "midi-destination-enum": {
             "OUT_DEVICE": "MIDI Ausgang",
             "LIGHTING": "Lichtsteuerung",
