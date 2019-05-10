@@ -12,6 +12,10 @@ public class LightingUniverse {
 	private final String uuid = String.valueOf(UUID.randomUUID());
 
 	public LightingUniverse() {
+		reset();
+	}
+
+	public void reset() {
 		universe = new HashMap<>();
 	}
 

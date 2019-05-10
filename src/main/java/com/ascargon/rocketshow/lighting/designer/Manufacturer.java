@@ -33,5 +33,5 @@ class Manufacturer {
     public void setWebsite(String website) {
         this.website = website;
     }
-w
+
 }

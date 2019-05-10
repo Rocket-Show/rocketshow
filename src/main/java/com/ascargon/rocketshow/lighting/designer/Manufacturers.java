@@ -16,7 +16,7 @@ import java.util.Map;
 @JsonIgnoreProperties({ "$schema" })
 class Manufacturers {
 
-    protected Map<String, Manufacturer> manufacturers = new HashMap<>();
+    private Map<String, Manufacturer> manufacturers = new HashMap<>();
 
     public Map<String, Manufacturer> getManufacturers() {
         return manufacturers;

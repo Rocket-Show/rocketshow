@@ -38,6 +38,8 @@ class FixtureTemplate {
     private String name;
     private String uuid;
     private List<String> categories;
+    private FixtureTemplateAvailableChannels availableChannels;
+    private FixtureMode[] modes;
 
     public String getName() {
         return name;
@@ -61,6 +63,22 @@ class FixtureTemplate {
 
     public void setCategories(List<String> categories) {
         this.categories = categories;
+    }
+
+    public FixtureTemplateAvailableChannels getAvailableChannels() {
+        return availableChannels;
+    }
+
+    public void setAvailableChannels(FixtureTemplateAvailableChannels availableChannels) {
+        this.availableChannels = availableChannels;
+    }
+
+    public FixtureMode[] getModes() {
+        return modes;
+    }
+
+    public void setModes(FixtureMode[] modes) {
+        this.modes = modes;
     }
 
 }

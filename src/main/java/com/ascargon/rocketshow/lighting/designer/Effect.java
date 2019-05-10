@@ -26,7 +26,7 @@ public class Effect {
     private String uuid;
     private EffectChannel[] effectChannels;
 
-    public int getValueAtMillis(long timeMillis, int fixtureIndex) {
+    public double getValueAtMillis(long timeMillis, int fixtureIndex) {
         return 0;
     }
 

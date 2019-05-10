@@ -28,7 +28,7 @@ public class FixtureCapability {
         EffectParameter,
         SoundSensitivity,
         Focus,
-        Zoom,,
+        Zoom,
         Iris,
         IrisEffect,
         Frost,

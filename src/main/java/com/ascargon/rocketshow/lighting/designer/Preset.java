@@ -16,7 +16,7 @@ public class Preset {
     private String name;
 
     // all related fixtures
-    private String[] fixtures;
+    private Fixture[] fixtures;
 
     // all properties. Also add the fine properties (16-bit values), if calculated.
     // The fixtures will pick up the corresponding values, if available.
@@ -32,7 +32,7 @@ public class Preset {
 
     // fading times
     private long fadeInMillis = 0;
-    private long adeOutMillis = 0;
+    private long fadeOutMillis = 0;
 
     public String getUuid() {
         return uuid;
@@ -50,11 +50,11 @@ public class Preset {
         this.name = name;
     }
 
-    public String[] getFixtures() {
+    public Fixture[] getFixtures() {
         return fixtures;
     }
 
-    public void setFixtures(String[] fixtures) {
+    public void setFixtures(Fixture[] fixtures) {
         this.fixtures = fixtures;
     }
 
@@ -98,12 +98,11 @@ public class Preset {
         this.fadeInMillis = fadeInMillis;
     }
 
-    public long getAdeOutMillis() {
-        return adeOutMillis;
+    public long getFadeOutMillis() {
+        return fadeOutMillis;
     }
 
-    public void setAdeOutMillis(long adeOutMillis) {
-        this.adeOutMillis = adeOutMillis;
+    public void setFadeOutMillis(long fadeOutMillis) {
+        this.fadeOutMillis = fadeOutMillis;
     }
-
 }
