@@ -12,6 +12,8 @@ import com.ascargon.rocketshow.audio.AudioService;
 import com.ascargon.rocketshow.gstreamer.GstApi;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.Midi2LightingConvertService;
+import com.ascargon.rocketshow.lighting.designer.DesignerService;
+import com.ascargon.rocketshow.lighting.designer.Project;
 import com.ascargon.rocketshow.midi.*;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
 import org.freedesktop.gstreamer.*;
@@ -63,6 +65,7 @@ public class CompositionPlayer {
     private final LightingService lightingService;
     private final MidiDeviceOutService midiDeviceOutService;
     private final AudioService audioService;
+    private final DesignerService designerService;
 
     private Composition composition;
     private PlayState playState = PlayState.STOPPED;
@@ -82,7 +85,10 @@ public class CompositionPlayer {
     // All MIDI routers
     private List<MidiRouter> midiRouterList = new ArrayList<>();
 
-    public CompositionPlayer(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, PlayerService playerService, SettingsService settingsService, CapabilitiesService capabilitiesService, ActivityNotificationAudioService activityNotificationAudioService, SetService setService, Midi2LightingConvertService midi2LightingConvertService, LightingService lightingService, MidiDeviceOutService midiDeviceOutService, AudioService audioService) {
+    // The designer project, if available
+    private Project project;
+
+    public CompositionPlayer(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, PlayerService playerService, SettingsService settingsService, CapabilitiesService capabilitiesService, ActivityNotificationAudioService activityNotificationAudioService, SetService setService, Midi2LightingConvertService midi2LightingConvertService, LightingService lightingService, MidiDeviceOutService midiDeviceOutService, AudioService audioService, DesignerService designerService) {
         this.notificationService = notificationService;
         this.activityNotificationMidiService = activityNotificationMidiService;
         this.playerService = playerService;
@@ -94,6 +100,7 @@ public class CompositionPlayer {
         this.lightingService = lightingService;
         this.midiDeviceOutService = midiDeviceOutService;
         this.audioService = audioService;
+        this.designerService = designerService;
 
         this.midiMapping.setParent(settingsService.getSettings().getMidiMapping());
     }
@@ -163,73 +170,10 @@ public class CompositionPlayer {
         }
     }
 
-    // Load all files and construct the complete GST pipeline
-    public void loadFiles() throws Exception {
-        boolean hasAudioFile = false;
-
-        if (playState != PlayState.STOPPED) {
-            return;
-        }
-
-        if (composition.getCompositionFileList().size() == 0) {
-            // No files to be played (maybe a lead sheet)
-            if (!isDefaultComposition && !isSample) {
-                notificationService.notifyClients(playerService, setService);
-            }
-
-            return;
-        }
-
-        if (!capabilitiesService.getCapabilities().isGstreamer()) {
-            throw new Exception("Gstreamer is not available");
-        }
-
-        // At least one active file
-        boolean hasActiveFile = false;
-
-        for (CompositionFile compositionFile : composition.getCompositionFileList()) {
-            if (compositionFile.isActive()) {
-                hasActiveFile = true;
-                break;
-            }
-        }
-
-        if (!hasActiveFile) {
-            // No need to play anything
-            return;
-        }
-
-        playState = PlayState.LOADING;
-
-        if (!isDefaultComposition && !isSample) {
-            notificationService.notifyClients(playerService, setService);
-        }
-
-        logger.debug(
-                "Loading composition '" + composition.getName() + "...");
-
-        if (pipeline != null) {
-            pipeline.stop();
-            pipeline.dispose();
-            pipeline = null;
-        }
-
+    private void createGstreamerPipeline(boolean hasAudioFile) {
         pipeline = new Pipeline();
-
         Bus bus = GstApi.GST_API.gst_element_get_bus(pipeline);
-
         Element audioMixer = null;
-
-        // Create an audiomixer, if at least one audiosource is present
-        for (int i = 0; i < composition.getCompositionFileList().size(); i++) {
-            CompositionFile compositionFile = composition.getCompositionFileList().get(i);
-
-            if (compositionFile.isActive() && compositionFile instanceof AudioCompositionFile) {
-                hasAudioFile = true;
-                break;
-            }
-        }
-
 
         bus.connect((Bus.ERROR) (GstObject source, int code, String message) -> {
             logger.error("GST error: " + message);
@@ -299,6 +243,7 @@ public class CompositionPlayer {
 
         GstApi.GST_API.gst_object_unref(bus);
 
+        // Create an pipeline, if at least one audiosource is present
         if (hasAudioFile) {
             audioMixer = ElementFactory.make("audiomixer", "audiomixer");
             pipeline.add(audioMixer);
@@ -464,6 +409,79 @@ public class CompositionPlayer {
                 }
             }
         }
+    }
+
+    // Load all files and construct the complete GST pipeline
+    public void loadFiles() throws Exception {
+        boolean hasActiveFile = false;
+        boolean hasAudioFile = false;
+        Project project;
+
+        if (playState != PlayState.STOPPED) {
+            return;
+        }
+
+        project = designerService.getProjectByCompositionName(composition.getName());
+
+        // Search for active files
+        for (CompositionFile compositionFile : composition.getCompositionFileList()) {
+            if (compositionFile.isActive()) {
+                hasActiveFile = true;
+                break;
+            }
+        }
+
+        if (!hasActiveFile && project == null) {
+            // No files to be played and no designer project (maybe a lead sheet)
+            if (!isDefaultComposition && !isSample) {
+                notificationService.notifyClients(playerService, setService);
+            }
+
+            return;
+        }
+
+        // Search for audio files
+        for (int i = 0; i < composition.getCompositionFileList().size(); i++) {
+            CompositionFile compositionFile = composition.getCompositionFileList().get(i);
+
+            if (compositionFile.isActive() && compositionFile instanceof AudioCompositionFile) {
+                hasAudioFile = true;
+                break;
+            }
+        }
+
+        if (hasActiveFile && !capabilitiesService.getCapabilities().isGstreamer()) {
+            throw new Exception("Gstreamer is required to play this composition but not available");
+        }
+
+        playState = PlayState.LOADING;
+
+        if (!isDefaultComposition && !isSample) {
+            notificationService.notifyClients(playerService, setService);
+        }
+
+        logger.debug(
+                "Loading composition '" + composition.getName() + "...");
+
+        // Destroy an old pipeline, if required
+        if (pipeline != null) {
+            pipeline.stop();
+            pipeline.dispose();
+            pipeline = null;
+        }
+
+        // Destroy an old designer project, if required
+        if (this.project != null) {
+            this.designerService.close();
+        }
+
+        if (hasActiveFile) {
+            createGstreamerPipeline(hasAudioFile);
+        }
+
+
+        designerService.load(this, project, pipeline);
+        this.project = project;
 
         logger.debug("Composition '" + composition.getName() + "' loaded");
 
@@ -488,6 +506,10 @@ public class CompositionPlayer {
         if (pipeline != null) {
             pipeline.play();
         }
+
+        if (project != null) {
+            designerService.play();
+        }
     }
 
     public void pause() throws Exception {
@@ -502,18 +524,14 @@ public class CompositionPlayer {
             pipeline.pause();
         }
 
+        if (project != null) {
+            designerService.pause();
+        }
+
         playState = PlayState.PAUSED;
 
         if (!isDefaultComposition && !isSample) {
             notificationService.notifyClients(playerService, setService);
-        }
-    }
-
-    public void togglePlay() throws Exception {
-        if (playState == PlayState.PLAYING) {
-            stop();
-        } else {
-            play();
         }
     }
 
@@ -538,6 +556,10 @@ public class CompositionPlayer {
             pipeline = null;
         }
 
+        if (project != null) {
+            designerService.close();
+        }
+
         // Close all MIDI routers
         for (MidiRouter midiRouter : midiRouterList) {
             midiRouter.close();
@@ -557,6 +579,14 @@ public class CompositionPlayer {
         logger.info("Composition '" + composition.getName() + "' stopped");
     }
 
+    public void togglePlay() throws Exception {
+        if (playState == PlayState.PLAYING) {
+            stop();
+        } else {
+            play();
+        }
+    }
+
     public void seek(long positionMillis) throws Exception {
         // When we seek before pressing play
         startPosition = positionMillis;
@@ -565,6 +595,10 @@ public class CompositionPlayer {
 
         if (pipeline != null) {
             pipeline.seek(positionMillis, TimeUnit.MILLISECONDS);
+        }
+
+        if (project != null) {
+            designerService.seek(positionMillis);
         }
 
         if (!isSample) {
@@ -583,6 +617,10 @@ public class CompositionPlayer {
 
         if (pipeline != null) {
             return pipeline.queryPosition(TimeUnit.MILLISECONDS);
+        }
+
+        if (project != null) {
+            designerService.getPositionMillis();
         }
 
         return 0;

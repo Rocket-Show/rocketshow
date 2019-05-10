@@ -9,10 +9,10 @@ import javax.sound.midi.ShortMessage;
 @Service
 public class DefaultMidi2LightingConvertService implements Midi2LightingConvertService {
 
-    private final DefaultLightingService defaultLightingService;
+    private final LightingService lightingService;
 
-    public DefaultMidi2LightingConvertService(DefaultLightingService defaultLightingService) {
-        this.defaultLightingService = defaultLightingService;
+    public DefaultMidi2LightingConvertService(LightingService lightingService) {
+        this.lightingService = lightingService;
     }
 
     private void mapSimple(MidiSignal midiSignal, LightingUniverse lightingUniverse) {
@@ -26,12 +26,12 @@ public class DefaultMidi2LightingConvertService implements Midi2LightingConvertS
             }
 
             lightingUniverse.getUniverse().put(midiSignal.getNote(), valueTo);
-            defaultLightingService.send();
+            lightingService.send();
         } else if (midiSignal.getCommand() == ShortMessage.NOTE_OFF) {
             int valueTo = 0;
 
             lightingUniverse.getUniverse().put(midiSignal.getNote(), valueTo);
-            defaultLightingService.send();
+            lightingService.send();
         }
     }
 

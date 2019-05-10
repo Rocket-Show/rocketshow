@@ -98,6 +98,8 @@ public class Settings {
 
     private Boolean enableMonitor;
 
+    private Integer designerFrequencyHertz;
+
     public MidiDevice getMidiInDevice() {
         return midiInDevice;
     }
@@ -461,6 +463,14 @@ public class Settings {
 
     public void setEnableMonitor(Boolean enableMonitor) {
         this.enableMonitor = enableMonitor;
+    }
+
+    public Integer getDesignerFrequencyHertz() {
+        return designerFrequencyHertz;
+    }
+
+    public void setDesignerFrequencyHertz(Integer designerFrequencyHertz) {
+        this.designerFrequencyHertz = designerFrequencyHertz;
     }
 
 }

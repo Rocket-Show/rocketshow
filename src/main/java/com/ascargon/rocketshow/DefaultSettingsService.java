@@ -227,6 +227,10 @@ public class DefaultSettingsService implements SettingsService {
         if (settings.getEnableMonitor() == null) {
             settings.setEnableMonitor(false);
         }
+
+        if(settings.getDesignerFrequencyHertz() == null) {
+            settings.setDesignerFrequencyHertz(40);
+        }
     }
 
     @Override

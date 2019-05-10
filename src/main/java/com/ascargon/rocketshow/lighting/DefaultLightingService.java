@@ -54,6 +54,8 @@ public class DefaultLightingService implements LightingService {
 
     private final HttpClient httpClient;
 
+    private boolean externalSync = false;
+
     public DefaultLightingService(SettingsService settingsService, CapabilitiesService capabilitiesService, ActivityNotificationLightingService activityNotificationLightingService) {
         this.settingsService = settingsService;
         this.capabilitiesService = capabilitiesService;
@@ -146,8 +148,14 @@ public class DefaultLightingService implements LightingService {
     // some timers are started in parallel, because different threads send at
     // the same time. This will cause the OLA rpc stream to break and a restart
     // is required.
+    @Override
     public synchronized void send() {
         logger.trace("Sending a lighting value");
+
+        if (externalSync) {
+            // Don't manage the send frequency internally, but rely on an external handler
+            return;
+        }
 
         // Schedule the specified count of executions in the specified delay
         if (sendUniverseTimer != null) {
@@ -175,6 +183,20 @@ public class DefaultLightingService implements LightingService {
 
         sendUniverseTimer = new Timer();
         sendUniverseTimer.schedule(timerTask, settingsService.getSettings().getLightingSendDelayMillis());
+    }
+
+    @Override
+    public void sendExternalSync() {
+        if (!externalSync) {
+            return;
+        }
+
+        try {
+            // Send the universe immediately
+            sendUniverse();
+        } catch (Exception e) {
+            logger.error("Could not send the lighting universe", e);
+        }
     }
 
     private boolean isStandardDevice(String name) {
@@ -293,6 +315,11 @@ public class DefaultLightingService implements LightingService {
     @Override
     public void removeLightingUniverse(LightingUniverse lightingUniverse) {
         lightingUniverseList.remove(lightingUniverse);
+    }
+
+    @Override
+    public void setExternalSync(boolean externalSync) {
+        this.externalSync = externalSync;
     }
 
     @Override

@@ -10,11 +10,11 @@ import java.util.List;
 @RestController()
 @RequestMapping("${spring.data.rest.base-path}")
 @CrossOrigin
-public class DesignerFixtureController {
+public class DesignerController {
 
     private final FixtureService fixtureService;
 
-    public DesignerFixtureController(FixtureService fixtureService) {
+    public DesignerController(FixtureService fixtureService) {
         this.fixtureService = fixtureService;
     }
 
@@ -27,5 +27,7 @@ public class DesignerFixtureController {
     public String getFixture(@RequestParam("uuid") String uuid) throws IOException {
         return fixtureService.getFixture(uuid);
     }
+
+
 
 }

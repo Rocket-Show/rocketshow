@@ -14,7 +14,11 @@ public class Project {
 
     private String name;
     private String uuid;
-    private List<Composition> compositions;
+    private Composition[] compositions;
+    private FixtureTemplate[] fixtureTemplates;
+    private Fixture[] fixtures;
+    private Scene[] scenes;
+    private Preset[] presets;
 
     public String getName() {
         return name;
@@ -32,12 +36,43 @@ public class Project {
         this.uuid = uuid;
     }
 
-    public List<Composition> getCompositions() {
+    public Composition[] getCompositions() {
         return compositions;
     }
 
-    public void setCompositions(List<Composition> compositions) {
+    public void setCompositions(Composition[] compositions) {
         this.compositions = compositions;
     }
 
+    public FixtureTemplate[] getFixtureTemplates() {
+        return fixtureTemplates;
+    }
+
+    public void setFixtureTemplates(FixtureTemplate[] fixtureTemplates) {
+        this.fixtureTemplates = fixtureTemplates;
+    }
+
+    public Fixture[] getFixtures() {
+        return fixtures;
+    }
+
+    public void setFixtures(Fixture[] fixtures) {
+        this.fixtures = fixtures;
+    }
+
+    public Scene[] getScenes() {
+        return scenes;
+    }
+
+    public void setScenes(Scene[] scenes) {
+        this.scenes = scenes;
+    }
+
+    public Preset[] getPresets() {
+        return presets;
+    }
+
+    public void setPresets(Preset[] presets) {
+        this.presets = presets;
+    }
 }

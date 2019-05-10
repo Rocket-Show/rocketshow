@@ -16,7 +16,7 @@ class Composition {
     private String uuid;
     private String syncType;
     private long durationMillis;
-    private List<ScenePlaybackRegion> scenePlaybackRegions;
+    private ScenePlaybackRegion[] scenePlaybackRegions;
 
     public String getName() {
         return name;
@@ -50,12 +50,11 @@ class Composition {
         this.durationMillis = durationMillis;
     }
 
-    public List<ScenePlaybackRegion> getScenePlaybackRegions() {
+    public ScenePlaybackRegion[] getScenePlaybackRegions() {
         return scenePlaybackRegions;
     }
 
-    public void setScenePlaybackRegions(List<ScenePlaybackRegion> scenePlaybackRegions) {
+    public void setScenePlaybackRegions(ScenePlaybackRegion[] scenePlaybackRegions) {
         this.scenePlaybackRegions = scenePlaybackRegions;
     }
-
 }

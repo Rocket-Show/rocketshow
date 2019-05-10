@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.lighting.designer;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
@@ -11,6 +12,28 @@ import java.util.List;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 class FixtureTemplate {
+
+    public enum FixtureType {
+        Blinder,
+        @JsonProperty("Color Changer")
+        ColorChanger,
+        Dimmer,
+        Effect,
+        Fan,
+        Flower,
+        Hazer,
+        Laser,
+        Matrix,
+        @JsonProperty("Moving Head")
+        MovingHead,
+        @JsonProperty("Pixel Bar")
+        PixelBar,
+        Scanner,
+        Smoke,
+        Stand,
+        Strobe,
+        Other
+    }
 
     private String name;
     private String uuid;
