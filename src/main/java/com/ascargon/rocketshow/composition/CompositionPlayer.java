@@ -479,9 +479,10 @@ public class CompositionPlayer {
             createGstreamerPipeline(hasAudioFile);
         }
 
-
-        designerService.load(this, project, pipeline);
-        this.project = project;
+        if (project != null) {
+            designerService.load(this, project, pipeline);
+            this.project = project;
+        }
 
         logger.debug("Composition '" + composition.getName() + "' loaded");
 

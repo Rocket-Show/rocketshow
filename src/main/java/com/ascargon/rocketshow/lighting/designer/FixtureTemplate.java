@@ -2,6 +2,7 @@ package com.ascargon.rocketshow.lighting.designer;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
 import java.util.List;
 
@@ -38,6 +39,7 @@ class FixtureTemplate {
     private String name;
     private String uuid;
     private List<String> categories;
+    @JsonUnwrapped
     private FixtureTemplateAvailableChannels availableChannels;
     private FixtureMode[] modes;
 

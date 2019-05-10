@@ -1,7 +1,14 @@
 package com.ascargon.rocketshow.lighting.designer;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * A Rocket Show Designer fixture capability.
+ *
+ * @author Moritz A. Vieli
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class FixtureCapability {
 
     public enum FixtureCapabilityType {

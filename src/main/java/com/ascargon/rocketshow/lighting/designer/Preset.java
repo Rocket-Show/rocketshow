@@ -26,7 +26,7 @@ public class Preset {
     private Effect[] effects;
 
     // position offset, relative to the scene start
-    // (undefined = start/end of the scene itself)
+    // (null = start/end of the scene itself)
     private Long startMillis;
     private Long endMillis;
 

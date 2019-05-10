@@ -13,7 +13,7 @@ public class Fixture {
     private String uuid;
     private String fixtureTemplateUuid;
     private String name;
-    private String dmxUniverseUuid;
+    private String dmxUniverseUuid = "";
     private int dmxFirstChannel;
     private String modeShortName;
 

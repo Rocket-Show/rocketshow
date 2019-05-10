@@ -21,6 +21,9 @@ public class FixtureCapabilityValue {
         this.type = type;
     }
 
+    public FixtureCapabilityValue() {
+    }
+
     public double getValue() {
         return value;
     }

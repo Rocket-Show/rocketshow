@@ -1,9 +1,6 @@
 package com.ascargon.rocketshow.lighting.designer;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;

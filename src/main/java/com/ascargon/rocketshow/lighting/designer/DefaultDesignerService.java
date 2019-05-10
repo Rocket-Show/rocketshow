@@ -36,9 +36,9 @@ public class DefaultDesignerService implements DesignerService {
     // Live preview
     private boolean previewPreset = false;
     private String selectedPresetUuid;
-    private List<String> selectedScenesUuid;
+    private List<String> selectedSceneUuids = new ArrayList<>();
 
-    private List<LightingUniverse> lightingUniverses;
+    private List<LightingUniverse> lightingUniverses = new ArrayList<>();
 
     private Timer sendUniverseTimer;
 
@@ -162,6 +162,10 @@ public class DefaultDesignerService implements DesignerService {
         // Get relevant presets in correct order to process with their corresponding scene, if available
         List<PresetRegionScene> presets = new ArrayList<>();
 
+        if(project == null) {
+            return presets;
+        }
+
         if (CompositionPlayer.PlayState.PLAYING.equals(compositionPlayer.getPlayState())) {
             // Only use active presets in current regions
             presets = getPresetsInTime(timeMillis);
@@ -174,7 +178,7 @@ public class DefaultDesignerService implements DesignerService {
             } else {
                 // Preview the selected scenes
                 for (int sceneIndex = project.getScenes().length - 1; sceneIndex >= 0; sceneIndex--) {
-                    for (String sceneUuid : selectedScenesUuid) {
+                    for (String sceneUuid : selectedSceneUuids) {
                         if (sceneUuid.equals(project.getScenes()[sceneIndex].getUuid())) {
                             for (int presetIndex = project.getPresets().length - 1; presetIndex >= 0; presetIndex--) {
                                 for (String presetUuid : project.getScenes()[sceneIndex].getPresetUuids()) {
@@ -255,6 +259,10 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     private FixtureTemplate getTemplateByUuid(String uuid) {
+        if(project == null) {
+            return null;
+        }
+
         for (FixtureTemplate fixtureTemplate : project.getFixtureTemplates()) {
             if (fixtureTemplate.getUuid().equals(uuid)) {
                 return fixtureTemplate;
@@ -298,7 +306,7 @@ public class DefaultDesignerService implements DesignerService {
 
     private List<FixtureChannel> getChannelsByFixture(Fixture fixture) {
         FixtureTemplate template = getTemplateByFixture(fixture);
-        FixtureMode mode = this.getModeByFixture(fixture);
+        FixtureMode mode = getModeByFixture(fixture);
         List<FixtureChannel> channels = new ArrayList<>();
 
         if (mode == null) {
@@ -306,7 +314,7 @@ public class DefaultDesignerService implements DesignerService {
         }
 
         for (String modeChannel : mode.getChannels()) {
-            if (modeChannel != null) {
+            if (modeChannel != null && modeChannel.length() > 0) {
                 for (Map.Entry<String, FixtureChannel> entry : template.getAvailableChannels().getAvailableChannels().entrySet()) {
                     if (modeChannel.equals(entry.getKey()) || Arrays.asList(entry.getValue().getFineChannelAliases()).contains(modeChannel)) {
                         channels.add(entry.getValue());
@@ -343,6 +351,10 @@ public class DefaultDesignerService implements DesignerService {
     private Map<String, List<FixtureCapabilityValue>> getFixturePropertyValues(long timeMillis, List<PresetRegionScene> presets) {
         // Loop over all relevant presets and calc the property values from the presets (capabilities and effects)
         HashMap<String, List<FixtureCapabilityValue>> calculatedFixtures = new HashMap<>();
+
+        if(project == null) {
+            return calculatedFixtures;
+        }
 
         for (int i = 0; i < project.getFixtures().length; i++) {
             Fixture fixture = project.getFixtures()[i];
@@ -382,9 +394,9 @@ public class DefaultDesignerService implements DesignerService {
                     double intensityPercentagePreset = 1;
                     double intensityPercentage = 1;
 
-                    if (preset.getRegion() != null && preset.getScene() != null) {
-                        // Fade out is stronger than fade in (if they overlap)
+                    // Fade out is stronger than fade in (if they overlap)
 
+                    if (preset.getRegion() != null && preset.getScene() != null) {
                         // Take away intensity for scene fading
                         if (timeMillis > preset.getRegion().getEndMillis() - preset.getScene().getFadeOutMillis()) {
                             // Scene fades out
@@ -393,12 +405,16 @@ public class DefaultDesignerService implements DesignerService {
                             // Scene fades in
                             intensityPercentageScene = (timeMillis - preset.getRegion().getStartMillis()) / (double) preset.getScene().getFadeInMillis();
                         }
+                    }
 
+                    if (preset.getRegion() != null && preset.getPreset() != null) {
                         // Take away intensity for preset fading
-                        if (timeMillis > preset.getRegion().getStartMillis() + preset.getPreset().getEndMillis() - preset.getPreset().getFadeOutMillis()) {
+                        if (preset.getPreset().getEndMillis() != null && timeMillis > preset.getRegion().getStartMillis() + preset.getPreset().getEndMillis() - preset.getPreset().getFadeOutMillis()) {
                             // Preset fades out
                             intensityPercentagePreset = (preset.getRegion().getStartMillis() + preset.getPreset().getEndMillis() - timeMillis) / (double) preset.getPreset().getFadeOutMillis();
-                        } else if (timeMillis < preset.getRegion().getStartMillis() + preset.getPreset().getStartMillis() + preset.getPreset().getFadeInMillis()) {
+                        }
+
+                        if (preset.getPreset().getStartMillis() != null && timeMillis < preset.getRegion().getStartMillis() + preset.getPreset().getStartMillis() + preset.getPreset().getFadeInMillis()) {
                             // Preset fades in
                             intensityPercentagePreset = (timeMillis - preset.getRegion().getStartMillis() + preset.getPreset().getStartMillis()) / (double) preset.getPreset().getFadeInMillis();
                         }
@@ -512,12 +528,8 @@ public class DefaultDesignerService implements DesignerService {
         Map<String, List<FixtureCapabilityValue>> calculatedFixtures = getFixturePropertyValues(timeMillis, presets);
         // TODO make the dimmer value adjustable and fall back to the project settings
         setUniverseValues(calculatedFixtures, 1);
-    }
 
-    private void sendUniverse() {
-        // Calculate and send the current state
-        calculateUniverse(getCurrentPositionMillis());
-        lightingService.sendExternalSync();
+        logger.info(lightingUniverses.get(0).getUniverse().toString());
     }
 
     private void startTimer() {
@@ -537,13 +549,15 @@ public class DefaultDesignerService implements DesignerService {
 //                        logger.error("Could not automatically stop the composition from the designer project", e);
 //                    }
 //                } else {
-                sendUniverse();
+                // Calculate and send the current state
+                calculateUniverse(getCurrentPositionMillis());
+                lightingService.sendExternalSync();
 //                }
             }
         };
 
         sendUniverseTimer = new Timer();
-        sendUniverseTimer.schedule(timerTask, 1000 / settingsService.getSettings().getDesignerFrequencyHertz());
+        sendUniverseTimer.schedule(timerTask, 0, 1000 / settingsService.getSettings().getDesignerFrequencyHertz());
     }
 
     private void stopTimer() {
@@ -598,13 +612,12 @@ public class DefaultDesignerService implements DesignerService {
 
     @Override
     public void close() {
-        startTimer();
+        stopTimer();
 
         for (LightingUniverse lightingUniverse : lightingUniverses) {
             lightingService.removeLightingUniverse(lightingUniverse);
         }
 
-        lightingUniverses = null;
         project = null;
         pipeline = null;
     }
