@@ -1,6 +1,9 @@
 package com.ascargon.rocketshow.lighting.designer;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A Rocket Show Designer effect.
@@ -10,6 +13,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EffectCurve extends Effect {
 
+    private final static Logger logger = LoggerFactory.getLogger(EffectCurve.class);
+
     private long lengthMillis = 2500;
     private long phaseMillis = 0;
     private int amplitude = 100;
@@ -18,6 +23,7 @@ public class EffectCurve extends Effect {
     private int maxValue = 255;
     private long phasingMillis = 0;
 
+    @Override
     public double getValueAtMillis(long timeMillis, Integer fixtureIndex) {
         // Calculate the offset for phasing
         int phasingIndex = 0;
