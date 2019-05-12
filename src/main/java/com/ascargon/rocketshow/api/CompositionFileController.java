@@ -6,11 +6,14 @@ import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.FilenameUtils;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.List;
 
@@ -57,6 +60,15 @@ public class CompositionFileController {
     public ResponseEntity<Void> saveSettings(@RequestParam("name") String name, @RequestParam("type") String type) {
         compositionFileService.deleteFile(name, type);
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @GetMapping("get")
+    public ResponseEntity<Resource> getFile(@RequestParam("name") String name, @RequestParam("type") String type) throws Exception {
+        InputStreamResource resource = new InputStreamResource(new FileInputStream(compositionFileService.getFile(name, type)));
+
+        return ResponseEntity
+                .ok()
+                .body(resource);
     }
 
 }

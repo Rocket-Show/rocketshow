@@ -6,8 +6,8 @@ import com.ascargon.rocketshow.midi.MidiCompositionFile;
 import com.ascargon.rocketshow.util.FileFilterService;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
 import org.apache.commons.io.FilenameUtils;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -16,7 +16,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 @Service
@@ -85,8 +84,7 @@ public class DefaultCompositionFileService implements CompositionFileService {
         return returnCompositionFileList;
     }
 
-    @Override
-    public void deleteFile(String name, String type) {
+    private String getPath(String name, String type) {
         String path = settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator;
 
         if ("MIDI".equals(type)) {
@@ -98,6 +96,13 @@ public class DefaultCompositionFileService implements CompositionFileService {
         }
 
         path += File.separator + name;
+
+        return path;
+    }
+
+    @Override
+    public void deleteFile(String name, String type) {
+        String path = getPath(name, type);
 
         logger.info("Delete file '" + path + "'");
 
@@ -189,6 +194,12 @@ public class DefaultCompositionFileService implements CompositionFileService {
         logger.info("File " + fileName + " successfully uploaded");
 
         return compositionFile;
+    }
+
+    @Override
+    public File getFile(String name, String type) throws Exception {
+        String path = getPath(name, type);
+        return new File(path);
     }
 
 }

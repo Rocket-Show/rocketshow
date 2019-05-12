@@ -2,6 +2,7 @@ package com.ascargon.rocketshow.composition;
 
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 
@@ -13,5 +14,7 @@ public interface CompositionFileService {
     void deleteFile(String name, String type);
 
     CompositionFile saveFile(InputStream uploadedInputStream, String fileName) throws Exception;
+
+    File getFile(String name, String type) throws Exception;
 
 }
