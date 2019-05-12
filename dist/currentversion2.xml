@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <versionInfo>
-    <version>2.2.0</version>
-    <date>2019-03-30</date>
+    <version>2.1.3</version>
+    <date>2019-05-07</date>
     <changeNoteList>
         <changeNote>
-            <version>2.2.0</version>
-            <changes>Allow uploads up to 10 GB, show correct space left on device. Minor bugfixes.</changes>
+            <version>2.1.2</version>
+            <changes>Disable monitoring by default to avoid performance problems. Minor bugfixes.</changes>
         </changeNote>
         <changeNote>
             <version>2.1.1</version>
