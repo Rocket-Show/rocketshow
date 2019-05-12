@@ -48,6 +48,8 @@ public class DefaultFixtureService implements FixtureService {
         if (fileList != null) {
             for (File file : fileList) {
                 if (file.isFile() && !fileFilterService.filterFile(file.getName())) {
+                    logger.debug("Load fixture " + file.getAbsolutePath());
+
                     ObjectMapper mapper = new ObjectMapper();
                     FixtureTemplate fixtureTemplate = mapper.readValue(file, FixtureTemplate.class);
 

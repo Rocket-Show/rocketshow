@@ -96,7 +96,6 @@ const DROPZONE_CONFIG: DropzoneConfigInterface = {
     RoutingDetailsComponent,
     SettingsSystemComponent,
     WarningDialogComponent,
-    WarningDialogComponent,
     SettingsAdvancedComponent,
     UpdateDialogComponent,
     WaitDialogComponent,

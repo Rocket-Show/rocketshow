@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Observable, of } from 'rxjs';
+import { AppHttpInterceptor } from '../app-http-interceptor/app-http-interceptor';
 
 @Component({
   selector: 'app-designer',
@@ -8,7 +9,9 @@ import { Observable, of } from 'rxjs';
 })
 export class DesignerComponent implements OnInit {
 
-  constructor() { }
+  constructor(
+    public appHttpInterceptor: AppHttpInterceptor
+  ) { }
 
   ngOnInit() {
   }

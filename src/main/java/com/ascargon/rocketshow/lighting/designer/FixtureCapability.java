@@ -53,7 +53,8 @@ public class FixtureCapability {
         Speed,
         Time,
         Maintenance,
-        Generic
+        Generic,
+        Effect
     }
 
     public enum FixtureCapabilityColor {

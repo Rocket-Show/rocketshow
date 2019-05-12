@@ -12,7 +12,7 @@ public class FixtureMode {
 
     private String name;
     private String shortName;
-    private String[] channels;
+    private Object[] channels;
 
     public String getName() {
         return name;
@@ -30,11 +30,11 @@ public class FixtureMode {
         this.shortName = shortName;
     }
 
-    public String[] getChannels() {
+    public Object[] getChannels() {
         return channels;
     }
 
-    public void setChannels(String[] channels) {
+    public void setChannels(Object[] channels) {
         this.channels = channels;
     }
 }

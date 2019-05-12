@@ -28,6 +28,4 @@ public class DesignerController {
         return fixtureService.getFixture(uuid);
     }
 
-
-
 }

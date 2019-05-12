@@ -313,16 +313,21 @@ public class DefaultDesignerService implements DesignerService {
             return channels;
         }
 
-        for (String modeChannel : mode.getChannels()) {
-            if (modeChannel != null && modeChannel.length() > 0) {
-                for (Map.Entry<String, FixtureChannel> entry : template.getAvailableChannels().getAvailableChannels().entrySet()) {
-                    if (modeChannel.equals(entry.getKey()) || Arrays.asList(entry.getValue().getFineChannelAliases()).contains(modeChannel)) {
-                        channels.add(entry.getValue());
+        for (Object channel : mode.getChannels()) {
+            // Check for string channel. It can get creepy for matrix modes
+            if(channel instanceof String) {
+                String modeChannel = (String)channel;
+
+                if (modeChannel != null && modeChannel.length() > 0) {
+                    for (Map.Entry<String, FixtureChannel> entry : template.getAvailableChannels().getAvailableChannels().entrySet()) {
+                        if (modeChannel.equals(entry.getKey()) || Arrays.asList(entry.getValue().getFineChannelAliases()).contains(modeChannel)) {
+                            channels.add(entry.getValue());
+                        }
                     }
+                } else {
+                    // null may be passed as a placeholder for an undefined channel
+                    channels.add(null);
                 }
-            } else {
-                // null may be passed as a placeholder for an undefined channel
-                channels.add(null);
             }
         }
 
