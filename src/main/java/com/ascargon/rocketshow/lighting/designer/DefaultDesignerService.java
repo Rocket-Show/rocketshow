@@ -538,7 +538,7 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     private void startTimer() {
-        if (sendUniverseTimer != null) {
+        if (sendUniverseTimer != null || settingsService.getSettings().getDesignerFrequencyHertz() == null) {
             return;
         }
 

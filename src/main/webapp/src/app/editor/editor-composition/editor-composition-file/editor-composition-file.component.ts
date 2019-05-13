@@ -91,15 +91,15 @@ export class EditorCompositionFileComponent implements OnInit {
       this.diskSpaceUsedGB = Math.round(this.diskSpaceUsedGB * 100) / 100;
       this.diskSpaceAvailableGB = Math.round(this.diskSpaceAvailableGB * 100) / 100;
 
-      if(diskSpace.usedMB != 0) {
+      if (diskSpace.usedMB != 0) {
         this.diskSpacePercentage = Math.round(100 * diskSpace.usedMB / (diskSpace.usedMB + diskSpace.availableMB));
       }
     })).subscribe();
   }
 
   private audioBusListContainsBus(audioBusList: AudioBus[], name: string): boolean {
-    for(let audioBus of audioBusList) {
-      if(audioBus.name == name) {
+    for (let audioBus of audioBusList) {
+      if (audioBus.name == name) {
         return true;
       }
     }
@@ -112,11 +112,11 @@ export class EditorCompositionFileComponent implements OnInit {
       this.settings = result;
 
       // Set the default bus, if the chosen one is not available anymore (e.g. due to changed settings)
-      if(this.file && this.file instanceof CompositionAudioFile) {
+      if (this.file && this.file instanceof CompositionAudioFile) {
         let compositionAudioFile = <CompositionAudioFile>this.file;
 
-        if(compositionAudioFile.outputBus && this.settings && this.settings.audioBusList) {
-          if(!this.audioBusListContainsBus(this.settings.audioBusList, compositionAudioFile.outputBus)) {
+        if (compositionAudioFile.outputBus && this.settings && this.settings.audioBusList) {
+          if (!this.audioBusListContainsBus(this.settings.audioBusList, compositionAudioFile.outputBus)) {
             compositionAudioFile.outputBus = this.settings.audioBusList[0].name;
           }
         }
@@ -155,7 +155,7 @@ export class EditorCompositionFileComponent implements OnInit {
     console.log('Upload error', args);
   }
 
-  private setDefaultOutputBus(compositionAudioFile : CompositionAudioFile) {
+  private setDefaultOutputBus(compositionAudioFile: CompositionAudioFile) {
     if (this.settings && this.settings.audioBusList) {
       compositionAudioFile.outputBus = this.settings.audioBusList[0].name;
     }

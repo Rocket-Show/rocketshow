@@ -28,11 +28,13 @@ public class DefaultStateService implements StateService {
         }
 
         if (setService == null) {
-            currentState.setCurrentCompositionIndex(getCompositionIndexWithoutSet(compositionService, playerService.getCompositionName()));
+            if (playerService != null) {
+                currentState.setCurrentCompositionIndex(getCompositionIndexWithoutSet(compositionService, playerService.getCompositionName()));
+            }
         } else {
             currentState.setCurrentCompositionIndex(setService.getCurrentCompositionIndex());
 
-            if (setService.getCurrentSet() == null) {
+            if (setService.getCurrentSet() == null && playerService != null) {
                 currentState.setCurrentCompositionIndex(getCompositionIndexWithoutSet(compositionService, playerService.getCompositionName()));
             } else {
                 currentState.setCurrentSetName(setService.getCurrentSet().getName());

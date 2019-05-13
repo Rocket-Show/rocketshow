@@ -1,5 +1,5 @@
 /* Add the theme */
-@import 'theme.scss';
+@import "theme.scss";
 
 /* Some overrides */
 $enable-rounded: false;
@@ -10,110 +10,124 @@ $theme-colors: (
 ) !default;
 
 /* Add bootstrap */
-@import '../node_modules/bootstrap/scss/bootstrap';
+@import "../node_modules/bootstrap/scss/bootstrap";
 
 /* To vertically center some parts (like the intro wizard) */
-html, body {
-    height: 100%;
+html,
+body {
+  height: 100%;
 }
 
 /* Better spacing for container */
 .container-fluid {
-    padding-bottom: 15px;
+  padding-bottom: 15px;
 }
 
 /* Style the dropzone */
-dropzone.dz-wrapper>.dropzone {
-    overflow: visible !important;
+dropzone.dz-wrapper > .dropzone {
+  overflow: visible !important;
 }
 
 .dz-message {
-    margin: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-height: 150px !important;
-    display: flex !important;
-    background-color: transparent !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 150px !important;
+  display: flex !important;
+  background-color: transparent !important;
 }
 
 .dz-text {
-    margin: auto;
+  margin: auto;
 }
 
 .dz-details {
-    color: white !important;
+  color: white !important;
 }
 
 .dropzone .dz-preview {
-    margin: 0 !important;
-    margin-top: 10px !important;
-    width: 100%;
-    min-height: 0 !important;
+  margin: 0 !important;
+  margin-top: 10px !important;
+  width: 100%;
+  min-height: 0 !important;
 }
 
-dropzone.dz-wrapper>.dropzone .dz-preview .dz-details {
-    padding: 0 !important;
-    padding-left: 3px !important;
-    padding-top: 3px !important;
+dropzone.dz-wrapper > .dropzone .dz-preview .dz-details {
+  padding: 0 !important;
+  padding-left: 3px !important;
+  padding-top: 3px !important;
 }
 
-dropzone.dz-wrapper>.dropzone {
-    color: white !important;
+dropzone.dz-wrapper > .dropzone {
+  color: white !important;
 }
 
 /* Enable a column taking up the left space */
 .flex-grow {
-    flex: 1 0;
+  flex: 1 0;
 }
 
 .text-break-word {
-    word-break: break-word;
+  word-break: break-word;
 }
 
 /* Style the slider for the play component */
 .slider.slider-horizontal {
-    width: 100%;
+  width: 100%;
 }
 
 .slider-horizontal .slider-track {
-    background-image: none;
-    background-color: #e9ecef;
-    box-shadow: none;
-    height: 8px !important;
+  background-image: none;
+  background-color: #e9ecef;
+  box-shadow: none;
+  height: 8px !important;
 }
 
 .slider-selection {
-    background-color: theme-color("primary");
-    background-image: none;
+  background-color: theme-color("primary");
+  background-image: none;
 }
 
 .slider-horizontal .slider-handle {
-    background-color: theme-color("primary");
-    background-image: none;
+  background-color: theme-color("primary");
+  background-image: none;
 
-    border: 1px solid white;
+  border: 1px solid white;
 
-    top: -1px;
+  top: -1px;
 }
 
 /* Style the toasts */
+/* Overwrite some wrong styles from bootstrap */
+.toast {
+  opacity: 1 !important;
+}
+
+.toast-error {
+  background-color: #bd362f !important;
+}
+
+.toast-success {
+  background-color: #51a351 !important;
+}
+
 .toast-container .toast {
-    border-radius: 0;
-    box-shadow: none;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 /* Misc */
 .list-group-item {
-    color: white;
+  color: white;
 }
 
 .list-group .active {
-    background-color: #303030;
-    color: theme-color("primary");
-    border-color: #444;
+  background-color: #303030;
+  color: theme-color("primary");
+  border-color: #444;
 }
 
 .main-list .active {
-    border-left: 10px solid #fd7e14;
-    padding-left: 11px;
+  border-left: 10px solid #fd7e14;
+  padding-left: 11px;
 }

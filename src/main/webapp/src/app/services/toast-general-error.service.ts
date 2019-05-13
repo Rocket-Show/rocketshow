@@ -1,8 +1,8 @@
-import { Observable } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
 import { TranslateService } from '@ngx-translate/core';
 import { Injectable } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
+import { throwError } from 'rxjs';
 
 @Injectable()
 export class ToastGeneralErrorService {
@@ -36,7 +36,7 @@ export class ToastGeneralErrorService {
 
     this.showMessage(message);
 
-    return Observable.throw(error);
+    return throwError(error);
   }
 
 }
