@@ -239,6 +239,7 @@ public class DefaultDesignerService implements DesignerService {
     // Get the fixture index inside the passed preset (used for chasing)
     private Integer getFixtureIndex(Preset preset, String fixtureUuid) {
         int index = 0;
+        List<Integer> countedDmxChannels = new ArrayList<>();
 
         // Loop over the global fixtures to retain the order
         for (Fixture fixture : project.getFixtures()) {
@@ -248,7 +249,11 @@ public class DefaultDesignerService implements DesignerService {
                         return index;
                     }
 
-                    index++;
+                    // don't count fixtures on the same channel as already counted ones
+                    if (!countedDmxChannels.contains(fixture.getDmxFirstChannel())) {
+                        countedDmxChannels.add(fixture.getDmxFirstChannel());
+                        index++;
+                    }
                     break;
                 }
             }
@@ -280,8 +285,14 @@ public class DefaultDesignerService implements DesignerService {
         FixtureTemplate template = this.getTemplateByFixture(fixture);
 
         for (FixtureMode mode : template.getModes()) {
-            if (mode.getShortName().equals(fixture.getModeShortName())) {
-                return mode;
+            if (mode.getShortName() != null && mode.getShortName().length() > 0) {
+                if(mode.getShortName().equals(fixture.getModeShortName())) {
+                    return mode;
+                }
+            } else {
+                if(mode.getName().equals(fixture.getModeShortName())) {
+                    return mode;
+                }
             }
         }
 

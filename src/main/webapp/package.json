@@ -38,7 +38,7 @@
     "ngx-toastr": "^8.10.2",
     "ngx-translate-multi-http-loader": "^3.0.0",
     "rxjs": "^6.2.2",
-    "sortablejs": "^1.7.0",
+    "sortablejs": "^1.9.0",
     "split.js": "^1.5.10",
     "tether": "^1.4.4",
     "three": "^0.104.0",
