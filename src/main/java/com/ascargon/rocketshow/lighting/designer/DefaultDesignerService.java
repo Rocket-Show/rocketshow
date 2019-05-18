@@ -162,7 +162,7 @@ public class DefaultDesignerService implements DesignerService {
         // Get relevant presets in correct order to process with their corresponding scene, if available
         List<PresetRegionScene> presets = new ArrayList<>();
 
-        if(project == null) {
+        if (project == null) {
             return presets;
         }
 
@@ -243,8 +243,8 @@ public class DefaultDesignerService implements DesignerService {
 
         // Loop over the global fixtures to retain the order
         for (Fixture fixture : project.getFixtures()) {
-            for (Fixture presetFixture : preset.getFixtures()) {
-                if (presetFixture.getUuid().equals(fixture.getUuid())) {
+            for (String presetFixtureUuid : preset.getFixtureUuids()) {
+                if (presetFixtureUuid.equals(fixture.getUuid())) {
                     if (fixture.getUuid().equals(fixtureUuid)) {
                         return index;
                     }
@@ -264,7 +264,7 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     private FixtureTemplate getTemplateByUuid(String uuid) {
-        if(project == null) {
+        if (project == null) {
             return null;
         }
 
@@ -286,11 +286,11 @@ public class DefaultDesignerService implements DesignerService {
 
         for (FixtureMode mode : template.getModes()) {
             if (mode.getShortName() != null && mode.getShortName().length() > 0) {
-                if(mode.getShortName().equals(fixture.getModeShortName())) {
+                if (mode.getShortName().equals(fixture.getModeShortName())) {
                     return mode;
                 }
             } else {
-                if(mode.getName().equals(fixture.getModeShortName())) {
+                if (mode.getName().equals(fixture.getModeShortName())) {
                     return mode;
                 }
             }
@@ -315,10 +315,10 @@ public class DefaultDesignerService implements DesignerService {
         return null;
     }
 
-    private List<FixtureChannel> getChannelsByFixture(Fixture fixture) {
+    private List<FixtureChannelFineIndex> getChannelsByFixture(Fixture fixture) {
         FixtureTemplate template = getTemplateByFixture(fixture);
         FixtureMode mode = getModeByFixture(fixture);
-        List<FixtureChannel> channels = new ArrayList<>();
+        List<FixtureChannelFineIndex> channels = new ArrayList<>();
 
         if (mode == null) {
             return channels;
@@ -326,19 +326,25 @@ public class DefaultDesignerService implements DesignerService {
 
         for (Object channel : mode.getChannels()) {
             // Check for string channel. It can get creepy for matrix modes
-            if(channel instanceof String) {
-                String modeChannel = (String)channel;
+            if (channel instanceof String) {
+                String modeString = (String) channel;
 
-                if (modeChannel != null && modeChannel.length() > 0) {
-                    for (Map.Entry<String, FixtureChannel> entry : template.getAvailableChannels().getAvailableChannels().entrySet()) {
-                        if (modeChannel.equals(entry.getKey()) || Arrays.asList(entry.getValue().getFineChannelAliases()).contains(modeChannel)) {
-                            channels.add(entry.getValue());
+                for (Map.Entry<String, FixtureChannel> entry : template.getAvailableChannels().getAvailableChannels().entrySet()) {
+                    if (modeString.equals(entry.getKey()) || Arrays.asList(entry.getValue().getFineChannelAliases()).contains(modeString)) {
+                        // count the fine channel values for this channel in the current mode
+                        int fineChannels = 0;
+                        for (Object modeChannel : mode.getChannels()) {
+                            if (Arrays.asList(entry.getValue().getFineChannelAliases()).contains(modeChannel)) {
+                                fineChannels++;
+                            }
                         }
+
+                        channels.add(new FixtureChannelFineIndex(entry.getValue(), fineChannels, Arrays.asList(entry.getValue().getFineChannelAliases()).indexOf(modeString)));
                     }
-                } else {
-                    // null may be passed as a placeholder for an undefined channel
-                    channels.add(null);
                 }
+            } else {
+                // null may be passed as a placeholder for an undefined channel
+                channels.add(new FixtureChannelFineIndex());
             }
         }
 
@@ -368,23 +374,25 @@ public class DefaultDesignerService implements DesignerService {
         // Loop over all relevant presets and calc the property values from the presets (capabilities and effects)
         HashMap<String, List<FixtureCapabilityValue>> calculatedFixtures = new HashMap<>();
 
-        if(project == null) {
+        if (project == null) {
             return calculatedFixtures;
         }
 
         for (int i = 0; i < project.getFixtures().length; i++) {
             Fixture fixture = project.getFixtures()[i];
 
-            // All capabilities of the current fixture
+            // all capabilities of the current fixture
             List<FixtureCapabilityValue> capabilities = new ArrayList<>();
 
             Fixture alreadyCalculatedFixture = getAlreadyCalculatedFixture(project.getFixtures(), i);
 
             if (alreadyCalculatedFixture == null) {
-                List<FixtureChannel> channels = getChannelsByFixture(fixture);
+                List<FixtureChannelFineIndex> channelFineIndices = getChannelsByFixture(fixture);
 
                 // Apply the fixture default channels
-                for (FixtureChannel channel : channels) {
+                for (FixtureChannelFineIndex channelFineIndex : channelFineIndices) {
+                    FixtureChannel channel = channelFineIndex.getFixtureChannel();
+
                     if (channel != null && channel.getDefaultValue() != null) {
                         FixtureCapability.FixtureCapabilityType type = channel.getCapability().getType();
                         double value;
@@ -395,7 +403,8 @@ public class DefaultDesignerService implements DesignerService {
                             value = 255 / 100d * percentage;
                         } else {
                             // DMX value
-                            value = Double.parseDouble(channel.getDefaultValue());
+                            double maxValue = Math.pow(256, 1 + channel.getFineChannelAliases().length) - 1;
+                            value = Double.parseDouble(channel.getDefaultValue()) / maxValue * 255;
                         }
 
                         this.mixCapabilityValue(capabilities, new FixtureCapabilityValue(value, type, channel.getCapability().getColor()), 1);
@@ -446,7 +455,9 @@ public class DefaultDesignerService implements DesignerService {
                         // This fixture is also in the preset
 
                         // Match all capability values in this preset with the fixture capabilities
-                        for (FixtureChannel channel : channels) {
+                        for (FixtureChannelFineIndex channelFineIndex : channelFineIndices) {
+                            FixtureChannel channel = channelFineIndex.getFixtureChannel();
+
                             for (FixtureCapabilityValue presetCapability : preset.getPreset().getCapabilityValues()) {
                                 if (channel != null && channel.getCapability().getType() == presetCapability.getType()) {
                                     this.mixCapabilityValue(capabilities, presetCapability, intensityPercentage);
@@ -482,10 +493,14 @@ public class DefaultDesignerService implements DesignerService {
                                 }
                             }
 
-                            for (FixtureChannel channel : channels) {
-                                for (FixtureCapabilityValue effectCapability : effectCapabilityValues) {
-                                    if (channel.getCapability().getType() == effectCapability.getType()) {
-                                        this.mixCapabilityValue(capabilities, effectCapability, intensityPercentage);
+                            for (FixtureChannelFineIndex channelFineIndex : channelFineIndices) {
+                                FixtureChannel channel = channelFineIndex.getFixtureChannel();
+
+                                if(channel != null) {
+                                    for (FixtureCapabilityValue effectCapability : effectCapabilityValues) {
+                                        if (channel.getCapability().getType() == effectCapability.getType()) {
+                                            this.mixCapabilityValue(capabilities, effectCapability, intensityPercentage);
+                                        }
                                     }
                                 }
                             }
@@ -499,6 +514,24 @@ public class DefaultDesignerService implements DesignerService {
         }
 
         return calculatedFixtures;
+    }
+
+    private int getDmxValue(double value, int fineValueCount, int fineIndex) {
+        // return the rounded dmx value in the specified fineness
+        if (fineIndex >= 0) {
+            // a finer value is requested. calculate it by substracting the value
+            // which has been returned on the current level.
+            return this.getDmxValue((value - Math.floor(value)) * 255, fineValueCount - 1, fineIndex - 1);
+        } else {
+            // we reached the required fineness of the value
+            if (fineValueCount > fineIndex + 1) {
+                // there are finer values still available -> floor the current value
+                return (int) Math.floor(value);
+            } else {
+                // there are no finer values available -> round it
+                return (int) Math.round(value);
+            }
+        }
     }
 
     private void setUniverseValues(Map<String, List<FixtureCapabilityValue>> values, double masterDimmerValue) {
@@ -518,17 +551,17 @@ public class DefaultDesignerService implements DesignerService {
             LightingUniverse universe = lightingUniverses.get(0);
 
             FixtureTemplate template = getTemplateByUuid(fixture.getFixtureTemplateUuid());
-            List<FixtureChannel> channels = getChannelsByFixture(fixture);
+            List<FixtureChannelFineIndex> channelFineIndices = getChannelsByFixture(fixture);
 
-            for (int channelIndex = 0; channelIndex < channels.size(); channelIndex++) {
-                FixtureChannel channel = channels.get(channelIndex);
+            for (int channelIndex = 0; channelIndex < channelFineIndices.size(); channelIndex++) {
+                FixtureChannel channel = channelFineIndices.get(channelIndex).getFixtureChannel();
 
                 for (FixtureCapabilityValue capability : capabilities) {
                     if (channel != null && channel.getCapability().getType() == capability.getType()) {
                         int universeChannel = fixture.getDmxFirstChannel() + channelIndex;
-                        double value = capability.getValue();
+                        int value = getDmxValue(capability.getValue(), channelFineIndices.get(channelIndex).getFineValueCount(), channelFineIndices.get(channelIndex).getFineIndex());
 
-                        universe.getUniverse().put(universeChannel, (int)Math.round(value));
+                        universe.getUniverse().put(universeChannel, value);
 
                         // TODO Set the fine properties, if available
 

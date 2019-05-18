@@ -16,7 +16,7 @@ public class Preset {
     private String name;
 
     // all related fixtures
-    private Fixture[] fixtures;
+    private String[] fixtureUuids;
 
     // all properties. Also add the fine properties (16-bit values), if calculated.
     // The fixtures will pick up the corresponding values, if available.
@@ -50,12 +50,12 @@ public class Preset {
         this.name = name;
     }
 
-    public Fixture[] getFixtures() {
-        return fixtures;
+    public String[] getFixtureUuids() {
+        return fixtureUuids;
     }
 
-    public void setFixtures(Fixture[] fixtures) {
-        this.fixtures = fixtures;
+    public void setFixtureUuids(String[] fixtureUuids) {
+        this.fixtureUuids = fixtureUuids;
     }
 
     public FixtureCapabilityValue[] getCapabilityValues() {
