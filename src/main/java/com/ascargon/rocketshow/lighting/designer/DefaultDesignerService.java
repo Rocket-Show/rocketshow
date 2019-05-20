@@ -339,7 +339,7 @@ public class DefaultDesignerService implements DesignerService {
                             }
                         }
 
-                        channels.add(new FixtureChannelFineIndex(entry.getValue(), fineChannels, Arrays.asList(entry.getValue().getFineChannelAliases()).indexOf(modeString)));
+                        channels.add(new FixtureChannelFineIndex(entry.getValue(), entry.getKey(), fineChannels, Arrays.asList(entry.getValue().getFineChannelAliases()).indexOf(modeString)));
                     }
                 }
             } else {
