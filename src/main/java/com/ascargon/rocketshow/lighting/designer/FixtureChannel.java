@@ -13,6 +13,7 @@ public class FixtureChannel {
     private String[] fineChannelAliases;
     private String defaultValue;
     private FixtureCapability capability;
+    private FixtureCapability[] capabilities;
     private String dmxValueResolution;
 
     public String[] getFineChannelAliases() {
@@ -37,6 +38,14 @@ public class FixtureChannel {
 
     public void setCapability(FixtureCapability capability) {
         this.capability = capability;
+    }
+
+    public FixtureCapability[] getCapabilities() {
+        return capabilities;
+    }
+
+    public void setCapabilities(FixtureCapability[] capabilities) {
+        this.capabilities = capabilities;
     }
 
     public String getDmxValueResolution() {

@@ -370,6 +370,30 @@ public class DefaultDesignerService implements DesignerService {
         }
     }
 
+    private List<FixtureCapability> getCapabilitiesByChannel(FixtureChannel fixtureChannel)  {
+        List<FixtureCapability> capabilites = new ArrayList<>();
+
+         if (fixtureChannel.getCapabilities() != null) {
+           capabilites.add(fixtureChannel.getCapability());
+         } else if (fixtureChannel.getCapabilities() != null) {
+           capabilites.addAll(Arrays.asList(fixtureChannel.getCapabilities()));
+         }
+
+        return capabilites;
+    }
+
+    private boolean channelHasCapabilityType(FixtureChannel fixtureChannel, FixtureCapability.FixtureCapabilityType fixtureCapabilityType) {
+        List<FixtureCapability> capabilites = getCapabilitiesByChannel(fixtureChannel);
+
+        for (FixtureCapability capability : capabilites) {
+            if (capability.getType().equals(fixtureCapabilityType)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private Map<String, List<FixtureCapabilityValue>> getFixturePropertyValues(long timeMillis, List<PresetRegionScene> presets) {
         // Loop over all relevant presets and calc the property values from the presets (capabilities and effects)
         HashMap<String, List<FixtureCapabilityValue>> calculatedFixtures = new HashMap<>();
@@ -389,7 +413,7 @@ public class DefaultDesignerService implements DesignerService {
             if (alreadyCalculatedFixture == null) {
                 List<FixtureChannelFineIndex> channelFineIndices = getChannelsByFixture(fixture);
 
-                // Apply the fixture default channels
+                // apply the fixture default channels
                 for (FixtureChannelFineIndex channelFineIndex : channelFineIndices) {
                     FixtureChannel channel = channelFineIndex.getFixtureChannel();
 
@@ -398,7 +422,7 @@ public class DefaultDesignerService implements DesignerService {
                         double value;
 
                         if (!isNumeric(channel.getDefaultValue()) && channel.getDefaultValue().endsWith("%")) {
-                            // Percentage value
+                            // percentage value
                             double percentage = Integer.parseInt(channel.getDefaultValue().replace("%", ""));
                             value = 255 / 100d * percentage;
                         } else {
@@ -452,9 +476,9 @@ public class DefaultDesignerService implements DesignerService {
                     Integer fixtureIndex = getFixtureIndex(preset.getPreset(), fixture.getUuid());
 
                     if (fixtureIndex != null && fixtureIndex >= 0) {
-                        // This fixture is also in the preset
+                        // this fixture is also in the preset
 
-                        // Match all capability values in this preset with the fixture capabilities
+                        // match all capability values in this preset with the fixture capabilities
                         for (FixtureChannelFineIndex channelFineIndex : channelFineIndices) {
                             FixtureChannel channel = channelFineIndex.getFixtureChannel();
 
