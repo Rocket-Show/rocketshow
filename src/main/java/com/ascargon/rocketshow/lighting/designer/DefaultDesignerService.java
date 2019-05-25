@@ -299,6 +299,10 @@ public class DefaultDesignerService implements DesignerService {
         return null;
     }
 
+    private double getMaxValueByChannel(FixtureChannel fixtureChannel) {
+        return Math.pow(256, 1 + fixtureChannel.getFineChannelAliases().length) - 1;
+    }
+
     private Fixture getAlreadyCalculatedFixture(Fixture[] fixtures, int fixtureIndex) {
         // Has this fixture already been calculated (same universe and dmx start address as a fixture before)
         // --> return it
@@ -315,14 +319,8 @@ public class DefaultDesignerService implements DesignerService {
         return null;
     }
 
-    private List<FixtureChannelFineIndex> getChannelsByFixture(Fixture fixture) {
-        FixtureTemplate template = getTemplateByFixture(fixture);
-        FixtureMode mode = getModeByFixture(fixture);
+    private List<FixtureChannelFineIndex> getChannelsByTemplateMode(FixtureTemplate template, FixtureMode mode) {
         List<FixtureChannelFineIndex> channels = new ArrayList<>();
-
-        if (mode == null) {
-            return channels;
-        }
 
         for (Object channel : mode.getChannels()) {
             // Check for string channel. It can get creepy for matrix modes
@@ -351,6 +349,17 @@ public class DefaultDesignerService implements DesignerService {
         return channels;
     }
 
+    private List<FixtureChannelFineIndex> getChannelsByFixture(Fixture fixture) {
+        FixtureTemplate template = getTemplateByFixture(fixture);
+        FixtureMode mode = getModeByFixture(fixture);
+
+        if (mode == null) {
+            return new ArrayList<>();
+        }
+
+        return getChannelsByTemplateMode(template, mode);
+    }
+
     private Fixture getFixtureByUuid(String uuid) {
         for (Fixture fixture : project.getFixtures()) {
             if (fixture.getUuid().equals(uuid)) {
@@ -370,14 +379,14 @@ public class DefaultDesignerService implements DesignerService {
         }
     }
 
-    private List<FixtureCapability> getCapabilitiesByChannel(FixtureChannel fixtureChannel)  {
+    private List<FixtureCapability> getCapabilitiesByChannel(FixtureChannel fixtureChannel) {
         List<FixtureCapability> capabilites = new ArrayList<>();
 
-         if (fixtureChannel.getCapabilities() != null) {
-           capabilites.add(fixtureChannel.getCapability());
-         } else if (fixtureChannel.getCapabilities() != null) {
-           capabilites.addAll(Arrays.asList(fixtureChannel.getCapabilities()));
-         }
+        if (fixtureChannel.getCapabilities() != null) {
+            capabilites.add(fixtureChannel.getCapability());
+        } else if (fixtureChannel.getCapabilities() != null) {
+            capabilites.addAll(Arrays.asList(fixtureChannel.getCapabilities()));
+        }
 
         return capabilites;
     }
@@ -520,7 +529,7 @@ public class DefaultDesignerService implements DesignerService {
                             for (FixtureChannelFineIndex channelFineIndex : channelFineIndices) {
                                 FixtureChannel channel = channelFineIndex.getFixtureChannel();
 
-                                if(channel != null) {
+                                if (channel != null) {
                                     for (FixtureCapabilityValue effectCapability : effectCapabilityValues) {
                                         if (channel.getCapability().getType() == effectCapability.getType()) {
                                             this.mixCapabilityValue(capabilities, effectCapability, intensityPercentage);

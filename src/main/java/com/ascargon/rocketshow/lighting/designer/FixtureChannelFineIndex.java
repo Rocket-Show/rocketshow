@@ -33,6 +33,14 @@ public class FixtureChannelFineIndex {
         this.fixtureChannel = fixtureChannel;
     }
 
+    public String getChannelName() {
+        return channelName;
+    }
+
+    public void setChannelName(String channelName) {
+        this.channelName = channelName;
+    }
+
     public int getFineValueCount() {
         return fineValueCount;
     }
