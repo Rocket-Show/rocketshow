@@ -198,22 +198,17 @@ public class DefaultDesignerService implements DesignerService {
         return presets;
     }
 
-    private boolean capabilityValuesEqual(FixtureCapabilityValue capability1, FixtureCapabilityValue capbability2) {
-        return capability1.getType() == capbability2.getType()
-                && (capability1.getColor() == null || capbability2.getColor() == capability1.getColor());
-    }
-
-    private void mixCapabilityValue(List<FixtureCapabilityValue> existingCapabilityValues, FixtureCapabilityValue capabilityValue, double intensityPercentage) {
-        double newValue = capabilityValue.getValue();
+    private void mixChannelValue(List<FixtureChannelValue> existingChannelValues, FixtureChannelValue channelValue, double intensityPercentage) {
+        double newValue = channelValue.getValue();
         double existingValue = 0;
 
         if (intensityPercentage < 1) {
             // We need to mix a possibly existing value (or the default value 0) with the new value (fading)
 
             // Get the existant value for this property
-            for (FixtureCapabilityValue existingCapabilityValue : existingCapabilityValues) {
-                if (this.capabilityValuesEqual(existingCapabilityValue, capabilityValue)) {
-                    existingValue = existingCapabilityValue.getValue();
+            for (FixtureChannelValue existingChannelValue : existingChannelValues) {
+                if (existingChannelValue.getChannelName().equals(channelValue.getChannelName()) && existingChannelValue.getFixtureTemplateUuid().equals(channelValue.getFixtureTemplateUuid())) {
+                    existingValue = existingChannelValue.getValue();
                     break;
                 }
             }
@@ -223,17 +218,17 @@ public class DefaultDesignerService implements DesignerService {
         }
 
         // Remove the existant value, if available
-        Iterator<FixtureCapabilityValue> iterator = existingCapabilityValues.iterator();
+        Iterator<FixtureChannelValue> iterator = existingChannelValues.iterator();
         while (iterator.hasNext()) {
-            FixtureCapabilityValue fixtureCapabilityValue = iterator.next();
-            if (this.capabilityValuesEqual(fixtureCapabilityValue, capabilityValue)) {
+            FixtureChannelValue fixtureChannelValue = iterator.next();
+            if (fixtureChannelValue.getChannelName().equals(channelValue.getChannelName()) && fixtureChannelValue.getFixtureTemplateUuid().equals(channelValue.getFixtureTemplateUuid())) {
                 iterator.remove();
                 break;
             }
         }
 
         // Add the new value
-        existingCapabilityValues.add(new FixtureCapabilityValue(newValue, capabilityValue.getType(), capabilityValue.getColor()));
+        existingChannelValues.add(new FixtureChannelValue(channelValue.getChannelName(), channelValue.getFixtureTemplateUuid(), newValue));
     }
 
     // Get the fixture index inside the passed preset (used for chasing)
@@ -303,6 +298,21 @@ public class DefaultDesignerService implements DesignerService {
         return Math.pow(256, 1 + fixtureChannel.getFineChannelAliases().length) - 1;
     }
 
+    private Double getDefaultValueByChannel(FixtureChannel fixtureChannel) {
+        if (fixtureChannel.getDefaultValue() == null) {
+            return null;
+        }
+
+        if (!isNumeric(fixtureChannel.getDefaultValue()) && fixtureChannel.getDefaultValue().endsWith("%")) {
+            // percentage value
+            double percentage = Integer.parseInt(fixtureChannel.getDefaultValue().replace("%", ""));
+            return 255 / 100d * percentage;
+        } else {
+            // DMX value
+            return Double.parseDouble(fixtureChannel.getDefaultValue()) / getMaxValueByChannel(fixtureChannel) * 255;
+        }
+    }
+
     private Fixture getAlreadyCalculatedFixture(Fixture[] fixtures, int fixtureIndex) {
         // Has this fixture already been calculated (same universe and dmx start address as a fixture before)
         // --> return it
@@ -337,7 +347,7 @@ public class DefaultDesignerService implements DesignerService {
                             }
                         }
 
-                        channels.add(new FixtureChannelFineIndex(entry.getValue(), entry.getKey(), fineChannels, Arrays.asList(entry.getValue().getFineChannelAliases()).indexOf(modeString)));
+                        channels.add(new FixtureChannelFineIndex(entry.getValue(), template, entry.getKey(), fineChannels, Arrays.asList(entry.getValue().getFineChannelAliases()).indexOf(modeString)));
                     }
                 }
             } else {
@@ -403,9 +413,10 @@ public class DefaultDesignerService implements DesignerService {
         return false;
     }
 
-    private Map<String, List<FixtureCapabilityValue>> getFixturePropertyValues(long timeMillis, List<PresetRegionScene> presets) {
+    // return all fixture uuids with their corresponding channel values
+    private Map<String, List<FixtureChannelValue>> getChannelValues(long timeMillis, List<PresetRegionScene> presets) {
         // Loop over all relevant presets and calc the property values from the presets (capabilities and effects)
-        HashMap<String, List<FixtureCapabilityValue>> calculatedFixtures = new HashMap<>();
+        HashMap<String, List<FixtureChannelValue>> calculatedFixtures = new HashMap<>();
 
         if (project == null) {
             return calculatedFixtures;
@@ -414,33 +425,24 @@ public class DefaultDesignerService implements DesignerService {
         for (int i = 0; i < project.getFixtures().length; i++) {
             Fixture fixture = project.getFixtures()[i];
 
-            // all capabilities of the current fixture
-            List<FixtureCapabilityValue> capabilities = new ArrayList<>();
+            // all values of the current fixture channels
+            List<FixtureChannelValue> values = new ArrayList<>();
 
             Fixture alreadyCalculatedFixture = getAlreadyCalculatedFixture(project.getFixtures(), i);
 
             if (alreadyCalculatedFixture == null) {
                 List<FixtureChannelFineIndex> channelFineIndices = getChannelsByFixture(fixture);
 
-                // apply the fixture default channels
+                // apply the default channels
                 for (FixtureChannelFineIndex channelFineIndex : channelFineIndices) {
                     FixtureChannel channel = channelFineIndex.getFixtureChannel();
 
                     if (channel != null && channel.getDefaultValue() != null) {
-                        FixtureCapability.FixtureCapabilityType type = channel.getCapability().getType();
-                        double value;
+                        Double defaultValue = getDefaultValueByChannel(channel);
 
-                        if (!isNumeric(channel.getDefaultValue()) && channel.getDefaultValue().endsWith("%")) {
-                            // percentage value
-                            double percentage = Integer.parseInt(channel.getDefaultValue().replace("%", ""));
-                            value = 255 / 100d * percentage;
-                        } else {
-                            // DMX value
-                            double maxValue = Math.pow(256, 1 + channel.getFineChannelAliases().length) - 1;
-                            value = Double.parseDouble(channel.getDefaultValue()) / maxValue * 255;
+                        if (defaultValue != null) {
+                            this.mixChannelValue(values, new FixtureChannelValue(channelFineIndex.getChannelName(), channelFineIndex.getFixtureTemplate().getUuid(), defaultValue), 1);
                         }
-
-                        this.mixCapabilityValue(capabilities, new FixtureCapabilityValue(value, type, channel.getCapability().getColor()), 1);
                     }
                 }
 
@@ -486,64 +488,68 @@ public class DefaultDesignerService implements DesignerService {
 
                     if (fixtureIndex != null && fixtureIndex >= 0) {
                         // this fixture is also in the preset
+                        FixtureTemplate template = getTemplateByFixture(fixture);
 
-                        // match all capability values in this preset with the fixture capabilities
+                        // mix all channel values in this preset with the fixture channel
                         for (FixtureChannelFineIndex channelFineIndex : channelFineIndices) {
                             FixtureChannel channel = channelFineIndex.getFixtureChannel();
 
-                            for (FixtureCapabilityValue presetCapability : preset.getPreset().getCapabilityValues()) {
-                                if (channel != null && channel.getCapability().getType() == presetCapability.getType()) {
-                                    this.mixCapabilityValue(capabilities, presetCapability, intensityPercentage);
-                                }
-                            }
-                        }
-
-                        // Match all effect capabilities of this preset with the fixture capabilities
-                        for (Effect effect : preset.getPreset().getEffects()) {
-                            List<FixtureCapabilityValue> effectCapabilityValues = new ArrayList<>();
-                            double value = effect.getValueAtMillis(timeMillis, fixtureIndex);
-
-                            for (Effect.EffectChannel effectChannel : effect.getEffectChannels()) {
-                                switch (effectChannel) {
-                                    case dimmer:
-                                        effectCapabilityValues.add(new FixtureCapabilityValue(value, FixtureCapability.FixtureCapabilityType.Intensity));
-                                        break;
-                                    case pan:
-                                        effectCapabilityValues.add(new FixtureCapabilityValue(value, FixtureCapability.FixtureCapabilityType.Pan));
-                                        break;
-                                    case tilt:
-                                        effectCapabilityValues.add(new FixtureCapabilityValue(value, FixtureCapability.FixtureCapabilityType.Tilt));
-                                        break;
-                                    case colorRed:
-                                        effectCapabilityValues.add(new FixtureCapabilityValue(value, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.Red));
-                                        break;
-                                    case colorGreen:
-                                        effectCapabilityValues.add(new FixtureCapabilityValue(value, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.Green));
-                                        break;
-                                    case colorBlue:
-                                        effectCapabilityValues.add(new FixtureCapabilityValue(value, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.Blue));
-                                        break;
-                                }
-                            }
-
-                            for (FixtureChannelFineIndex channelFineIndex : channelFineIndices) {
-                                FixtureChannel channel = channelFineIndex.getFixtureChannel();
-
-                                if (channel != null) {
-                                    for (FixtureCapabilityValue effectCapability : effectCapabilityValues) {
-                                        if (channel.getCapability().getType() == effectCapability.getType()) {
-                                            this.mixCapabilityValue(capabilities, effectCapability, intensityPercentage);
-                                        }
+                            if(channel != null) {
+                                for (FixtureChannelValue channelValue : preset.getPreset().getFixtureChannelValues()) {
+                                    if (template.getUuid() == channelValue.getFixtureTemplateUuid() && channelFineIndex.getChannelName() == channelValue.getChannelName()) {
+                                        this.mixChannelValue(values, channelValue, intensityPercentage);
                                     }
                                 }
                             }
                         }
+
+                        // TODO
+                        // Match all effect capabilities of this preset with the fixture capabilities
+//                        for (Effect effect : preset.getPreset().getEffects()) {
+//                            List<FixtureChannelValue> effectChannelValues = new ArrayList<>();
+//                            double value = effect.getValueAtMillis(timeMillis, fixtureIndex);
+//
+//                            for (Effect.EffectChannel effectChannel : effect.getEffectChannels()) {
+//                                switch (effectChannel) {
+//                                    case dimmer:
+//                                        effectChannelValues.add(new FixtureCapabilityValue(value, FixtureCapability.FixtureCapabilityType.Intensity));
+//                                        break;
+//                                    case pan:
+//                                        effectChannelValues.add(new FixtureCapabilityValue(value, FixtureCapability.FixtureCapabilityType.Pan));
+//                                        break;
+//                                    case tilt:
+//                                        effectChannelValues.add(new FixtureCapabilityValue(value, FixtureCapability.FixtureCapabilityType.Tilt));
+//                                        break;
+//                                    case colorRed:
+//                                        effectChannelValues.add(new FixtureCapabilityValue(value, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.Red));
+//                                        break;
+//                                    case colorGreen:
+//                                        effectChannelValues.add(new FixtureCapabilityValue(value, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.Green));
+//                                        break;
+//                                    case colorBlue:
+//                                        effectChannelValues.add(new FixtureCapabilityValue(value, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.Blue));
+//                                        break;
+//                                }
+//                            }
+//
+//                            for (FixtureChannelFineIndex channelFineIndex : channelFineIndices) {
+//                                FixtureChannel channel = channelFineIndex.getFixtureChannel();
+//
+//                                if (channel != null) {
+//                                    for (FixtureChannelValue effectChannelValue : effectChannelValues) {
+//                                        if (channel.getCapability().getType() == effectChannelValue.getType()) {
+//                                            this.mixChannelValue(values, effectChannelValue, intensityPercentage);
+//                                        }
+//                                    }
+//                                }
+//                            }
+//                        }
                     }
                 }
             }
 
             // Store the calculated values for subsequent fixtures on the same DMX address
-            calculatedFixtures.put(fixture.getUuid(), capabilities);
+            calculatedFixtures.put(fixture.getUuid(), values);
         }
 
         return calculatedFixtures;
@@ -567,15 +573,15 @@ public class DefaultDesignerService implements DesignerService {
         }
     }
 
-    private void setUniverseValues(Map<String, List<FixtureCapabilityValue>> values, double masterDimmerValue) {
+    private void setUniverseValues(Map<String, List<FixtureChannelValue>> fixtures, double masterDimmerValue) {
         // Reset all DMX universes
         for (LightingUniverse universe : lightingUniverses) {
             universe.reset();
         }
 
-        for (Map.Entry<String, List<FixtureCapabilityValue>> entry : values.entrySet()) {
+        for (Map.Entry<String, List<FixtureChannelValue>> entry : fixtures.entrySet()) {
             String fixtureUuid = entry.getKey();
-            List<FixtureCapabilityValue> capabilities = entry.getValue();
+            List<FixtureChannelValue> channelValues = entry.getValue();
 
             Fixture fixture = getFixtureByUuid(fixtureUuid);
 
@@ -589,25 +595,26 @@ public class DefaultDesignerService implements DesignerService {
             for (int channelIndex = 0; channelIndex < channelFineIndices.size(); channelIndex++) {
                 FixtureChannel channel = channelFineIndices.get(channelIndex).getFixtureChannel();
 
-                for (FixtureCapabilityValue capability : capabilities) {
-                    if (channel != null && channel.getCapability().getType() == capability.getType()) {
-                        int universeChannel = fixture.getDmxFirstChannel() + channelIndex;
-                        int value = getDmxValue(capability.getValue(), channelFineIndices.get(channelIndex).getFineValueCount(), channelFineIndices.get(channelIndex).getFineIndex());
-
-                        universe.getUniverse().put(universeChannel, value);
-
-                        // TODO Set the fine properties, if available
-
-                        // TODO apply the master dimmer value to dimmer channels
-                    }
-                }
+                // TODO
+//                for (FixtureChannelValue channelValue : channelValues) {
+//                    if (channel != null && channel.getCapability().getType() == capability.getType()) {
+//                        int universeChannel = fixture.getDmxFirstChannel() + channelIndex;
+//                        int value = getDmxValue(capability.getValue(), channelFineIndices.get(channelIndex).getFineValueCount(), channelFineIndices.get(channelIndex).getFineIndex());
+//
+//                        universe.getUniverse().put(universeChannel, value);
+//
+//                        // TODO Set the fine properties, if available
+//
+//                        // TODO apply the master dimmer value to dimmer channels
+//                    }
+//                }
             }
         }
     }
 
     private void calculateUniverse(long timeMillis) {
         List<PresetRegionScene> presets = getPresets(timeMillis);
-        Map<String, List<FixtureCapabilityValue>> calculatedFixtures = getFixturePropertyValues(timeMillis, presets);
+        Map<String, List<FixtureChannelValue>> calculatedFixtures = getChannelValues(timeMillis, presets);
         // TODO make the dimmer value adjustable and fall back to the project settings
         setUniverseValues(calculatedFixtures, 1);
 

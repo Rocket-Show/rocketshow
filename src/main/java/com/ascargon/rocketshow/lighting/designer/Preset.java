@@ -18,9 +18,8 @@ public class Preset {
     // all related fixtures
     private String[] fixtureUuids;
 
-    // all properties. Also add the fine properties (16-bit values), if calculated.
-    // The fixtures will pick up the corresponding values, if available.
-    private FixtureCapabilityValue[] capabilityValues;
+    // all channel values
+    FixtureChannelValue[] fixtureChannelValues;
 
     // all related effects
     private Effect[] effects;
@@ -58,12 +57,12 @@ public class Preset {
         this.fixtureUuids = fixtureUuids;
     }
 
-    public FixtureCapabilityValue[] getCapabilityValues() {
-        return capabilityValues;
+    public FixtureChannelValue[] getFixtureChannelValues() {
+        return fixtureChannelValues;
     }
 
-    public void setCapabilityValues(FixtureCapabilityValue[] capabilityValues) {
-        this.capabilityValues = capabilityValues;
+    public void setFixtureChannelValues(FixtureChannelValue[] fixtureChannelValues) {
+        this.fixtureChannelValues = fixtureChannelValues;
     }
 
     public Effect[] getEffects() {

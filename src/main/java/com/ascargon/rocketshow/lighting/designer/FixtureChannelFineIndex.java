@@ -6,6 +6,9 @@ public class FixtureChannelFineIndex {
     // the corresponding channel
     private FixtureChannel fixtureChannel;
 
+    // the corresponding template
+    private FixtureTemplate fixtureTemplate;
+
     // the name of the channel
     private String channelName;
 
@@ -15,8 +18,9 @@ public class FixtureChannelFineIndex {
     // the fine value of the current channel
     private int fineIndex = -1;
 
-    public FixtureChannelFineIndex(FixtureChannel fixtureChannel, String channelName, int fineValueCount, int fineIndex) {
+    public FixtureChannelFineIndex(FixtureChannel fixtureChannel, FixtureTemplate fixtureTemplate, String channelName, int fineValueCount, int fineIndex) {
         this.fixtureChannel = fixtureChannel;
+        this.fixtureTemplate = fixtureTemplate;
         this.channelName = channelName;
         this.fineValueCount = fineValueCount;
         this.fineIndex = fineIndex;
@@ -39,6 +43,14 @@ public class FixtureChannelFineIndex {
 
     public void setChannelName(String channelName) {
         this.channelName = channelName;
+    }
+
+    public FixtureTemplate getFixtureTemplate() {
+        return fixtureTemplate;
+    }
+
+    public void setFixtureTemplate(FixtureTemplate fixtureTemplate) {
+        this.fixtureTemplate = fixtureTemplate;
     }
 
     public int getFineValueCount() {
