@@ -78,6 +78,9 @@ public class FixtureCapability {
     private FixtureCapabilityType type;
     private FixtureCapabilityColor color;
     private int[] dmxRange;
+    private String brightness;
+    private String brightnessStart;
+    private String brightnessEnd;
 
     public FixtureCapabilityType getType() {
         return type;
@@ -101,5 +104,29 @@ public class FixtureCapability {
 
     public void setDmxRange(int[] dmxRange) {
         this.dmxRange = dmxRange;
+    }
+
+    public String getBrightness() {
+        return brightness;
+    }
+
+    public void setBrightness(String brightness) {
+        this.brightness = brightness;
+    }
+
+    public String getBrightnessStart() {
+        return brightnessStart;
+    }
+
+    public void setBrightnessStart(String brightnessStart) {
+        this.brightnessStart = brightnessStart;
+    }
+
+    public String getBrightnessEnd() {
+        return brightnessEnd;
+    }
+
+    public void setBrightnessEnd(String brightnessEnd) {
+        this.brightnessEnd = brightnessEnd;
     }
 }

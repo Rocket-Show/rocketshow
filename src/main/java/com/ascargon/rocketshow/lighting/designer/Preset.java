@@ -24,6 +24,9 @@ public class Preset {
     // all related effects
     private Effect[] effects;
 
+    // known capabilities
+    private Double dimmer;
+
     // position offset, relative to the scene start
     // (null = start/end of the scene itself)
     private Long startMillis;
@@ -71,6 +74,14 @@ public class Preset {
 
     public void setEffects(Effect[] effects) {
         this.effects = effects;
+    }
+
+    public Double getDimmer() {
+        return dimmer;
+    }
+
+    public void setDimmer(Double dimmer) {
+        this.dimmer = dimmer;
     }
 
     public Long getStartMillis() {

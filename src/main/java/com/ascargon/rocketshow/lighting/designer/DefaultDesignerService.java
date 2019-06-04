@@ -490,11 +490,47 @@ public class DefaultDesignerService implements DesignerService {
                         // this fixture is also in the preset
                         FixtureTemplate template = getTemplateByFixture(fixture);
 
-                        // mix all channel values in this preset with the fixture channel
+                        // mix all preset capabilities with the fixture channel
                         for (FixtureChannelFineIndex channelFineIndex : channelFineIndices) {
                             FixtureChannel channel = channelFineIndex.getFixtureChannel();
 
-                            if(channel != null) {
+                            if (channel != null) {
+                                List<FixtureCapability> capabilities = getCapabilitiesByChannel(channel);
+
+                                // TODO color, strobo, etc.
+
+                                // dimmer
+                                if (preset.getPreset().getDimmer() != null) {
+                                    if (capabilities.size() == 1 && capabilities.get(0).getType() == FixtureCapability.FixtureCapabilityType.Intensity) {
+                                        // the only capability in this channel
+                                        Double value = getMaxValueByChannel(channel) * preset.getPreset().getDimmer();
+                                        FixtureChannelValue channelValue = new FixtureChannelValue(channelFineIndex.getChannelName(), template.getUuid(), value);
+                                        this.mixChannelValue(values, channelValue, intensityPercentage);
+                                    } else {
+                                        // more than one capability in the channel
+                                        for (FixtureCapability capability : capabilities){
+                                            if (capability.getType() == FixtureCapability.FixtureCapabilityType.Intensity) {
+                                                if (capability.getBrightness() == "off" && preset.getPreset().getDimmer() == 0) {
+                                                    FixtureChannelValue channelValue = new FixtureChannelValue(channelFineIndex.getChannelName(), template.getUuid(), Double.valueOf(capability.getDmxRange()[0]));
+                                                    this.mixChannelValue(values, channelValue, intensityPercentage);
+                                                } else if ((capability.getBrightnessStart() == "dark" || capability.getBrightnessStart() == "off") && capability.getBrightnessEnd() == "bright") {
+                                                    Double value = (capability.getDmxRange()[1] - capability.getDmxRange()[0]) * preset.getPreset().getDimmer() + capability.getDmxRange()[0];
+                                                    FixtureChannelValue channelValue = new FixtureChannelValue(channelFineIndex.getChannelName(), template.getUuid(), value);
+                                                    this.mixChannelValue(values, channelValue, intensityPercentage);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // mix all channel values in this preset with the fixture channel
+                        // (overwrite the capabilities, if necessary)
+                        for (FixtureChannelFineIndex channelFineIndex : channelFineIndices) {
+                            FixtureChannel channel = channelFineIndex.getFixtureChannel();
+
+                            if (channel != null) {
                                 for (FixtureChannelValue channelValue : preset.getPreset().getFixtureChannelValues()) {
                                     if (template.getUuid() == channelValue.getFixtureTemplateUuid() && channelFineIndex.getChannelName() == channelValue.getChannelName()) {
                                         this.mixChannelValue(values, channelValue, intensityPercentage);
