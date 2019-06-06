@@ -2,8 +2,6 @@ package com.ascargon.rocketshow.lighting.designer;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import java.util.List;
-
 /**
  * A Rocket Show Designer preset.
  *
@@ -18,14 +16,13 @@ public class Preset {
     // all related fixtures
     private String[] fixtureUuids;
 
-    // all channel values
-    FixtureChannelValue[] fixtureChannelValues;
+    // the selected values
+    private FixtureChannelValue[] fixtureChannelValues;
+    private FixtureCapabilityValue[] fixtureCapabilityValues;
+    private FixtureWheelValue[] fixtureWheelValues;
 
     // all related effects
     private Effect[] effects;
-
-    // known capabilities
-    private Double dimmer;
 
     // position offset, relative to the scene start
     // (null = start/end of the scene itself)
@@ -68,20 +65,28 @@ public class Preset {
         this.fixtureChannelValues = fixtureChannelValues;
     }
 
+    public FixtureCapabilityValue[] getFixtureCapabilityValues() {
+        return fixtureCapabilityValues;
+    }
+
+    public void setFixtureCapabilityValues(FixtureCapabilityValue[] fixtureCapabilityValues) {
+        this.fixtureCapabilityValues = fixtureCapabilityValues;
+    }
+
+    public FixtureWheelValue[] getFixtureWheelValues() {
+        return fixtureWheelValues;
+    }
+
+    public void setFixtureWheelValues(FixtureWheelValue[] fixtureWheelValues) {
+        this.fixtureWheelValues = fixtureWheelValues;
+    }
+
     public Effect[] getEffects() {
         return effects;
     }
 
     public void setEffects(Effect[] effects) {
         this.effects = effects;
-    }
-
-    public Double getDimmer() {
-        return dimmer;
-    }
-
-    public void setDimmer(Double dimmer) {
-        this.dimmer = dimmer;
     }
 
     public Long getStartMillis() {

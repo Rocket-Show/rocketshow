@@ -26,6 +26,10 @@ public class FixtureChannelFineIndex {
         this.fineIndex = fineIndex;
     }
 
+    public FixtureChannelFineIndex(FixtureTemplate fixtureTemplate) {
+        this.fixtureTemplate = fixtureTemplate;
+    }
+
     public FixtureChannelFineIndex() {
     }
 

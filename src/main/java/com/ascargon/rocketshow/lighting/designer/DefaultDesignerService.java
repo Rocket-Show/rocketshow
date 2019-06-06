@@ -352,7 +352,7 @@ public class DefaultDesignerService implements DesignerService {
                 }
             } else {
                 // null may be passed as a placeholder for an undefined channel
-                channels.add(new FixtureChannelFineIndex());
+                channels.add(new FixtureChannelFineIndex(template));
             }
         }
 
@@ -411,6 +411,25 @@ public class DefaultDesignerService implements DesignerService {
         }
 
         return false;
+    }
+
+    private boolean capabilityValueMatches(FixtureCapabilityValue capabilityValue, FixtureCapability.FixtureCapabilityType capabilityType, FixtureCapability.FixtureCapabilityColor color) {
+        if (capabilityValue.getType() == capabilityType
+                && (color == null || capabilityValue.getColor() == color)) {
+            return true;
+        }
+        return false;
+    }
+
+    private Double getCapabilityValue(Preset preset, FixtureCapability.FixtureCapabilityType capabilityType, FixtureCapability.FixtureCapabilityColor color) {
+        for (FixtureCapabilityValue capabilityValue : preset.getFixtureCapabilityValues()) {
+            if (capabilityValueMatches(capabilityValue,
+                    capabilityType,
+                    color)) {
+                return capabilityValue.getValuePercentage();
+            }
+        }
+        return null;
     }
 
     // return all fixture uuids with their corresponding channel values
@@ -500,21 +519,22 @@ public class DefaultDesignerService implements DesignerService {
                                 // TODO color, strobo, etc.
 
                                 // dimmer
-                                if (preset.getPreset().getDimmer() != null) {
+                                Double dimmer = getCapabilityValue(preset.getPreset(), FixtureCapability.FixtureCapabilityType.Intensity, null);
+                                if (dimmer != null) {
                                     if (capabilities.size() == 1 && capabilities.get(0).getType() == FixtureCapability.FixtureCapabilityType.Intensity) {
                                         // the only capability in this channel
-                                        Double value = getMaxValueByChannel(channel) * preset.getPreset().getDimmer();
+                                        Double value = getMaxValueByChannel(channel) * dimmer;
                                         FixtureChannelValue channelValue = new FixtureChannelValue(channelFineIndex.getChannelName(), template.getUuid(), value);
                                         this.mixChannelValue(values, channelValue, intensityPercentage);
                                     } else {
                                         // more than one capability in the channel
                                         for (FixtureCapability capability : capabilities){
                                             if (capability.getType() == FixtureCapability.FixtureCapabilityType.Intensity) {
-                                                if (capability.getBrightness() == "off" && preset.getPreset().getDimmer() == 0) {
+                                                if (capability.getBrightness() == "off" && dimmer == 0) {
                                                     FixtureChannelValue channelValue = new FixtureChannelValue(channelFineIndex.getChannelName(), template.getUuid(), Double.valueOf(capability.getDmxRange()[0]));
                                                     this.mixChannelValue(values, channelValue, intensityPercentage);
                                                 } else if ((capability.getBrightnessStart() == "dark" || capability.getBrightnessStart() == "off") && capability.getBrightnessEnd() == "bright") {
-                                                    Double value = (capability.getDmxRange()[1] - capability.getDmxRange()[0]) * preset.getPreset().getDimmer() + capability.getDmxRange()[0];
+                                                    Double value = (capability.getDmxRange()[1] - capability.getDmxRange()[0]) * dimmer + capability.getDmxRange()[0];
                                                     FixtureChannelValue channelValue = new FixtureChannelValue(channelFineIndex.getChannelName(), template.getUuid(), value);
                                                     this.mixChannelValue(values, channelValue, intensityPercentage);
                                                 }

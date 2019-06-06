@@ -2,34 +2,20 @@ package com.ascargon.rocketshow.lighting.designer;
 
 public class FixtureCapabilityValue {
 
-    // DMX value between 0 and 255
-    private double value;
-
+    // value between 0 and 1
+    private double valuePercentage;
     private FixtureCapability.FixtureCapabilityType type;
     private FixtureCapability.FixtureCapabilityColor color;
-
-    public FixtureCapabilityValue(double value, FixtureCapability.FixtureCapabilityType type, FixtureCapability.FixtureCapabilityColor color) {
-        this.value = value;
-
-        this.type = type;
-        this.color = color;
-    }
-
-    public FixtureCapabilityValue(double value, FixtureCapability.FixtureCapabilityType type) {
-        this.value = value;
-
-        this.type = type;
-    }
 
     public FixtureCapabilityValue() {
     }
 
-    public double getValue() {
-        return value;
+    public double getValuePercentage() {
+        return valuePercentage;
     }
 
-    public void setValue(double value) {
-        this.value = value;
+    public void setValuePercentage(double valuePercentage) {
+        this.valuePercentage = valuePercentage;
     }
 
     public FixtureCapability.FixtureCapabilityType getType() {
