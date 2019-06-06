@@ -509,14 +509,12 @@ public class DefaultDesignerService implements DesignerService {
                         // this fixture is also in the preset
                         FixtureTemplate template = getTemplateByFixture(fixture);
 
-                        // mix all preset capabilities with the fixture channel
+                        // mix all preset capability values
                         for (FixtureChannelFineIndex channelFineIndex : channelFineIndices) {
                             FixtureChannel channel = channelFineIndex.getFixtureChannel();
 
                             if (channel != null) {
                                 List<FixtureCapability> capabilities = getCapabilitiesByChannel(channel);
-
-                                // TODO color, strobo, etc.
 
                                 // dimmer
                                 Double dimmer = getCapabilityValue(preset.getPreset(), FixtureCapability.FixtureCapabilityType.Intensity, null);
@@ -528,7 +526,7 @@ public class DefaultDesignerService implements DesignerService {
                                         this.mixChannelValue(values, channelValue, intensityPercentage);
                                     } else {
                                         // more than one capability in the channel
-                                        for (FixtureCapability capability : capabilities){
+                                        for (FixtureCapability capability : capabilities) {
                                             if (capability.getType() == FixtureCapability.FixtureCapabilityType.Intensity) {
                                                 if (capability.getBrightness() == "off" && dimmer == 0) {
                                                     FixtureChannelValue channelValue = new FixtureChannelValue(channelFineIndex.getChannelName(), template.getUuid(), Double.valueOf(capability.getDmxRange()[0]));
@@ -545,8 +543,19 @@ public class DefaultDesignerService implements DesignerService {
                             }
                         }
 
-                        // mix all channel values in this preset with the fixture channel
-                        // (overwrite the capabilities, if necessary)
+                        // mix all preset wheels
+                        for (FixtureChannelFineIndex channelFineIndex : channelFineIndices) {
+                            FixtureChannel channel = channelFineIndex.getFixtureChannel();
+
+                            if (channel != null) {
+                                // TODO
+
+                                // approximate the color wheel, if a color capability is set or a different color wheel
+                                // this.presetService.getApproximatedColorWheelSlotIndex
+                            }
+                        }
+
+                        // mix all preset channel values (overwrite the capabilities, if necessary)
                         for (FixtureChannelFineIndex channelFineIndex : channelFineIndices) {
                             FixtureChannel channel = channelFineIndex.getFixtureChannel();
 
