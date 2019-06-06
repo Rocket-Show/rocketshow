@@ -673,7 +673,7 @@ public class DefaultDesignerService implements DesignerService {
 
                                         if (presetCapabilityValue.getType() == channelCapability.getType()
                                                 && (presetCapabilityValue.getColor() == null || presetCapabilityValue.getColor() == channelCapability.getColor())
-                                                && (presetCapabilityValue.getWheel() == null || (presetCapabilityValue.getWheel().equals(wheelName) && presetCapabilityValue.getFixtureTemplateUuid() == template.getUuid()))) {
+                                                && (presetCapabilityValue.getWheel() == null || (presetCapabilityValue.getWheel().equals(wheelName) && presetCapabilityValue.getFixtureTemplateUuid().equals(template.getUuid())))) {
 
                                             // the capabilities match -> apply the value, if possible
                                             if (presetCapabilityValue.getValuePercentage() != null && (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Intensity ||
@@ -690,11 +690,10 @@ public class DefaultDesignerService implements DesignerService {
                                                     if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity) {
                                                         hasColor = true;
                                                     }
-
                                                 } else {
                                                     // more than one capability in the channel
                                                     if ("off".equals(channelCapability.getBrightness()) && valuePercentage == 0) {
-                                                        FixtureChannelValue channelValue = new FixtureChannelValue(channelFineIndex.getChannelName(), template.getUuid(), Double.valueOf(channelCapability.getDmxRange()[0]));
+                                                        FixtureChannelValue channelValue = new FixtureChannelValue(channelFineIndex.getChannelName(), template.getUuid(), (double)(channelCapability.getDmxRange()[0]));
                                                         this.mixChannelValue(values, channelValue, intensityPercentage);
 
                                                         if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity) {
@@ -708,6 +707,22 @@ public class DefaultDesignerService implements DesignerService {
                                                         if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity) {
                                                             hasColor = true;
                                                         }
+                                                    }
+                                                }
+                                            } else if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.WheelSlot
+                                                    && channelCapability.getSlotNumber().equals(presetCapabilityValue.slotNumber)) {
+
+                                                // wheel slot (color, gobo, etc.)
+                                                FixtureChannelValue channelValue = new FixtureChannelValue(channelFineIndex.getChannelName(), template.getUuid(), Math.floor(((double) channelCapability.getDmxRange()[0] + (double) channelCapability.getDmxRange()[1]) / 2));
+                                                this.mixChannelValue(values, channelValue, 1);
+
+                                                // check, whether we just set a color wheel value
+                                                FixtureWheel wheel = getWheelByName(template, (channelCapability.getWheel() != null) ? channelCapability.getWheel() : channelFineIndex.getChannelName());
+                                                List<FixtureWheelSlot> wheelSlots = getWheelSlots(wheel, channelCapability.getSlotNumber());
+                                                for (FixtureWheelSlot slot : wheelSlots) {
+                                                    if (slot.getColors().size() > 0) {
+                                                        hasColor = true;
+                                                        break;
                                                     }
                                                 }
                                             }
@@ -737,19 +752,8 @@ public class DefaultDesignerService implements DesignerService {
 
                                         if (capability != null) {
                                             // we found an approximated color in the available wheel channel
-                                            boolean channelSet = false;
-                                            for (FixtureChannelValue channelValue : values) {
-                                                if (channelValue.getChannelName().equals(channelFineIndex.getChannelName()) && channelValue.getFixtureTemplateUuid().equals(template.getUuid())) {
-                                                    // the channel has already been set -> don't overwrite it
-                                                    channelSet = true;
-                                                    break;
-                                                }
-                                            }
-
-                                            if (!channelSet) {
-                                                FixtureChannelValue channelValue = new FixtureChannelValue(channelFineIndex.getChannelName(), template.getUuid(), Math.floor((capability.getDmxRange()[0] + capability.getDmxRange()[1]) / 2));
-                                                this.mixChannelValue(values, channelValue, 1);
-                                            }
+                                            FixtureChannelValue channelValue = new FixtureChannelValue(channelFineIndex.getChannelName(), template.getUuid(), Math.floor((capability.getDmxRange()[0] + capability.getDmxRange()[1]) / 2));
+                                            this.mixChannelValue(values, channelValue, 1);
                                         }
                                     }
                                 }
