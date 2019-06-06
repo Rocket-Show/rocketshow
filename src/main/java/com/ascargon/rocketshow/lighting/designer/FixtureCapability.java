@@ -78,6 +78,8 @@ public class FixtureCapability {
     private FixtureCapabilityType type;
     private FixtureCapabilityColor color;
     private int[] dmxRange;
+    private String wheel;
+    private Integer slotNumber;
     private String brightness;
     private String brightnessStart;
     private String brightnessEnd;
@@ -104,6 +106,22 @@ public class FixtureCapability {
 
     public void setDmxRange(int[] dmxRange) {
         this.dmxRange = dmxRange;
+    }
+
+    public String getWheel() {
+        return wheel;
+    }
+
+    public void setWheel(String wheel) {
+        this.wheel = wheel;
+    }
+
+    public Integer getSlotNumber() {
+        return slotNumber;
+    }
+
+    public void setSlotNumber(Integer slotNumber) {
+        this.slotNumber = slotNumber;
     }
 
     public String getBrightness() {

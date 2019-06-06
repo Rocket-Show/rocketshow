@@ -6,6 +6,9 @@ public class FixtureCapabilityValue {
     private Double valuePercentage;
     private FixtureCapability.FixtureCapabilityType type;
     private FixtureCapability.FixtureCapabilityColor color;
+    Integer slotNumber;
+    String wheel;
+    String fixtureTemplateUuid;
 
     public FixtureCapabilityValue() {
     }
@@ -34,4 +37,27 @@ public class FixtureCapabilityValue {
         this.color = color;
     }
 
+    public Integer getSlotNumber() {
+        return slotNumber;
+    }
+
+    public void setSlotNumber(Integer slotNumber) {
+        this.slotNumber = slotNumber;
+    }
+
+    public String getWheel() {
+        return wheel;
+    }
+
+    public void setWheel(String wheel) {
+        this.wheel = wheel;
+    }
+
+    public String getFixtureTemplateUuid() {
+        return fixtureTemplateUuid;
+    }
+
+    public void setFixtureTemplateUuid(String fixtureTemplateUuid) {
+        this.fixtureTemplateUuid = fixtureTemplateUuid;
+    }
 }

@@ -41,6 +41,7 @@ class FixtureTemplate {
     private List<String> categories;
     @JsonUnwrapped
     private FixtureTemplateAvailableChannels availableChannels;
+    private FixtureTemplateWheels wheels;
     private FixtureMode[] modes;
 
     public String getName() {
@@ -73,6 +74,14 @@ class FixtureTemplate {
 
     public void setAvailableChannels(FixtureTemplateAvailableChannels availableChannels) {
         this.availableChannels = availableChannels;
+    }
+
+    public FixtureTemplateWheels getWheels() {
+        return wheels;
+    }
+
+    public void setWheels(FixtureTemplateWheels wheels) {
+        this.wheels = wheels;
     }
 
     public FixtureMode[] getModes() {

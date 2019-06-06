@@ -19,7 +19,6 @@ public class Preset {
     // the selected values
     private FixtureChannelValue[] fixtureChannelValues;
     private FixtureCapabilityValue[] fixtureCapabilityValues;
-    private FixtureWheelValue[] fixtureWheelValues;
 
     // all related effects
     private Effect[] effects;
@@ -71,14 +70,6 @@ public class Preset {
 
     public void setFixtureCapabilityValues(FixtureCapabilityValue[] fixtureCapabilityValues) {
         this.fixtureCapabilityValues = fixtureCapabilityValues;
-    }
-
-    public FixtureWheelValue[] getFixtureWheelValues() {
-        return fixtureWheelValues;
-    }
-
-    public void setFixtureWheelValues(FixtureWheelValue[] fixtureWheelValues) {
-        this.fixtureWheelValues = fixtureWheelValues;
     }
 
     public Effect[] getEffects() {

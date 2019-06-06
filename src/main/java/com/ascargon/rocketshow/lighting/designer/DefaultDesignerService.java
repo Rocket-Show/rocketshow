@@ -6,6 +6,7 @@ import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.LightingUniverse;
 import com.ascargon.rocketshow.util.FileFilterService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import javafx.beans.property.IntegerProperty;
 import org.freedesktop.gstreamer.Pipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -421,15 +422,164 @@ public class DefaultDesignerService implements DesignerService {
         return false;
     }
 
-    private Double getCapabilityValue(Preset preset, FixtureCapability.FixtureCapabilityType capabilityType, FixtureCapability.FixtureCapabilityColor color) {
+    private FixtureCapabilityValue getCapabilityValue(Preset preset, FixtureCapability.FixtureCapabilityType capabilityType, FixtureCapability.FixtureCapabilityColor color) {
         for (FixtureCapabilityValue capabilityValue : preset.getFixtureCapabilityValues()) {
             if (capabilityValueMatches(capabilityValue,
                     capabilityType,
                     color)) {
-                return capabilityValue.getValuePercentage();
+                return capabilityValue;
             }
         }
         return null;
+    }
+
+    private List<FixtureCapability> getCapabilitiesByChannelName(String channelName, String templateUuid) {
+        FixtureTemplate template = this.getTemplateByUuid(templateUuid);
+
+        for (Map.Entry<String, FixtureChannel> entry : template.getAvailableChannels().getAvailableChannels().entrySet()) {
+            if (entry.getKey().equals(channelName)) {
+                return this.getCapabilitiesByChannel(template.getAvailableChannels().getAvailableChannels().get(entry.getKey()));
+            }
+        }
+
+        return new ArrayList<>();
+    }
+
+    private FixtureWheel getWheelByName(FixtureTemplate template, String wheelName) {
+        for (Map.Entry<String, FixtureWheel> entry : template.getWheels().getWheels().entrySet()) {
+            if (entry.getKey().equals(wheelName)) {
+                return template.getWheels().getWheels().get(entry.getKey());
+            }
+        }
+
+        // wheel not found
+        return null;
+    }
+
+    private List<FixtureWheelSlot> getWheelSlots(FixtureWheel wheel, int slotNumber) {
+        // return one slot or two slots, if they are mixed (e.g. slor number 2.5 returns the slots 2 and 3)
+        List<FixtureWheelSlot> slots = new ArrayList<>();
+
+        if (wheel == null) {
+            return slots;
+        }
+
+        if (slotNumber - Math.floor(slotNumber) > 0) {
+            // two slots are set
+            int number = (int) (Math.floor(slotNumber));
+            slots.add(wheel.getSlots()[number - 1]);
+            if (wheel.getSlots()[number] != null) {
+                slots.add(wheel.getSlots()[number]);
+            }
+        } else {
+            // only one slot is set
+            slots.add(wheel.getSlots()[slotNumber - 1]);
+        }
+
+        return slots;
+    }
+
+    private List<String> getWheelSlotColors(FixtureWheel wheel, int slotNumber) {
+        List<String> colors = new ArrayList<>();
+        List<FixtureWheelSlot> wheelSlots = getWheelSlots(wheel, slotNumber);
+
+        for (FixtureWheelSlot slot : wheelSlots) {
+            if (slot.getColors() != null && slot.getColors().size() > 0) {
+                colors.addAll(slot.getColors());
+            }
+        }
+
+        return colors;
+    }
+
+    private Color hexToRgb(String hex) {
+        return new Color(
+                Double.valueOf(Integer.valueOf(hex.substring(1, 3), 16)),
+                Double.valueOf(Integer.valueOf(hex.substring(3, 5), 16)),
+                Double.valueOf(Integer.valueOf(hex.substring(5, 7), 16)));
+    }
+
+    private Color mixColors(List<Color> colors) {
+        // mix an array of rgb-colors containing r, g, b values to a new color
+        Double r = 0d;
+        Double g = 0d;
+        Double b = 0d;
+
+        for (Color color : colors) {
+            r += color.getRed();
+            g += color.getGreen();
+            b += color.getBlue();
+        }
+
+        r /= colors.size();
+        g /= colors.size();
+        b /= colors.size();
+
+        return new Color(r, g, b);
+    }
+
+    private Color getMixedWheelSlotColor(FixtureWheel wheel, Integer slotNumber) {
+        List<String> colors = getWheelSlotColors(wheel, slotNumber);
+        List<Color> colorsRgb = new ArrayList<>();
+
+        if (colors.size() == 0) {
+            return null;
+        }
+
+        for (String color : colors) {
+            colorsRgb.add(hexToRgb(color));
+        }
+
+        return mixColors(colorsRgb);
+    }
+
+    private FixtureCapability getApproximatedColorWheelCapability(Preset preset, String wheelChannelName, FixtureTemplate fixtureTemplate) {
+        // return an approximated wheel slot channel capability, if a color or a slot on a different
+        // wheel has been selected
+        Double colorRed = null;
+        Double colorGreen = null;
+        Double colorBlue = null;
+        Double lowestDiff = Double.MAX_VALUE;
+        FixtureCapability lowestDiffCapability = null;
+        FixtureCapabilityValue capabilityValue;
+
+        capabilityValue = this.getCapabilityValue(preset, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.Red);
+        if (capabilityValue != null) {
+            colorRed = 255 * capabilityValue.getValuePercentage();
+        }
+        capabilityValue = this.getCapabilityValue(preset, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.Green);
+        if (capabilityValue != null) {
+            colorGreen = 255 * capabilityValue.getValuePercentage();
+        }
+        capabilityValue = this.getCapabilityValue(preset, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.Blue);
+        if (capabilityValue != null) {
+            colorBlue = 255 * capabilityValue.getValuePercentage();
+        }
+
+        if (colorRed == null) {
+            // no color found -> search the first color wheel
+            // TODO
+        }
+
+        if (colorRed != null && colorGreen != null && colorBlue != null) {
+            List<FixtureCapability> capabilities = getCapabilitiesByChannelName(wheelChannelName, fixtureTemplate.getUuid());
+
+            for (FixtureCapability capability : capabilities) {
+                if (capability.getSlotNumber() != null) {
+                    FixtureWheel wheel = getWheelByName(fixtureTemplate, (capability.getWheel() != null) ? capability.getWheel() : wheelChannelName);
+                    Color mixedColor = getMixedWheelSlotColor(wheel, capability.getSlotNumber());
+                    if (mixedColor != null) {
+                        Double diff = Math.abs(mixedColor.getRed() - colorRed) + Math.abs(mixedColor.getGreen() - colorGreen) + Math.abs(mixedColor.getBlue() - colorBlue);
+                        if (diff < lowestDiff) {
+                            lowestDiff = diff;
+                            lowestDiffCapability = capability;
+                        }
+                    }
+                }
+            }
+        }
+
+        return lowestDiffCapability;
     }
 
     // return all fixture uuids with their corresponding channel values
@@ -504,6 +654,7 @@ public class DefaultDesignerService implements DesignerService {
 
                     // Search for this fixture in the preset and get it's preset-specific index (for chasing effects)
                     Integer fixtureIndex = getFixtureIndex(preset.getPreset(), fixture.getUuid());
+                    boolean hasColor = false;
 
                     if (fixtureIndex != null && fixtureIndex >= 0) {
                         // this fixture is also in the preset
@@ -518,8 +669,11 @@ public class DefaultDesignerService implements DesignerService {
 
                                 for (FixtureCapabilityValue presetCapabilityValue : preset.getPreset().getFixtureCapabilityValues()) {
                                     for (FixtureCapability channelCapability : channelCapabilities) {
-                                        if (presetCapabilityValue.getType() == channelCapability.getType() &&
-                                                (presetCapabilityValue.getColor() == null || presetCapabilityValue.getColor() == channelCapability.getColor())) {
+                                        String wheelName = (channelCapability.getWheel() != null) ? channelCapability.getWheel() : channelFineIndex.getChannelName();
+
+                                        if (presetCapabilityValue.getType() == channelCapability.getType()
+                                                && (presetCapabilityValue.getColor() == null || presetCapabilityValue.getColor() == channelCapability.getColor())
+                                                && (presetCapabilityValue.getWheel() == null || (presetCapabilityValue.getWheel().equals(wheelName) && presetCapabilityValue.getFixtureTemplateUuid() == template.getUuid()))) {
 
                                             // the capabilities match -> apply the value, if possible
                                             if (presetCapabilityValue.getValuePercentage() != null && (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Intensity ||
@@ -532,33 +686,73 @@ public class DefaultDesignerService implements DesignerService {
                                                     // the only capability in this channel
                                                     FixtureChannelValue channelValue = new FixtureChannelValue(channelFineIndex.getChannelName(), template.getUuid(), getMaxValueByChannel(channel) * valuePercentage);
                                                     this.mixChannelValue(values, channelValue, intensityPercentage);
+
+                                                    if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity) {
+                                                        hasColor = true;
+                                                    }
+
                                                 } else {
                                                     // more than one capability in the channel
-                                                    if(channelCapability.getBrightness() == "off" && valuePercentage == 0) {
+                                                    if ("off".equals(channelCapability.getBrightness()) && valuePercentage == 0) {
                                                         FixtureChannelValue channelValue = new FixtureChannelValue(channelFineIndex.getChannelName(), template.getUuid(), Double.valueOf(channelCapability.getDmxRange()[0]));
                                                         this.mixChannelValue(values, channelValue, intensityPercentage);
-                                                    } else if ((channelCapability.getBrightnessStart() == "dark" || channelCapability.getBrightnessStart() == "off") && channelCapability.getBrightnessEnd() == "bright") {
+
+                                                        if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity) {
+                                                            hasColor = true;
+                                                        }
+                                                    } else if (("dark".equals(channelCapability.getBrightnessStart()) || "off".equals(channelCapability.getBrightnessStart())) && "bright".equals(channelCapability.getBrightnessEnd())) {
                                                         double value = (channelCapability.getDmxRange()[1] - channelCapability.getDmxRange()[0]) * valuePercentage + channelCapability.getDmxRange()[0];
                                                         FixtureChannelValue channelValue = new FixtureChannelValue(channelFineIndex.getChannelName(), template.getUuid(), value);
                                                         this.mixChannelValue(values, channelValue, intensityPercentage);
+
+                                                        if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity) {
+                                                            hasColor = true;
+                                                        }
                                                     }
                                                 }
                                             }
                                         }
                                     }
                                 }
-                            }
-                        }
 
-                        // mix the preset wheels
-                        for (FixtureChannelFineIndex channelFineIndex : channelFineIndices) {
-                            FixtureChannel channel = channelFineIndex.getFixtureChannel();
+                                // approximate the color from a color or a different color wheel, if necessary
+                                if (!hasColor) {
+                                    // search for a color wheel on this fixture
+                                    FixtureWheel colorWheel = null;
+                                    for (FixtureCapability channelCapability : channelCapabilities) {
+                                        if (channelCapability.getType() == FixtureCapability.FixtureCapabilityType.WheelSlot) {
+                                            FixtureWheel wheel = getWheelByName(template, (channelCapability.getWheel() != null) ? channelCapability.getWheel() : channelFineIndex.getChannelName());
+                                            List<FixtureWheelSlot> wheelSlots = getWheelSlots(wheel, channelCapability.getSlotNumber());
+                                            for (FixtureWheelSlot slot : wheelSlots) {
+                                                if (slot.getColors().size() > 0) {
+                                                    colorWheel = wheel;
+                                                }
+                                            }
+                                        }
+                                    }
 
-                            if (channel != null) {
-                                // TODO
+                                    if (colorWheel != null) {
+                                        // there is a color wheel
+                                        FixtureCapability capability = getApproximatedColorWheelCapability(preset.getPreset(), channelFineIndex.getChannelName(), template);
 
-                                // approximate the color wheel, if a color capability is set or a different color wheel
-                                // this.presetService.getApproximatedColorWheelSlotIndex
+                                        if (capability != null) {
+                                            // we found an approximated color in the available wheel channel
+                                            boolean channelSet = false;
+                                            for (FixtureChannelValue channelValue : values) {
+                                                if (channelValue.getChannelName().equals(channelFineIndex.getChannelName()) && channelValue.getFixtureTemplateUuid().equals(template.getUuid())) {
+                                                    // the channel has already been set -> don't overwrite it
+                                                    channelSet = true;
+                                                    break;
+                                                }
+                                            }
+
+                                            if (!channelSet) {
+                                                FixtureChannelValue channelValue = new FixtureChannelValue(channelFineIndex.getChannelName(), template.getUuid(), Math.floor((capability.getDmxRange()[0] + capability.getDmxRange()[1]) / 2));
+                                                this.mixChannelValue(values, channelValue, 1);
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
 
@@ -568,7 +762,7 @@ public class DefaultDesignerService implements DesignerService {
 
                             if (channel != null) {
                                 for (FixtureChannelValue channelValue : preset.getPreset().getFixtureChannelValues()) {
-                                    if (template.getUuid() == channelValue.getFixtureTemplateUuid() && channelFineIndex.getChannelName() == channelValue.getChannelName()) {
+                                    if (template.getUuid().equals(channelValue.getFixtureTemplateUuid()) && channelFineIndex.getChannelName() == channelValue.getChannelName()) {
                                         this.mixChannelValue(values, channelValue, intensityPercentage);
                                     }
                                 }
