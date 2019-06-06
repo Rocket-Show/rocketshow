@@ -3,18 +3,18 @@ package com.ascargon.rocketshow.lighting.designer;
 public class FixtureCapabilityValue {
 
     // value between 0 and 1
-    private double valuePercentage;
+    private Double valuePercentage;
     private FixtureCapability.FixtureCapabilityType type;
     private FixtureCapability.FixtureCapabilityColor color;
 
     public FixtureCapabilityValue() {
     }
 
-    public double getValuePercentage() {
+    public Double getValuePercentage() {
         return valuePercentage;
     }
 
-    public void setValuePercentage(double valuePercentage) {
+    public void setValuePercentage(Double valuePercentage) {
         this.valuePercentage = valuePercentage;
     }
 
