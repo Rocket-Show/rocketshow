@@ -199,9 +199,9 @@ public class DefaultDesignerService implements DesignerService {
         return presets;
     }
 
-    private void mixChannelValue(List<FixtureChannelValue> existingChannelValues, FixtureChannelValue channelValue, double intensityPercentage) {
+    private void mixChannelValue(List<FixtureChannelValue> existingChannelValues, FixtureChannelValue channelValue, double intensityPercentage, double defaultValue) {
         double newValue = channelValue.getValue();
-        double existingValue = 0;
+        double existingValue = defaultValue;
 
         if (intensityPercentage < 1) {
             // We need to mix a possibly existing value (or the default value 0) with the new value (fading)
@@ -230,6 +230,10 @@ public class DefaultDesignerService implements DesignerService {
 
         // Add the new value
         existingChannelValues.add(new FixtureChannelValue(channelValue.getChannelName(), channelValue.getFixtureTemplateUuid(), newValue));
+    }
+
+    private void mixChannelValue(List<FixtureChannelValue> existingChannelValues, FixtureChannelValue channelValue, double intensityPercentage) {
+        mixChannelValue(existingChannelValues, channelValue, intensityPercentage, 0);
     }
 
     // Get the fixture index inside the passed preset (used for chasing)
@@ -680,12 +684,18 @@ public class DefaultDesignerService implements DesignerService {
                                                     presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity)) {
 
                                                 Double valuePercentage = presetCapabilityValue.getValuePercentage();
+                                                Double defaultValue = 0d;
+
+                                                if(presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Intensity) {
+                                                    // the dimmer starts at full brightness
+                                                    defaultValue = 255d;
+                                                }
 
                                                 // brightness property
                                                 if (channelCapabilities.size() == 1) {
                                                     // the only capability in this channel
                                                     FixtureChannelValue channelValue = new FixtureChannelValue(channelFineIndex.getChannelName(), template.getUuid(), getMaxValueByChannel(channel) * valuePercentage);
-                                                    this.mixChannelValue(values, channelValue, intensityPercentage);
+                                                    this.mixChannelValue(values, channelValue, intensityPercentage, defaultValue);
 
                                                     if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity) {
                                                         hasColor = true;
@@ -694,7 +704,7 @@ public class DefaultDesignerService implements DesignerService {
                                                     // more than one capability in the channel
                                                     if ("off".equals(channelCapability.getBrightness()) && valuePercentage == 0) {
                                                         FixtureChannelValue channelValue = new FixtureChannelValue(channelFineIndex.getChannelName(), template.getUuid(), (double)(channelCapability.getDmxRange()[0]));
-                                                        this.mixChannelValue(values, channelValue, intensityPercentage);
+                                                        this.mixChannelValue(values, channelValue, intensityPercentage, defaultValue);
 
                                                         if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity) {
                                                             hasColor = true;
@@ -702,7 +712,7 @@ public class DefaultDesignerService implements DesignerService {
                                                     } else if (("dark".equals(channelCapability.getBrightnessStart()) || "off".equals(channelCapability.getBrightnessStart())) && "bright".equals(channelCapability.getBrightnessEnd())) {
                                                         double value = (channelCapability.getDmxRange()[1] - channelCapability.getDmxRange()[0]) * valuePercentage + channelCapability.getDmxRange()[0];
                                                         FixtureChannelValue channelValue = new FixtureChannelValue(channelFineIndex.getChannelName(), template.getUuid(), value);
-                                                        this.mixChannelValue(values, channelValue, intensityPercentage);
+                                                        this.mixChannelValue(values, channelValue, intensityPercentage, defaultValue);
 
                                                         if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity) {
                                                             hasColor = true;
