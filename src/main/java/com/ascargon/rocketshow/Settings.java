@@ -89,6 +89,9 @@ public class Settings {
     private String wlanApSsid = "Rocket Show";
     private String wlanApPassphrase = "";
     private boolean wlanApSsidHide = false;
+    private String wlanApHwMode;
+    private Integer wlanApChannel;
+    private String wlanApCountryCode;
 
     private Boolean enableRaspberryGpio = false;
     private int raspberryGpioDebounceMillis = 500;
@@ -313,6 +316,30 @@ public class Settings {
 
     public void setWlanApSsidHide(boolean wlanApSsidHide) {
         this.wlanApSsidHide = wlanApSsidHide;
+    }
+
+    public String getWlanApHwMode() {
+        return wlanApHwMode;
+    }
+
+    public void setWlanApHwMode(String wlanApHwMode) {
+        this.wlanApHwMode = wlanApHwMode;
+    }
+
+    public Integer getWlanApChannel() {
+        return wlanApChannel;
+    }
+
+    public void setWlanApChannel(Integer wlanApChannel) {
+        this.wlanApChannel = wlanApChannel;
+    }
+
+    public String getWlanApCountryCode() {
+        return wlanApCountryCode;
+    }
+
+    public void setWlanApCountryCode(String wlanApCountryCode) {
+        this.wlanApCountryCode = wlanApCountryCode;
     }
 
     public Boolean isEnableRaspberryGpio() {

@@ -166,6 +166,7 @@ ssid=Rocket Show
 utf8_ssid=1
 hw_mode=g
 channel=7
+country_code=US
 wmm_enabled=0
 macaddr_acl=0
 auth_algs=1

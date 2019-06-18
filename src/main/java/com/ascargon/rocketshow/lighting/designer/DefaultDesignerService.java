@@ -606,7 +606,7 @@ public class DefaultDesignerService implements DesignerService {
             if (alreadyCalculatedFixture == null) {
                 List<FixtureChannelFineIndex> channelFineIndices = getChannelsByFixture(fixture);
 
-                // apply the default channels
+                // apply the default values
                 for (FixtureChannelFineIndex channelFineIndex : channelFineIndices) {
                     FixtureChannel channel = channelFineIndex.getFixtureChannel();
 
@@ -656,7 +656,7 @@ public class DefaultDesignerService implements DesignerService {
                         intensityPercentage = Math.min(intensityPercentageScene, intensityPercentagePreset);
                     }
 
-                    // Search for this fixture in the preset and get it's preset-specific index (for chasing effects)
+                    // search for this fixture in the preset and get it's preset-specific index (for chasing effects)
                     Integer fixtureIndex = getFixtureIndex(preset.getPreset(), fixture.getUuid());
                     boolean hasColor = false;
 

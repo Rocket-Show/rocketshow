@@ -43,6 +43,9 @@ export class Settings {
     wlanApSsid: string;
     wlanApPassphrase: string;
     wlanApSsidHide: boolean;
+    wlanApHwMode: string;
+    wlanApChannel: number;
+    wlanApCountryCode: string;
     enableRaspberryGpio: boolean;
     instrumentList: Instrument[] = [];
     enableMonitor: boolean;
@@ -142,6 +145,9 @@ export class Settings {
         this.wlanApSsid = data.wlanApSsid;
         this.wlanApPassphrase = data.wlanApPassphrase;
         this.wlanApSsidHide = data.wlanApSsidHide;
+        this.wlanApHwMode = data.wlanApHwMode;
+        this.wlanApChannel = data.wlanApChannel;
+        this.wlanApCountryCode = data.wlanApCountryCode;
         this.enableRaspberryGpio = data.enableRaspberryGpio;
 
         if (data.instrumentList) {

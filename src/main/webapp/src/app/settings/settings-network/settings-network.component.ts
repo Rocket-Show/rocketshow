@@ -52,9 +52,19 @@ export class SettingsNetworkComponent implements OnInit, OnDestroy {
     this.settings.remoteDeviceList.splice(remoteDeviceIndex, 1);
   }
 
+  updateChannel() {
+    if (this.settings.wlanApHwMode == 'b' || this.settings.wlanApHwMode == 'g') {
+      this.settings.wlanApChannel = 7;
+    } else if (this.settings.wlanApHwMode == 'a') {
+      this.settings.wlanApChannel = 44;
+    } else if (this.settings.wlanApHwMode == 'ad') {
+      this.settings.wlanApChannel = 5;
+    }
+  }
+
   // Prevent the last item in the file-list to be draggable.
   // Taken from http://jsbin.com/tuyafe/1/edit?html,js,output
-  sortMove(evt) {
+  sortMove(evt: any) {
     return evt.related.className.indexOf('no-sortjs') === -1;
   }
 

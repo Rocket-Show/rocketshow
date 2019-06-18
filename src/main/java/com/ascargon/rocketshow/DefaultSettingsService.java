@@ -198,6 +198,18 @@ public class DefaultSettingsService implements SettingsService {
             if (settings.isWlanApEnable() == null) {
                 settings.setWlanApEnable(true);
             }
+
+            if (settings.getWlanApHwMode() == null) {
+                settings.setWlanApHwMode("g");
+            }
+
+            if (settings.getWlanApChannel() == null) {
+                settings.setWlanApChannel(7);
+            }
+
+            if (settings.getWlanApCountryCode() == null) {
+                settings.setWlanApCountryCode("US");
+            }
         }
 
         if (settings.getInstrumentList().size() == 0) {
@@ -470,8 +482,9 @@ public class DefaultSettingsService implements SettingsService {
         apConfig += "driver=nl80211\n";
         apConfig += "ssid=" + settings.getWlanApSsid() + "\n";
         apConfig += "utf8_ssid=1\n";
-        apConfig += "hw_mode=g\n";
-        apConfig += "channel=7\n";
+        apConfig += "hw_mode=" + settings.getWlanApHwMode() + "\n";
+        apConfig += "channel=" + settings.getWlanApChannel() + "\n";
+        apConfig += "country_code=" + settings.getWlanApCountryCode() + "\n";
         apConfig += "wmm_enabled=0\n";
         apConfig += "macaddr_acl=0\n";
         apConfig += "auth_algs=1\n";
