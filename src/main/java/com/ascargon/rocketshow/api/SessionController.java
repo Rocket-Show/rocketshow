@@ -28,6 +28,13 @@ public class SessionController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @PostMapping("wizard-reset")
+    public ResponseEntity<Void> resetWizard() {
+        sessionService.getSession().setFirstStart(true);
+        sessionService.save();
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     @PostMapping("dismiss-update-finished")
     public ResponseEntity<Void> dismissUpdateFinished() {
         sessionService.getSession().setUpdateFinished(false);

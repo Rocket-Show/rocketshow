@@ -198,18 +198,18 @@ public class DefaultSettingsService implements SettingsService {
             if (settings.isWlanApEnable() == null) {
                 settings.setWlanApEnable(true);
             }
+        }
 
-            if (settings.getWlanApHwMode() == null) {
-                settings.setWlanApHwMode("g");
-            }
+        if (settings.getWlanApHwMode() == null) {
+            settings.setWlanApHwMode("g");
+        }
 
-            if (settings.getWlanApChannel() == null) {
-                settings.setWlanApChannel(7);
-            }
+        if (settings.getWlanApChannel() == null) {
+            settings.setWlanApChannel(7);
+        }
 
-            if (settings.getWlanApCountryCode() == null) {
-                settings.setWlanApCountryCode("US");
-            }
+        if (settings.getWlanApCountryCode() == null) {
+            settings.setWlanApCountryCode("US");
         }
 
         if (settings.getInstrumentList().size() == 0) {
@@ -240,7 +240,7 @@ public class DefaultSettingsService implements SettingsService {
             settings.setEnableMonitor(false);
         }
 
-        if(settings.getDesignerFrequencyHertz() == null) {
+        if (settings.getDesignerFrequencyHertz() == null) {
             settings.setDesignerFrequencyHertz(40);
         }
     }

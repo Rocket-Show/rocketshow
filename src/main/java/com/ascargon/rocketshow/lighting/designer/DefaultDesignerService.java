@@ -6,7 +6,6 @@ import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.LightingUniverse;
 import com.ascargon.rocketshow.util.FileFilterService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import javafx.beans.property.IntegerProperty;
 import org.freedesktop.gstreamer.Pipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +14,12 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 @Service
 public class DefaultDesignerService implements DesignerService {
@@ -41,7 +45,9 @@ public class DefaultDesignerService implements DesignerService {
 
     private List<LightingUniverse> lightingUniverses = new ArrayList<>();
 
-    private Timer sendUniverseTimer;
+    // TODO what is a good corePoolSize?
+    private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(20);
+    private ScheduledFuture<?> universeSenderHandle;
 
     private long lastPlayTimeMillis;
     private long lastPositionMillis;
@@ -121,7 +127,7 @@ public class DefaultDesignerService implements DesignerService {
 
     private long getCurrentPositionMillis() {
         if (pipeline != null) {
-            return pipeline.queryPosition(TimeUnit.MILLISECONDS);
+            return pipeline.queryPosition(MILLISECONDS);
         }
 
         return System.currentTimeMillis() - lastPlayTimeMillis + lastPositionMillis;
@@ -686,7 +692,7 @@ public class DefaultDesignerService implements DesignerService {
                                                 Double valuePercentage = presetCapabilityValue.getValuePercentage();
                                                 Double defaultValue = 0d;
 
-                                                if(presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Intensity) {
+                                                if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Intensity) {
                                                     // the dimmer starts at full brightness
                                                     defaultValue = 255d;
                                                 }
@@ -703,7 +709,7 @@ public class DefaultDesignerService implements DesignerService {
                                                 } else {
                                                     // more than one capability in the channel
                                                     if ("off".equals(channelCapability.getBrightness()) && valuePercentage == 0) {
-                                                        FixtureChannelValue channelValue = new FixtureChannelValue(channelFineIndex.getChannelName(), template.getUuid(), (double)(channelCapability.getDmxRange()[0]));
+                                                        FixtureChannelValue channelValue = new FixtureChannelValue(channelFineIndex.getChannelName(), template.getUuid(), (double) (channelCapability.getDmxRange()[0]));
                                                         this.mixChannelValue(values, channelValue, intensityPercentage, defaultValue);
 
                                                         if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity) {
@@ -901,13 +907,12 @@ public class DefaultDesignerService implements DesignerService {
         logger.info(lightingUniverses.get(0).getUniverse().toString());
     }
 
-    private void startTimer() {
-        if (sendUniverseTimer != null || settingsService.getSettings().getDesignerFrequencyHertz() == null) {
+    private void startScheduler() {
+        if (universeSenderHandle != null || settingsService.getSettings().getDesignerFrequencyHertz() == null) {
             return;
         }
 
-        TimerTask timerTask = new TimerTask() {
-            @Override
+        final Runnable universeSender = new Runnable() {
             public void run() {
                 // TODO
 //                if (pipeline == null && getCurrentTimeMillis() > project.duration) {
@@ -925,17 +930,17 @@ public class DefaultDesignerService implements DesignerService {
             }
         };
 
-        sendUniverseTimer = new Timer();
-        sendUniverseTimer.schedule(timerTask, 0, 1000 / settingsService.getSettings().getDesignerFrequencyHertz());
+        universeSenderHandle =
+                scheduler.scheduleAtFixedRate(universeSender, 0, 1000 / settingsService.getSettings().getDesignerFrequencyHertz(), MILLISECONDS);
     }
 
     private void stopTimer() {
-        if (sendUniverseTimer == null) {
+        if (universeSenderHandle == null) {
             return;
         }
 
-        sendUniverseTimer.cancel();
-        sendUniverseTimer = null;
+        universeSenderHandle.cancel(true);
+        universeSenderHandle = null;
     }
 
     @Override
@@ -959,7 +964,7 @@ public class DefaultDesignerService implements DesignerService {
     @Override
     public void play() {
         lastPlayTimeMillis = System.currentTimeMillis();
-        startTimer();
+        startScheduler();
     }
 
     @Override

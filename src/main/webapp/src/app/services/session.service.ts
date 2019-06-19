@@ -41,6 +41,10 @@ export class SessionService {
     return this.http.post('session/wizard-finished', undefined);
   }
 
+  introReset(): Observable<Object> {
+    return this.http.post('session/wizard-reset', undefined);
+  }
+
   setAutoSelectNextComposition(value: boolean): Observable<Object> {
     return this.http.post('session/set-auto-select-next-composition?value=' + value, undefined);
   }

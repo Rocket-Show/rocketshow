@@ -42,7 +42,7 @@
                 class="form-control">
             </div>
           </div>
-          <div class="form-group row mb-0">
+          <div class="form-group row">
             <div class="col-sm-3"></div>
 
             <div class="col-sm-9">
@@ -58,7 +58,7 @@
           </div>
           <div class="form-group row">
             <label class="col-md-3 col-form-label">{{ 'settings.wlan-ap-hw-mode' | translate }}</label>
-            <div class="col-md-8">
+            <div class="col-md-9">
               <select class="custom-select" [ngModel]="settings?.wlanApHwMode"
                 (ngModelChange)="settings.wlanApHwMode = $event; updateChannel()">
                 <option value="a">IEEE 802.11a (5 GHz)</option>
@@ -70,7 +70,7 @@
           </div>
           <div class="form-group row">
             <label class="col-md-3 col-form-label">{{ 'settings.wlan-ap-channel' | translate }}</label>
-            <div class="col-md-8">
+            <div class="col-md-9">
               <select *ngIf="this.settings.wlanApHwMode == 'b' || this.settings.wlanApHwMode == 'g'"
                 class="custom-select" [ngModel]="settings?.wlanApChannel"
                 (ngModelChange)="settings.wlanApChannel = $event">
@@ -168,9 +168,9 @@
               </select>
             </div>
           </div>
-          <div class="form-group row">
+          <div class="form-group row mb-0">
             <label class="col-md-3 col-form-label">{{ 'settings.wlan-ap-country-code' | translate }}</label>
-            <div class="col-md-8">
+            <div class="col-md-9">
               <select class="custom-select" [ngModel]="settings?.wlanApCountryCode"
                 (ngModelChange)="settings.wlanApCountryCode = $event">
                 <option value="AE">United Arab Emirates</option>

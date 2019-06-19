@@ -12,6 +12,7 @@ import { OperatingSystemInformation } from '../../models/operating-system-inform
 import { OperatingSystemInformationService } from '../../services/operating-system-information.service';
 import { map } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
+import { SessionService } from '../../services/session.service';
 
 @Component({
   selector: 'app-settings-advanced',
@@ -31,6 +32,7 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
 
   constructor(
     private settingsService: SettingsService,
+    private sessionService: SessionService,
     private warningDialogService: WarningDialogService,
     private waitDialogService: WaitDialogService,
     private http: HttpClient,
@@ -86,6 +88,12 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
         this.http.post('system/factory-reset', undefined).subscribe();
       }
     })).subscribe();
+  }
+
+  resetIntro() {
+    this.sessionService.introReset().subscribe(() => {
+      location.reload(true);
+    });
   }
 
   private downloadFile(blob: Blob) {

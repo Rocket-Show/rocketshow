@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { $WebSocket, WebSocketConfig } from 'angular2-websocket/angular2-websocket';
 import { map } from "rxjs/operators";
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, Subscription, timer } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { State } from '../models/state';
 import { HttpClient } from '@angular/common/http';
@@ -16,10 +16,12 @@ export class StateService {
   private wsUrl: string;
 
   // The websocket connection
-  websocket: $WebSocket;
+  public websocket: $WebSocket;
 
-  connected: boolean = false;
+  public connected: boolean = false;
   public getsConnected: Subject<void> = new Subject();
+
+  private reconnectSubscription: Subscription;
 
   constructor(private http: HttpClient
   ) {
@@ -33,7 +35,7 @@ export class StateService {
     this.wsUrl += 'api/state';
 
     // Connect to the websocket backend
-    const wsConfig = { reconnectIfNotNormalClose: true } as WebSocketConfig;
+    const wsConfig = { reconnectIfNotNormalClose: false } as WebSocketConfig;
     this.websocket = new $WebSocket(this.wsUrl, null, wsConfig);
 
     this.websocket.onMessage(
@@ -52,6 +54,16 @@ export class StateService {
 
     this.websocket.onClose(() => {
       this.connected = false;
+    });
+
+    // try to reconnect manually and don't rely on reconnectIfNotNormalClose, because
+    // this too slow sometimes (exponential backoff timer). try to reconnect
+    // each 5 seconds.
+    let reconnectTimer = timer(0, 5000);
+    this.reconnectSubscription = reconnectTimer.subscribe(() => {
+      if(!this.connected) {
+        this.websocket.connect();
+      }
     });
   }
 
