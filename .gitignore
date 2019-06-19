@@ -3,6 +3,11 @@ src/main/resources/static/*
 /target/
 !.mvn/wrapper/maven-wrapper.jar
 
+# generated from test run
+session.xml
+settings.xml
+log/*
+
 ### STS ###
 .apt_generated
 .classpath

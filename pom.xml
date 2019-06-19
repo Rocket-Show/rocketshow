@@ -54,7 +54,7 @@
                 <configuration>
                     <workingDirectory>src/main/webapp</workingDirectory>
                     <!-- where to install npm -->
-                    <installDirectory>target/npm-tmp</installDirectory>
+                    <installDirectory>target/npm</installDirectory>
                 </configuration>
                 <executions>
                     <execution>
