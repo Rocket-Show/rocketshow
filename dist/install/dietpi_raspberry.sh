@@ -12,7 +12,7 @@ apt-get upgrade -y
 # Currently still using Oracle JDK 8 instead of OpenJDK 9 because of the following reasons:
 # - MIDI does not work with openjdk 9 (midi unavailable exceptions)
 # - General playback with Gstreamer is much slower and not unstable
-apt-get -y install oracle-java8-jdk fbi ola libnss-mdns wiringpi iptables alsa-base libasound2 alsa-utils
+apt-get -y install oracle-java8-jdk fbi ola libnss-mdns wiringpi iptables alsa-base libasound2 alsa-utils openssh-sftp-server
 
 # Install packages to play media for Gstreamer
 sudo apt-get install -y libxml2-dev zlib1g-dev libglib2.0-dev \
@@ -177,6 +177,11 @@ rsn_pairwise=CCMP
 EOF
 
 printf "\n# ROCKETSHOWSTART\nDAEMON_CONF=\"/etc/hostapd/hostapd.conf\"\n# ROCKETSHOWEND\n" | tee -a /etc/default/hostapd
+
+# Add a sleep to the start, because a race condition can cause the hotspot to fail on boot
+# See: https://unix.stackexchange.com/questions/119209/hostapd-will-not-start-via-service-but-will-start-directly
+# Starting with iface wlan0 inet static is too unstable
+sudo sed -i '/start)/a \\tsleep 10' /etc/init.d/hostapd
 
 systemctl start hostapd
 
