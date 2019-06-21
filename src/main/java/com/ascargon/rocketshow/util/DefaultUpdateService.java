@@ -69,7 +69,7 @@ public class DefaultUpdateService implements UpdateService {
     private void downloadUpdateFile(String name) throws Exception {
         URL url = new URL(UPDATE_URL + name);
         ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
-        FileOutputStream fileOutputStream = new FileOutputStream(settingsService.getSettings().getBasePath() + "/" + UPDATE_PATH + name);
+        FileOutputStream fileOutputStream = new FileOutputStream(settingsService.getSettings().getBasePath() + "/" + UPDATE_PATH + "/" + name);
         fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
         fileOutputStream.close();
     }

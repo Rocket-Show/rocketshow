@@ -5,10 +5,10 @@
 
 ### PREPARE ###
 # Get the currently installed version
-CURR_VERSION=$(cat /opt/rocketshow/currentversion.xml | grep -oPm1 "(?<=<version>)[^<]+")
+CURR_VERSION=$(cat /opt/rocketshow/currentversion2.xml | grep -oPm1 "(?<=<version>)[^<]+")
 
 # Get the new version
-NEW_VERSION=$(cat /opt/rocketshow/update/currentversion.xml | grep -oPm1 "(?<=<version>)[^<]+")
+NEW_VERSION=$(cat /opt/rocketshow/update/currentversion2.xml | grep -oPm1 "(?<=<version>)[^<]+")
 
 ### Install the wireless access point feature ###
 # https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
