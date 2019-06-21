@@ -15,6 +15,7 @@ NEW_VERSION=$(cat /opt/rocketshow/update/currentversion.xml | grep -oPm1 "(?<=<v
 UPD_VERSION="2.1.3"
 if [ $UPD_VERSION = $CURR_VERSION ] || [ $UPD_VERSION != $(printf "$UPD_VERSION\n$CURR_VERSION\n" | sort -V | head -n1) ] ; then
     echo "Installing the wireless access point feature..."
+    sudo sed -i '/start)/a \\tsleep 10' /etc/init.d/hostapd
 fi
 
 ### Install zip ###
