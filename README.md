@@ -1,24 +1,26 @@
 # Rocket Show
-An app to play shows including audio, video, lighting (e.g. DMX) and MIDI.
+An app to automate and play shows including audio, video, lighting (e.g. DMX) and MIDI.
 
-## For developers
-### Development
-#### Build
+## Development
+### Build
 1. Build the Java JAR: `mvn install`
-2. Start the backend server: `java -jar rocketshow.jar`
-3. Start web frontend server: `cd src/main/webapp && npx ng serve`
+2. Start the backend server from target directory: `java -jar rocketshow.jar`
+3. Open the web app on http://localhost:8080
 
-Check the state of the backend: http://localhost:8080/api/system/state \
-Open the web application: http://localhost:4200
+For frequent builds, you might want to comment out the frontend-maven-plugin in the POM and make use of the Maven parameter `-DskipTests`.
 
-### Deployment
-#### Seed directory
+While developing the web app, it might be convenient to start an Angular server:
+1. Start web frontend server: `cd src/main/webapp && npx ng serve`
+2. Open the web application: http://localhost:4200
+
+## Deployment
+### Seed directory
 The seed directory structure '/dist/rocketshow' can be packed on a mac with this commands (assuming you're currently in the 'dist' directory):
 ```shell
 COPYFILE_DISABLE=true tar -c --exclude='.DS_Store' -zf directory.tar.gz rocketshow
 ```
 
-#### Raspberry Pi Image building
+### Raspberry Pi Image building
 These steps describe how to build a Raspberry Pi image based on the DietPi distribution on a Mac OS X. Raspbian Light is not supported, because audio playback is laggy.
 
 1. Flash an image with DietPi 6.17 ARMv6-Stretch to an SD card.
@@ -46,7 +48,7 @@ sudo reboot
 15. Use https://raw.githubusercontent.com/Drewsif/PiShrink/master/pishrink.sh to shrink the image.
 16. Zip the image using ```gzip -9 rocketshow.img```.
 
-#### Update process
+### Update process
 - Add the release notes in update/currentversion2.xml and build the war ("mvn install")
 - Copy seed directory directory.tar.gz to rocketshow.net/install, if updated
 - Copy target/rocketshow.jar to rocketshow.net/update/rocketshow.jar
@@ -58,5 +60,65 @@ sudo reboot
 - GIT tag with the current version
 - Switch to DEV and update POM and update/currentversion2.xml versions
 
-#### Application
+### Application
 The built application should be uploaded to rocketshow.net/update and be named "rocketshow.jar". The file "currentversion2.xml" can be modified accordingly.
+
+## Code structure
+
+### Server
+
+#### Overview
+
+The Rocket Show server is written in Java and uses Spring Boot ([https://spring.io/projects/spring-boot](https://spring.io/projects/spring-boot))  for easier configuration and dependency injection. Gstreamer ([https://gstreamer.freedesktop.org/](https://gstreamer.freedesktop.org/)), a framework written in C, is included as multimedia playback backend.
+
+Spring services are autowired into each other (dependency injection). The interface is named XyService, the corresponding implementation is called DefaultXyService.
+
+The class RocketShowApplication serves as the application entry point. Some beans are initialized in the correct order.
+
+There is a player service, which organises all composition players (responsible for the playback of a single composition). Parallel playbacks are possible as well.
+
+The code is structured in different modules, which are described in more details below.
+
+##### Base functionalities
+
+A few base services and models lie in the root folder (e.g. settings, session-handling).
+
+##### Api
+
+This module is responsible for the communication with the web app and with other Rocket Show devices. A couple of REST interfaces are exposed as well as some web sockets for time critical topics or where server push is required.
+
+##### Audio
+
+Services related to audio playback.
+
+##### Composition
+
+Handling the composition and the composition player.
+
+##### Gstreamer
+
+Rocket Show specific calls to the native Gstreamer C api.
+
+##### Image
+
+Handling the image displaying.
+
+##### Lighting
+
+Responsible for the connection of Rocket Show to the Open Lighting Architecture to control connected lighting interfaces. Services for designer project playback also lies here.
+
+##### MIDI
+
+MIDI input, output routing and mapping.
+
+##### Raspberry
+
+Raspberry Pi specific services (e.g. GPIO triggers).
+
+##### Util
+
+Various utilities used across the project.
+
+### Web app
+
+TODO
