@@ -77,6 +77,7 @@
                         <configuration>
                             <arguments>install</arguments>
                         </configuration>
+                        <phase>generate-sources</phase>
                     </execution>
                     <execution>
                         <id>prod</id>
