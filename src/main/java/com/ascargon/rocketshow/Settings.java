@@ -85,6 +85,9 @@ public class Settings {
     private Integer alsaPeriodTime;
     private List<AudioBus> audioBusList = new ArrayList<>();
 
+    private Integer videoWidth;
+    private Integer videoHeight;
+
     private Boolean wlanApEnable;
     private String wlanApSsid = "Rocket Show";
     private String wlanApPassphrase = "";
@@ -267,6 +270,22 @@ public class Settings {
 
     public void setAudioBusList(List<AudioBus> audioBusList) {
         this.audioBusList = audioBusList;
+    }
+
+    public Integer getVideoWidth() {
+        return videoWidth;
+    }
+
+    public void setVideoWidth(Integer videoWidth) {
+        this.videoWidth = videoWidth;
+    }
+
+    public Integer getVideoHeight() {
+        return videoHeight;
+    }
+
+    public void setVideoHeight(Integer videoHeight) {
+        this.videoHeight = videoHeight;
     }
 
     public Integer getAudioRate() {

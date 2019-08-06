@@ -82,6 +82,14 @@ export class SettingsSystemComponent implements OnInit, OnDestroy {
     })).subscribe();
   }
 
+  shutdown() {
+    this.warningDialogService.show('settings.warning-shutdown').pipe(map(result => {
+      if (result) {
+        this.http.post('system/shutdown', undefined).subscribe();
+      }
+    })).subscribe();
+  }
+
   checkVersion() {
     // Show the file details dialog
     let updateDialog = this.modalService.show(UpdateDialogComponent, { keyboard: false, ignoreBackdropClick: true, class: '' });

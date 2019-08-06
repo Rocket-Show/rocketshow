@@ -27,6 +27,7 @@ class SystemController {
     private final SetService setService;
     private final PlayerService playerService;
     private final RebootService rebootService;
+    private final ShutdownService shutdownService;
     private final SettingsService settingsService;
     private final MidiDeviceInService midiDeviceInService;
     private final MidiDeviceOutService midiDeviceOutService;
@@ -38,11 +39,12 @@ class SystemController {
     private final SessionService sessionService;
     private final CompositionService compositionService;
 
-    public SystemController(StateService stateService, SetService setService, PlayerService playerService, RebootService rebootService, SettingsService settingsService, MidiDeviceInService midiDeviceInService, MidiDeviceOutService midiDeviceOutService, UpdateService updateService, FactoryResetService factoryResetService, LogDownloadService logDownloadService, DiskSpaceService diskSpaceService, OperatingSystemInformationService operatingSystemInformationService, SessionService sessionService, CompositionService compositionService) {
+    public SystemController(StateService stateService, SetService setService, PlayerService playerService, RebootService rebootService, ShutdownService shutdownService, SettingsService settingsService, MidiDeviceInService midiDeviceInService, MidiDeviceOutService midiDeviceOutService, UpdateService updateService, FactoryResetService factoryResetService, LogDownloadService logDownloadService, DiskSpaceService diskSpaceService, OperatingSystemInformationService operatingSystemInformationService, SessionService sessionService, CompositionService compositionService) {
         this.stateService = stateService;
         this.setService = setService;
         this.playerService = playerService;
         this.rebootService = rebootService;
+        this.shutdownService = shutdownService;
         this.settingsService = settingsService;
         this.midiDeviceInService = midiDeviceInService;
         this.midiDeviceOutService = midiDeviceOutService;
@@ -58,6 +60,12 @@ class SystemController {
     @PostMapping("reboot")
     public ResponseEntity<Void> reboot() throws Exception {
         rebootService.reboot();
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("shutdown")
+    public ResponseEntity<Void> shutdown() throws Exception {
+        shutdownService.shutdown();
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

@@ -18,7 +18,8 @@
         "update": "Update",
         "please-wait": "Please wait...",
         "info": "Information",
-        "default-set": "All compositions"
+        "default-set": "All compositions",
+        "lead-sheet-close": "Close"
     },
     "loading": {
         "title": "Loading...",
@@ -134,6 +135,7 @@
         "wlan-ap-country-code": "Country",
         "language": "Language",
         "warning-reboot": "Do you really want to reboot the device?",
+        "warning-shutdown": "Do you really want to shutdown the device?",
         "factory-reset": "Reset to factory defaults",
         "factory-reset-done": "The factory defaults have successfully been restored.",
         "wait-factory-reset": "Please wait, while the device is being reset...",
@@ -178,6 +180,7 @@
         "update-reboot": "Rebooting...",
         "update-finished": "Hooray! The update has finished successfully.",
         "reboot-device": "Reboot",
+        "shutdown-device": "Shutdown",
         "default-composition": "Default composition",
         "no-default-composition": "None",
         "audio-buses": "Audio buses",

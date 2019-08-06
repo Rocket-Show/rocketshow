@@ -18,7 +18,8 @@
         "update": "Aktualisieren",
         "please-wait": "Bitte warten...",
         "info": "Hinweis",
-        "default-set": "Alle Kompositionen"
+        "default-set": "Alle Kompositionen",
+        "lead-sheet-close": "Schliessen"
     },
     "loading": {
         "title": "Laden...",
@@ -134,6 +135,7 @@
         "wlan-ap-country-code": "Land",
         "language": "Sprache",
         "warning-reboot": "Möchtest du das Gerät wirklich neu starten?",
+        "warning-shutdown": "Möchtest du das Gerät wirklich herunterfahren?",
         "factory-reset": "Auf Werkseinstellungen zurücksetzen",
         "factory-reset-done": "Die Werkseinstellungen wurden erfolgreich zurückgesetzt.",
         "wait-factory-reset": "Bitte warte, während das Gerät zurückgesetzt wird...",
@@ -178,6 +180,7 @@
         "update-reboot": "Neu starten...",
         "update-finished": "Hurrah! Die Aktualisierung wurde erfolgreich abgeschlossen.",
         "reboot-device": "Neu starten",
+        "shutdown-device": "Herunterfahren",
         "default-composition": "Standard-Komposition",
         "no-default-composition": "Keine",
         "audio-buses": "Audio Busse",

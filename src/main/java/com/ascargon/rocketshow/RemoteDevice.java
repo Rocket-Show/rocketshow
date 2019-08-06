@@ -89,6 +89,10 @@ public class RemoteDevice {
         doPost("system/reboot");
     }
 
+    public void shutdown() {
+        doPost("system/shutdown");
+    }
+
     public void load(boolean synchronous, String name) {
         try {
             doPost("transport/load?name=" + URLEncoder.encode(name, "UTF-8"),

@@ -401,11 +401,59 @@ public class CompositionPlayer {
                     // Does not work on OS X
                     // See http://gstreamer-devel.966125.n4.nabble.com/OpenGL-renderer-window-td4686092.html
 
-                    // TODO Add offset to a video file
+                    URIDecodeBin videoSource = (URIDecodeBin) ElementFactory.make("uridecodebin", "videouridecodebin");
+                    videoSource.set("uri", "file://" + settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getVideoPath() + File.separator + compositionFile.getName());
+                    pipeline.add(videoSource);
 
-                    PlayBin playBin = (PlayBin) ElementFactory.make("playbin", "playbin" + i);
-                    playBin.set("uri", "file://" + settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getVideoPath() + File.separator + compositionFile.getName());
-                    pipeline.add(playBin);
+                    Element queue = ElementFactory.make("queue", "videosourcequeue");
+                    pipeline.add(queue);
+
+                    Element videoconvert = ElementFactory.make("videoconvert", "videoconvert");
+                    pipeline.add(videoconvert);
+
+                    Element videoscale = ElementFactory.make("videoscale", "videoscale");
+                    pipeline.add(videoscale);
+
+                    Element glupload = ElementFactory.make("glupload", "glupload");
+                    pipeline.add(glupload);
+
+                    Element glcolorconvert = ElementFactory.make("glcolorconvert", "glcolorconvert");
+                    pipeline.add(glcolorconvert);
+
+                    Element glcolorscale = ElementFactory.make("glcolorscale", "glcolorscale");
+                    pipeline.add(glcolorscale);
+
+                    Element capsFilter = null;
+                    if (settingsService.getSettings().getVideoWidth() != null && settingsService.getSettings().getVideoHeight() != null) {
+                        capsFilter = ElementFactory.make("capsfilter", "capsfilter");
+                        Caps caps = GstApi.GST_API.gst_caps_from_string("video/x-raw(memory:GLMemory),width=" + settingsService.getSettings().getVideoWidth() + "height=" + settingsService.getSettings().getVideoHeight());
+                        capsFilter.set("caps", caps);
+                        pipeline.add(capsFilter);
+                    }
+
+                    Element glcolorbalance = ElementFactory.make("glcolorbalance", "glcolorbalance");
+                    pipeline.add(glcolorbalance);
+
+                    Element autovideosink = ElementFactory.make("autovideosink", "autovideosink");
+                    pipeline.add(autovideosink);
+
+                    queue.getSrcPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisVideo() + compositionFile.getOffsetMillis()) * 1000000L);
+
+                    videoSource.link(queue);
+                    queue.link(videoconvert);
+                    videoconvert.link(videoscale);
+                    videoscale.link(glupload);
+                    glupload.link(glcolorconvert);
+                    glcolorconvert.link(glcolorscale);
+
+                    if (settingsService.getSettings().getVideoWidth() != null && settingsService.getSettings().getVideoHeight() != null) {
+                        glcolorscale.link(capsFilter);
+                        capsFilter.link(glcolorbalance);
+                    } else {
+                        glcolorscale.link(glcolorbalance);
+                    }
+
+                    glcolorbalance.link(autovideosink);
                 }
             }
         }
