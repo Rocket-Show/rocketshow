@@ -1,4 +1,4 @@
-package com.ascargon.RocketShow;
+package com.ascargon.rocketshow;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
