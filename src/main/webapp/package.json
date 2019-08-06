@@ -9,7 +9,8 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
-    "prepare": "rmdir-cli src/assets/designer && ncp node_modules/@rocketshow/designer/assets src/assets/designer"
+    "prepare": "rmdir-cli src/assets/designer && ncp node_modules/@rocketshow/designer/assets src/assets/designer",
+    "prod": "node node_modules/@angular/cli/bin/ng build --prod"
   },
   "private": true,
   "dependencies": {

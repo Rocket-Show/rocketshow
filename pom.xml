@@ -88,7 +88,7 @@
                             <!-- No caching to make sure, the newest version will always be loaded
                             (e.g. after an update). Caching anyways only has a small impact, because
                             the devices are most probably run in an internal network. -->
-                            <arguments>run build -- --prod --output-hashing=all</arguments>
+                            <arguments>run prod -- --output-hashing=all</arguments>
                         </configuration>
                         <phase>generate-sources</phase>
                     </execution>
