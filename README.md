@@ -9,6 +9,11 @@ An app to automate and play shows including audio, video, lighting (e.g. DMX) an
 
 For frequent builds, you might want to comment out the frontend-maven-plugin in the POM and make use of the Maven parameter `-DskipTests`.
 
+To debug Gstreamer issues, export GST_DEBUG before starting the server:
+```shell
+export GST_DEBUG=3
+```
+
 While developing the web app, it might be convenient to start an Angular server:
 1. Start web frontend server: `cd src/main/webapp && npx ng serve`
 2. Open the web application: http://localhost:4200

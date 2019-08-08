@@ -150,6 +150,8 @@
         "remote-device-name-placeholder": "Mein entferntes Gerät",
         "remote-device-host": "Host",
         "remote-device-synchronize": "Synchronisieren",
+        "video-resolution": "Auflösung",
+        "video-resolution-not-set": "Nicht ausgewählt",
         "midi-device-in": "Eingang",
         "midi-device-out": "Ausgang",
         "midi-control": "Steuerung",

@@ -4,3 +4,14 @@
     <input type="text" class="form-control" [ngModel]="settings?.offsetMillisVideo" (ngModelChange)="settings.offsetMillisVideo = $event">
   </div>
 </div>
+
+<div class="form-group row">
+  <label class="col-sm-3 col-form-label">{{ 'settings.video-resolution' | translate }}</label>
+  <div class="col-sm-9">
+    <select class="custom-select" [ngModel]="getResolution()" (ngModelChange)="setResolution($event)">
+      <option [ngValue]="selectUndefinedOptionValue">- {{ 'settings.video-resolution-not-set' | translate }} -</option>
+      <option [ngValue]="'640,360'">640 x 360 (16:9)</option>
+      <option [ngValue]="'800,600'">800 x 600 (4:3)</option>
+    </select>
+  </div>
+</div>

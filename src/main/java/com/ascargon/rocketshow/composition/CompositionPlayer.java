@@ -406,6 +406,17 @@ public class CompositionPlayer {
                     pipeline.add(videoSource);
 
                     Element queue = ElementFactory.make("queue", "videosourcequeue");
+                    videoSource.connect((Element.PAD_ADDED) (Element element, Pad pad) -> {
+                        Caps caps = pad.getCaps();
+
+                        String name = caps.getStructure(0).getName();
+
+                        if (name.startsWith("video/x-raw")) {
+                            pad.link(queue.getSinkPads().get(0));
+                        }
+                    });
+
+                    queue.getSrcPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisVideo() + compositionFile.getOffsetMillis()) * 1000000L);
                     pipeline.add(queue);
 
                     Element videoconvert = ElementFactory.make("videoconvert", "videoconvert");
@@ -425,8 +436,10 @@ public class CompositionPlayer {
 
                     Element capsFilter = null;
                     if (settingsService.getSettings().getVideoWidth() != null && settingsService.getSettings().getVideoHeight() != null) {
+                        logger.debug("Scale video...");
+
                         capsFilter = ElementFactory.make("capsfilter", "capsfilter");
-                        Caps caps = GstApi.GST_API.gst_caps_from_string("video/x-raw(memory:GLMemory),width=" + settingsService.getSettings().getVideoWidth() + "height=" + settingsService.getSettings().getVideoHeight());
+                        Caps caps = GstApi.GST_API.gst_caps_from_string("video/x-raw(memory:GLMemory),width=" + settingsService.getSettings().getVideoWidth() + ",height=" + settingsService.getSettings().getVideoHeight());
                         capsFilter.set("caps", caps);
                         pipeline.add(capsFilter);
                     }
@@ -437,8 +450,6 @@ public class CompositionPlayer {
                     Element autovideosink = ElementFactory.make("autovideosink", "autovideosink");
                     pipeline.add(autovideosink);
 
-                    queue.getSrcPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisVideo() + compositionFile.getOffsetMillis()) * 1000000L);
-
                     videoSource.link(queue);
                     queue.link(videoconvert);
                     videoconvert.link(videoscale);
@@ -446,11 +457,11 @@ public class CompositionPlayer {
                     glupload.link(glcolorconvert);
                     glcolorconvert.link(glcolorscale);
 
-                    if (settingsService.getSettings().getVideoWidth() != null && settingsService.getSettings().getVideoHeight() != null) {
+                    if (capsFilter == null) {
+                        glcolorscale.link(glcolorbalance);
+                    } else {
                         glcolorscale.link(capsFilter);
                         capsFilter.link(glcolorbalance);
-                    } else {
-                        glcolorscale.link(glcolorbalance);
                     }
 
                     glcolorbalance.link(autovideosink);

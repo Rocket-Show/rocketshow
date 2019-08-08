@@ -10,6 +10,8 @@ import { map } from "rxjs/operators";
 })
 export class SettingsVideoComponent implements OnInit {
 
+  selectUndefinedOptionValue: any = undefined;
+
   settings: Settings;
 
   constructor(
@@ -24,6 +26,14 @@ export class SettingsVideoComponent implements OnInit {
 
   ngOnInit() {
     this.loadSettings();
+  }
+
+  getResolution(): string {
+    return undefined;
+  }
+
+  setResolution(resolution: string) {
+    
   }
 
 }

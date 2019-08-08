@@ -150,6 +150,8 @@
         "remote-device-name-placeholder": "My remote device",
         "remote-device-host": "Host",
         "remote-device-synchronize": "Synchronize",
+        "video-resolution": "Resolution",
+        "video-resolution-not-set": "Not specified",
         "midi-device-in": "MIDI input",
         "midi-device-out": "MIDI output",
         "midi-control": "Control",
