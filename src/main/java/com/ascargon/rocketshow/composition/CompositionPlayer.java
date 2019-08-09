@@ -401,24 +401,32 @@ public class CompositionPlayer {
                     // Does not work on OS X
                     // See http://gstreamer-devel.966125.n4.nabble.com/OpenGL-renderer-window-td4686092.html
 
+                    // The audio/video-common part of the pipeline
                     URIDecodeBin videoSource = (URIDecodeBin) ElementFactory.make("uridecodebin", "videouridecodebin");
                     videoSource.set("uri", "file://" + settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getVideoPath() + File.separator + compositionFile.getName());
                     pipeline.add(videoSource);
 
-                    Element queue = ElementFactory.make("queue", "videosourcequeue");
+                    Element videoQueue = ElementFactory.make("queue", "videoqueue");
+                    Element audioQueue = ElementFactory.make("queue", "videoaudioqueue");
                     videoSource.connect((Element.PAD_ADDED) (Element element, Pad pad) -> {
                         Caps caps = pad.getCaps();
 
                         String name = caps.getStructure(0).getName();
 
                         if (name.startsWith("video/x-raw")) {
-                            pad.link(queue.getSinkPads().get(0));
+                            pad.link(videoQueue.getSinkPads().get(0));
+                        } else if (name.startsWith("audio/x-raw")) {
+                            pad.link(audioQueue.getSinkPads().get(0));
                         }
                     });
 
-                    queue.getSrcPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisVideo() + compositionFile.getOffsetMillis()) * 1000000L);
-                    pipeline.add(queue);
+                    videoQueue.getSrcPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisVideo() + compositionFile.getOffsetMillis()) * 1000000L);
+                    pipeline.add(videoQueue);
 
+                    audioQueue.getSrcPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisVideo() + compositionFile.getOffsetMillis()) * 1000000L);
+                    pipeline.add(audioQueue);
+
+                    // The video part of the pipeline
                     Element videoconvert = ElementFactory.make("videoconvert", "videoconvert");
                     pipeline.add(videoconvert);
 
@@ -450,8 +458,8 @@ public class CompositionPlayer {
                     Element autovideosink = ElementFactory.make("autovideosink", "autovideosink");
                     pipeline.add(autovideosink);
 
-                    videoSource.link(queue);
-                    queue.link(videoconvert);
+                    videoSource.link(videoQueue);
+                    videoQueue.link(videoconvert);
                     videoconvert.link(videoscale);
                     videoscale.link(glupload);
                     glupload.link(glcolorconvert);
@@ -465,6 +473,20 @@ public class CompositionPlayer {
                     }
 
                     glcolorbalance.link(autovideosink);
+
+                    // The audio part of the pipeline
+                    Element audioConvert = ElementFactory.make("audioconvert", "videoaudioconvert");
+                    pipeline.add(audioConvert);
+
+                    Element audioResample = ElementFactory.make("audioresample", "videoaudioresample");
+                    pipeline.add(audioResample);
+
+                    Element omxHdmiAudioSink = ElementFactory.make("omxhdmiaudiosink", "omxhdmiaudiosink");
+                    pipeline.add(omxHdmiAudioSink);
+
+                    audioQueue.link(audioConvert);
+                    audioConvert.link(audioResample);
+                    audioResample.link(omxHdmiAudioSink);
                 }
             }
         }
