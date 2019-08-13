@@ -16,7 +16,7 @@ sed -i '' 's/CONFIG_BOOT_WAIT_FOR_NETWORK=1/CONFIG_BOOT_WAIT_FOR_NETWORK=0/g' $f
 
 # Automatically install Rocket Show
 # Does not work. The script hangs infinitely and I don't know why...
-#sed -i '' 's/AUTO_SETUP_CUSTOM_SCRIPT_EXEC=0/AUTO_SETUP_CUSTOM_SCRIPT_EXEC=https:\/\/rocketshow.net\/install\/script\/dietpi_raspberry.sh/g' $file
+sed -i '' 's/AUTO_SETUP_CUSTOM_SCRIPT_EXEC=0/AUTO_SETUP_CUSTOM_SCRIPT_EXEC=https:\/\/rocketshow.net\/install\/script\/dietpi_raspberry.sh/g' $file
 
 # Set the CPU governor to performance
 sed -i '' 's/CONFIG_CPU_GOVERNOR=ondemand/CONFIG_CPU_GOVERNOR=performance/g' $file

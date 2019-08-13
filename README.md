@@ -26,25 +26,17 @@ COPYFILE_DISABLE=true tar -c --exclude='.DS_Store' -zf directory.tar.gz rocketsh
 ```
 
 ### Raspberry Pi Image building
-These steps describe how to build a Raspberry Pi image based on the DietPi distribution on a Mac OS X. Raspbian Light is not supported, because audio playback is laggy.
+These steps describe how to build a Raspberry Pi image based on the DietPi distribution on a Mac OS X. Raspbian Light is not supported, because audio playback is laggy on the Raspberry Pi 3.
 
-1. Flash an image with DietPi 6.17 ARMv6-Stretch to an SD card.
+1. Flash an image with DietPi_v6.25_RPi-ARMv6-Buster.img to an SD card.
 2. Remove the card from the Mac and add it again.
 3. There should now be a directory /Volumes/boot available
 4. Execute the shell script dist/install/prepare_dietpi_raspberry_image.sh
 5. This script prepared the configuration for Rocket Show.
-6. Safely remove the SD card and use a Raspberry Pi *connected to the internet* to boot it. According to DietPi, unfortunately there is currently no possibility to build the image without a Raspberry Pi.
-7. Let the Raspberry Pi finish its boot process and install all required software.
-8. SSH into it (username = root, password = dietpi) and run the following code:
-```
-cd /tmp
-wget https://rocketshow.net/install/script/dietpi_raspberry.sh
-chmod +x dietpi_raspberry.sh
-./dietpi_raspberry.sh
-rm -rf dietpi_raspberry.sh
-sudo reboot
-```
-9. Let the system start itself a first time, login again with ssh and shut down using ```shutdown -h now```
+6. Safely remove the SD card and use a Raspberry Pi *connected to the internet* to boot it (monitor it while ssh-ed with credentials root, dietpi). According to DietPi, unfortunately there is currently no possibility to build the image without a Raspberry Pi.
+7. Let the Raspberry Pi finish its boot process and install all required software. It will reboot in the end.
+8. ssh into the pi with credentials rocketshow, thisrocks
+9. Shut down using ```shutdown -h now```
 10. Add the SD card back to the Mac.
 11. Find its drive name with ```diskutil list```.
 12. Unmount the disk. E.g. ```diskutil umountDisk /dev/disk2```.

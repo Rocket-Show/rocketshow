@@ -7,12 +7,8 @@
 apt-get update
 apt-get upgrade -y
 
-# Install step-by-step because it does not work alltogether.
-# Also see https://raspberrypi.stackexchange.com/questions/74798/raspbian-stretch-getting-error-missing-server-jvm-at-usr-lib-jvm-java-8-op
-# Currently still using Oracle JDK 8 instead of OpenJDK 9 because of the following reasons:
-# - MIDI does not work with openjdk 9 (midi unavailable exceptions)
-# - General playback with Gstreamer is much slower and not unstable
-apt-get -y install oracle-java8-jdk fbi ola libnss-mdns wiringpi iptables alsa-base libasound2 alsa-utils openssh-sftp-server
+# Install step-by-step because it does not work alltogether (timeouts to raspbian.org, maybe due to connection limits).
+apt-get -y install openjdk-11-jdk fbi ola libnss-mdns wiringpi iptables alsa-base libasound2 alsa-utils openssh-sftp-server
 
 # Install packages to play media for Gstreamer
 sudo apt-get install -y libxml2-dev zlib1g-dev libglib2.0-dev \
@@ -21,14 +17,18 @@ sudo apt-get install -y libxml2-dev zlib1g-dev libglib2.0-dev \
     libtheora-dev libvisual-0.4-dev iso-codes \
     libraw1394-dev libiec61883-dev libavc1394-dev \
     libv4l-dev libcaca-dev libspeex-dev libpng-dev \
-    libshout3-dev libjpeg-dev libflac-dev libdv4-dev \
+    libshout3-dev libjpeg-dev libflac-dev libdv4-dev
+
+sudo apt-get install -y \
     libtag1-dev libwavpack-dev libsoup2.4-dev libbz2-dev \
     libcdaudio-dev libdc1394-22-dev ladspa-sdk libass-dev \
-    libcurl4-gnutls-dev libdca-dev libdirac-dev libdvdnav-dev \
+    libcurl4-gnutls-dev libdca-dev libdvdnav-dev \
     libexempi-dev libexif-dev libfaad-dev libgme-dev libgsm1-dev \
     libiptcdata0-dev libkate-dev libmimic-dev libmms-dev \
     libmodplug-dev libmpcdec-dev libofa0-dev libopus-dev \
-    librtmp-dev libschroedinger-dev libslv2-dev \
+    librtmp-dev libschroedinger-dev libslv2-dev
+
+sudo apt-get install -y \
     libsndfile1-dev libsoundtouch-dev libspandsp-dev \
     libxvidcore-dev libzvbi-dev liba52-0.7.4-dev \
     libcdio-dev libdvdread-dev libmad0-dev libmp3lame-dev \
