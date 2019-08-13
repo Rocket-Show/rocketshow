@@ -39,6 +39,9 @@ export class Settings {
     alsaPeriodSize: number;
     alsaPeriodTime: number;
     audioBusList: AudioBus[];
+    videoWidth: number;
+    videoHeight: number;
+    customVideoResolution: boolean;
     wlanApEnable: boolean;
     wlanApSsid: string;
     wlanApPassphrase: string;
@@ -141,6 +144,9 @@ export class Settings {
             }
         }
 
+        this.videoWidth = data.videoWidth;
+        this.videoHeight = data.videoHeight;
+        this.customVideoResolution = data.customVideoResolution;
         this.wlanApEnable = data.wlanApEnable;
         this.wlanApSsid = data.wlanApSsid;
         this.wlanApPassphrase = data.wlanApPassphrase;

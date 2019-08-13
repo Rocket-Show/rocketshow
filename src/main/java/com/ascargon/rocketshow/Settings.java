@@ -87,6 +87,7 @@ public class Settings {
 
     private Integer videoWidth;
     private Integer videoHeight;
+    private Boolean customVideoResolution;
 
     private Boolean wlanApEnable;
     private String wlanApSsid = "Rocket Show";
@@ -286,6 +287,14 @@ public class Settings {
 
     public void setVideoHeight(Integer videoHeight) {
         this.videoHeight = videoHeight;
+    }
+
+    public Boolean getCustomVideoResolution() {
+        return customVideoResolution;
+    }
+
+    public void setCustomVideoResolution(Boolean customVideoResolution) {
+        this.customVideoResolution = customVideoResolution;
     }
 
     public Integer getAudioRate() {

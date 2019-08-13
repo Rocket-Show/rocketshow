@@ -29,11 +29,33 @@ export class SettingsVideoComponent implements OnInit {
   }
 
   getResolution(): string {
+    if(this.settings.customVideoResolution) {
+      return 'custom';
+    }
+
+    if(this.settings.videoWidth && this.settings.videoHeight) {
+      return this.settings.videoWidth + ',' + this.settings.videoHeight;
+    }
+
     return undefined;
   }
 
   setResolution(resolution: string) {
-    
+    if(!resolution) {
+      this.settings.customVideoResolution = false;
+      this.settings.videoWidth = undefined;
+      this.settings.videoHeight = undefined;
+      return;
+    }
+
+    if(resolution == 'custom') {
+      this.settings.customVideoResolution = true;
+    } else {
+      this.settings.customVideoResolution = false;
+      let dimensions: string[] = resolution.split(',');
+      this.settings.videoWidth = Number.parseInt(dimensions[0]);
+      this.settings.videoHeight = Number.parseInt(dimensions[1]);
+    }
   }
 
 }
