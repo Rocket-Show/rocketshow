@@ -2,6 +2,8 @@ package com.ascargon.rocketshow.lighting.designer;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.util.List;
+
 /**
  * A Rocket Show Designer preset.
  *
@@ -17,11 +19,11 @@ public class Preset {
     private String[] fixtureUuids;
 
     // the selected values
-    private FixtureChannelValue[] fixtureChannelValues;
-    private FixtureCapabilityValue[] fixtureCapabilityValues;
+    private List<FixtureChannelValue> fixtureChannelValues;
+    private List<FixtureCapabilityValue> fixtureCapabilityValues;
 
     // all related effects
-    private Effect[] effects;
+    private List<Effect> effects;
 
     // position offset, relative to the scene start
     // (null = start/end of the scene itself)
@@ -56,27 +58,27 @@ public class Preset {
         this.fixtureUuids = fixtureUuids;
     }
 
-    public FixtureChannelValue[] getFixtureChannelValues() {
+    public List<FixtureChannelValue> getFixtureChannelValues() {
         return fixtureChannelValues;
     }
 
-    public void setFixtureChannelValues(FixtureChannelValue[] fixtureChannelValues) {
+    public void setFixtureChannelValues(List<FixtureChannelValue> fixtureChannelValues) {
         this.fixtureChannelValues = fixtureChannelValues;
     }
 
-    public FixtureCapabilityValue[] getFixtureCapabilityValues() {
+    public List<FixtureCapabilityValue> getFixtureCapabilityValues() {
         return fixtureCapabilityValues;
     }
 
-    public void setFixtureCapabilityValues(FixtureCapabilityValue[] fixtureCapabilityValues) {
+    public void setFixtureCapabilityValues(List<FixtureCapabilityValue> fixtureCapabilityValues) {
         this.fixtureCapabilityValues = fixtureCapabilityValues;
     }
 
-    public Effect[] getEffects() {
+    public List<Effect> getEffects() {
         return effects;
     }
 
-    public void setEffects(Effect[] effects) {
+    public void setEffects(List<Effect> effects) {
         this.effects = effects;
     }
 

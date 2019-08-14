@@ -11,18 +11,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class FixtureChannelValue {
 
     private String channelName;
-    private String fixtureTemplateUuid;
+    private String profileUuid;
     private Double value;
-
-    public FixtureChannelValue(String channelName, String fixtureTemplateUuid, Double value) {
-        this.channelName = channelName;
-        this.fixtureTemplateUuid = fixtureTemplateUuid;
-        this.value = value;
-    }
-
-    public FixtureChannelValue() {
-
-    }
 
     public String getChannelName() {
         return channelName;
@@ -32,12 +22,12 @@ public class FixtureChannelValue {
         this.channelName = channelName;
     }
 
-    public String getFixtureTemplateUuid() {
-        return fixtureTemplateUuid;
+    public String getProfileUuid() {
+        return profileUuid;
     }
 
-    public void setFixtureTemplateUuid(String fixtureTemplateUuid) {
-        this.fixtureTemplateUuid = fixtureTemplateUuid;
+    public void setProfileUuid(String profileUuid) {
+        this.profileUuid = profileUuid;
     }
 
     public Double getValue() {

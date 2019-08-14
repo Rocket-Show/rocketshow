@@ -2,6 +2,8 @@ package com.ascargon.rocketshow.lighting.designer;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.util.List;
+
 /**
  * A Rocket Show Designer fixture mode.
  *
@@ -12,7 +14,7 @@ public class FixtureMode {
 
     private String name;
     private String shortName;
-    private Object[] channels;
+    private List<Object> channels;
 
     public String getName() {
         return name;
@@ -30,11 +32,11 @@ public class FixtureMode {
         this.shortName = shortName;
     }
 
-    public Object[] getChannels() {
+    public List<Object> getChannels() {
         return channels;
     }
 
-    public void setChannels(Object[] channels) {
+    public void setChannels(List<Object> channels) {
         this.channels = channels;
     }
 }

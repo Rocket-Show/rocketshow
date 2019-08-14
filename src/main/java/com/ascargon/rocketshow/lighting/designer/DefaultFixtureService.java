@@ -51,14 +51,11 @@ public class DefaultFixtureService implements FixtureService {
                     logger.debug("Load fixture " + file.getAbsolutePath());
 
                     ObjectMapper mapper = new ObjectMapper();
-                    FixtureTemplate fixtureTemplate = mapper.readValue(file, FixtureTemplate.class);
+                    FixtureProfile fixtureProfile = mapper.readValue(file, FixtureProfile.class);
 
                     SearchFixtureTemplate searchFixtureTemplate = new SearchFixtureTemplate();
                     searchFixtureTemplate.setUuid(manufacturerShortName + "/" + file.getName().substring(0, file.getName().length() - 5));
-                    searchFixtureTemplate.setName(fixtureTemplate.getName());
-                    if (fixtureTemplate.getCategories() != null) {
-                        searchFixtureTemplate.setMainCategory(fixtureTemplate.getCategories().get(0));
-                    }
+                    searchFixtureTemplate.setName(fixtureProfile.getName());
                     searchFixtureTemplate.setManufacturerShortName(manufacturerShortName);
                     searchFixtureTemplate.setManufacturerName(manufacturerName);
 
@@ -98,9 +95,9 @@ public class DefaultFixtureService implements FixtureService {
             buildCache();
         }
 
-        if(uuid != null) {
-            for(SearchFixtureTemplate searchFixtureTemplate : searchFixtureTemplates) {
-                if(uuid.equals(searchFixtureTemplate.getUuid())) {
+        if (uuid != null) {
+            for (SearchFixtureTemplate searchFixtureTemplate : searchFixtureTemplates) {
+                if (uuid.equals(searchFixtureTemplate.getUuid())) {
                     List<SearchFixtureTemplate> filteredSearchFixtureTemplas = new ArrayList<>();
                     filteredSearchFixtureTemplas.add(searchFixtureTemplate);
                     return filteredSearchFixtureTemplas;

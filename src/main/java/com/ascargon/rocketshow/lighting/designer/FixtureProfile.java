@@ -12,9 +12,9 @@ import java.util.List;
  * @author Moritz A. Vieli
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-class FixtureTemplate {
+class FixtureProfile {
 
-    public enum FixtureType {
+    public enum FixtureCategory {
         Blinder,
         @JsonProperty("Color Changer")
         ColorChanger,
@@ -36,21 +36,13 @@ class FixtureTemplate {
         Other
     }
 
-    private String name;
     private String uuid;
-    private List<String> categories;
+    private String name;
+    private List<FixtureCategory> categories;
     @JsonUnwrapped
-    private FixtureTemplateAvailableChannels availableChannels;
-    private FixtureTemplateWheels wheels;
-    private FixtureMode[] modes;
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
+    private FixtureProfileAvailableChannels availableChannels;
+    private FixtureProfileWheels wheels;
+    private List<FixtureMode> modes;
 
     public String getUuid() {
         return uuid;
@@ -60,36 +52,43 @@ class FixtureTemplate {
         this.uuid = uuid;
     }
 
-    public List<String> getCategories() {
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public List<FixtureCategory> getCategories() {
         return categories;
     }
 
-    public void setCategories(List<String> categories) {
+    public void setCategories(List<FixtureCategory> categories) {
         this.categories = categories;
     }
 
-    public FixtureTemplateAvailableChannels getAvailableChannels() {
+    public FixtureProfileAvailableChannels getAvailableChannels() {
         return availableChannels;
     }
 
-    public void setAvailableChannels(FixtureTemplateAvailableChannels availableChannels) {
+    public void setAvailableChannels(FixtureProfileAvailableChannels availableChannels) {
         this.availableChannels = availableChannels;
     }
 
-    public FixtureTemplateWheels getWheels() {
+    public FixtureProfileWheels getWheels() {
         return wheels;
     }
 
-    public void setWheels(FixtureTemplateWheels wheels) {
+    public void setWheels(FixtureProfileWheels wheels) {
         this.wheels = wheels;
     }
 
-    public FixtureMode[] getModes() {
+    public List<FixtureMode> getModes() {
         return modes;
     }
 
-    public void setModes(FixtureMode[] modes) {
+    public void setModes(List<FixtureMode> modes) {
         this.modes = modes;
     }
-
 }
