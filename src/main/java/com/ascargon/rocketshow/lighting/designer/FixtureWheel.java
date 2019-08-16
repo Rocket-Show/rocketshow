@@ -2,6 +2,7 @@ package com.ascargon.rocketshow.lighting.designer;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -12,7 +13,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FixtureWheel {
 
-    private List<FixtureWheelSlot> slots;
+    private List<FixtureWheelSlot> slots = new ArrayList<>();
 
     public List<FixtureWheelSlot> getSlots() {
         return slots;

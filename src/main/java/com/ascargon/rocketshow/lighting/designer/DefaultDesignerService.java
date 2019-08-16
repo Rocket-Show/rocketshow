@@ -355,7 +355,9 @@ public class DefaultDesignerService implements DesignerService {
             cachedFixtureCapability.setWheelSlots(getWheelSlots(cachedFixtureCapability.getWheel(), capability.getSlotNumber()));
             cachedFixtureCapability.setWheelIsColor(wheelHasSlotType(cachedFixtureCapability.getWheel(), FixtureWheelSlot.FixtureWheelSlotType.Color));
         }
-        cachedFixtureCapability.setCenterValue((int) Math.floor((cachedFixtureCapability.getCapability().getDmxRange().get(0) + cachedFixtureCapability.getCapability().getDmxRange().get(1)) / 2f));
+        if (cachedFixtureCapability.getCapability().getDmxRange() != null && cachedFixtureCapability.getCapability().getDmxRange().size() == 2) {
+            cachedFixtureCapability.setCenterValue((int) Math.floor((cachedFixtureCapability.getCapability().getDmxRange().get(0) + cachedFixtureCapability.getCapability().getDmxRange().get(1)) / 2f));
+        }
         return cachedFixtureCapability;
     }
 
@@ -817,13 +819,49 @@ public class DefaultDesignerService implements DesignerService {
         }
     }
 
+    private CachedFixtureChannel getChannelByName(CachedFixture fixture, String channelName) {
+        for (CachedFixtureChannel channel : fixture.getChannels()) {
+            if ((channel.getName() != null && channel.getName().equals(channelName)) || (channel.getChannel() != null && channel.getChannel().getFineChannelAliases().indexOf(channelName) > -1)) {
+                return channel;
+            }
+        }
+
+        return null;
+    }
+
     private void setUniverseValues(Map<CachedFixture, List<FixtureChannelValue>> fixtures, double masterDimmerValue) {
         // Reset all DMX universes
         for (LightingUniverse universe : lightingUniverses) {
             universe.reset();
         }
 
-        // TODO
+        // loop over each fixture
+        for (Map.Entry<CachedFixture, List<FixtureChannelValue>> entry : fixtures.entrySet()) {
+            // TODO Get the correct universe for this fixture
+            //Universe universe = getUniverseByUuid(entry.getKey().getFixture().getDmxUniverseUuid());
+
+            // loop over each channel for this fixture
+            for (int channelIndex = 0; channelIndex < entry.getKey().getMode().getChannels().size(); channelIndex++) {
+                Object channelObj = entry.getKey().getMode().getChannels().get(channelIndex);
+                if (channelObj instanceof String) {
+                    String channelName = (String) channelObj;
+                    // match this mode channel with a channel value
+                    for (FixtureChannelValue channelValue : entry.getValue()) {
+                        CachedFixtureChannel channel = getChannelByName(entry.getKey(), channelName);
+                        if (channel != null && channel.getChannel() != null) {
+                            int fineIndex = channel.getChannel().getFineChannelAliases().indexOf(channelName);
+                            if (channel.getName().equals(channelValue.getChannelName()) || fineIndex > -1) {
+                                int universeChannel = entry.getKey().getFixture().getDmxFirstChannel() + channelIndex;
+                                int dmxValue = (int) Math.floor(channelValue.getValue() / Math.pow(256, channel.getChannel().getFineChannelAliases().size() - (fineIndex + 1))) % 256;
+                                // TODO use the correct universe
+                                lightingUniverses.get(0).getUniverse().put(universeChannel, dmxValue);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private void calculateUniverse(long timeMillis) {
@@ -831,7 +869,7 @@ public class DefaultDesignerService implements DesignerService {
         Map<CachedFixture, List<FixtureChannelValue>> calculatedFixtures = getChannelValues(timeMillis, presets);
 
         // TODO make the dimmer value adjustable and fall back to the project settings
-        setUniverseValues(calculatedFixtures, 1);
+        setUniverseValues(calculatedFixtures, project.getMasterDimmerValue());
 
         logger.info(lightingUniverses.get(0).getUniverse().toString());
     }
@@ -901,7 +939,10 @@ public class DefaultDesignerService implements DesignerService {
                         cachedFixtureChannel.setChannel(entry.getValue());
                         cachedFixtureChannel.setName(entry.getKey());
                         cachedFixtureChannel.setCapabilities(getCapabilitiesByChannel(cachedFixtureChannel.getChannel(), entry.getKey(), profile));
-                        cachedFixtureChannel.setDefaultValue(getDefaultValueByChannel(cachedFixtureChannel.getChannel()));
+                        Double defaultValue = getDefaultValueByChannel(cachedFixtureChannel.getChannel());
+                        if (defaultValue != null) {
+                            cachedFixtureChannel.setDefaultValue(defaultValue);
+                        }
                         cachedFixtureChannel.setMaxValue(getMaxValueByChannel(cachedFixtureChannel.getChannel()));
                         cachedFixtureChannel.setColorWheel(getColorWheelByChannel(cachedFixtureChannel, profile));
                         channels.add(cachedFixtureChannel);
@@ -941,7 +982,7 @@ public class DefaultDesignerService implements DesignerService {
         this.composition = getCompositionByName(project, compositionPlayer.getComposition().getName());
 
         // Create the caches
-        // TODO
+        updateCachedFixtures();
 
         // TODO Init all universes
         LightingUniverse newUniverse = new LightingUniverse();

@@ -555,6 +555,7 @@ public class CompositionPlayer {
         }
 
         if (designerProject != null) {
+            logger.info("Designer project found. Load it...");
             designerService.load(this, designerProject, pipeline);
         }
 

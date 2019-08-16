@@ -41,6 +41,7 @@ class FixtureProfile {
     private List<FixtureCategory> categories;
     @JsonUnwrapped
     private FixtureProfileAvailableChannels availableChannels;
+    @JsonUnwrapped
     private FixtureProfileWheels wheels;
     private List<FixtureMode> modes;
 

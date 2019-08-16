@@ -1,6 +1,9 @@
 package com.ascargon.rocketshow.lighting.designer;
 
+import com.ascargon.rocketshow.composition.CompositionPlayer;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +15,8 @@ import java.util.List;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EffectCurve extends Effect {
+
+    private final static Logger logger = LoggerFactory.getLogger(EffectCurve.class);
 
     private List<FixtureCapability> capabilities = new ArrayList<>();
     private List<EffectCurveProfileChannels> channels = new ArrayList<>();
@@ -36,7 +41,7 @@ public class EffectCurve extends Effect {
         double phase = this.phaseMillis + phasingIndex * this.phasingMillis;
 
         // Calculate the value according to the curve
-        double value = this.amplitude / 2d * Math.sin((2 * Math.PI * (timeMillis - phase) / this.lengthMillis)) + 255 / 2d + this.position;
+        double value = this.amplitude / 2d * Math.sin((2 * Math.PI * (timeMillis - phase) / this.lengthMillis)) / 2d + this.position;
 
         if (value < this.minValue) {
             value = this.minValue;
