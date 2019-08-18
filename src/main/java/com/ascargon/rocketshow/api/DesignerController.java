@@ -18,7 +18,7 @@ public class DesignerController {
         this.fixtureService = fixtureService;
     }
 
-    @GetMapping("fixture-search")
+    @GetMapping("fixtures")
     public List<SearchFixtureTemplate> searchFixtures(@RequestParam(value = "uuid", required = false) String uuid, @RequestParam(value = "manufacturerShortName", required = false) String manufacturerShortName, @RequestParam(value = "name", required = false) String name, @RequestParam(value = "mainCategory", required = false) String mainCategory) throws IOException {
         return fixtureService.searchFixtures(uuid, manufacturerShortName, name, mainCategory);
     }
