@@ -53,6 +53,12 @@ import 'web-animations-js';  // Run `npm install --save web-animations-js`.
 /***************************************************************************************************
  * Zone JS is required by Angular itself.
  */
+
+// Disable change detection cycle on request requestAnimationFrame, which runs 60 times a second in the
+// preview component with threejs.
+// See https://stackoverflow.com/questions/54416133/is-it-possible-to-use-ngzone-noop-for-particular-function-component-in-an
+import './ngzone-flags.ts';
+
 import 'zone.js/dist/zone';  // Included with Angular CLI.
 
 
