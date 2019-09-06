@@ -789,7 +789,7 @@ public class DefaultDesignerService implements DesignerService {
                                     FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
                                     fixtureChannelValue.setChannelName(cachedChannel.getName());
                                     fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
-                                    fixtureChannelValue.setValue(cachedChannel.getMaxValue() * effectCurve.getValueAtMillis(timeMillis, fixtureIndex) / 100);
+                                    fixtureChannelValue.setValue(cachedChannel.getMaxValue() * effectCurve.getValueAtMillis(timeMillis, fixtureIndex));
                                     this.mixChannelValue(values, fixtureChannelValue, intensityPercentage);
                                 }
                             }
@@ -805,7 +805,7 @@ public class DefaultDesignerService implements DesignerService {
                                         FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
                                         fixtureChannelValue.setChannelName(cachedChannel.getName());
                                         fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
-                                        fixtureChannelValue.setValue(cachedChannel.getMaxValue() * effectCurve.getValueAtMillis(timeMillis, fixtureIndex) / 100);
+                                        fixtureChannelValue.setValue(cachedChannel.getMaxValue() * effectCurve.getValueAtMillis(timeMillis, fixtureIndex));
                                         this.mixChannelValue(values, fixtureChannelValue, intensityPercentage);
                                     }
                                 }

@@ -18,17 +18,17 @@ public class EffectCurve extends Effect {
 
     private final static Logger logger = LoggerFactory.getLogger(EffectCurve.class);
 
-    private String type = "sine";
+    private String curveType = "sine";
 
     private List<FixtureCapability> capabilities = new ArrayList<>();
     private List<EffectCurveProfileChannels> channels = new ArrayList<>();
 
     private long lengthMillis = 2500;
     private long phaseMillis = 0;
-    private int amplitude = 100;
-    private int position = 0;
-    private int minValue = 0;
-    private int maxValue = 255;
+    private float amplitude = 1;
+    private float position = 0.5f;
+    private float minValue = 0;
+    private float maxValue = 1;
     private long phasingMillis = 0;
 
     @Override
@@ -56,12 +56,12 @@ public class EffectCurve extends Effect {
         return value;
     }
 
-    public String getType() {
-        return type;
+    public String getCurveType() {
+        return curveType;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setCurveType(String curveType) {
+        this.curveType = curveType;
     }
 
     public List<FixtureCapability> getCapabilities() {
@@ -96,35 +96,35 @@ public class EffectCurve extends Effect {
         this.phaseMillis = phaseMillis;
     }
 
-    public int getAmplitude() {
+    public float getAmplitude() {
         return amplitude;
     }
 
-    public void setAmplitude(int amplitude) {
+    public void setAmplitude(float amplitude) {
         this.amplitude = amplitude;
     }
 
-    public int getPosition() {
+    public float getPosition() {
         return position;
     }
 
-    public void setPosition(int position) {
+    public void setPosition(float position) {
         this.position = position;
     }
 
-    public int getMinValue() {
+    public float getMinValue() {
         return minValue;
     }
 
-    public void setMinValue(int minValue) {
+    public void setMinValue(float minValue) {
         this.minValue = minValue;
     }
 
-    public int getMaxValue() {
+    public float getMaxValue() {
         return maxValue;
     }
 
-    public void setMaxValue(int maxValue) {
+    public void setMaxValue(float maxValue) {
         this.maxValue = maxValue;
     }
 
