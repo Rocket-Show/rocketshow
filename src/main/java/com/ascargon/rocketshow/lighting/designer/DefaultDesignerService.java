@@ -767,40 +767,25 @@ public class DefaultDesignerService implements DesignerService {
 
     private void mixEffects(long timeMillis, int fixtureIndex, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double intensityPercentage) {
         for (Effect effect : preset.getPreset().getEffects()) {
-            // EffectCurve
-            if (effect instanceof EffectCurve) {
-                EffectCurve effectCurve = (EffectCurve) effect;
+            if (effect.isVisible()) {
+                // EffectCurve
+                if (effect instanceof EffectCurve) {
+                    EffectCurve effectCurve = (EffectCurve) effect;
 
-                // capabilities
-                for (FixtureCapability capability : effectCurve.getCapabilities()) {
-                    for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
-                        for (CachedFixtureCapability channelCapability : cachedChannel.getCapabilities()) {
-                            if (capabilitiesMatch(
-                                    capability.getType(),
-                                    channelCapability.getCapability().getType(),
-                                    capability.getColor(),
-                                    channelCapability.getCapability().getColor(),
-                                    null,
-                                    null,
-                                    null,
-                                    null
-                            )) {
-                                FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
-                                fixtureChannelValue.setChannelName(cachedChannel.getName());
-                                fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
-                                fixtureChannelValue.setValue(cachedChannel.getMaxValue() * effectCurve.getValueAtMillis(timeMillis, fixtureIndex) / 100);
-                                this.mixChannelValue(values, fixtureChannelValue, intensityPercentage);
-                            }
-                        }
-                    }
-                }
-
-                // channels
-                for (EffectCurveProfileChannels channelProfile : effectCurve.getChannels()) {
-                    if (channelProfile.profileUuid.equals(cachedFixture.getProfile().getUuid())) {
-                        for (String channel : channelProfile.getChannels()) {
-                            for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
-                                if (cachedChannel.getName().equals(channel)) {
+                    // capabilities
+                    for (FixtureCapability capability : effectCurve.getCapabilities()) {
+                        for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
+                            for (CachedFixtureCapability channelCapability : cachedChannel.getCapabilities()) {
+                                if (capabilitiesMatch(
+                                        capability.getType(),
+                                        channelCapability.getCapability().getType(),
+                                        capability.getColor(),
+                                        channelCapability.getCapability().getColor(),
+                                        null,
+                                        null,
+                                        null,
+                                        null
+                                )) {
                                     FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
                                     fixtureChannelValue.setChannelName(cachedChannel.getName());
                                     fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
@@ -809,13 +794,30 @@ public class DefaultDesignerService implements DesignerService {
                                 }
                             }
                         }
+                    }
 
-                        break;
+                    // channels
+                    for (EffectCurveProfileChannels channelProfile : effectCurve.getChannels()) {
+                        if (channelProfile.profileUuid.equals(cachedFixture.getProfile().getUuid())) {
+                            for (String channel : channelProfile.getChannels()) {
+                                for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
+                                    if (cachedChannel.getName().equals(channel)) {
+                                        FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
+                                        fixtureChannelValue.setChannelName(cachedChannel.getName());
+                                        fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
+                                        fixtureChannelValue.setValue(cachedChannel.getMaxValue() * effectCurve.getValueAtMillis(timeMillis, fixtureIndex) / 100);
+                                        this.mixChannelValue(values, fixtureChannelValue, intensityPercentage);
+                                    }
+                                }
+                            }
+
+                            break;
+                        }
                     }
                 }
-            }
 
-            // TODO other effects (PanTilt, etc.)
+                // TODO other effects (PanTilt, etc.)
+            }
         }
     }
 

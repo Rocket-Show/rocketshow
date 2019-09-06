@@ -18,6 +18,8 @@ public class EffectCurve extends Effect {
 
     private final static Logger logger = LoggerFactory.getLogger(EffectCurve.class);
 
+    private String type = "sine";
+
     private List<FixtureCapability> capabilities = new ArrayList<>();
     private List<EffectCurveProfileChannels> channels = new ArrayList<>();
 
@@ -52,6 +54,14 @@ public class EffectCurve extends Effect {
         }
 
         return value;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public List<FixtureCapability> getCapabilities() {

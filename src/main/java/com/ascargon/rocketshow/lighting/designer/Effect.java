@@ -23,8 +23,7 @@ public abstract class Effect {
 
     private final static Logger logger = LoggerFactory.getLogger(Effect.class);
 
-    public enum EffectChannel
-    {
+    public enum EffectChannel {
         colorRed,
         colorGreen,
         colorBlue,
@@ -38,6 +37,7 @@ public abstract class Effect {
 
     private String uuid;
     private EffectChannel[] effectChannels;
+    private boolean visible = true;
 
     public abstract double getValueAtMillis(long timeMillis, Integer fixtureIndex);
 
@@ -57,4 +57,11 @@ public abstract class Effect {
         this.effectChannels = effectChannels;
     }
 
+    public boolean isVisible() {
+        return visible;
+    }
+
+    public void setVisible(boolean visible) {
+        this.visible = visible;
+    }
 }
