@@ -27,8 +27,6 @@ public class EffectCurve extends Effect {
     private long phaseMillis = 0;
     private float amplitude = 1;
     private float position = 0.5f;
-    private float minValue = 0;
-    private float maxValue = 1;
     private long phasingMillis = 0;
 
     @Override
@@ -42,18 +40,30 @@ public class EffectCurve extends Effect {
 
         double phase = this.phaseMillis + phasingIndex * this.phasingMillis;
 
-        // Calculate the value according to the curve
-        double value = this.amplitude / 2d * Math.sin((2 * Math.PI * (timeMillis - phase) / this.lengthMillis)) / 2d + this.position;
+        // Calculate the value between 0 and 1 according to the curve
+        double value = 0d;
 
-        if (value < this.minValue) {
-            value = this.minValue;
+        switch (this.curveType) {
+            case "sine":
+                value = this.amplitude / 2 * Math.sin((2 * Math.PI * (timeMillis - phase) / this.lengthMillis)) / 2d;
+                break;
+            case "square":
+                // TODO
+                break;
+            case "triangle":
+                // TODO
+                break;
+            case "sawtooth":
+                // TODO
+                break;
+            case "reverse-sawtooth":
+                // TODO
+                break;
         }
 
-        if (value > this.maxValue) {
-            value = this.maxValue;
-        }
+        value += this.position;
 
-        return value;
+        return Math.max(Math.min(value, 1), 0);
     }
 
     public String getCurveType() {
@@ -110,22 +120,6 @@ public class EffectCurve extends Effect {
 
     public void setPosition(float position) {
         this.position = position;
-    }
-
-    public float getMinValue() {
-        return minValue;
-    }
-
-    public void setMinValue(float minValue) {
-        this.minValue = minValue;
-    }
-
-    public float getMaxValue() {
-        return maxValue;
-    }
-
-    public void setMaxValue(float maxValue) {
-        this.maxValue = maxValue;
     }
 
     public long getPhasingMillis() {
