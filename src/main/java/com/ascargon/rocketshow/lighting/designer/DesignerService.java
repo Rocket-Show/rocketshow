@@ -24,4 +24,14 @@ public interface DesignerService {
 
     long getPositionMillis();
 
+    void startPreview();
+
+    void stopPreview();
+
+    void setPreviewPreset(boolean previewPreset);
+
+    void setSelectedPresetUuid(String selectedPresetUuid);
+
+    void setSelectedSceneUuids(List<String> selectedSceneUuids);
+
 }

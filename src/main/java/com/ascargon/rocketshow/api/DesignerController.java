@@ -1,6 +1,8 @@
 package com.ascargon.rocketshow.api;
 
+import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.lighting.designer.FixtureService;
+import com.ascargon.rocketshow.lighting.designer.Preview;
 import com.ascargon.rocketshow.lighting.designer.SearchFixtureTemplate;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,9 +15,11 @@ import java.util.List;
 public class DesignerController {
 
     private final FixtureService fixtureService;
+    private final DesignerService designerService;
 
-    public DesignerController(FixtureService fixtureService) {
+    public DesignerController(FixtureService fixtureService, DesignerService designerService) {
         this.fixtureService = fixtureService;
+        this.designerService = designerService;
     }
 
     @GetMapping("fixtures")
@@ -26,6 +30,13 @@ public class DesignerController {
     @GetMapping("fixture")
     public String getFixture(@RequestParam("uuid") String uuid) throws IOException {
         return fixtureService.getFixture(uuid);
+    }
+
+    @PostMapping("designer-preview")
+    public void getFixture(@RequestBody Preview preview) {
+        designerService.setPreviewPreset(preview.isPresetPreview());
+        designerService.setSelectedPresetUuid(preview.getPresetUuid());
+        designerService.setSelectedSceneUuids(preview.getSceneUuids());
     }
 
 }

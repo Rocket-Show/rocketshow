@@ -58,6 +58,10 @@ public class DefaultDesignerService implements DesignerService {
         this.fileFilterService = fileFilterService;
         this.lightingService = lightingService;
 
+        if (settingsService.getSettings().getDesignerLivePreview()) {
+            startPreview();
+        }
+
         this.buildDesignerCache();
     }
 
@@ -876,7 +880,7 @@ public class DefaultDesignerService implements DesignerService {
         logger.info(lightingUniverses.get(0).getUniverse().toString());
     }
 
-    private void startScheduler() {
+    private void startTimer() {
         if (universeSenderHandle != null || settingsService.getSettings().getDesignerFrequencyHertz() == null) {
             return;
         }
@@ -1005,7 +1009,7 @@ public class DefaultDesignerService implements DesignerService {
         }
 
         lastPlayTimeMillis = System.currentTimeMillis();
-        startScheduler();
+        startTimer();
     }
 
     @Override
@@ -1050,6 +1054,24 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     @Override
+    public void startPreview() {
+        if (project == null) {
+            return;
+        }
+
+        startTimer();
+    }
+
+    @Override
+    public void stopPreview() {
+        if (project == null) {
+            return;
+        }
+
+        stopTimer();
+    }
+
+    @Override
     public long getPositionMillis() {
         if (project == null) {
             return 0;
@@ -1058,4 +1080,18 @@ public class DefaultDesignerService implements DesignerService {
         return getCurrentPositionMillis();
     }
 
+    @Override
+    public void setPreviewPreset(boolean previewPreset) {
+        this.previewPreset = previewPreset;
+    }
+
+    @Override
+    public void setSelectedPresetUuid(String selectedPresetUuid) {
+        this.selectedPresetUuid = selectedPresetUuid;
+    }
+
+    @Override
+    public void setSelectedSceneUuids(List<String> selectedSceneUuids) {
+        this.selectedSceneUuids = selectedSceneUuids;
+    }
 }

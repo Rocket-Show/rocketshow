@@ -107,6 +107,8 @@ public class Settings {
 
     private Integer designerFrequencyHertz;
 
+    private Boolean designerLivePreview = false;
+
     public MidiDevice getMidiInDevice() {
         return midiInDevice;
     }
@@ -526,6 +528,14 @@ public class Settings {
 
     public void setDesignerFrequencyHertz(Integer designerFrequencyHertz) {
         this.designerFrequencyHertz = designerFrequencyHertz;
+    }
+
+    public Boolean getDesignerLivePreview() {
+        return designerLivePreview;
+    }
+
+    public void setDesignerLivePreview(Boolean designerLivePreview) {
+        this.designerLivePreview = designerLivePreview;
     }
 
 }

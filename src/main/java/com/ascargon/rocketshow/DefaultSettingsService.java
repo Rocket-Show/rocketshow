@@ -147,7 +147,7 @@ public class DefaultSettingsService implements SettingsService {
             settings.setCustomVideoResolution(false);
         }
 
-        if(settings.getCustomVideoResolution() == null) {
+        if (settings.getCustomVideoResolution() == null) {
             settings.setCustomVideoResolution(true);
         }
 
@@ -252,6 +252,10 @@ public class DefaultSettingsService implements SettingsService {
 
         if (settings.getDesignerFrequencyHertz() == null) {
             settings.setDesignerFrequencyHertz(40);
+        }
+
+        if (settings.getDesignerLivePreview() == null) {
+            settings.setDesignerLivePreview(false);
         }
     }
 
