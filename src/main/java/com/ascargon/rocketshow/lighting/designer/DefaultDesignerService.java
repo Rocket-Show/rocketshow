@@ -109,6 +109,18 @@ public class DefaultDesignerService implements DesignerService {
         return null;
     }
 
+    @Override
+    public Project getProjectByName(String name) {
+        // Return the project for a specified name
+        for (Project project : projects) {
+            if (project.getName().equals(name)) {
+                return project;
+            }
+        }
+
+        return null;
+    }
+
     private Composition getCompositionByName(Project project, String compositionName) {
         // Return the project for a specified composition (only one project is supported)
         for (Composition composition : project.getCompositions()) {
@@ -1093,5 +1105,10 @@ public class DefaultDesignerService implements DesignerService {
     @Override
     public void setSelectedSceneUuids(List<String> selectedSceneUuids) {
         this.selectedSceneUuids = selectedSceneUuids;
+    }
+
+    @Override
+    public Project getCurrentProject() {
+        return project;
     }
 }

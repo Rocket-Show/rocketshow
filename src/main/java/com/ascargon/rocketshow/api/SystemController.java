@@ -121,6 +121,8 @@ class SystemController {
 
         if(settings.getDesignerLivePreview()) {
             designerService.startPreview();
+        } else {
+            designerService.stopPreview();
         }
 
         return new ResponseEntity<>(HttpStatus.OK);

@@ -12,6 +12,8 @@ public interface DesignerService {
 
     Project getProjectByCompositionName(String compositionName);
 
+    Project getProjectByName(String name);
+
     void load(CompositionPlayer compositionPlayer, Project project, Pipeline pipeline);
 
     void play();
@@ -33,5 +35,7 @@ public interface DesignerService {
     void setSelectedPresetUuid(String selectedPresetUuid);
 
     void setSelectedSceneUuids(List<String> selectedSceneUuids);
+
+    Project getCurrentProject();
 
 }

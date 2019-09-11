@@ -13,9 +13,18 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Preview {
 
+    private String projectName;
     private boolean presetPreview;
     private List<String> sceneUuids = new ArrayList<>();
     private String presetUuid;
+
+    public String getProjectName() {
+        return projectName;
+    }
+
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
+    }
 
     public boolean isPresetPreview() {
         return presetPreview;
@@ -40,4 +49,5 @@ public class Preview {
     public void setPresetUuid(String presetUuid) {
         this.presetUuid = presetUuid;
     }
+
 }
