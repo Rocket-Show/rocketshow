@@ -4,7 +4,10 @@ import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.lighting.designer.*;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 @RestController()
@@ -33,7 +36,7 @@ public class DesignerController {
     }
 
     @PostMapping("preview")
-    public void preview(@RequestBody Project project) {
+    public synchronized void preview(@RequestBody Project project) {
         if(!settingsService.getSettings().getDesignerLivePreview()) {
             return;
         }
@@ -46,8 +49,10 @@ public class DesignerController {
     }
 
     @GetMapping("project")
-    public Project getProject(@RequestParam("name") String name) {
-        return designerService.getProjectByName(name);
+    public String getProject(@RequestParam("name") String name) throws IOException {
+        // Get the string, because the parsed project might be missing some attributes
+        // not needed in the backend
+        return new String(Files.readAllBytes(Paths.get(settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getDesignerPath() + File.separator + name + ".json")));
     }
 
     @GetMapping("projects")

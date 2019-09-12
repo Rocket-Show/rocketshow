@@ -70,6 +70,10 @@ public class DefaultDesignerService implements DesignerService {
         this.buildDesignerCache();
     }
 
+    private void downloadCurrentFixtures() {
+        
+    }
+
     private void buildDesignerCache() {
         // Load all designer files
         File folder;
@@ -925,7 +929,7 @@ public class DefaultDesignerService implements DesignerService {
             // TODO make the dimmer value adjustable and fall back to the project settings
             setUniverseValues(calculatedFixtures, project.getMasterDimmerValue());
 
-            logger.info(lightingUniverses.get(0).getUniverse().toString());
+//            logger.info(lightingUniverses.get(0).getUniverse().toString());
         } catch (Exception e) {
             logger.error("Could not calculate the universe", e);
         }

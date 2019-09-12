@@ -7,7 +7,7 @@ import java.util.UUID;
 @XmlRootElement
 public class LightingUniverse {
 
-	private HashMap<Integer, Integer> universe;
+	private HashMap<Integer, Integer> universe = new HashMap<>();
 
 	private final String uuid = String.valueOf(UUID.randomUUID());
 
