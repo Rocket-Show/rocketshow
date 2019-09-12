@@ -2,6 +2,7 @@ package com.ascargon.rocketshow.lighting.designer;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -15,6 +16,9 @@ public class Project {
     private String uuid;
     private String name;
     private float masterDimmerValue = 1;
+    private String selectedPresetUuid;
+    private List<String> selectedSceneUuids = new ArrayList<>();
+    private boolean previewPreset = true;
     private Composition[] compositions;
     private List<FixtureProfile> fixtureProfiles;
     private List<Fixture> fixtures;
@@ -43,6 +47,30 @@ public class Project {
 
     public void setMasterDimmerValue(float masterDimmerValue) {
         this.masterDimmerValue = masterDimmerValue;
+    }
+
+    public String getSelectedPresetUuid() {
+        return selectedPresetUuid;
+    }
+
+    public void setSelectedPresetUuid(String selectedPresetUuid) {
+        this.selectedPresetUuid = selectedPresetUuid;
+    }
+
+    public List<String> getSelectedSceneUuids() {
+        return selectedSceneUuids;
+    }
+
+    public void setSelectedSceneUuids(List<String> selectedSceneUuids) {
+        this.selectedSceneUuids = selectedSceneUuids;
+    }
+
+    public boolean isPreviewPreset() {
+        return previewPreset;
+    }
+
+    public void setPreviewPreset(boolean previewPreset) {
+        this.previewPreset = previewPreset;
     }
 
     public Composition[] getCompositions() {

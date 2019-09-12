@@ -14,6 +14,10 @@ public interface DesignerService {
 
     Project getProjectByName(String name);
 
+    List<Project> getAllProjects();
+
+    void saveProject(String project) throws IOException;
+
     void load(CompositionPlayer compositionPlayer, Project project, Pipeline pipeline);
 
     void play();

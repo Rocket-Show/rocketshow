@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.lighting.designer;
 
+import com.ascargon.rocketshow.Settings;
 import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.composition.CompositionPlayer;
 import com.ascargon.rocketshow.lighting.LightingService;
@@ -11,7 +12,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Marshaller;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -121,6 +126,36 @@ public class DefaultDesignerService implements DesignerService {
         return null;
     }
 
+    @Override
+    public List<Project> getAllProjects() {
+        return projects;
+    }
+
+    @Override
+    public void saveProject(String project) throws IOException {
+        // Save a project as string, because we will not access properties
+        // and unmarshalling might be incomplete, because the backend only cares
+        // about a part of the properties not all (e.g. preview-related ones).
+        ObjectMapper mapper = new ObjectMapper();
+        Project projectObject = mapper.readValue(project, Project.class);
+        String projectName = projectObject.getName();
+
+        BufferedWriter writer = new BufferedWriter(new FileWriter(settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getDesignerPath() + File.separator + projectName + ".json"));
+        writer.write(project);
+        writer.close();
+
+        // Add the file to the cache
+        for (Project existingProject : projects) {
+            if (existingProject.getName().equals(projectName)) {
+                projects.remove(existingProject);
+                break;
+            }
+        }
+        projects.add(projectObject);
+
+        logger.info("Designer project '" + projectName + "' saved");
+    }
+
     private Composition getCompositionByName(Project project, String compositionName) {
         // Return the project for a specified composition (only one project is supported)
         for (Composition composition : project.getCompositions()) {
@@ -186,7 +221,7 @@ public class DefaultDesignerService implements DesignerService {
         // Get relevant presets in correct order to process with their corresponding scene, if available
         List<PresetRegionScene> presets = new ArrayList<>();
 
-        if (CompositionPlayer.PlayState.PLAYING.equals(compositionPlayer.getPlayState())) {
+        if (compositionPlayer != null && CompositionPlayer.PlayState.PLAYING.equals(compositionPlayer.getPlayState())) {
             // Only use active presets in current regions
             presets = getPresetsInTime(timeMillis);
         } else {
@@ -629,7 +664,7 @@ public class DefaultDesignerService implements DesignerService {
                         )) {
 
                             // the capabilities match -> apply the value, if possible
-                            if (presetCapabilityValue.getValuePercentage() >= 0 &&
+                            if (presetCapabilityValue.getValuePercentage() != null &&
                                     (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Intensity ||
                                             presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity)) {
                                 // intensity and colorIntensity (dimmer and color)
@@ -760,9 +795,9 @@ public class DefaultDesignerService implements DesignerService {
 
                 for (PresetRegionScene preset : presets) {
                     // search for this fixture in the preset and get it's preset-specific index (for chasing effects)
-                    int fixtureIndex = getFixtureIndex(preset.getPreset(), cachedFixture.getFixture().getUuid());
+                    Integer fixtureIndex = getFixtureIndex(preset.getPreset(), cachedFixture.getFixture().getUuid());
 
-                    if (fixtureIndex >= 0) {
+                    if (fixtureIndex != null) {
                         // this fixture is also in the preset -> mix the required values (overwrite existing values,
                         // if set multiple times)
                         double intensityPercentage = getPresetIntensity(preset, timeMillis);
@@ -883,13 +918,17 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     private void calculateUniverse(long timeMillis) {
-        List<PresetRegionScene> presets = getPresets(timeMillis);
-        Map<CachedFixture, List<FixtureChannelValue>> calculatedFixtures = getChannelValues(timeMillis, presets);
+        try {
+            List<PresetRegionScene> presets = getPresets(timeMillis);
+            Map<CachedFixture, List<FixtureChannelValue>> calculatedFixtures = getChannelValues(timeMillis, presets);
 
-        // TODO make the dimmer value adjustable and fall back to the project settings
-        setUniverseValues(calculatedFixtures, project.getMasterDimmerValue());
+            // TODO make the dimmer value adjustable and fall back to the project settings
+            setUniverseValues(calculatedFixtures, project.getMasterDimmerValue());
 
-        logger.info(lightingUniverses.get(0).getUniverse().toString());
+            logger.info(lightingUniverses.get(0).getUniverse().toString());
+        } catch (Exception e) {
+            logger.error("Could not calculate the universe", e);
+        }
     }
 
     private void startTimer() {
@@ -997,7 +1036,10 @@ public class DefaultDesignerService implements DesignerService {
     public void load(CompositionPlayer compositionPlayer, Project project, Pipeline pipeline) {
         this.compositionPlayer = compositionPlayer;
         this.project = project;
-        this.composition = getCompositionByName(project, compositionPlayer.getComposition().getName());
+
+        if (compositionPlayer != null) {
+            this.composition = getCompositionByName(project, compositionPlayer.getComposition().getName());
+        }
 
         // Create the caches
         updateCachedFixtures();

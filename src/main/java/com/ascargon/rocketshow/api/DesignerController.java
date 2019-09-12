@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.api;
 
+import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.lighting.designer.*;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,10 +14,12 @@ public class DesignerController {
 
     private final FixtureService fixtureService;
     private final DesignerService designerService;
+    private final SettingsService settingsService;
 
-    public DesignerController(FixtureService fixtureService, DesignerService designerService) {
+    public DesignerController(FixtureService fixtureService, DesignerService designerService, SettingsService settingsService) {
         this.fixtureService = fixtureService;
         this.designerService = designerService;
+        this.settingsService = settingsService;
     }
 
     @GetMapping("fixtures")
@@ -30,18 +33,31 @@ public class DesignerController {
     }
 
     @PostMapping("preview")
-    public void getFixture(@RequestBody Preview preview) {
-        if (!designerService.getCurrentProject().getName().equals(preview.getPresetUuid())) {
-            designerService.load(null, designerService.getProjectByName(preview.getProjectName()), null);
+    public void preview(@RequestBody Project project) {
+        if(!settingsService.getSettings().getDesignerLivePreview()) {
+            return;
         }
-        designerService.setPreviewPreset(preview.isPresetPreview());
-        designerService.setSelectedPresetUuid(preview.getPresetUuid());
-        designerService.setSelectedSceneUuids(preview.getSceneUuids());
+        designerService.stopPreview();
+        designerService.load(null, project, null);
+        designerService.setPreviewPreset(project.isPreviewPreset());
+        designerService.setSelectedPresetUuid(project.getSelectedPresetUuid());
+        designerService.setSelectedSceneUuids(project.getSelectedSceneUuids());
+        designerService.startPreview();
     }
 
     @GetMapping("project")
-    public Project getProject() {
-        return
+    public Project getProject(@RequestParam("name") String name) {
+        return designerService.getProjectByName(name);
+    }
+
+    @GetMapping("projects")
+    public List<Project> getProjects() {
+        return designerService.getAllProjects();
+    }
+
+    @PostMapping("project")
+    public void saveProject(@RequestBody String project) throws IOException {
+        designerService.saveProject(project);
     }
 
 }
