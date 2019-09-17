@@ -30,11 +30,13 @@ public interface DesignerService {
 
     long getPositionMillis();
 
-    void startPreview();
+    void startPreview(long positionMillis);
 
     void stopPreview();
 
     void setPreviewPreset(boolean previewPreset);
+
+    void setPreviewComposition(String compositionName);
 
     void setSelectedPresetUuid(String selectedPresetUuid);
 

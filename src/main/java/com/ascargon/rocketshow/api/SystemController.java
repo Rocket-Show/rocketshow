@@ -120,7 +120,7 @@ class SystemController {
         settingsService.save();
 
         if(settings.getDesignerLivePreview()) {
-            designerService.startPreview();
+            designerService.startPreview(0);
         } else {
             designerService.stopPreview();
         }

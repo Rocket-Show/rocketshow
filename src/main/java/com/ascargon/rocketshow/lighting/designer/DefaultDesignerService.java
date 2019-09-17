@@ -51,6 +51,7 @@ public class DefaultDesignerService implements DesignerService {
     private Composition composition;
 
     // Live preview
+    private boolean playPreview = false;
     private boolean previewPreset = false;
     private String selectedPresetUuid;
     private List<String> selectedSceneUuids = new ArrayList<>();
@@ -72,7 +73,7 @@ public class DefaultDesignerService implements DesignerService {
         this.lightingService = lightingService;
 
         if (settingsService.getSettings().getDesignerLivePreview()) {
-            startPreview();
+            startPreview(0);
         }
 
         this.buildDesignerCache();
@@ -337,7 +338,7 @@ public class DefaultDesignerService implements DesignerService {
         // Get relevant presets in correct order to process with their corresponding scene, if available
         List<PresetRegionScene> presets = new ArrayList<>();
 
-        if (compositionPlayer != null && CompositionPlayer.PlayState.PLAYING.equals(compositionPlayer.getPlayState())) {
+        if (playPreview || (compositionPlayer != null && CompositionPlayer.PlayState.PLAYING.equals(compositionPlayer.getPlayState()))) {
             // Only use active presets in current regions
             presets = getPresetsInTime(timeMillis);
         } else {
@@ -1224,10 +1225,13 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     @Override
-    public void startPreview() {
+    public void startPreview(long positionMillis) {
         if (project == null) {
             return;
         }
+
+        this.lastPlayTimeMillis = System.currentTimeMillis();
+        this.lastPositionMillis = positionMillis;
 
         startTimer();
     }
@@ -1239,6 +1243,16 @@ public class DefaultDesignerService implements DesignerService {
         }
 
         stopTimer();
+    }
+
+    @Override
+    public void setPreviewComposition(String compositionName) {
+        if (compositionName != null) {
+            composition = getCompositionByName(project, compositionName);
+            playPreview = true;
+        } else {
+            this.playPreview = false;
+        }
     }
 
     @Override

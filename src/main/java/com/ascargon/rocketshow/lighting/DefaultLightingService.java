@@ -121,7 +121,7 @@ public class DefaultLightingService implements LightingService {
             for (LightingUniverse lightingUniverse : lightingUniverseListCopy) {
                 HashMap<Integer, Integer> universe = lightingUniverse.getUniverse();
 
-                if (universe.get(i) != null && universe.get(i) > highestValue) {
+                if (universe != null && universe.get(i) != null && universe.get(i) > highestValue) {
                     highestValue = universe.get(i);
                 }
             }

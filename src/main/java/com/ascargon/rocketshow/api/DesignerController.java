@@ -36,16 +36,29 @@ public class DesignerController {
     }
 
     @PostMapping("preview")
-    public synchronized void preview(@RequestBody Project project) {
-        if(!settingsService.getSettings().getDesignerLivePreview()) {
+    public synchronized void preview(@RequestBody Project project, @RequestParam("positionMillis") long positionMillis, @RequestParam(value = "compositionName", required = false, defaultValue = "") String compositionName) {
+        if (!settingsService.getSettings().getDesignerLivePreview()) {
             return;
         }
         designerService.stopPreview();
         designerService.load(null, project, null);
+
         designerService.setPreviewPreset(project.isPreviewPreset());
         designerService.setSelectedPresetUuid(project.getSelectedPresetUuid());
         designerService.setSelectedSceneUuids(project.getSelectedSceneUuids());
-        designerService.startPreview();
+        if (compositionName != null && compositionName.length() > 0) {
+            designerService.setPreviewComposition(compositionName);
+        }
+        designerService.startPreview(positionMillis);
+    }
+
+    @PostMapping("stop-preview-play")
+    public synchronized void stopPreviewPlay() {
+        if (!settingsService.getSettings().getDesignerLivePreview()) {
+            return;
+        }
+
+        designerService.setPreviewComposition(null);
     }
 
     @GetMapping("project")
