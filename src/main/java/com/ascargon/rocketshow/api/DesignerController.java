@@ -65,4 +65,9 @@ public class DesignerController {
         designerService.saveProject(project);
     }
 
+    @PostMapping("update-profiles")
+    public void updateProfiles() throws IOException {
+        designerService.updateProfiles();
+    }
+
 }

@@ -42,4 +42,6 @@ public interface DesignerService {
 
     Project getCurrentProject();
 
+    void updateProfiles() throws IOException;
+
 }

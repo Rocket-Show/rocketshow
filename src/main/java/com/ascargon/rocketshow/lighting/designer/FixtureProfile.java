@@ -33,7 +33,10 @@ class FixtureProfile {
         Smoke,
         Stand,
         Strobe,
-        Other
+        Other,
+        @JsonProperty("Barrel Scanner")
+        BarrelScanner
+
     }
 
     private String uuid;

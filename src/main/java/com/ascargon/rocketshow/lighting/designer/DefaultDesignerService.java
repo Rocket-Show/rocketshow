@@ -7,6 +7,7 @@ import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.LightingUniverse;
 import com.ascargon.rocketshow.util.FileFilterService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.io.FileUtils;
 import org.freedesktop.gstreamer.Pipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,14 +15,21 @@ import org.springframework.stereotype.Service;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -70,8 +78,112 @@ public class DefaultDesignerService implements DesignerService {
         this.buildDesignerCache();
     }
 
-    private void downloadCurrentFixtures() {
-        
+    private File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {
+        File destFile = new File(destinationDir, zipEntry.getName());
+
+        String destDirPath = destinationDir.getCanonicalPath();
+        String destFilePath = destFile.getCanonicalPath();
+
+        if (!destFilePath.startsWith(destDirPath + File.separator)) {
+            throw new IOException("Entry is outside of the target dir: " + zipEntry.getName());
+        }
+
+        return destFile;
+    }
+
+    private void createDirectoryIfNotExists(String directory) throws IOException {
+        Path path = Paths.get(directory);
+
+        if (Files.notExists(path)) {
+            Files.createDirectories(path);
+        }
+    }
+
+    private void extractFolder(String zipFile) throws ZipException, IOException {
+        int BUFFER = 2048;
+        File file = new File(zipFile);
+
+        ZipFile zip = new ZipFile(file);
+        String newPath = zipFile.substring(0, zipFile.length() - 4);
+
+        new File(newPath).mkdir();
+        Enumeration zipFileEntries = zip.entries();
+
+        // Process each entry
+        while (zipFileEntries.hasMoreElements()) {
+            // grab a zip file entry
+            ZipEntry entry = (ZipEntry) zipFileEntries.nextElement();
+            String currentEntry = entry.getName();
+            File destFile = new File(newPath, currentEntry);
+            //destFile = new File(newPath, destFile.getName());
+            File destinationParent = destFile.getParentFile();
+
+            // create the parent directory structure if needed
+            destinationParent.mkdirs();
+
+            if (!entry.isDirectory()) {
+                BufferedInputStream inputStream = new BufferedInputStream(zip
+                        .getInputStream(entry));
+                int currentByte;
+                // establish buffer for writing file
+                byte data[] = new byte[BUFFER];
+
+                // write the current file to disk
+                FileOutputStream fos = new FileOutputStream(destFile);
+                BufferedOutputStream dest = new BufferedOutputStream(fos,
+                        BUFFER);
+
+                // read and write until last byte is encountered
+                while ((currentByte = inputStream.read(data, 0, BUFFER)) != -1) {
+                    dest.write(data, 0, currentByte);
+                }
+                dest.flush();
+                dest.close();
+                inputStream.close();
+            }
+
+            if (currentEntry.endsWith(".zip")) {
+                // found a zip file, try to open
+                extractFolder(destFile.getAbsolutePath());
+            }
+        }
+    }
+
+    public void updateProfiles() throws IOException {
+        String fixturesPath = settingsService.getSettings().getBasePath() + "fixtures";
+        File fixturesDirectory = new File(fixturesPath);
+
+        // Download the current profile set, if an internet connection is available
+        String downloadFile = settingsService.getSettings().getBasePath() + "fixtures.zip";
+
+        // Download the fixtures ZIP
+        URL url = new URL("https://www.rocketshow.net/designer/fixtures.zip");
+        ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
+        FileOutputStream fileOutputStream = new FileOutputStream(downloadFile);
+        fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
+        fileOutputStream.close();
+
+        // Delete the local directory
+        FileUtils.deleteDirectory(fixturesDirectory);
+
+        // Create the directory
+        createDirectoryIfNotExists(fixturesPath);
+
+        // Unzip the archive
+        extractFolder(downloadFile);
+
+        // Delete the ZIP file
+        File systemFile = new File(downloadFile);
+
+        if (!systemFile.exists()) {
+            return;
+        }
+
+        boolean result = systemFile.delete();
+
+        if (!result) {
+            logger.error("Could not delete fixtures ZIP file '" + downloadFile + "'");
+        }
     }
 
     private void buildDesignerCache() {

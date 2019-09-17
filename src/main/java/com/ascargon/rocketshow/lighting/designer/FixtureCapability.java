@@ -57,7 +57,7 @@ public class FixtureCapability {
         Maintenance,
         Generic,
         Effect,
-        BeamPosition
+        BeamPosition,
     }
 
     public enum FixtureCapabilityColor {
