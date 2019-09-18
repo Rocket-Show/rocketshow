@@ -1,6 +1,5 @@
 package com.ascargon.rocketshow.lighting.designer;
 
-import com.ascargon.rocketshow.Settings;
 import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.composition.CompositionPlayer;
 import com.ascargon.rocketshow.lighting.LightingService;
@@ -13,8 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Marshaller;
 import java.io.*;
 import java.net.URL;
 import java.nio.channels.Channels;
@@ -29,7 +26,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -158,7 +154,7 @@ public class DefaultDesignerService implements DesignerService {
         String downloadFile = settingsService.getSettings().getBasePath() + "fixtures.zip";
 
         // Download the fixtures ZIP
-        URL url = new URL("https://www.rocketshow.net/designer/fixtures.zip");
+        URL url = new URL("https://www.rocketshow.net/designer/downloads/fixtures.zip");
         ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
         FileOutputStream fileOutputStream = new FileOutputStream(downloadFile);
         fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
