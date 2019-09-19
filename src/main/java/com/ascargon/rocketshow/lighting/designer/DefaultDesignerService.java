@@ -740,17 +740,26 @@ public class DefaultDesignerService implements DesignerService {
 
         if (preset.getRegion() != null && preset.getPreset() != null) {
             // Take away intensity for preset fading
-            if (preset.getPreset().getEndMillis() != null && timeMillis > preset.getRegion().getStartMillis() + preset.getPreset().getEndMillis() - preset.getPreset().getFadeOutMillis()) {
+            long presetEnd = preset.getRegion().getEndMillis();
+            if (preset.getPreset().getEndMillis() != null) {
+                presetEnd = preset.getRegion().getStartMillis() + preset.getPreset().getEndMillis();
+            }
+            if (timeMillis > presetEnd - preset.getPreset().getFadeOutMillis()) {
                 // Preset fades out
-                intensityPercentagePreset = (preset.getRegion().getStartMillis() + preset.getPreset().getEndMillis() - timeMillis) / (float) preset.getPreset().getFadeOutMillis();
+                intensityPercentagePreset = (presetEnd - timeMillis) / preset.getPreset().getFadeOutMillis();
             }
 
-            if (preset.getPreset().getStartMillis() != null && timeMillis < preset.getRegion().getStartMillis() + preset.getPreset().getStartMillis() + preset.getPreset().getFadeInMillis()) {
+            long presetStart = preset.getRegion().getStartMillis();
+            if (preset.getPreset().getStartMillis() != null) {
+                presetStart = preset.getRegion().getStartMillis() + preset.getPreset().getStartMillis();
+            }
+            if (timeMillis < presetStart + preset.getPreset().getFadeInMillis()) {
                 // Preset fades in
-                intensityPercentagePreset = (timeMillis - preset.getRegion().getStartMillis() + preset.getPreset().getStartMillis()) / (float) preset.getPreset().getFadeInMillis();
+                intensityPercentagePreset = (timeMillis - presetStart) / preset.getPreset().getFadeInMillis();
             }
 
-            // If the preset and the scene, both are fading, take the stronger
+
+            // If the preset and the scene, both are fading, take the stronger one
             intensityPercentage = Math.min(intensityPercentageScene, intensityPercentagePreset);
         }
 
