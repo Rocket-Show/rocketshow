@@ -306,17 +306,21 @@ public class DefaultDesignerService implements DesignerService {
             Scene scene = project.getScenes().get(sceneIndex);
 
             for (ScenePlaybackRegion region : composition.getScenePlaybackRegions()) {
-                if (region.getSceneUuid().equals(scene.getUuid()) && region.getStartMillis() <= timeMillis && region.getEndMillis() >= timeMillis) {
-                    // This region is currently being played -> check all scene presets
+                if (region.getSceneUuid().equals(scene.getUuid())) {
                     for (int presetIndex = project.getPresets().size() - 1; presetIndex >= 0; presetIndex--) {
                         for (String presetUuid : scene.getPresetUuids()) {
                             if (presetUuid.equals(project.getPresets().get(presetIndex).getUuid())) {
                                 Preset preset = getPresetByUuid(presetUuid);
 
                                 if (preset != null) {
-                                    if ((preset.getStartMillis() == null || preset.getStartMillis() + region.getStartMillis() <= timeMillis)
-                                            && (preset.getEndMillis() == null || preset.getEndMillis() + region.getStartMillis() >= timeMillis)) {
+                                    long presetStartMillis = preset.getStartMillis() == null ? region.getStartMillis() : region.getStartMillis() + preset.getStartMillis();
+                                    long presetEndMillis = preset.getEndMillis() == null ? region.getEndMillis() : region.getStartMillis() + preset.getEndMillis();
 
+                                    // extend the running time, if fading is done outside the boundaries
+                                    presetStartMillis -= preset.isFadeInPre() ? preset.getFadeInMillis() : 0;
+                                    presetEndMillis += preset.isFadeOutPost() ? preset.getFadeOutMillis() : 0;
+
+                                    if (presetStartMillis <= timeMillis && presetEndMillis >= timeMillis) {
                                         activePresets.add(new PresetRegionScene(preset, region, scene));
                                     }
                                 }
@@ -729,33 +733,37 @@ public class DefaultDesignerService implements DesignerService {
             // Fade out is stronger than fade in (if they overlap)
 
             // Take away intensity for scene fading
-            if (timeMillis > preset.getRegion().getEndMillis() - preset.getScene().getFadeOutMillis()) {
+            long sceneStartMillis = preset.getScene().isFadeInPre() ? preset.getRegion().getStartMillis() - preset.getScene().getFadeInMillis() : preset.getRegion().getStartMillis();
+            long sceneEndMillis = preset.getScene().isFadeOutPost() ? preset.getRegion().getEndMillis() + preset.getScene().getFadeOutMillis() : preset.getRegion().getEndMillis();
+
+            if (timeMillis > sceneEndMillis - preset.getScene().getFadeOutMillis()
+                    && timeMillis < sceneEndMillis) {
                 // Scene fades out
-                intensityPercentageScene = (preset.getRegion().getEndMillis() - timeMillis) / (float) preset.getScene().getFadeOutMillis();
-            } else if (timeMillis < preset.getRegion().getStartMillis() + preset.getScene().getFadeInMillis()) {
+                intensityPercentageScene = (sceneEndMillis - timeMillis) / preset.getScene().getFadeOutMillis();
+            } else if (timeMillis < sceneStartMillis + preset.getScene().getFadeInMillis()
+                    && timeMillis > sceneStartMillis) {
                 // Scene fades in
-                intensityPercentageScene = (timeMillis - preset.getRegion().getStartMillis()) / (float) preset.getScene().getFadeInMillis();
+                intensityPercentageScene = (timeMillis - sceneStartMillis) / preset.getScene().getFadeInMillis();
             }
         }
 
         if (preset.getRegion() != null && preset.getPreset() != null) {
             // Take away intensity for preset fading
-            long presetEnd = preset.getRegion().getEndMillis();
-            if (preset.getPreset().getEndMillis() != null) {
-                presetEnd = preset.getRegion().getStartMillis() + preset.getPreset().getEndMillis();
-            }
-            if (timeMillis > presetEnd - preset.getPreset().getFadeOutMillis()) {
-                // Preset fades out
-                intensityPercentagePreset = (presetEnd - timeMillis) / preset.getPreset().getFadeOutMillis();
-            }
+            long presetStartMillis = preset.getPreset().getStartMillis() == null ? preset.getRegion().getStartMillis() : preset.getRegion().getStartMillis() + preset.getPreset().getStartMillis();
+            long presetEndMillis = preset.getPreset().getEndMillis() == null ? preset.getRegion().getEndMillis() : preset.getRegion().getStartMillis() + preset.getPreset().getEndMillis();
 
-            long presetStart = preset.getRegion().getStartMillis();
-            if (preset.getPreset().getStartMillis() != null) {
-                presetStart = preset.getRegion().getStartMillis() + preset.getPreset().getStartMillis();
-            }
-            if (timeMillis < presetStart + preset.getPreset().getFadeInMillis()) {
+            // extend the running time, if fading is done outside the boundaries
+            presetStartMillis -= preset.getPreset().isFadeInPre() ? preset.getPreset().getFadeInMillis() : 0;
+            presetEndMillis += preset.getPreset().isFadeOutPost() ? preset.getPreset().getFadeOutMillis() : 0;
+
+            if (timeMillis > presetEndMillis - preset.getPreset().getFadeOutMillis()
+                    && timeMillis < presetEndMillis) {
+                // Preset fades out
+                intensityPercentagePreset = (presetEndMillis - timeMillis) / preset.getPreset().getFadeOutMillis();
+            } else if (timeMillis < presetStartMillis + preset.getPreset().getFadeInMillis()
+                    && timeMillis > presetStartMillis) {
                 // Preset fades in
-                intensityPercentagePreset = (timeMillis - presetStart) / preset.getPreset().getFadeInMillis();
+                intensityPercentagePreset = (timeMillis - presetStartMillis) / preset.getPreset().getFadeInMillis();
             }
 
 

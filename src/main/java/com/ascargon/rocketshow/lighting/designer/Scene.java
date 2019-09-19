@@ -22,6 +22,10 @@ public class Scene {
     private long fadeInMillis = 2000;
     private long fadeOutMillis = 2000;
 
+    // fade in/out outside the start/end times?
+    private boolean fadeInPre = false;
+    private boolean fadeOutPost = false;
+
     public String getUuid() {
         return uuid;
     }
@@ -62,4 +66,19 @@ public class Scene {
         this.fadeOutMillis = fadeOutMillis;
     }
 
+    public boolean isFadeInPre() {
+        return fadeInPre;
+    }
+
+    public void setFadeInPre(boolean fadeInPre) {
+        this.fadeInPre = fadeInPre;
+    }
+
+    public boolean isFadeOutPost() {
+        return fadeOutPost;
+    }
+
+    public void setFadeOutPost(boolean fadeOutPost) {
+        this.fadeOutPost = fadeOutPost;
+    }
 }
