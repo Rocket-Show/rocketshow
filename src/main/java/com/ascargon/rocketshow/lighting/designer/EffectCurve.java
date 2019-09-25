@@ -45,10 +45,14 @@ public class EffectCurve extends Effect {
 
         switch (this.curveType) {
             case "sine":
-                value = this.amplitude / 2 * Math.sin((2 * Math.PI * (timeMillis - phase) / this.lengthMillis)) / 2d;
+                value = position + amplitude / 2 * Math.sin((2 * Math.PI * (timeMillis - phase) / lengthMillis)) / 2d;
                 break;
             case "square":
-                // TODO
+                if (Math.signum(Math.sin((2 * Math.PI * (timeMillis - phase) / lengthMillis)) / 2) == -1.0) {
+                    value = position + amplitude / 2;
+                } else {
+                    value = position - amplitude / 2;
+                }
                 break;
             case "triangle":
                 // TODO
@@ -60,8 +64,6 @@ public class EffectCurve extends Effect {
                 // TODO
                 break;
         }
-
-        value += this.position;
 
         return Math.max(Math.min(value, 1), 0);
     }
