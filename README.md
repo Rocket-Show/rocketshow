@@ -54,16 +54,19 @@ sudo reboot
 16. Zip the image using ```gzip -9 rocketshow.img```.
 
 ### Update process
-- Add the release notes in update/currentversion2.xml and build the war ("mvn install")
-- Copy seed directory directory.tar.gz to rocketshow.net/install, if updated
+- Add the release notes in dist/currentversion2.xml
+- Build the jar with Maven
 - Copy target/rocketshow.jar to rocketshow.net/update/rocketshow.jar
-- Copy install/*.sh scripts to rocketshow.net/install/script/*.sh, if updated
-- Copy update/currentversion2.xml to rocketshow.net/update/currentversion2.xml
-- Copy update/before.sh, update/after.sh to rocketshow.net/update/xy.sh, if updated
-- Copy the new complete image to rocketshow.net/install/images and change the file latest.php to link the new version
+- Copy dist/currentversion2.xml to rocketshow.net/update/currentversion2.xml
 - GIT merge DEV branch to MASTER
 - GIT tag with the current version
 - Switch to DEV and update POM and update/currentversion2.xml versions
+
+#### Optional
+- Copy install/*.sh scripts to rocketshow.net/install/script/*.sh, if updated
+- Copy dist/before.sh, dist/after.sh to rocketshow.net/update/xy.sh, if updated
+- Copy the new complete image to rocketshow.net/install/images and change the file latest.php to link the new version
+- Copy seed directory directory.tar.gz to rocketshow.net/install, if updated
 
 ### Application
 The built application should be uploaded to rocketshow.net/update and be named "rocketshow.jar". The file "currentversion2.xml" can be modified accordingly.
