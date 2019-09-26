@@ -1,6 +1,7 @@
 /WebContent/*
 src/main/resources/static/*
 /target/
+/target_template/
 !.mvn/wrapper/maven-wrapper.jar
 
 # generated from test run
