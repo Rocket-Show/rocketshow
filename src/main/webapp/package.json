@@ -25,7 +25,7 @@
     "@angular/router": "^6.1.10",
     "@ngx-translate/core": "^10.0.2",
     "@ngx-translate/http-loader": "^3.0.1",
-    "@rocketshow/designer": "^1.27.0",
+    "@rocketshow/designer": "^1.28.0",
     "angular-sortablejs": "^2.7.0",
     "angular2-websocket": "^0.9.7",
     "bootstrap": "^4.1.2",

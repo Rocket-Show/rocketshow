@@ -3,6 +3,8 @@ An app to automate and play shows including audio, video, lighting (e.g. DMX) an
 
 ## Development
 ### Build
+Warning: Delete `node_modules/@angular-devkit/build-optimizer/src/.cache` after each NPM package update to make sure, the devkit is not caching an old version (see https://github.com/angular/devkit/issues/913).
+
 1. Build the Java JAR: `mvn install`
 2. Start the backend server from target directory: `java -jar rocketshow.jar`
 3. Open the web app on http://localhost:8080
