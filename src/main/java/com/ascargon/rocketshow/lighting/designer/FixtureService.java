@@ -8,10 +8,10 @@ import java.util.List;
 @Service
 public interface FixtureService {
 
-    void invalidateCache();
-
     List<SearchFixtureTemplate> searchFixtures(String uuid, String manufacturerShortName, String name, String mainCategory) throws IOException;
 
     String getFixture(String uuid) throws IOException;
+
+    void updateProfiles() throws IOException;
 
 }

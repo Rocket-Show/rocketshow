@@ -1,7 +1,10 @@
 package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.SettingsService;
-import com.ascargon.rocketshow.lighting.designer.*;
+import com.ascargon.rocketshow.lighting.designer.DesignerService;
+import com.ascargon.rocketshow.lighting.designer.FixtureService;
+import com.ascargon.rocketshow.lighting.designer.Project;
+import com.ascargon.rocketshow.lighting.designer.SearchFixtureTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
@@ -80,7 +83,7 @@ public class DesignerController {
 
     @PostMapping("update-profiles")
     public void updateProfiles() throws IOException {
-        designerService.updateProfiles();
+        fixtureService.updateProfiles();
     }
 
 }

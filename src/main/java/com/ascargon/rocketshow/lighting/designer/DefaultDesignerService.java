@@ -96,93 +96,6 @@ public class DefaultDesignerService implements DesignerService {
         }
     }
 
-    private void extractFolder(String zipFile) throws ZipException, IOException {
-        int BUFFER = 2048;
-        File file = new File(zipFile);
-
-        ZipFile zip = new ZipFile(file);
-        String newPath = zipFile.substring(0, zipFile.length() - 4);
-
-        new File(newPath).mkdir();
-        Enumeration zipFileEntries = zip.entries();
-
-        // Process each entry
-        while (zipFileEntries.hasMoreElements()) {
-            // grab a zip file entry
-            ZipEntry entry = (ZipEntry) zipFileEntries.nextElement();
-            String currentEntry = entry.getName();
-            File destFile = new File(newPath, currentEntry);
-            //destFile = new File(newPath, destFile.getName());
-            File destinationParent = destFile.getParentFile();
-
-            // create the parent directory structure if needed
-            destinationParent.mkdirs();
-
-            if (!entry.isDirectory()) {
-                BufferedInputStream inputStream = new BufferedInputStream(zip
-                        .getInputStream(entry));
-                int currentByte;
-                // establish buffer for writing file
-                byte data[] = new byte[BUFFER];
-
-                // write the current file to disk
-                FileOutputStream fos = new FileOutputStream(destFile);
-                BufferedOutputStream dest = new BufferedOutputStream(fos,
-                        BUFFER);
-
-                // read and write until last byte is encountered
-                while ((currentByte = inputStream.read(data, 0, BUFFER)) != -1) {
-                    dest.write(data, 0, currentByte);
-                }
-                dest.flush();
-                dest.close();
-                inputStream.close();
-            }
-
-            if (currentEntry.endsWith(".zip")) {
-                // found a zip file, try to open
-                extractFolder(destFile.getAbsolutePath());
-            }
-        }
-    }
-
-    public void updateProfiles() throws IOException {
-        String fixturesPath = settingsService.getSettings().getBasePath() + "fixtures";
-        File fixturesDirectory = new File(fixturesPath);
-
-        // Download the current profile set, if an internet connection is available
-        String downloadFile = settingsService.getSettings().getBasePath() + "fixtures.zip";
-
-        // Download the fixtures ZIP
-        URL url = new URL("https://www.rocketshow.net/designer/downloads/fixtures.zip");
-        ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
-        FileOutputStream fileOutputStream = new FileOutputStream(downloadFile);
-        fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
-        fileOutputStream.close();
-
-        // Delete the local directory
-        FileUtils.deleteDirectory(fixturesDirectory);
-
-        // Create the directory
-        createDirectoryIfNotExists(fixturesPath);
-
-        // Unzip the archive
-        extractFolder(downloadFile);
-
-        // Delete the ZIP file
-        File systemFile = new File(downloadFile);
-
-        if (!systemFile.exists()) {
-            return;
-        }
-
-        boolean result = systemFile.delete();
-
-        if (!result) {
-            logger.error("Could not delete fixtures ZIP file '" + downloadFile + "'");
-        }
-    }
-
     private void buildDesignerCache() {
         // Load all designer files
         File folder;
@@ -252,8 +165,11 @@ public class DefaultDesignerService implements DesignerService {
         ObjectMapper mapper = new ObjectMapper();
         Project projectObject = mapper.readValue(project, Project.class);
         String projectName = projectObject.getName();
+        String designerPath = settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getDesignerPath();
 
-        BufferedWriter writer = new BufferedWriter(new FileWriter(settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getDesignerPath() + File.separator + projectName + ".json"));
+        createDirectoryIfNotExists(designerPath);
+
+        BufferedWriter writer = new BufferedWriter(new FileWriter(designerPath + File.separator + projectName + ".json"));
         writer.write(project);
         writer.close();
 
