@@ -12,7 +12,7 @@ import java.util.Map;
  * @author Moritz A. Vieli
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-class FixtureTemplateAvailableChannels {
+class FixtureProfileAvailableChannels {
 
     private Map<String, FixtureChannel> availableChannels = new HashMap<>();
 

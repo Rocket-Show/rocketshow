@@ -141,6 +141,16 @@ public class DefaultSettingsService implements SettingsService {
             settings.getAudioBusList().add(audioBus);
         }
 
+        if (settings.getVideoWidth() == null || settings.getVideoHeight() == null) {
+            settings.setVideoWidth(1920);
+            settings.setVideoHeight(1080);
+            settings.setCustomVideoResolution(false);
+        }
+
+        if (settings.getCustomVideoResolution() == null) {
+            settings.setCustomVideoResolution(true);
+        }
+
         // Global MIDI mapping
         if (settings.getMidiMapping() == null) {
             settings.setMidiMapping(new MidiMapping());
@@ -242,6 +252,10 @@ public class DefaultSettingsService implements SettingsService {
 
         if (settings.getDesignerFrequencyHertz() == null) {
             settings.setDesignerFrequencyHertz(40);
+        }
+
+        if (settings.getDesignerLivePreview() == null) {
+            settings.setDesignerLivePreview(false);
         }
     }
 

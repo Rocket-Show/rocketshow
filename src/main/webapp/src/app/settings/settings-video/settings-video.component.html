@@ -1,7 +1,8 @@
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{ 'settings.global-play-offset' | translate }}</label>
   <div class="col-lg-9">
-    <input type="text" class="form-control" [ngModel]="settings?.offsetMillisVideo" (ngModelChange)="settings.offsetMillisVideo = $event">
+    <input type="text" class="form-control" [ngModel]="settings?.offsetMillisVideo"
+      (ngModelChange)="settings.offsetMillisVideo = $event">
   </div>
 </div>
 
@@ -10,8 +11,37 @@
   <div class="col-sm-9">
     <select class="custom-select" [ngModel]="getResolution()" (ngModelChange)="setResolution($event)">
       <option [ngValue]="selectUndefinedOptionValue">- {{ 'settings.video-resolution-not-set' | translate }} -</option>
-      <option [ngValue]="'640,360'">640 x 360 (16:9)</option>
-      <option [ngValue]="'800,600'">800 x 600 (4:3)</option>
+      <option [ngValue]="'640,360'">640 x 360 (16:9 nHD)</option>
+      <option [ngValue]="'800,600'">800 x 600 (4:3 SVGA)</option>
+      <option [ngValue]="'1024,768'">1024 x 768 (4:3 XGA)</option>
+      <option [ngValue]="'1280,720'">1280 x 720 (16:9 WXGA)</option>
+      <option [ngValue]="'1280,800'">1280 x 800 (16:10 WXGA)</option>
+      <option [ngValue]="'1280,1024'">1280 x 1024 (5:4 SXGA)</option>
+      <option [ngValue]="'1360,768'">1360 x 768 (≈16:9 HD)</option>
+      <option [ngValue]="'1366,768'">1366 x 768 (≈16:9 HD)</option>
+      <option [ngValue]="'1440,900'">1440 x 900 (16:10 WXGA+)</option>
+      <option [ngValue]="'1536,864'">1536 x 864 (16:9 other)</option>
+      <option [ngValue]="'1600,900'">1600 x 900 (16:9 HD+)</option>
+      <option [ngValue]="'1680,1050'">1680 x 1050 (16:10 WSXGA+)</option>
+      <option [ngValue]="'1920,1080'">1920 x 1080 (16:9 FHD)</option>
+      <option [ngValue]="'1920,1200'">1920 x 1200 (16:10 WUXGA)</option>
+      <option [ngValue]="'2048,1152'">2048 x 1152 (16:9 QWXGA)</option>
+      <option [ngValue]="'2560,1080'">2560 x 1080 (≈21:9 other)</option>
+      <option [ngValue]="'2560,1440'">2560 x 1440 (16:9 QHD)</option>
+      <option [ngValue]="'3440,1440'">3440 x 1440 (≈21:9 other)</option>
+      <option [ngValue]="'3840,2160'">3840 x 2160 (16:9 4K UHD)</option>
+      <option [ngValue]="'custom'">{{ 'settings.video-resolution-custom' | translate }}</option>
     </select>
+  </div>
+</div>
+
+<div *ngIf="settings.customVideoResolution" class="form-group row">
+  <label class="col-lg-3 col-form-label">{{ 'settings.video-resolution-width' | translate }}</label>
+  <div class="col-lg-3">
+    <input type="text" class="form-control" [(ngModel)]="settings.videoWidth">
+  </div>
+  <label class="col-lg-3 col-form-label">{{ 'settings.video-resolution-height' | translate }}</label>
+  <div class="col-lg-3">
+    <input type="text" class="form-control" [(ngModel)]="settings.videoHeight">
   </div>
 </div>

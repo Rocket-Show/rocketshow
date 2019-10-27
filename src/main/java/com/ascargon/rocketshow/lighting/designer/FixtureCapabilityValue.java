@@ -2,15 +2,30 @@ package com.ascargon.rocketshow.lighting.designer;
 
 public class FixtureCapabilityValue {
 
+    private FixtureCapability.FixtureCapabilityType type;
+    private String profileUuid;
+
     // value between 0 and 1
     private Double valuePercentage;
-    private FixtureCapability.FixtureCapabilityType type;
-    private FixtureCapability.FixtureCapabilityColor color;
-    Integer slotNumber;
-    String wheel;
-    String fixtureTemplateUuid;
 
-    public FixtureCapabilityValue() {
+    private FixtureCapability.FixtureCapabilityColor color;
+    private Integer slotNumber;
+    private String wheel;
+
+    public FixtureCapability.FixtureCapabilityType getType() {
+        return type;
+    }
+
+    public void setType(FixtureCapability.FixtureCapabilityType type) {
+        this.type = type;
+    }
+
+    public String getProfileUuid() {
+        return profileUuid;
+    }
+
+    public void setProfileUuid(String profileUuid) {
+        this.profileUuid = profileUuid;
     }
 
     public Double getValuePercentage() {
@@ -19,14 +34,6 @@ public class FixtureCapabilityValue {
 
     public void setValuePercentage(Double valuePercentage) {
         this.valuePercentage = valuePercentage;
-    }
-
-    public FixtureCapability.FixtureCapabilityType getType() {
-        return type;
-    }
-
-    public void setType(FixtureCapability.FixtureCapabilityType type) {
-        this.type = type;
     }
 
     public FixtureCapability.FixtureCapabilityColor getColor() {
@@ -51,13 +58,5 @@ public class FixtureCapabilityValue {
 
     public void setWheel(String wheel) {
         this.wheel = wheel;
-    }
-
-    public String getFixtureTemplateUuid() {
-        return fixtureTemplateUuid;
-    }
-
-    public void setFixtureTemplateUuid(String fixtureTemplateUuid) {
-        this.fixtureTemplateUuid = fixtureTemplateUuid;
     }
 }

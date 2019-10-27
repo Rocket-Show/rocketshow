@@ -39,6 +39,9 @@ export class Settings {
     alsaPeriodSize: number;
     alsaPeriodTime: number;
     audioBusList: AudioBus[];
+    videoWidth: number;
+    videoHeight: number;
+    customVideoResolution: boolean;
     wlanApEnable: boolean;
     wlanApSsid: string;
     wlanApPassphrase: string;
@@ -49,6 +52,8 @@ export class Settings {
     enableRaspberryGpio: boolean;
     instrumentList: Instrument[] = [];
     enableMonitor: boolean;
+    designerFrequencyHertz: number;
+    designerLivePreview: boolean;
 
     constructor(data?: any) {
         if (!data) {
@@ -60,7 +65,7 @@ export class Settings {
         this.midiPath = data.midiPath;
         this.audioPath = data.audioPath;
         this.videoPath = data.videoPath;
-        
+
         if (data.midiInDevice) {
             this.midiInDevice = new MidiDevice(data.midiInDevice);
         }
@@ -141,6 +146,9 @@ export class Settings {
             }
         }
 
+        this.videoWidth = data.videoWidth;
+        this.videoHeight = data.videoHeight;
+        this.customVideoResolution = data.customVideoResolution;
         this.wlanApEnable = data.wlanApEnable;
         this.wlanApSsid = data.wlanApSsid;
         this.wlanApPassphrase = data.wlanApPassphrase;
@@ -159,6 +167,8 @@ export class Settings {
         }
 
         this.enableMonitor = data.enableMonitor;
+        this.designerFrequencyHertz = data.designerFrequencyHertz;
+        this.designerLivePreview = data.designerLivePreview;
     }
 
 }

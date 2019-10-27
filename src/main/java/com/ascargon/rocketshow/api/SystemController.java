@@ -6,6 +6,7 @@ import com.ascargon.rocketshow.Settings;
 import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
+import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.midi.MidiDeviceInService;
 import com.ascargon.rocketshow.midi.MidiDeviceOutService;
 import com.ascargon.rocketshow.util.*;
@@ -38,8 +39,9 @@ class SystemController {
     private final OperatingSystemInformationService operatingSystemInformationService;
     private final SessionService sessionService;
     private final CompositionService compositionService;
+    private final DesignerService designerService;
 
-    public SystemController(StateService stateService, SetService setService, PlayerService playerService, RebootService rebootService, ShutdownService shutdownService, SettingsService settingsService, MidiDeviceInService midiDeviceInService, MidiDeviceOutService midiDeviceOutService, UpdateService updateService, FactoryResetService factoryResetService, LogDownloadService logDownloadService, DiskSpaceService diskSpaceService, OperatingSystemInformationService operatingSystemInformationService, SessionService sessionService, CompositionService compositionService) {
+    public SystemController(StateService stateService, SetService setService, PlayerService playerService, RebootService rebootService, ShutdownService shutdownService, SettingsService settingsService, MidiDeviceInService midiDeviceInService, MidiDeviceOutService midiDeviceOutService, UpdateService updateService, FactoryResetService factoryResetService, LogDownloadService logDownloadService, DiskSpaceService diskSpaceService, OperatingSystemInformationService operatingSystemInformationService, SessionService sessionService, CompositionService compositionService, DesignerService designerService) {
         this.stateService = stateService;
         this.setService = setService;
         this.playerService = playerService;
@@ -55,6 +57,7 @@ class SystemController {
         this.operatingSystemInformationService = operatingSystemInformationService;
         this.sessionService = sessionService;
         this.compositionService = compositionService;
+        this.designerService = designerService;
     }
 
     @PostMapping("reboot")
@@ -115,6 +118,12 @@ class SystemController {
     public ResponseEntity<Void> saveSettings(@RequestBody Settings settings) throws JAXBException {
         settingsService.setSettings(settings);
         settingsService.save();
+
+        if(settings.getDesignerLivePreview()) {
+            designerService.startPreview(0);
+        } else {
+            designerService.stopPreview();
+        }
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

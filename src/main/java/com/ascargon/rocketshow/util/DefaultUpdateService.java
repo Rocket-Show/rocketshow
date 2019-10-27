@@ -47,7 +47,7 @@ public class DefaultUpdateService implements UpdateService {
 
     @Override
     public VersionInfo getCurrentVersionInfo() throws Exception {
-        File file = new File(settingsService.getSettings().getBasePath() + "/" + CURRENT_VERSION);
+        File file = new File(settingsService.getSettings().getBasePath() + File.separator + CURRENT_VERSION);
 
         JAXBContext jaxbContext = JAXBContext.newInstance(VersionInfo.class);
 
@@ -69,7 +69,7 @@ public class DefaultUpdateService implements UpdateService {
     private void downloadUpdateFile(String name) throws Exception {
         URL url = new URL(UPDATE_URL + name);
         ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
-        FileOutputStream fileOutputStream = new FileOutputStream(settingsService.getSettings().getBasePath() + "/" + UPDATE_PATH + "/" + name);
+        FileOutputStream fileOutputStream = new FileOutputStream(settingsService.getSettings().getBasePath() + File.separator + UPDATE_PATH + File.separator + name);
         fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
         fileOutputStream.close();
     }
@@ -95,7 +95,7 @@ public class DefaultUpdateService implements UpdateService {
         sessionService.getSession().setUpdateFinished(false);
         sessionService.save();
 
-        createDirectoryIfNotExists(settingsService.getSettings().getBasePath() + "/" + UPDATE_PATH);
+        createDirectoryIfNotExists(settingsService.getSettings().getBasePath() + File.separator + UPDATE_PATH);
 
         logger.info("Downloading new version...");
 
@@ -111,7 +111,7 @@ public class DefaultUpdateService implements UpdateService {
 
         // Execute the script
         logger.info("Files downloaded. Execute update...");
-        executeScript(new String[]{settingsService.getSettings().getBasePath() + "/" + UPDATE_SCRIPT});
+        executeScript(new String[]{settingsService.getSettings().getBasePath() + File.separator + UPDATE_SCRIPT});
 
         notificationService.notifyClients(UpdateState.REBOOTING);
 

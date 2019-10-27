@@ -3,6 +3,8 @@ package com.ascargon.rocketshow.lighting.designer;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.List;
+
 /**
  * A Rocket Show Designer fixture capability.
  *
@@ -54,7 +56,8 @@ public class FixtureCapability {
         Time,
         Maintenance,
         Generic,
-        Effect
+        Effect,
+        BeamPosition,
     }
 
     public enum FixtureCapabilityColor {
@@ -77,7 +80,7 @@ public class FixtureCapability {
 
     private FixtureCapabilityType type;
     private FixtureCapabilityColor color;
-    private int[] dmxRange;
+    private List<Integer> dmxRange;
     private Object wheel;
     private Integer slotNumber;
     private String brightness;
@@ -100,21 +103,20 @@ public class FixtureCapability {
         this.color = color;
     }
 
-    public int[] getDmxRange() {
+    public List<Integer> getDmxRange() {
         return dmxRange;
     }
 
-    public void setDmxRange(int[] dmxRange) {
+    public void setDmxRange(List<Integer> dmxRange) {
         this.dmxRange = dmxRange;
     }
 
-    public String getWheel() {
+    public Object getWheel() {
         return null;
     }
 
     public void setWheel(Object wheel) {
         this.wheel = wheel;
-        System.out.println(wheel.toString());
     }
 
     public Integer getSlotNumber() {

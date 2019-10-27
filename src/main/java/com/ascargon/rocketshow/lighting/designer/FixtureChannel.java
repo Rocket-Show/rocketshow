@@ -2,6 +2,8 @@ package com.ascargon.rocketshow.lighting.designer;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.util.List;
+
 /**
  * A Rocket Show Designer fixture channel.
  *
@@ -10,17 +12,17 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FixtureChannel {
 
-    private String[] fineChannelAliases;
+    private List<String> fineChannelAliases;
     private String defaultValue;
     private FixtureCapability capability;
-    private FixtureCapability[] capabilities;
+    private List<FixtureCapability> capabilities;
     private String dmxValueResolution;
 
-    public String[] getFineChannelAliases() {
+    public List<String> getFineChannelAliases() {
         return fineChannelAliases;
     }
 
-    public void setFineChannelAliases(String[] fineChannelAliases) {
+    public void setFineChannelAliases(List<String> fineChannelAliases) {
         this.fineChannelAliases = fineChannelAliases;
     }
 
@@ -40,11 +42,11 @@ public class FixtureChannel {
         this.capability = capability;
     }
 
-    public FixtureCapability[] getCapabilities() {
+    public List<FixtureCapability> getCapabilities() {
         return capabilities;
     }
 
-    public void setCapabilities(FixtureCapability[] capabilities) {
+    public void setCapabilities(List<FixtureCapability> capabilities) {
         this.capabilities = capabilities;
     }
 

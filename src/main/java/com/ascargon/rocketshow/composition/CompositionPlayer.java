@@ -19,7 +19,6 @@ import com.ascargon.rocketshow.video.VideoCompositionFile;
 import org.freedesktop.gstreamer.*;
 import org.freedesktop.gstreamer.elements.AppSink;
 import org.freedesktop.gstreamer.elements.BaseSink;
-import org.freedesktop.gstreamer.elements.PlayBin;
 import org.freedesktop.gstreamer.elements.URIDecodeBin;
 import org.freedesktop.gstreamer.lowlevel.GType;
 import org.freedesktop.gstreamer.lowlevel.GValueAPI;
@@ -84,9 +83,6 @@ public class CompositionPlayer {
 
     // All MIDI routers
     private List<MidiRouter> midiRouterList = new ArrayList<>();
-
-    // The designer project, if available
-    private Project project;
 
     public CompositionPlayer(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, PlayerService playerService, SettingsService settingsService, CapabilitiesService capabilitiesService, ActivityNotificationAudioService activityNotificationAudioService, SetService setService, Midi2LightingConvertService midi2LightingConvertService, LightingService lightingService, MidiDeviceOutService midiDeviceOutService, AudioService audioService, DesignerService designerService) {
         this.notificationService = notificationService;
@@ -496,13 +492,13 @@ public class CompositionPlayer {
     public void loadFiles() throws Exception {
         boolean hasActiveFile = false;
         boolean hasAudioFile = false;
-        Project project;
+        Project designerProject;
 
         if (playState != PlayState.STOPPED) {
             return;
         }
 
-        project = designerService.getProjectByCompositionName(composition.getName());
+        designerProject = designerService.getProjectByCompositionName(composition.getName());
 
         // Search for active files
         for (CompositionFile compositionFile : composition.getCompositionFileList()) {
@@ -512,7 +508,7 @@ public class CompositionPlayer {
             }
         }
 
-        if (!hasActiveFile && project == null) {
+        if (!hasActiveFile && designerProject == null) {
             // No files to be played and no designer project (maybe a lead sheet)
             if (!isDefaultComposition && !isSample) {
                 notificationService.notifyClients(playerService, setService);
@@ -552,17 +548,15 @@ public class CompositionPlayer {
         }
 
         // Destroy an old designer project, if required
-        if (this.project != null) {
-            this.designerService.close();
-        }
+        this.designerService.close();
 
         if (hasActiveFile) {
             createGstreamerPipeline(hasAudioFile);
         }
 
-        if (project != null) {
-            designerService.load(this, project, pipeline);
-            this.project = project;
+        if (designerProject != null) {
+            logger.info("Designer project found. Load it...");
+            designerService.load(this, designerProject, pipeline);
         }
 
         logger.debug("Composition '" + composition.getName() + "' loaded");
@@ -589,9 +583,7 @@ public class CompositionPlayer {
             pipeline.play();
         }
 
-        if (project != null) {
-            designerService.play();
-        }
+        designerService.play();
     }
 
     public void pause() throws Exception {
@@ -606,9 +598,7 @@ public class CompositionPlayer {
             pipeline.pause();
         }
 
-        if (project != null) {
-            designerService.pause();
-        }
+        designerService.pause();
 
         playState = PlayState.PAUSED;
 
@@ -638,9 +628,7 @@ public class CompositionPlayer {
             pipeline = null;
         }
 
-        if (project != null) {
-            designerService.close();
-        }
+        designerService.close();
 
         // Close all MIDI routers
         for (MidiRouter midiRouter : midiRouterList) {
@@ -679,9 +667,7 @@ public class CompositionPlayer {
             pipeline.seek(positionMillis, TimeUnit.MILLISECONDS);
         }
 
-        if (project != null) {
-            designerService.seek(positionMillis);
-        }
+        designerService.seek(positionMillis);
 
         if (!isSample) {
             notificationService.notifyClients(playerService, setService);
@@ -701,9 +687,7 @@ public class CompositionPlayer {
             return pipeline.queryPosition(TimeUnit.MILLISECONDS);
         }
 
-        if (project != null) {
-            designerService.getPositionMillis();
-        }
+        designerService.getPositionMillis();
 
         return 0;
     }

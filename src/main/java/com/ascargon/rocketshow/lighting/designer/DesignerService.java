@@ -12,6 +12,12 @@ public interface DesignerService {
 
     Project getProjectByCompositionName(String compositionName);
 
+    Project getProjectByName(String name);
+
+    List<Project> getAllProjects();
+
+    void saveProject(String project) throws IOException;
+
     void load(CompositionPlayer compositionPlayer, Project project, Pipeline pipeline);
 
     void play();
@@ -23,5 +29,19 @@ public interface DesignerService {
     void close();
 
     long getPositionMillis();
+
+    void startPreview(long positionMillis);
+
+    void stopPreview();
+
+    void setPreviewPreset(boolean previewPreset);
+
+    void setPreviewComposition(String compositionName);
+
+    void setSelectedPresetUuid(String selectedPresetUuid);
+
+    void setSelectedSceneUuids(List<String> selectedSceneUuids);
+
+    Project getCurrentProject();
 
 }

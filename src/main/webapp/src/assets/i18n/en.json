@@ -152,6 +152,9 @@
         "remote-device-synchronize": "Synchronize",
         "video-resolution": "Resolution",
         "video-resolution-not-set": "Not specified",
+        "video-resolution-custom": "Custom",
+        "video-resolution-width": "Width (px)",
+        "video-resolution-height": "Height (px)",
         "midi-device-in": "MIDI input",
         "midi-device-out": "MIDI output",
         "midi-control": "Control",
@@ -228,6 +231,8 @@
         "error-max-audio-channels-exceeded": "The current configuration is not valid: The selected audio device supports only {{ max }} channels, but {{ current }} channels have been specified. Please reduce the channel count.",
         "monitoring": "Monitoring",
         "monitoring-enable": "Enable",
+        "designer-live-preview": "Designer live preview",
+        "designer-live-preview-enable": "Enable",
         "midi-destination-enum": {
             "OUT_DEVICE": "MIDI out",
             "LIGHTING": "Lighting",

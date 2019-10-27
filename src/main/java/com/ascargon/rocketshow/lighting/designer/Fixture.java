@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class Fixture {
 
     private String uuid;
-    private String fixtureTemplateUuid;
+    private String profileUuid;
     private String name;
     private String dmxUniverseUuid = "";
     private int dmxFirstChannel;
@@ -25,12 +25,12 @@ public class Fixture {
         this.uuid = uuid;
     }
 
-    public String getFixtureTemplateUuid() {
-        return fixtureTemplateUuid;
+    public String getProfileUuid() {
+        return profileUuid;
     }
 
-    public void setFixtureTemplateUuid(String fixtureTemplateUuid) {
-        this.fixtureTemplateUuid = fixtureTemplateUuid;
+    public void setProfileUuid(String profileUuid) {
+        this.profileUuid = profileUuid;
     }
 
     public String getName() {

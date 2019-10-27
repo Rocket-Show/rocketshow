@@ -16,8 +16,6 @@ public class SearchFixtureTemplate {
     private String manufacturerShortName;
     private String manufacturerName;
 
-    private String mainCategory;
-
     public String getUuid() {
         return uuid;
     }
@@ -48,14 +46,6 @@ public class SearchFixtureTemplate {
 
     public void setManufacturerName(String manufacturerName) {
         this.manufacturerName = manufacturerName;
-    }
-
-    public String getMainCategory() {
-        return mainCategory;
-    }
-
-    public void setMainCategory(String mainCategory) {
-        this.mainCategory = mainCategory;
     }
 
 }

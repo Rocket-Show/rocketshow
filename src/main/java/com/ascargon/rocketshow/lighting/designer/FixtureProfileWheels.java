@@ -13,7 +13,7 @@ import java.util.Map;
  * @author Moritz A. Vieli
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-class FixtureTemplateWheels {
+class FixtureProfileWheels {
 
     private Map<String, FixtureWheel> wheels = new HashMap<>();
 

@@ -26,8 +26,8 @@
 
 <div class="form-group row">
   <div class="col-lg-3 col-form-label">{{ 'settings.monitoring' | translate }}</div>
-  <div class="col-lg-9">
-    <div class="form-check">
+  <div class="col-lg-9 d-flex">
+    <div class="form-check my-auto">
       <input type="checkbox" [ngModel]="settings?.enableMonitor" (ngModelChange)="settings.enableMonitor = $event" class="form-check-input"
         id="enableMonitor">
 

@@ -2,6 +2,7 @@ package com.ascargon.rocketshow.lighting.designer;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -12,13 +13,25 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Project {
 
-    private String name;
     private String uuid;
+    private String name;
+    private float masterDimmerValue = 1;
+    private String selectedPresetUuid;
+    private List<String> selectedSceneUuids = new ArrayList<>();
+    private boolean previewPreset = true;
     private Composition[] compositions;
-    private FixtureTemplate[] fixtureTemplates;
-    private Fixture[] fixtures;
-    private Scene[] scenes;
-    private Preset[] presets;
+    private List<FixtureProfile> fixtureProfiles;
+    private List<Fixture> fixtures;
+    private List<Scene> scenes;
+    private List<Preset> presets;
+
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
+    }
 
     public String getName() {
         return name;
@@ -28,12 +41,36 @@ public class Project {
         this.name = name;
     }
 
-    public String getUuid() {
-        return uuid;
+    public float getMasterDimmerValue() {
+        return masterDimmerValue;
     }
 
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
+    public void setMasterDimmerValue(float masterDimmerValue) {
+        this.masterDimmerValue = masterDimmerValue;
+    }
+
+    public String getSelectedPresetUuid() {
+        return selectedPresetUuid;
+    }
+
+    public void setSelectedPresetUuid(String selectedPresetUuid) {
+        this.selectedPresetUuid = selectedPresetUuid;
+    }
+
+    public List<String> getSelectedSceneUuids() {
+        return selectedSceneUuids;
+    }
+
+    public void setSelectedSceneUuids(List<String> selectedSceneUuids) {
+        this.selectedSceneUuids = selectedSceneUuids;
+    }
+
+    public boolean isPreviewPreset() {
+        return previewPreset;
+    }
+
+    public void setPreviewPreset(boolean previewPreset) {
+        this.previewPreset = previewPreset;
     }
 
     public Composition[] getCompositions() {
@@ -44,35 +81,35 @@ public class Project {
         this.compositions = compositions;
     }
 
-    public FixtureTemplate[] getFixtureTemplates() {
-        return fixtureTemplates;
+    public List<FixtureProfile> getFixtureProfiles() {
+        return fixtureProfiles;
     }
 
-    public void setFixtureTemplates(FixtureTemplate[] fixtureTemplates) {
-        this.fixtureTemplates = fixtureTemplates;
+    public void setFixtureProfiles(List<FixtureProfile> fixtureProfiles) {
+        this.fixtureProfiles = fixtureProfiles;
     }
 
-    public Fixture[] getFixtures() {
+    public List<Fixture> getFixtures() {
         return fixtures;
     }
 
-    public void setFixtures(Fixture[] fixtures) {
+    public void setFixtures(List<Fixture> fixtures) {
         this.fixtures = fixtures;
     }
 
-    public Scene[] getScenes() {
+    public List<Scene> getScenes() {
         return scenes;
     }
 
-    public void setScenes(Scene[] scenes) {
+    public void setScenes(List<Scene> scenes) {
         this.scenes = scenes;
     }
 
-    public Preset[] getPresets() {
+    public List<Preset> getPresets() {
         return presets;
     }
 
-    public void setPresets(Preset[] presets) {
+    public void setPresets(List<Preset> presets) {
         this.presets = presets;
     }
 }
