@@ -1170,6 +1170,12 @@ public class DefaultDesignerService implements DesignerService {
         }
 
         stopTimer();
+
+        for (LightingUniverse lightingUniverse : lightingUniverses) {
+            lightingService.removeLightingUniverse(lightingUniverse);
+        }
+
+        lightingUniverses = new ArrayList<>();
     }
 
     @Override
