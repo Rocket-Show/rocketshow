@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class DefaultPlayerService implements PlayerService {
@@ -172,10 +173,7 @@ public class DefaultPlayerService implements PlayerService {
 
         // Wait for the compositions on all devices to be loaded
         playExecutor.shutdown();
-
-        while (!playExecutor.isTerminated()) {
-            Thread.sleep(50);
-        }
+        playExecutor.awaitTermination(60, TimeUnit.SECONDS);
 
         // Load the local files outside the executor for better error handling
         currentCompositionPlayer.loadFiles();
@@ -287,14 +285,7 @@ public class DefaultPlayerService implements PlayerService {
 
         // Wait for all devices to be stopped
         executor.shutdown();
-
-        while (!executor.isTerminated()) {
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                logger.error("Error while waiting to stop the composition", e);
-            }
-        }
+        executor.awaitTermination(60, TimeUnit.SECONDS);
 
         // Reset the lighting universe to clear left out signals
         lightingService.reset();

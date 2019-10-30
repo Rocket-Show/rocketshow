@@ -6,16 +6,15 @@ import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.LightingUniverse;
 import com.ascargon.rocketshow.util.FileFilterService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.io.FileUtils;
 import org.freedesktop.gstreamer.Pipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.io.*;
-import java.net.URL;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,8 +23,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
-import java.util.zip.ZipFile;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -150,6 +147,28 @@ public class DefaultDesignerService implements DesignerService {
         }
 
         return null;
+    }
+
+    @Override
+    public void deleteProjectByName(String name) {
+        // Delete the project
+        File file = new File(settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getDesignerPath() + File.separator + name + ".json");
+
+        if (file.exists()) {
+            boolean result = file.delete();
+
+            if (!result) {
+                logger.error("Could not delete project '" + name + "'");
+            }
+        }
+
+        // Return the project for a specified name
+        for (Project project : projects) {
+            if (project.getName().equals(name)) {
+                projects.remove(project);
+                break;
+            }
+        }
     }
 
     @Override
@@ -951,7 +970,9 @@ public class DefaultDesignerService implements DesignerService {
                                 int universeChannel = entry.getKey().getFixture().getDmxFirstChannel() + channelIndex;
                                 int dmxValue = (int) Math.floor(channelValue.getValue() / Math.pow(256, channel.getChannel().getFineChannelAliases().size() - (fineIndex + 1))) % 256;
                                 // TODO use the correct universe
-                                lightingUniverses.get(0).getUniverse().put(universeChannel, dmxValue);
+                                if (lightingUniverses.size() > 0) {
+                                    lightingUniverses.get(0).getUniverse().put(universeChannel, dmxValue);
+                                }
                                 break;
                             }
                         }
