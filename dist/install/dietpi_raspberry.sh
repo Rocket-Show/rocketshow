@@ -8,74 +8,7 @@ apt-get update
 apt-get upgrade -y
 
 # Install step-by-step because it does not work alltogether (timeouts to raspbian.org, maybe due to connection limits).
-apt-get -y install openjdk-11-jdk fbi ola libnss-mdns wiringpi iptables alsa-base libasound2 alsa-utils openssh-sftp-server
-
-# Install packages to play media for Gstreamer
-sudo apt-get install -y libxml2-dev zlib1g-dev libglib2.0-dev \
-    pkg-config bison flex python3 wget tar gtk-doc-tools libasound2-dev \
-    libgudev-1.0-dev libvorbis-dev libcdparanoia-dev \
-    libtheora-dev libvisual-0.4-dev iso-codes \
-    libraw1394-dev libiec61883-dev libavc1394-dev \
-    libv4l-dev libcaca-dev libspeex-dev libpng-dev \
-    libshout3-dev libjpeg-dev libflac-dev libdv4-dev
-
-sudo apt-get install -y \
-    libtag1-dev libwavpack-dev libsoup2.4-dev libbz2-dev \
-    libcdaudio-dev libdc1394-22-dev ladspa-sdk libass-dev \
-    libcurl4-gnutls-dev libdca-dev libdvdnav-dev \
-    libexempi-dev libexif-dev libfaad-dev libgme-dev libgsm1-dev \
-    libiptcdata0-dev libkate-dev libmimic-dev libmms-dev \
-    libmodplug-dev libmpcdec-dev libofa0-dev libopus-dev \
-    librtmp-dev libschroedinger-dev libslv2-dev
-
-sudo apt-get install -y \
-    libsndfile1-dev libsoundtouch-dev libspandsp-dev \
-    libxvidcore-dev libzvbi-dev liba52-0.7.4-dev \
-    libcdio-dev libdvdread-dev libmad0-dev libmp3lame-dev \
-    libmpeg2-4-dev libopencore-amrnb-dev libopencore-amrwb-dev \
-    libsidplay1-dev libtwolame-dev libx264-dev libusb-1.0 \
-    python-gi-dev yasm python3-dev libgirepository1.0-dev \
-    freeglut3 libgles2-mesa-dev libgl1-mesa-dri \
-    weston wayland-protocols libssl-dev
-
-# Install the gstreamer packages, built by Rocket Show for the Raspberry Pi to make
-# accelerated video playback on Raspberry Pi possible. The versions on the official repos did not work until
-# now (version 1.14.3). The script used to compile the custom gst-version is available here:
-# https://gist.github.com/moritzvieli/417de950209a24a4f7a57ce1bb5bfeb7
-wget https://rocketshow.net/install/gst/gstreamer_1.14.3-1_armhf.deb
-wget https://rocketshow.net/install/gst/gst-plugins-base_1.14.3-1_armhf.deb
-wget https://rocketshow.net/install/gst/gst-plugins-good_1.14.3-1_armhf.deb
-wget https://rocketshow.net/install/gst/gst-plugins-ugly_1.14.3-1_armhf.deb
-wget https://rocketshow.net/install/gst/gst-plugins-bad_1.14.3-1_armhf.deb
-wget https://rocketshow.net/install/gst/gst-libav_1.14.3-1_armhf.deb
-wget https://rocketshow.net/install/gst/gst-omx_1.14.3-1_armhf.deb
-
-apt-get install ./gstreamer_1.14.3-1_armhf.deb
-apt-get install ./gst-plugins-base_1.14.3-1_armhf.deb
-apt-get install ./gst-plugins-good_1.14.3-1_armhf.deb
-apt-get install ./gst-plugins-ugly_1.14.3-1_armhf.deb
-apt-get install ./gst-plugins-bad_1.14.3-1_armhf.deb
-apt-get install ./gst-libav_1.14.3-1_armhf.deb
-apt-get install ./gst-omx_1.14.3-1_armhf.deb
-
-rm gstreamer_1.14.3-1_armhf.deb
-rm gst-plugins-base_1.14.3-1_armhf.deb
-rm gst-plugins-good_1.14.3-1_armhf.deb
-rm gst-plugins-ugly_1.14.3-1_armhf.deb
-rm gst-plugins-bad_1.14.3-1_armhf.deb
-rm gst-libav_1.14.3-1_armhf.deb
-rm gst-omx_1.14.3-1_armhf.deb
-
-# Point libEGL and libGLESv2 to the correct version by copying the correct files. A symbolic link
-# won't work until ldconfig is run again. There should be a cleaner solution, configuring ldconfig
-# to do this work.
-rm /usr/lib/arm-linux-gnueabihf/libEGL.so.1
-rm /usr/lib/arm-linux-gnueabihf/libGLESv2.so.2
-
-cp /opt/vc/lib/libbrcmEGL.so /usr/lib/arm-linux-gnueabihf/libEGL.so.1
-cp /opt/vc/lib/libbrcmGLESv2.so /usr/lib/arm-linux-gnueabihf/libGLESv2.so.2
-
-ldconfig
+apt-get -y install openjdk-11-jdk fbi ola libnss-mdns wiringpi iptables alsa-base libasound2 alsa-utils openssh-sftp-server libgstreamer1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-x gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3
 
 # Add the rocketshow user
 adduser \
