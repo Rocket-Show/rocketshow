@@ -129,8 +129,17 @@ public class DefaultLightingService implements LightingService {
             mixedUniverse[i] = (short) highestValue;
         }
 
+        // delete unnecessary values in the univers
+//        for (int i = 511; i >= 0; i--) {
+//            if (mixedUniverse[i] == 0) {
+//                Arrays.copyOf(mixedUniverse, mixedUniverse.length - 1);
+//            } else {
+//                break;
+//            }
+//        }
+
         if (olaClient != null) {
-            olaClient.streamDmx(1, mixedUniverse);
+            olaClient.sendDmx(1, mixedUniverse);
         }
 
         if (settingsService.getSettings().getEnableMonitor()) {

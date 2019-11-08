@@ -217,6 +217,7 @@
         "alsa-period-time": "ALSA Periodenzeit",
         "lighting-console": "Lichtsteuerungs-Konsole",
         "lighting-console-open": "Lichtsteuerungs-Konsole öffnen",
+        "lighting-designer-frequency-hertz": "Senderate in Hertz",
         "instruments": "Instrumente",
         "instrument": "Instrument",
         "instrument-not-specified": "Nicht spezifiziert",

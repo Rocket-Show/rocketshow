@@ -14,6 +14,8 @@ public interface DesignerService {
 
     Project getProjectByName(String name);
 
+    void deleteProjectByName(String name);
+
     List<Project> getAllProjects();
 
     void saveProject(String project) throws IOException;

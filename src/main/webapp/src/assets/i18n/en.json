@@ -217,6 +217,7 @@
         "alsa-period-time": "ALSA period time",
         "lighting-console": "Lighting console",
         "lighting-console-open": "Open lighting console",
+        "lighting-designer-frequency-hertz": "Refresh rate in Hertz",
         "instruments": "Instruments",
         "instrument": "Instrument",
         "instrument-not-specified": "Not specified",

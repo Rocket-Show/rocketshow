@@ -3,12 +3,15 @@ package com.ascargon.rocketshow;
 import com.ascargon.rocketshow.api.NotificationService;
 import com.ascargon.rocketshow.image.ImageDisplayingService;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
+import com.ascargon.rocketshow.lighting.designer.FixtureService;
 import com.ascargon.rocketshow.midi.MidiDeviceInService;
 import com.ascargon.rocketshow.midi.MidiDeviceOutService;
 import com.ascargon.rocketshow.raspberry.RaspberryGpioControlActionExecutionService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+
+import java.io.IOException;
 
 @SpringBootApplication
 public class RocketShowApplication {
@@ -39,6 +42,15 @@ public class RocketShowApplication {
 
         // Start the designer preview, if necessary
         context.getBean(DesignerService.class);
+
+        // Update the fixture profiles, if possible
+        FixtureService fixtureService = context.getBean(FixtureService.class);
+        try {
+            fixtureService.updateProfiles();
+        } catch (IOException e) {
+            // do nothing. maybe we're not connected to the internet. the user
+            // is able to update the profiles manually from the webapp.
+        }
 
         RocketShowApplication.args = args;
         RocketShowApplication.context = context;

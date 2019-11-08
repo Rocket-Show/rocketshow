@@ -81,6 +81,11 @@ public class DesignerController {
         designerService.saveProject(project);
     }
 
+    @DeleteMapping("project")
+    public void deleteProject(@RequestParam("name") String name) throws IOException {
+        designerService.deleteProjectByName(name);
+    }
+
     @PostMapping("update-profiles")
     public void updateProfiles() throws IOException {
         fixtureService.updateProfiles();
