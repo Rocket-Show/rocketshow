@@ -123,7 +123,7 @@ printf "\n# ROCKETSHOWSTART\nnet.ipv4.ip_forward=1\n# ROCKETSHOWEND\n" | tee -a 
 # Install pi4j
 curl -s get.pi4j.com | bash
 
-# Add execution permissions on the update script
+# Add execution permissions on the start script
 chmod +x start.sh
 
 # Add a service to automatically start the app on boot and redirect port 80 to 8080
