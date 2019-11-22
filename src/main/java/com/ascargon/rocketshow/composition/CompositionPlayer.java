@@ -400,10 +400,8 @@ public class CompositionPlayer {
                     // The audio/video-common part of the pipeline
                     URIDecodeBin videoSource = (URIDecodeBin) ElementFactory.make("uridecodebin", "videouridecodebin");
                     videoSource.set("uri", "file://" + settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getVideoPath() + File.separator + compositionFile.getName());
-                    pipeline.add(videoSource);
 
                     Element videoQueue = ElementFactory.make("queue", "videoqueue");
-                    Element audioQueue = ElementFactory.make("queue", "videoaudioqueue");
                     videoSource.connect((Element.PAD_ADDED) (Element element, Pad pad) -> {
                         Caps caps = pad.getCaps();
 
@@ -412,31 +410,11 @@ public class CompositionPlayer {
                         if (name.startsWith("video/x-raw")) {
                             pad.link(videoQueue.getSinkPads().get(0));
                         } else if (name.startsWith("audio/x-raw")) {
-                            pad.link(audioQueue.getSinkPads().get(0));
+                            // TODO where should the audio go to? hdmisink not available in Debian Buster anymore.
                         }
                     });
-
-                    videoQueue.getSrcPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisVideo() + compositionFile.getOffsetMillis()) * 1000000L);
+                    pipeline.add(videoSource);
                     pipeline.add(videoQueue);
-
-                    audioQueue.getSrcPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisVideo() + compositionFile.getOffsetMillis()) * 1000000L);
-                    pipeline.add(audioQueue);
-
-                    // The video part of the pipeline
-                    Element videoconvert = ElementFactory.make("videoconvert", "videoconvert");
-                    pipeline.add(videoconvert);
-
-                    Element videoscale = ElementFactory.make("videoscale", "videoscale");
-                    pipeline.add(videoscale);
-
-                    Element glupload = ElementFactory.make("glupload", "glupload");
-                    pipeline.add(glupload);
-
-                    Element glcolorconvert = ElementFactory.make("glcolorconvert", "glcolorconvert");
-                    pipeline.add(glcolorconvert);
-
-                    Element glcolorscale = ElementFactory.make("glcolorscale", "glcolorscale");
-                    pipeline.add(glcolorscale);
 
                     Element capsFilter = null;
                     if (settingsService.getSettings().getVideoWidth() != null && settingsService.getSettings().getVideoHeight() != null) {
@@ -448,41 +426,19 @@ public class CompositionPlayer {
                         pipeline.add(capsFilter);
                     }
 
-                    Element glcolorbalance = ElementFactory.make("glcolorbalance", "glcolorbalance");
-                    pipeline.add(glcolorbalance);
-
-                    Element autovideosink = ElementFactory.make("autovideosink", "autovideosink");
-                    pipeline.add(autovideosink);
+                    Element kmssink = ElementFactory.make("kmssink", "kmssink");
+                    pipeline.add(kmssink);
 
                     videoSource.link(videoQueue);
-                    videoQueue.link(videoconvert);
-                    videoconvert.link(videoscale);
-                    videoscale.link(glupload);
-                    glupload.link(glcolorconvert);
-                    glcolorconvert.link(glcolorscale);
 
                     if (capsFilter == null) {
-                        glcolorscale.link(glcolorbalance);
+                        videoQueue.link(kmssink);
                     } else {
-                        glcolorscale.link(capsFilter);
-                        capsFilter.link(glcolorbalance);
+                        videoQueue.link(capsFilter);
+                        capsFilter.link(videoQueue);
                     }
 
-                    glcolorbalance.link(autovideosink);
-
-                    // The audio part of the pipeline
-                    Element audioConvert = ElementFactory.make("audioconvert", "videoaudioconvert");
-                    pipeline.add(audioConvert);
-
-                    Element audioResample = ElementFactory.make("audioresample", "videoaudioresample");
-                    pipeline.add(audioResample);
-
-                    Element omxHdmiAudioSink = ElementFactory.make("omxhdmiaudiosink", "omxhdmiaudiosink");
-                    pipeline.add(omxHdmiAudioSink);
-
-                    audioQueue.link(audioConvert);
-                    audioConvert.link(audioResample);
-                    audioResample.link(omxHdmiAudioSink);
+                    videoQueue.link(kmssink);
                 }
             }
         }
