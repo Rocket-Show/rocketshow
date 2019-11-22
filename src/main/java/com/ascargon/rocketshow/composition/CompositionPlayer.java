@@ -416,28 +416,10 @@ public class CompositionPlayer {
                     pipeline.add(videoSource);
                     pipeline.add(videoQueue);
 
-                    Element capsFilter = null;
-                    if (settingsService.getSettings().getVideoWidth() != null && settingsService.getSettings().getVideoHeight() != null) {
-                        logger.debug("Scale video...");
-
-                        capsFilter = ElementFactory.make("capsfilter", "capsfilter");
-                        Caps caps = GstApi.GST_API.gst_caps_from_string("video/x-raw(memory:GLMemory),width=" + settingsService.getSettings().getVideoWidth() + ",height=" + settingsService.getSettings().getVideoHeight());
-                        capsFilter.set("caps", caps);
-                        pipeline.add(capsFilter);
-                    }
-
                     Element kmssink = ElementFactory.make("kmssink", "kmssink");
                     pipeline.add(kmssink);
 
                     videoSource.link(videoQueue);
-
-                    if (capsFilter == null) {
-                        videoQueue.link(kmssink);
-                    } else {
-                        videoQueue.link(capsFilter);
-                        capsFilter.link(videoQueue);
-                    }
-
                     videoQueue.link(kmssink);
                 }
             }
