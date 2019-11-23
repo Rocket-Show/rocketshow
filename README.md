@@ -59,7 +59,7 @@ chmod +x ./stage2/99-rocket-show/00-run-chroot.sh
 ```
 
 ### Update process
-- Add the release notes in dist/currentversion2.xml
+- Add the release notes in dist/currentversion2.xml and update the date on top
 - Build the jar with Maven
 - Copy target/rocketshow.jar to rocketshow.net/update/rocketshow.jar
 - Copy dist/currentversion2.xml to rocketshow.net/update/currentversion2.xml
