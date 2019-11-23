@@ -48,12 +48,14 @@ cat <<'EOF' >./stage2/99-rocket-show/00-run-chroot.sh
 #
 cd /tmp
 wget https://rocketshow.net/install/script/raspbian.sh
-chmod +x install.sh
-./install.sh
-rm -rf install.sh
+chmod +x raspbian.sh
+./raspbian.sh
+rm -rf raspbian.sh
 EOF
 
 chmod +x ./stage2/99-rocket-show/00-run-chroot.sh
+
+apt-get update
 
 ./build.sh
 ```

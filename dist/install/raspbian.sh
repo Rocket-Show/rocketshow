@@ -83,7 +83,8 @@ systemctl stop hostapd
 
 printf "\n# ROCKETSHOWSTART\ninterface wlan0\n    static ip_address=192.168.4.1/24\n# ROCKETSHOWEND\n" | tee -a /etc/dhcpcd.conf
 
-service dhcpcd restart
+# Don't start during install
+#service dhcpcd restart
 
 printf "\n# ROCKETSHOWSTART\ninterface=wlan0\n  dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h\naddress=/rocketshow.local/192.168.4.1\n# ROCKETSHOWEND\n" | tee -a /etc/dnsmasq.conf
 
@@ -109,8 +110,8 @@ EOF
 
 printf "\n# ROCKETSHOWSTART\nDAEMON_CONF=\"/etc/hostapd/hostapd.conf\"\n# ROCKETSHOWEND\n" | tee -a /etc/default/hostapd
 
-systemctl start hostapd
-systemctl start dnsmasq
+#systemctl start hostapd
+#systemctl start dnsmasq
 
 printf "\n# ROCKETSHOWSTART\nnet.ipv4.ip_forward=1\n# ROCKETSHOWEND\n" | tee -a /etc/sysctl.conf
 
@@ -163,3 +164,7 @@ pcm.!default {
 EOF
 
 chown -R rocketshow:rocketshow /home/rocketshow
+
+# Give the setup some time, because umount won't work afterwards if called too fast ("umount: device is busy")
+echo "Wait 30 seconds..."
+sleep 30s
