@@ -9,7 +9,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { ArraySortPipe } from './array-sort-pipe';
 import { SortablejsModule } from 'angular-sortablejs';
-import { AlertModule, AccordionModule, PopoverModule, TypeaheadModule } from 'ngx-bootstrap';
+import { AlertModule, AccordionModule, PopoverModule, TypeaheadModule, BsDropdownModule } from 'ngx-bootstrap';
 import { ModalModule } from 'ngx-bootstrap';
 import { DropzoneModule } from 'ngx-dropzone-wrapper';
 import { DropzoneConfigInterface } from 'ngx-dropzone-wrapper';
@@ -145,6 +145,7 @@ const DROPZONE_CONFIG: DropzoneConfigInterface = {
     AccordionModule.forRoot(),
     PopoverModule.forRoot(),
     TypeaheadModule.forRoot(),
+    BsDropdownModule.forRoot(),
     DesignerModule
   ],
   providers: [

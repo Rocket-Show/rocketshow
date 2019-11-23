@@ -10,7 +10,8 @@
           <div class="row d-flex mb-1">
             <div class="col-auto mx-auto">
               <!-- Automatically select the next song when finished -->
-              <button type="button" (click)="toggleAutoSelectNextSong()" class="btn btn-transport" [class.text-danger]="session?.autoSelectNextComposition">
+              <button type="button" (click)="toggleAutoSelectNextSong()" class="btn btn-transport"
+                [class.text-danger]="session?.autoSelectNextComposition">
                 <i class="fa fa-level-down fa-fw" aria-hidden="true"></i>
               </button>
 
@@ -21,21 +22,23 @@
               </button>
 
               <!-- Play -->
-              <button type="button" [disabled]="!currentState?.currentCompositionName" (click)="play()" class="btn btn-transport btn-transport-main"
+              <button type="button" [disabled]="!currentState?.currentCompositionName" (click)="play()"
+                class="btn btn-transport btn-transport-main"
                 *ngIf="currentState?.playState == 'STOPPED' || currentState?.playState == 'PAUSED'">
 
                 <i class="fa fa-play fa-fw" aria-hidden="true"></i>
               </button>
 
               <!-- Pause -->
-              <button type="button" [disabled]="!currentState?.currentCompositionName" (click)="pause()" class="btn btn-transport btn-transport-main"
-                *ngIf="currentState?.playState == 'PLAYING'">
+              <button type="button" [disabled]="!currentState?.currentCompositionName" (click)="pause()"
+                class="btn btn-transport btn-transport-main" *ngIf="currentState?.playState == 'PLAYING'">
 
                 <i class="fa fa-pause fa-fw" aria-hidden="true"></i>
               </button>
 
               <!-- Loading -->
-              <button type="button" class="btn btn-transport btn-transport-main" *ngIf="currentState?.playState == 'LOADING' || currentState?.playState == 'LOADED' || currentState?.playState == 'STOPPING'"
+              <button type="button" class="btn btn-transport btn-transport-main"
+                *ngIf="currentState?.playState == 'LOADING' || currentState?.playState == 'LOADED' || currentState?.playState == 'STOPPING'"
                 style="cursor: default;">
                 <i class="fa fa-circle-o-notch fa-spin fa-fw" aria-hidden="true"></i>
               </button>
@@ -47,7 +50,8 @@
               </button>
 
               <!-- Stop -->
-              <button type="button" [disabled]="!currentState?.currentCompositionName || currentState?.playState == 'STOPPING' || (currentState?.playState == 'STOPPED' && currentState?.positionMillis == 0)"
+              <button type="button"
+                [disabled]="!currentState?.currentCompositionName || currentState?.playState == 'STOPPING' || (currentState?.playState == 'STOPPED' && currentState?.positionMillis == 0)"
                 (click)="stop()" class="btn btn-transport">
                 <i class="fa fa-stop fa-fw" aria-hidden="true"></i>
               </button>
@@ -57,8 +61,10 @@
           <!-- The slider -->
           <div class="row d-flex mb-2">
             <div class="col-sm my-auto">
-              <mv-slider min="0" [enabled]="currentState?.currentCompositionName" tooltip="hide" [max]="currentState?.currentCompositionDurationMillis" [(value)]="positionMillis"
-                (slideStart)="slideStart($event)" (slideStop)="slideStop($event)" (change)="slideChange($event)"></mv-slider>
+              <mv-slider min="0" [enabled]="currentState?.currentCompositionName" tooltip="hide"
+                [max]="currentState?.currentCompositionDurationMillis" [(value)]="positionMillis"
+                (slideStart)="slideStart($event)" (slideStop)="slideStop($event)" (change)="slideChange($event)">
+              </mv-slider>
             </div>
           </div>
 
@@ -66,8 +72,10 @@
           <div class="row">
             <div class="col my-auto py-0 px-2 d-flex">
               <h5 class="mx-auto mb-0" style="text-align: center;">
-                <span style="width: 100px; text-align: left; display: inline-block; margin-left: 5px;">{{ playTime }}</span>
-                <span *ngIf="currentState?.currentCompositionName" style="display: inline-block;"> - {{ currentState?.currentCompositionName }}</span>
+                <span
+                  style="width: 100px; text-align: left; display: inline-block; margin-left: 5px;">{{ playTime }}</span>
+                <span *ngIf="currentState?.currentCompositionName" style="display: inline-block;"> -
+                  {{ currentState?.currentCompositionName }}</span>
               </h5>
             </div>
           </div>
@@ -100,7 +108,8 @@
                 <div *ngFor="let audioBus of activityAudio?.activityAudioBusList" class="d-flex pr-2 my-auto">
                   <div *ngFor="let channel of audioBus.activityAudioChannelList" class="d-flex my-auto pr-1">
                     <div class="my-auto activity-indicator"></div>
-                    <div class="my-auto activity-indicator activity-indicator-received" style="margin-left: -10px;" [style.opacity]="audioActivityOpacity(channel.volumeDb)"></div>
+                    <div class="my-auto activity-indicator activity-indicator-received" style="margin-left: -10px;"
+                      [style.opacity]="audioActivityOpacity(channel.volumeDb)"></div>
                   </div>
                 </div>
               </div>
@@ -127,19 +136,22 @@
       <!-- For larger screens -->
       <div class="list-group d-none d-sm-flex" style="flex: 0 0 auto; border-top: 1px solid #444;">
         <div class="list-group-item flex-column align-items-start">
-          <a href="#" class="" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            <span *ngIf="currentSet && currentSet.name">{{ currentSet?.name }}</span>
-            <span *ngIf="!currentSet || !currentSet.name">{{ 'misc.default-set' | translate }}</span>
-            <i class="fa fa-caret-down ml-2" aria-hidden="true"></i>
-          </a>
-
-          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-            <a class="dropdown-item" [class.active]="!currentSet || !currentSet.name" href="#" (click)="selectSet(undefined); false;">{{
-              'misc.default-set' | translate }}</a>
-            <a *ngFor="let set of sets" class="dropdown-item" [class.active]="set.name == currentSet?.name" href="#"
-              (click)="selectSet(set); false;">{{ set.name }}</a>
+          <div class="btn-group" dropdown container="body">
+            <a href="#" id="button-container" dropdownToggle aria-controls="dropdown-container">
+              <span *ngIf="currentSet && currentSet.name">{{ currentSet?.name }}</span>
+              <span *ngIf="!currentSet || !currentSet.name">{{ 'misc.default-set' | translate }}</span>
+              <i class="fa fa-caret-down ml-2" aria-hidden="true"></i>
+            </a>
+            <ul id="dropdown-container" *dropdownMenu class="dropdown-menu" role="menu"
+              aria-labelledby="button-container">
+              <li role="menuitem"> <a class="dropdown-item" [class.active]="!currentSet || !currentSet.name" href="#"
+                  (click)="selectSet(undefined); false;">{{
+                'misc.default-set' | translate }}</a></li>
+              <li role="menuitem" *ngFor="let set of sets"> <a class="dropdown-item"
+                  [class.active]="set.name == currentSet?.name" href="#"
+                  (click)="selectSet(set); false;">{{ set.name }}</a></li>
+            </ul>
           </div>
-
           <span style="margin-top: 3px" class="float-right">{{ totalPlayTime }}</span>
         </div>
       </div>
@@ -156,16 +168,16 @@
         </a>
 
         <!-- No compositions in the current set -->
-        <a *ngIf="!loadingSet && currentSet && currentSet.name && currentSet.compositionList.length == 0" id="composition0"
-          href="#" routerLink="/editor" class="list-group-item flex-column align-items-start">
+        <a *ngIf="!loadingSet && currentSet && currentSet.name && currentSet.compositionList.length == 0"
+          id="composition0" href="#" routerLink="/editor" class="list-group-item flex-column align-items-start">
           <div class="d-flex w-100 justify-content-between">
             <p class="mb-1">{{ 'misc.set-without-compositions' | translate }}</p>
           </div>
         </a>
 
         <!-- no compositions at all -->
-        <a *ngIf="!loadingSet && (currentSet && !currentSet.name) && currentSet.compositionList.length == 0" id="composition0"
-          href="#" routerLink="/editor" class="list-group-item flex-column align-items-start">
+        <a *ngIf="!loadingSet && (currentSet && !currentSet.name) && currentSet.compositionList.length == 0"
+          id="composition0" href="#" routerLink="/editor" class="list-group-item flex-column align-items-start">
           <div class="d-flex w-100 justify-content-between">
             <p class="mb-1">{{ 'misc.no-compositions' | translate }}</p>
           </div>
@@ -184,17 +196,21 @@
       <!-- For smaller screens -->
       <div class="list-group d-sm-none" style="flex: 0 0 auto;">
         <div class="list-group-item flex-column align-items-start pt-2 pb-2">
-          <a href="#" class="" d="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            <span *ngIf="currentSet && currentSet.name">{{ currentSet?.name }}</span>
-            <span *ngIf="!currentSet || !currentSet.name">{{ 'misc.default-set' | translate }}</span>
-            <i class="fa fa-caret-down ml-2" aria-hidden="true"></i>
-          </a>
-
-          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-            <a class="dropdown-item" [class.active]="!currentSet || !currentSet.name" href="#" (click)="selectSet(undefined); false;">{{
-              'misc.default-set' | translate }}</a>
-            <a *ngFor="let set of sets" class="dropdown-item" [class.active]="set.name == currentSet?.name" href="#"
-              (click)="selectSet(set); false;">{{ set.name }}</a>
+          <div class="btn-group" dropdown container="body">
+            <a href="#" id="button-container" dropdownToggle aria-controls="dropdown-container">
+              <span *ngIf="currentSet && currentSet.name">{{ currentSet?.name }}</span>
+              <span *ngIf="!currentSet || !currentSet.name">{{ 'misc.default-set' | translate }}</span>
+              <i class="fa fa-caret-down ml-2" aria-hidden="true"></i>
+            </a>
+            <ul id="dropdown-container" *dropdownMenu class="dropdown-menu" role="menu"
+              aria-labelledby="button-container">
+              <li role="menuitem"> <a class="dropdown-item" [class.active]="!currentSet || !currentSet.name" href="#"
+                  (click)="selectSet(undefined); false;">{{
+                'misc.default-set' | translate }}</a></li>
+              <li role="menuitem" *ngFor="let set of sets"> <a class="dropdown-item"
+                  [class.active]="set.name == currentSet?.name" href="#"
+                  (click)="selectSet(set); false;">{{ set.name }}</a></li>
+            </ul>
           </div>
 
           <span style="margin-top: 3px" class="float-right">{{ totalPlayTime }}</span>
@@ -204,7 +220,8 @@
       <div class="list-group main-list composition-list d-sm-none" style="flex: 0 1 auto; overflow: auto;">
         <!-- Display all compositions -->
         <a *ngFor="let composition of currentSet?.compositionList; let i = index" id="compositionSmall{{ i }}" href="#"
-          (click)="setComposition(i, composition); false" class="list-group-item flex-column align-items-start pt-1 pb-1"
+          (click)="setComposition(i, composition); false"
+          class="list-group-item flex-column align-items-start pt-1 pb-1"
           [class.active]="currentState?.currentCompositionName == composition.name">
 
           <div class="d-flex w-100 justify-content-between">
@@ -214,8 +231,8 @@
         </a>
 
         <!-- No compositions in the current set -->
-        <a *ngIf="!loadingSet && currentSet && currentSet.name && currentSet.compositionList.length == 0" id="composition0"
-          href="#" routerLink="/editor" class="list-group-item flex-column align-items-start">
+        <a *ngIf="!loadingSet && currentSet && currentSet.name && currentSet.compositionList.length == 0"
+          id="composition0" href="#" routerLink="/editor" class="list-group-item flex-column align-items-start">
 
           <div class="d-flex w-100 justify-content-between">
             <p class="mb-1">{{ 'misc.set-without-compositions' | translate }}</p>
@@ -223,8 +240,8 @@
         </a>
 
         <!-- no compositions at all -->
-        <a *ngIf="!loadingSet && (currentSet && !currentSet.name) && currentSet.compositionList.length == 0" id="composition0"
-          href="#" routerLink="/editor" class="list-group-item flex-column align-items-start">
+        <a *ngIf="!loadingSet && (currentSet && !currentSet.name) && currentSet.compositionList.length == 0"
+          id="composition0" href="#" routerLink="/editor" class="list-group-item flex-column align-items-start">
 
           <div class="d-flex w-100 justify-content-between">
             <p class="mb-1">{{ 'misc.no-compositions' | translate }}</p>
