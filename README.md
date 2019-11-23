@@ -47,7 +47,7 @@ cat <<'EOF' >./stage2/99-rocket-show/00-run-chroot.sh
 #!/bin/bash
 #
 cd /tmp
-wget https://rocketshow.net/install/script/install.sh
+wget https://rocketshow.net/install/script/raspbian.sh
 chmod +x install.sh
 ./install.sh
 rm -rf install.sh
