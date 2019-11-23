@@ -1,6 +1,5 @@
 package com.ascargon.rocketshow.util;
 
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
@@ -18,9 +17,14 @@ public class OperatingSystemInformation {
         UNKNOWN, T32, T64
     }
 
+    public enum RaspberryVersion {
+        UNKNOWN, MODEL_3, MODEL_4
+    }
+
     private Type type = Type.UNKNOWN;
     private SubType subType = SubType.UNKNOWN;
     private ArchitectureType architectureType = ArchitectureType.UNKNOWN;
+    private RaspberryVersion raspberryVersion = RaspberryVersion.UNKNOWN;
 
     public Type getType() {
         return type;
@@ -46,4 +50,11 @@ public class OperatingSystemInformation {
         this.architectureType = architectureType;
     }
 
+    public RaspberryVersion getRaspberryVersion() {
+        return raspberryVersion;
+    }
+
+    public void setRaspberryVersion(RaspberryVersion raspberryVersion) {
+        this.raspberryVersion = raspberryVersion;
+    }
 }

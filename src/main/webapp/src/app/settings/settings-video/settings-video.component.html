@@ -6,7 +6,8 @@
   </div>
 </div>
 
-<div class="form-group row">
+<!-- Not available on Debian Buster (Raspberry Pi 4) -->
+<!-- <div class="form-group row">
   <label class="col-sm-3 col-form-label">{{ 'settings.video-resolution' | translate }}</label>
   <div class="col-sm-9">
     <select class="custom-select" [ngModel]="getResolution()" (ngModelChange)="setResolution($event)">
@@ -33,7 +34,7 @@
       <option [ngValue]="'custom'">{{ 'settings.video-resolution-custom' | translate }}</option>
     </select>
   </div>
-</div>
+</div> -->
 
 <div *ngIf="settings.customVideoResolution" class="form-group row">
   <label class="col-lg-3 col-form-label">{{ 'settings.video-resolution-width' | translate }}</label>

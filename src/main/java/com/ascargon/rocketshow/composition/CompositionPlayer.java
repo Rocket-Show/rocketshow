@@ -15,10 +15,13 @@ import com.ascargon.rocketshow.lighting.Midi2LightingConvertService;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.lighting.designer.Project;
 import com.ascargon.rocketshow.midi.*;
+import com.ascargon.rocketshow.util.OperatingSystemInformation;
+import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
 import org.freedesktop.gstreamer.*;
 import org.freedesktop.gstreamer.elements.AppSink;
 import org.freedesktop.gstreamer.elements.BaseSink;
+import org.freedesktop.gstreamer.elements.PlayBin;
 import org.freedesktop.gstreamer.elements.URIDecodeBin;
 import org.freedesktop.gstreamer.lowlevel.GType;
 import org.freedesktop.gstreamer.lowlevel.GValueAPI;
@@ -65,6 +68,7 @@ public class CompositionPlayer {
     private final MidiDeviceOutService midiDeviceOutService;
     private final AudioService audioService;
     private final DesignerService designerService;
+    private final OperatingSystemInformationService operatingSystemInformationService;
 
     private Composition composition;
     private PlayState playState = PlayState.STOPPED;
@@ -84,7 +88,7 @@ public class CompositionPlayer {
     // All MIDI routers
     private List<MidiRouter> midiRouterList = new ArrayList<>();
 
-    public CompositionPlayer(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, PlayerService playerService, SettingsService settingsService, CapabilitiesService capabilitiesService, ActivityNotificationAudioService activityNotificationAudioService, SetService setService, Midi2LightingConvertService midi2LightingConvertService, LightingService lightingService, MidiDeviceOutService midiDeviceOutService, AudioService audioService, DesignerService designerService) {
+    public CompositionPlayer(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, PlayerService playerService, SettingsService settingsService, CapabilitiesService capabilitiesService, ActivityNotificationAudioService activityNotificationAudioService, SetService setService, Midi2LightingConvertService midi2LightingConvertService, LightingService lightingService, MidiDeviceOutService midiDeviceOutService, AudioService audioService, DesignerService designerService, OperatingSystemInformationService operatingSystemInformationService) {
         this.notificationService = notificationService;
         this.activityNotificationMidiService = activityNotificationMidiService;
         this.playerService = playerService;
@@ -97,6 +101,7 @@ public class CompositionPlayer {
         this.midiDeviceOutService = midiDeviceOutService;
         this.audioService = audioService;
         this.designerService = designerService;
+        this.operatingSystemInformationService = operatingSystemInformationService;
 
         this.midiMapping.setParent(settingsService.getSettings().getMidiMapping());
     }
@@ -164,6 +169,38 @@ public class CompositionPlayer {
         } else {
             return 0;
         }
+    }
+
+    private void addVideoToPipelineRaspberry3(CompositionFile compositionFile, int index) {
+        PlayBin playBin = (PlayBin) ElementFactory.make("playbin", "playbin" + index);
+        playBin.set("uri", "file://" + settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getVideoPath() + File.separator + compositionFile.getName());
+        pipeline.add(playBin);
+    }
+
+    private void addVideoToPipelineRaspberry4(CompositionFile compositionFile, int index) {
+        URIDecodeBin videoSource = (URIDecodeBin) ElementFactory.make("uridecodebin", "videouridecodebin");
+        videoSource.set("uri", "file://" + settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getVideoPath() + File.separator + compositionFile.getName());
+
+        Element videoQueue = ElementFactory.make("queue", "videoqueue");
+        videoSource.connect((Element.PAD_ADDED) (Element element, Pad pad) -> {
+            Caps caps = pad.getCaps();
+
+            String name = caps.getStructure(0).getName();
+
+            if (name.startsWith("video/x-raw")) {
+                pad.link(videoQueue.getSinkPads().get(0));
+            } else if (name.startsWith("audio/x-raw")) {
+                // TODO where should the audio go to? hdmisink not available in Debian Buster anymore.
+            }
+        });
+        pipeline.add(videoSource);
+        pipeline.add(videoQueue);
+
+        Element kmssink = ElementFactory.make("kmssink", "kmssink");
+        pipeline.add(kmssink);
+
+        videoSource.link(videoQueue);
+        videoQueue.link(kmssink);
     }
 
     private void createGstreamerPipeline(boolean hasAudioFile) {
@@ -397,92 +434,15 @@ public class CompositionPlayer {
                     // Does not work on OS X
                     // See http://gstreamer-devel.966125.n4.nabble.com/OpenGL-renderer-window-td4686092.html
 
-                    // The audio/video-common part of the pipeline
-                    URIDecodeBin videoSource = (URIDecodeBin) ElementFactory.make("uridecodebin", "videouridecodebin");
-                    videoSource.set("uri", "file://" + settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getVideoPath() + File.separator + compositionFile.getName());
-                    pipeline.add(videoSource);
-
-                    Element videoQueue = ElementFactory.make("queue", "videoqueue");
-                    Element audioQueue = ElementFactory.make("queue", "videoaudioqueue");
-                    videoSource.connect((Element.PAD_ADDED) (Element element, Pad pad) -> {
-                        Caps caps = pad.getCaps();
-
-                        String name = caps.getStructure(0).getName();
-
-                        if (name.startsWith("video/x-raw")) {
-                            pad.link(videoQueue.getSinkPads().get(0));
-                        } else if (name.startsWith("audio/x-raw")) {
-                            pad.link(audioQueue.getSinkPads().get(0));
+                    if (OperatingSystemInformation.Type.LINUX.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+                        if (OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+                            if (OperatingSystemInformation.RaspberryVersion.MODEL_3.equals(operatingSystemInformationService.getOperatingSystemInformation().getRaspberryVersion())) {
+                                addVideoToPipelineRaspberry3(compositionFile, i);
+                            } else if (OperatingSystemInformation.RaspberryVersion.MODEL_4.equals(operatingSystemInformationService.getOperatingSystemInformation().getRaspberryVersion())) {
+                                addVideoToPipelineRaspberry4(compositionFile, i);
+                            }
                         }
-                    });
-
-                    videoQueue.getSrcPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisVideo() + compositionFile.getOffsetMillis()) * 1000000L);
-                    pipeline.add(videoQueue);
-
-                    audioQueue.getSrcPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisVideo() + compositionFile.getOffsetMillis()) * 1000000L);
-                    pipeline.add(audioQueue);
-
-                    // The video part of the pipeline
-                    Element videoconvert = ElementFactory.make("videoconvert", "videoconvert");
-                    pipeline.add(videoconvert);
-
-                    Element videoscale = ElementFactory.make("videoscale", "videoscale");
-                    pipeline.add(videoscale);
-
-                    Element glupload = ElementFactory.make("glupload", "glupload");
-                    pipeline.add(glupload);
-
-                    Element glcolorconvert = ElementFactory.make("glcolorconvert", "glcolorconvert");
-                    pipeline.add(glcolorconvert);
-
-                    Element glcolorscale = ElementFactory.make("glcolorscale", "glcolorscale");
-                    pipeline.add(glcolorscale);
-
-                    Element capsFilter = null;
-                    if (settingsService.getSettings().getVideoWidth() != null && settingsService.getSettings().getVideoHeight() != null) {
-                        logger.debug("Scale video...");
-
-                        capsFilter = ElementFactory.make("capsfilter", "capsfilter");
-                        Caps caps = GstApi.GST_API.gst_caps_from_string("video/x-raw(memory:GLMemory),width=" + settingsService.getSettings().getVideoWidth() + ",height=" + settingsService.getSettings().getVideoHeight());
-                        capsFilter.set("caps", caps);
-                        pipeline.add(capsFilter);
                     }
-
-                    Element glcolorbalance = ElementFactory.make("glcolorbalance", "glcolorbalance");
-                    pipeline.add(glcolorbalance);
-
-                    Element autovideosink = ElementFactory.make("autovideosink", "autovideosink");
-                    pipeline.add(autovideosink);
-
-                    videoSource.link(videoQueue);
-                    videoQueue.link(videoconvert);
-                    videoconvert.link(videoscale);
-                    videoscale.link(glupload);
-                    glupload.link(glcolorconvert);
-                    glcolorconvert.link(glcolorscale);
-
-                    if (capsFilter == null) {
-                        glcolorscale.link(glcolorbalance);
-                    } else {
-                        glcolorscale.link(capsFilter);
-                        capsFilter.link(glcolorbalance);
-                    }
-
-                    glcolorbalance.link(autovideosink);
-
-                    // The audio part of the pipeline
-                    Element audioConvert = ElementFactory.make("audioconvert", "videoaudioconvert");
-                    pipeline.add(audioConvert);
-
-                    Element audioResample = ElementFactory.make("audioresample", "videoaudioresample");
-                    pipeline.add(audioResample);
-
-                    Element omxHdmiAudioSink = ElementFactory.make("omxhdmiaudiosink", "omxhdmiaudiosink");
-                    pipeline.add(omxHdmiAudioSink);
-
-                    audioQueue.link(audioConvert);
-                    audioConvert.link(audioResample);
-                    audioResample.link(omxHdmiAudioSink);
                 }
             }
         }

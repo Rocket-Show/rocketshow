@@ -12,10 +12,12 @@ sed -i '' 's/AUTO_SETUP_AUTOMATED=0/AUTO_SETUP_AUTOMATED=1/g' $file
 sed -i '' 's/AUTO_SETUP_NET_HOSTNAME=DietPi/AUTO_SETUP_NET_HOSTNAME=RocketShow/g' $file
 
 # Don't wait for the network
-sed -i '' 's/CONFIG_BOOT_WAIT_FOR_NETWORK=1/CONFIG_BOOT_WAIT_FOR_NETWORK=0/g' $file
+# TODO We need to wait on Buster. Can we deactivate the wait afterwards? Or not even required to deactivate it anymore?
+#sed -i '' 's/CONFIG_BOOT_WAIT_FOR_NETWORK=1/CONFIG_BOOT_WAIT_FOR_NETWORK=0/g' $file
 
 # Automatically install Rocket Show
 # Does not work. The script hangs infinitely and I don't know why...
+# TODO Retest on Raspbian Buster
 #sed -i '' 's/AUTO_SETUP_CUSTOM_SCRIPT_EXEC=0/AUTO_SETUP_CUSTOM_SCRIPT_EXEC=https:\/\/rocketshow.net\/install\/script\/dietpi_raspberry.sh/g' $file
 
 # Set the CPU governor to performance

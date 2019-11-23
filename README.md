@@ -28,32 +28,35 @@ COPYFILE_DISABLE=true tar -c --exclude='.DS_Store' -zf directory.tar.gz rocketsh
 ```
 
 ### Raspberry Pi Image building
-These steps describe how to build a Raspberry Pi image based on the DietPi distribution on a Mac OS X. Raspbian Light is not supported, because audio playback is laggy.
+This script is used to build the image (may take about 45 minutes). Preparation should be done according to the readme in the GIT repo.
 
-1. Flash an image with DietPi 6.17 ARMv6-Stretch to an SD card.
-2. Remove the card from the Mac and add it again.
-3. There should now be a directory /Volumes/boot available
-4. Execute the shell script dist/install/prepare_dietpi_raspberry_image.sh
-5. This script prepared the configuration for Rocket Show.
-6. Safely remove the SD card and use a Raspberry Pi *connected to the internet* to boot it. According to DietPi, unfortunately there is currently no possibility to build the image without a Raspberry Pi.
-7. Let the Raspberry Pi finish its boot process and install all required software.
-8. SSH into it (username = root, password = dietpi) and run the following code:
-```
+```shell
+git clone https://github.com/RPi-distro/pi-gen.git
+cd pi-gen
+git checkout tags/2019-07-10-raspbian-buster
+
+echo "IMG_NAME='RocketShow'" > config
+
+touch ./stage3/SKIP ./stage4/SKIP ./stage5/SKIP
+rm stage4/EXPORT* stage5/EXPORT*
+
+# Enhance stage2 with rocketshow
+mkdir ./stage2/99-rocket-show
+
+cat <<'EOF' >./stage2/99-rocket-show/00-run-chroot.sh
+#!/bin/bash
+#
 cd /tmp
-wget https://rocketshow.net/install/script/dietpi_raspberry.sh
-chmod +x dietpi_raspberry.sh
-./dietpi_raspberry.sh
-rm -rf dietpi_raspberry.sh
-sudo reboot
+wget https://rocketshow.net/install/script/raspbian.sh
+chmod +x install.sh
+./install.sh
+rm -rf install.sh
+EOF
+
+chmod +x ./stage2/99-rocket-show/00-run-chroot.sh
+
+./build.sh
 ```
-9. Let the system start itself a first time, login again with ssh and shut down using ```shutdown -h now```
-10. Add the SD card back to the Mac.
-11. Find its drive name with ```diskutil list```.
-12. Unmount the disk. E.g. ```diskutil umountDisk /dev/disk2```.
-13 Create an image of the card. E.g. ```sudo dd if=/dev/disk2 of=/Users/vio/sdcard.img bs=512```.
-14. Transfer the image to a Linux (e.g. VirtualBox), because gparted is needed for the next steps.
-15. Use https://raw.githubusercontent.com/Drewsif/PiShrink/master/pishrink.sh to shrink the image.
-16. Zip the image using ```gzip -9 rocketshow.img```.
 
 ### Update process
 - Add the release notes in dist/currentversion2.xml

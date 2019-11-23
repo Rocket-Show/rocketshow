@@ -1,7 +1,7 @@
 package com.ascargon.rocketshow.util;
 
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -55,7 +55,7 @@ public class DefaultOperatingSystemInformationService implements OperatingSystem
                 while ((line = bufferedReader.readLine()) != null) {
                     if (line.toLowerCase().startsWith("id_like")) {
                         idLike = line.split("=")[1];
-                    } else if(line.toLowerCase().startsWith("id")) {
+                    } else if (line.toLowerCase().startsWith("id")) {
                         id = line.split("=")[1];
                     }
                 }
@@ -63,15 +63,35 @@ public class DefaultOperatingSystemInformationService implements OperatingSystem
                 logger.error("Could not read details about the linux operating system", e);
             }
 
-            if("debian".equals(idLike)) {
-                if("raspbian".equals(id)) {
+            if ("debian".equals(idLike)) {
+                if ("raspbian".equals(id)) {
                     operatingSystemInformation.setSubType(OperatingSystemInformation.SubType.RASPBIAN);
+                    determineRaspberryModel(operatingSystemInformation);
                 } else {
                     operatingSystemInformation.setSubType(OperatingSystemInformation.SubType.DEBIAN);
                 }
-            } else if("ubuntu".equals(idLike)) {
+            } else if ("ubuntu".equals(idLike)) {
                 operatingSystemInformation.setSubType(OperatingSystemInformation.SubType.UBUNTU);
             }
+        }
+    }
+
+    private void determineRaspberryModel(OperatingSystemInformation operatingSystemInformation) {
+        // get the Raspberry model
+        final File file = new File("/sys/firmware/devicetree/base", "model");
+
+        try (FileInputStream fileInputStream = new FileInputStream(file);
+             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream))) {
+
+            String line = bufferedReader.readLine();
+
+            if (line.startsWith("Raspberry Pi 3")) {
+                operatingSystemInformation.setRaspberryVersion(OperatingSystemInformation.RaspberryVersion.MODEL_3);
+            } else if (line.startsWith("Raspberry Pi 4")) {
+                operatingSystemInformation.setRaspberryVersion(OperatingSystemInformation.RaspberryVersion.MODEL_4);
+            }
+        } catch (final Exception e) {
+            logger.error("Could not read details about the Raspberry model", e);
         }
     }
 
