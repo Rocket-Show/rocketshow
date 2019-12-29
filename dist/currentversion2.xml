@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <versionInfo>
-    <version>2.2.1</version>
+    <version>2.2.2</version>
     <date>2019-12-29</date>
     <changeNoteList>
+        <changeNote>
+            <version>2.2.2</version>
+            <changes>TODO</changes>
+        </changeNote>
         <changeNote>
             <version>2.2.1</version>
             <changes>Bugfix for MIDI files to be playable also on systems without a MIDI system.</changes>
