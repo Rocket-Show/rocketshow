@@ -8,6 +8,7 @@ import com.ascargon.rocketshow.gstreamer.GstDiscovererService;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
 import com.sun.jna.Pointer;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -19,8 +20,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.util.JAXBSource;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -219,11 +219,7 @@ public class DefaultCompositionService implements CompositionService {
         long duration;
 
         Sequence sequence = MidiSystem.getSequence(new File(path));
-        Sequencer sequencer = MidiSystem.getSequencer();
-        sequencer.open();
-        sequencer.setSequence(sequence);
-        duration = sequencer.getMicrosecondLength() / 1000;
-        sequencer.close();
+        duration = sequence.getMicrosecondLength() / 1000;
 
         return duration;
     }
