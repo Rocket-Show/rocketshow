@@ -14,6 +14,7 @@ export class Settings {
     midiPath: string;
     audioPath: string;
     videoPath: string;
+    leadSheetPath: string;
     midiInDevice: MidiDevice;
     midiOutDevice: MidiDevice;
     remoteDeviceList: RemoteDevice[];
@@ -65,6 +66,7 @@ export class Settings {
         this.midiPath = data.midiPath;
         this.audioPath = data.audioPath;
         this.videoPath = data.videoPath;
+        this.leadSheetPath = data.leadSheetPath;
 
         if (data.midiInDevice) {
             this.midiInDevice = new MidiDevice(data.midiInDevice);
