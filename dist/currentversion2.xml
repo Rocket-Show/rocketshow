@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <versionInfo>
     <version>2.2.2</version>
-    <date>2019-12-29</date>
+    <date>2020-09-20</date>
     <changeNoteList>
         <changeNote>
             <version>2.2.2</version>
-            <changes>TODO</changes>
+            <changes>Fixed seeking/looping and leadsheets on Raspberry Pi 4. Reflashing is required.</changes>
         </changeNote>
         <changeNote>
             <version>2.2.1</version>
