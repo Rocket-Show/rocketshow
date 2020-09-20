@@ -4,7 +4,7 @@ import { Composition } from './../models/composition';
 import { CompositionService } from './../services/composition.service';
 import { StateService } from './../services/state.service';
 import { Set } from './../models/set';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { State } from '../models/state';
 import { TransportService } from '../services/transport.service';
 import { Subscription, timer } from 'rxjs';
@@ -74,7 +74,9 @@ export class PlayComponent implements OnInit, OnDestroy {
     private activityMidiService: ActivityMidiService,
     public activityAudioService: ActivityAudioService,
     public activityLightingService: ActivityLightingService,
-    public settingsService: SettingsService) {
+    public settingsService: SettingsService,
+    private changeDetectorRef: ChangeDetectorRef
+    ) {
 
     this.loadSettings();
 
@@ -113,7 +115,11 @@ export class PlayComponent implements OnInit, OnDestroy {
   ngOnInit() {
     // Subscribe to the state-changed service
     this.stateServiceSubscription = this.stateService.state.subscribe((state: State) => {
-      this.stateChanged(state);
+      // ignore playing state with positionMillis = 0, because Gstreamer sets the position
+      // to for a brief period while seeking
+      if(state.playState != 'PLAYING' || state.positionMillis > 0) {
+        this.stateChanged(state);
+      }
     });
 
     // Subscribe to the get connection service
@@ -316,6 +322,9 @@ export class PlayComponent implements OnInit, OnDestroy {
   }
 
   private stateChanged(newState: State) {
+    // as we have a new sync-point for the position millis, reset the last play time
+    this.lastPlayTime = new Date();
+
     setTimeout(() => {
       this.positionMillis = newState.positionMillis;
     }, 0);
@@ -330,9 +339,6 @@ export class PlayComponent implements OnInit, OnDestroy {
       if (this.playUpdateSubscription) {
         this.playUpdateSubscription.unsubscribe;
       }
-
-      // Save the last time, we started the composition. Don't use device time, as it may be wrong.
-      this.lastPlayTime = new Date();
 
       let playUpdater = timer(0, 10);
       this.playUpdateSubscription = playUpdater.subscribe(() => {
