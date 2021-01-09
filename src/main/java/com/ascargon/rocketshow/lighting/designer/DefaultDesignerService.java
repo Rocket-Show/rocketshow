@@ -730,14 +730,10 @@ public class DefaultDesignerService implements DesignerService {
                             if (presetCapabilityValue.getValuePercentage() != null &&
                                     (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Intensity ||
                                             presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity)) {
+
                                 // intensity and colorIntensity (dimmer and color)
                                 double valuePercentage = presetCapabilityValue.getValuePercentage();
                                 int defaultValue = 0;
-
-                                if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Intensity) {
-                                    // the dimmer starts at full brightness
-                                    defaultValue = 255;
-                                }
 
                                 // brightness property
                                 if (cachedChannel.getCapabilities().size() == 1) {
