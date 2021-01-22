@@ -727,9 +727,9 @@ public class DefaultDesignerService implements DesignerService {
                         )) {
 
                             // the capabilities match -> apply the value, if possible
-                            if (presetCapabilityValue.getValuePercentage() != null &&
-                                    (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Intensity ||
-                                            presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity)) {
+                            if ((presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Intensity ||
+                                    presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity)
+                                    && presetCapabilityValue.getValuePercentage() != null) {
 
                                 // intensity and colorIntensity (dimmer and color)
                                 double valuePercentage = presetCapabilityValue.getValuePercentage();
@@ -772,6 +772,15 @@ public class DefaultDesignerService implements DesignerService {
                                         }
                                     }
                                 }
+                            } else if ((presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Pan
+                                    || presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Tilt)
+                                    && presetCapabilityValue.getValuePercentage() != null) {
+
+                                FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
+                                fixtureChannelValue.setChannelName(cachedChannel.getName());
+                                fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
+                                fixtureChannelValue.setValue(cachedChannel.getMaxValue() * presetCapabilityValue.getValuePercentage());
+                                this.mixChannelValue(values, fixtureChannelValue, 1);
                             } else if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.WheelSlot
                                     && channelCapability.getCapability().getSlotNumber().equals(presetCapabilityValue.getSlotNumber())) {
 
