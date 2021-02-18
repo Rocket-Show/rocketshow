@@ -3,7 +3,6 @@ import { Composition } from './../models/composition';
 import { Observable } from 'rxjs';
 import { map } from "rxjs/operators";
 import { Injectable } from '@angular/core';
-import { Response } from '@angular/http';
 import { CompositionFile } from '../models/composition-file';
 
 @Injectable()

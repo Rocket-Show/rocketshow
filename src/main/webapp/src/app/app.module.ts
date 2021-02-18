@@ -8,11 +8,14 @@ import { MultiTranslateHttpLoader } from "ngx-translate-multi-http-loader";
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { ArraySortPipe } from './array-sort-pipe';
-import { SortablejsModule } from 'angular-sortablejs';
-import { AlertModule, AccordionModule, PopoverModule, TypeaheadModule, BsDropdownModule } from 'ngx-bootstrap';
-import { ModalModule } from 'ngx-bootstrap';
+import { SortablejsModule } from 'ngx-sortablejs';
+import { AlertModule } from 'ngx-bootstrap/alert';
+import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
+import { AccordionModule } from 'ngx-bootstrap/accordion';
+import { PopoverModule } from 'ngx-bootstrap/popover';
+import { TypeaheadModule } from 'ngx-bootstrap/typeahead';
+import { ModalModule } from 'ngx-bootstrap/modal';
 import { DropzoneModule } from 'ngx-dropzone-wrapper';
-import { DropzoneConfigInterface } from 'ngx-dropzone-wrapper';
 import { ToastrModule } from 'ngx-toastr';
 import { NgxBootstrapSliderModule } from 'ngx-bootstrap-slider';
 import { DesignerModule } from '@rocketshow/designer';
@@ -78,9 +81,6 @@ const appRoutes: Routes = [
   { path: '**', component: PlayComponent }
 ];
 
-const DROPZONE_CONFIG: DropzoneConfigInterface = {
-};
-
 @NgModule({
   declarations: [
     ArraySortPipe,
@@ -137,7 +137,7 @@ const DROPZONE_CONFIG: DropzoneConfigInterface = {
     }),
     AlertModule.forRoot(),
     ModalModule.forRoot(),
-    DropzoneModule.forRoot(DROPZONE_CONFIG),
+    DropzoneModule,
     ToastrModule.forRoot({
       newestOnTop: true
     }),

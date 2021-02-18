@@ -3,7 +3,7 @@ import { UpdateService } from './../services/update.service';
 import { Subject, Subscription } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { BsModalRef } from 'ngx-bootstrap';
+import { BsModalRef } from 'ngx-bootstrap/modal';
 import { State } from '../models/state';
 import { Version } from '../models/version';
 

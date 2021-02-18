@@ -8,11 +8,11 @@ import { FileService } from './../../../services/file.service';
 import { TranslateService } from '@ngx-translate/core';
 import { CompositionFile } from './../../../models/composition-file';
 import { Component, OnInit } from '@angular/core';
-import { BsModalRef } from 'ngx-bootstrap';
+import { BsModalRef } from 'ngx-bootstrap/modal';
 import { Subject } from 'rxjs';
 import { map } from "rxjs/operators";
 import { Composition } from '../../../models/composition';
-import { DropzoneConfigInterface } from 'ngx-dropzone-wrapper/dist/lib/dropzone.interfaces';
+import { DropzoneConfigInterface } from 'ngx-dropzone-wrapper';
 import { CompositionAudioFile } from '../../../models/composition-audio-file';
 import { AudioBus } from '../../../models/audio-bus';
 

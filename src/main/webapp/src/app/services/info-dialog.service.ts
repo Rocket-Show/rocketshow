@@ -3,7 +3,7 @@ import { Observable, of } from 'rxjs';
 import { map, flatMap } from "rxjs/operators";
 import { TranslateService } from '@ngx-translate/core';
 import { Injectable } from '@angular/core';
-import { BsModalService } from 'ngx-bootstrap';
+import { BsModalService } from 'ngx-bootstrap/modal';
 
 @Injectable()
 export class InfoDialogService {

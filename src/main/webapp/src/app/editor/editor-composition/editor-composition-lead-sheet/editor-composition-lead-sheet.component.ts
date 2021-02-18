@@ -1,7 +1,7 @@
 import { TranslateService } from '@ngx-translate/core';
-import { DropzoneConfigInterface } from 'ngx-dropzone-wrapper/dist/lib/dropzone.interfaces';
+import { DropzoneConfigInterface } from 'ngx-dropzone-wrapper';
 import { AppHttpInterceptor } from './../../../app-http-interceptor/app-http-interceptor';
-import { BsModalRef } from 'ngx-bootstrap';
+import { BsModalRef } from 'ngx-bootstrap/modal';
 import { Composition } from './../../../models/composition';
 import { Subject } from 'rxjs';
 import { map } from "rxjs/operators";
