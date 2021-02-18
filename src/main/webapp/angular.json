@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "Rocket Show": {
+    "RocketShow": {
       "root": "",
       "sourceRoot": "src",
       "projectType": "application",
@@ -11,6 +11,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
+            "aot": true,
             "outputPath": "../resources/static",
             "index": "src/index.html",
             "main": "src/main.ts",
@@ -28,7 +29,6 @@
               "src/styles.scss"
             ],
             "scripts": [
-              "node_modules/jquery/dist/jquery.js",
               "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js",
               "node_modules/bootstrap-slider/dist/bootstrap-slider.min.js",
 
@@ -37,6 +37,12 @@
           },
           "configurations": {
             "production": {
+              "budgets": [
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "6kb"
+                }
+              ],
               "optimization": true,
               "outputHashing": "all",
               "sourceMap": false,
@@ -54,6 +60,12 @@
               ]
             },
             "disconnected": {
+              "budgets": [
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "6kb"
+                }
+              ],
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
@@ -66,21 +78,21 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "Rocket Show:build"
+            "browserTarget": "RocketShow:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "Rocket Show:build:production"
+              "browserTarget": "RocketShow:build:production"
             },
             "disconnected": {
-              "browserTarget": "Rocket Show:build:disconnected"
+              "browserTarget": "RocketShow:build:disconnected"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "Rocket Show:build"
+            "browserTarget": "RocketShow:build"
           }
         },
         "test": {
@@ -91,7 +103,6 @@
             "polyfills": "src/polyfills.ts",
             "tsConfig": "src/tsconfig.spec.json",
             "scripts": [
-              "node_modules/jquery/dist/jquery.js",
               "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"
             ],
             "styles": [
@@ -119,7 +130,7 @@
         }
       }
     },
-    "Rocket Show-e2e": {
+    "RocketShow-e2e": {
       "root": "",
       "sourceRoot": "e2e",
       "projectType": "application",
@@ -128,7 +139,7 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "./protractor.conf.js",
-            "devServerTarget": "Rocket Show:serve"
+            "devServerTarget": "RocketShow:serve"
           }
         },
         "lint": {
@@ -145,11 +156,11 @@
       }
     }
   },
-  "defaultProject": "Rocket Show",
+  "defaultProject": "RocketShow",
   "schematics": {
     "@schematics/angular:component": {
       "prefix": "app",
-      "styleext": "scss"
+      "style": "scss"
     },
     "@schematics/angular:directive": {
       "prefix": "app"
