@@ -12,8 +12,8 @@ import { EditorSetComponent } from './editor-set/editor-set.component';
 })
 export class EditorComponent implements OnInit, ComponentCanDeactivate {
 
-  @ViewChild(EditorCompositionComponent) editorCompositionComponent: EditorCompositionComponent;
-  @ViewChild(EditorSetComponent) editorSetComponent: EditorSetComponent;
+  @ViewChild(EditorCompositionComponent, {static: false}) editorCompositionComponent: EditorCompositionComponent;
+  @ViewChild(EditorSetComponent, {static: false}) editorSetComponent: EditorSetComponent;
   
   constructor() {
   }

@@ -12,7 +12,7 @@ import { environment } from '../../environments/environment';
 })
 export class LeadSheetComponent implements OnInit {
 
-  @ViewChild('img') img: ElementRef;
+  @ViewChild('img', {static: false}) img: ElementRef;
 
   currentState: State = new State();
   imgStyle: any = {};

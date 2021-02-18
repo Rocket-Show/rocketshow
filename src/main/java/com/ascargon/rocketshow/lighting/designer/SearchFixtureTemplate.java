@@ -1,9 +1,5 @@
 package com.ascargon.rocketshow.lighting.designer;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-import java.util.List;
-
 /**
  * A fixture template returned as a search result.
  *

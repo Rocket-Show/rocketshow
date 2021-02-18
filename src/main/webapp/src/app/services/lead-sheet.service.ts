@@ -1,7 +1,5 @@
-import { Subject } from 'rxjs';
+import { Subject ,  Observable ,  forkJoin } from 'rxjs';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { forkJoin } from 'rxjs';
 import { map } from "rxjs/operators";
 import { HttpClient } from '@angular/common/http';
 import { LeadSheet } from '../models/lead-sheet';

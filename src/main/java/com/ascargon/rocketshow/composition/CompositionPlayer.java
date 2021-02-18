@@ -276,7 +276,7 @@ public class CompositionPlayer {
 
         GstApi.GST_API.gst_object_unref(bus);
 
-        // Create an pipeline, if at least one audiosource is present
+        // Create a pipeline, if at least one audiosource is present
         if (hasAudioFile) {
             audioMixer = ElementFactory.make("audiomixer", "audiomixer");
             pipeline.add(audioMixer);
