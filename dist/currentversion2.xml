@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <versionInfo>
     <version>2.2.3</version>
-    <date>2020-09-20</date>
+    <date>2021-02-21</date>
     <changeNoteList>
         <changeNote>
             <version>2.2.3</version>
-            <changes>TODO</changes>
+            <changes>Bugfixes, new designer version</changes>
         </changeNote>
         <changeNote>
             <version>2.2.2</version>

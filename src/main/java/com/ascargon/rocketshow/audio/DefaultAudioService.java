@@ -64,7 +64,12 @@ public class DefaultAudioService implements AudioService {
                                 AudioDevice audioDevice = getAudioDeviceFromString(line);
 
                                 if (audioDevice.getName() != null && audioDevice.getName().length() > 0
-                                        && !audioDevice.getKey().equals("ALSA")) {
+                                        && !audioDevice.getKey().equals("ALSA")
+
+                                        // Does not work with Gstreamer. Currently disabled.
+                                        // see https://github.com/moritzvieli/rocketshow/issues/19
+                                        && !audioDevice.getKey().equals("Headphones")
+                                ) {
 
                                     audioDeviceList.add(audioDevice);
                                 }

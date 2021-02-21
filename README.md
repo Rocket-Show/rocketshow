@@ -67,7 +67,7 @@ apt-get update
 - Copy dist/currentversion2.xml to rocketshow.net/update/currentversion2.xml
 - GIT merge DEV branch to MASTER
 - GIT tag with the current version
-- Switch to DEV and update POM and update/currentversion2.xml versions
+- Switch to DEV and update POM and dist/currentversion2.xml versions
 
 #### Optional
 - Copy install/*.sh scripts to rocketshow.net/install/script/*.sh, if updated
