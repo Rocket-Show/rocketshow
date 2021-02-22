@@ -28,7 +28,7 @@ COPYFILE_DISABLE=true tar -c --exclude='.DS_Store' -zf directory.tar.gz rocketsh
 ```
 
 ### Raspberry Pi Image building
-This script is used to build the image (may take about 45 minutes). Preparation should be done according to the readme in the GIT repo.
+This script is used to build the image on Debian Buster (may take about 45 minutes). Preparation should be done according to the readme in the pi-gen GIT repo.
 
 ```shell
 git clone https://github.com/RPi-distro/pi-gen.git
@@ -59,6 +59,17 @@ apt-get update
 
 ./build.sh
 ```
+
+Afterwards, the image will be renamed and zipped to the following format:
+```
+cd work/[...]/export-image
+mv 2021-02-22-RocketShow-lite.img 2021-02-22-RocketShow-2.3.3.img
+zip 2021-02-22-RocketShow-2.3.3.zip 2021-02-22-RocketShow-2.3.3.img
+
+# copy the zip to a shared folder, in case we're running inside Virtual Box:
+cp 2021-02-22-RocketShow-2.3.3.zip /media/sf_xxx/
+```
+
 
 ### Update process
 - Add the release notes in dist/currentversion2.xml and update the date on top

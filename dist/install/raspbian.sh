@@ -9,7 +9,7 @@ apt-get update
 apt-get upgrade -y
 
 # Install step-by-step because it does not work alltogether (timeouts to raspbian.org, maybe due to connection limits).
-apt-get -y install openjdk-11-jdk dnsmasq hostapd fbi ola libnss-mdns wiringpi iptables alsa-base libasound2 alsa-utils openssh-sftp-server libgstreamer1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl
+apt-get -y install unzip openjdk-11-jdk dnsmasq hostapd fbi ola libnss-mdns wiringpi iptables alsa-base libasound2 alsa-utils openssh-sftp-server libgstreamer1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl
 
 # Add the rocketshow user
 adduser \
@@ -52,6 +52,11 @@ cd rocketshow
 
 # Add execution permissions on the update script
 chmod +x update.sh
+
+# Download the current set of fixtures
+wget https://rocketshow.net/designer/downloads/fixtures.zip
+unzip fixtures.zip -d fixtures
+rm fixtures.zip
 
 # Overclock the raspberry to sustain streams without underruns
 # - Set more memory for the GPU to play larger video files with omx
