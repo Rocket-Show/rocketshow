@@ -187,6 +187,8 @@ public class CompositionPlayer {
 
             String name = caps.getStructure(0).getName();
 
+            pad.set("offset", (settingsService.getSettings().getOffsetMillisVideo() + compositionFile.getOffsetMillis()) * 1000000L);
+
             if (name.startsWith("video/x-raw")) {
                 pad.link(videoQueue.getSinkPads().get(0));
             } else if (name.startsWith("audio/x-raw")) {
