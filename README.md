@@ -30,6 +30,8 @@ COPYFILE_DISABLE=true tar -c --exclude='.DS_Store' -zf directory.tar.gz rocketsh
 ### Raspberry Pi Image building
 This script is used to build the image on Debian Buster (may take about 45 minutes). Preparation should be done according to the readme in the pi-gen GIT repo.
 
+Building is recommended on a Raspberry Pi device with enough storage.
+
 ```shell
 git clone https://github.com/RPi-distro/pi-gen.git
 cd pi-gen
