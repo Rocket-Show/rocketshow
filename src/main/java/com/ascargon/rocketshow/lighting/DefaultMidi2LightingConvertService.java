@@ -1,7 +1,6 @@
 package com.ascargon.rocketshow.lighting;
 
 import com.ascargon.rocketshow.lighting.Midi2LightingMapping.MappingType;
-import com.ascargon.rocketshow.midi.MidiSignal;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.ShortMessage;
@@ -15,9 +14,9 @@ public class DefaultMidi2LightingConvertService implements Midi2LightingConvertS
         this.lightingService = lightingService;
     }
 
-    private void mapSimple(MidiSignal midiSignal, LightingUniverse lightingUniverse) {
-        if (midiSignal.getCommand() == ShortMessage.NOTE_ON) {
-            int valueTo = midiSignal.getVelocity() * 2;
+    private void mapSimple(ShortMessage shortMessage, LightingUniverse lightingUniverse) {
+        if (shortMessage.getCommand() == ShortMessage.NOTE_ON) {
+            int valueTo = shortMessage.getData2() * 2;
 
             // Extend the last note to the max
             // TODO enable this feature by a mapping-setting
@@ -25,12 +24,12 @@ public class DefaultMidi2LightingConvertService implements Midi2LightingConvertS
                 valueTo = 255;
             }
 
-            lightingUniverse.getUniverse().put(midiSignal.getNote(), valueTo);
+            lightingUniverse.getUniverse().put(shortMessage.getData1(), valueTo);
             lightingService.send();
-        } else if (midiSignal.getCommand() == ShortMessage.NOTE_OFF) {
+        } else if (shortMessage.getCommand() == ShortMessage.NOTE_OFF) {
             int valueTo = 0;
 
-            lightingUniverse.getUniverse().put(midiSignal.getNote(), valueTo);
+            lightingUniverse.getUniverse().put(shortMessage.getData1(), valueTo);
             lightingService.send();
         }
     }
@@ -40,16 +39,16 @@ public class DefaultMidi2LightingConvertService implements Midi2LightingConvertS
     }
 
     @Override
-    public void processMidiEvent(MidiSignal midiSignal, Midi2LightingMapping midi2LightingMapping, LightingUniverse lightingUniverse) {
+    public void processMidiEvent(ShortMessage shortMessage, Midi2LightingMapping midi2LightingMapping, LightingUniverse lightingUniverse) {
         // Map the MIDI event and send the appropriate lighting signal
 
         // Only react to NOTE_ON/NOTE_OFF events
-        if (midiSignal.getCommand() != ShortMessage.NOTE_ON && midiSignal.getCommand() != ShortMessage.NOTE_OFF) {
+        if (shortMessage.getCommand() != ShortMessage.NOTE_ON && shortMessage.getCommand() != ShortMessage.NOTE_OFF) {
             return;
         }
 
         if (midi2LightingMapping.getMappingType() == MappingType.SIMPLE) {
-            mapSimple(midiSignal, lightingUniverse);
+            mapSimple(shortMessage, lightingUniverse);
         } else if (midi2LightingMapping.getMappingType() == MappingType.EXACT) {
             mapExact();
         }

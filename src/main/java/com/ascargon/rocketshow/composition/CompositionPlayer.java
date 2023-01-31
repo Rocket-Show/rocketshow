@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.ShortMessage;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -115,25 +116,26 @@ public class CompositionPlayer {
             // Common messages
             int channel = event & 0x0f;
             int command = event & 0xf0;
-            int note = byteBuffer.get(1) & 0x7f;
+            int data1 = byteBuffer.get(1) & 0x7f;
 
             // TODO Can result in index out of bounds exception
-            int velocity = byteBuffer.get(2) & 0x7f;
+            int data2 = byteBuffer.get(2) & 0x7f;
 
-            MidiSignal midiSignal = new MidiSignal();
-            midiSignal.setChannel(channel);
-            midiSignal.setCommand(command);
-            midiSignal.setNote(note);
-            midiSignal.setVelocity(velocity);
+            ShortMessage shortMessage = new ShortMessage();
+            try {
+                shortMessage.setMessage(command, channel, data1, data2);
+            } catch (InvalidMidiDataException e) {
+                logger.error("Could not process MIDI signal from MIDI file", e);
+            }
 
             try {
-                midiRouter.sendSignal(midiSignal);
+                midiRouter.sendSignal(shortMessage);
             } catch (InvalidMidiDataException e) {
                 logger.error("Could not send MIDI signal from MIDI file", e);
             }
 
             if (settingsService.getSettings().getEnableMonitor()) {
-                activityNotificationMidiService.notifyClients(midiSignal, MidiSignal.MidiDirection.IN, MidiSignal.MidiSource.MIDI_FILE, null);
+                activityNotificationMidiService.notifyClients(shortMessage, MidiDirection.IN, MidiSource.MIDI_FILE, null);
             }
         }
     }

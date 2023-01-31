@@ -1,5 +1,5 @@
 # Rocket Show
-An app to automate and play shows including audio, video, lighting (e.g. DMX) and MIDI.
+A system to automate and play shows including audio, video, lighting (e.g. DMX) and MIDI.
 
 ## Development
 ### Build
@@ -33,7 +33,7 @@ This script is used to build the image (may take about 45 minutes). Preparation 
 ```shell
 git clone https://github.com/RPi-distro/pi-gen.git
 cd pi-gen
-git checkout tags/2019-07-10-raspbian-buster
+git checkout tags/2022-09-22-raspios-bullseye
 
 echo "IMG_NAME='RocketShow'" > config
 

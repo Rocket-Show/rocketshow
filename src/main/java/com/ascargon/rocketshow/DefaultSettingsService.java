@@ -2,9 +2,9 @@ package com.ascargon.rocketshow;
 
 import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.midi.MidiDevice;
+import com.ascargon.rocketshow.midi.MidiDirection;
 import com.ascargon.rocketshow.midi.MidiMapping;
 import com.ascargon.rocketshow.midi.MidiService;
-import com.ascargon.rocketshow.midi.MidiSignal;
 import com.ascargon.rocketshow.raspberry.RaspberryResetUsbService;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
@@ -110,7 +110,7 @@ public class DefaultSettingsService implements SettingsService {
 
             try {
                 List<MidiDevice> midiInDeviceList;
-                midiInDeviceList = midiService.getMidiDevices(MidiSignal.MidiDirection.IN);
+                midiInDeviceList = midiService.getMidiDevices(MidiDirection.IN);
                 if (midiInDeviceList.size() > 0) {
                     settings.setMidiInDevice(midiInDeviceList.get(0));
                 }
@@ -124,7 +124,7 @@ public class DefaultSettingsService implements SettingsService {
 
             try {
                 List<MidiDevice> midiOutDeviceList;
-                midiOutDeviceList = midiService.getMidiDevices(MidiSignal.MidiDirection.OUT);
+                midiOutDeviceList = midiService.getMidiDevices(MidiDirection.OUT);
                 if (midiOutDeviceList.size() > 0) {
                     settings.setMidiOutDevice(midiOutDeviceList.get(0));
                 }

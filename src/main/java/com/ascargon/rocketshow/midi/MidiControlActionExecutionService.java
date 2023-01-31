@@ -2,9 +2,11 @@ package com.ascargon.rocketshow.midi;
 
 import org.springframework.stereotype.Service;
 
+import javax.sound.midi.MidiMessage;
+
 @Service
 public interface MidiControlActionExecutionService {
 
-    void processMidiSignal(MidiSignal midiSignal) throws Exception;
+    void processMidiSignal(MidiMessage midiMessage) throws Exception;
 
 }

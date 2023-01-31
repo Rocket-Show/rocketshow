@@ -7,6 +7,7 @@ import com.ascargon.rocketshow.lighting.Midi2LightingConvertService;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.Transmitter;
 import java.util.ArrayList;
@@ -45,18 +46,18 @@ public class MidiRouter {
 
     // Get the correct receiver based on the routing
     private Receiver getReceiver(MidiRouting midiRouting) {
-        if (midiRouting.getMidiDestination() == MidiSignal.MidiDestination.OUT_DEVICE) {
+        if (midiRouting.getMidiDestination() == MidiDestination.OUT_DEVICE) {
             Midi2DeviceOutReceiver midi2DeviceOutReceiver = new Midi2DeviceOutReceiver(midiDeviceOutService);
             midi2DeviceOutReceiver.setMidiMapping(midiRouting.getMidiMapping());
 
             return midi2DeviceOutReceiver;
-        } else if (midiRouting.getMidiDestination() == MidiSignal.MidiDestination.LIGHTING) {
+        } else if (midiRouting.getMidiDestination() == MidiDestination.LIGHTING) {
             Midi2LightingReceiver midi2LightingReceiver = new Midi2LightingReceiver(midi2LightingConvertService, lightingService);
             midi2LightingReceiver.setMidiMapping(midiRouting.getMidiMapping());
             midi2LightingReceiver.setMidi2LightingMapping(midiRouting.getMidi2LightingMapping());
 
             return midi2LightingReceiver;
-        } else if (midiRouting.getMidiDestination() == MidiSignal.MidiDestination.REMOTE) {
+        } else if (midiRouting.getMidiDestination() == MidiDestination.REMOTE) {
             Midi2RemoteReceiver midi2RemoteReceiver = new Midi2RemoteReceiver(settingsService);
             midi2RemoteReceiver.setMidiMapping(midiRouting.getMidiMapping());
             midi2RemoteReceiver.setRemoteDeviceNameList(midiRouting.getRemoteDeviceIdList());
@@ -80,19 +81,19 @@ public class MidiRouter {
         }
     }
 
-    public void sendSignal(MidiSignal midiSignal) throws InvalidMidiDataException {
+    public void sendSignal(MidiMessage midiMessage) throws InvalidMidiDataException {
         // Send the signal to each receiver
         for (Map.Entry<MidiRouting, Receiver> entry : receiverList.entrySet()) {
-            entry.getValue().send(midiSignal.getShortMessage(), -1);
+            entry.getValue().send(midiMessage, -1);
 
-            activityNotificationMidiService.notifyClients(midiSignal, MidiSignal.MidiDirection.OUT, null, entry.getKey().getMidiDestination());
+            activityNotificationMidiService.notifyClients(midiMessage, MidiDirection.OUT, null, entry.getKey().getMidiDestination());
         }
     }
 
     public void close() {
         // Close all receivers
         for (Map.Entry<MidiRouting, Receiver> entry : receiverList.entrySet()) {
-            if(entry.getValue() != null) {
+            if (entry.getValue() != null) {
                 entry.getValue().close();
             }
         }

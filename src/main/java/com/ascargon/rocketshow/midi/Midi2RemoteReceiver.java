@@ -5,6 +5,7 @@ import com.ascargon.rocketshow.SettingsService;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
+import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
@@ -31,16 +32,22 @@ class Midi2RemoteReceiver implements Receiver {
     }
 
     @Override
-    public void send(MidiMessage message, long timeStamp) {
-        if (!(message instanceof ShortMessage)) {
+    public void send(MidiMessage midiMessage, long timeStamp) {
+        // Only send short messages
+        if (!(midiMessage instanceof ShortMessage)) {
             return;
         }
 
-        MidiSignal midiSignal = new MidiSignal((ShortMessage) message);
-        MidiMapper.processMidiEvent(midiSignal, midiMapping);
+        ShortMessage shortMessage = (ShortMessage) midiMessage;
 
-        String apiUrl = "midi/send-message?command=" + midiSignal.getCommand() + "&channel=" + midiSignal.getChannel()
-                + "&note=" + midiSignal.getNote() + "&velocity" + midiSignal.getVelocity();
+        try {
+            MidiMapper.processMidiEvent(midiMessage, midiMapping);
+        } catch (InvalidMidiDataException e) {
+            logger.error("Could not process MIDI event to remote", e);
+        }
+
+        String apiUrl = "midi/send-message?command=" + shortMessage.getCommand() + "&channel=" + shortMessage.getChannel()
+                + "&note=" + shortMessage.getData1() + "&velocity" + shortMessage.getData2();
 
         for (String name : remoteDeviceNameList) {
             RemoteDevice remoteDevice = settingsService.getRemoteDeviceByName(name);

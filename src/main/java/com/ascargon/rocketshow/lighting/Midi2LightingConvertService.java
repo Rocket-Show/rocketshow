@@ -1,9 +1,9 @@
 package com.ascargon.rocketshow.lighting;
 
-import com.ascargon.rocketshow.midi.MidiSignal;
+import javax.sound.midi.ShortMessage;
 
 public interface Midi2LightingConvertService {
 
-    void processMidiEvent(MidiSignal midiSignal, Midi2LightingMapping midi2LightingMapping, LightingUniverse lightingUniverse);
+    void processMidiEvent(ShortMessage shortMessage, Midi2LightingMapping midi2LightingMapping, LightingUniverse lightingUniverse);
 
 }

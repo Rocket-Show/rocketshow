@@ -16,7 +16,7 @@ import java.util.List;
 @XmlRootElement
 public class MidiRouting {
 
-    private MidiSignal.MidiDestination midiDestination = MidiSignal.MidiDestination.OUT_DEVICE;
+    private MidiDestination midiDestination = MidiDestination.OUT_DEVICE;
 
     private MidiMapping midiMapping = new MidiMapping();
     private Midi2LightingMapping midi2LightingMapping = new Midi2LightingMapping();
@@ -24,11 +24,11 @@ public class MidiRouting {
     // A list of remote device ids in case of destination type = REMOTE
     private List<String> remoteDeviceNameList = new ArrayList<>();
 
-    public MidiSignal.MidiDestination getMidiDestination() {
+    public MidiDestination getMidiDestination() {
         return midiDestination;
     }
 
-    public void setMidiDestination(MidiSignal.MidiDestination midiDestination) {
+    public void setMidiDestination(MidiDestination midiDestination) {
         this.midiDestination = midiDestination;
     }
 

@@ -1,6 +1,9 @@
 package com.ascargon.rocketshow.api;
 
-import com.ascargon.rocketshow.midi.MidiSignal;
+import com.ascargon.rocketshow.midi.ActivityMidiSignal;
+import com.ascargon.rocketshow.midi.MidiDestination;
+import com.ascargon.rocketshow.midi.MidiDirection;
+import com.ascargon.rocketshow.midi.MidiSource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +14,8 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import javax.annotation.PreDestroy;
+import javax.sound.midi.MidiMessage;
+import javax.sound.midi.ShortMessage;
 import java.io.IOException;
 import java.util.List;
 import java.util.Timer;
@@ -61,13 +66,20 @@ public class DefaultActivityNotificationMidiService extends TextWebSocketHandler
     }
 
     @Override
-    public void notifyClients(MidiSignal midiSignal, MidiSignal.MidiDirection midiDirection, MidiSignal.MidiSource midiSource, MidiSignal.MidiDestination midiDestination) {
+    public void notifyClients(MidiMessage midiMessage, MidiDirection midiDirection, MidiSource midiSource, MidiDestination midiDestination) {
+        // only notify short messages
+        if (!(midiMessage instanceof ShortMessage)) {
+            return;
+        }
+
+        ShortMessage shortMessage = (ShortMessage) midiMessage;
+
         // Mix the current event into the pending activity or create a new one
         if (activityMidi == null) {
             // Create a new MIDI activity
             activityMidi = new ActivityMidi();
 
-            activityMidi.setMidiSignal(midiSignal);
+            activityMidi.setMidiSignal(new ActivityMidiSignal(shortMessage));
             activityMidi.setMidiDirection(midiDirection);
             if (midiSource != null) {
                 activityMidi.getMidiSources().add(midiSource);
@@ -80,7 +92,7 @@ public class DefaultActivityNotificationMidiService extends TextWebSocketHandler
             // TODO mix the signal
 
             if (!activityMidi.getMidiDirection().equals(midiDirection)) {
-                activityMidi.setMidiDirection(MidiSignal.MidiDirection.IN_OUT);
+                activityMidi.setMidiDirection(MidiDirection.IN_OUT);
             }
 
             if (midiSource != null && !activityMidi.getMidiSources().contains(midiSource)) {

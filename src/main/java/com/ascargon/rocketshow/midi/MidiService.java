@@ -6,9 +6,9 @@ import java.util.List;
 public interface MidiService {
 
     javax.sound.midi.MidiDevice getHardwareMidiDevice(com.ascargon.rocketshow.midi.MidiDevice midiDevice,
-                                                      MidiSignal.MidiDirection midiDirection) throws MidiUnavailableException;
+                                                      MidiDirection midiDirection) throws MidiUnavailableException;
 
-    List<MidiDevice> getMidiDevices(MidiSignal.MidiDirection midiDirection)
+    List<MidiDevice> getMidiDevices(MidiDirection midiDirection)
             throws MidiUnavailableException;
 
 }
