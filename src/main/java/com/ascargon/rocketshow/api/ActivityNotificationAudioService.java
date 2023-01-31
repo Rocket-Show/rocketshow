@@ -1,7 +1,5 @@
 package com.ascargon.rocketshow.api;
 
-import com.ascargon.rocketshow.audio.AudioBus;
-import com.ascargon.rocketshow.midi.MidiSignal;
 import org.springframework.stereotype.Service;
 
 @Service

@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.ShortMessage;
 import java.util.List;
 
 @RestController()
@@ -32,28 +33,24 @@ class MidiController {
 
     @GetMapping("in-devices")
     public List<MidiDevice> getInDevices() throws Exception {
-        return midiService.getMidiDevices(MidiSignal.MidiDirection.IN);
+        return midiService.getMidiDevices(MidiDirection.IN);
     }
 
     @GetMapping("out-devices")
     public List<MidiDevice> getOutDevices() throws Exception {
-        return midiService.getMidiDevices(MidiSignal.MidiDirection.OUT);
+        return midiService.getMidiDevices(MidiDirection.OUT);
     }
 
     @PostMapping("send-message")
     public ResponseEntity<Void> sendMessage(@RequestParam("command") int command, @RequestParam("channel") int channel,
                                             @RequestParam("note") int note, @RequestParam("velocity") int velocity) throws InvalidMidiDataException {
 
-        MidiSignal midiSignal = new MidiSignal();
+        ShortMessage shortMessage = new ShortMessage();
+        shortMessage.setMessage(command, channel, note, velocity);
 
-        midiSignal.setCommand(command);
-        midiSignal.setChannel(channel);
-        midiSignal.setNote(note);
-        midiSignal.setVelocity(velocity);
+        midiRouter.sendSignal(shortMessage);
 
-        midiRouter.sendSignal(midiSignal);
-
-        activityNotificationMidiService.notifyClients(midiSignal, MidiSignal.MidiDirection.IN, MidiSignal.MidiSource.REMOTE, null);
+        activityNotificationMidiService.notifyClients(shortMessage, MidiDirection.IN, MidiSource.REMOTE, null);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -62,14 +59,10 @@ class MidiController {
     public ResponseEntity<Void> testControl(@RequestParam("command") int command, @RequestParam("channel") int channel,
                                             @RequestParam("note") int note, @RequestParam("velocity") int velocity) throws Exception {
 
-        MidiSignal midiSignal = new MidiSignal();
+        ShortMessage shortMessage = new ShortMessage();
+        shortMessage.setMessage(command, channel, note, velocity);
 
-        midiSignal.setCommand(command);
-        midiSignal.setChannel(channel);
-        midiSignal.setNote(note);
-        midiSignal.setVelocity(velocity);
-
-        midiControlActionExecutionService.processMidiSignal(midiSignal);
+        midiControlActionExecutionService.processMidiSignal(shortMessage);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

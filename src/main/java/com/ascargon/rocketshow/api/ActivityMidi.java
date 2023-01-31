@@ -1,6 +1,9 @@
 package com.ascargon.rocketshow.api;
 
-import com.ascargon.rocketshow.midi.MidiSignal;
+import com.ascargon.rocketshow.midi.ActivityMidiSignal;
+import com.ascargon.rocketshow.midi.MidiDestination;
+import com.ascargon.rocketshow.midi.MidiDirection;
+import com.ascargon.rocketshow.midi.MidiSource;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
@@ -9,43 +12,43 @@ import java.util.List;
 @XmlRootElement
 public class ActivityMidi {
 
-    private MidiSignal midiSignal;
+    private ActivityMidiSignal midiSignal;
 
-    private MidiSignal.MidiDirection midiDirection;
+    private MidiDirection midiDirection;
 
-    private List<MidiSignal.MidiSource> midiSources = new ArrayList<>();
+    private List<MidiSource> midiSources = new ArrayList<>();
 
-    private List<MidiSignal.MidiDestination> midiDestinations = new ArrayList<>();
+    private List<MidiDestination> midiDestinations = new ArrayList<>();
 
-    public MidiSignal getMidiSignal() {
+    public ActivityMidiSignal getMidiSignal() {
         return midiSignal;
     }
 
-    public void setMidiSignal(MidiSignal midiSignal) {
+    public void setMidiSignal(ActivityMidiSignal midiSignal) {
         this.midiSignal = midiSignal;
     }
 
-    public MidiSignal.MidiDirection getMidiDirection() {
+    public MidiDirection getMidiDirection() {
         return midiDirection;
     }
 
-    public void setMidiDirection(MidiSignal.MidiDirection midiDirection) {
+    public void setMidiDirection(MidiDirection midiDirection) {
         this.midiDirection = midiDirection;
     }
 
-    public List<MidiSignal.MidiSource> getMidiSources() {
+    public List<MidiSource> getMidiSources() {
         return midiSources;
     }
 
-    public void setMidiSources(List<MidiSignal.MidiSource> midiSources) {
+    public void setMidiSources(List<MidiSource> midiSources) {
         this.midiSources = midiSources;
     }
 
-    public List<MidiSignal.MidiDestination> getMidiDestinations() {
+    public List<MidiDestination> getMidiDestinations() {
         return midiDestinations;
     }
 
-    public void setMidiDestinations(List<MidiSignal.MidiDestination> midiDestinations) {
+    public void setMidiDestinations(List<MidiDestination> midiDestinations) {
         this.midiDestinations = midiDestinations;
     }
 }

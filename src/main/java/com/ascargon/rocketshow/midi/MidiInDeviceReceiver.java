@@ -34,26 +34,20 @@ class MidiInDeviceReceiver implements Receiver {
     }
 
     @Override
-    public void send(MidiMessage message, long timeStamp) {
-        if (!(message instanceof ShortMessage)) {
-            return;
-        }
-
-        MidiSignal midiSignal = new MidiSignal((ShortMessage) message);
-
+    public void send(MidiMessage midiMessage, long timeStamp) {
         // Notify the frontend, if midi learn is activated
-        activityNotificationMidiService.notifyClients(midiSignal, MidiSignal.MidiDirection.IN, MidiSignal.MidiSource.IN_DEVICE, null);
+        activityNotificationMidiService.notifyClients(midiMessage, MidiDirection.IN, MidiSource.IN_DEVICE, null);
 
         // Process MIDI events as actions according to the settings
         try {
-            midiControlActionExecutionService.processMidiSignal(midiSignal);
+            midiControlActionExecutionService.processMidiSignal(midiMessage);
         } catch (Exception e) {
             logger.error("Could not execute action from MIDI device", e);
         }
 
         // Process the MIDI events through the defined routings
         try {
-            midiRouter.sendSignal(midiSignal);
+            midiRouter.sendSignal(midiMessage);
         } catch (InvalidMidiDataException e) {
             logger.error("Could not route event from MIDI device", e);
         }

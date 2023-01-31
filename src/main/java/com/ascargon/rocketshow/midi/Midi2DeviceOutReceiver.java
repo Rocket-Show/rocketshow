@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.midi;
 
+import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
@@ -34,11 +35,16 @@ class Midi2DeviceOutReceiver implements Receiver {
             return;
         }
 
-        MidiSignal midiSignal = new MidiSignal((ShortMessage) message);
-        MidiMapper.processMidiEvent(midiSignal, midiMapping);
+        ShortMessage shortMessage = (ShortMessage) message;
 
         try {
-            midiDeviceOutService.getMidiOutDevice().getReceiver().send(midiSignal.getShortMessage(), -1);
+            MidiMapper.processMidiEvent(shortMessage, midiMapping);
+        } catch (InvalidMidiDataException e) {
+            logger.error("Could not process MIDI event to device out", e);
+        }
+
+        try {
+            midiDeviceOutService.getMidiOutDevice().getReceiver().send(shortMessage, -1);
         } catch (Exception e) {
             logger.error("Could not send MIDI signal to out device receiver", e);
         }

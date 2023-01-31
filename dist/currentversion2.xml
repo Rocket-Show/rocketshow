@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <versionInfo>
     <version>2.2.4</version>
-    <date>2021-02-21</date>
+    <date>2023-01-31</date>
     <changeNoteList>
         <changeNote>
             <version>2.2.4</version>
-            <changes>TODO</changes>
+            <changes>Route more MIDI messages (e.g. program changes and control changes)</changes>
         </changeNote>
         <changeNote>
             <version>2.2.3</version>

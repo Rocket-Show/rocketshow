@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.midi;
 
+import javax.sound.midi.MidiMessage;
 import javax.sound.midi.ShortMessage;
 
 import com.ascargon.rocketshow.SettingsService;
@@ -27,18 +28,25 @@ public class DefaultMidiControlActionExecutionService implements MidiControlActi
     }
 
     @Override
-    public void processMidiSignal(MidiSignal midiSignal) throws Exception {
+    public void processMidiSignal(MidiMessage midiMessage) throws Exception {
         // Map the MIDI event and execute the appropriate actions
+
+        // Only process short messages
+        if (!(midiMessage instanceof ShortMessage)) {
+            return;
+        }
+
+        ShortMessage shortMessage = (ShortMessage) midiMessage;
 
         // Only react to NOTE_ON events with a velocity higher than 0
         // TODO Disable velocity check in settings
-        if (midiSignal.getCommand() != ShortMessage.NOTE_ON || midiSignal.getVelocity() == 0) {
+        if (shortMessage.getCommand() != ShortMessage.NOTE_ON || shortMessage.getData2() == 0) {
             return;
         }
 
         // Search for and execute all required actions
         for (MidiControl midiControl : settingsService.getSettings().getMidiControlList()) {
-            if (isActionMappingMatch(midiControl, midiSignal.getChannel(), midiSignal.getNote())) {
+            if (isActionMappingMatch(midiControl, shortMessage.getChannel(), shortMessage.getData1())) {
                 controlActionExecutionService.execute(midiControl);
             }
         }

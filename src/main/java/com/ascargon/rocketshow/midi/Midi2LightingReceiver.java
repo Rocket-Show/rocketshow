@@ -1,10 +1,10 @@
 package com.ascargon.rocketshow.midi;
 
-import com.ascargon.rocketshow.lighting.LightingService;
-import com.ascargon.rocketshow.lighting.LightingUniverse;
-import com.ascargon.rocketshow.lighting.Midi2LightingConvertService;
-import com.ascargon.rocketshow.lighting.Midi2LightingMapping;
+import com.ascargon.rocketshow.lighting.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
@@ -15,6 +15,8 @@ import javax.sound.midi.ShortMessage;
  * @author Moritz A. Vieli
  */
 class Midi2LightingReceiver implements Receiver {
+
+    private final static Logger logger = LoggerFactory.getLogger(Midi2LightingReceiver.class);
 
     private MidiMapping midiMapping;
     private Midi2LightingMapping midi2LightingMapping;
@@ -33,17 +35,21 @@ class Midi2LightingReceiver implements Receiver {
     }
 
     @Override
-    public void send(MidiMessage message, long timeStamp) {
+    public void send(MidiMessage midiMessage, long timeStamp) {
         // Map the MIDI message to a lighting signal
-        if (!(message instanceof ShortMessage)) {
+        if (!(midiMessage instanceof ShortMessage)) {
             return;
         }
 
-        MidiSignal midiSignal = new MidiSignal((ShortMessage) message);
+        ShortMessage shortMessage = (ShortMessage) midiMessage;
 
-        MidiMapper.processMidiEvent(midiSignal, midiMapping);
+        try {
+            MidiMapper.processMidiEvent(shortMessage, midiMapping);
+        } catch (InvalidMidiDataException e) {
+            logger.error("Could not process MIDI event to lighting", e);
+        }
 
-        midi2LightingConvertService.processMidiEvent(midiSignal, midi2LightingMapping, lightingUniverse);
+        midi2LightingConvertService.processMidiEvent(shortMessage, midi2LightingMapping, lightingUniverse);
     }
 
     public void setMidi2LightingMapping(Midi2LightingMapping midi2LightingMapping) {
