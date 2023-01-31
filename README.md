@@ -28,11 +28,26 @@ COPYFILE_DISABLE=true tar -c --exclude='.DS_Store' -zf directory.tar.gz rocketsh
 ```
 
 ### Raspberry Pi Image building
-This script is used to build the image on Debian Buster (may take about 45 minutes). Preparation should be done according to the readme in the pi-gen GIT repo.
-
-Building is recommended on a Raspberry Pi device with enough storage.
-
+Building is recommended on a Raspberry Pi device with enough storage. Steps to follow:
+- Flash an SD card with Raspberry Pi OS
+- Unmount and mount the SD card again
+- Run the following script
 ```shell
+cd /Volumes/boot
+touch ssh
+cat <<'EOF' >./userconf.txt
+pi:FHzhxyxnV/C1o
+EOF
+```
+- Login using `ssh pi@raspberrypi.local` and password `raspberry`
+- Prepare the environment according to https://github.com/RPi-distro/pi-gen (e.g. install the required dependencies)
+- Run the following script (might take about 45 minutes)
+```shell
+sudo su - root
+cd /opt
+mkdir build
+cd build
+
 git clone https://github.com/RPi-distro/pi-gen.git
 cd pi-gen
 git checkout tags/2022-09-22-raspios-bullseye
@@ -64,12 +79,12 @@ apt-get update
 
 Afterwards, the image will be renamed and zipped to the following format:
 ```
-cd work/[...]/export-image
-mv 2021-02-22-RocketShow-lite.img 2021-02-22-RocketShow-2.3.3.img
-zip 2021-02-22-RocketShow-2.3.3.zip 2021-02-22-RocketShow-2.3.3.img
+cd work/RocketShow/export-image
+mv 2023-01-31-RocketShow-lite.img 2023-01-31-RocketShow-2.3.4.img
+zip 2023-01-31-RocketShow-2.3.4.zip 2023-01-31-RocketShow-2.3.4.img
 
-# copy the zip to a shared folder, in case we're running inside Virtual Box:
-cp 2021-02-22-RocketShow-2.3.3.zip /media/sf_xxx/
+# copy the zip to a folder where we can get it with SFTP:
+mv 2023-01-31-RocketShow-2.3.4.zip /home/pi
 ```
 
 
