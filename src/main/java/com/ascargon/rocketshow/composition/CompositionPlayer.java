@@ -119,23 +119,28 @@ public class CompositionPlayer {
             int data1 = byteBuffer.get(1) & 0x7f;
 
             // TODO Can result in index out of bounds exception
-            int data2 = byteBuffer.get(2) & 0x7f;
+            int data2 = 0;
+
+            try {
+                data2 = byteBuffer.get(2) & 0x7f;
+            } catch (Exception exception) {
+            }
 
             ShortMessage shortMessage = new ShortMessage();
             try {
                 shortMessage.setMessage(command, channel, data1, data2);
+
+                try {
+                    midiRouter.sendSignal(shortMessage);
+                } catch (InvalidMidiDataException e) {
+                    logger.error("Could not send MIDI signal from MIDI file", e);
+                }
+
+                if (settingsService.getSettings().getEnableMonitor()) {
+                    activityNotificationMidiService.notifyClients(shortMessage, MidiDirection.IN, MidiSource.MIDI_FILE, null);
+                }
             } catch (InvalidMidiDataException e) {
                 logger.error("Could not process MIDI signal from MIDI file", e);
-            }
-
-            try {
-                midiRouter.sendSignal(shortMessage);
-            } catch (InvalidMidiDataException e) {
-                logger.error("Could not send MIDI signal from MIDI file", e);
-            }
-
-            if (settingsService.getSettings().getEnableMonitor()) {
-                activityNotificationMidiService.notifyClients(shortMessage, MidiDirection.IN, MidiSource.MIDI_FILE, null);
             }
         }
     }
