@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <versionInfo>
-    <version>2.2.4</version>
+    <version>2.2.5</version>
     <date>2023-01-31</date>
     <changeNoteList>
+        <changeNote>
+            <version>2.2.5</version>
+            <changes>TODO</changes>
+        </changeNote>
         <changeNote>
             <version>2.2.4</version>
             <changes>Route more MIDI messages (e.g. program changes and control changes)</changes>
