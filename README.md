@@ -39,8 +39,22 @@ cat <<'EOF' >./userconf.txt
 pi:FHzhxyxnV/C1o
 EOF
 ```
+
+Automatically connect to a wifi network (update the country code, SSID and PSK):
+```shell
+cd /Volumes/boot
+cat <<'EOF' >./wpa_supplicant.conf
+country=US
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+network={
+    ssid="Your SSID"
+    psk="Your Password"
+    key_mgmt=WPA-PSK
+}
+EOF
+```
 - Login using `ssh pi@raspberrypi.local` and password `raspberry`
-- Prepare the environment according to https://github.com/RPi-distro/pi-gen (e.g. install the required dependencies)
+- Prepare the environment according to [https://github.com/RPi-distro/pi-gen] (e.g. install the required dependencies)
 - Run the following script (might take about 45 minutes)
 ```shell
 sudo su - root
@@ -56,6 +70,9 @@ echo "IMG_NAME='RocketShow'" > config
 
 touch ./stage3/SKIP ./stage4/SKIP ./stage5/SKIP
 rm stage4/EXPORT* stage5/EXPORT*
+
+# Disable noobs build
+rm stage2/EXPORT_NOOBS
 
 # Enhance stage2 with rocketshow
 mkdir ./stage2/99-rocket-show
@@ -75,16 +92,15 @@ chmod +x ./stage2/99-rocket-show/00-run-chroot.sh
 apt-get update
 
 ./build.sh
-```
 
-Afterwards, the image will be renamed and zipped to the following format:
-```
+# rename and zip the image
 cd work/RocketShow/export-image
-mv 2023-01-31-RocketShow-lite.img 2023-01-31-RocketShow-2.3.4.img
-zip 2023-01-31-RocketShow-2.3.4.zip 2023-01-31-RocketShow-2.3.4.img
+
+mv "$(date '+%Y-%m-%d')-RocketShow-lite.img" "$(date '+%Y-%m-%d')-RocketShow.img"
+zip "$(date '+%Y-%m-%d')-RocketShow.zip" "$(date '+%Y-%m-%d')-RocketShow.img"
 
 # copy the zip to a folder where we can get it with SFTP:
-mv 2023-01-31-RocketShow-2.3.4.zip /home/pi
+mv "$(date '+%Y-%m-%d')-RocketShow.zip" /home/pi
 ```
 
 
