@@ -25,6 +25,8 @@ import org.freedesktop.gstreamer.elements.PlayBin;
 import org.freedesktop.gstreamer.elements.URIDecodeBin;
 import org.freedesktop.gstreamer.lowlevel.GType;
 import org.freedesktop.gstreamer.lowlevel.GValueAPI;
+import org.freedesktop.gstreamer.message.Message;
+import org.freedesktop.gstreamer.message.MessageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -190,7 +192,7 @@ public class CompositionPlayer {
 
         Element videoQueue = ElementFactory.make("queue", "videoqueue");
         videoSource.connect((Element.PAD_ADDED) (Element element, Pad pad) -> {
-            Caps caps = pad.getCaps();
+            Caps caps = pad.getCurrentCaps();
 
             String name = caps.getStructure(0).getName();
 
@@ -388,7 +390,7 @@ public class CompositionPlayer {
 
                     Element audioConvert = ElementFactory.make("audioconvert", "audioconvert" + i);
                     audioSource.connect((Element.PAD_ADDED) (Element element, Pad pad) -> {
-                        Caps caps = pad.getCaps();
+                        Caps caps = pad.getCurrentCaps();
 
                         String name = caps.getStructure(0).getName();
 

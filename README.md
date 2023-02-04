@@ -16,6 +16,12 @@ To debug Gstreamer issues, export GST_DEBUG before starting the server:
 export GST_DEBUG=3
 ```
 
+Pipelines can be tested using gst-launch-1.0. E.g.:
+```shell
+gst-launch-1.0 videotestsrc ! videoconvert ! autovideosink
+gst-launch-1.0 uridecodebin uri=file:///opt/rocketshow/media/video/clouds.mp4 ! queue ! kmssink
+```
+
 While developing the web app, it might be convenient to start an Angular server:
 1. Start web frontend server: `cd src/main/webapp && npx ng serve`
 2. Open the web application: http://localhost:4200
@@ -165,6 +171,8 @@ Handling the image displaying.
 ##### Lighting
 
 Responsible for the connection of Rocket Show to the Open Lighting Architecture to control connected lighting interfaces. Services for designer project playback also lies here.
+
+The sources of the inluded jar file with the OLA client are copied from an archive into ola-java-client-src.
 
 ##### MIDI
 

@@ -5,9 +5,12 @@ import com.sun.jna.Structure;
 import org.freedesktop.gstreamer.ClockTime;
 import org.freedesktop.gstreamer.lowlevel.GlibAPI;
 import org.freedesktop.gstreamer.lowlevel.GstAPI;
+import org.freedesktop.gstreamer.lowlevel.GstClockAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import java.util.concurrent.TimeUnit;
 
 import static com.ascargon.rocketshow.gstreamer.PbUtilsApi.PB_UTILS_API;
 import static org.freedesktop.gstreamer.lowlevel.GstPluginAPI.GSTPLUGIN_API;
@@ -41,8 +44,7 @@ public class DefaultGstDiscovererService implements GstDiscovererService {
 
     @Override
     public long getDurationMillis(Pointer discovererInformation) {
-        ClockTime time = PB_UTILS_API.gst_discoverer_info_get_duration(discovererInformation);
-        return time.toMillis();
+        return PB_UTILS_API.gst_discoverer_info_get_duration(discovererInformation) / 1000000;
     }
 
     @Override

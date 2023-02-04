@@ -29,13 +29,13 @@ public interface PbUtilsApi extends Library {
         GST_DISCOVERER_MISSING_PLUGINS
     }
 
-    Pointer gst_discoverer_new(ClockTime timeout, GstAPI.GErrorStruct error);
+    Pointer gst_discoverer_new(long timeout, GstAPI.GErrorStruct error);
 
     Pointer gst_discoverer_discover_uri(Pointer discoverer, String uri, GstAPI.GErrorStruct error);
 
     GstDiscovererResult gst_discoverer_info_get_result(Pointer discoverer);
 
-    ClockTime gst_discoverer_info_get_duration(Pointer info);
+    long gst_discoverer_info_get_duration(Pointer info);
 
     GlibAPI.GList gst_discoverer_info_get_audio_streams (Pointer info);
 
