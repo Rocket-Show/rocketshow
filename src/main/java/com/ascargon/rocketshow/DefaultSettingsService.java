@@ -255,7 +255,7 @@ public class DefaultSettingsService implements SettingsService {
         }
 
         if (settings.getDesignerLivePreview() == null) {
-            settings.setDesignerLivePreview(false);
+            settings.setDesignerLivePreview(true);
         }
     }
 
