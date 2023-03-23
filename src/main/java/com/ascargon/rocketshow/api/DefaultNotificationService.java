@@ -11,7 +11,6 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -95,11 +94,6 @@ public class DefaultNotificationService extends TextWebSocketHandler implements 
     @Override
     public void notifyClients() throws IOException {
         notifyClients(null, null, null, null, null);
-    }
-
-    @PreDestroy
-    public void close() {
-        // Don't close the sessions, because the webapp would not automatically reconnect in this case.
     }
 
 }

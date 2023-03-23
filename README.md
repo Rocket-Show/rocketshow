@@ -23,8 +23,34 @@ gst-launch-1.0 uridecodebin uri=file:///opt/rocketshow/media/video/clouds.mp4 ! 
 ```
 
 While developing the web app, it might be convenient to start an Angular server:
-1. Start web frontend server: `cd src/main/webapp && npx ng serve`
+1. Start web frontend server: `cd src/main/webapp && npm install && npx ng serve`
 2. Open the web application: http://localhost:4200
+
+On the Mac, Gstreamer and OLA can be installed using Homebrew:
+```shell
+brew install gstreamer
+brew install gst-plugins-base
+brew install gst-plugins-good
+brew install gst-plugins-bad
+brew install gst-plugins-ugly
+brew install ola
+```
+
+A few testpipelines for Mac:
+```shell
+gst-launch-1.0 videotestsrc ! videoconvert ! osxvideosink
+gst-launch-1.0 uridecodebin uri=file:///opt/rocketshow/media/video/clouds.mp4 ! queue ! osxaudiosink
+```
+
+Launch the OLA daemon on Mac:
+```shell
+olad
+```
+
+Launch Rocket Show on the mac:
+```shell
+./start.sh
+```
 
 ## Deployment
 ### Seed directory
@@ -134,7 +160,7 @@ The built application should be uploaded to rocketshow.net/update and be named "
 
 #### Overview
 
-The Rocket Show server is written in Java and uses Spring Boot ([https://spring.io/projects/spring-boot](https://spring.io/projects/spring-boot))  for easier configuration and dependency injection. Gstreamer ([https://gstreamer.freedesktop.org/](https://gstreamer.freedesktop.org/)), a framework written in C, is included as multimedia playback backend.
+The Rocket Show server is written in Java and uses Spring Boot ([https://spring.io/projects/spring-boot](https://spring.io/projects/spring-boot)). Gstreamer ([https://gstreamer.freedesktop.org/](https://gstreamer.freedesktop.org/)), a framework written in C, is included as multimedia playback backend.
 
 Spring services are autowired into each other (dependency injection). The interface is named XyService, the corresponding implementation is called DefaultXyService.
 

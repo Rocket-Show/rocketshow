@@ -10,7 +10,6 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.List;
 import java.util.Timer;
@@ -81,11 +80,6 @@ public class DefaultActivityNotificationLightingService extends TextWebSocketHan
 
         sendActivityTimer = new Timer();
         sendActivityTimer.schedule(timerTask, 50);
-    }
-
-    @PreDestroy
-    public void close() {
-        // Don't close the sessions, because the webapp would not automatically reconnect in this case.
     }
 
 }

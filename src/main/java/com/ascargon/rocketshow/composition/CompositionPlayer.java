@@ -147,6 +147,29 @@ public class CompositionPlayer {
         }
     }
 
+    private BaseSink getGstAudioSink() {
+        String sinkName = "alsasink";
+
+        if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+            sinkName = "osxaudiosink";
+        }
+
+        BaseSink sink = (BaseSink) ElementFactory.make(sinkName, "audiosink");
+
+        if (!OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+            sink.set("device", "rocketshow");
+        }
+
+        return sink;
+    }
+
+    private Element getGstVideoSink() {
+        if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+            return ElementFactory.make("osxvideosink", "osxvideosink");
+        }
+        return ElementFactory.make("kmssink", "kmssink");
+    }
+
     private int getAudioBusStartChannel(AudioBus audioBus) {
         int startChannelIndex = 0;
 
@@ -207,7 +230,7 @@ public class CompositionPlayer {
         pipeline.add(videoSource);
         pipeline.add(videoQueue);
 
-        Element kmssink = ElementFactory.make("kmssink", "kmssink");
+        Element kmssink = getGstVideoSink();
         pipeline.add(kmssink);
 
         videoSource.link(videoQueue);
@@ -303,7 +326,7 @@ public class CompositionPlayer {
             Element queue = ElementFactory.make("queue", "audiosinkqueue");
             pipeline.add(queue);
 
-            BaseSink sink = audioService.getGstAudioSink();
+            BaseSink sink = getGstAudioSink();
             pipeline.add(sink);
 
             Element level = null;
