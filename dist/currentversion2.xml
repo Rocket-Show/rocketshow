@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <versionInfo>
-    <version>2.2.5</version>
-    <date>2023-02-04</date>
+    <version>2.3.0</version>
+    <date>???</date>
     <changeNoteList>
         <changeNote>
+            <version>2.3.0</version>
+            <changes>Updated dependencies</changes>
+        </changeNote>
+        <changeNote>
             <version>2.2.5</version>
-            <changes>Updates for the new Raspberry Pi 4 editions</changes>
+            <changes>Fix designer fade in/out on real hardware</changes>
         </changeNote>
         <changeNote>
             <version>2.2.4</version>
