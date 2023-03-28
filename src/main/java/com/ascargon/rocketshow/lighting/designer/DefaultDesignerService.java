@@ -312,7 +312,7 @@ public class DefaultDesignerService implements DesignerService {
         if (intensityPercentage < 1) {
             // We need to mix a possibly existing value (or the default value 0) with the new value (fading)
 
-            // Get the existant value for this property
+            // Get the existent value for this property
             for (FixtureChannelValue existingChannelValue : existingChannelValues) {
                 if (existingChannelValue.getChannelName().equals(channelValue.getChannelName()) && existingChannelValue.getProfileUuid().equals(channelValue.getProfileUuid())) {
                     existingValue = existingChannelValue.getValue();
@@ -322,9 +322,11 @@ public class DefaultDesignerService implements DesignerService {
 
             // Mix the existing value with the new value
             newValue = existingValue * (1 - intensityPercentage) + newValue * intensityPercentage;
+
+            logger.info("existingValue: " + existingValue + ", intensityPercentage: " + intensityPercentage + ", newValue: " + newValue);
         }
 
-        // Remove the existant value, if available
+        // Remove the existent value, if available
         Iterator<FixtureChannelValue> iterator = existingChannelValues.iterator();
         while (iterator.hasNext()) {
             FixtureChannelValue fixtureChannelValue = iterator.next();
@@ -674,11 +676,11 @@ public class DefaultDesignerService implements DesignerService {
             if (timeMillis > sceneEndMillis - preset.getScene().getFadeOutMillis()
                     && timeMillis < sceneEndMillis) {
                 // Scene fades out
-                intensityPercentageScene = (sceneEndMillis - timeMillis) / preset.getScene().getFadeOutMillis();
+                intensityPercentageScene = ((double) (sceneEndMillis - timeMillis)) / ((double) preset.getScene().getFadeOutMillis());
             } else if (timeMillis < sceneStartMillis + preset.getScene().getFadeInMillis()
                     && timeMillis > sceneStartMillis) {
                 // Scene fades in
-                intensityPercentageScene = (timeMillis - sceneStartMillis) / preset.getScene().getFadeInMillis();
+                intensityPercentageScene = ((double) (timeMillis - sceneStartMillis)) / ((double) preset.getScene().getFadeInMillis());
             }
         }
 
@@ -694,11 +696,11 @@ public class DefaultDesignerService implements DesignerService {
             if (timeMillis > presetEndMillis - preset.getPreset().getFadeOutMillis()
                     && timeMillis < presetEndMillis) {
                 // Preset fades out
-                intensityPercentagePreset = (presetEndMillis - timeMillis) / preset.getPreset().getFadeOutMillis();
+                intensityPercentagePreset = ((double) (presetEndMillis - timeMillis)) / ((double) preset.getPreset().getFadeOutMillis());
             } else if (timeMillis < presetStartMillis + preset.getPreset().getFadeInMillis()
                     && timeMillis > presetStartMillis) {
                 // Preset fades in
-                intensityPercentagePreset = (timeMillis - presetStartMillis) / preset.getPreset().getFadeInMillis();
+                intensityPercentagePreset = ((double) (timeMillis - presetStartMillis)) / ((double) preset.getPreset().getFadeInMillis());
             }
 
             intensityPercentage = intensityPercentageScene * intensityPercentagePreset;
@@ -909,7 +911,7 @@ public class DefaultDesignerService implements DesignerService {
                                     fixtureChannelValue.setChannelName(cachedChannel.getName());
                                     fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
                                     fixtureChannelValue.setValue(cachedChannel.getMaxValue() * effectCurve.getValueAtMillis(timeMillis, fixtureIndex));
-                                    this.mixChannelValue(values, fixtureChannelValue, intensityPercentage);
+                                    mixChannelValue(values, fixtureChannelValue, intensityPercentage);
                                 }
                             }
                         }
@@ -925,7 +927,7 @@ public class DefaultDesignerService implements DesignerService {
                                         fixtureChannelValue.setChannelName(cachedChannel.getName());
                                         fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
                                         fixtureChannelValue.setValue(cachedChannel.getMaxValue() * effectCurve.getValueAtMillis(timeMillis, fixtureIndex));
-                                        this.mixChannelValue(values, fixtureChannelValue, intensityPercentage);
+                                        mixChannelValue(values, fixtureChannelValue, intensityPercentage);
                                     }
                                 }
                             }
