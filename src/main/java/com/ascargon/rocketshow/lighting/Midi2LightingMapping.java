@@ -1,6 +1,6 @@
 package com.ascargon.rocketshow.lighting;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class Midi2LightingMapping {

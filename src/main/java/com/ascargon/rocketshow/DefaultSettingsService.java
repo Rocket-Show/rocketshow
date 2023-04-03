@@ -9,6 +9,10 @@ import com.ascargon.rocketshow.raspberry.RaspberryResetUsbService;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import com.ascargon.rocketshow.util.ShellManager;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
+import jakarta.xml.bind.Unmarshaller;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.slf4j.Logger;
@@ -17,10 +21,6 @@ import org.springframework.boot.system.ApplicationHome;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.MidiUnavailableException;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
 import java.io.*;
 import java.util.List;
 import java.util.UUID;
@@ -358,11 +358,11 @@ public class DefaultSettingsService implements SettingsService {
 
         // Build the dshare device
         alsaSettings.append(
-                "pcm.dshare {\n" +
-                        "  type dmix\n" +
-                        "  ipc_key 2048\n" +
-                        "  slave {\n" +
-                        "    pcm \"hw:").append(settings.getAudioDevice().getKey()).append("\"\n")
+                        "pcm.dshare {\n" +
+                                "  type dmix\n" +
+                                "  ipc_key 2048\n" +
+                                "  slave {\n" +
+                                "    pcm \"hw:").append(settings.getAudioDevice().getKey()).append("\"\n")
                 .append("    channels ").append(getTotalAudioChannels()).append("\n");
 
         if (settings.getAlsaPeriodTime() != null) {

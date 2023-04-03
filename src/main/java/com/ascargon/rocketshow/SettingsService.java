@@ -1,9 +1,8 @@
 package com.ascargon.rocketshow;
 
 import com.ascargon.rocketshow.audio.AudioBus;
+import jakarta.xml.bind.JAXBException;
 import org.springframework.stereotype.Service;
-
-import javax.xml.bind.JAXBException;
 
 @Service
 public interface SettingsService {

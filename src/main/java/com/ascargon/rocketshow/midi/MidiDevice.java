@@ -1,7 +1,7 @@
 package com.ascargon.rocketshow.midi;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * A MIDI device containing name and id.
@@ -11,44 +11,44 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class MidiDevice {
 
-	private int id;
+    private int id;
 
-	private String name;
-	
-	private String vendor;
-	
-	private String description;
+    private String name;
 
-	public int getId() {
-		return id;
-	}
+    private String vendor;
 
-	public void setId(int id) {
-		this.id = id;
-	}
+    private String description;
 
-	public String getName() {
-		return name;
-	}
+    public int getId() {
+        return id;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setId(int id) {
+        this.id = id;
+    }
 
-	public String getVendor() {
-		return vendor;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setVendor(String vendor) {
-		this.vendor = vendor;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public String getDescription() {
-		return description;
-	}
+    public String getVendor() {
+        return vendor;
+    }
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
+    public void setVendor(String vendor) {
+        this.vendor = vendor;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
 }

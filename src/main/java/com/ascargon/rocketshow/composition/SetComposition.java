@@ -1,7 +1,7 @@
 package com.ascargon.rocketshow.composition;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * A composition inside a set containing less information than a "real"

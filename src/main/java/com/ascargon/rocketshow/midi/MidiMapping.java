@@ -3,63 +3,63 @@ package com.ascargon.rocketshow.midi;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlTransient;
 
 @XmlRootElement
 public class MidiMapping {
 
-	private MidiMapping parent;
+    private MidiMapping parent;
 
-	private List<ChannelMapping> channelMap = new ArrayList<>();
-	
-	private Integer channelOffset = 0;
-	private Integer noteOffset = 0;
+    private List<ChannelMapping> channelMap = new ArrayList<>();
 
-	// Completely ignore all parent's settings
-	private Boolean overrideParent = false;
+    private Integer channelOffset = 0;
+    private Integer noteOffset = 0;
 
-	@XmlTransient
-	public MidiMapping getParent() {
-		return parent;
-	}
+    // Completely ignore all parent's settings
+    private Boolean overrideParent = false;
 
-	public void setParent(MidiMapping parent) {
-		this.parent = parent;
-	}
+    @XmlTransient
+    public MidiMapping getParent() {
+        return parent;
+    }
 
-	public Boolean isOverrideParent() {
-		return overrideParent;
-	}
+    public void setParent(MidiMapping parent) {
+        this.parent = parent;
+    }
 
-    @SuppressWarnings("unused")
-	public void setOverrideParent(Boolean overrideParent) {
-		this.overrideParent = overrideParent;
-	}
-
-	public List<ChannelMapping> getChannelMap() {
-		return channelMap;
-	}
+    public Boolean isOverrideParent() {
+        return overrideParent;
+    }
 
     @SuppressWarnings("unused")
-	public void setChannelMap(List<ChannelMapping> channelMap) {
-		this.channelMap = channelMap;
-	}
+    public void setOverrideParent(Boolean overrideParent) {
+        this.overrideParent = overrideParent;
+    }
 
-	public Integer getChannelOffset() {
-		return channelOffset;
-	}
+    public List<ChannelMapping> getChannelMap() {
+        return channelMap;
+    }
 
-	public void setChannelOffset(Integer channelOffset) {
-		this.channelOffset = channelOffset;
-	}
+    @SuppressWarnings("unused")
+    public void setChannelMap(List<ChannelMapping> channelMap) {
+        this.channelMap = channelMap;
+    }
 
-	public Integer getNoteOffset() {
-		return noteOffset;
-	}
+    public Integer getChannelOffset() {
+        return channelOffset;
+    }
 
-	public void setNoteOffset(Integer noteOffset) {
-		this.noteOffset = noteOffset;
-	}
+    public void setChannelOffset(Integer channelOffset) {
+        this.channelOffset = channelOffset;
+    }
+
+    public Integer getNoteOffset() {
+        return noteOffset;
+    }
+
+    public void setNoteOffset(Integer noteOffset) {
+        this.noteOffset = noteOffset;
+    }
 
 }
