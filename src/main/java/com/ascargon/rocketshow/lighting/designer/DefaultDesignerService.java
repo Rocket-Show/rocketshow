@@ -323,7 +323,7 @@ public class DefaultDesignerService implements DesignerService {
             // Mix the existing value with the new value
             newValue = existingValue * (1 - intensityPercentage) + newValue * intensityPercentage;
 
-            logger.info("existingValue: " + existingValue + ", intensityPercentage: " + intensityPercentage + ", newValue: " + newValue);
+            logger.trace("existingValue: " + existingValue + ", intensityPercentage: " + intensityPercentage + ", newValue: " + newValue);
         }
 
         // Remove the existent value, if available
