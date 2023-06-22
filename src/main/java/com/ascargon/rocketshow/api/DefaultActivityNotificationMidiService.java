@@ -13,7 +13,6 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import javax.annotation.PreDestroy;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.ShortMessage;
 import java.io.IOException;
@@ -129,11 +128,6 @@ public class DefaultActivityNotificationMidiService extends TextWebSocketHandler
 
         sendActivityTimer = new Timer();
         sendActivityTimer.schedule(timerTask, 50);
-    }
-
-    @PreDestroy
-    public void close() {
-        // Don't close the sessions, because the webapp would not automatically reconnect in this case.
     }
 
 }

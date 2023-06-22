@@ -1,6 +1,6 @@
 #!/bin/bash
 # 
-# Install Rocket Show on a Raspian Stretch.
+# Install Rocket Show on a Raspian Bullseye.
 # This script needs to be executed as root.
 # 
 
@@ -8,8 +8,7 @@
 apt-get update
 apt-get upgrade -y
 
-# Install step-by-step because it does not work alltogether (timeouts to raspbian.org, maybe due to connection limits).
-apt-get -y install openjdk-11-jdk dnsmasq hostapd fbi ola libnss-mdns wiringpi iptables alsa-base libasound2 alsa-utils openssh-sftp-server libgstreamer1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl
+apt-get -y install unzip openjdk-17-jdk dnsmasq hostapd fbi ola libnss-mdns iptables alsa-base libasound2 alsa-utils openssh-sftp-server libgstreamer1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl
 
 # Add the rocketshow user
 adduser \
@@ -53,6 +52,11 @@ cd rocketshow
 # Add execution permissions on the update script
 chmod +x update.sh
 
+# Download the current set of fixtures
+wget https://rocketshow.net/designer/downloads/fixtures.zip
+unzip fixtures.zip -d fixtures
+rm fixtures.zip
+
 # Overclock the raspberry to sustain streams without underruns
 # - Set more memory for the GPU to play larger video files with omx
 # - Enable turbo-mode by default (boot_delay avoids sdcard corruption)
@@ -81,10 +85,8 @@ systemctl enable hostapd
 systemctl stop dnsmasq
 systemctl stop hostapd
 
-printf "\n# ROCKETSHOWSTART\ninterface wlan0\n    static ip_address=192.168.4.1/24\n# ROCKETSHOWEND\n" | tee -a /etc/dhcpcd.conf
-
-# Don't start during install
-#service dhcpcd restart
+# Required in order for the wireless AP to work
+printf "\n# ROCKETSHOWSTART\ninterface wlan0\nnohook wpa_supplicant\nstatic ip_address=192.168.4.1/24\n# ROCKETSHOWEND\n" | tee -a /etc/dhcpcd.conf
 
 printf "\n# ROCKETSHOWSTART\ninterface=wlan0\n  dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h\naddress=/rocketshow.local/192.168.4.1\n# ROCKETSHOWEND\n" | tee -a /etc/dnsmasq.conf
 
@@ -99,6 +101,7 @@ ssid=Rocket Show
 utf8_ssid=1
 hw_mode=g
 channel=7
+country_code=US
 wmm_enabled=0
 macaddr_acl=0
 auth_algs=1
@@ -108,17 +111,18 @@ wpa_pairwise=TKIP
 rsn_pairwise=CCMP
 EOF
 
-printf "\n# ROCKETSHOWSTART\nDAEMON_CONF=\"/etc/hostapd/hostapd.conf\"\n# ROCKETSHOWEND\n" | tee -a /etc/default/hostapd
-
-#systemctl start hostapd
-#systemctl start dnsmasq
-
 printf "\n# ROCKETSHOWSTART\nnet.ipv4.ip_forward=1\n# ROCKETSHOWEND\n" | tee -a /etc/sysctl.conf
+
+# set the country code (required in order for wlan0 and hostapd to work)
+raspi-config nonint do_wifi_country US
+#printf "\ncountry=CH" | tee -a /etc/wpa_supplicant/wpa_supplicant.conf
+# manually unblock wifi, because we set a country code
+#rfkill unblock wifi
 
 # Install pi4j
 curl -s get.pi4j.com | bash
 
-# Add execution permissions on the start script
+# Add execution permissions to the start script
 chmod +x start.sh
 
 # Add a service to automatically start the app on boot and redirect port 80 to 8080
@@ -165,7 +169,7 @@ EOF
 
 chown -R rocketshow:rocketshow /home/rocketshow
 
-# Apply a patch to make seeking work on the Raspberry Pi 4
+# Apply a patch to make seeking videos work on the Raspberry Pi 4
 # https://github.com/moritzvieli/rocketshow/issues/7
 # See: https://github.com/raspberrypi/linux/issues/3325#issuecomment-684040830
 firmware=$(zgrep "firmware as of" \

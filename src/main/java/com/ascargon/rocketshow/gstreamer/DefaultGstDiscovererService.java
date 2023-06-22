@@ -5,9 +5,12 @@ import com.sun.jna.Structure;
 import org.freedesktop.gstreamer.ClockTime;
 import org.freedesktop.gstreamer.lowlevel.GlibAPI;
 import org.freedesktop.gstreamer.lowlevel.GstAPI;
+import org.freedesktop.gstreamer.lowlevel.GstClockAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import java.util.concurrent.TimeUnit;
 
 import static com.ascargon.rocketshow.gstreamer.PbUtilsApi.PB_UTILS_API;
 import static org.freedesktop.gstreamer.lowlevel.GstPluginAPI.GSTPLUGIN_API;
@@ -29,7 +32,12 @@ public class DefaultGstDiscovererService implements GstDiscovererService {
 
         Pointer discovererInformation = PB_UTILS_API.gst_discoverer_discover_uri(discoverer, "file://" + path, error);
 
-        if (PB_UTILS_API.gst_discoverer_info_get_result(discovererInformation) != PbUtilsApi.GstDiscovererResult.GST_DISCOVERER_OK) {
+        // timing out is fine most of the time, because the required info is still found
+        if (PB_UTILS_API.gst_discoverer_info_get_result(discovererInformation)
+                != PbUtilsApi.GstDiscovererResult.GST_DISCOVERER_OK
+                && PB_UTILS_API.gst_discoverer_info_get_result(discovererInformation)
+                != PbUtilsApi.GstDiscovererResult.GST_DISCOVERER_TIMEOUT
+        ) {
             // Unfortunately, error.message is always null. Don't know why. And
             // getting the message from domain and code also does not work.
 
@@ -41,8 +49,7 @@ public class DefaultGstDiscovererService implements GstDiscovererService {
 
     @Override
     public long getDurationMillis(Pointer discovererInformation) {
-        ClockTime time = PB_UTILS_API.gst_discoverer_info_get_duration(discovererInformation);
-        return time.toMillis();
+        return PB_UTILS_API.gst_discoverer_info_get_duration(discovererInformation) / 1000000;
     }
 
     @Override

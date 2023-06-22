@@ -100,23 +100,6 @@ public class DefaultAudioService implements AudioService {
     }
 
     @Override
-    public BaseSink getGstAudioSink() {
-        String sinkName = "alsasink";
-
-        if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
-            sinkName = "osxaudiosink";
-        }
-
-        BaseSink sink = (BaseSink) ElementFactory.make(sinkName, "audiosink");
-
-        if (!OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
-            sink.set("device", "rocketshow");
-        }
-
-        return sink;
-    }
-
-    @Override
     public int getMaxAvailableSinkChannels() {
         // Build a test Gstreamer pipeline and query the channel count from the sink
         final CountDownLatch countDownLatch = new CountDownLatch(1);

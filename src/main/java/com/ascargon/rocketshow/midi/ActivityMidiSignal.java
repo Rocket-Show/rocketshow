@@ -1,7 +1,7 @@
 package com.ascargon.rocketshow.midi;
 
 import javax.sound.midi.ShortMessage;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class ActivityMidiSignal {

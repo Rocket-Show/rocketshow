@@ -1,9 +1,7 @@
 package com.ascargon.rocketshow.midi;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import com.ascargon.rocketshow.util.ControlAction;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Map one specific MIDI event to an action.

@@ -13,12 +13,14 @@ import com.ascargon.rocketshow.lighting.Midi2LightingConvertService;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.midi.MidiDeviceOutService;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
+import com.sun.jna.Platform;
 import org.freedesktop.gstreamer.Gst;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -71,6 +73,21 @@ public class DefaultPlayerService implements PlayerService {
         defaultCompositionPlayer.setDefaultComposition(true);
 
         try {
+            // Setup the Gstreamer paths
+            if (Platform.isMac()) {
+                // libs path
+                String gstPath = System.getProperty("gstreamer.path", "/opt/homebrew/lib");
+
+                if (!gstPath.isEmpty()) {
+                    String jnaPath = System.getProperty("jna.library.path", "").trim();
+                    if (jnaPath.isEmpty()) {
+                        System.setProperty("jna.library.path", gstPath);
+                    } else {
+                        System.setProperty("jna.library.path", jnaPath + File.pathSeparator + gstPath);
+                    }
+                }
+            }
+
             Gst.init();
         } catch (Exception | UnsatisfiedLinkError e) {
             // Gstreamer might not be installed properly or not be installed at all

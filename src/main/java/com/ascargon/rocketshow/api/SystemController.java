@@ -10,13 +10,13 @@ import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.midi.MidiDeviceInService;
 import com.ascargon.rocketshow.midi.MidiDeviceOutService;
 import com.ascargon.rocketshow.util.*;
+import jakarta.xml.bind.JAXBException;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.xml.bind.JAXBException;
 import java.io.FileInputStream;
 
 @RestController()
@@ -119,7 +119,7 @@ class SystemController {
         settingsService.setSettings(settings);
         settingsService.save();
 
-        if(settings.getDesignerLivePreview()) {
+        if (settings.getDesignerLivePreview()) {
             designerService.startPreview(0);
         } else {
             designerService.stopPreview();

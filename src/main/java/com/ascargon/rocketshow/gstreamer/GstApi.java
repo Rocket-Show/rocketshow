@@ -25,7 +25,7 @@ public interface GstApi extends Library {
     void gst_value_array_append_value(GValueAPI.GValue var1, Pointer var2);
 
     // Set a pointer property to an object, like a GST_TYPE_ARRAY
-    void g_object_set_property (GObject object, String property, Pointer value);
+    void g_object_set_property (GstObject object, String property, Pointer value);
 
     // Get the caps from a string (e.g. "audio/x-raw,channels=4")
     Caps gst_caps_from_string(String string);

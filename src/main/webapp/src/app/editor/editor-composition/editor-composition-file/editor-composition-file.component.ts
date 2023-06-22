@@ -53,6 +53,7 @@ export class EditorCompositionFileComponent implements OnInit {
 
     this.dropzoneConfig = {
       url: this.appHttpInterceptor.getRestUrl() + 'file/upload',
+      paramName: 'file',
       addRemoveLinks: false,
       maxFilesize: 10000 /* 10 GB */,
       acceptedFiles: 'audio/*,video/*',
@@ -63,11 +64,11 @@ export class EditorCompositionFileComponent implements OnInit {
         <div class="dz-details" style="text-align: left">
           <i class="fa fa-file-o"></i> <span data-dz-name></span> <small><span class="label label-default file-size" data-dz-size></span></small>
         </div>
-        
+
         <!--div class="mt-5">
           <span data-dz-errormessage></span>
         </div-->
-        
+
         <div class="progress mt-4 mb-1" style="height: 10px">
           <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width:0%;" data-dz-uploadprogress></div>
         </div>

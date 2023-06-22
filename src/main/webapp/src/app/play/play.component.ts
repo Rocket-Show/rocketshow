@@ -1,32 +1,31 @@
-import { Session } from './../models/session';
-import { SessionService } from './../services/session.service';
-import { Composition } from './../models/composition';
-import { CompositionService } from './../services/composition.service';
-import { StateService } from './../services/state.service';
-import { Set } from './../models/set';
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { State } from '../models/state';
-import { TransportService } from '../services/transport.service';
-import { Subscription, timer } from 'rxjs';
-import { map, finalize, catchError } from 'rxjs/operators';
-import { ToastGeneralErrorService } from '../services/toast-general-error.service';
-import { ActivityMidiService } from '../services/activity-midi.service';
-import { ActivityMidi } from '../models/activity-midi';
-import { SettingsService } from '../services/settings.service';
-import { ActivityAudioService } from '../services/activity-audio.service';
-import { ActivityAudio } from '../models/activity-audio';
-import { ActivityAudioBus } from '../models/activity-audio-bus';
-import { ActivityAudioChannel } from '../models/activity-audio-channel';
-import { ActivityLightingService } from '../services/activity-lighting.service';
-import { ActivityLighting } from '../models/activity-lighting';
+import { Session } from "./../models/session";
+import { SessionService } from "./../services/session.service";
+import { Composition } from "./../models/composition";
+import { CompositionService } from "./../services/composition.service";
+import { StateService } from "./../services/state.service";
+import { Set } from "./../models/set";
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from "@angular/core";
+import { State } from "../models/state";
+import { TransportService } from "../services/transport.service";
+import { Subscription, timer } from "rxjs";
+import { map, finalize, catchError } from "rxjs/operators";
+import { ToastGeneralErrorService } from "../services/toast-general-error.service";
+import { ActivityMidiService } from "../services/activity-midi.service";
+import { ActivityMidi } from "../models/activity-midi";
+import { SettingsService } from "../services/settings.service";
+import { ActivityAudioService } from "../services/activity-audio.service";
+import { ActivityAudio } from "../models/activity-audio";
+import { ActivityAudioBus } from "../models/activity-audio-bus";
+import { ActivityAudioChannel } from "../models/activity-audio-channel";
+import { ActivityLightingService } from "../services/activity-lighting.service";
+import { ActivityLighting } from "../models/activity-lighting";
 
 @Component({
-  selector: 'app-play',
-  templateUrl: './play.component.html',
-  styleUrls: ['./play.component.scss']
+  selector: "app-play",
+  templateUrl: "./play.component.html",
+  styleUrls: ["./play.component.scss"],
 })
 export class PlayComponent implements OnInit, OnDestroy {
-
   stateServiceSubscription: Subscription;
 
   currentSet: Set;
@@ -37,7 +36,7 @@ export class PlayComponent implements OnInit, OnDestroy {
   sets: Set[];
 
   positionMillis: number = 0;
-  playTime: string = '00:00.000';
+  playTime: string = "00:00.000";
   playUpdateSubscription: Subscription;
   lastPlayTime: Date;
 
@@ -46,7 +45,7 @@ export class PlayComponent implements OnInit, OnDestroy {
 
   manualCompositionSelection: boolean = false;
 
-  totalPlayTime: string = '';
+  totalPlayTime: string = "";
 
   loadingSet: boolean = false;
 
@@ -76,8 +75,7 @@ export class PlayComponent implements OnInit, OnDestroy {
     public activityLightingService: ActivityLightingService,
     public settingsService: SettingsService,
     private changeDetectorRef: ChangeDetectorRef
-    ) {
-
+  ) {
     this.loadSettings();
 
     this.settingsService.settingsChanged.subscribe(() => {
@@ -86,21 +84,28 @@ export class PlayComponent implements OnInit, OnDestroy {
   }
 
   private loadSettings() {
-    this.settingsService.getSettings().pipe(map(settings => {
-      this.activityAudio = new ActivityAudio();
+    this.settingsService
+      .getSettings()
+      .pipe(
+        map((settings) => {
+          this.activityAudio = new ActivityAudio();
 
-      for (let audioBus of settings.audioBusList) {
-        let activityAudioBus = new ActivityAudioBus();
-        activityAudioBus.name = audioBus.name;
-        this.activityAudio.activityAudioBusList.push(activityAudioBus);
+          for (let audioBus of settings.audioBusList) {
+            let activityAudioBus = new ActivityAudioBus();
+            activityAudioBus.name = audioBus.name;
+            this.activityAudio.activityAudioBusList.push(activityAudioBus);
 
-        for (var i = 0; i < audioBus.channels; i++) {
-          let activityAudioChannel = new ActivityAudioChannel();
-          activityAudioChannel.index = i;
-          activityAudioBus.activityAudioChannelList.push(activityAudioChannel);
-        }
-      }
-    })).subscribe();
+            for (var i = 0; i < audioBus.channels; i++) {
+              let activityAudioChannel = new ActivityAudioChannel();
+              activityAudioChannel.index = i;
+              activityAudioBus.activityAudioChannelList.push(
+                activityAudioChannel
+              );
+            }
+          }
+        })
+      )
+      .subscribe();
   }
 
   resetChannelVolumes() {
@@ -114,13 +119,11 @@ export class PlayComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     // Subscribe to the state-changed service
-    this.stateServiceSubscription = this.stateService.state.subscribe((state: State) => {
-      // ignore playing state with positionMillis = 0, because Gstreamer sets the position
-      // to for a brief period while seeking
-      if(state.playState != 'PLAYING' || state.positionMillis > 0) {
+    this.stateServiceSubscription = this.stateService.state.subscribe(
+      (state: State) => {
         this.stateChanged(state);
       }
-    });
+    );
 
     // Subscribe to the get connection service
     this.stateService.getsConnected.subscribe(() => {
@@ -135,7 +138,7 @@ export class PlayComponent implements OnInit, OnDestroy {
     });
 
     // Load the current session
-    this.sessionService.getSession().subscribe(session => {
+    this.sessionService.getSession().subscribe((session) => {
       this.session = session;
     });
 
@@ -143,91 +146,106 @@ export class PlayComponent implements OnInit, OnDestroy {
     this.loadCurrentSet();
 
     // Subscribe to MIDI activities
-    this.activityMidiSubscription = this.activityMidiService.subject.subscribe((activityMidi: ActivityMidi) => {
-      let decayMillis = 50;
+    this.activityMidiSubscription = this.activityMidiService.subject.subscribe(
+      (activityMidi: ActivityMidi) => {
+        let decayMillis = 50;
 
-      if (activityMidi.midiDirection == 'IN' || activityMidi.midiDirection == 'IN_OUT') {
-        this.activityMidiIn = true;
+        if (
+          activityMidi.midiDirection == "IN" ||
+          activityMidi.midiDirection == "IN_OUT"
+        ) {
+          this.activityMidiIn = true;
 
-        if (this.activityMidiInStopTimeout) {
-          clearTimeout(this.activityMidiInStopTimeout);
-          this.activityMidiInStopTimeout = undefined;
+          if (this.activityMidiInStopTimeout) {
+            clearTimeout(this.activityMidiInStopTimeout);
+            this.activityMidiInStopTimeout = undefined;
+          }
+
+          this.activityMidiInStopTimeout = setTimeout(() => {
+            this.activityMidiInStopTimeout = undefined;
+            this.activityMidiIn = false;
+          }, decayMillis);
         }
 
-        this.activityMidiInStopTimeout = setTimeout(() => {
-          this.activityMidiInStopTimeout = undefined;
-          this.activityMidiIn = false;
-        }, decayMillis);
-      }
-      
-      if ((activityMidi.midiDirection == 'OUT' || activityMidi.midiDirection == 'IN_OUT') && activityMidi.midiDestinations.indexOf('LIGHTING') == -1) {
-        // Lighting is monitored separately
+        if (
+          (activityMidi.midiDirection == "OUT" ||
+            activityMidi.midiDirection == "IN_OUT") &&
+          activityMidi.midiDestinations.indexOf("LIGHTING") == -1
+        ) {
+          // Lighting is monitored separately
 
-        this.activityMidiOut = true;
+          this.activityMidiOut = true;
 
-        if (this.activityMidiOutStopTimeout) {
-          clearTimeout(this.activityMidiOutStopTimeout);
-          this.activityMidiOutStopTimeout = undefined;
+          if (this.activityMidiOutStopTimeout) {
+            clearTimeout(this.activityMidiOutStopTimeout);
+            this.activityMidiOutStopTimeout = undefined;
+          }
+
+          this.activityMidiOutStopTimeout = setTimeout(() => {
+            this.activityMidiOutStopTimeout = undefined;
+            this.activityMidiOut = false;
+          }, decayMillis);
         }
-
-        this.activityMidiOutStopTimeout = setTimeout(() => {
-          this.activityMidiOutStopTimeout = undefined;
-          this.activityMidiOut = false;
-        }, decayMillis);
       }
-    });
+    );
     this.activityMidiService.startMonitor();
 
     // Subscribe to audio activities
-    this.activityAudioSubscription = this.activityAudioService.subject.subscribe((activityAudio: ActivityAudio) => {
-      if (this.activityAudioStopTimeout) {
-        clearTimeout(this.activityAudioStopTimeout);
-        this.activityAudioStopTimeout = undefined;
-      }
+    this.activityAudioSubscription =
+      this.activityAudioService.subject.subscribe(
+        (activityAudio: ActivityAudio) => {
+          if (this.activityAudioStopTimeout) {
+            clearTimeout(this.activityAudioStopTimeout);
+            this.activityAudioStopTimeout = undefined;
+          }
 
-      this.activityAudioStopTimeout = setTimeout(() => {
-        this.activityAudioStopTimeout = undefined;
-        this.resetChannelVolumes();
-      }, 1000);
+          this.activityAudioStopTimeout = setTimeout(() => {
+            this.activityAudioStopTimeout = undefined;
+            this.resetChannelVolumes();
+          }, 1000);
 
-      // Map the audio activity from the backend into the frontend monitoring activity,
-      // based on the settings (e.g. if more channels are played than specified in the settings,
-      // they will not be shown)
-      this.resetChannelVolumes()
+          // Map the audio activity from the backend into the frontend monitoring activity,
+          // based on the settings (e.g. if more channels are played than specified in the settings,
+          // they will not be shown)
+          this.resetChannelVolumes();
 
-      for (let settingsBus of this.activityAudio.activityAudioBusList) {
-        for (let activityBus of activityAudio.activityAudioBusList) {
-          if (settingsBus.name == activityBus.name) {
-            for (let settingsChannel of settingsBus.activityAudioChannelList) {
-              for (let activityChannel of activityBus.activityAudioChannelList) {
-                if (settingsChannel.index == activityChannel.index) {
-                  // Increase the sensitivity by factor 5 to make also more silent tracks visible
-                  settingsChannel.volumeDb = activityChannel.volumeDb / 5;
+          for (let settingsBus of this.activityAudio.activityAudioBusList) {
+            for (let activityBus of activityAudio.activityAudioBusList) {
+              if (settingsBus.name == activityBus.name) {
+                for (let settingsChannel of settingsBus.activityAudioChannelList) {
+                  for (let activityChannel of activityBus.activityAudioChannelList) {
+                    if (settingsChannel.index == activityChannel.index) {
+                      // Increase the sensitivity by factor 5 to make also more silent tracks visible
+                      settingsChannel.volumeDb = activityChannel.volumeDb / 5;
+                    }
+                  }
                 }
               }
             }
           }
         }
-      }
-    });
+      );
     this.activityAudioService.startMonitor();
 
     // Subscribe to lighting activities
-    this.activityLightingSubscription = this.activityLightingService.subject.subscribe((activityLighting: ActivityLighting) => {
-      let decayMillis = 50;
+    this.activityLightingSubscription =
+      this.activityLightingService.subject.subscribe(
+        (activityLighting: ActivityLighting) => {
+          let decayMillis = 50;
 
-      this.activityLighting = true;
+          this.activityLighting = true;
 
-      if (this.activityLightingStopTimeout) {
-        clearTimeout(this.activityLightingStopTimeout);
-        this.activityLightingStopTimeout = undefined;
-      }
+          if (this.activityLightingStopTimeout) {
+            clearTimeout(this.activityLightingStopTimeout);
+            this.activityLightingStopTimeout = undefined;
+          }
 
-      this.activityLightingStopTimeout = setTimeout(() => {
-        this.activityLightingStopTimeout = undefined;
-        this.activityLighting = false;
-      }, decayMillis);
-    });
+          this.activityLightingStopTimeout = setTimeout(() => {
+            this.activityLightingStopTimeout = undefined;
+            this.activityLighting = false;
+          }, decayMillis);
+        }
+      );
     this.activityLightingService.startMonitor();
   }
 
@@ -244,9 +262,14 @@ export class PlayComponent implements OnInit, OnDestroy {
   }
 
   private loadAllSets() {
-    this.compositionService.getSets().pipe(map(result => {
-      this.sets = result;
-    })).subscribe();
+    this.compositionService
+      .getSets()
+      .pipe(
+        map((result) => {
+          this.sets = result;
+        })
+      )
+      .subscribe();
   }
 
   private updateTotalDuration() {
@@ -263,31 +286,38 @@ export class PlayComponent implements OnInit, OnDestroy {
     // Load the current set
     this.loadingSet = true;
 
-    this.compositionService.getCurrentSet(true).pipe(finalize(() => {
-      this.loadingSet = false;
-    })).subscribe((set: Set) => {
-      this.currentSet = undefined;
-
-      if (set) {
-        this.currentSet = set;
-        this.updateTotalDuration();
-      }
-
-      if (this.currentSet && !this.currentSet.name) {
-        // The default set with all compositions is loaded -> display all compositions
-        this.compositionService.getCompositions(true).subscribe((compositions: Composition[]) => {
-          this.currentSet.compositionList = compositions;
-          this.updateTotalDuration();
+    this.compositionService
+      .getCurrentSet(true)
+      .pipe(
+        finalize(() => {
           this.loadingSet = false;
-        });
-      } else {
-        this.loadingSet = false;
-      }
-    });
+        })
+      )
+      .subscribe((set: Set) => {
+        this.currentSet = undefined;
+
+        if (set) {
+          this.currentSet = set;
+          this.updateTotalDuration();
+        }
+
+        if (this.currentSet && !this.currentSet.name) {
+          // The default set with all compositions is loaded -> display all compositions
+          this.compositionService
+            .getCompositions(true)
+            .subscribe((compositions: Composition[]) => {
+              this.currentSet.compositionList = compositions;
+              this.updateTotalDuration();
+              this.loadingSet = false;
+            });
+        } else {
+          this.loadingSet = false;
+        }
+      });
   }
 
   selectSet(set: Set) {
-    let setName: string = '';
+    let setName: string = "";
 
     if (set) {
       setName = set.name;
@@ -303,7 +333,7 @@ export class PlayComponent implements OnInit, OnDestroy {
 
     let padded: string = num.toString();
     while (padded.length < size) {
-      padded = '0' + padded;
+      padded = "0" + padded;
     }
 
     return padded;
@@ -315,9 +345,15 @@ export class PlayComponent implements OnInit, OnDestroy {
     let minutes: number = Math.floor((millis % 3600000) / 60000);
 
     if (includeMillis) {
-      return this.pad(minutes, 2) + ':' + this.pad(seconds, 2) + '.' + this.pad(ms, 3);
+      return (
+        this.pad(minutes, 2) +
+        ":" +
+        this.pad(seconds, 2) +
+        "." +
+        this.pad(ms, 3)
+      );
     } else {
-      return this.pad(minutes, 2) + ':' + this.pad(seconds, 2);
+      return this.pad(minutes, 2) + ":" + this.pad(seconds, 2);
     }
   }
 
@@ -335,7 +371,10 @@ export class PlayComponent implements OnInit, OnDestroy {
       this.toastGeneralErrorService.showMessage(newState.error);
     }
 
-    if (newState.playState == 'PLAYING' && this.currentState.playState != 'PLAYING') {
+    if (
+      newState.playState == "PLAYING" &&
+      this.currentState.playState != "PLAYING"
+    ) {
       if (this.playUpdateSubscription) {
         this.playUpdateSubscription.unsubscribe;
       }
@@ -343,9 +382,12 @@ export class PlayComponent implements OnInit, OnDestroy {
       let playUpdater = timer(0, 10);
       this.playUpdateSubscription = playUpdater.subscribe(() => {
         let currentTime = new Date();
-        let positionMillis = currentTime.getTime() - this.lastPlayTime.getTime() + this.currentState.positionMillis;
+        let positionMillis =
+          currentTime.getTime() -
+          this.lastPlayTime.getTime() +
+          this.currentState.positionMillis;
 
-        if (!this.sliding && this.currentState.playState != 'STOPPING') {
+        if (!this.sliding && this.currentState.playState != "STOPPING") {
           if (positionMillis > 0) {
             this.playTime = this.msToTime(positionMillis);
           }
@@ -355,7 +397,11 @@ export class PlayComponent implements OnInit, OnDestroy {
       });
     }
 
-    if (newState.playState == 'STOPPING' || newState.playState == 'STOPPING' || newState.playState == 'PAUSED') {
+    if (
+      newState.playState == "STOPPING" ||
+      newState.playState == "STOPPING" ||
+      newState.playState == "PAUSED"
+    ) {
       if (this.playUpdateSubscription) {
         this.playUpdateSubscription.unsubscribe();
       }
@@ -367,12 +413,16 @@ export class PlayComponent implements OnInit, OnDestroy {
       // The next time, we receive a new composition state, we should scroll into the view again
       this.manualCompositionSelection = false;
     } else {
-      let compositionObject = document.querySelector('#composition' + newState.currentCompositionIndex);
+      let compositionObject = document.querySelector(
+        "#composition" + newState.currentCompositionIndex
+      );
       if (compositionObject) {
         compositionObject.scrollIntoView();
       }
 
-      let compositionSmallObject = document.querySelector('#compositionSmall' + newState.currentCompositionIndex);
+      let compositionSmallObject = document.querySelector(
+        "#compositionSmall" + newState.currentCompositionIndex
+      );
       if (compositionSmallObject) {
         compositionSmallObject.scrollIntoView();
       }
@@ -389,12 +439,15 @@ export class PlayComponent implements OnInit, OnDestroy {
   }
 
   play() {
-    this.currentState.playState = 'LOADING';
-    this.transportService.play()
-      .pipe(catchError((err) => {
-        this.stop();
-        return this.toastGeneralErrorService.show(err);
-      }))
+    this.currentState.playState = "LOADING";
+    this.transportService
+      .play()
+      .pipe(
+        catchError((err) => {
+          this.stop();
+          return this.toastGeneralErrorService.show(err);
+        })
+      )
       .subscribe();
   }
 
@@ -411,7 +464,7 @@ export class PlayComponent implements OnInit, OnDestroy {
   }
 
   slideStop(positionMillis: number) {
-    if(!this.currentState || !this.currentState.currentCompositionName) {
+    if (!this.currentState || !this.currentState.currentCompositionName) {
       return;
     }
 
@@ -449,14 +502,16 @@ export class PlayComponent implements OnInit, OnDestroy {
   }
 
   toggleAutoSelectNextSong() {
-    this.session.autoSelectNextComposition = !this.session.autoSelectNextComposition;
+    this.session.autoSelectNextComposition =
+      !this.session.autoSelectNextComposition;
 
-    this.sessionService.setAutoSelectNextComposition(this.session.autoSelectNextComposition).subscribe();
+    this.sessionService
+      .setAutoSelectNextComposition(this.session.autoSelectNextComposition)
+      .subscribe();
   }
 
   audioActivityOpacity(volumeDb: number): number {
     // Normalize the DB value to a value between 0.0 and 1.0
     return Math.pow(10, volumeDb / 20);
   }
-
 }

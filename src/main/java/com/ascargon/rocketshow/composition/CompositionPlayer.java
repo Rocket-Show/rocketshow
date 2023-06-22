@@ -25,6 +25,8 @@ import org.freedesktop.gstreamer.elements.PlayBin;
 import org.freedesktop.gstreamer.elements.URIDecodeBin;
 import org.freedesktop.gstreamer.lowlevel.GType;
 import org.freedesktop.gstreamer.lowlevel.GValueAPI;
+import org.freedesktop.gstreamer.message.Message;
+import org.freedesktop.gstreamer.message.MessageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -119,25 +121,53 @@ public class CompositionPlayer {
             int data1 = byteBuffer.get(1) & 0x7f;
 
             // TODO Can result in index out of bounds exception
-            int data2 = byteBuffer.get(2) & 0x7f;
+            int data2 = 0;
+
+            try {
+                data2 = byteBuffer.get(2) & 0x7f;
+            } catch (Exception exception) {
+            }
 
             ShortMessage shortMessage = new ShortMessage();
             try {
                 shortMessage.setMessage(command, channel, data1, data2);
+
+                try {
+                    midiRouter.sendSignal(shortMessage);
+                } catch (InvalidMidiDataException e) {
+                    logger.error("Could not send MIDI signal from MIDI file", e);
+                }
+
+                if (settingsService.getSettings().getEnableMonitor()) {
+                    activityNotificationMidiService.notifyClients(shortMessage, MidiDirection.IN, MidiSource.MIDI_FILE, null);
+                }
             } catch (InvalidMidiDataException e) {
                 logger.error("Could not process MIDI signal from MIDI file", e);
             }
-
-            try {
-                midiRouter.sendSignal(shortMessage);
-            } catch (InvalidMidiDataException e) {
-                logger.error("Could not send MIDI signal from MIDI file", e);
-            }
-
-            if (settingsService.getSettings().getEnableMonitor()) {
-                activityNotificationMidiService.notifyClients(shortMessage, MidiDirection.IN, MidiSource.MIDI_FILE, null);
-            }
         }
+    }
+
+    private BaseSink getGstAudioSink() {
+        String sinkName = "alsasink";
+
+        if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+            sinkName = "osxaudiosink";
+        }
+
+        BaseSink sink = (BaseSink) ElementFactory.make(sinkName, "audiosink");
+
+        if (!OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+            sink.set("device", "rocketshow");
+        }
+
+        return sink;
+    }
+
+    private Element getGstVideoSink() {
+        if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+            return ElementFactory.make("osxvideosink", "osxvideosink");
+        }
+        return ElementFactory.make("kmssink", "kmssink");
     }
 
     private int getAudioBusStartChannel(AudioBus audioBus) {
@@ -185,9 +215,11 @@ public class CompositionPlayer {
 
         Element videoQueue = ElementFactory.make("queue", "videoqueue");
         videoSource.connect((Element.PAD_ADDED) (Element element, Pad pad) -> {
-            Caps caps = pad.getCaps();
+            Caps caps = pad.getCurrentCaps();
 
             String name = caps.getStructure(0).getName();
+
+            pad.set("offset", (settingsService.getSettings().getOffsetMillisVideo() + compositionFile.getOffsetMillis()) * 1000000L);
 
             if (name.startsWith("video/x-raw")) {
                 pad.link(videoQueue.getSinkPads().get(0));
@@ -198,7 +230,7 @@ public class CompositionPlayer {
         pipeline.add(videoSource);
         pipeline.add(videoQueue);
 
-        Element kmssink = ElementFactory.make("kmssink", "kmssink");
+        Element kmssink = getGstVideoSink();
         pipeline.add(kmssink);
 
         videoSource.link(videoQueue);
@@ -294,7 +326,7 @@ public class CompositionPlayer {
             Element queue = ElementFactory.make("queue", "audiosinkqueue");
             pipeline.add(queue);
 
-            BaseSink sink = audioService.getGstAudioSink();
+            BaseSink sink = getGstAudioSink();
             pipeline.add(sink);
 
             Element level = null;
@@ -381,7 +413,7 @@ public class CompositionPlayer {
 
                     Element audioConvert = ElementFactory.make("audioconvert", "audioconvert" + i);
                     audioSource.connect((Element.PAD_ADDED) (Element element, Pad pad) -> {
-                        Caps caps = pad.getCaps();
+                        Caps caps = pad.getCurrentCaps();
 
                         String name = caps.getStructure(0).getName();
 
@@ -454,13 +486,10 @@ public class CompositionPlayer {
     public void loadFiles() throws Exception {
         boolean hasActiveFile = false;
         boolean hasAudioFile = false;
-        Project designerProject;
 
         if (playState != PlayState.STOPPED) {
             return;
         }
-
-        designerProject = designerService.getProjectByCompositionName(composition.getName());
 
         // Search for active files
         for (CompositionFile compositionFile : composition.getCompositionFileList()) {
@@ -470,7 +499,7 @@ public class CompositionPlayer {
             }
         }
 
-        if (!hasActiveFile && designerProject == null) {
+        if (!hasActiveFile && designerService.getProjectByCompositionName(composition.getName()) == null) {
             // No files to be played and no designer project (maybe a lead sheet)
             if (!isDefaultComposition && !isSample) {
                 notificationService.notifyClients(playerService, setService);
@@ -509,16 +538,14 @@ public class CompositionPlayer {
             pipeline = null;
         }
 
+        // Initialize lighting without designer
+        lightingService.setExternalSync(false);
+
         // Destroy an old designer project, if required
         this.designerService.close();
 
         if (hasActiveFile) {
             createGstreamerPipeline(hasAudioFile);
-        }
-
-        if (designerProject != null) {
-            logger.info("Designer project found. Load it...");
-            designerService.load(this, designerProject, pipeline);
         }
 
         logger.debug("Composition '" + composition.getName() + "' loaded");
@@ -537,6 +564,15 @@ public class CompositionPlayer {
 
         // Load the files, if not already done by a previously by a separate call
         loadFiles();
+
+        // Load the designer files
+        // -> no separate step, because there's only one global handler and the default composition is closed
+        // after the loading step.
+        Project designerProject = designerService.getProjectByCompositionName(composition.getName());
+        if (designerProject != null) {
+            logger.info("Designer project found. Load it...");
+            designerService.load(this, designerProject, pipeline);
+        }
 
         // All files are loaded -> play the composition (start each file)
         logger.info("Playing composition '" + composition.getName() + "'...");

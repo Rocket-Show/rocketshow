@@ -103,7 +103,7 @@ public class DefaultLightingService implements LightingService {
             }
         }
 
-        send();
+        sendUniverse();
     }
 
     private void sendUniverse() {
@@ -129,15 +129,6 @@ public class DefaultLightingService implements LightingService {
             mixedUniverse[i] = (short) highestValue;
         }
 
-        // delete unnecessary values in the univers
-//        for (int i = 511; i >= 0; i--) {
-//            if (mixedUniverse[i] == 0) {
-//                Arrays.copyOf(mixedUniverse, mixedUniverse.length - 1);
-//            } else {
-//                break;
-//            }
-//        }
-
         if (olaClient != null) {
             olaClient.sendDmx(1, mixedUniverse);
         }
@@ -157,7 +148,6 @@ public class DefaultLightingService implements LightingService {
     // some timers are started in parallel, because different threads send at
     // the same time. This will cause the OLA rpc stream to break and a restart
     // is required.
-    @Override
     public synchronized void send() {
         logger.trace("Sending a lighting value");
 
