@@ -9,11 +9,12 @@ import com.ascargon.rocketshow.midi.MidiDeviceOutService;
 import com.ascargon.rocketshow.raspberry.RaspberryGpioControlActionExecutionService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import java.io.IOException;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = SecurityAutoConfiguration.class)
 public class RocketShowApplication {
 
     private static String[] args;
