@@ -1108,6 +1108,7 @@ public class DefaultDesignerService implements DesignerService {
     public void load(CompositionPlayer compositionPlayer, Project project, Pipeline pipeline) {
         this.compositionPlayer = compositionPlayer;
         this.project = project;
+        this.pipeline = pipeline;
 
         if (compositionPlayer != null) {
             this.composition = getCompositionByName(project, compositionPlayer.getComposition().getName());

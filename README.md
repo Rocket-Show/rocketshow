@@ -89,7 +89,7 @@ Building is recommended on a Raspberry Pi device with enough storage. Steps to f
 - Run the following script
 
 ```shell
-cd /Volumes/boot
+cd /Volumes/bootfs
 touch ssh
 cat <<'EOF' >./userconf.txt
 pi:FHzhxyxnV/C1o
@@ -111,19 +111,29 @@ network={
 EOF
 ```
 
-- Login using `ssh pi@raspberrypi.local` and password `raspberry`
-- Prepare the environment according to [https://github.com/RPi-distro/pi-gen] (e.g. install the required dependencies)
-- Run the following script (might take about 45 minutes)
+Login using `ssh pi@raspberrypi.local` and password `raspberry`
 
-```shell
+Switch to user root:
+````shell
 sudo su - root
+````
+
+Update apt:
+````shell
+apt-get update
+````
+
+Prepare the environment according to [https://github.com/RPi-distro/pi-gen] (e.g. install the required dependencies)
+
+Run the following script (might take about 45 minutes)
+```shell
 cd /opt
 mkdir build
 cd build
 
 git clone https://github.com/RPi-distro/pi-gen.git
 cd pi-gen
-git checkout tags/2022-09-22-raspios-bullseye
+git checkout tags/2023-05-03-raspios-bullseye
 
 echo "IMG_NAME='RocketShow'" > config
 
@@ -147,8 +157,6 @@ rm -rf raspbian.sh
 EOF
 
 chmod +x ./stage2/99-rocket-show/00-run-chroot.sh
-
-apt-get update
 
 ./build.sh
 

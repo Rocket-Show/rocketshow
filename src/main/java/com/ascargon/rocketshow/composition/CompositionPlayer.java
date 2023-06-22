@@ -486,13 +486,10 @@ public class CompositionPlayer {
     public void loadFiles() throws Exception {
         boolean hasActiveFile = false;
         boolean hasAudioFile = false;
-        Project designerProject;
 
         if (playState != PlayState.STOPPED) {
             return;
         }
-
-        designerProject = designerService.getProjectByCompositionName(composition.getName());
 
         // Search for active files
         for (CompositionFile compositionFile : composition.getCompositionFileList()) {
@@ -502,7 +499,7 @@ public class CompositionPlayer {
             }
         }
 
-        if (!hasActiveFile && designerProject == null) {
+        if (!hasActiveFile && designerService.getProjectByCompositionName(composition.getName()) == null) {
             // No files to be played and no designer project (maybe a lead sheet)
             if (!isDefaultComposition && !isSample) {
                 notificationService.notifyClients(playerService, setService);
@@ -541,16 +538,14 @@ public class CompositionPlayer {
             pipeline = null;
         }
 
+        // Initialize lighting without designer
+        lightingService.setExternalSync(false);
+
         // Destroy an old designer project, if required
         this.designerService.close();
 
         if (hasActiveFile) {
             createGstreamerPipeline(hasAudioFile);
-        }
-
-        if (designerProject != null) {
-            logger.info("Designer project found. Load it...");
-            designerService.load(this, designerProject, pipeline);
         }
 
         logger.debug("Composition '" + composition.getName() + "' loaded");
@@ -569,6 +564,15 @@ public class CompositionPlayer {
 
         // Load the files, if not already done by a previously by a separate call
         loadFiles();
+
+        // Load the designer files
+        // -> no separate step, because there's only one global handler and the default composition is closed
+        // after the loading step.
+        Project designerProject = designerService.getProjectByCompositionName(composition.getName());
+        if (designerProject != null) {
+            logger.info("Designer project found. Load it...");
+            designerService.load(this, designerProject, pipeline);
+        }
 
         // All files are loaded -> play the composition (start each file)
         logger.info("Playing composition '" + composition.getName() + "'...");

@@ -32,7 +32,12 @@ public class DefaultGstDiscovererService implements GstDiscovererService {
 
         Pointer discovererInformation = PB_UTILS_API.gst_discoverer_discover_uri(discoverer, "file://" + path, error);
 
-        if (PB_UTILS_API.gst_discoverer_info_get_result(discovererInformation) != PbUtilsApi.GstDiscovererResult.GST_DISCOVERER_OK) {
+        // timing out is fine most of the time, because the required info is still found
+        if (PB_UTILS_API.gst_discoverer_info_get_result(discovererInformation)
+                != PbUtilsApi.GstDiscovererResult.GST_DISCOVERER_OK
+                && PB_UTILS_API.gst_discoverer_info_get_result(discovererInformation)
+                != PbUtilsApi.GstDiscovererResult.GST_DISCOVERER_TIMEOUT
+        ) {
             // Unfortunately, error.message is always null. Don't know why. And
             // getting the message from domain and code also does not work.
 

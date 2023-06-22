@@ -103,7 +103,7 @@ public class DefaultLightingService implements LightingService {
             }
         }
 
-        send();
+        sendUniverse();
     }
 
     private void sendUniverse() {
@@ -148,7 +148,6 @@ public class DefaultLightingService implements LightingService {
     // some timers are started in parallel, because different threads send at
     // the same time. This will cause the OLA rpc stream to break and a restart
     // is required.
-    @Override
     public synchronized void send() {
         logger.trace("Sending a lighting value");
 
