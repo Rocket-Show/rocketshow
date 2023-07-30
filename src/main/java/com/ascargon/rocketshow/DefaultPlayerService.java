@@ -47,7 +47,7 @@ public class DefaultPlayerService implements PlayerService {
     private final DesignerService designerService;
     private final OperatingSystemInformationService operatingSystemInformationService;
 
-    private CompositionPlayer defaultCompositionPlayer;
+    private final CompositionPlayer defaultCompositionPlayer;
     private final CompositionPlayer currentCompositionPlayer;
     private final List<CompositionPlayer> sampleCompositionPlayerList = new ArrayList<>();
 
@@ -157,7 +157,7 @@ public class DefaultPlayerService implements PlayerService {
 
     @Override
     public synchronized void loadCompositionName(String compositionName) throws Exception {
-        if (currentCompositionPlayer.getComposition() != null && compositionName.equals(currentCompositionPlayer.getComposition().getName())) {
+        if (currentCompositionPlayer.getComposition() == null || !compositionName.equals(currentCompositionPlayer.getComposition().getName())) {
             setCompositionName(compositionName);
         }
 
@@ -193,7 +193,9 @@ public class DefaultPlayerService implements PlayerService {
 
         // Wait for the compositions on all devices to be loaded
         playExecutor.shutdown();
-        playExecutor.awaitTermination(60, TimeUnit.SECONDS);
+        if (!playExecutor.awaitTermination(60, TimeUnit.SECONDS)) {
+            logger.error("Timeout while waiting for the compositions to load on remote devices");
+        }
 
         // Load the local files outside the executor for better error handling
         currentCompositionPlayer.loadFiles();
@@ -305,7 +307,9 @@ public class DefaultPlayerService implements PlayerService {
 
         // Wait for all devices to be stopped
         executor.shutdown();
-        executor.awaitTermination(60, TimeUnit.SECONDS);
+        if(!executor.awaitTermination(60, TimeUnit.SECONDS)){
+            logger.error("Timeout while waiting for the compositions to stop on remote devices");
+        }
 
         // Reset the lighting universe to clear left out signals
         lightingService.reset();
