@@ -12,8 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Defines a remote RocketShow device to be triggered by the local one one.
@@ -94,12 +94,8 @@ public class RemoteDevice {
     }
 
     public void load(boolean synchronous, String name) {
-        try {
-            doPost("transport/load?name=" + URLEncoder.encode(name, "UTF-8"),
-                    synchronous);
-        } catch (UnsupportedEncodingException e) {
-            logger.error("Could not encode the name " + name, e);
-        }
+        doPost("transport/load?name=" + URLEncoder.encode(name, StandardCharsets.UTF_8),
+                synchronous);
     }
 
     public void load() {
