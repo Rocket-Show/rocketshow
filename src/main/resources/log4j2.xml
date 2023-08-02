@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Properties>
+        <Property name="PATH">./log</Property>
+    </Properties>
+
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT" follow="true">
+            <PatternLayout pattern="%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}} %highlight{${LOG_LEVEL_PATTERN:-%p}}{FATAL=red blink, ERROR=red, WARN=yellow bold, INFO=green, DEBUG=green bold, TRACE=blue} %style{%-40.40C{1.}}{cyan} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+        </Console>
+        <RollingFile name="RollingFile"
+                     fileName="${PATH}/rocketshow.log"
+                     filePattern="${PATH}/rocketshow-%d{yyyy-MM-dd}-%i.log">
+            <PatternLayout pattern="%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}} %p %-40.40C{1.} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="1MB"/>
+            </Policies>
+            <DefaultRolloverStrategy min="1" max="9999999">
+                <Delete basePath="${PATH}" maxDepth="1">
+                    <IfAccumulatedFileSize exceeds="5MB" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <Root>
+            <AppenderRef ref="RollingFile" />
+            <AppenderRef ref="Console" />
+        </Root>
+    </Loggers>
+</Configuration>

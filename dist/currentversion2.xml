@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <versionInfo>
-    <version>2.3.3</version>
-    <date>2023-07-29</date>
+    <version>2.3.5</version>
+    <date>2023-07-31</date>
     <changeNoteList>
+        <changeNote>
+            <version>2.3.5</version>
+            <changes>Fix logging</changes>
+        </changeNote>
+        <changeNote>
+            <version>2.3.4</version>
+            <changes>Fix logging and log download</changes>
+        </changeNote>
         <changeNote>
             <version>2.3.3</version>
             <changes>Fix an issue with loading compositions on remote devices</changes>
