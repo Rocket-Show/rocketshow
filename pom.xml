@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.ascargon</groupId>
     <artifactId>rocketshow</artifactId>
-    <version>2.3.4</version>
+    <version>2.3.5</version>
     <packaging>jar</packaging>
 
     <name>Rocket Show</name>
@@ -38,53 +38,53 @@
             </plugin>
 
             <!-- Compile the webapp -->
-            <plugin>
-                <groupId>com.github.eirslett</groupId>
-                <artifactId>frontend-maven-plugin</artifactId>
-                <version>1.11.0</version>
-                <configuration>
-                    <workingDirectory>src/main/webapp</workingDirectory>
-                    <!-- where to install npm -->
-                    <installDirectory>target/npm</installDirectory>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>exec-npm-install</id>
-                        <goals>
-                            <goal>install-node-and-npm</goal>
-                        </goals>
-                        <phase>generate-sources</phase>
-                        <configuration>
-                            <nodeVersion>v10.13.0</nodeVersion>
-                            <npmVersion>6.4.1</npmVersion>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>npm install</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <!-- Optional configuration which provides for running any npm command -->
-                        <configuration>
-                            <arguments>install</arguments>
-                        </configuration>
-                        <phase>generate-sources</phase>
-                    </execution>
-                    <execution>
-                        <id>prod</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <configuration>
-                            <!-- No caching to make sure, the newest version will always be loaded
-                            (e.g. after an update). Caching anyways only has a small impact, because
-                            the devices are most probably run in an internal network. -->
-                            <arguments>run prod -- --output-hashing=all</arguments>
-                        </configuration>
-                        <phase>generate-sources</phase>
-                    </execution>
-                </executions>
-            </plugin>
+<!--            <plugin>-->
+<!--                <groupId>com.github.eirslett</groupId>-->
+<!--                <artifactId>frontend-maven-plugin</artifactId>-->
+<!--                <version>1.11.0</version>-->
+<!--                <configuration>-->
+<!--                    <workingDirectory>src/main/webapp</workingDirectory>-->
+<!--                    &lt;!&ndash; where to install npm &ndash;&gt;-->
+<!--                    <installDirectory>target/npm</installDirectory>-->
+<!--                </configuration>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>exec-npm-install</id>-->
+<!--                        <goals>-->
+<!--                            <goal>install-node-and-npm</goal>-->
+<!--                        </goals>-->
+<!--                        <phase>generate-sources</phase>-->
+<!--                        <configuration>-->
+<!--                            <nodeVersion>v10.13.0</nodeVersion>-->
+<!--                            <npmVersion>6.4.1</npmVersion>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                    <execution>-->
+<!--                        <id>npm install</id>-->
+<!--                        <goals>-->
+<!--                            <goal>npm</goal>-->
+<!--                        </goals>-->
+<!--                        &lt;!&ndash; Optional configuration which provides for running any npm command &ndash;&gt;-->
+<!--                        <configuration>-->
+<!--                            <arguments>install</arguments>-->
+<!--                        </configuration>-->
+<!--                        <phase>generate-sources</phase>-->
+<!--                    </execution>-->
+<!--                    <execution>-->
+<!--                        <id>prod</id>-->
+<!--                        <goals>-->
+<!--                            <goal>npm</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            &lt;!&ndash; No caching to make sure, the newest version will always be loaded-->
+<!--                            (e.g. after an update). Caching anyways only has a small impact, because-->
+<!--                            the devices are most probably run in an internal network. &ndash;&gt;-->
+<!--                            <arguments>run prod &#45;&#45; &#45;&#45;output-hashing=all</arguments>-->
+<!--                        </configuration>-->
+<!--                        <phase>generate-sources</phase>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
         </plugins>
     </build>
 
