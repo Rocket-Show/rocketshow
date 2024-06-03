@@ -56,6 +56,9 @@ public class DefaultLightingService implements LightingService {
 
     private boolean externalSync = false;
 
+    // is OLA initialized and at least one universe prepared?
+    private boolean olaReady = false;
+
     public DefaultLightingService(SettingsService settingsService, CapabilitiesService capabilitiesService, ActivityNotificationLightingService activityNotificationLightingService) {
         this.settingsService = settingsService;
         this.capabilitiesService = capabilitiesService;
@@ -129,7 +132,7 @@ public class DefaultLightingService implements LightingService {
             mixedUniverse[i] = (short) highestValue;
         }
 
-        if (olaClient != null) {
+        if (olaReady) {
             olaClient.sendDmx(1, mixedUniverse);
         }
 
@@ -274,6 +277,7 @@ public class DefaultLightingService implements LightingService {
         if (universeInfoReply != null) {
             if (universeInfoReply.getUniverseCount() > 0) {
                 // At least one universe is already initialized
+                olaReady = true;
                 return;
             }
         }
@@ -285,7 +289,7 @@ public class DefaultLightingService implements LightingService {
         try {
             portId = getConnectedPort();
         } catch (Exception e) {
-            logger.error("Could not get a output port", e);
+            logger.error("Could not get an output port", e);
         }
 
         if (portId == null || portId.length() == 0) {
@@ -299,6 +303,7 @@ public class DefaultLightingService implements LightingService {
             // Create the port with the device-id, "O" for output and the port
             // ID
             createOlaUniverse(portId);
+            olaReady = true;
         } catch (Exception e) {
             logger.error("Could not create a new universe on OLA", e);
         }

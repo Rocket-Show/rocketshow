@@ -173,9 +173,7 @@ public class DefaultSettingsService implements SettingsService {
         }
 
         if (settings.getAudioOutput() == null) {
-            if (OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
-                settings.setAudioOutput(Settings.AudioOutput.DEVICE);
-            } else if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+            if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
                 settings.setAudioOutput(Settings.AudioOutput.DEFAULT);
             } else if (OperatingSystemInformation.Type.LINUX.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
                 settings.setAudioOutput(Settings.AudioOutput.DEVICE);
@@ -198,7 +196,7 @@ public class DefaultSettingsService implements SettingsService {
             settings.setLoggingLevel(Settings.LoggingLevel.INFO);
         }
 
-        if (OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+        if (OperatingSystemInformation.SubType.RASPBERRYOS.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
             // Raspbian-specific settings
 
             if (settings.isEnableRaspberryGpio() == null) {
@@ -296,10 +294,6 @@ public class DefaultSettingsService implements SettingsService {
     }
 
     private void setSystemAudioOutput(int id) throws Exception {
-        if (!OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
-            return;
-        }
-
         // TODO Not supported currently
         //ShellManager shellManager = new ShellManager(new String[]{"amixer", "cset", "numid=3", String.valueOf(id)});
         //shellManager.getProcess().waitFor();
@@ -404,9 +398,10 @@ public class DefaultSettingsService implements SettingsService {
     }
 
     private void updateAudioSystem() throws Exception {
-        if (settings.getAudioOutput() == Settings.AudioOutput.HEADPHONES && OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+        // not supported currently
+        if (settings.getAudioOutput() == Settings.AudioOutput.HEADPHONES && OperatingSystemInformation.SubType.RASPBERRYOS.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
             setSystemAudioOutput(1);
-        } else if (settings.getAudioOutput() == Settings.AudioOutput.HDMI && OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+        } else if (settings.getAudioOutput() == Settings.AudioOutput.HDMI && OperatingSystemInformation.SubType.RASPBERRYOS.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
             setSystemAudioOutput(2);
         } else if (settings.getAudioOutput() == Settings.AudioOutput.DEVICE) {
             // Write the audio settings to /home/.asoundrc and use ALSA to
@@ -487,10 +482,6 @@ public class DefaultSettingsService implements SettingsService {
         String apConfig = "";
         String statusCommand;
 
-        if (!settings.isWlanApEnable()) {
-            return;
-        }
-
         // Update the access point configuration
         apConfig += "interface=wlan0\n";
         apConfig += "driver=nl80211\n";
@@ -557,7 +548,7 @@ public class DefaultSettingsService implements SettingsService {
             logger.error("Could not update the logging level system settings", e);
         }
 
-        if (OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+        if (OperatingSystemInformation.SubType.RASPBERRYOS.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
             try {
                 updateWlanAp();
             } catch (Exception e) {

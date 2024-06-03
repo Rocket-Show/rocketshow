@@ -17,7 +17,7 @@ public class DefaultImageDisplayingService implements ImageDisplayingService {
         shellManager = new ShellManager(new String[]{"sh"});
 
         // Display a default black screen on Raspbian
-        if (OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+        if (OperatingSystemInformation.SubType.RASPBERRYOS.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
             display(settingsService.getSettings().getBasePath() + "black.jpg");
         }
     }

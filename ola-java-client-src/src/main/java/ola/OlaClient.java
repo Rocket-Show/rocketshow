@@ -82,7 +82,6 @@ public class OlaClient {
      * @return Message result message or null if the call failed.
      */
     private Message callRpcMethod(String method, Message inputMessage) {
-
         final Message[] outputMessage = new Message[1];
         controller.reset();
 

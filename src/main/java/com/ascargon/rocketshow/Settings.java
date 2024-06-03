@@ -57,6 +57,10 @@ public class Settings {
 
     private List<RaspberryGpioControl> raspberryGpioControlList = new ArrayList<>();
 
+    // Used to collect all lighting events within a certain amount of time and send them alltogether, not
+    // one by one as soon as they occur, for performance reasons. The higher, the more events will be "merged",
+    // the lower, the more CPU it needs.
+    // To set a delay on lighting events coming from MIDI, use offsetMillisMidi (or the offset on the composition file).
     private Integer lightingSendDelayMillis;
 
     // Global play offset on file types

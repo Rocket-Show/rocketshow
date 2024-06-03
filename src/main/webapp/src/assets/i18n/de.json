@@ -23,7 +23,7 @@
     },
     "loading": {
         "title": "Laden...",
-        "description": "Bitte warte, bis die App geladen ist." 
+        "description": "Bitte warte, bis die App geladen ist."
     },
     "intro": {
         "welcome": "Whoop, whoop!",
@@ -37,7 +37,7 @@
         "start": "Start",
         "compositions": "Kompositionen",
         "designer": "Designer",
-        "settings": "Einstellungen" 
+        "settings": "Einstellungen"
     },
     "editor": {
         "compositions": "Kompositionen",
@@ -99,7 +99,7 @@
         "title": "Ausgabe",
         "description": "Stelle ein, wo und wie diese MIDI Datei ausgegeben werden soll.",
         "type": "Ausgabe",
-        "midi-transformation": "MIDI Transformation",        
+        "midi-transformation": "MIDI Transformation",
         "channel-offset": "Kanal Versatz",
         "note-offset": "Noten Versatz",
         "lighting-mapping": "Lichtsteuerungs-Mapping",
@@ -206,7 +206,7 @@
         "no-audio-device": "Keines",
         "no-audio-devices": "Keine Audio Geräte verfügbar",
         "logging-level": "Logging Level",
-        "lighting-send-delay": "Sendeverzögerung in Millisekunden",
+        "lighting-send-delay": "Gruppierungs-Verzögerung in Millisekunden",
         "global-play-offset": "Globale Abspiel-Verzögerung in Millisekunden",
         "device-in-midi-routing": "MIDI Gerät Ausgabe",
         "remote-midi-routing": "Netzwerk MIDI Ausgang",

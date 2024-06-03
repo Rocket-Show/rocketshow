@@ -18,7 +18,7 @@ public class DefaultFactoryResetService implements FactoryResetService {
 
     @Override
     public void reset() throws Exception {
-        if (!OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+        if (!OperatingSystemInformation.SubType.RASPBERRYOS.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
             return;
         }
 

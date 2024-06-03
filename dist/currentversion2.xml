@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <versionInfo>
     <version>2.3.5</version>
-    <date>2023-07-31</date>
+    <date>2024-05-13</date>
     <changeNoteList>
+        <changeNote>
+            <version>2.3.6</version>
+            <changes>Support Raspberry Pi 5, bugfix with WLAN AP disable, minor fixes</changes>
+        </changeNote>
         <changeNote>
             <version>2.3.5</version>
             <changes>Fix logging</changes>

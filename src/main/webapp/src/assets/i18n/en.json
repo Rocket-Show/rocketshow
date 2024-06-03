@@ -23,7 +23,7 @@
     },
     "loading": {
         "title": "Loading...",
-        "description": "Please wait while the application is being loaded." 
+        "description": "Please wait while the application is being loaded."
     },
     "intro": {
         "welcome": "Whoop, whoop!",
@@ -37,7 +37,7 @@
         "start": "Start",
         "compositions": "Compositions",
         "designer": "Designer",
-        "settings": "Settings" 
+        "settings": "Settings"
     },
     "editor": {
         "compositions": "Compositions",
@@ -206,7 +206,7 @@
         "no-audio-device": "None",
         "no-audio-devices": "No audio devices available",
         "logging-level": "Logging level",
-        "lighting-send-delay": "Send delay in milliseconds",
+        "lighting-send-delay": "Grouping delay in milliseconds",
         "global-play-offset": "Global play offset in milliseconds",
         "device-in-midi-routing": "MIDI device routing",
         "remote-midi-routing": "Remote MIDI routing",

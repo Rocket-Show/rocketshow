@@ -26,7 +26,7 @@ public class DefaultRebootService implements RebootService {
             }
         }
 
-        if (!OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+        if (!OperatingSystemInformation.SubType.RASPBERRYOS.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
             // Restart the app instead of a complete system reboot. Restarting
             // the app should be enough, because all the additional settings
             // (access point, etc.) do not work anyway on systems other than
