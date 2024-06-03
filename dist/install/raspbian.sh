@@ -8,7 +8,7 @@
 apt-get update
 apt-get upgrade -y
 
-apt-get -y install unzip openjdk-17-jdk dnsmasq hostapd fbi ola libnss-mdns iptables alsa-base libasound2 alsa-utils openssh-sftp-server libgstreamer1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl
+apt-get -y install unzip openjdk-17-jdk dnsmasq hostapd fbi ola libnss-mdns iptables libasound2 alsa-utils openssh-sftp-server libgstreamer1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl
 
 # Add the rocketshow user
 adduser \
@@ -172,18 +172,18 @@ chown -R rocketshow:rocketshow /home/rocketshow
 # Apply a patch to make seeking videos work on the Raspberry Pi 4
 # https://github.com/moritzvieli/rocketshow/issues/7
 # See: https://github.com/raspberrypi/linux/issues/3325#issuecomment-684040830
-firmware=$(zgrep "firmware as of" \
- "/usr/share/doc/raspberrypi-kernel/changelog.Debian.gz" | \
- head -n1 | sed  -n 's|.* \([^ ]*\)$|\1|p')
-uname="$(curl -k -s -L "https://github.com/raspberrypi/firmware/raw/$firmware/extra/uname_string7l")"
-KVER="$(echo ${uname} | grep -Po '\b(Linux version )\K(?<price>[^\ ]+)' | cat)"
-
-cd /lib/modules/${KVER}/kernel/drivers/staging/vc04_services/bcm2835-codec
-rm -rf bcm2835-codec.ko
-wget https://rocketshow.net/install/patches/bcm2835-codec.ko
-mkdir -p /lib/modules/${KVER}/extra
-cp bcm2835-codec.ko /lib/modules/${KVER}/extra/bcm2835-codec.ko
+#firmware=$(zgrep "firmware as of" \
+# "/usr/share/doc/raspberrypi-kernel/changelog.Debian.gz" | \
+# head -n1 | sed  -n 's|.* \([^ ]*\)$|\1|p')
+#uname="$(curl -k -s -L "https://github.com/raspberrypi/firmware/raw/$firmware/extra/uname_string7l")"
+#KVER="$(echo ${uname} | grep -Po '\b(Linux version )\K(?<price>[^\ ]+)' | cat)"
+#
+#cd /lib/modules/${KVER}/kernel/drivers/staging/vc04_services/bcm2835-codec
+#rm -rf bcm2835-codec.ko
+#wget https://rocketshow.net/install/patches/bcm2835-codec.ko
+#mkdir -p /lib/modules/${KVER}/extra
+#cp bcm2835-codec.ko /lib/modules/${KVER}/extra/bcm2835-codec.ko
 
 # Give the setup some time, because umount won't work afterwards if called too fast ("umount: device is busy")
-echo "Wait 30 seconds..."
-sleep 30s
+echo "Wait 5 seconds..."
+sleep 5s

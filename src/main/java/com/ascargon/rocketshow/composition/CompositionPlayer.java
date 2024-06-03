@@ -209,7 +209,7 @@ public class CompositionPlayer {
         pipeline.add(playBin);
     }
 
-    private void addVideoToPipelineRaspberry4(CompositionFile compositionFile, int index) {
+    private void addVideoToPipeline(CompositionFile compositionFile, int index) {
         URIDecodeBin videoSource = (URIDecodeBin) ElementFactory.make("uridecodebin", "videouridecodebin");
         videoSource.set("uri", "file://" + settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getVideoPath() + File.separator + compositionFile.getName());
 
@@ -469,12 +469,12 @@ public class CompositionPlayer {
                     // See http://gstreamer-devel.966125.n4.nabble.com/OpenGL-renderer-window-td4686092.html
 
                     if (OperatingSystemInformation.Type.LINUX.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
-                        if (OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
-                            if (OperatingSystemInformation.RaspberryVersion.MODEL_3.equals(operatingSystemInformationService.getOperatingSystemInformation().getRaspberryVersion())) {
-                                addVideoToPipelineRaspberry3(compositionFile, i);
-                            } else if (OperatingSystemInformation.RaspberryVersion.MODEL_4.equals(operatingSystemInformationService.getOperatingSystemInformation().getRaspberryVersion())) {
-                                addVideoToPipelineRaspberry4(compositionFile, i);
-                            }
+                        if (OperatingSystemInformation.SubType.RASPBERRYOS.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())
+                                && OperatingSystemInformation.RaspberryVersion.MODEL_3.equals(operatingSystemInformationService.getOperatingSystemInformation().getRaspberryVersion())) {
+
+                            addVideoToPipelineRaspberry3(compositionFile, i);
+                        } else {
+                            addVideoToPipeline(compositionFile, i);
                         }
                     }
                 }

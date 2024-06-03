@@ -123,17 +123,18 @@ Update apt:
 apt-get update
 ````
 
-Prepare the environment according to [https://github.com/RPi-distro/pi-gen] (e.g. install the required dependencies)
+Prepare the environment according to [https://github.com/RPi-distro/pi-gen](pi-gen Readme) (e.g. install the required dependencies)
 
 Run the following script (might take about 45 minutes)
 ```shell
 cd /opt
+rm -rf build
 mkdir build
 cd build
 
 git clone https://github.com/RPi-distro/pi-gen.git
 cd pi-gen
-git checkout tags/2023-05-03-raspios-bullseye
+git checkout tags/2024-03-15-raspios-bookworm-arm64
 
 echo "IMG_NAME='RocketShow'" > config
 

@@ -245,4 +245,8 @@ export class SettingsMidiComponent implements OnInit, OnDestroy {
     });
   }
 
+  midiDeviceEqual(device1: MidiDevice, device2: MidiDevice): boolean {
+      return device1 && device2 ? device1.id === device2.id : false;
+  }
+
 }

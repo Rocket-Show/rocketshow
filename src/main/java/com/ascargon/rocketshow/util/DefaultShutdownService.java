@@ -26,7 +26,7 @@ public class DefaultShutdownService implements ShutdownService {
             }
         }
 
-        if (!OperatingSystemInformation.SubType.RASPBIAN.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+        if (!OperatingSystemInformation.SubType.RASPBERRYOS.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
             // Don't shutdown the system if we're not running on Raspbian
             return;
         }
