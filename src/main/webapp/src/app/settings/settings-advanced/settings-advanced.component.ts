@@ -92,7 +92,7 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
 
   resetIntro() {
     this.sessionService.introReset().subscribe(() => {
-      location.reload(true);
+      location.reload();
     });
   }
 

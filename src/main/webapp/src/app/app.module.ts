@@ -8,7 +8,7 @@ import { MultiTranslateHttpLoader } from "ngx-translate-multi-http-loader";
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { ArraySortPipe } from './array-sort-pipe';
-import { SortablejsModule } from 'ngx-sortablejs';
+import { SortablejsModule } from 'ngx-sortablejs-plus';
 import { AlertModule } from 'ngx-bootstrap/alert';
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { AccordionModule } from 'ngx-bootstrap/accordion';
