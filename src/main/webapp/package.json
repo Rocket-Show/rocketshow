@@ -24,7 +24,7 @@
     "@angular/router": "^17.3.11",
     "@ngx-translate/core": "^10.0.2",
     "@ngx-translate/http-loader": "^3.0.1",
-    "@rocketshow/designer": "^1.32.0",
+    "@rocketshow/designer": "^1.33.0",
     "angular2-websocket": "^0.9.7",
     "bootstrap": "^4.1.2",
     "core-js": "^2.5.7",
