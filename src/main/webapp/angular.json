@@ -83,21 +83,21 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "RocketShow:build"
+            "buildTarget": "RocketShow:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "RocketShow:build:production"
+              "buildTarget": "RocketShow:build:production"
             },
             "disconnected": {
-              "browserTarget": "RocketShow:build:disconnected"
+              "buildTarget": "RocketShow:build:disconnected"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "RocketShow:build"
+            "buildTarget": "RocketShow:build"
           }
         },
         "test": {
