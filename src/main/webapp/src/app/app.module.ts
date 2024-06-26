@@ -82,103 +82,91 @@ const appRoutes: Routes = [
 ];
 
 @NgModule({
-  declarations: [
-    ArraySortPipe,
-    AppComponent,
-    IntroComponent,
-    PlayComponent,
-    SettingsComponent,
-    EditorComponent,
-    EditorCompositionComponent,
-    EditorSetComponent,
-    ConnectionComponent,
-    EditorCompositionFileComponent,
-    RoutingDetailsComponent,
-    SettingsSystemComponent,
-    WarningDialogComponent,
-    SettingsAdvancedComponent,
-    UpdateDialogComponent,
-    WaitDialogComponent,
-    InfoDialogComponent,
-    SettingsMidiComponent,
-    SettingsNetworkComponent,
-    SettingsAudioComponent,
-    SettingsVideoComponent,
-    RemoteDeviceSelectionComponent,
-    SettingsLightingComponent,
-    MidiRoutingComponent,
-    MidiMappingComponent,
-    SettingsInfoComponent,
-    LeadSheetComponent,
-    EditorCompositionLeadSheetComponent,
-    SettingsBandComponent,
-    SettingsPersonalComponent,
-    DesignerComponent
-  ],
-  imports: [
-    BrowserModule,
-    HttpClientModule,
-    RouterModule.forRoot(
-      appRoutes,
-      { enableTracing: false, useHash: true }
-    ),
-    BrowserAnimationsModule,
-    TranslateModule.forRoot({
-      loader: {
-        provide: TranslateLoader,
-        useFactory: HttpLoaderFactory,
-        deps: [HttpClient]
-      }
-    }),
-    FormsModule,
-    SortablejsModule.forRoot({
-      animation: 300,
-      handle: '.list-sort-handle'
-    }),
-    AlertModule.forRoot(),
-    ModalModule.forRoot(),
-    DropzoneModule,
-    ToastrModule.forRoot({
-      newestOnTop: true
-    }),
-    NgxBootstrapSliderModule,
-    AccordionModule.forRoot(),
-    PopoverModule.forRoot(),
-    TypeaheadModule.forRoot(),
-    BsDropdownModule.forRoot(),
-    DesignerModule
-  ],
-  providers: [
-    AppHttpInterceptor,
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: AppHttpInterceptor,
-      multi: true
-    },
-    PendingChangesGuard,
-    StateService,
-    TransportService,
-    CompositionService,
-    FileService,
-    SettingsService,
-    SessionService,
-    WarningDialogService,
-    PendingChangesDialogService,
-    UpdateService,
-    WaitDialogService,
-    InfoDialogService,
-    ToastGeneralErrorService
-  ],
-  entryComponents: [
-    EditorCompositionFileComponent,
-    RoutingDetailsComponent,
-    WarningDialogComponent,
-    UpdateDialogComponent,
-    WaitDialogComponent,
-    InfoDialogComponent,
-    EditorCompositionLeadSheetComponent
-  ],
-  bootstrap: [AppComponent]
+    declarations: [
+        ArraySortPipe,
+        AppComponent,
+        IntroComponent,
+        PlayComponent,
+        SettingsComponent,
+        EditorComponent,
+        EditorCompositionComponent,
+        EditorSetComponent,
+        ConnectionComponent,
+        EditorCompositionFileComponent,
+        RoutingDetailsComponent,
+        SettingsSystemComponent,
+        WarningDialogComponent,
+        SettingsAdvancedComponent,
+        UpdateDialogComponent,
+        WaitDialogComponent,
+        InfoDialogComponent,
+        SettingsMidiComponent,
+        SettingsNetworkComponent,
+        SettingsAudioComponent,
+        SettingsVideoComponent,
+        RemoteDeviceSelectionComponent,
+        SettingsLightingComponent,
+        MidiRoutingComponent,
+        MidiMappingComponent,
+        SettingsInfoComponent,
+        LeadSheetComponent,
+        EditorCompositionLeadSheetComponent,
+        SettingsBandComponent,
+        SettingsPersonalComponent,
+        DesignerComponent
+    ],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        RouterModule.forRoot(appRoutes, { enableTracing: false, useHash: true }),
+        BrowserAnimationsModule,
+        TranslateModule.forRoot({
+            loader: {
+                provide: TranslateLoader,
+                useFactory: HttpLoaderFactory,
+                deps: [HttpClient]
+            }
+        }),
+        FormsModule,
+        SortablejsModule.forRoot({
+            animation: 300,
+            handle: '.list-sort-handle'
+        }),
+        AlertModule.forRoot(),
+        ModalModule.forRoot(),
+        DropzoneModule,
+        ToastrModule.forRoot({
+            newestOnTop: true
+        }),
+        NgxBootstrapSliderModule,
+        AccordionModule.forRoot(),
+        PopoverModule.forRoot(),
+        TypeaheadModule.forRoot(),
+        BsDropdownModule.forRoot(),
+        DesignerModule
+    ],
+    providers: [
+        AppHttpInterceptor,
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: AppHttpInterceptor,
+            multi: true
+        },
+        PendingChangesGuard,
+        StateService,
+        TransportService,
+        CompositionService,
+        FileService,
+        SettingsService,
+        SessionService,
+        WarningDialogService,
+        PendingChangesDialogService,
+        UpdateService,
+        WaitDialogService,
+        InfoDialogService,
+        ToastGeneralErrorService
+    ],
+    bootstrap: [AppComponent]
 })
 export class AppModule { }
 
