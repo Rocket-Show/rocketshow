@@ -43,7 +43,7 @@ import 'web-animations-js';  // Run `npm install --save web-animations-js`.
 // See https://stackoverflow.com/questions/54416133/is-it-possible-to-use-ngzone-noop-for-particular-function-component-in-an
 import './ngzone-flags';
 
-import 'zone.js/dist/zone';  // Included with Angular CLI.
+import 'zone.js';  // Included with Angular CLI.
 
 
 
