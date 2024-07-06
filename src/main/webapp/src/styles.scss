@@ -52,7 +52,7 @@ dropzone.dz-wrapper > .dropzone {
   min-height: 0 !important;
 }
 
-dropzone.dz-wrapper > .dropzone .dz-preview .dz-details {
+dropzone>.dropzone.dz-wrapper .dz-preview .dz-details {
   padding: 0 !important;
   padding-left: 3px !important;
   padding-top: 3px !important;
@@ -60,6 +60,11 @@ dropzone.dz-wrapper > .dropzone .dz-preview .dz-details {
 
 dropzone.dz-wrapper > .dropzone {
   color: white !important;
+}
+
+.dz-max-files-reached {
+  pointer-events: none;
+  cursor: default;
 }
 
 /* Enable a column taking up the left space */

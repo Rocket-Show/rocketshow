@@ -8,7 +8,7 @@ import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
- * Defines an instrument played in the band.
+ * Defines an instrument played in a band.
  *
  * @author Moritz A. Vieli
  */

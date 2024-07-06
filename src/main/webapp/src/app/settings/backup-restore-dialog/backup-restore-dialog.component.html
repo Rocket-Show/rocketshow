@@ -1,0 +1,32 @@
+<div class="card-modal">
+  <div class="card">
+    <div class="card-header">
+      {{ "settings.backup.title" | translate }}
+    </div>
+
+    <div class="card-body">
+      <dropzone
+        [config]="dropzoneConfig"
+        [useDropzoneClass]="'false'"
+        [message]="uploadMessage"
+        (error)="onUploadError($event)"
+        (success)="onUploadSuccess($event)"
+        (addedFile)="onAddedFile($event)"
+
+      ></dropzone>
+    </div>
+
+    <div class="card-footer">
+      <div class="d-flex float-right">
+        <button
+          type="button"
+          [disabled]="uploading"
+          class="btn btn-primary"
+          (click)="cancel(); (false)"
+        >
+          {{ "misc.cancel" | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

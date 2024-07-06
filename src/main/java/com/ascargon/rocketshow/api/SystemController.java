@@ -4,6 +4,7 @@ import com.ascargon.rocketshow.PlayerService;
 import com.ascargon.rocketshow.SessionService;
 import com.ascargon.rocketshow.Settings;
 import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.audio.DefaultAudioService;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
@@ -11,6 +12,8 @@ import com.ascargon.rocketshow.midi.MidiDeviceInService;
 import com.ascargon.rocketshow.midi.MidiDeviceOutService;
 import com.ascargon.rocketshow.util.*;
 import jakarta.xml.bind.JAXBException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -23,6 +26,8 @@ import java.io.FileInputStream;
 @RequestMapping("${spring.data.rest.base-path}/system")
 @CrossOrigin
 class SystemController {
+
+    private final static Logger logger = LoggerFactory.getLogger(SystemController.class);
 
     private final StateService stateService;
     private final SetService setService;
@@ -40,8 +45,9 @@ class SystemController {
     private final SessionService sessionService;
     private final CompositionService compositionService;
     private final DesignerService designerService;
+    private final BackupService backupService;
 
-    public SystemController(StateService stateService, SetService setService, PlayerService playerService, RebootService rebootService, ShutdownService shutdownService, SettingsService settingsService, MidiDeviceInService midiDeviceInService, MidiDeviceOutService midiDeviceOutService, UpdateService updateService, FactoryResetService factoryResetService, LogDownloadService logDownloadService, DiskSpaceService diskSpaceService, OperatingSystemInformationService operatingSystemInformationService, SessionService sessionService, CompositionService compositionService, DesignerService designerService) {
+    public SystemController(StateService stateService, SetService setService, PlayerService playerService, RebootService rebootService, ShutdownService shutdownService, SettingsService settingsService, MidiDeviceInService midiDeviceInService, MidiDeviceOutService midiDeviceOutService, UpdateService updateService, FactoryResetService factoryResetService, LogDownloadService logDownloadService, DiskSpaceService diskSpaceService, OperatingSystemInformationService operatingSystemInformationService, SessionService sessionService, CompositionService compositionService, DesignerService designerService, BackupService backupService) {
         this.stateService = stateService;
         this.setService = setService;
         this.playerService = playerService;
@@ -58,6 +64,7 @@ class SystemController {
         this.sessionService = sessionService;
         this.compositionService = compositionService;
         this.designerService = designerService;
+        this.backupService = backupService;
     }
 
     @PostMapping("reboot")
@@ -137,10 +144,7 @@ class SystemController {
     @GetMapping("download-logs")
     public ResponseEntity<Resource> downloadLogs() throws Exception {
         InputStreamResource resource = new InputStreamResource(new FileInputStream(logDownloadService.getLogsFile()));
-
-        return ResponseEntity
-                .ok()
-                .body(resource);
+        return ResponseEntity.ok().body(resource);
     }
 
     @GetMapping("disk-space")
@@ -151,6 +155,18 @@ class SystemController {
     @GetMapping("operating-system-information")
     public OperatingSystemInformation getOperatingSystemInformation() {
         return operatingSystemInformationService.getOperatingSystemInformation();
+    }
+
+    @GetMapping("create-backup")
+    public ResponseEntity<Resource> createBackup() throws Exception {
+        InputStreamResource resource = new InputStreamResource(new FileInputStream(backupService.createBackup()));
+        return ResponseEntity.ok().body(resource);
+    }
+
+    @PostMapping("restore-backup")
+    public ResponseEntity<Void> restoreBackup() throws Exception {
+        logger.info("XXX");
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
 }

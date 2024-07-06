@@ -258,6 +258,12 @@
             "INFO": "Info (default)",
             "DEBUG": "Debug",
             "TRACE": "Trace"
+        },
+        "backup": {
+          "title": "Backup",
+          "create": "Download",
+          "restore": "Restore...",
+          "wait-create": "The backup is being created..."
         }
     }
 }

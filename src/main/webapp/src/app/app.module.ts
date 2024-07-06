@@ -54,7 +54,7 @@ import { EditorCompositionComponent } from './editor/editor-composition/editor-c
 import { EditorSetComponent } from './editor/editor-set/editor-set.component';
 import { EditorCompositionFileComponent } from './editor/editor-composition/editor-composition-file/editor-composition-file.component';
 import { RoutingDetailsComponent } from './routing-details/routing-details.component';
-import { UpdateDialogComponent } from './update-dialog/update-dialog.component';
+import { UpdateDialogComponent } from './settings/update-dialog/update-dialog.component';
 import { WaitDialogComponent } from './wait-dialog/wait-dialog.component';
 import { InfoDialogComponent } from './info-dialog/info-dialog.component';
 import { RemoteDeviceSelectionComponent } from './remote-device-selection/remote-device-selection.component';
@@ -66,6 +66,7 @@ import { EditorCompositionLeadSheetComponent } from './editor/editor-composition
 import { SettingsBandComponent } from './settings/settings-band/settings-band.component';
 import { SettingsPersonalComponent } from './settings/settings-personal/settings-personal.component';
 import { DesignerComponent } from './designer/designer.component';
+import { BackupRestoreDialogComponent } from './settings/backup-restore-dialog/backup-restore-dialog.component';
 
 const appRoutes: Routes = [
   { path: 'intro', component: IntroComponent },
@@ -98,6 +99,7 @@ const appRoutes: Routes = [
         WarningDialogComponent,
         SettingsAdvancedComponent,
         UpdateDialogComponent,
+        BackupRestoreDialogComponent,
         WaitDialogComponent,
         InfoDialogComponent,
         SettingsMidiComponent,
