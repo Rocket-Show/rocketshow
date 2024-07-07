@@ -49,7 +49,7 @@ public class DesignerController {
         designerService.setPreviewPreset(project.isPreviewPreset());
         designerService.setSelectedPresetUuid(project.getSelectedPresetUuid());
         designerService.setSelectedSceneUuids(project.getSelectedSceneUuids());
-        if (compositionName != null && compositionName.length() > 0) {
+        if (compositionName != null && !compositionName.isEmpty()) {
             designerService.setPreviewComposition(compositionName);
         }
         designerService.startPreview(positionMillis);
