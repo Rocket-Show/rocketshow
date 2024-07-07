@@ -22,7 +22,7 @@ export class SettingsAudioComponent implements OnInit, OnDestroy {
   audioOutputList: string[] = [];
   maxAudioChannels: number = 9999;
   currentAudioChannels: number = 0;
-  
+
   constructor(
     private settingsService: SettingsService,
     private operatingSystemInformationService: OperatingSystemInformationService
@@ -32,7 +32,7 @@ export class SettingsAudioComponent implements OnInit, OnDestroy {
         // TODO
       } else if(operatingSystemInformation.type == 'OS_X') {
         this.audioOutputList.push('DEFAULT');
-      } else if(operatingSystemInformation.subType == 'RASPBIAN') {
+      } else if(operatingSystemInformation.subType == 'RASPBERRYOS') {
         // Currently disabled
         //this.audioOutputList.push('HEADPHONES');
         //this.audioOutputList.push('HDMI');

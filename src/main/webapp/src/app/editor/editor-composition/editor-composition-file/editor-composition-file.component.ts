@@ -10,7 +10,6 @@ import { BsModalRef } from 'ngx-bootstrap/modal';
 import { Subject } from 'rxjs';
 import { map } from "rxjs/operators";
 import { Composition } from '../../../models/composition';
-import { DropzoneConfigInterface } from 'ngx-dropzone-wrapper';
 import { CompositionAudioFile } from '../../../models/composition-audio-file';
 import { AudioBus } from '../../../models/audio-bus';
 
@@ -32,9 +31,6 @@ export class EditorCompositionFileComponent implements OnInit {
 
   existingFiles: CompositionFile[] = [];
   filteredExistingFiles: CompositionFile[] = [];
-
-  dropzoneConfig: DropzoneConfigInterface;
-  uploadMessage: string;
 
   diskSpaceUsedGB: number = 0;
   diskSpaceAvailableGB: number = 0;

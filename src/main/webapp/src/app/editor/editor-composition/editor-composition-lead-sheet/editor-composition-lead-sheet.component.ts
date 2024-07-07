@@ -1,4 +1,3 @@
-import { DropzoneConfigInterface } from 'ngx-dropzone-wrapper';
 import { BsModalRef } from 'ngx-bootstrap/modal';
 import { Composition } from './../../../models/composition';
 import { Subject } from 'rxjs';
@@ -29,10 +28,6 @@ export class EditorCompositionLeadSheetComponent implements OnInit {
 
   existingLeadSheets: LeadSheet[] = [];
   filteredExistingLeadSheets: LeadSheet[] = [];
-
-  dropzoneConfig: DropzoneConfigInterface;
-
-  uploadMessage: string;
 
   diskSpaceUsedGB: number = 0;
   diskSpaceAvailableGB: number = 0;
