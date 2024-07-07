@@ -4,7 +4,6 @@ import com.ascargon.rocketshow.PlayerService;
 import com.ascargon.rocketshow.SessionService;
 import com.ascargon.rocketshow.Settings;
 import com.ascargon.rocketshow.SettingsService;
-import com.ascargon.rocketshow.audio.DefaultAudioService;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
@@ -12,26 +11,16 @@ import com.ascargon.rocketshow.midi.MidiDeviceInService;
 import com.ascargon.rocketshow.midi.MidiDeviceOutService;
 import com.ascargon.rocketshow.util.*;
 import jakarta.xml.bind.JAXBException;
-import org.apache.commons.fileupload.FileItemIterator;
-import org.apache.commons.fileupload.FileItemStream;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.FileInputStream;
-import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
 
 @RestController()
 @RequestMapping("${spring.data.rest.base-path}/system")
