@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.composition;
 
 import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.util.ChunkedFileUploadService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -19,9 +20,14 @@ public class DefaultLeadSheetService implements LeadSheetService {
     private final static Logger logger = LoggerFactory.getLogger(DefaultLeadSheetService.class);
 
     private final SettingsService settingsService;
+    private final ChunkedFileUploadService chunkedFileUploadService;
 
-    public DefaultLeadSheetService(SettingsService settingsService) {
+    public DefaultLeadSheetService(
+            SettingsService settingsService,
+            ChunkedFileUploadService chunkedFileUploadService
+    ) {
         this.settingsService = settingsService;
+        this.chunkedFileUploadService = chunkedFileUploadService;
     }
 
     @Override
@@ -74,11 +80,7 @@ public class DefaultLeadSheetService implements LeadSheetService {
         }
     }
 
-
-    @Override
-    public LeadSheet saveLeadSheet(InputStream uploadedInputStream, String fileName) {
-        LeadSheet leadSheet = new LeadSheet();
-
+    private File saveLeadSheetGetFile(String fileName) throws Exception {
         String path = settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getLeadSheetPath() + File.separator;
 
         path += File.separator;
@@ -89,27 +91,31 @@ public class DefaultLeadSheetService implements LeadSheetService {
             logger.error("Could not create directory to save the lead sheet", e);
         }
 
-        leadSheet.setName(fileName);
-
         path += fileName;
 
-        try {
-            OutputStream out;
-            int read;
-            byte[] bytes = new byte[1024];
+        return new File(path);
+    }
 
-            out = new FileOutputStream(new File(path));
-
-            while ((read = uploadedInputStream.read(bytes)) != -1) {
-                out.write(bytes, 0, read);
+    @Override
+    public void saveLeadSheetInit(String fileName) throws Exception {
+        File file = saveLeadSheetGetFile(fileName);
+        if (file.exists()) {
+            boolean result = file.delete();
+            if (!result) {
+                throw new Exception("Could not delete lead sheet '" + file.getPath() + "'");
             }
-
-            out.flush();
-            out.close();
-        } catch (IOException e) {
-            logger.error("Could not save lead sheet '" + fileName + "'", e);
         }
+    }
 
+    @Override
+    public void saveLeadSheetAddChunk(InputStream inputStream, String fileName) throws Exception {
+        chunkedFileUploadService.handleChunk(inputStream, saveLeadSheetGetFile(fileName));
+    }
+
+    @Override
+    public LeadSheet saveLeadSheetFinish(String fileName) throws Exception {
+        LeadSheet leadSheet = new LeadSheet();
+        leadSheet.setName(fileName);
         return leadSheet;
     }
 

@@ -1,0 +1,17 @@
+# The port we're running on
+server:
+  port: 8080
+
+spring:
+  data:
+    rest:
+      # The base API path
+      base-path: api
+  jackson:
+    # Don't include null values in the JSONs
+    default-property-inclusion: non_null
+  servlet:
+    multipart:
+      # Allow uploading files with sizes up to 10 MB
+      max-file-size: 10MB
+      max-request-size: 10MB

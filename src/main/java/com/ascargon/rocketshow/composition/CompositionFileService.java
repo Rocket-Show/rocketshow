@@ -13,7 +13,11 @@ public interface CompositionFileService {
 
     void deleteFile(String name, String type);
 
-    CompositionFile saveFile(InputStream uploadedInputStream, String fileName) throws Exception;
+    void saveFileInit(String fileName) throws Exception;
+
+    void saveFileAddChunk(InputStream inputStream, String fileName) throws Exception;
+
+    CompositionFile saveFileFinish(String fileName) throws Exception;
 
     File getFile(String name, String type) throws Exception;
 

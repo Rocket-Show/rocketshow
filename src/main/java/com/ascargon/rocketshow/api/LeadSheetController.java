@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.api;
 
+import com.ascargon.rocketshow.composition.CompositionFile;
 import com.ascargon.rocketshow.composition.LeadSheet;
 import com.ascargon.rocketshow.composition.LeadSheetService;
 import org.apache.commons.fileupload.FileItemIterator;
@@ -11,6 +12,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.FileInputStream;
@@ -34,26 +36,21 @@ public class LeadSheetController {
     }
 
     @PostMapping("upload")
-    public LeadSheet upload(HttpServletRequest request) throws Exception {
-        ServletFileUpload upload = new ServletFileUpload();
-        FileItemIterator itemIterator = upload.getItemIterator(request);
-
-        while (itemIterator.hasNext()) {
-            FileItemStream item = itemIterator.next();
-            String fileName = item.getName();
-
-            if (fileName != null) {
-                fileName = FilenameUtils.getName(fileName);
-            }
-
-            InputStream stream = item.openStream();
-
-            if (!item.isFormField()) {
-                return leadSheetService.saveLeadSheet(stream, fileName);
-            }
+    public LeadSheet upload(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("dzchunkindex") Long dzchunkindex,
+            @RequestParam("dztotalchunkcount") Long dztotalchunkcount
+    ) throws Exception {
+        String fileName = file.getOriginalFilename();
+        LeadSheet leadSheet = null;
+        if (dzchunkindex == 0) {
+            leadSheetService.saveLeadSheetInit(fileName);
         }
-
-        return null;
+        leadSheetService.saveLeadSheetAddChunk(file.getInputStream(), fileName);
+        if (dzchunkindex.equals(dztotalchunkcount - 1)) {
+            leadSheet = leadSheetService.saveLeadSheetFinish(fileName);
+        }
+        return leadSheet;
     }
 
     @PostMapping("delete")

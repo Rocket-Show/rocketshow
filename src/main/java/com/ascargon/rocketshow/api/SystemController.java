@@ -12,15 +12,26 @@ import com.ascargon.rocketshow.midi.MidiDeviceInService;
 import com.ascargon.rocketshow.midi.MidiDeviceOutService;
 import com.ascargon.rocketshow.util.*;
 import jakarta.xml.bind.JAXBException;
+import org.apache.commons.fileupload.FileItemIterator;
+import org.apache.commons.fileupload.FileItemStream;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
 
 @RestController()
 @RequestMapping("${spring.data.rest.base-path}/system")
@@ -159,13 +170,23 @@ class SystemController {
 
     @GetMapping("create-backup")
     public ResponseEntity<Resource> createBackup() throws Exception {
-        InputStreamResource resource = new InputStreamResource(new FileInputStream(backupService.createBackup()));
+        InputStreamResource resource = new InputStreamResource(new FileInputStream(backupService.create()));
         return ResponseEntity.ok().body(resource);
     }
 
     @PostMapping("restore-backup")
-    public ResponseEntity<Void> restoreBackup() throws Exception {
-        logger.info("XXX");
+    public ResponseEntity<Void> restoreBackup(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("dzchunkindex") Long dzchunkindex,
+            @RequestParam("dztotalchunkcount") Long dztotalchunkcount
+    ) throws Exception {
+        if (dzchunkindex == 0) {
+            backupService.restoreInit();
+        }
+        backupService.restoreAddChunk(file.getInputStream());
+        if (dzchunkindex.equals(dztotalchunkcount - 1)) {
+            backupService.restoreFinish();
+        }
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

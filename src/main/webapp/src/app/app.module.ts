@@ -67,6 +67,7 @@ import { SettingsBandComponent } from './settings/settings-band/settings-band.co
 import { SettingsPersonalComponent } from './settings/settings-personal/settings-personal.component';
 import { DesignerComponent } from './designer/designer.component';
 import { BackupRestoreDialogComponent } from './settings/backup-restore-dialog/backup-restore-dialog.component';
+import { DropzoneComponent } from './dropzone/dropzone.component';
 
 const appRoutes: Routes = [
   { path: 'intro', component: IntroComponent },
@@ -115,7 +116,8 @@ const appRoutes: Routes = [
         EditorCompositionLeadSheetComponent,
         SettingsBandComponent,
         SettingsPersonalComponent,
-        DesignerComponent
+        DesignerComponent,
+        DropzoneComponent
     ],
     imports: [
         BrowserModule,

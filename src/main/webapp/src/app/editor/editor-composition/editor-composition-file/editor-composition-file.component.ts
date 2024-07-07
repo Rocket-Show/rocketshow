@@ -1,11 +1,9 @@
 import { DiskSpaceService } from './../../../services/disk-space.service';
-import { AppHttpInterceptor } from './../../../app-http-interceptor/app-http-interceptor';
 import { Settings } from './../../../models/settings';
 import { SettingsService } from './../../../services/settings.service';
 import { WarningDialogService } from './../../../services/warning-dialog.service';
 import { CompositionMidiFile } from './../../../models/composition-midi-file';
 import { FileService } from './../../../services/file.service';
-import { TranslateService } from '@ngx-translate/core';
 import { CompositionFile } from './../../../models/composition-file';
 import { Component, OnInit } from '@angular/core';
 import { BsModalRef } from 'ngx-bootstrap/modal';
@@ -44,41 +42,10 @@ export class EditorCompositionFileComponent implements OnInit {
 
   constructor(
     private bsModalRef: BsModalRef,
-    private appHttpInterceptor: AppHttpInterceptor,
-    private translateService: TranslateService,
     private fileService: FileService,
     private warningDialogService: WarningDialogService,
     private settingsService: SettingsService,
     private diskSpaceService: DiskSpaceService) {
-
-    this.dropzoneConfig = {
-      url: this.appHttpInterceptor.getRestUrl() + 'file/upload',
-      paramName: 'file',
-      addRemoveLinks: false,
-      maxFilesize: 10000 /* 10 GB */,
-      acceptedFiles: 'audio/*,video/*',
-      timeout: 0,
-      previewTemplate: `
-      <div class="dz-preview dz-file-preview">
-        <!-- The attachment details -->
-        <div class="dz-details" style="text-align: left">
-          <i class="fa fa-file-o"></i> <span data-dz-name></span> <small><span class="label label-default file-size" data-dz-size></span></small>
-        </div>
-
-        <!--div class="mt-5">
-          <span data-dz-errormessage></span>
-        </div-->
-
-        <div class="progress mt-4 mb-1" style="height: 10px">
-          <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width:0%;" data-dz-uploadprogress></div>
-        </div>
-      </div>
-      `
-    };
-
-    this.translateService.get('editor.dropzone-message').pipe(map(result => {
-      this.uploadMessage = '<h3 class="mb-0"><i class="fa fa-cloud-upload"></i></h3>' + result;
-    })).subscribe();
 
     this.loadFiles();
     this.loadDiskSpace();

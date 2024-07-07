@@ -11,6 +11,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.FileInputStream;
@@ -34,26 +35,21 @@ public class CompositionFileController {
     }
 
     @PostMapping("upload")
-    public CompositionFile upload(HttpServletRequest request) throws Exception {
-        ServletFileUpload upload = new ServletFileUpload();
-        FileItemIterator itemIterator = upload.getItemIterator(request);
-
-        while (itemIterator.hasNext()) {
-            FileItemStream item = itemIterator.next();
-            String fileName = item.getName();
-
-            if (fileName != null) {
-                fileName = FilenameUtils.getName(fileName);
-            }
-
-            InputStream stream = item.openStream();
-
-            if (!item.isFormField()) {
-                return compositionFileService.saveFile(stream, fileName);
-            }
+    public CompositionFile upload(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("dzchunkindex") Long dzchunkindex,
+            @RequestParam("dztotalchunkcount") Long dztotalchunkcount
+    ) throws Exception {
+        String fileName = file.getOriginalFilename();
+        CompositionFile compositionFile = null;
+        if (dzchunkindex == 0) {
+            compositionFileService.saveFileInit(fileName);
         }
-
-        return null;
+        compositionFileService.saveFileAddChunk(file.getInputStream(), fileName);
+        if (dzchunkindex.equals(dztotalchunkcount - 1)) {
+            compositionFile = compositionFileService.saveFileFinish(fileName);
+        }
+        return compositionFile;
     }
 
     @PostMapping("delete")
