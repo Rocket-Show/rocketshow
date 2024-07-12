@@ -25,6 +25,7 @@ public class DefaultBackupService implements BackupService {
     private final DiskSpaceService diskSpaceService;
     private final ZipService zipService;
     private final ChunkedFileUploadService chunkedFileUploadService;
+    private final RebootService rebootService;
 
     private final static String BACKUP_FILE_NAME = "backup.zip";
 
@@ -34,12 +35,14 @@ public class DefaultBackupService implements BackupService {
             SettingsService settingsService,
             DiskSpaceService diskSpaceService,
             ZipService zipService,
-            ChunkedFileUploadService chunkedFileUploadService
+            ChunkedFileUploadService chunkedFileUploadService,
+            RebootService rebootService
     ) {
         this.settingsService = settingsService;
         this.diskSpaceService = diskSpaceService;
         this.zipService = zipService;
         this.chunkedFileUploadService = chunkedFileUploadService;
+        this.rebootService = rebootService;
 
         backupFile = new File(settingsService.getSettings().getBasePath() + BACKUP_FILE_NAME);
     }
@@ -70,7 +73,7 @@ public class DefaultBackupService implements BackupService {
                 throw new Exception("Not enough free disk space available on the device to create the backup (at least 50% required).");
             }
         }
-        logger.info(settingsService.getSettings().getBasePath());
+
         // zip the complete rocket show directory
         FileOutputStream fileOutputStream = new FileOutputStream(BACKUP_FILE_NAME);
         ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream);
@@ -100,8 +103,27 @@ public class DefaultBackupService implements BackupService {
 
     @Override
     public void restoreFinish() throws Exception {
-        // TODO
-        logger.info("INIT RESTORE");
+        logger.info("Start restoring backup...");
+
+        // unzip backup.zip
+        zipService.unzipFile(backupFile.getPath(), new File(settingsService.getSettings().getBasePath()));
+
+        ShellManager shellManager = new ShellManager(new String[]{"sh"});
+
+        String workingDirectory = new File(settingsService.getSettings().getBasePath()).getName();
+
+        // delete all files/directories in the basepath, except the subdirectory rocketshow we just unzipped
+        shellManager.sendCommand("find " + settingsService.getSettings().getBasePath() + " -mindepth 1 -maxdepth 1 ! -name " + workingDirectory + " -exec rm -rf {} +", true);
+
+        // move the contents of the rocketshow subdirectory to its parent directory
+        shellManager.sendCommand("mv " + settingsService.getSettings().getBasePath() + workingDirectory + File.separator + "* " + settingsService.getSettings().getBasePath(), true);
+
+        // delete the rocketshow subdirectory
+        shellManager.sendCommand("rmdir " + settingsService.getSettings().getBasePath() + workingDirectory, true);
+
+        logger.info("Backup has been restored. Reboot...");
+
+        rebootService.reboot();
     }
 
 }

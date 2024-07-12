@@ -12,4 +12,6 @@ public interface ZipService {
 
     void zipFile(File directory, String fileName, ZipOutputStream zipOut, List<String> ignoreFileNameList) throws IOException;
 
+    void unzipFile(String zipFile, File destDir) throws IOException;
+
 }
