@@ -1,7 +1,7 @@
 <div class="card-modal">
   <div class="card border-secondary">
     <div class="card-header">
-      {{ 'editor.lead-sheets-add' | translate }}
+      {{ "editor.lead-sheets-add" | translate }}
     </div>
 
     <div class="card-body">
@@ -12,12 +12,13 @@
             <div class="card-body">
               <!-- No file selected -->
               <div *ngIf="!leadSheet?.name">
-                {{ 'editor.no-file-selected' | translate }}
+                {{ "editor.no-file-selected" | translate }}
               </div>
 
               <!-- A file is selected -->
               <div *ngIf="leadSheet?.name">
-                <i class="fa fa-fw fa-file-text-o" aria-hidden="true"></i> {{ leadSheet?.name }}
+                <i class="fa fa-fw fa-file-text-o" aria-hidden="true"></i>
+                {{ leadSheet?.name }}
               </div>
             </div>
           </div>
@@ -25,45 +26,83 @@
           <!-- Choose file -->
           <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
             <li class="nav-item">
-              <a class="nav-link active" id="upload-tab" data-toggle="tab" href="#upload" role="tab">
-                <i class="fa fa-upload" aria-hidden="true"></i> {{ 'editor.upload' | translate }}
+              <a
+                class="nav-link active"
+                id="upload-tab"
+                data-toggle="tab"
+                href="#upload"
+                role="tab"
+              >
+                <i class="fa fa-upload" aria-hidden="true"></i>
+                {{ "editor.upload" | translate }}
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" id="media-library-tab" data-toggle="tab" href="#media-library" role="tab">
-                <i class="fa fa-folder-o" aria-hidden="true"></i> {{ 'editor.lead-sheets-library' | translate }}
+              <a
+                class="nav-link"
+                id="media-library-tab"
+                data-toggle="tab"
+                href="#media-library"
+                role="tab"
+              >
+                <i class="fa fa-folder-o" aria-hidden="true"></i>
+                {{ "editor.lead-sheets-library" | translate }}
               </a>
             </li>
           </ul>
 
           <div class="tab-content mb-3" id="myTabContent">
-
             <!-- Upload -->
             <div class="tab-pane fade show active" id="upload" role="tabpanel">
-              <dropzone [config]="dropzoneConfig" [useDropzoneClass]="'false'" [message]="uploadMessage"
-                (error)="onUploadError($event)" (success)="onUploadSuccess($event)"></dropzone>
+              <app-dropzone
+                [url]="'lead-sheet/upload'"
+                [acceptedFiles]="'image/*'"
+                (error)="onUploadError($event)"
+                (success)="onUploadSuccess($event)"
+              ></app-dropzone>
             </div>
 
             <!-- Library -->
             <div class="tab-pane fade" id="media-library" role="tabpanel">
-              <input type="text" class="form-control input-block mb-3" id="searchFileList"
+              <input
+                type="text"
+                class="form-control input-block mb-3"
+                id="searchFileList"
                 placeholder="{{ 'editor.search-files' | translate }}"
-                (input)="filterExistingLeadSheets($event.target.value)">
+                (input)="filterExistingLeadSheets($event.target.value)"
+              />
 
-              <div class="card border-secondary" style="height: 300px; overflow-y: scroll;">
+              <div
+                class="card border-secondary"
+                style="height: 300px; overflow-y: scroll"
+              >
                 <div class="card-body p-0">
                   <div class="list-group list-group-flush">
-                    <a *ngFor="let existingLeadSheet of filteredExistingLeadSheets | sort:'name'"
-                      class="list-group-item" [class.active]="leadSheet?.name == existingLeadSheet.name" href="#"
-                      (click)="selectExistingLeadSheet(existingLeadSheet); false">
-
+                    <a
+                      *ngFor="
+                        let existingLeadSheet of filteredExistingLeadSheets
+                          | sort : 'name'
+                      "
+                      class="list-group-item"
+                      [class.active]="leadSheet?.name == existingLeadSheet.name"
+                      href="#"
+                      (click)="
+                        selectExistingLeadSheet(existingLeadSheet); (false)
+                      "
+                    >
                       <div class="row">
                         <div class="col-auto my-auto flex-grow text-break-word">
-                          <i class="fa fa-fw fa-file-text-o" aria-hidden="true"></i> {{ existingLeadSheet.name }}
+                          <i
+                            class="fa fa-fw fa-file-text-o"
+                            aria-hidden="true"
+                          ></i>
+                          {{ existingLeadSheet.name }}
                         </div>
 
-                        <div class="col-auto my-auto pl-0 text-danger float-right"
-                          (click)="deleteLeadSheet(existingLeadSheet); false">
+                        <div
+                          class="col-auto my-auto pl-0 text-danger float-right"
+                          (click)="deleteLeadSheet(existingLeadSheet); (false)"
+                        >
                           <i class="fa fa-trash-o" aria-hidden="true"></i>
                         </div>
                       </div>
@@ -80,40 +119,52 @@
         <div class="col-lg-6">
           <div class="card border-secondary">
             <div class="card-header">
-              {{ 'editor.file-settings' | translate }}
+              {{ "editor.file-settings" | translate }}
             </div>
 
             <div class="card-body">
-
               <!-- Instrument -->
               <div class="form-group">
-                <label class="col-form-label">{{ 'settings.instrument' | translate }}</label>
+                <label class="col-form-label">{{
+                  "settings.instrument" | translate
+                }}</label>
 
-                <select class="custom-select form-control" [ngModel]="leadSheet?.instrumentUuid"
-                  (ngModelChange)="leadSheet.instrumentUuid = $event">
-                  <option [ngValue]="selectUndefinedOptionValue">- {{ 'settings.no-instrument' | translate }} -</option>
-                  <option *ngFor="let instrument of settings.instrumentList" [ngValue]="instrument.uuid">{{
-                    instrument.name }}</option>
+                <select
+                  class="custom-select form-control"
+                  [ngModel]="leadSheet?.instrumentUuid"
+                  (ngModelChange)="leadSheet.instrumentUuid = $event"
+                >
+                  <option [ngValue]="selectUndefinedOptionValue">
+                    - {{ "settings.no-instrument" | translate }} -
+                  </option>
+                  <option
+                    *ngFor="let instrument of settings.instrumentList"
+                    [ngValue]="instrument.uuid"
+                  >
+                    {{ instrument.name }}
+                  </option>
                 </select>
               </div>
-
             </div>
           </div>
-
         </div>
       </div>
     </div>
 
     <div class="card-footer">
       <div class="d-flex float-right">
-        <a class="mr-3 my-auto" href="#" role="button" (click)="cancel(); false">
-          {{ 'misc.cancel' | translate }}
+        <a
+          class="mr-3 my-auto"
+          href="#"
+          role="button"
+          (click)="cancel(); (false)"
+        >
+          {{ "misc.cancel" | translate }}
         </a>
-        <button type="button" class="btn btn-primary" (click)="ok(); false">
-          {{ 'misc.ok' | translate }}
+        <button type="button" class="btn btn-primary" (click)="ok(); (false)">
+          {{ "misc.ok" | translate }}
         </button>
       </div>
     </div>
   </div>
-
 </div>

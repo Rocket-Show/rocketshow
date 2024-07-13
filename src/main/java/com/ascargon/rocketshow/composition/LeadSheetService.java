@@ -13,7 +13,11 @@ public interface LeadSheetService {
 
     void deleteLeadSheet(String name);
 
-    LeadSheet saveLeadSheet(InputStream uploadedInputStream, String fileName);
+    void saveLeadSheetInit(String fileName) throws Exception;
+
+    void saveLeadSheetAddChunk(InputStream inputStream, String fileName) throws Exception;
+
+    LeadSheet saveLeadSheetFinish(String fileName) throws Exception;
 
     File getImage(String name) throws Exception;
 

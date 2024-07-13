@@ -1,0 +1,8 @@
+<dropzone
+  [config]="dropzoneConfig"
+  [useDropzoneClass]="'false'"
+  [message]="uploadMessage"
+  (error)="error.emit($event)"
+  (success)="success.emit($event)"
+  (addedFile)="addedFile.emit($event)"
+></dropzone>

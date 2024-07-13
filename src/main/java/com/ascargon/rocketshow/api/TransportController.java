@@ -17,14 +17,21 @@ class TransportController {
 
     private final static Logger logger = LoggerFactory.getLogger(TransportController.class);
 
+    private final ControllerService controllerService;
     private final NotificationService notificationService;
     private final PlayerService playerService;
     private final SetService setService;
 
-    private TransportController(NotificationService notificationService, PlayerService playerService, SetService setService) {
+    private TransportController(ControllerService controllerService, NotificationService notificationService, PlayerService playerService, SetService setService) {
+        this.controllerService = controllerService;
         this.notificationService = notificationService;
         this.playerService = playerService;
         this.setService = setService;
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(Exception exception) {
+        return controllerService.handleException(exception);
     }
 
     @PostMapping("load")

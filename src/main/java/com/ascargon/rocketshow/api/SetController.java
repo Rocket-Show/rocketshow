@@ -15,14 +15,21 @@ import java.util.List;
 @CrossOrigin
 public class SetController {
 
+    private final ControllerService controllerService;
     private final SetService setService;
     private final CompositionService compositionService;
     private final PlayerService playerService;
 
-    public SetController(SetService setService, CompositionService compositionService, PlayerService playerService) {
+    public SetController(ControllerService controllerService, SetService setService, CompositionService compositionService, PlayerService playerService) {
+        this.controllerService = controllerService;
         this.setService = setService;
         this.compositionService = compositionService;
         this.playerService = playerService;
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(Exception exception) {
+        return controllerService.handleException(exception);
     }
 
     @GetMapping("list")

@@ -57,6 +57,7 @@ wget https://rocketshow.net/designer/downloads/fixtures.zip
 unzip fixtures.zip -d fixtures
 rm fixtures.zip
 
+# TODO not required for raspberry pi 5 anymore?
 # Overclock the raspberry to sustain streams without underruns
 # - Set more memory for the GPU to play larger video files with omx
 # - Enable turbo-mode by default (boot_delay avoids sdcard corruption)
@@ -64,9 +65,11 @@ rm fixtures.zip
 # - Hide warnings (e.g. temperature icon)
 sed -i '1i# ROCKETSHOWSTART\ngpu_mem=256\nforce_turbo=1\nboot_delay=1\ndtparam=sd_overclock=100\navoid_warnings=1\n# ROCKETSHOWEND\n' /boot/config.txt
 
+# TODO not required for raspberry pi 5 anymore?
 # Set rocketshows nice priority to 10
 sed -i '1irocketshow soft priority 10' /etc/security/limits.conf
 
+# TODO not required for raspberry pi 5 anymore?
 # Add realtime permissions to the audio group
 sed -i '1i@audio   -  rtprio     99\n@audio   -  memlock    unlimited' /etc/security/limits.d/audio.conf
 
@@ -168,6 +171,11 @@ pcm.!default {
 EOF
 
 chown -R rocketshow:rocketshow /home/rocketshow
+chown -R rocketshow:rocketshow /opt/rocketshow_factory.tar.gz
+chown -R rocketshow:rocketshow /opt/rocketshow_reset.sh
+
+chmod 755 /opt/rocketshow_factory.tar.gz
+chmod 755 /opt/rocketshow_reset.sh
 
 # Apply a patch to make seeking videos work on the Raspberry Pi 4
 # https://github.com/moritzvieli/rocketshow/issues/7

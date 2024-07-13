@@ -1,9 +1,6 @@
 package com.ascargon.rocketshow.audio;
 
-import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
-import org.freedesktop.gstreamer.ElementFactory;
-import org.freedesktop.gstreamer.elements.BaseSink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

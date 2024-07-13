@@ -2,19 +2,14 @@ package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.composition.CompositionFile;
 import com.ascargon.rocketshow.composition.CompositionFileService;
-import org.apache.commons.fileupload.FileItemIterator;
-import org.apache.commons.fileupload.FileItemStream;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.commons.io.FilenameUtils;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.FileInputStream;
-import java.io.InputStream;
 import java.util.List;
 
 @RestController()
@@ -22,10 +17,17 @@ import java.util.List;
 @CrossOrigin
 public class CompositionFileController {
 
+    private final ControllerService controllerService;
     private final CompositionFileService compositionFileService;
 
-    public CompositionFileController(CompositionFileService compositionFileService) {
+    public CompositionFileController(ControllerService controllerService, CompositionFileService compositionFileService) {
+        this.controllerService = controllerService;
         this.compositionFileService = compositionFileService;
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(Exception exception) {
+        return controllerService.handleException(exception);
     }
 
     @GetMapping("list")
@@ -34,26 +36,21 @@ public class CompositionFileController {
     }
 
     @PostMapping("upload")
-    public CompositionFile upload(HttpServletRequest request) throws Exception {
-        ServletFileUpload upload = new ServletFileUpload();
-        FileItemIterator itemIterator = upload.getItemIterator(request);
-
-        while (itemIterator.hasNext()) {
-            FileItemStream item = itemIterator.next();
-            String fileName = item.getName();
-
-            if (fileName != null) {
-                fileName = FilenameUtils.getName(fileName);
-            }
-
-            InputStream stream = item.openStream();
-
-            if (!item.isFormField()) {
-                return compositionFileService.saveFile(stream, fileName);
-            }
+    public CompositionFile upload(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("dzchunkindex") Long dzchunkindex,
+            @RequestParam("dztotalchunkcount") Long dztotalchunkcount
+    ) throws Exception {
+        String fileName = file.getOriginalFilename();
+        CompositionFile compositionFile = null;
+        if (dzchunkindex == 0) {
+            compositionFileService.saveFileInit(fileName);
         }
-
-        return null;
+        compositionFileService.saveFileAddChunk(file.getInputStream(), fileName);
+        if (dzchunkindex.equals(dztotalchunkcount - 1)) {
+            compositionFile = compositionFileService.saveFileFinish(fileName);
+        }
+        return compositionFile;
     }
 
     @PostMapping("delete")

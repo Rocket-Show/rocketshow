@@ -19,68 +19,29 @@ import java.util.zip.ZipOutputStream;
 public class DefaultLogDownloadService implements LogDownloadService {
 
     private final SettingsService settingsService;
+    private final ZipService zipService;
 
-    private final static String LOGS_FILE_NAME = "logs.zip";
-
-    public DefaultLogDownloadService(SettingsService settingsService) {
+    public DefaultLogDownloadService(
+            SettingsService settingsService,
+            ZipService zipService
+    ) {
         this.settingsService = settingsService;
-    }
-
-    // Taken from https://www.baeldung.com/java-compress-and-uncompress
-    private void zipFile(File fileToZip, String fileName, ZipOutputStream zipOut) throws IOException {
-        if (fileToZip.isHidden()) {
-            return;
-        }
-
-        if (fileToZip.isDirectory()) {
-            if (fileName.endsWith("/")) {
-                zipOut.putNextEntry(new ZipEntry(fileName));
-                zipOut.closeEntry();
-            } else {
-                zipOut.putNextEntry(new ZipEntry(fileName + "/"));
-                zipOut.closeEntry();
-            }
-
-            File[] children = fileToZip.listFiles();
-
-            if (children != null) {
-                for (File childFile : children) {
-                    zipFile(childFile, fileName + "/" + childFile.getName(), zipOut);
-                }
-            }
-
-            return;
-        }
-
-        FileInputStream fis = new FileInputStream(fileToZip);
-        ZipEntry zipEntry = new ZipEntry(fileName);
-        zipOut.putNextEntry(zipEntry);
-
-        byte[] bytes = new byte[1024];
-        int length;
-
-        while ((length = fis.read(bytes)) >= 0) {
-            zipOut.write(bytes, 0, length);
-        }
-
-        fis.close();
+        this.zipService = zipService;
     }
 
     @Override
     public File getLogsFile() throws Exception {
-        // TODO It would be better to return an input stream instead of writing
-
-        // Zip the logfile directory
+        // zip the log directory
         FileOutputStream fileOutputStream = new FileOutputStream(LOGS_FILE_NAME);
         ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream);
         File fileToZip = new File(settingsService.getSettings().getBasePath() + "log");
 
-        zipFile(fileToZip, fileToZip.getName(), zipOutputStream);
+        zipService.zipFile(fileToZip, fileToZip.getName(), zipOutputStream, null);
         zipOutputStream.close();
         fileOutputStream.close();
 
         // Return the prepared zip
-        return new File(settingsService.getSettings().getBasePath() + File.separator + LOGS_FILE_NAME);
+        return new File(settingsService.getSettings().getBasePath() + LOGS_FILE_NAME);
     }
 
 }

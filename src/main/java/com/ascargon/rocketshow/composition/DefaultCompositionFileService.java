@@ -3,6 +3,7 @@ package com.ascargon.rocketshow.composition;
 import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
+import com.ascargon.rocketshow.util.ChunkedFileUploadService;
 import com.ascargon.rocketshow.util.FileFilterService;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
 import org.apache.commons.io.FilenameUtils;
@@ -25,10 +26,16 @@ public class DefaultCompositionFileService implements CompositionFileService {
 
     private final SettingsService settingsService;
     private final FileFilterService fileFilterService;
+    private final ChunkedFileUploadService chunkedFileUploadService;
 
-    public DefaultCompositionFileService(SettingsService settingsService, FileFilterService fileFilterService) {
+    public DefaultCompositionFileService(
+            SettingsService settingsService,
+            FileFilterService fileFilterService,
+            ChunkedFileUploadService chunkedFileUploadService
+    ) {
         this.settingsService = settingsService;
         this.fileFilterService = fileFilterService;
+        this.chunkedFileUploadService = chunkedFileUploadService;
     }
 
     @Override
@@ -127,37 +134,42 @@ public class DefaultCompositionFileService implements CompositionFileService {
         }
     }
 
-    @Override
-    public CompositionFile saveFile(InputStream uploadedInputStream, String fileName) throws Exception {
+    private CompositionFile.CompositionFileType saveFileGetFileType(String fileName) throws Exception {
         String[] midiFormats = {"midi", "mid"};
         String[] audioFormats = {"wav", "wave", "mp3", "aac", "ogg", "oga", "mogg", "wma"};
         String[] videoFormats = {"avi", "mpg", "mpeg", "mkv", "mp4", "mov", "m4a", "m4v"};
 
-        CompositionFile compositionFile = null;
-
-        // Compute the path according to the file extension
         String extension = FilenameUtils.getExtension(fileName).toLowerCase().trim();
-        String path = settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getMediaPath() + File.separator;
 
         if (Arrays.asList(midiFormats).contains(extension)) {
-            path += settingsService.getSettings().getMidiPath();
-            compositionFile = new MidiCompositionFile();
+            return CompositionFile.CompositionFileType.MIDI;
         } else if (Arrays.asList(audioFormats).contains(extension)) {
-            path += settingsService.getSettings().getAudioPath();
-            compositionFile = new AudioCompositionFile();
+            return CompositionFile.CompositionFileType.AUDIO;
         } else if (Arrays.asList(videoFormats).contains(extension)) {
-            path += settingsService.getSettings().getVideoPath();
-            compositionFile = new VideoCompositionFile();
+            return CompositionFile.CompositionFileType.VIDEO;
         } else {
             throw new Exception("No valid file format");
         }
+    }
+
+    private File saveFileGetFile(String fileName) throws Exception {
+        CompositionFile.CompositionFileType fileType = saveFileGetFileType(fileName);
+
+        String path = settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getMediaPath() + File.separator;
+
+        switch (fileType) {
+            case MIDI -> {
+                path += settingsService.getSettings().getMidiPath();
+            }
+            case AUDIO -> {
+                path += settingsService.getSettings().getAudioPath();
+            }
+            case VIDEO -> {
+                path += settingsService.getSettings().getVideoPath();
+            }
+        }
 
         path += File.separator;
-
-        if (compositionFile == null) {
-            // We could not determine the file type -> don't store the file
-            return null;
-        }
 
         try {
             createDirectoryIfNotExists(path);
@@ -165,33 +177,45 @@ public class DefaultCompositionFileService implements CompositionFileService {
             logger.error("Could not create directory to save the file", e);
         }
 
-        compositionFile.setName(fileName);
-
         path += fileName;
 
-        logger.info("Uploading file " + fileName + "...");
+        return new File(path);
+    }
 
-        try {
-            OutputStream out;
-            int read;
-            byte[] bytes = new byte[1024];
-
-            out = new FileOutputStream(new File(path));
-
-            while ((read = uploadedInputStream.read(bytes)) != -1) {
-                out.write(bytes, 0, read);
+    @Override
+    public void saveFileInit(String fileName) throws Exception {
+        File file = saveFileGetFile(fileName);
+        if (file.exists()) {
+            boolean result = file.delete();
+            if (!result) {
+                throw new Exception("Could not delete composition file '" + file.getPath() + "'");
             }
+        }
+    }
 
-            out.flush();
-            out.close();
-        } catch (IOException e) {
-            logger.error("Could not save file '" + fileName + "'", e);
+    @Override
+    public void saveFileAddChunk(InputStream inputStream, String fileName) throws Exception {
+        chunkedFileUploadService.handleChunk(inputStream, saveFileGetFile(fileName));
+    }
 
-            // Delete the temporary file, if necessary
-            deleteFile(fileName, compositionFile.getType().toString());
+    @Override
+    public CompositionFile saveFileFinish(String fileName) throws Exception {
+        CompositionFile compositionFile = null;
+        CompositionFile.CompositionFileType fileType = saveFileGetFileType(fileName);
+
+        switch (fileType) {
+            case MIDI -> {
+                compositionFile = new MidiCompositionFile();
+            }
+            case AUDIO -> {
+                compositionFile = new AudioCompositionFile();
+            }
+            case VIDEO -> {
+                compositionFile = new VideoCompositionFile();
+            }
         }
 
-        logger.info("File " + fileName + " successfully uploaded");
+        compositionFile.setName(fileName);
 
         return compositionFile;
     }

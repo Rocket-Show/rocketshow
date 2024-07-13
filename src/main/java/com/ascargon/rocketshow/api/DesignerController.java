@@ -5,6 +5,7 @@ import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.lighting.designer.FixtureService;
 import com.ascargon.rocketshow.lighting.designer.Project;
 import com.ascargon.rocketshow.lighting.designer.SearchFixtureTemplate;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
@@ -18,14 +19,21 @@ import java.util.List;
 @CrossOrigin
 public class DesignerController {
 
+    private final ControllerService controllerService;
     private final FixtureService fixtureService;
     private final DesignerService designerService;
     private final SettingsService settingsService;
 
-    public DesignerController(FixtureService fixtureService, DesignerService designerService, SettingsService settingsService) {
+    public DesignerController(ControllerService controllerService, FixtureService fixtureService, DesignerService designerService, SettingsService settingsService) {
+        this.controllerService = controllerService;
         this.fixtureService = fixtureService;
         this.designerService = designerService;
         this.settingsService = settingsService;
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(Exception exception) {
+        return controllerService.handleException(exception);
     }
 
     @GetMapping("fixtures")
@@ -49,7 +57,7 @@ public class DesignerController {
         designerService.setPreviewPreset(project.isPreviewPreset());
         designerService.setSelectedPresetUuid(project.getSelectedPresetUuid());
         designerService.setSelectedSceneUuids(project.getSelectedSceneUuids());
-        if (compositionName != null && compositionName.length() > 0) {
+        if (compositionName != null && !compositionName.isEmpty()) {
             designerService.setPreviewComposition(compositionName);
         }
         designerService.startPreview(positionMillis);
