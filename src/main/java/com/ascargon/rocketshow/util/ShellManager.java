@@ -1,45 +1,68 @@
 package com.ascargon.rocketshow.util;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class ShellManager {
 
-	private Process process;
-	private PrintStream outStream;
+    private final static Logger logger = LoggerFactory.getLogger(ShellManager.class);
 
-	public ShellManager(String[] command) throws IOException {
-		//process = Runtime.getRuntime().exec(command);
-		process = new ProcessBuilder(command).redirectErrorStream(true).start();
-		outStream = new PrintStream(process.getOutputStream());
-	}
+    private Process process;
+    private PrintStream outStream;
 
-	public void sendCommand(String command, boolean newLine) {
-		if (newLine) {
-			outStream.println(command);
-		} else {
-			outStream.print(command);
-		}
-		outStream.flush();
-	}
+    public ShellManager(String[] command) throws IOException {
+        logger.debug("Execute shell command: " + String.join(" ", command));
 
-	public InputStream getInputStream() {
-		return process.getInputStream();
-	}
+        process = new ProcessBuilder(command).redirectErrorStream(true).start();
+        outStream = new PrintStream(process.getOutputStream());
 
-	public void close() {
-		if (process != null) {
-			process.destroy();
-		}
-	}
+        if (logger.isDebugEnabled()) {
+            // log the output from the call
+            logInputStreamAsync(process.getInputStream());
+        }
+    }
 
-	public Process getProcess() {
-		return process;
-	}
+    public static void logInputStreamAsync(InputStream inputStream) {
+        Runnable task = () -> {
+            StringBuilder sb = new StringBuilder();
+            String line;
 
-	public void setProcess(Process process) {
-		this.process = process;
-	}
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line).append(System.lineSeparator());
+                }
+            } catch (IOException e) {
+                logger.error("Error reading shell command output", e);
+            }
+
+            logger.info("Shell command output:\n{}", sb.toString());
+        };
+
+        Thread thread = new Thread(task);
+        thread.start();
+    }
+
+    public void sendCommand(String command, boolean newLine) {
+        if (newLine) {
+            outStream.println(command);
+        } else {
+            outStream.print(command);
+        }
+        outStream.flush();
+    }
+
+    public void close() {
+        if (process != null) {
+            process.destroy();
+        }
+    }
+
+    public Process getProcess() {
+        return process;
+    }
 
 }

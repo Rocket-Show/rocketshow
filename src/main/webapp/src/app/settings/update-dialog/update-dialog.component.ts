@@ -6,6 +6,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { BsModalRef } from 'ngx-bootstrap/modal';
 import { State } from '../../models/state';
 import { Version } from '../../models/version';
+import { ReloadClearCacheService } from '../../services/reload-clear-cache.service';
 
 @Component({
   selector: 'app-update-dialog',
@@ -29,7 +30,9 @@ export class UpdateDialogComponent implements OnInit, OnDestroy {
   constructor(
     private bsModalRef: BsModalRef,
     public updateService: UpdateService,
-    private stateService: StateService) { }
+    private stateService: StateService,
+    private reloadClearCacheService: ReloadClearCacheService
+  ) { }
 
   ngOnInit() {
     this.onClose = new Subject();
@@ -165,7 +168,7 @@ export class UpdateDialogComponent implements OnInit, OnDestroy {
     if (this.updateFinished) {
       // Reload the page (caching has been disabled in Angular CLI and we
       // therefore automatically receive the new version of the app)
-      location.reload();
+      this.reloadClearCacheService.reload();
     } else {
       this.onClose.next(1);
       this.bsModalRef.hide();

@@ -1,4 +1,4 @@
-<div class="card-modal">
+<div *ngIf="!isRestoringBackup" class="card-modal">
   <div class="card">
     <div class="card-header">
       {{ "settings.backup.title" | translate }}
@@ -7,7 +7,7 @@
     <div class="card-body">
       <app-dropzone
         [url]="'system/restore-backup'"
-        [acceptedFiles]="'.zip'"
+        [acceptedFiles]="'.gz'"
         [maxFiles]="1"
         (error)="onUploadError($event)"
         (success)="onUploadSuccess($event)"

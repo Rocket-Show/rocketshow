@@ -17,10 +17,17 @@ import java.util.List;
 @CrossOrigin
 public class CompositionFileController {
 
+    private final ControllerService controllerService;
     private final CompositionFileService compositionFileService;
 
-    public CompositionFileController(CompositionFileService compositionFileService) {
+    public CompositionFileController(ControllerService controllerService, CompositionFileService compositionFileService) {
+        this.controllerService = controllerService;
         this.compositionFileService = compositionFileService;
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(Exception exception) {
+        return controllerService.handleException(exception);
     }
 
     @GetMapping("list")

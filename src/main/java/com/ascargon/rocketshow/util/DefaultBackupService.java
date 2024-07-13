@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -27,17 +28,12 @@ public class DefaultBackupService implements BackupService {
     private final ChunkedFileUploadService chunkedFileUploadService;
     private final RebootService rebootService;
 
-    private final static String BACKUP_FILE_NAME = "backup.zip";
+    private final static String BACKUP_FILE_NAME = "backup.tar.gz";
 
     private final File backupFile;
+    private final String workingDirectory;
 
-    public DefaultBackupService(
-            SettingsService settingsService,
-            DiskSpaceService diskSpaceService,
-            ZipService zipService,
-            ChunkedFileUploadService chunkedFileUploadService,
-            RebootService rebootService
-    ) {
+    public DefaultBackupService(SettingsService settingsService, DiskSpaceService diskSpaceService, ZipService zipService, ChunkedFileUploadService chunkedFileUploadService, RebootService rebootService) {
         this.settingsService = settingsService;
         this.diskSpaceService = diskSpaceService;
         this.zipService = zipService;
@@ -45,6 +41,8 @@ public class DefaultBackupService implements BackupService {
         this.rebootService = rebootService;
 
         backupFile = new File(settingsService.getSettings().getBasePath() + BACKUP_FILE_NAME);
+        workingDirectory = new File(settingsService.getSettings().getBasePath()).getName();
+
     }
 
     private void deleteBackupFile() throws Exception {
@@ -68,24 +66,17 @@ public class DefaultBackupService implements BackupService {
 
         if (diskSpace.getUsedMB() > 0) {
             // does not work on the mac e.g.
-            long freeFiskSpacePercentage = Math.round(100 * diskSpace.getUsedMB() / (diskSpace.getUsedMB() + diskSpace.getAvailableMB()));
-            if (freeFiskSpacePercentage < 50) {
+            long usedDiskSpacePercentage = Math.round(100 * diskSpace.getUsedMB() / (diskSpace.getUsedMB() + diskSpace.getAvailableMB()));
+            if (usedDiskSpacePercentage > 50) {
                 throw new Exception("Not enough free disk space available on the device to create the backup (at least 50% required).");
             }
         }
 
-        // zip the complete rocket show directory
-        FileOutputStream fileOutputStream = new FileOutputStream(BACKUP_FILE_NAME);
-        ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream);
-        File fileToZip = new File(settingsService.getSettings().getBasePath());
-
-        List<String> ignoreFileNameList = new ArrayList<>();
-        ignoreFileNameList.add(BACKUP_FILE_NAME);
-        ignoreFileNameList.add(LogDownloadService.LOGS_FILE_NAME);
-
-        zipService.zipFile(fileToZip, fileToZip.getName(), zipOutputStream, ignoreFileNameList);
-        zipOutputStream.close();
-        fileOutputStream.close();
+        // tar the complete rocket show directory
+        // don't use zip, because the file permissions (e.g. execution rights) are not preserved easily with java
+        ShellManager shellManager = new ShellManager(new String[]{"bash", "-c", "cd " + settingsService.getSettings().getBasePath() + ".. && tar -czpf " + workingDirectory + File.separator + BACKUP_FILE_NAME + " --exclude='" + BACKUP_FILE_NAME + "' " + workingDirectory + File.separator});
+        shellManager.getProcess().waitFor();
+        shellManager.close();
 
         // Return the prepared zip
         return backupFile;
@@ -106,25 +97,43 @@ public class DefaultBackupService implements BackupService {
         // automatic restore only works linux-based environments
         logger.info("Start restoring backup...");
 
-        // unzip backup.zip
-        zipService.unzipFile(backupFile.getPath(), new File(settingsService.getSettings().getBasePath()));
+        // run async
+        Runnable task = () -> {
+            ShellManager shellManager;
 
-        ShellManager shellManager = new ShellManager(new String[]{"sh"});
+            try {
+                // unpack the backup-file
+                shellManager = new ShellManager(new String[]{"tar", "-xzpf", settingsService.getSettings().getBasePath() + BACKUP_FILE_NAME});
 
-        String workingDirectory = new File(settingsService.getSettings().getBasePath()).getName();
+                shellManager.getProcess().waitFor();
+                shellManager.close();
 
-        // delete all files/directories in the basepath, except the subdirectory rocketshow we just unzipped
-        shellManager.sendCommand("find " + settingsService.getSettings().getBasePath() + " -mindepth 1 -maxdepth 1 ! -name " + workingDirectory + " -exec rm -rf {} +", true);
+                // delete all files/directories in the basepath, except the subdirectory rocketshow we just unzipped
+                shellManager = new ShellManager(new String[]{"find", settingsService.getSettings().getBasePath(), "-mindepth", "1", "-maxdepth", "1", "!", "-name", workingDirectory, "-exec", "rm", "-rf", "{}", "+"});
+                shellManager.getProcess().waitFor();
+                shellManager.close();
 
-        // move the contents of the rocketshow subdirectory to its parent directory
-        shellManager.sendCommand("mv " + settingsService.getSettings().getBasePath() + workingDirectory + File.separator + "* " + settingsService.getSettings().getBasePath(), true);
+                // move the contents of the rocketshow subdirectory to its parent directory
+                // invoke a bash shell in order to use a wildcard in the path
+                shellManager = new ShellManager(new String[]{"bash", "-c", "mv " + settingsService.getSettings().getBasePath() + workingDirectory + File.separator + "* " + settingsService.getSettings().getBasePath()});
+                shellManager.getProcess().waitFor();
+                shellManager.close();
 
-        // delete the rocketshow subdirectory
-        shellManager.sendCommand("rmdir " + settingsService.getSettings().getBasePath() + workingDirectory, true);
+                // delete the rocketshow subdirectory
+                shellManager = new ShellManager(new String[]{"rm", "-rf", settingsService.getSettings().getBasePath() + workingDirectory});
+                shellManager.getProcess().waitFor();
+                shellManager.close();
 
-        logger.info("Backup has been restored. Reboot...");
+                logger.info("Backup has been restored. Reboot...");
 
-        rebootService.reboot();
+                rebootService.reboot();
+            } catch (Exception e) {
+                logger.error("Could not restore backup", e);
+            }
+        };
+
+        Thread thread = new Thread(task);
+        thread.start();
     }
 
 }

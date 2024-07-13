@@ -6,6 +6,7 @@ import { WaitDialogService } from "../../services/wait-dialog.service";
 import { map } from "rxjs/operators";
 import { State } from "../../models/state";
 import { InfoDialogService } from "../../services/info-dialog.service";
+import { ReloadClearCacheService } from "../../services/reload-clear-cache.service";
 
 @Component({
   selector: "app-backup-restore-dialog",
@@ -17,13 +18,14 @@ export class BackupRestoreDialogComponent implements OnInit, OnDestroy {
   uploading: boolean = false;
 
   private stateChangedSubscription: Subscription;
-  private isRestoringBackup: boolean = false;
+  public isRestoringBackup: boolean = false;
 
   constructor(
     private bsModalRef: BsModalRef,
     private stateService: StateService,
     private waitDialogService: WaitDialogService,
-    private infoDialogService: InfoDialogService
+    private infoDialogService: InfoDialogService,
+    private reloadClearCacheService: ReloadClearCacheService
   ) {}
 
   ngOnInit() {
@@ -34,13 +36,11 @@ export class BackupRestoreDialogComponent implements OnInit, OnDestroy {
         if (this.isRestoringBackup) {
           // We got a new state after restoring the backup
           // -> the device has been resetted
-          this.isRestoringBackup = false;
-
           this.infoDialogService
             .show("settings.backup.restore-done")
             .pipe(
               map(() => {
-                location.reload();
+                this.reloadClearCacheService.reload();
               })
             )
             .subscribe();
@@ -71,6 +71,5 @@ export class BackupRestoreDialogComponent implements OnInit, OnDestroy {
     this.uploading = false;
     this.waitDialogService.show("settings.backup.wait-restore");
     this.isRestoringBackup = true;
-    this.bsModalRef.hide();
   }
 }

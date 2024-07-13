@@ -9,13 +9,14 @@ import { SettingsService } from "../../services/settings.service";
 import { CompositionService } from "../../services/composition.service";
 import { Composition } from "../../models/composition";
 import { Version } from "../../models/version";
-import { map } from "rxjs/operators";
+import { catchError, finalize, map } from "rxjs/operators";
 import { OperatingSystemInformation } from "../../models/operating-system-information";
 import { OperatingSystemInformationService } from "../../services/operating-system-information.service";
 import { Subscription } from "rxjs";
 import { BackupRestoreDialogComponent } from "../backup-restore-dialog/backup-restore-dialog.component";
 import { saveAs } from "file-saver/FileSaver";
 import { WaitDialogService } from "../../services/wait-dialog.service";
+import { ToastGeneralErrorService } from "../../services/toast-general-error.service";
 
 @Component({
   selector: "app-settings-system",
@@ -41,6 +42,7 @@ export class SettingsSystemComponent implements OnInit, OnDestroy {
     private modalService: BsModalService,
     private operatingSystemInformationService: OperatingSystemInformationService,
     private waitDialogService: WaitDialogService,
+    private toastGeneralErrorService: ToastGeneralErrorService,
   ) {
     this.operatingSystemInformationService
       .getOperatingSystemInformation()
@@ -131,15 +133,22 @@ export class SettingsSystemComponent implements OnInit, OnDestroy {
   }
 
   private downloadFile(blob: Blob) {
-    saveAs(blob, "rocket-show-backup-" + this.getCurrentDateString() + ".zip");
+    saveAs(blob, "rocket-show-backup-" + this.getCurrentDateString() + ".tar.gz");
   }
 
   backupCreate() {
-    this.waitDialogService.show('settings.backup.wait-create');
+    this.waitDialogService.show("settings.backup.wait-create");
     this.http
       .get("system/create-backup", { responseType: "blob" })
-      .subscribe((blob) => {
-        this.waitDialogService.hide();
+      .pipe(
+        catchError((err) => {
+          return this.toastGeneralErrorService.show(err);
+        }),
+        finalize(() => {
+          this.waitDialogService.hide();
+        })
+      )
+      .subscribe((blob: any) => {
         this.downloadFile(blob);
       });
   }

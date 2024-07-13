@@ -29,6 +29,7 @@ class SystemController {
 
     private final static Logger logger = LoggerFactory.getLogger(SystemController.class);
 
+    private final ControllerService controllerService;
     private final StateService stateService;
     private final SetService setService;
     private final PlayerService playerService;
@@ -47,7 +48,8 @@ class SystemController {
     private final DesignerService designerService;
     private final BackupService backupService;
 
-    public SystemController(StateService stateService, SetService setService, PlayerService playerService, RebootService rebootService, ShutdownService shutdownService, SettingsService settingsService, MidiDeviceInService midiDeviceInService, MidiDeviceOutService midiDeviceOutService, UpdateService updateService, FactoryResetService factoryResetService, LogDownloadService logDownloadService, DiskSpaceService diskSpaceService, OperatingSystemInformationService operatingSystemInformationService, SessionService sessionService, CompositionService compositionService, DesignerService designerService, BackupService backupService) {
+    public SystemController(ControllerService controllerService, StateService stateService, SetService setService, PlayerService playerService, RebootService rebootService, ShutdownService shutdownService, SettingsService settingsService, MidiDeviceInService midiDeviceInService, MidiDeviceOutService midiDeviceOutService, UpdateService updateService, FactoryResetService factoryResetService, LogDownloadService logDownloadService, DiskSpaceService diskSpaceService, OperatingSystemInformationService operatingSystemInformationService, SessionService sessionService, CompositionService compositionService, DesignerService designerService, BackupService backupService) {
+        this.controllerService = controllerService;
         this.stateService = stateService;
         this.setService = setService;
         this.playerService = playerService;
@@ -65,6 +67,11 @@ class SystemController {
         this.compositionService = compositionService;
         this.designerService = designerService;
         this.backupService = backupService;
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(Exception exception) {
+        return controllerService.handleException(exception);
     }
 
     @PostMapping("reboot")

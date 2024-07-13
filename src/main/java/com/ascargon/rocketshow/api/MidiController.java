@@ -17,18 +17,25 @@ import java.util.List;
 @CrossOrigin
 class MidiController {
 
+    private final ControllerService controllerService;
     private final ActivityNotificationMidiService activityNotificationMidiService;
     private final MidiService midiService;
     private final MidiControlActionExecutionService midiControlActionExecutionService;
 
     private MidiRouter midiRouter;
 
-    private MidiController(SettingsService settingsService, ActivityNotificationMidiService activityNotificationMidiService, MidiService midiService, MidiControlActionExecutionService midiControlActionExecutionService, Midi2LightingConvertService midi2LightingConvertService, LightingService lightingService, MidiDeviceOutService midiDeviceOutService) {
+    private MidiController(ControllerService controllerService, SettingsService settingsService, ActivityNotificationMidiService activityNotificationMidiService, MidiService midiService, MidiControlActionExecutionService midiControlActionExecutionService, Midi2LightingConvertService midi2LightingConvertService, LightingService lightingService, MidiDeviceOutService midiDeviceOutService) {
+        this.controllerService = controllerService;
         this.activityNotificationMidiService = activityNotificationMidiService;
         this.midiService = midiService;
         this.midiControlActionExecutionService = midiControlActionExecutionService;
 
         midiRouter = new MidiRouter(settingsService, midi2LightingConvertService, lightingService, midiDeviceOutService, activityNotificationMidiService, settingsService.getSettings().getRemoteMidiRoutingList());
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(Exception exception) {
+        return controllerService.handleException(exception);
     }
 
     @GetMapping("in-devices")

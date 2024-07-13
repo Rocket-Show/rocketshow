@@ -17,10 +17,17 @@ import java.util.List;
 @CrossOrigin
 public class LeadSheetController {
 
+    private final ControllerService controllerService;
     private final LeadSheetService leadSheetService;
 
-    public LeadSheetController(LeadSheetService leadSheetService) {
+    public LeadSheetController(ControllerService controllerService, LeadSheetService leadSheetService) {
+        this.controllerService = controllerService;
         this.leadSheetService = leadSheetService;
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(Exception exception) {
+        return controllerService.handleException(exception);
     }
 
     @GetMapping("list")

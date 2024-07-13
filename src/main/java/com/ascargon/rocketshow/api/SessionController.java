@@ -10,10 +10,17 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin
 public class SessionController {
 
+    private final ControllerService controllerService;
     private final SessionService sessionService;
 
-    public SessionController(SessionService sessionService) {
+    public SessionController(ControllerService controllerService, SessionService sessionService) {
+        this.controllerService = controllerService;
         this.sessionService = sessionService;
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(Exception exception) {
+        return controllerService.handleException(exception);
     }
 
     @GetMapping
