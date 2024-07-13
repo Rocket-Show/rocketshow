@@ -103,6 +103,7 @@ public class DefaultBackupService implements BackupService {
 
     @Override
     public void restoreFinish() throws Exception {
+        // automatic restore only works linux-based environments
         logger.info("Start restoring backup...");
 
         // unzip backup.zip
