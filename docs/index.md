@@ -5,4 +5,4 @@ devices.
 
 ## Index
 
-- [Getting Started](./getting-started.md)
+- [Getting Started](getting-started/getting-started.md)
