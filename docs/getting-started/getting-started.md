@@ -187,6 +187,10 @@ If you can control your DMX fixtures from this page then you have confirmed that
 
 ![DMX Information](images/image7.png)
 
+In this example I’m sending DMX information to the first 4 channels of this simple DMX light. The master dimmer (ch1=84), red (ch2=184), green (ch 3=181) and blue (ch4=169)
+
+![Resulting Light](images/image14.png)
+
 Note: any time you plug or unplug the DMX interface you need to reboot the Pi for the change to take effect.
 
 ### Verify Rocket Show can run video and sound with synchronized DMX lighting presets made in Rocket Show Designer (in 5 parts)
