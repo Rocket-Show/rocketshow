@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <versionInfo>
-    <version>2.3.7</version>
-    <date>2024-05-13</date>
+    <version>2.3.8</version>
+    <date>2024-07-23</date>
     <changeNoteList>
+        <changeNote>
+            <version>2.3.8</version>
+            <changes>Only include relevant files in the backup to increase compatibility between different Rocket Show releases.</changes>
+        </changeNote>
         <changeNote>
             <version>2.3.7</version>
             <changes>Option to create and restore backups (settings -> system). Upload size limit for all kind of files has been removed. Fixed light rays in the show designer for newer browser versions.</changes>

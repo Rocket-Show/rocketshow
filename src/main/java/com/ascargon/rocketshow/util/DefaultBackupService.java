@@ -8,7 +8,9 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -22,9 +24,10 @@ public class DefaultBackupService implements BackupService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultBackupService.class);
 
+    private final List<String> backedUpFileList = Arrays.asList("compositions", "fixtures", "media", "session.xml", "settings.xml");
+
     private final SettingsService settingsService;
     private final DiskSpaceService diskSpaceService;
-    private final ZipService zipService;
     private final ChunkedFileUploadService chunkedFileUploadService;
     private final RebootService rebootService;
 
@@ -33,16 +36,14 @@ public class DefaultBackupService implements BackupService {
     private final File backupFile;
     private final String workingDirectory;
 
-    public DefaultBackupService(SettingsService settingsService, DiskSpaceService diskSpaceService, ZipService zipService, ChunkedFileUploadService chunkedFileUploadService, RebootService rebootService) {
+    public DefaultBackupService(SettingsService settingsService, DiskSpaceService diskSpaceService, ChunkedFileUploadService chunkedFileUploadService, RebootService rebootService) {
         this.settingsService = settingsService;
         this.diskSpaceService = diskSpaceService;
-        this.zipService = zipService;
         this.chunkedFileUploadService = chunkedFileUploadService;
         this.rebootService = rebootService;
 
         backupFile = new File(settingsService.getSettings().getBasePath() + BACKUP_FILE_NAME);
         workingDirectory = new File(settingsService.getSettings().getBasePath()).getName();
-
     }
 
     private void deleteBackupFile() throws Exception {
@@ -72,9 +73,9 @@ public class DefaultBackupService implements BackupService {
             }
         }
 
-        // tar the complete rocket show directory
+        // tar all backed up files
         // don't use zip, because the file permissions (e.g. execution rights) are not preserved easily with java
-        ShellManager shellManager = new ShellManager(new String[]{"bash", "-c", "cd " + settingsService.getSettings().getBasePath() + ".. && tar -czpf " + workingDirectory + File.separator + BACKUP_FILE_NAME + " --exclude='" + BACKUP_FILE_NAME + "' " + workingDirectory + File.separator});
+        ShellManager shellManager = new ShellManager(new String[]{"bash", "-c", "cd " + settingsService.getSettings().getBasePath() + " && tar -czpf " + BACKUP_FILE_NAME + " " + String.join(" ", backedUpFileList)});
         shellManager.getProcess().waitFor();
         shellManager.close();
 
@@ -102,25 +103,18 @@ public class DefaultBackupService implements BackupService {
             ShellManager shellManager;
 
             try {
+                // delete all backed up files/directories in the basepath
+                shellManager = new ShellManager(new String[]{"bash", "-c", "rm -rf " + String.join(" ", backedUpFileList)});
+                shellManager.getProcess().waitFor();
+                shellManager.close();
+
                 // unpack the backup-file
                 shellManager = new ShellManager(new String[]{"tar", "-xzpf", settingsService.getSettings().getBasePath() + BACKUP_FILE_NAME});
-
                 shellManager.getProcess().waitFor();
                 shellManager.close();
 
-                // delete all files/directories in the basepath, except the subdirectory rocketshow we just unzipped
-                shellManager = new ShellManager(new String[]{"find", settingsService.getSettings().getBasePath(), "-mindepth", "1", "-maxdepth", "1", "!", "-name", workingDirectory, "-exec", "rm", "-rf", "{}", "+"});
-                shellManager.getProcess().waitFor();
-                shellManager.close();
-
-                // move the contents of the rocketshow subdirectory to its parent directory
-                // invoke a bash shell in order to use a wildcard in the path
-                shellManager = new ShellManager(new String[]{"bash", "-c", "mv " + settingsService.getSettings().getBasePath() + workingDirectory + File.separator + "* " + settingsService.getSettings().getBasePath()});
-                shellManager.getProcess().waitFor();
-                shellManager.close();
-
-                // delete the rocketshow subdirectory
-                shellManager = new ShellManager(new String[]{"rm", "-rf", settingsService.getSettings().getBasePath() + workingDirectory});
+                // delete the backup file
+                shellManager = new ShellManager(new String[]{"rm", "-rf", settingsService.getSettings().getBasePath() + BACKUP_FILE_NAME});
                 shellManager.getProcess().waitFor();
                 shellManager.close();
 

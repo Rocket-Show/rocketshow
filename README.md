@@ -3,6 +3,8 @@
 Rocket Show is a system to automate and play shows including audio, video, lighting (e.g. DMX) and MIDI on Raspberry Pi
 devices.
 
+Check our website: https://rocketshow.net
+
 ## Usage
 
 Refer to [the docs](./docs/index.md) to find out how to use Rocket Show.
