@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <versionInfo>
-    <version>2.3.8</version>
-    <date>2024-07-23</date>
+    <version>2.3.9</version>
+    <date>2024-07-31</date>
     <changeNoteList>
+        <changeNote>
+            <version>2.3.9</version>
+            <changes>Also backup designer projects</changes>
+        </changeNote>
         <changeNote>
             <version>2.3.8</version>
             <changes>Only include relevant files in the backup to increase compatibility between different Rocket Show releases.</changes>

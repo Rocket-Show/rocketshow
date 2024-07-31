@@ -24,7 +24,7 @@ public class DefaultBackupService implements BackupService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultBackupService.class);
 
-    private final List<String> backedUpFileList = Arrays.asList("compositions", "fixtures", "media", "session.xml", "settings.xml");
+    private final List<String> backedUpFileList = Arrays.asList("compositions", "designer", "fixtures", "media", "session.xml", "settings.xml");
 
     private final SettingsService settingsService;
     private final DiskSpaceService diskSpaceService;
