@@ -45,7 +45,7 @@ public class DefaultFixtureService implements FixtureService {
         basePath = settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getFixturePath();
     }
 
-    private void processManufacturerDirectory(String manufacturerShortName, String manufacturerName, List<SearchFixtureTemplate> searchFixtureTemplates) throws IOException {
+    private void processManufacturerDirectory(String manufacturerShortName, String manufacturerName, List<SearchFixtureTemplate> searchFixtureTemplates) throws Exception {
         File folder;
         File[] fileList;
 
@@ -60,21 +60,25 @@ public class DefaultFixtureService implements FixtureService {
                     logger.debug("Load fixture " + file.getAbsolutePath());
 
                     ObjectMapper mapper = new ObjectMapper();
-                    FixtureProfile fixtureProfile = mapper.readValue(file, FixtureProfile.class);
+                    try {
+                        FixtureProfile fixtureProfile = mapper.readValue(file, FixtureProfile.class);
 
-                    SearchFixtureTemplate searchFixtureTemplate = new SearchFixtureTemplate();
-                    searchFixtureTemplate.setUuid(manufacturerShortName + "/" + file.getName().substring(0, file.getName().length() - 5));
-                    searchFixtureTemplate.setName(fixtureProfile.getName());
-                    searchFixtureTemplate.setManufacturerShortName(manufacturerShortName);
-                    searchFixtureTemplate.setManufacturerName(manufacturerName);
+                        SearchFixtureTemplate searchFixtureTemplate = new SearchFixtureTemplate();
+                        searchFixtureTemplate.setUuid(manufacturerShortName + "/" + file.getName().substring(0, file.getName().length() - 5));
+                        searchFixtureTemplate.setName(fixtureProfile.getName());
+                        searchFixtureTemplate.setManufacturerShortName(manufacturerShortName);
+                        searchFixtureTemplate.setManufacturerName(manufacturerName);
 
-                    searchFixtureTemplates.add(searchFixtureTemplate);
+                        searchFixtureTemplates.add(searchFixtureTemplate);
+                    } catch (Exception e) {
+                        throw new Exception("Could not parse fixture " + file.getPath(), e);
+                    }
                 }
             }
         }
     }
 
-    private void buildCache() throws IOException {
+    private void buildCache() throws Exception {
         List<SearchFixtureTemplate> searchFixtureTemplates = new ArrayList<>();
 
         ObjectMapper mapper = new ObjectMapper();
@@ -96,7 +100,7 @@ public class DefaultFixtureService implements FixtureService {
     }
 
     @Override
-    public List<SearchFixtureTemplate> searchFixtures(String uuid, String manufacturerShortName, String name, String mainCategory) throws IOException {
+    public List<SearchFixtureTemplate> searchFixtures(String uuid, String manufacturerShortName, String name, String mainCategory) throws Exception {
         // Return a list of fixtures based on the search criteria
 
         if (searchFixtureTemplates == null) {

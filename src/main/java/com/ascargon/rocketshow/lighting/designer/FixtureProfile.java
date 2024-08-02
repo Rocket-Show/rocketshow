@@ -42,8 +42,12 @@ class FixtureProfile {
     private String uuid;
     private String name;
     private List<FixtureCategory> categories;
+    private FixturePhysical physical;
+    private FixtureMatrix matrix;
     @JsonUnwrapped
     private FixtureProfileAvailableChannels availableChannels;
+    @JsonUnwrapped
+    private FixtureProfileTemplateChannels templateChannels;
     @JsonUnwrapped
     private FixtureProfileWheels wheels;
     private List<FixtureMode> modes;
@@ -72,12 +76,36 @@ class FixtureProfile {
         this.categories = categories;
     }
 
+    public FixturePhysical getPhysical() {
+        return physical;
+    }
+
+    public void setPhysical(FixturePhysical physical) {
+        this.physical = physical;
+    }
+
+    public FixtureMatrix getMatrix() {
+        return matrix;
+    }
+
+    public void setMatrix(FixtureMatrix matrix) {
+        this.matrix = matrix;
+    }
+
     public FixtureProfileAvailableChannels getAvailableChannels() {
         return availableChannels;
     }
 
     public void setAvailableChannels(FixtureProfileAvailableChannels availableChannels) {
         this.availableChannels = availableChannels;
+    }
+
+    public FixtureProfileTemplateChannels getTemplateChannels() {
+        return templateChannels;
+    }
+
+    public void setTemplateChannels(FixtureProfileTemplateChannels templateChannels) {
+        this.templateChannels = templateChannels;
     }
 
     public FixtureProfileWheels getWheels() {

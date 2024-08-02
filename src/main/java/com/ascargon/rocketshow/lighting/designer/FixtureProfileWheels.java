@@ -8,7 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * The wheels inside a fixture template. Used for @JsonAnySetter to work only on this part.
+ * The wheels inside a fixture template.
+ * Used for @JsonAnySetter to work only on this part, because the object name in the JSON is dynamic.
  *
  * @author Moritz A. Vieli
  */

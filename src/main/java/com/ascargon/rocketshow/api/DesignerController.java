@@ -37,12 +37,12 @@ public class DesignerController {
     }
 
     @GetMapping("fixtures")
-    public List<SearchFixtureTemplate> searchFixtures(@RequestParam(value = "uuid", required = false) String uuid, @RequestParam(value = "manufacturerShortName", required = false) String manufacturerShortName, @RequestParam(value = "name", required = false) String name, @RequestParam(value = "mainCategory", required = false) String mainCategory) throws IOException {
+    public List<SearchFixtureTemplate> searchFixtures(@RequestParam(value = "uuid", required = false) String uuid, @RequestParam(value = "manufacturerShortName", required = false) String manufacturerShortName, @RequestParam(value = "name", required = false) String name, @RequestParam(value = "mainCategory", required = false) String mainCategory) throws Exception {
         return fixtureService.searchFixtures(uuid, manufacturerShortName, name, mainCategory);
     }
 
     @GetMapping("fixture")
-    public String getFixture(@RequestParam("uuid") String uuid) throws IOException {
+    public String getFixture(@RequestParam("uuid") String uuid) throws Exception {
         return fixtureService.getFixture(uuid);
     }
 
@@ -95,7 +95,7 @@ public class DesignerController {
     }
 
     @PostMapping("update-profiles")
-    public void updateProfiles() throws IOException {
+    public void updateProfiles() throws Exception {
         fixtureService.updateProfiles();
     }
 

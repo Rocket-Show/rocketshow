@@ -467,17 +467,17 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     private List<CachedFixtureCapability> getCapabilitiesByChannel(FixtureChannel fixtureChannel, String channelName, FixtureProfile profile) {
-        List<CachedFixtureCapability> capabilites = new ArrayList<>();
+        List<CachedFixtureCapability> capabilities = new ArrayList<>();
 
         if (fixtureChannel.getCapability() != null) {
-            capabilites.add(getFixtureCapability(fixtureChannel.getCapability(), channelName, profile));
+            capabilities.add(getFixtureCapability(fixtureChannel.getCapability(), channelName, profile));
         } else if (fixtureChannel.getCapabilities() != null) {
             for (FixtureCapability capability : fixtureChannel.getCapabilities()) {
-                capabilites.add(getFixtureCapability(capability, channelName, profile));
+                capabilities.add(getFixtureCapability(capability, channelName, profile));
             }
         }
 
-        return capabilites;
+        return capabilities;
     }
 
     private boolean capabilitiesMatch(
@@ -967,7 +967,10 @@ public class DefaultDesignerService implements DesignerService {
             for (int channelIndex = 0; channelIndex < entry.getKey().getMode().getChannels().size(); channelIndex++) {
                 Object channelObj = entry.getKey().getMode().getChannels().get(channelIndex);
                 if (channelObj instanceof String) {
+                    // direct reference to a channel
+
                     String channelName = (String) channelObj;
+
                     // match this mode channel with a channel value
                     for (FixtureChannelValue channelValue : entry.getValue()) {
                         CachedFixtureChannel channel = getChannelByName(entry.getKey(), channelName);
@@ -984,6 +987,11 @@ public class DefaultDesignerService implements DesignerService {
                             }
                         }
                     }
+                } else if (channelObj instanceof FixtureModeChannel) {
+                    // reference a channel through a pixel matrix
+
+                    FixtureModeChannel fixtureModeChannel = (FixtureModeChannel) channelObj;
+                    // TODO
                 }
             }
         }
@@ -1058,8 +1066,9 @@ public class DefaultDesignerService implements DesignerService {
 
         for (Map.Entry<String, FixtureChannel> entry : profile.getAvailableChannels().getAvailableChannels().entrySet()) {
             for (Object channel : mode.getChannels()) {
-                // check for string channel. It can get creepy for matrix modes
                 if (channel instanceof String) {
+                    // direct reference to a channel
+
                     String modeChannel = (String) channel;
 
                     // don't check the fine channels. only add the coarse channel.
@@ -1076,6 +1085,11 @@ public class DefaultDesignerService implements DesignerService {
                         cachedFixtureChannel.setColorWheel(getColorWheelByChannel(cachedFixtureChannel, profile));
                         channels.add(cachedFixtureChannel);
                     }
+                } else if (channel instanceof FixtureModeChannel) {
+                    // reference a channel through a pixel matrix
+
+                    FixtureModeChannel fixtureModeChannel = (FixtureModeChannel) channel;
+                    // TODO
                 } else {
                     // null may be passed as a placeholder for an undefined channel
                     channels.add(new CachedFixtureChannel());
