@@ -2,6 +2,7 @@ package com.ascargon.rocketshow.lighting.designer;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.util.List;
 
@@ -15,6 +16,8 @@ public class FixtureMatrix {
 
     private List<List<String>> pixelKeys;
     private List<Integer> pixelCount;
-    @JsonUnwrapped
-    private FixtureProfileMatrixPixelGroups pixelGroups;
+
+    // the list contains objects with a name and constraints
+    @JsonDeserialize(using = FixturePixelGroupMapDeserializer.class)
+    private List<FixtureProfileMatrixPixelGroup> pixelGroups;
 }

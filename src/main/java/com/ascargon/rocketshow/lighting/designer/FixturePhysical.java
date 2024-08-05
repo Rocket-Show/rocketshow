@@ -1,6 +1,8 @@
 package com.ascargon.rocketshow.lighting.designer;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * A Rocket Show Designer fixture physical-entry.
@@ -8,15 +10,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  * @author Moritz A. Vieli
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Getter
+@Setter
 public class FixturePhysical {
 
     private int[] dimensions;
 
-    public int[] getDimensions() {
-        return dimensions;
-    }
-
-    public void setDimensions(int[] dimensions) {
-        this.dimensions = dimensions;
-    }
 }
