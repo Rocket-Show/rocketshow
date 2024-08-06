@@ -1,5 +1,5 @@
 # Rocket Show Startup Guide by DavidOpgh
-Version 2.0.20240605
+Version 2.1.20240605
 
 Installing Rocket Show on a Pi isn’t difficult but there are some important steps you need to know.  
 I wrote this guide so you could benefit from all my efforts to get you up and running quickly.  
@@ -7,9 +7,14 @@ Note: At first glance this guide might look long and difficult, but it’s just 
 
 ## Installing Rocket Show on a Pi
 
+I recommend running Rocket Show on the latest model of Pi (currently the Pi 5). New software images of Rocket Show will only be built for the latest model. As a result some newer dependencies won't work on the older models of Pi. This guide's primary focus will be on the Pi 5 although I will document some the known issues with the Pi 4. 
+
 ### Plug all your devices into the Pi (see Appendix A for a list of my devices)
 
-At a minimum to get started you will need a usb audio device, usb keyboard/mouse, a wired network connection to your home internet, and a monitor as the console terminal.  
+For Pi 5: At a minimum to get started you will need a usb audio device, a wired network connection to your home internet, a monitor as the console terminal, and a remote device such as a computer or tablet connected to your home internet which will be used to access the Pi.
+
+For Pi 4: You will need a usb keyboard/mouse in addition to all the devices used for the Pi 5.
+
 If you’re planning on controlling DMX lights you’ll also need a USB DMX interface and DMX lights.
 
 ### Download the proper version of Rocket Show for your Pi from the Rocketshow.Net website and unzip the image to your PC
@@ -17,7 +22,7 @@ For Pi5
 [https://rocketshow.net/install/images/latest.php](https://rocketshow.net/install/images/latest.php)
 
 Note: There isn’t a latest image for all Pi models, only for the newest model (currently the PI 5)  
-For Pi4 and Pi3 you need to install the last version available for that model and then from inside Rocket Show you’re able to update to the latest version.
+For Pi4 and Pi3 you need to install the last image available for that model and then from inside Rocket Show use the "Search for updates" function to install the latest version.
 
 ### Download and Install Raspberry Pi Imager (currently Version 1.8.5) on your PC
 [https://www.raspberrypi.com/software/](https://www.raspberrypi.com/software/)
