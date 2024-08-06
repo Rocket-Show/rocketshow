@@ -422,10 +422,17 @@ DavidOpgh
 
 ### Appendix B - Enable/Disable OLA plugins
 
-For Pi 5: The OLA Console has a New UI (Beta) page which can be used to enable/disable plugins. The link is located at the bottom 
+For Pi 5: 
+The OLA Console has a New UI (Beta) page which can be used to enable/disable OLA plugins. 
+Go to Settings.Lighting and click on the link "Open lighting console" or open a new tab in your browser using the address rocketshow.local:9090/ola.html
+
+![Open Lighting Console](images/image47.png)
+
+It will open a new "OLA Admin" tab in the browser. At the bottom of the page there is a link to the New UI (Beta) page
 
 
-**Note**: If you have a USB keyboard connected to your Pi you can enable/disable OLA plugins through the keyboard after logging in locally to Rocket Show on the Pi.
+For Pi 4:
+You need to have a USB keyboard connected to your Pi to enable/disable OLA plugins through the keyboard after logging in locally to Rocket Show on the Pi.
 
 The current configuration of the Open Lighting Architecture (OLA) used by Rocket Show has the required plugins disabled for the most common of DMX USB interfaces.  
 If you bought a ENTTEC OPEN DMX USB interface (which I consider as the standard) or some other cheap FTDI USB DMX interface like this one  
