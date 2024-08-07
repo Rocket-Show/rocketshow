@@ -422,7 +422,28 @@ DavidOpgh
 
 ### Appendix B - Enable/Disable OLA plugins
 
-For Pi 5: 
+The current configuration of the Open Lighting Architecture (OLA) used by Rocket Show to control DMX lights has the plugins disabled for the most common of DMX USB interfaces (FTDI USB DMX interfaces) 
+
+FTDI USB DMX interfaces like the ENTTEC OPEN DMX USB interface or other cheap ones like this one from Amazon  
+[https://www.amazon.com/dp/B07D6LNXF9](https://www.amazon.com/dp/B07D6LNXF9)  
+
+won't work when you initially boot up Rocket Show so you can't control your DMX lights.
+
+For this type of USB DMX interface to work you need to disable 3 OLA plugins and enable 1 OLA plugin because some plugins conflict with other plugins.  
+
+   **The plugins that need disabled:**
+
+   - StageProfi
+   - Serial USB
+   - Enttec Open DXM
+
+**The plugin that needs enabled:**
+
+- FTDI USB DMX
+
+
+#### For Pi 5:
+
 The OLA Console has a New UI (Beta) page which can be used to enable/disable OLA plugins. 
 Go to Settings.Lighting and click on the link "Open lighting console" or open a new tab in your browser using the address rocketshow.local:9090/ola.html
 
@@ -430,16 +451,23 @@ Go to Settings.Lighting and click on the link "Open lighting console" or open a 
 
 It will open a new "OLA Admin" tab in the browser. At the bottom of the page there is a link to the New UI (Beta) page
 
+![OLA](images/OLA1.JPG)
 
-For Pi 4:
-You need to have a USB keyboard connected to your Pi to enable/disable OLA plugins through the keyboard after logging in locally to Rocket Show on the Pi.
+Click on the Plugins link
 
-The current configuration of the Open Lighting Architecture (OLA) used by Rocket Show has the required plugins disabled for the most common of DMX USB interfaces.  
-If you bought a ENTTEC OPEN DMX USB interface (which I consider as the standard) or some other cheap FTDI USB DMX interface like this one  
-[https://www.amazon.com/dp/B07D6LNXF9](https://www.amazon.com/dp/B07D6LNXF9)  
-when you initially boot up Rocket Show it won't see these USB DMX interfaces and your DMX lights won't work.
+![OLA](images/OLA2.JPG)
 
-You need to disable 3 OLA plugins and enable 1 OLA plugin for interfaces like these to work. This is required because some plugins conflict with other plugins.  
+This page shows the Name of the Plugin, whether it's Enabled or not, and whether it's Active or not. 
+
+To Enable/Disable plugins click on it's Enabled status and then click on the "Reload plugins" button to execute the changes.
+This image shows the correct plugin configuration for FTDI USB DMX interfaces
+
+![OLA](images/OLA4.JPG)
+
+#### For Pi 4:
+
+The OLA UI Beta page doesn't work for the Pi 4. You need to manually enable/disable OLA plugins from a USB keyboard connected to your Pi. This requires logging in locally to the Pi after Rocket Show boots, supplying the username rockshow and password thisrocks
+
 Here is the command used enable/disable OLA plugins  
 ola_plugin_state - Get and set the state of the plugins loaded by olad.
 
