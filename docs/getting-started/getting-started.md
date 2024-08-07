@@ -427,15 +427,15 @@ The current configuration of the Open Lighting Architecture (OLA) used by Rocket
 FTDI USB DMX interfaces like the ENTTEC OPEN DMX USB interface or other cheap ones like this one from Amazon  
 [https://www.amazon.com/dp/B07D6LNXF9](https://www.amazon.com/dp/B07D6LNXF9)  
 
-won't work when you initially boot up Rocket Show so you can't control your DMX lights.
+won't work when you initially boot up Rocket Show so you won't be able to control your DMX lights.
 
-For this type of USB DMX interface to work you need to disable 3 OLA plugins and enable 1 OLA plugin because some plugins conflict with other plugins.  
+To get this type of USB DMX interface to work you need to disable 3 OLA plugins and enable 1 OLA plugin because some plugins conflict with other plugins.  
 
-   **The plugins that need disabled:**
+**The plugins that need disabled:**
 
-   - StageProfi
-   - Serial USB
-   - Enttec Open DXM
+- StageProfi
+- Serial USB
+- Enttec Open DMX
 
 **The plugin that needs enabled:**
 
@@ -445,7 +445,7 @@ For this type of USB DMX interface to work you need to disable 3 OLA plugins and
 #### For Pi 5:
 
 The OLA Console has a New UI (Beta) page which can be used to enable/disable OLA plugins. 
-Go to Settings.Lighting and click on the link "Open lighting console" or open a new tab in your browser using the address rocketshow.local:9090/ola.html
+Go to **Settings.Lighting** and click on the link "Open lighting console" or open a new tab in your browser using the address rocketshow.local:9090/ola.html
 
 ![Open Lighting Console](images/image47.png)
 
@@ -470,20 +470,6 @@ The OLA UI Beta page doesn't work for the Pi 4. You need to manually enable/disa
 
 Here is the command used enable/disable OLA plugins  
 ola_plugin_state - Get and set the state of the plugins loaded by olad.
-
-#### SYNOPSIS
-`ola_plugin_state --plugin-id [--state <enable|disable>]`
-
-#### DESCRIPTION
-`ola_plugin_state` is used to get and set the enabled/disabled state for a plugin and the list of plugins this plugin will conflict with.
-
-#### OPTIONS
-- `-h, --help`  
-  Display the help message
-- `-p, --plugin-id <plugin_id>`  
-  Id of the plugin to fetch the state of.
-- `-s, --state <enable|disable>`  
-  State to set a plugin to.
 
 These are the 3 plugins that need disabled.  
 (They need to be disabled because they conflict with the plugin we need.)
@@ -515,6 +501,20 @@ ola_plugin_state -p13 -senable
 ```
 
 ![OLA Plugin State](images/image44.png)
+
+#### SYNOPSIS
+`ola_plugin_state --plugin-id [--state <enable|disable>]`
+
+#### DESCRIPTION
+`ola_plugin_state` is used to get and set the enabled/disabled state for a plugin and the list of plugins this plugin will conflict with.
+
+#### OPTIONS
+- `-h, --help`  
+  Display the help message
+- `-p, --plugin-id <plugin_id>`  
+  Id of the plugin to fetch the state of.
+- `-s, --state <enable|disable>`  
+  State to set a plugin to.
 
 **Note**: If you need to find the id of a plugin  
 There might be an easier way but this is how I did it.  
