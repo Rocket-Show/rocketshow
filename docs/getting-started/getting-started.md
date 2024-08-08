@@ -1,5 +1,5 @@
 # Rocket Show Startup Guide by DavidOpgh
-Version 2.0.20240605
+Version 2.2.20240807
 
 Installing Rocket Show on a Pi isn’t difficult but there are some important steps you need to know.  
 I wrote this guide so you could benefit from all my efforts to get you up and running quickly.  
@@ -7,9 +7,14 @@ Note: At first glance this guide might look long and difficult, but it’s just 
 
 ## Installing Rocket Show on a Pi
 
+I recommend running Rocket Show on the latest model of Pi (currently the Pi 5). New software images of Rocket Show will only be built for the latest model. As a result some newer dependencies might not work on the older models of Pi. This guide's primary focus will be on the Pi 5 although I will document some the known issues with the Pi 4. I've never tried running Rocket Show on a Pi 3. 
+
 ### Plug all your devices into the Pi (see Appendix A for a list of my devices)
 
-At a minimum to get started you will need a usb audio device, usb keyboard/mouse, a wired network connection to your home internet, and a monitor as the console terminal.  
+For Pi 5: At a minimum to get started you will need a usb audio device, a wired network connection to your home internet, a monitor as the console terminal, and a remote device such as a computer or tablet connected to your home internet which will be used to access the Pi.
+
+For Pi 4: You will need a usb keyboard/mouse in addition to all the devices used for the Pi 5.
+
 If you’re planning on controlling DMX lights you’ll also need a USB DMX interface and DMX lights.
 
 ### Download the proper version of Rocket Show for your Pi from the Rocketshow.Net website and unzip the image to your PC
@@ -17,7 +22,7 @@ For Pi5
 [https://rocketshow.net/install/images/latest.php](https://rocketshow.net/install/images/latest.php)
 
 Note: There isn’t a latest image for all Pi models, only for the newest model (currently the PI 5)  
-For Pi4 and Pi3 you need to install the last version available for that model and then from inside Rocket Show you’re able to update to the latest version.
+For Pi4 and Pi3 you need to install the last image available for that model and after booting Rocket Show use the "Search for updates" function to install the latest version.
 
 ### Download and Install Raspberry Pi Imager (currently Version 1.8.5) on your PC
 [https://www.raspberrypi.com/software/](https://www.raspberrypi.com/software/)
@@ -81,16 +86,16 @@ The Console terminal screen will then go blank when Rocket Show has completely f
 ## DMX Lighting configuration
 
 If you don’t plan on using DMX lighting you can skip to the next section “Log in remotely to Rocket Show”.  
-If you plan on using DMX lighting you need to configure Rocket Show for your USB DMX interface.
+If you plan on using DMX lighting you need to configure Rocket Show to enable the correct OLA plugins your USB DMX interface.
 
 ### Enable/Disable OLA plugins
 /* Appendix B shows what OLA plugins you need to enable/disable depending on your DMX interface */
 
 When you have the correct plugins enabled, reboot the Pi for the changes to take effect.
 
-## Log in remotely to Rocket Show - from your laptop for the 1st time.
+## Log into Rocket Show on your Pi from your remote device for the 1st time.
 
-To log in remotely to Rocket Show both your laptop and the Pi need to be connected to your home network. After the PI is finished booting use the browser on your laptop and type the address rocketshow.local
+To log in remotely to Rocket Show both your device and the Pi need to be connected to your home network. After the PI is finished booting use the browser on your device and type the address rocketshow.local
 
 Rocket Show will recognize this is the first time you've logged into this new Pi and will ask you for your language.
 
@@ -102,7 +107,7 @@ Rocket Show will ask you to name your new Pi. Enter a name for the new PI. I nam
 ![Name Your Pi](images/image50.png)
 
 Click Finished  
-Don’t skip this next step! (I know at this point you’re excited to play around with Rocket Show but you need to configure the USB audio interface first or you’ll just generate an error)
+**Don’t skip this next step!** (I know at this point you’re excited to play around with Rocket Show but you need to configure the USB audio interface first or you’ll just generate an error)
 
 ## Configure the USB Audio Interface
 
@@ -391,6 +396,10 @@ Choose a composition and click Save
 Reboot the Pi for the changes to take effect.  
 ![Default Composition](images/image31.png)
 
+#### Backup / Restore
+A Backup / Restore function was added in Version 2.3.9. This function backups up and restores all the relevant media and settings files. I used it to migrate my files from a Pi 4 to a Pi 5. It is available from the Settings.System page. Clicking Download will create a compressed archive file "rocket show backup-YYYY-MM-DD.tar.gz" which will be downloaded to your remote device. This will take a minute or two. Clicking Restore will ask you for the compressed archive backup file.
+![Backup](images/backup1.JPG)
+
 ### Conclusion
 That's It! That's as far as I got with the features of Rocket Show.  
 Once I figure out any more features I'll update this document.
@@ -416,30 +425,54 @@ DavidOpgh
 - PC laptop connected to home or local internet with network cable
 
 ### Appendix B - Enable/Disable OLA plugins
-**Note**: If you have a USB keyboard connected to your Pi you can enable/disable OLA plugins through the keyboard after logging in locally to Rocket Show on the Pi.
 
-The current configuration of the Open Lighting Architecture (OLA) used by Rocket Show has the required plugins disabled for the most common of DMX USB interfaces.  
-If you bought a ENTTEC OPEN DMX USB interface (which I consider as the standard) or some other cheap FTDI USB DMX interface like this one  
+The current configuration of the Open Lighting Architecture (OLA) used by Rocket Show to control DMX lights has the plugins disabled for the most common of DMX USB interfaces (FTDI USB DMX interfaces) 
+
+FTDI USB DMX interfaces like the ENTTEC OPEN DMX USB interface or other cheap ones like this one from Amazon  
 [https://www.amazon.com/dp/B07D6LNXF9](https://www.amazon.com/dp/B07D6LNXF9)  
-when you initially boot up Rocket Show it won't see these USB DMX interfaces and your DMX lights won't work.
+won't work when you initially boot up Rocket Show so you won't be able to control your DMX lights.
 
-You need to disable 3 OLA plugins and enable 1 OLA plugin for interfaces like these to work. This is required because some plugins conflict with other plugins.  
+To get these types of USB DMX interface to work you need to disable 3 OLA plugins and enable 1 OLA plugin because some plugins conflict with other plugins.  
+
+**The plugins that need disabled:**
+
+- StageProfi
+- Serial USB
+- Enttec Open DMX
+
+**The plugin that needs enabled:**
+
+- FTDI USB DMX
+
+
+#### For Pi 5:
+
+The OLA Console has a New UI (Beta) page which can be used to enable/disable OLA plugins. 
+Go to **Settings.Lighting** and click on the link "Open lighting console" or open a new tab in your browser using the address rocketshow.local:9090/ola.html
+
+![Open Lighting Console](images/image47.png)
+
+It will open a new "OLA Admin" tab in the browser. At the bottom of the page there is a link to the New UI (Beta) page
+
+![OLA](images/OLA1.JPG)
+
+Click on the Plugins link
+
+![OLA](images/OLA2.JPG)
+
+This page shows the Name of the Plugin, whether it's Enabled or not, and whether it's Active or not. 
+
+To Enable/Disable plugins click on it's Enabled status and then click on the "Reload plugins" button to execute the changes.
+This image shows the correct plugin configuration for FTDI USB DMX interfaces
+
+![OLA](images/OLA4.JPG)
+
+#### For Pi 4:
+
+The OLA UI Beta page doesn't work for the Pi 4. You need to manually enable/disable OLA plugins from a USB keyboard connected to your Pi. This requires logging in locally to the Pi after Rocket Show boots, supplying the username rockshow and password thisrocks
+
 Here is the command used enable/disable OLA plugins  
-ola_plugin_state - Get and set the state of the plugins loaded by olad.
-
-#### SYNOPSIS
 `ola_plugin_state --plugin-id [--state <enable|disable>]`
-
-#### DESCRIPTION
-`ola_plugin_state` is used to get and set the enabled/disabled state for a plugin and the list of plugins this plugin will conflict with.
-
-#### OPTIONS
-- `-h, --help`  
-  Display the help message
-- `-p, --plugin-id <plugin_id>`  
-  Id of the plugin to fetch the state of.
-- `-s, --state <enable|disable>`  
-  State to set a plugin to.
 
 These are the 3 plugins that need disabled.  
 (They need to be disabled because they conflict with the plugin we need.)
@@ -472,15 +505,29 @@ ola_plugin_state -p13 -senable
 
 ![OLA Plugin State](images/image44.png)
 
-**Note**: If you need to find the id of a plugin  
-There might be an easier way but this is how I did it.  
-You can do this after Rocket Show is up and running.  
-Go to the OLA Admin browser tab page in your browser
-rocketshow.local:9090/ola.html
-Click on plugin name located in the column on the left side
-Click the "View Log" link located in upper right corner of the page
-Look for a recent entry in log for the command
-Sending request [GET json/plugin_info?id=XX where XX will be the Id of the plugin you clicked on.
+#### ADDITIONAL INFO
+`ola_plugin_state --plugin-id [--state <enable|disable>]`
+
+#### DESCRIPTION
+`ola_plugin_state` is used to get and set the enabled/disabled state for a plugin and the list of plugins this plugin will conflict with.
+
+#### OPTIONS
+- `-h, --help`  
+  Display the help message
+- `-p, --plugin-id <plugin_id>`  
+  Id of the plugin to fetch the state of.
+- `-s, --state <enable|disable>`  
+  State to set a plugin to.
+
+#### **Note**: If you need to find the id of a plugin  
+  There might be an easier way but this is how I did it.  
+  You can do this after Rocket Show is up and running.  
+  Go to the OLA Admin browser tab page in your browser
+  rocketshow.local:9090/ola.html
+  Click on plugin name located in the column on the left side
+  Click the "View Log" link located in upper right corner of the page
+  Look for a recent entry in log for the command
+  Sending request [GET json/plugin_info?id=XX where XX will be the Id of the plugin you clicked on.
 
 ## Appendix C - Designer Preset and Scene Parameters
 
