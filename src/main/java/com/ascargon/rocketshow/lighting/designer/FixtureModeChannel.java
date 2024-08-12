@@ -8,7 +8,7 @@ import lombok.Setter;
 import java.util.List;
 
 /**
- * A Rocket Show Designer fixture mode channel (e.g. a matrix channel).
+ * A Rocket Show Designer fixture mode channel.
  *
  * @author Moritz A. Vieli
  */
@@ -17,6 +17,10 @@ import java.util.List;
 @Setter
 public class FixtureModeChannel {
 
+    // direct reference to an available channel
+    private String name;
+
+    // a matrix channel
     private String insert;
     // the list of string could be a single string (no JSON array), e.g. 'eachPixelABC'
     @JsonDeserialize(using = StringOrListDeserializer.class)

@@ -1065,14 +1065,12 @@ public class DefaultDesignerService implements DesignerService {
         }
 
         for (Map.Entry<String, FixtureChannel> entry : profile.getAvailableChannels().getAvailableChannels().entrySet()) {
-            for (Object channel : mode.getChannels()) {
-                if (channel instanceof String) {
+            for (FixtureModeChannel channel : mode.getChannels()) {
+                if (!channel.getName().isEmpty()) {
                     // direct reference to a channel
 
-                    String modeChannel = (String) channel;
-
                     // don't check the fine channels. only add the coarse channel.
-                    if (modeChannel.equals(entry.getKey())) {
+                    if (channel.getName().equals(entry.getKey())) {
                         CachedFixtureChannel cachedFixtureChannel = new CachedFixtureChannel();
                         cachedFixtureChannel.setChannel(entry.getValue());
                         cachedFixtureChannel.setName(entry.getKey());
@@ -1085,14 +1083,10 @@ public class DefaultDesignerService implements DesignerService {
                         cachedFixtureChannel.setColorWheel(getColorWheelByChannel(cachedFixtureChannel, profile));
                         channels.add(cachedFixtureChannel);
                     }
-                } else if (channel instanceof FixtureModeChannel) {
+                } else {
                     // reference a channel through a pixel matrix
 
-                    FixtureModeChannel fixtureModeChannel = (FixtureModeChannel) channel;
                     // TODO
-                } else {
-                    // null may be passed as a placeholder for an undefined channel
-                    channels.add(new CachedFixtureChannel());
                 }
             }
         }

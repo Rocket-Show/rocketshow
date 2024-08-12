@@ -9,22 +9,27 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.util.*;
 
-public class ListWithStringOrFixtureModeChannelDeserializer extends JsonDeserializer<List<Object>> {
+public class FixtureModeChannelListDeserializer extends JsonDeserializer<List<FixtureModeChannel>> {
 
     @Override
-    public List<Object> deserialize(JsonParser jp, DeserializationContext ctxt)
+    public List<FixtureModeChannel> deserialize(JsonParser jp, DeserializationContext ctxt)
             throws IOException, JsonProcessingException {
-        List<Object> result = new ArrayList<>();
+
+        List<FixtureModeChannel> result = new ArrayList<>();
         JsonNode node = jp.getCodec().readTree(jp);
 
         for (JsonNode itemNode : node) {
+            FixtureModeChannel fixtureModeChannel = new FixtureModeChannel();
+
             if (itemNode.isTextual()) {
-                result.add(itemNode.asText());
+                fixtureModeChannel.setName(itemNode.asText());
             } else if (itemNode.isObject()) {
-                FixtureModeChannel fixtureModeChannel = jp.getCodec().treeToValue(itemNode, FixtureModeChannel.class);
-                result.add(fixtureModeChannel);
+                fixtureModeChannel = jp.getCodec().treeToValue(itemNode, FixtureModeChannel.class);
             }
+
+            result.add(fixtureModeChannel);
         }
+
         return result;
     }
 }

@@ -2,6 +2,8 @@ package com.ascargon.rocketshow.lighting.designer;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
@@ -11,36 +13,15 @@ import java.util.List;
  * @author Moritz A. Vieli
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Getter
+@Setter
 public class FixtureMode {
 
     private String name;
     private String shortName;
 
     // the list could contain a single name of a channel or an object in case of a matrix channel
-    @JsonDeserialize(using = ListWithStringOrFixtureModeChannelDeserializer.class)
-    private List<Object> channels;
+    @JsonDeserialize(using = FixtureModeChannelListDeserializer.class)
+    private List<FixtureModeChannel> channels;
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getShortName() {
-        return shortName;
-    }
-
-    public void setShortName(String shortName) {
-        this.shortName = shortName;
-    }
-
-    public List<Object> getChannels() {
-        return channels;
-    }
-
-    public void setChannels(List<Object> channels) {
-        this.channels = channels;
-    }
 }
