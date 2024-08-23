@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -22,6 +23,6 @@ public class FixtureMode {
 
     // the list could contain a single name of a channel or an object in case of a matrix channel
     @JsonDeserialize(using = FixtureModeChannelListDeserializer.class)
-    private List<FixtureModeChannel> channels;
+    private List<FixtureModeChannel> channels = new ArrayList<>();
 
 }

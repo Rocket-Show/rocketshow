@@ -19,11 +19,15 @@ import java.util.Map;
 @Setter
 public class FixtureMatrixPixelGroupConstraints {
 
-    private boolean isAll = false;
+    // constraint the pixel keys directly
     private List<String> keys;
+
+    // constraints by coordinates
     private List<String> x;
     private List<String> y;
     private List<String> z;
+
+    // a name regexp-constraint
     private List<String> name;
 
 }

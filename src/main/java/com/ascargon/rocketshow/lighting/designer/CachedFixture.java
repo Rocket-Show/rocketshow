@@ -11,6 +11,7 @@ import java.util.List;
 public class CachedFixture {
 
     private Fixture fixture;
+    private String pixelKey;
     private FixtureProfile profile;
     private FixtureMode mode;
     private List<CachedFixtureChannel> channels = new ArrayList<>();

@@ -12,13 +12,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-public class FixturePixelGroupListDeserializer extends JsonDeserializer<List<FixtureProfileMatrixPixelGroup>> {
+public class FixtureMatrixPixelGroupListDeserializer extends JsonDeserializer<List<FixtureMatrixPixelGroup>> {
 
     @Override
-    public List<FixtureProfileMatrixPixelGroup> deserialize(JsonParser p, DeserializationContext ctxt)
+    public List<FixtureMatrixPixelGroup> deserialize(JsonParser p, DeserializationContext ctxt)
             throws IOException {
 
-        List<FixtureProfileMatrixPixelGroup> result = new ArrayList<>();
+        List<FixtureMatrixPixelGroup> result = new ArrayList<>();
         JsonNode node = p.getCodec().readTree(p);
         Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
 
@@ -26,7 +26,7 @@ public class FixturePixelGroupListDeserializer extends JsonDeserializer<List<Fix
             Map.Entry<String, JsonNode> entry = fields.next();
             String key = entry.getKey();
             JsonNode valueNode = entry.getValue();
-            FixtureProfileMatrixPixelGroup group = new FixtureProfileMatrixPixelGroup();
+            FixtureMatrixPixelGroup group = new FixtureMatrixPixelGroup();
 
             group.setName(key);
 
