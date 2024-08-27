@@ -18,7 +18,7 @@ import java.util.List;
 public class FixtureModeChannel {
 
     // direct reference to an available channel
-    private String name;
+    private String name = "";
 
     // a matrix channel
     private String insert;

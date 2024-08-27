@@ -30,6 +30,9 @@ public class DefaultDesignerService implements DesignerService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultDesignerService.class);
 
+    private final String CHANNEL_ORDER_PER_PIXEL = "perPixel";
+    private final String CHANNEL_ORDER_PER_CHANNEL = "perChannel";
+
     private final SettingsService settingsService;
     private final FileFilterService fileFilterService;
     private final LightingService lightingService;
@@ -190,6 +193,15 @@ public class DefaultDesignerService implements DesignerService {
         logger.info("Designer project '" + projectName + "' saved");
     }
 
+    private Fixture getFixtureByUuid(Project project, String uuid) {
+        for (Fixture fixture : project.getFixtures()) {
+            if (Objects.equals(fixture.getUuid(), uuid)) {
+                return fixture;
+            }
+        }
+        return null;
+    }
+
     private Composition getCompositionByName(Project project, String compositionName) {
         // Return the project for a specified composition (only one project is supported)
         for (Composition composition : project.getCompositions()) {
@@ -288,6 +300,13 @@ public class DefaultDesignerService implements DesignerService {
             }
         }
 
+        if (logger.isTraceEnabled()) {
+            logger.trace("Presets in time:");
+            for (PresetRegionScene preset : presets) {
+                logger.trace("- " + preset.getPreset().getUuid());
+            }
+        }
+
         return presets;
     }
 
@@ -334,30 +353,56 @@ public class DefaultDesignerService implements DesignerService {
         mixChannelValue(existingChannelValues, channelValue, intensityPercentage, 0);
     }
 
+    private boolean fixtureUuidAndPixelKeyEquals(String fixtureUuid1, String fixtureUuid2, String pixelKey1, String pixelKey2) {
+        return fixtureUuid1.equals(fixtureUuid2) && ((pixelKey1 == null && pixelKey2 == null) || Objects.equals(pixelKey1, pixelKey2));
+    }
+
+    private PresetFixture getPresetFixture(Preset preset, String fixtureUuid, String pixelKey) {
+        for (PresetFixture fixture : preset.getFixtures()) {
+            if (fixtureUuidAndPixelKeyEquals(fixture.getFixtureUuid(), fixtureUuid, fixture.getPixelKey(), pixelKey)) {
+                return fixture;
+            }
+        }
+
+        return null;
+    }
+
     // Get the fixture index inside the passed preset (used for chasing)
     private Integer getFixtureIndex(Preset preset, String fixtureUuid, String pixelKey) {
         int index = 0;
-        List<Integer> countedDmxChannels = new ArrayList<>();
+        List<DmxChannelAndPixelKey> countedFirstDmxChannelPixelKey = new ArrayList<>();
+
+        if (getPresetFixture(preset, fixtureUuid, pixelKey) == null) {
+            // fixture is not in preset
+            return null;
+        }
 
         // Loop over the global fixtures to retain the order
-        for (Fixture fixture : project.getFixtures()) {
-            for (String presetFixtureUuid : preset.getFixtureUuids()) {
-                if (presetFixtureUuid.equals(fixture.getUuid())) {
-                    if (fixture.getUuid().equals(fixtureUuid)) {
+        for (PresetFixture projectFixture : project.getPresetFixtures()) {
+            for (PresetFixture presetFixture : preset.getFixtures()) {
+                if (fixtureUuidAndPixelKeyEquals(projectFixture.getFixtureUuid(), presetFixture.getFixtureUuid(), projectFixture.getPixelKey(), presetFixture.getPixelKey())) {
+                    if (fixtureUuidAndPixelKeyEquals(presetFixture.getFixtureUuid(), fixtureUuid, presetFixture.getPixelKey(), pixelKey)) {
                         return index;
                     }
 
+                    Fixture fixture = getFixtureByUuid(project, projectFixture.getFixtureUuid());
+                    DmxChannelAndPixelKey firstDmxChannelAndFixtureUuid = new DmxChannelAndPixelKey();
+                    firstDmxChannelAndFixtureUuid.setDmxChannel(fixture.getDmxFirstChannel());
+                    firstDmxChannelAndFixtureUuid.setPixelKey(projectFixture.getPixelKey());
+
+                    boolean exists = countedFirstDmxChannelPixelKey.stream().anyMatch(item -> item.getDmxChannel() == firstDmxChannelAndFixtureUuid.getDmxChannel() && ((item.getPixelKey() == null && firstDmxChannelAndFixtureUuid.getPixelKey() == null) || Objects.equals(item.getPixelKey(), firstDmxChannelAndFixtureUuid.getPixelKey())));
+
                     // don't count fixtures on the same channel as already counted ones
-                    if (!countedDmxChannels.contains(fixture.getDmxFirstChannel())) {
-                        countedDmxChannels.add(fixture.getDmxFirstChannel());
+                    if (!exists) {
                         index++;
+                        countedFirstDmxChannelPixelKey.add(firstDmxChannelAndFixtureUuid);
                     }
+
                     break;
                 }
             }
         }
 
-        // Not found in the preset
         return null;
     }
 
@@ -466,35 +511,14 @@ public class DefaultDesignerService implements DesignerService {
         return capabilities;
     }
 
-    private boolean capabilitiesMatch(
-            FixtureCapability.FixtureCapabilityType type1,
-            FixtureCapability.FixtureCapabilityType type2,
-            FixtureCapability.FixtureCapabilityColor color1,
-            FixtureCapability.FixtureCapabilityColor color2,
-            String wheel1,
-            String wheel2,
-            String profileUuid1,
-            String profileUuid2
-    ) {
+    private boolean capabilitiesMatch(FixtureCapability.FixtureCapabilityType type1, FixtureCapability.FixtureCapabilityType type2, FixtureCapability.FixtureCapabilityColor color1, FixtureCapability.FixtureCapabilityColor color2, String wheel1, String wheel2, String profileUuid1, String profileUuid2) {
         // checks, whether two provided capapabilities match
-        return type1 == type2
-                && (color1 == null || color1 == color2)
-                && (wheel1 == null || wheel1.equals(wheel2))
-                && (profileUuid1 == null || profileUuid1.equals(profileUuid2));
+        return type1 == type2 && (color1 == null || color1 == color2) && (wheel1 == null || wheel1.equals(wheel2)) && (profileUuid1 == null || profileUuid1.equals(profileUuid2));
     }
 
     private FixtureCapabilityValue getCapabilityValue(Preset preset, FixtureCapability.FixtureCapabilityType capabilityType, FixtureCapability.FixtureCapabilityColor color, String wheel, String profileUuid) {
         for (FixtureCapabilityValue capabilityValue : preset.getFixtureCapabilityValues()) {
-            if (capabilitiesMatch(
-                    capabilityValue.getType(),
-                    capabilityType,
-                    capabilityValue.getColor(),
-                    color,
-                    capabilityValue.getWheel(),
-                    wheel,
-                    capabilityValue.getProfileUuid(),
-                    profileUuid
-            )) {
+            if (capabilitiesMatch(capabilityValue.getType(), capabilityType, capabilityValue.getColor(), color, capabilityValue.getWheel(), wheel, capabilityValue.getProfileUuid(), profileUuid)) {
                 return capabilityValue;
             }
         }
@@ -542,10 +566,7 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     private Color hexToRgb(String hex) {
-        return new Color(
-                Double.valueOf(Integer.valueOf(hex.substring(1, 3), 16)),
-                Double.valueOf(Integer.valueOf(hex.substring(3, 5), 16)),
-                Double.valueOf(Integer.valueOf(hex.substring(5, 7), 16)));
+        return new Color(Double.valueOf(Integer.valueOf(hex.substring(1, 3), 16)), Double.valueOf(Integer.valueOf(hex.substring(3, 5), 16)), Double.valueOf(Integer.valueOf(hex.substring(5, 7), 16)));
     }
 
     private Color mixColors(List<Color> colors) {
@@ -631,12 +652,12 @@ public class DefaultDesignerService implements DesignerService {
     private CachedFixture getAlreadyCalculatedFixture(List<CachedFixture> fixtures, int fixtureIndex) {
         // Has this fixture already been calculated (same universe and dmx start address as a fixture before)
         // --> return it
+        CachedFixture currentFixture = fixtures.get(fixtureIndex);
+
         for (int i = 0; i < fixtureIndex; i++) {
             CachedFixture calculatedFixture = fixtures.get(i);
 
-            if (calculatedFixture.getFixture().getDmxUniverseUuid().equals(fixtures.get(fixtureIndex).getFixture().getDmxUniverseUuid())
-                    && calculatedFixture.getFixture().getDmxFirstChannel() == fixtures.get(fixtureIndex).getFixture().getDmxFirstChannel()) {
-
+            if (calculatedFixture.getFixture().getDmxUniverseUuid().equals(currentFixture.getFixture().getDmxUniverseUuid()) && calculatedFixture.getFixture().getDmxFirstChannel() == currentFixture.getFixture().getDmxFirstChannel() && ((calculatedFixture.getPixelKey() == null && currentFixture.getPixelKey() == null) || Objects.equals(calculatedFixture.getPixelKey(), currentFixture.getPixelKey()))) {
                 return calculatedFixture;
             }
         }
@@ -659,12 +680,10 @@ public class DefaultDesignerService implements DesignerService {
             long sceneStartMillis = preset.getScene().isFadeInPre() ? preset.getRegion().getStartMillis() - preset.getScene().getFadeInMillis() : preset.getRegion().getStartMillis();
             long sceneEndMillis = preset.getScene().isFadeOutPost() ? preset.getRegion().getEndMillis() + preset.getScene().getFadeOutMillis() : preset.getRegion().getEndMillis();
 
-            if (timeMillis > sceneEndMillis - preset.getScene().getFadeOutMillis()
-                    && timeMillis < sceneEndMillis) {
+            if (timeMillis > sceneEndMillis - preset.getScene().getFadeOutMillis() && timeMillis < sceneEndMillis) {
                 // Scene fades out
                 intensityPercentageScene = ((double) (sceneEndMillis - timeMillis)) / ((double) preset.getScene().getFadeOutMillis());
-            } else if (timeMillis < sceneStartMillis + preset.getScene().getFadeInMillis()
-                    && timeMillis > sceneStartMillis) {
+            } else if (timeMillis < sceneStartMillis + preset.getScene().getFadeInMillis() && timeMillis > sceneStartMillis) {
                 // Scene fades in
                 intensityPercentageScene = ((double) (timeMillis - sceneStartMillis)) / ((double) preset.getScene().getFadeInMillis());
             }
@@ -679,12 +698,10 @@ public class DefaultDesignerService implements DesignerService {
             presetStartMillis -= preset.getPreset().isFadeInPre() ? preset.getPreset().getFadeInMillis() : 0;
             presetEndMillis += preset.getPreset().isFadeOutPost() ? preset.getPreset().getFadeOutMillis() : 0;
 
-            if (timeMillis > presetEndMillis - preset.getPreset().getFadeOutMillis()
-                    && timeMillis < presetEndMillis) {
+            if (timeMillis > presetEndMillis - preset.getPreset().getFadeOutMillis() && timeMillis < presetEndMillis) {
                 // Preset fades out
                 intensityPercentagePreset = ((double) (presetEndMillis - timeMillis)) / ((double) preset.getPreset().getFadeOutMillis());
-            } else if (timeMillis < presetStartMillis + preset.getPreset().getFadeInMillis()
-                    && timeMillis > presetStartMillis) {
+            } else if (timeMillis < presetStartMillis + preset.getPreset().getFadeInMillis() && timeMillis > presetStartMillis) {
                 // Preset fades in
                 intensityPercentagePreset = ((double) (timeMillis - presetStartMillis)) / ((double) preset.getPreset().getFadeInMillis());
             }
@@ -703,21 +720,9 @@ public class DefaultDesignerService implements DesignerService {
             for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
                 if (cachedChannel.getChannel() != null) {
                     for (CachedFixtureCapability channelCapability : cachedChannel.getCapabilities()) {
-                        if (capabilitiesMatch(
-                                presetCapabilityValue.getType(),
-                                channelCapability.getCapability().getType(),
-                                presetCapabilityValue.getColor(),
-                                channelCapability.getCapability().getColor(),
-                                presetCapabilityValue.getWheel(),
-                                channelCapability.getWheelName(),
-                                presetCapabilityValue.getProfileUuid(),
-                                cachedFixture.getProfile().getUuid()
-                        )) {
-
+                        if (capabilitiesMatch(presetCapabilityValue.getType(), channelCapability.getCapability().getType(), presetCapabilityValue.getColor(), channelCapability.getCapability().getColor(), presetCapabilityValue.getWheel(), channelCapability.getWheelName(), presetCapabilityValue.getProfileUuid(), cachedFixture.getProfile().getUuid())) {
                             // the capabilities match -> apply the value, if possible
-                            if ((presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Intensity ||
-                                    presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity)
-                                    && presetCapabilityValue.getValuePercentage() != null) {
+                            if ((presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Intensity || presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity) && presetCapabilityValue.getValuePercentage() != null) {
 
                                 // intensity and colorIntensity (dimmer and color)
                                 double valuePercentage = presetCapabilityValue.getValuePercentage();
@@ -760,18 +765,13 @@ public class DefaultDesignerService implements DesignerService {
                                         }
                                     }
                                 }
-                            } else if ((presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Pan
-                                    || presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Tilt)
-                                    && presetCapabilityValue.getValuePercentage() != null) {
-
+                            } else if ((presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Pan || presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Tilt) && presetCapabilityValue.getValuePercentage() != null) {
                                 FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
                                 fixtureChannelValue.setChannelName(cachedChannel.getName());
                                 fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
                                 fixtureChannelValue.setValue(cachedChannel.getMaxValue() * presetCapabilityValue.getValuePercentage());
                                 this.mixChannelValue(values, fixtureChannelValue, 1);
-                            } else if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.WheelSlot
-                                    && channelCapability.getCapability().getSlotNumber().equals(presetCapabilityValue.getSlotNumber())) {
-
+                            } else if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.WheelSlot && channelCapability.getCapability().getSlotNumber().equals(presetCapabilityValue.getSlotNumber())) {
                                 // wheel slot (color, gobo, etc.)
                                 FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
                                 fixtureChannelValue.setChannelName(cachedChannel.getName());
@@ -824,6 +824,7 @@ public class DefaultDesignerService implements DesignerService {
         HashMap<CachedFixture, List<FixtureChannelValue>> calculatedFixtures = new HashMap<>();
 
         if (project == null) {
+            logger.trace("No project set. Skip fixture calculation.");
             return calculatedFixtures;
         }
 
@@ -834,6 +835,10 @@ public class DefaultDesignerService implements DesignerService {
             List<FixtureChannelValue> values = new ArrayList<>();
 
             CachedFixture alreadyCalculatedFixture = getAlreadyCalculatedFixture(cachedFixtures, i);
+
+            if (logger.isTraceEnabled()) {
+                logger.trace("Calculate fixture: " + cachedFixture.getProfile().getName() + " " + cachedFixture.getPixelKey());
+            }
 
             if (alreadyCalculatedFixture == null) {
                 // apply the default values
@@ -883,16 +888,7 @@ public class DefaultDesignerService implements DesignerService {
                     for (FixtureCapability capability : effectCurve.getCapabilities()) {
                         for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
                             for (CachedFixtureCapability channelCapability : cachedChannel.getCapabilities()) {
-                                if (capabilitiesMatch(
-                                        capability.getType(),
-                                        channelCapability.getCapability().getType(),
-                                        capability.getColor(),
-                                        channelCapability.getCapability().getColor(),
-                                        null,
-                                        null,
-                                        null,
-                                        null
-                                )) {
+                                if (capabilitiesMatch(capability.getType(), channelCapability.getCapability().getType(), capability.getColor(), channelCapability.getCapability().getColor(), null, null, null, null)) {
                                     FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
                                     fixtureChannelValue.setChannelName(cachedChannel.getName());
                                     fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
@@ -938,46 +934,82 @@ public class DefaultDesignerService implements DesignerService {
         return null;
     }
 
-    private void setUniverseValues(Map<CachedFixture, List<FixtureChannelValue>> fixtures, double masterDimmerValue) {
+    private void setUniverseValueForChannel(HashMap<Integer, Integer> universe, int channelIndex, CachedFixture cachedFixture, String templateChannelName, String pixelKey, List<FixtureChannelValue> fixtureChannelValues) {
+        String channelName = getChannelNameWithPixelKey(templateChannelName, pixelKey);
+
+        // match this mode channel with a channel value
+        for (FixtureChannelValue channelValue : fixtureChannelValues) {
+            CachedFixtureChannel channel = getChannelByName(cachedFixture, channelName);
+            if (channel != null && channel.getChannel() != null) {
+                int fineIndex = channel.getChannel().getFineChannelAliases().indexOf(channelName);
+                if (channel.getName().equals(channelValue.getChannelName()) || fineIndex > -1) {
+                    int dmxValue = (int) Math.floor(channelValue.getValue() / Math.pow(256, channel.getChannel().getFineChannelAliases().size() - (fineIndex + 1))) % 256;
+                    universe.put(channelIndex, dmxValue);
+                    break;
+                }
+            }
+        }
+    }
+
+    private void setUniverseValues(Map<CachedFixture, List<FixtureChannelValue>> fixtures) {
+        logger.trace("Set universe values...");
+
         // Reset all DMX universes
         for (LightingUniverse universe : lightingUniverses) {
             universe.reset();
         }
 
-        // loop over each fixture
+        // loop over each fixture with its values for each channel
         for (Map.Entry<CachedFixture, List<FixtureChannelValue>> entry : fixtures.entrySet()) {
             // TODO Get the correct universe for this fixture
-            //Universe universe = getUniverseByUuid(entry.getKey().getFixture().getDmxUniverseUuid());
+            HashMap<Integer, Integer> universe = null;
+            if (!lightingUniverses.isEmpty()) {
+                universe = lightingUniverses.get(0).getUniverse();
+            }
+
+            if (universe == null) {
+                continue;
+            }
+
+            if (logger.isTraceEnabled()) {
+                logger.trace("Set universe values for " + entry.getValue().size() + " channels of fixture " + entry.getKey().getFixture().getName() + " " + entry.getKey().getPixelKey());
+            }
 
             // loop over each channel for this fixture
-            for (int channelIndex = 0; channelIndex < entry.getKey().getMode().getChannels().size(); channelIndex++) {
-                Object channelObj = entry.getKey().getMode().getChannels().get(channelIndex);
-                if (channelObj instanceof String) {
-                    // direct reference to a channel
+            int channelIndex = entry.getKey().getFixture().getDmxFirstChannel();
 
-                    String channelName = (String) channelObj;
+            for (FixtureModeChannel fixtureModeChannel : entry.getKey().getMode().getChannels()) {
+                logger.trace("Process channel " + fixtureModeChannel.getName());
 
-                    // match this mode channel with a channel value
-                    for (FixtureChannelValue channelValue : entry.getValue()) {
-                        CachedFixtureChannel channel = getChannelByName(entry.getKey(), channelName);
-                        if (channel != null && channel.getChannel() != null) {
-                            int fineIndex = channel.getChannel().getFineChannelAliases().indexOf(channelName);
-                            if (channel.getName().equals(channelValue.getChannelName()) || fineIndex > -1) {
-                                int universeChannel = entry.getKey().getFixture().getDmxFirstChannel() + channelIndex;
-                                int dmxValue = (int) Math.floor(channelValue.getValue() / Math.pow(256, channel.getChannel().getFineChannelAliases().size() - (fineIndex + 1))) % 256;
-                                // TODO use the correct universe
-                                if (!lightingUniverses.isEmpty()) {
-                                    lightingUniverses.get(0).getUniverse().put(universeChannel, dmxValue);
-                                }
-                                break;
+                if (fixtureModeChannel.getName() == null || fixtureModeChannel.getName().isEmpty()) {
+                    // reference a channel through a pixel matrix
+
+                    List<String> availablePixelKeys = getPixelKeysInOrder(entry.getKey().getProfile(), fixtureModeChannel.getRepeatFor());
+
+                    if (CHANNEL_ORDER_PER_PIXEL.equals(fixtureModeChannel.getChannelOrder())) {
+                        // each channel for each pixel
+
+                        for (String availablePixelKey : availablePixelKeys) {
+                            for (String modeTemplateChannelName : fixtureModeChannel.getTemplateChannels()) {
+                                setUniverseValueForChannel(universe, channelIndex, entry.getKey(), modeTemplateChannelName, availablePixelKey, entry.getValue());
+                                channelIndex++;
+                            }
+                        }
+                    } else if (CHANNEL_ORDER_PER_CHANNEL.equals(fixtureModeChannel.getChannelOrder())) {
+                        // each pixel for each channel
+
+                        for (String modeTemplateChannelName : fixtureModeChannel.getTemplateChannels()) {
+                            for (String availablePixelKey : availablePixelKeys) {
+                                setUniverseValueForChannel(universe, channelIndex, entry.getKey(), modeTemplateChannelName, availablePixelKey, entry.getValue());
+                                channelIndex++;
                             }
                         }
                     }
-                } else if (channelObj instanceof FixtureModeChannel) {
-                    // reference a channel through a pixel matrix
+                } else {
+                    // direct reference to a channel
 
-                    FixtureModeChannel fixtureModeChannel = (FixtureModeChannel) channelObj;
-                    // TODO
+                    setUniverseValueForChannel(universe, channelIndex, entry.getKey(), fixtureModeChannel.getName(), null, entry.getValue());
+                    channelIndex++;
                 }
             }
         }
@@ -989,9 +1021,9 @@ public class DefaultDesignerService implements DesignerService {
             Map<CachedFixture, List<FixtureChannelValue>> calculatedFixtures = getChannelValues(timeMillis, presets);
 
             // TODO make the dimmer value adjustable and fall back to the project settings
-            setUniverseValues(calculatedFixtures, project.getMasterDimmerValue());
+            setUniverseValues(calculatedFixtures);
 
-//            logger.info(lightingUniverses.get(0).getUniverse().toString());
+            logger.trace("DMX universe: " + lightingUniverses.get(0).getUniverse().toString());
         } catch (Exception e) {
             logger.error("Could not calculate the universe", e);
         }
@@ -999,8 +1031,11 @@ public class DefaultDesignerService implements DesignerService {
 
     private void startTimer() {
         if (universeSenderHandle != null || settingsService.getSettings().getDesignerFrequencyHertz() == null) {
+            logger.debug("Could not start preview timer (universeSenderHandle = " + universeSenderHandle + ", designerFrequencyHertz = " + settingsService.getSettings().getDesignerFrequencyHertz() + ")");
             return;
         }
+
+        logger.debug("Start designer universe send timer...");
 
         final Runnable universeSender = new Runnable() {
             public void run() {
@@ -1020,8 +1055,9 @@ public class DefaultDesignerService implements DesignerService {
             }
         };
 
-        universeSenderHandle =
-                scheduler.scheduleAtFixedRate(universeSender, 0, 1000 / settingsService.getSettings().getDesignerFrequencyHertz(), MILLISECONDS);
+        logger.debug("Designer universe send timer triggering each " + 1000 / settingsService.getSettings().getDesignerFrequencyHertz() + " milliseconds");
+
+        universeSenderHandle = scheduler.scheduleAtFixedRate(universeSender, 0, 1000 / settingsService.getSettings().getDesignerFrequencyHertz(), MILLISECONDS);
     }
 
     private void stopTimer() {
@@ -1043,9 +1079,19 @@ public class DefaultDesignerService implements DesignerService {
         return null;
     }
 
-    private void addCachedChannel(List<CachedFixtureChannel> channels, FixtureChannel channel, String templateChannelName, String pixelKey, FixtureProfile profile) {
+    private String getChannelNameWithPixelKey(String templateChannelName, String pixelKey) {
+        if (pixelKey == null || pixelKey.isEmpty()) {
+            return templateChannelName;
+        }
+
+        return templateChannelName.replace("$pixelKey", pixelKey);
+    }
+
+    private void addCachedChannel(List<CachedFixtureChannel> channels, FixtureChannel channel, String
+            templateChannelName, String pixelKey, FixtureProfile profile) {
+
         CachedFixtureChannel cachedFixtureChannel = new CachedFixtureChannel();
-        String channelName = templateChannelName.replace("$pixelKey", pixelKey);
+        String channelName = getChannelNameWithPixelKey(templateChannelName, pixelKey);
 
         cachedFixtureChannel.setChannel(channel);
         cachedFixtureChannel.setName(channelName);
@@ -1063,11 +1109,35 @@ public class DefaultDesignerService implements DesignerService {
         return s1.compareTo(s2);
     }
 
+    private List<String> getAllPixelKeys(FixtureProfile profile) {
+        List<String> result = new ArrayList<>();
+        for (List<List<String>> pixelKeyX : profile.getMatrix().getPixelKeys()) {
+            for (List<String> pixelKeyY : pixelKeyX) {
+                for (String pixelKeyZ : pixelKeyY) {
+                    if (pixelKeyZ != null) {
+                        result.add(pixelKeyZ);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    private List<String> getAllPixelGroups(FixtureProfile profile) {
+        List<String> result = new ArrayList<>();
+        for (FixtureMatrixPixelGroup fixtureMatrixPixelGroup : profile.getMatrix().getPixelGroups()) {
+            result.add(fixtureMatrixPixelGroup.getName());
+        }
+        return result;
+    }
+
     private List<String> getPixelKeysInOrder(FixtureProfile profile, List<String> repeatFor) {
         List<String> result = new ArrayList<>();
 
         if (repeatFor.size() > 1) {
             result = repeatFor;
+        } else if (repeatFor.isEmpty()) {
+            return result;
         } else if (repeatFor.get(0).equals("eachPixelABC")) {
             if (profile.getMatrix().getPixelCount().size() == 3) {
                 for (int x = 0; x < profile.getMatrix().getPixelCount().get(0); x++) {
@@ -1078,21 +1148,11 @@ public class DefaultDesignerService implements DesignerService {
                     }
                 }
             } else {
-                for (List<List<String>> pixelKeyX : profile.getMatrix().getPixelKeys()) {
-                    for (List<String> pixelKeyY : pixelKeyX) {
-                        for (String pixelKeyZ : pixelKeyY) {
-                            if (pixelKeyZ != null) {
-                                result.add(pixelKeyZ);
-                            }
-                        }
-                    }
-                }
+                result.addAll(getAllPixelKeys(profile));
             }
             result.sort(this::alphanumericSort);
         } else if (repeatFor.get(0).equals("eachPixelGroup")) {
-            for (FixtureMatrixPixelGroup fixtureMatrixPixelGroup : profile.getMatrix().getPixelGroups()) {
-                result.add(fixtureMatrixPixelGroup.getName());
-            }
+            result.addAll(getAllPixelGroups(profile));
         } else if (repeatFor.get(0).equals("eachPixelXYZ")) {
             for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
                 for (int y = 0; y < profile.getMatrix().getPixelKeys().get(x).size(); y++) {
@@ -1174,18 +1234,37 @@ public class DefaultDesignerService implements DesignerService {
         for (FixtureModeChannel channel : mode.getChannels()) {
             if (!channel.getName().isEmpty() && (pixelKey == null || pixelKey.isEmpty())) {
                 // direct reference to a channel
+                // don't check the fine channels. only add the coarse channel.
+                boolean channelFound = false;
 
                 for (Map.Entry<String, FixtureChannel> entry : profile.getAvailableChannels().getAvailableChannels().entrySet()) {
-                    // don't check the fine channels. only add the coarse channel.
                     if (channel.getName().equals(entry.getKey())) {
                         addCachedChannel(channels, entry.getValue(), entry.getKey(), null, profile);
+                        channelFound = true;
+                        break;
+                    }
+                }
+
+                // check the template channels, if not found in the available channels
+                if (!channelFound) {
+                    for (Map.Entry<String, FixtureChannel> entry : profile.getTemplateChannels().getTemplateChannels().entrySet()) {
+                        List<String> existingPixelKeys = getAllPixelKeys(profile);
+                        existingPixelKeys.addAll(getAllPixelGroups(profile));
+
+                        for (String existingPixelKey : existingPixelKeys) {
+                            String channelName = this.getChannelNameWithPixelKey(entry.getKey(), existingPixelKey);
+
+                            if (channel.getName().equals(channelName)) {
+                                this.addCachedChannel(channels, entry.getValue(), channelName, null, profile);
+                            }
+                        }
                     }
                 }
             } else {
                 // reference a channel through a pixel matrix
                 List<String> availablePixelKeys = getPixelKeysInOrder(profile, channel.getRepeatFor());
 
-                if ("perPixel".equals(channel.getChannelOrder())) {
+                if (CHANNEL_ORDER_PER_PIXEL.equals(channel.getChannelOrder())) {
                     // each channel for each pixel
 
                     for (String availablePixelKey : availablePixelKeys) {
@@ -1200,7 +1279,7 @@ public class DefaultDesignerService implements DesignerService {
                             }
                         }
                     }
-                } else if ("perChannel".equals(channel.getChannelOrder())) {
+                } else if (CHANNEL_ORDER_PER_CHANNEL.equals(channel.getChannelOrder())) {
                     // each pixel for each channel
 
                     for (String modeTemplateChannelName : channel.getTemplateChannels()) {
@@ -1236,25 +1315,29 @@ public class DefaultDesignerService implements DesignerService {
         return new ArrayList<>(pixelKeys);
     }
 
+    // does the fixture have a general channel without reference to specific pixel keys in the current mode?
+    private boolean fixtureHasGeneralChannel(Fixture fixture) {
+        FixtureProfile profile = this.getProfileByUuid(fixture.getProfileUuid());
+        FixtureMode mode = this.getModeByFixture(profile, fixture);
+
+        for (FixtureModeChannel channel : mode.getChannels()) {
+            if (this.getPixelKeysInOrder(profile, channel.getRepeatFor()).isEmpty()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void updateCachedFixtures() {
         // calculate some frequently used values as a cache to save cpu time
         // afterwards
         cachedFixtures = new ArrayList<>();
 
-        for (Fixture fixture : project.getFixtures()) {
-            List<String> pixelKeys = fixtureGetUniquePixelKeys(fixture);
+        logger.debug("Calculate cached fixtures...");
 
-            if (!pixelKeys.isEmpty()) {
-                for (String pixelKey : pixelKeys) {
-                    CachedFixture cachedFixture = new CachedFixture();
-                    cachedFixture.setFixture(fixture);
-                    cachedFixture.setPixelKey(pixelKey);
-                    cachedFixture.setProfile(getProfileByUuid(fixture.getProfileUuid()));
-                    cachedFixture.setMode(getModeByFixture(cachedFixture.getProfile(), fixture));
-                    cachedFixture.setChannels(getCachedChannels(cachedFixture.getProfile(), cachedFixture.getMode(), pixelKey));
-                    cachedFixtures.add(cachedFixture);
-                }
-            } else {
+        for (Fixture fixture : project.getFixtures()) {
+            if (fixtureHasGeneralChannel(fixture)) {
                 CachedFixture cachedFixture = new CachedFixture();
                 cachedFixture.setFixture(fixture);
                 cachedFixture.setProfile(getProfileByUuid(fixture.getProfileUuid()));
@@ -1262,7 +1345,23 @@ public class DefaultDesignerService implements DesignerService {
                 cachedFixture.setChannels(getCachedChannels(cachedFixture.getProfile(), cachedFixture.getMode(), null));
                 cachedFixtures.add(cachedFixture);
             }
+
+            List<String> pixelKeys = fixtureGetUniquePixelKeys(fixture);
+
+            logger.trace("Got pixel keys: " + pixelKeys);
+
+            for (String pixelKey : pixelKeys) {
+                CachedFixture cachedFixture = new CachedFixture();
+                cachedFixture.setFixture(fixture);
+                cachedFixture.setPixelKey(pixelKey);
+                cachedFixture.setProfile(getProfileByUuid(fixture.getProfileUuid()));
+                cachedFixture.setMode(getModeByFixture(cachedFixture.getProfile(), fixture));
+                cachedFixture.setChannels(getCachedChannels(cachedFixture.getProfile(), cachedFixture.getMode(), pixelKey));
+                cachedFixtures.add(cachedFixture);
+            }
         }
+
+        logger.debug("Calculated " + cachedFixtures.size() + " fixtures");
     }
 
     @Override
@@ -1344,6 +1443,7 @@ public class DefaultDesignerService implements DesignerService {
     @Override
     public void startPreview(long positionMillis) {
         if (project == null) {
+            logger.debug("No project available to preview");
             return;
         }
 
@@ -1370,11 +1470,11 @@ public class DefaultDesignerService implements DesignerService {
 
     @Override
     public void setPreviewComposition(String compositionName) {
-        if (compositionName != null) {
+        if (compositionName == null) {
+            this.playPreview = false;
+        } else {
             composition = getCompositionByName(project, compositionName);
             playPreview = true;
-        } else {
-            this.playPreview = false;
         }
     }
 

@@ -48,6 +48,8 @@ public class FixtureMatrixPixelGroupListDeserializer extends JsonDeserializer<Li
                     group.getConstraints().setName(convertToList(valueNode.get("name")));
                 }
             }
+
+            result.add(group);
         }
 
         return result;

@@ -134,7 +134,7 @@ public class DefaultSettingsService implements SettingsService {
         }
 
         // Add the default audio bus
-        if (settings.getAudioBusList().size() == 0) {
+        if (settings.getAudioBusList().isEmpty()) {
             AudioBus audioBus = new AudioBus();
             audioBus.setName("My audio bus 1");
             audioBus.setChannels(2);
@@ -607,6 +607,11 @@ public class DefaultSettingsService implements SettingsService {
     @Override
     public void setSettings(Settings settings) {
         this.settings = settings;
+
+        // make sure, settings not available in the interface (e.g. the designer path)
+        // are not lost
+        this.initDefaultSettings();
+
         updateSystem();
     }
 
