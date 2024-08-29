@@ -24,7 +24,7 @@ public class DefaultRaspberryGpioControlActionExecutionService implements Raspbe
     private List<RaspberryGpioControlButton> raspberryGpioControlButtonList = new ArrayList<>();
 
     public DefaultRaspberryGpioControlActionExecutionService(SettingsService settingsService, ControlActionExecutionService controlActionExecutionService) {
-        if (!settingsService.getSettings().isEnableRaspberryGpio()) {
+        if (!settingsService.getSettings().getEnableRaspberryGpio()) {
             return;
         }
 

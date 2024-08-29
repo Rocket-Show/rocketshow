@@ -199,11 +199,11 @@ public class DefaultSettingsService implements SettingsService {
         if (OperatingSystemInformation.SubType.RASPBERRYOS.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
             // Raspbian-specific settings
 
-            if (settings.isEnableRaspberryGpio() == null) {
+            if (settings.getEnableRaspberryGpio() == null) {
                 settings.setEnableRaspberryGpio(true);
             }
 
-            if (settings.isWlanApEnable() == null) {
+            if (settings.getWlanApEnable() == null) {
                 settings.setWlanApEnable(true);
             }
         }
@@ -518,7 +518,7 @@ public class DefaultSettingsService implements SettingsService {
         }
 
         // Activate/deactivate the access point completely
-        if (settings.isWlanApEnable()) {
+        if (settings.getWlanApEnable()) {
             statusCommand = "enable";
         } else {
             statusCommand = "disable";

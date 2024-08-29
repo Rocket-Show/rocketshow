@@ -178,8 +178,8 @@ mv "$(date '+%Y-%m-%d')-RocketShow.zip" /home/pi
 - Update POM and dist/currentversion2.xml versions
 - Add the release notes in dist/currentversion2.xml and update the date on top
 - Build the jar with Maven
-- Copy target/rocketshow.jar to rocketshow.net/update/rocketshow.jar
-- Copy dist/currentversion2.xml to rocketshow.net/update/currentversion2.xml
+- Copy target/rocketshow.jar to rocketshow.net/update/test/rocketshow.jar (and parent-directory to release it directly)
+- Copy dist/currentversion2.xml to rocketshow.net/update/test/currentversion2.xml (and parent-directory to release it directly)
 - GIT merge DEV branch to MASTER
 - GIT tag with the current version
 - Switch back to DEV

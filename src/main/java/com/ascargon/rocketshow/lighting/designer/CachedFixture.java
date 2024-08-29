@@ -15,5 +15,6 @@ public class CachedFixture {
     private FixtureProfile profile;
     private FixtureMode mode;
     private List<CachedFixtureChannel> channels = new ArrayList<>();
+    private List<String> pixelKeysInOrder = new ArrayList<>();
 
 }

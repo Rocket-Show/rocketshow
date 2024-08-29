@@ -31,6 +31,7 @@ public class DefaultUpdateService implements UpdateService {
     private final static String JAR_NAME = "rocketshow.jar";
     private final static String CURRENT_VERSION = "currentversion2.xml";
     private final static String UPDATE_URL = "https://www.rocketshow.net/update/";
+    private final static String UPDATE_URL_TEST_SUFFIX = "test/";
     private final static String UPDATE_SCRIPT = "update.sh";
 
     private final NotificationService notificationService;
@@ -55,9 +56,17 @@ public class DefaultUpdateService implements UpdateService {
         return (VersionInfo) jaxbUnmarshaller.unmarshal(file);
     }
 
+    private String getRemoteBaseUrl(boolean testBranch) {
+        String url = UPDATE_URL;
+        if (testBranch) {
+            url += UPDATE_URL_TEST_SUFFIX;
+        }
+        return url;
+    }
+
     @Override
-    public VersionInfo getRemoteVersionInfo() throws Exception {
-        URL url = new URL(UPDATE_URL + "currentversion2.xml");
+    public VersionInfo getRemoteVersionInfo(boolean testBranch) throws Exception {
+        URL url = new URL(getRemoteBaseUrl(testBranch) + "currentversion2.xml");
         InputStream inputStream = url.openStream();
 
         JAXBContext jaxbContext = JAXBContext.newInstance(VersionInfo.class);
@@ -66,8 +75,8 @@ public class DefaultUpdateService implements UpdateService {
         return (VersionInfo) jaxbUnmarshaller.unmarshal(inputStream);
     }
 
-    private void downloadUpdateFile(String name) throws Exception {
-        URL url = new URL(UPDATE_URL + name);
+    private void downloadUpdateFile(String name, boolean testBranch) throws Exception {
+        URL url = new URL(getRemoteBaseUrl(testBranch) + name);
         ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
         FileOutputStream fileOutputStream = new FileOutputStream(settingsService.getSettings().getBasePath() + File.separator + UPDATE_PATH + File.separator + name);
         fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
@@ -89,7 +98,7 @@ public class DefaultUpdateService implements UpdateService {
     }
 
     @Override
-    public void update() throws Exception {
+    public void update(boolean testBranch) throws Exception {
         logger.info("Updating system...");
 
         sessionService.getSession().setUpdateFinished(false);
@@ -102,10 +111,10 @@ public class DefaultUpdateService implements UpdateService {
         notificationService.notifyClients(UpdateState.DOWNLOADING);
 
         // Download the new version
-        downloadUpdateFile(CURRENT_VERSION);
-        downloadUpdateFile(JAR_NAME);
-        downloadUpdateFile(BEFORE_SCRIPT_NAME);
-        downloadUpdateFile(AFTER_SCRIPT_NAME);
+        downloadUpdateFile(CURRENT_VERSION, testBranch);
+        downloadUpdateFile(JAR_NAME, testBranch);
+        downloadUpdateFile(BEFORE_SCRIPT_NAME, testBranch);
+        downloadUpdateFile(AFTER_SCRIPT_NAME, testBranch);
 
         notificationService.notifyClients(UpdateState.INSTALLING);
 

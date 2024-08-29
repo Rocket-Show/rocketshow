@@ -106,13 +106,13 @@ class SystemController {
     }
 
     @GetMapping("remote-version")
-    public VersionInfo remoteVersion() throws Exception {
-        return updateService.getRemoteVersionInfo();
+    public VersionInfo remoteVersion(@RequestParam(value = "testBranch", required = false, defaultValue = "false") boolean testBranch) throws Exception {
+        return updateService.getRemoteVersionInfo(testBranch);
     }
 
     @PostMapping("update")
-    public ResponseEntity<Void> update() throws Exception {
-        updateService.update();
+    public ResponseEntity<Void> update(@RequestParam(value = "testBranch", required = false, defaultValue = "false") boolean testBranch) throws Exception {
+        updateService.update(testBranch);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

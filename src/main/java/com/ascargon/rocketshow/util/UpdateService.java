@@ -8,8 +8,8 @@ public interface UpdateService {
 
     VersionInfo getCurrentVersionInfo() throws Exception;
 
-    VersionInfo getRemoteVersionInfo() throws Exception;
+    VersionInfo getRemoteVersionInfo(boolean testBranch) throws Exception;
 
-    void update() throws Exception;
+    void update(boolean testBranch) throws Exception;
 
 }
