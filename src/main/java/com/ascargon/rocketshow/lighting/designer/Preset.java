@@ -1,7 +1,10 @@
 package com.ascargon.rocketshow.lighting.designer;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Getter;
+import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -10,13 +13,15 @@ import java.util.List;
  * @author Moritz A. Vieli
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Getter
+@Setter
 public class Preset {
 
     private String uuid;
     private String name;
 
     // all related fixtures
-    private String[] fixtureUuids;
+    private List<PresetFixture> fixtures = new ArrayList<>();
 
     // the selected values
     private List<FixtureChannelValue> fixtureChannelValues;
@@ -38,99 +43,4 @@ public class Preset {
     private boolean fadeInPre = false;
     private boolean fadeOutPost = false;
 
-    public String getUuid() {
-        return uuid;
-    }
-
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String[] getFixtureUuids() {
-        return fixtureUuids;
-    }
-
-    public void setFixtureUuids(String[] fixtureUuids) {
-        this.fixtureUuids = fixtureUuids;
-    }
-
-    public List<FixtureChannelValue> getFixtureChannelValues() {
-        return fixtureChannelValues;
-    }
-
-    public void setFixtureChannelValues(List<FixtureChannelValue> fixtureChannelValues) {
-        this.fixtureChannelValues = fixtureChannelValues;
-    }
-
-    public List<FixtureCapabilityValue> getFixtureCapabilityValues() {
-        return fixtureCapabilityValues;
-    }
-
-    public void setFixtureCapabilityValues(List<FixtureCapabilityValue> fixtureCapabilityValues) {
-        this.fixtureCapabilityValues = fixtureCapabilityValues;
-    }
-
-    public List<Effect> getEffects() {
-        return effects;
-    }
-
-    public void setEffects(List<Effect> effects) {
-        this.effects = effects;
-    }
-
-    public Long getStartMillis() {
-        return startMillis;
-    }
-
-    public void setStartMillis(Long startMillis) {
-        this.startMillis = startMillis;
-    }
-
-    public Long getEndMillis() {
-        return endMillis;
-    }
-
-    public void setEndMillis(Long endMillis) {
-        this.endMillis = endMillis;
-    }
-
-    public long getFadeInMillis() {
-        return fadeInMillis;
-    }
-
-    public void setFadeInMillis(long fadeInMillis) {
-        this.fadeInMillis = fadeInMillis;
-    }
-
-    public long getFadeOutMillis() {
-        return fadeOutMillis;
-    }
-
-    public void setFadeOutMillis(long fadeOutMillis) {
-        this.fadeOutMillis = fadeOutMillis;
-    }
-
-    public boolean isFadeInPre() {
-        return fadeInPre;
-    }
-
-    public void setFadeInPre(boolean fadeInPre) {
-        this.fadeInPre = fadeInPre;
-    }
-
-    public boolean isFadeOutPost() {
-        return fadeOutPost;
-    }
-
-    public void setFadeOutPost(boolean fadeOutPost) {
-        this.fadeOutPost = fadeOutPost;
-    }
 }

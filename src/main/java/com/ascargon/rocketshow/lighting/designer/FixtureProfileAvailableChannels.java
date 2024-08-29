@@ -7,7 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The available channels inside a fixture template. Used for @JsonAnySetter to work only on this part.
+ * The available channels inside a fixture profile.
+ * Used for @JsonAnySetter to work only on this part, because the object name in the JSON is dynamic.
  *
  * @author Moritz A. Vieli
  */

@@ -3,6 +3,8 @@ package com.ascargon.rocketshow.lighting.designer;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
@@ -12,6 +14,8 @@ import java.util.List;
  * @author Moritz A. Vieli
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Getter
+@Setter
 class FixtureProfile {
 
     public enum FixtureCategory {
@@ -36,63 +40,19 @@ class FixtureProfile {
         Other,
         @JsonProperty("Barrel Scanner")
         BarrelScanner
-
     }
 
     private String uuid;
     private String name;
     private List<FixtureCategory> categories;
+    private FixturePhysical physical;
+    private FixtureMatrix matrix;
     @JsonUnwrapped
     private FixtureProfileAvailableChannels availableChannels;
+    @JsonUnwrapped
+    private FixtureProfileTemplateChannels templateChannels;
     @JsonUnwrapped
     private FixtureProfileWheels wheels;
     private List<FixtureMode> modes;
 
-    public String getUuid() {
-        return uuid;
-    }
-
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public List<FixtureCategory> getCategories() {
-        return categories;
-    }
-
-    public void setCategories(List<FixtureCategory> categories) {
-        this.categories = categories;
-    }
-
-    public FixtureProfileAvailableChannels getAvailableChannels() {
-        return availableChannels;
-    }
-
-    public void setAvailableChannels(FixtureProfileAvailableChannels availableChannels) {
-        this.availableChannels = availableChannels;
-    }
-
-    public FixtureProfileWheels getWheels() {
-        return wheels;
-    }
-
-    public void setWheels(FixtureProfileWheels wheels) {
-        this.wheels = wheels;
-    }
-
-    public List<FixtureMode> getModes() {
-        return modes;
-    }
-
-    public void setModes(List<FixtureMode> modes) {
-        this.modes = modes;
-    }
 }

@@ -55,6 +55,7 @@ export class Settings {
     enableMonitor: boolean;
     designerFrequencyHertz: number;
     designerLivePreview: boolean;
+    updateTestBranch: boolean;
 
     constructor(data?: any) {
         if (!data) {
@@ -171,6 +172,7 @@ export class Settings {
         this.enableMonitor = data.enableMonitor;
         this.designerFrequencyHertz = data.designerFrequencyHertz;
         this.designerLivePreview = data.designerLivePreview;
+        this.updateTestBranch = data.updateTestBranch;
     }
 
 }

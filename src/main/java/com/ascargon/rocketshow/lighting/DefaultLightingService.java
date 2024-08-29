@@ -190,6 +190,7 @@ public class DefaultLightingService implements LightingService {
     @Override
     public void sendExternalSync() {
         if (!externalSync) {
+            logger.debug("Cannot send external sync, because it is not enabled");
             return;
         }
 

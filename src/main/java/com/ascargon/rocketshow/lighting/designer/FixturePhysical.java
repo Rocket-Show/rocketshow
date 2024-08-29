@@ -5,20 +5,15 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * A Rocket Show Designer fixture.
+ * A Rocket Show Designer fixture physical-entry.
  *
  * @author Moritz A. Vieli
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 @Setter
-public class Fixture {
+public class FixturePhysical {
 
-    private String uuid;
-    private String profileUuid;
-    private String name;
-    private String dmxUniverseUuid = "";
-    private int dmxFirstChannel;
-    private String modeShortName;
+    private int[] dimensions;
 
 }

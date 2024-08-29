@@ -1,10 +1,13 @@
 package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.composition.DefaultCompositionFileService;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.lighting.designer.FixtureService;
 import com.ascargon.rocketshow.lighting.designer.Project;
 import com.ascargon.rocketshow.lighting.designer.SearchFixtureTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +21,8 @@ import java.util.List;
 @RequestMapping("${spring.data.rest.base-path}")
 @CrossOrigin
 public class DesignerController {
+
+    private final static Logger logger = LoggerFactory.getLogger(DesignerController.class);
 
     private final ControllerService controllerService;
     private final FixtureService fixtureService;
@@ -37,20 +42,24 @@ public class DesignerController {
     }
 
     @GetMapping("fixtures")
-    public List<SearchFixtureTemplate> searchFixtures(@RequestParam(value = "uuid", required = false) String uuid, @RequestParam(value = "manufacturerShortName", required = false) String manufacturerShortName, @RequestParam(value = "name", required = false) String name, @RequestParam(value = "mainCategory", required = false) String mainCategory) throws IOException {
+    public List<SearchFixtureTemplate> searchFixtures(@RequestParam(value = "uuid", required = false) String uuid, @RequestParam(value = "manufacturerShortName", required = false) String manufacturerShortName, @RequestParam(value = "name", required = false) String name, @RequestParam(value = "mainCategory", required = false) String mainCategory) throws Exception {
         return fixtureService.searchFixtures(uuid, manufacturerShortName, name, mainCategory);
     }
 
     @GetMapping("fixture")
-    public String getFixture(@RequestParam("uuid") String uuid) throws IOException {
+    public String getFixture(@RequestParam("uuid") String uuid) throws Exception {
         return fixtureService.getFixture(uuid);
     }
 
     @PostMapping("preview")
     public synchronized void preview(@RequestBody Project project, @RequestParam("positionMillis") long positionMillis, @RequestParam(value = "compositionName", required = false, defaultValue = "") String compositionName) {
         if (!settingsService.getSettings().getDesignerLivePreview()) {
+            logger.debug("Live preview disabled");
             return;
         }
+
+        logger.debug("Preview designer...");
+
         designerService.stopPreview();
         designerService.load(null, project, null);
 
@@ -95,7 +104,7 @@ public class DesignerController {
     }
 
     @PostMapping("update-profiles")
-    public void updateProfiles() throws IOException {
+    public void updateProfiles() throws Exception {
         fixtureService.updateProfiles();
     }
 

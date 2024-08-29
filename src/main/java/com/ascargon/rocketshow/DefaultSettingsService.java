@@ -134,7 +134,7 @@ public class DefaultSettingsService implements SettingsService {
         }
 
         // Add the default audio bus
-        if (settings.getAudioBusList().size() == 0) {
+        if (settings.getAudioBusList().isEmpty()) {
             AudioBus audioBus = new AudioBus();
             audioBus.setName("My audio bus 1");
             audioBus.setChannels(2);
@@ -199,11 +199,11 @@ public class DefaultSettingsService implements SettingsService {
         if (OperatingSystemInformation.SubType.RASPBERRYOS.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
             // Raspbian-specific settings
 
-            if (settings.isEnableRaspberryGpio() == null) {
+            if (settings.getEnableRaspberryGpio() == null) {
                 settings.setEnableRaspberryGpio(true);
             }
 
-            if (settings.isWlanApEnable() == null) {
+            if (settings.getWlanApEnable() == null) {
                 settings.setWlanApEnable(true);
             }
         }
@@ -518,7 +518,7 @@ public class DefaultSettingsService implements SettingsService {
         }
 
         // Activate/deactivate the access point completely
-        if (settings.isWlanApEnable()) {
+        if (settings.getWlanApEnable()) {
             statusCommand = "enable";
         } else {
             statusCommand = "disable";
@@ -607,6 +607,11 @@ public class DefaultSettingsService implements SettingsService {
     @Override
     public void setSettings(Settings settings) {
         this.settings = settings;
+
+        // make sure, settings not available in the interface (e.g. the designer path)
+        // are not lost
+        this.initDefaultSettings();
+
         updateSystem();
     }
 

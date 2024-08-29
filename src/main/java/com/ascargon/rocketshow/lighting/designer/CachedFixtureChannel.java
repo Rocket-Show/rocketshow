@@ -1,5 +1,8 @@
 package com.ascargon.rocketshow.lighting.designer;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,6 +11,8 @@ import java.util.List;
  *
  * @author Moritz A. Vieli
  */
+@Setter
+@Getter
 public class CachedFixtureChannel {
 
     // the corresponding channel
@@ -28,51 +33,4 @@ public class CachedFixtureChannel {
     // a color wheel, if available
     private FixtureWheel colorWheel;
 
-    public FixtureChannel getChannel() {
-        return channel;
-    }
-
-    public void setChannel(FixtureChannel channel) {
-        this.channel = channel;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public List<CachedFixtureCapability> getCapabilities() {
-        return capabilities;
-    }
-
-    public void setCapabilities(List<CachedFixtureCapability> capabilities) {
-        this.capabilities = capabilities;
-    }
-
-    public double getDefaultValue() {
-        return defaultValue;
-    }
-
-    public void setDefaultValue(double defaultValue) {
-        this.defaultValue = defaultValue;
-    }
-
-    public double getMaxValue() {
-        return maxValue;
-    }
-
-    public void setMaxValue(double maxValue) {
-        this.maxValue = maxValue;
-    }
-
-    public FixtureWheel getColorWheel() {
-        return colorWheel;
-    }
-
-    public void setColorWheel(FixtureWheel colorWheel) {
-        this.colorWheel = colorWheel;
-    }
 }

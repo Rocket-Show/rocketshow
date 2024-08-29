@@ -232,6 +232,8 @@
     "error-max-audio-channels-exceeded": "Die aktuelle Konfiguration ist ungültig: Das ausgewählte Audio Gerät unterstützt maximal {{ max }} Kanäle, es wurden aber {{ current }} eingestellt. Bitte reduziere die Anzahl Kanäle.",
     "monitoring": "Monitoring",
     "monitoring-enable": "Aktivieren",
+    "update-test-branch": "Test-Branch (möglicherweise instabil)",
+    "update-test-branch-enable": "Aktivieren",
     "designer-live-preview": "Designer live preview",
     "designer-live-preview-enable": "Aktivieren",
     "midi-destination-enum": {

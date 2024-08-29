@@ -5,20 +5,17 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * A Rocket Show Designer fixture.
+ * Rocket Show Designer fixture matrix pixelGroup.
  *
  * @author Moritz A. Vieli
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 @Setter
-public class Fixture {
+public class FixtureMatrixPixelGroup {
 
-    private String uuid;
-    private String profileUuid;
     private String name;
-    private String dmxUniverseUuid = "";
-    private int dmxFirstChannel;
-    private String modeShortName;
+    private boolean isAll = false;
+    private FixtureMatrixPixelGroupConstraints constraints = new FixtureMatrixPixelGroupConstraints();
 
 }
