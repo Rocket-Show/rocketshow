@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <versionInfo>
-    <version>2.4.0</version>
-    <date>2024-07-31</date>
+    <version>2.4.1</version>
+    <date>2024-09-07</date>
     <changeNoteList>
+        <changeNote>
+            <version>2.4.1</version>
+            <changes>Better display of fixture capabilities in the designer. Performance improvements.</changes>
+        </changeNote>
         <changeNote>
             <version>2.4.0</version>
             <changes>Support designer fixtures with multiple beams, various bugfixes</changes>

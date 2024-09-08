@@ -175,8 +175,8 @@ mv "$(date '+%Y-%m-%d')-RocketShow.zip" /home/pi
 
 ### Update process
 
-- Update POM and dist/currentversion2.xml versions
-- Add the release notes in dist/currentversion2.xml and update the date on top
+- Update POM
+- Update dist/currentversion2.xml version/date on top and add the release notes
 - Build the jar with Maven
 - Copy target/rocketshow.jar to rocketshow.net/update/test/rocketshow.jar (and parent-directory to release it directly)
 - Copy dist/currentversion2.xml to rocketshow.net/update/test/currentversion2.xml (and parent-directory to release it directly)
