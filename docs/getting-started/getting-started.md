@@ -1,5 +1,5 @@
 # Rocket Show Startup Guide by DavidOpgh
-Version 2.2.20240807
+Version 2.3.20240910
 
 Installing Rocket Show on a Pi isn’t difficult but there are some important steps you need to know.  
 I wrote this guide so you could benefit from all my efforts to get you up and running quickly.  
@@ -85,15 +85,16 @@ The Console terminal screen will then go blank when Rocket Show has completely f
 
 ## DMX Lighting configuration
 
-If you don’t plan on using DMX lighting you can skip to the next section “Log in remotely to Rocket Show”.  
-If you plan on using DMX lighting you need to configure Rocket Show to enable the correct OLA plugins your USB DMX interface.
+- If you don’t plan on using DMX lighting you can skip to the section **Log into Rocket Show from your remote device for the 1st time**.  
+- If you plan on using the Enttec DMX USB Pro for your DMX interface you can skip to the section **Log into Rocket Show from your remote device for the 1st time**. The default configuration of Rocket Show will correctly detect this interface.
+- If you plan on using any other DMX interface for DMX lighting you may need to configure Rocket Show to enable/disable the correct OLA plugins your USB DMX interface.
 
-### Enable/Disable OLA plugins
-/* Appendix B shows what OLA plugins you need to enable/disable depending on your DMX interface */
+    ### Enable/Disable OLA plugins
+    /* Appendix B shows what OLA plugins you need to enable/disable depending on your DMX interface */
 
-When you have the correct plugins enabled, reboot the Pi for the changes to take effect.
+    When you have the correct plugins enabled, reboot the Pi for the changes to take effect.
 
-## Log into Rocket Show on your Pi from your remote device for the 1st time.
+## Log into Rocket Show from your remote device for the 1st time.
 
 To log in remotely to Rocket Show both your device and the Pi need to be connected to your home network. After the PI is finished booting use the browser on your device and type the address rocketshow.local
 
@@ -407,7 +408,7 @@ Once I figure out any more features I'll update this document.
 Thanks for reading. I hope this helps you.  
 DavidOpgh
 
-### Appendix A: My Gear
+## Appendix A: My Gear
 - Raspberry Pi 4 8GB
 - Case [https://www.amazon.com/Argon-Raspberry-Aluminum-Heatsink-Supports/dp/B07WP8WC3V](https://www.amazon.com/Argon-Raspberry-Aluminum-Heatsink-Supports/dp/B07WP8WC3V)
 - Power supply [https://www.amazon.com/gp/product/B094J8TK61](https://www.amazon.com/gp/product/B094J8TK61)
@@ -420,11 +421,12 @@ DavidOpgh
 - Network cable plugged into home or local internet
 - USB audio device - I'm using this [https://www.amazon.com/gp/product/B07RV6VBNR](https://www.amazon.com/gp/product/B07RV6VBNR)
 - USB DMX Interface - I'm using the ENTTEC Open DMX USB [https://www.amazon.com/gp/product/B00O9RY664](https://www.amazon.com/gp/product/B00O9RY664)
+see Appendix E for USB DMX Interfaces I've tested with the PI 5.
 - Simple 7 channel DMX RGB Light - used for testing. Something like this. [https://www.amazon.com/Iverens-Stage-Lights-Control-Lighting/dp/B0CKNY9Z75](https://www.amazon.com/Iverens-Stage-Lights-Control-Lighting/dp/B0CKNY9Z75)
 - USB keyboard and mouse - I'm using this [https://www.amazon.com/Logitech-Wireless-Keyboard-Mouse-Combo/dp/B07SD98VP7](https://www.amazon.com/Logitech-Wireless-Keyboard-Mouse-Combo/dp/B07SD98VP7)
 - PC laptop connected to home or local internet with network cable
 
-### Appendix B - Enable/Disable OLA plugins
+## Appendix B - Enable/Disable OLA plugins
 
 The current configuration of the Open Lighting Architecture (OLA) used by Rocket Show to control DMX lights has the plugins disabled for the most common of DMX USB interfaces (FTDI USB DMX interfaces) 
 
@@ -574,3 +576,31 @@ This is the step before submitting it to the OFL.
 You download the format Open Fixture Library JSON if you want to import it into Rocket Show.
 
 I’ve created my own fixture profiles. You can use an existing profile as a template. In practice, it’s best to create simple profiles with a slider for each channel.
+
+## Appendix E - USB DMX interfaces I've tested with Rocket Show on PI 5
+
+- ENTTEC Open DMX USB (FTDI technology) [https://www.amazon.com/gp/product/B00O9RY664](https://www.amazon.com/gp/product/B00O9RY664)
+- Cheap generic FTDI DMX USB [https://www.amazon.com/dp/B07D6LNXF9](https://www.amazon.com/dp/B07D6LNXF9)
+- Enttec DMXIS (OLA recognizes this as "Enttec Usb Pro Device" (no longer available)
+- Enttec DMX USB Pro (probably the industry standard) https://www.amazon.com/ENTTEC-DMX-USB-512-Ch-Interface/dp/B077VW1DJH
+- DMXking ultraDMX Max (works if you add this line to ola-usbserial.conf: "device_prefix = ttyACM" (see explanation below) https://shop.dmxking.com/ultraDMX-MAX_p_52.html
+
+**Note:** The ENTTEC Open DMX USB and DMX USB Pro have a 5 pin DMX output. To use these interfaces with your 3 pin DMX fixtures you need an adapter cable. Make sure your interface comes with the adapter cable or you'll need to buy one https://www.amazon.com/CHAUVET-DJ-Lighting-Black-DMX3F5M/dp/B00180UNI0
+
+Although the documenation says I'm using the ENTTEC Open DMX USB I have recently changed to the DMXking ultraDMX Max. 
+- Compared to the FTDI based DMX interfaces the Max has a microcontroller for better performance
+- Compared to the DMX USB Pro it's less expensive, smaller size, all metal construction. a 3-pin DMX output, and a much more visable LED indicator. 
+
+Bottom line: If you want the industry standard that will work without any hassles go for the DMX USB Pro. The Max took some extra steps to get configured in OLA but it was better in every way for my needs.
+
+**For DMXking ultraDMX Max - how to add line if you add line "device_prefix = ttyACM" line to the OLA file ola-usbserial.conf**
+(without this change OLA detects the Max as a UART native DMX device - /dev/ttyACM0 )
+
+From your USB keyboard connected to your PI 5 running Rocket Show type the following:
+- RocketShow login: **rocketshow**
+- Password: **thisrocks**
+- rocketshow@RocketShow: ~$ **sudo nano /etc/ola/ola-usbserial.conf**
+- Add this line to the file: **device_prefix = ttyACM**
+- To Write Out the changes press **^O** 
+- Reboot the PI 5
+
