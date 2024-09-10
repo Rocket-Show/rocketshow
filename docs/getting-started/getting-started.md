@@ -554,18 +554,17 @@ ola_plugin_state -p13 -senable
 
 ## Appendix D - Open Fixture Library
 
-The Open Fixture Library (OFL) used by Rocket Show is a static snapshot of the online library. The library of fixtures does not get regularly updated by Rocket Show. So if you submit new fixture profiles online to the OFL, Rocket Show won’t pick them up until Moritz updates Rocket Show’s OFL local database.
+The Open Fixture Library (OFL) used by Rocket Show is a static snapshot of the online library. The library of fixtures is not regularly updated by Rocket Show. So if you submit new fixture profiles online to the OFL, Rocket Show won’t pick them up until Moritz updates Rocket Show’s OFL local database.
 
-If OFL has a fixture but Rocket Show does not have it, you can download the JSON file from the OFL and import it into Rocket Show. But make sure you thoroughly test these downloaded profiles. OFL has a programming language with different functions used by some profiles, but Rocket Show does not recognize them. I’ve come across profiles that won't work in Rocket Show, so I had to make my own.
+If the online OFL database has a fixture profile but Rocket Show does not, you can download the profile's JSON file from the OFL and import it into Rocket Show. But make sure you thoroughly test these downloaded profiles. OFL has a programming language with functions used by some profiles that Rocket Show might not recognize. Moritz made some recent changes to Rocket Show that should have corrected this issue but if you come across profiles that don't work correctly, you will have to make your own.
 
-Any fixture you create or download will have to be imported to every Designer project you make since they’re not incorporated into Rocket Show’s local snapshot of the OFL.
+Note: Any fixture you create or download will have to be imported to every Designer project you make since they’re not incorporated into Rocket Show’s local snapshot of the OFL.
 
-At some point, you’ll most likely need to build your own fixture profiles if they’re not already in the fixture library. It’s best to keep your profiles simple.
-
-Here is Moritz’s video to get you started using the online fixture editor:
+#### At some point, you’ll most likely need to build your own fixture profiles if they’re not already in the fixture library. It’s best to keep your profiles simple.
+ - Here is Moritz’s video to get you started using the online fixture editor:
 [https://www.youtube.com/watch?v=c5n19GrXYfo](https://www.youtube.com/watch?v=c5n19GrXYfo)
 
-Here is the link to the fixture editor:
+- Here is the link to the fixture editor:
 [https://open-fixture-library.org/fixture-editor](https://open-fixture-library.org/fixture-editor)
 
 ![Fixture Editor](images/image36.png)
