@@ -87,11 +87,11 @@ The Console terminal screen will then go blank when Rocket Show has completely f
 
 - If you don’t plan on using DMX lighting you can skip to the section **Log into Rocket Show from your remote device for the 1st time**.  
 - If you plan on using the Enttec DMX USB Pro for your DMX interface you can skip to the section **Log into Rocket Show from your remote device for the 1st time**. The default configuration of Rocket Show will correctly detect this interface.
-- If you plan on using any other DMX interface for DMX lighting you may need to configure Rocket Show to enable/disable the correct OLA plugins your USB DMX interface.
+- If you plan on using any other DMX interface for DMX lighting you may need to configure Rocket Show to enable/disable the correct OLA plugins your USB DMX interface. Appendix E shows what DMX interfaces I've tried with Rocket Show.
 
     ### Enable/Disable OLA plugins
     /* Appendix B shows what OLA plugins you need to enable/disable depending on your DMX interface */
-
+  
     When you have the correct plugins enabled, reboot the Pi for the changes to take effect.
 
 ## Log into Rocket Show from your remote device for the 1st time.
@@ -593,7 +593,7 @@ Although the documenation says I'm using the ENTTEC Open DMX USB I have recently
 Bottom line: If you want the industry standard that will work without any hassles go for the DMX USB Pro. The Max took some extra steps to get configured in OLA but it was better in every way for my needs.
 
 **For DMXking ultraDMX Max - how to add line if you add line "device_prefix = ttyACM" line to the OLA file ola-usbserial.conf**
-(without this change OLA detects the Max as a UART native DMX device - /dev/ttyACM0 )
+(without this change OLA incorrectly detects the Max as a UART native DMX device - /dev/ttyACM0 )
 
 From your USB keyboard connected to your PI 5 running Rocket Show type the following:
 - RocketShow login: **rocketshow**
