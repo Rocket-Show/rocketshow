@@ -1,25 +1,24 @@
-import { DiskSpaceService } from './../../../services/disk-space.service';
-import { Settings } from './../../../models/settings';
-import { SettingsService } from './../../../services/settings.service';
-import { WarningDialogService } from './../../../services/warning-dialog.service';
-import { CompositionMidiFile } from './../../../models/composition-midi-file';
-import { FileService } from './../../../services/file.service';
-import { CompositionFile } from './../../../models/composition-file';
-import { Component, OnInit } from '@angular/core';
-import { BsModalRef } from 'ngx-bootstrap/modal';
-import { Subject } from 'rxjs';
+import { DiskSpaceService } from "./../../../services/disk-space.service";
+import { Settings } from "./../../../models/settings";
+import { SettingsService } from "./../../../services/settings.service";
+import { WarningDialogService } from "./../../../services/warning-dialog.service";
+import { CompositionMidiFile } from "./../../../models/composition-midi-file";
+import { FileService } from "./../../../services/file.service";
+import { CompositionFile } from "./../../../models/composition-file";
+import { ChangeDetectorRef, Component, OnInit } from "@angular/core";
+import { BsModalRef } from "ngx-bootstrap/modal";
+import { Subject } from "rxjs";
 import { map } from "rxjs/operators";
-import { Composition } from '../../../models/composition';
-import { CompositionAudioFile } from '../../../models/composition-audio-file';
-import { AudioBus } from '../../../models/audio-bus';
+import { Composition } from "../../../models/composition";
+import { CompositionAudioFile } from "../../../models/composition-audio-file";
+import { AudioBus } from "../../../models/audio-bus";
 
 @Component({
-  selector: 'app-editor-composition-file',
-  templateUrl: './editor-composition-file.component.html',
-  styleUrls: ['./editor-composition-file.component.scss'],
+  selector: "app-editor-composition-file",
+  templateUrl: "./editor-composition-file.component.html",
+  styleUrls: ["./editor-composition-file.component.scss"],
 })
 export class EditorCompositionFileComponent implements OnInit {
-
   selectUndefinedOptionValue: any = undefined;
 
   fileIndex: number;
@@ -41,27 +40,41 @@ export class EditorCompositionFileComponent implements OnInit {
     private fileService: FileService,
     private warningDialogService: WarningDialogService,
     private settingsService: SettingsService,
-    private diskSpaceService: DiskSpaceService) {
-
+    private diskSpaceService: DiskSpaceService,
+    public changeDetectorRef: ChangeDetectorRef
+  ) {
     this.loadFiles();
     this.loadDiskSpace();
   }
 
   private loadDiskSpace() {
-    this.diskSpaceService.getDiskSpace().pipe(map(diskSpace => {
-      this.diskSpaceUsedGB = diskSpace.usedMB / 1024;
-      this.diskSpaceAvailableGB = (diskSpace.availableMB + diskSpace.availableMB) / 1024;
+    this.diskSpaceService
+      .getDiskSpace()
+      .pipe(
+        map((diskSpace) => {
+          this.diskSpaceUsedGB = diskSpace.usedMB / 1024;
+          this.diskSpaceAvailableGB =
+            (diskSpace.availableMB + diskSpace.availableMB) / 1024;
 
-      this.diskSpaceUsedGB = Math.round(this.diskSpaceUsedGB * 100) / 100;
-      this.diskSpaceAvailableGB = Math.round(this.diskSpaceAvailableGB * 100) / 100;
+          this.diskSpaceUsedGB = Math.round(this.diskSpaceUsedGB * 100) / 100;
+          this.diskSpaceAvailableGB =
+            Math.round(this.diskSpaceAvailableGB * 100) / 100;
 
-      if (diskSpace.usedMB != 0) {
-        this.diskSpacePercentage = Math.round(100 * diskSpace.usedMB / (diskSpace.usedMB + diskSpace.availableMB));
-      }
-    })).subscribe();
+          if (diskSpace.usedMB != 0) {
+            this.diskSpacePercentage = Math.round(
+              (100 * diskSpace.usedMB) /
+                (diskSpace.usedMB + diskSpace.availableMB)
+            );
+          }
+        })
+      )
+      .subscribe();
   }
 
-  private audioBusListContainsBus(audioBusList: AudioBus[], name: string): boolean {
+  private audioBusListContainsBus(
+    audioBusList: AudioBus[],
+    name: string
+  ): boolean {
     for (let audioBus of audioBusList) {
       if (audioBus.name == name) {
         return true;
@@ -72,27 +85,47 @@ export class EditorCompositionFileComponent implements OnInit {
   }
 
   private loadSettings() {
-    this.settingsService.getSettings().pipe(map(result => {
-      this.settings = result;
+    this.settingsService
+      .getSettings()
+      .pipe(
+        map((result) => {
+          this.settings = result;
 
-      // Set the default bus, if the chosen one is not available anymore (e.g. due to changed settings)
-      if (this.file && this.file instanceof CompositionAudioFile) {
-        let compositionAudioFile = <CompositionAudioFile>this.file;
+          // Set the default bus, if the chosen one is not available anymore (e.g. due to changed settings)
+          if (this.file && this.file instanceof CompositionAudioFile) {
+            let compositionAudioFile = <CompositionAudioFile>this.file;
 
-        if (compositionAudioFile.outputBus && this.settings && this.settings.audioBusList) {
-          if (!this.audioBusListContainsBus(this.settings.audioBusList, compositionAudioFile.outputBus)) {
-            compositionAudioFile.outputBus = this.settings.audioBusList[0].name;
+            if (
+              compositionAudioFile.outputBus &&
+              this.settings &&
+              this.settings.audioBusList
+            ) {
+              if (
+                !this.audioBusListContainsBus(
+                  this.settings.audioBusList,
+                  compositionAudioFile.outputBus
+                )
+              ) {
+                compositionAudioFile.outputBus =
+                  this.settings.audioBusList[0].name;
+              }
+            }
           }
-        }
-      }
-    })).subscribe();
+        })
+      )
+      .subscribe();
   }
 
   private loadFiles() {
-    this.fileService.getFiles().pipe(map(result => {
-      this.existingFiles = result;
-      this.filterExistingFiles();
-    })).subscribe();
+    this.fileService
+      .getFiles()
+      .pipe(
+        map((result) => {
+          this.existingFiles = result;
+          this.filterExistingFiles();
+        })
+      )
+      .subscribe();
   }
 
   ngOnInit() {
@@ -116,7 +149,7 @@ export class EditorCompositionFileComponent implements OnInit {
   }
 
   public onUploadError(args: any) {
-    console.log('Upload error', args);
+    console.log("Upload error", args);
   }
 
   private setDefaultOutputBus(compositionAudioFile: CompositionAudioFile) {
@@ -141,7 +174,7 @@ export class EditorCompositionFileComponent implements OnInit {
     this.file = Composition.getFileObjectByType(args[1]);
 
     if (this.file && this.file instanceof CompositionAudioFile) {
-      this.setDefaultOutputBus((<CompositionAudioFile>this.file));
+      this.setDefaultOutputBus(<CompositionAudioFile>this.file);
     }
 
     if (this.file instanceof CompositionMidiFile && midiRoutingList) {
@@ -166,7 +199,10 @@ export class EditorCompositionFileComponent implements OnInit {
   }
 
   selectExistingFile(existingFile: CompositionFile) {
-    if (this.file.name == existingFile.name && this.file.type == existingFile.type) {
+    if (
+      this.file.name == existingFile.name &&
+      this.file.type == existingFile.type
+    ) {
       // This file is already selected
       return;
     }
@@ -178,7 +214,7 @@ export class EditorCompositionFileComponent implements OnInit {
 
     this.file = existingFile;
 
-    this.setDefaultOutputBus((<CompositionAudioFile>this.file));
+    this.setDefaultOutputBus(<CompositionAudioFile>this.file);
 
     if (this.file instanceof CompositionMidiFile && midiRoutingList) {
       (<CompositionMidiFile>this.file).midiRoutingList = midiRoutingList;
@@ -186,14 +222,28 @@ export class EditorCompositionFileComponent implements OnInit {
   }
 
   deleteFile(existingFile: CompositionFile) {
-    this.warningDialogService.show('editor.warning-delete-file').pipe(map(result => {
-      if (result) {
-        this.fileService.deleteFile(existingFile).subscribe(() => {
-          this.loadFiles();
-          this.loadDiskSpace();
-        });
-      }
-    })).subscribe();
+    this.warningDialogService
+      .show("editor.warning-delete-file")
+      .pipe(
+        map((result) => {
+          if (result) {
+            this.fileService.deleteFile(existingFile).subscribe(() => {
+              this.loadFiles();
+              this.loadDiskSpace();
+            });
+          }
+        })
+      )
+      .subscribe();
   }
 
+  getVolume() {
+    return Math.round((<CompositionAudioFile>this.file).volume * 100);
+  }
+
+  setVolume(value: any) {
+    if (!isNaN(value) && value >= 0 && value <= 100) {
+      (<CompositionAudioFile>this.file).volume = value / 100;
+    }
+  }
 }

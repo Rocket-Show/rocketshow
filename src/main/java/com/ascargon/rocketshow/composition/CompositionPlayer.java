@@ -185,7 +185,12 @@ public class CompositionPlayer {
         return startChannelIndex;
     }
 
-    private float getChannelVolume(AudioBus audioBus, int outputChannelIndex, int inputChannelIndex) {
+    private float getChannelVolume(
+            AudioBus audioBus,
+            int outputChannelIndex,
+            int inputChannelIndex,
+            float volume
+    ) {
         int startChannelIndex = getAudioBusStartChannel(audioBus);
 
         if (outputChannelIndex < startChannelIndex) {
@@ -197,7 +202,7 @@ public class CompositionPlayer {
         }
 
         if (inputChannelIndex == outputChannelIndex - startChannelIndex) {
-            return 1;
+            return volume;
         } else {
             return 0;
         }
@@ -310,7 +315,7 @@ public class CompositionPlayer {
 
         GstApi.GST_API.gst_object_unref(bus);
 
-        // Create a pipeline, if at least one audiosource is present
+        // Add some audio-specific elements to the pipeline, if at least one audio file is present
         if (hasAudioFile) {
             audioMixer = ElementFactory.make("audiomixer", "audiomixer");
             pipeline.add(audioMixer);
@@ -443,7 +448,12 @@ public class CompositionPlayer {
                         for (int k = 0; k < audioCompositionFile.getChannels(); k++) {
                             GValueAPI.GValue inputChannel = new GValueAPI.GValue(GType.FLOAT);
 
-                            float channelVolume = getChannelVolume(audioBus, j, k);
+                            float channelVolume = getChannelVolume(
+                                    audioBus,
+                                    j,
+                                    k,
+                                    audioCompositionFile.getVolume()
+                            );
 
                             inputChannel.setValue(channelVolume);
                             GstApi.GST_API.gst_value_array_append_value(outputChannel, inputChannel.getPointer());
@@ -454,7 +464,7 @@ public class CompositionPlayer {
                         GValueAPI.GVALUE_API.g_value_unset(outputChannel);
                     }
 
-                    logger.debug("Mix-matrix for " + audioCompositionFile.getName() + ": " + mixMatrix.toString());
+                    logger.debug("Mix-matrix for " + audioCompositionFile.getName() + ": " + mixMatrix);
 
                     GstApi.GST_API.g_object_set_property(audioConvert, "mix-matrix", mixMatrix.getPointer());
                     GValueAPI.GVALUE_API.g_value_unset(mixMatrix);

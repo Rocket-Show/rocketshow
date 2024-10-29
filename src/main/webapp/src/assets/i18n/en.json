@@ -199,6 +199,7 @@
     "audio-bus-quadro": "Quadro",
     "audio-bus-surround": "Surround",
     "no-audio-bus": "None",
+    "audio-volume": "Volume",
     "no-composition": "None",
     "no-instrument": "None",
     "audio-output": "Output",
