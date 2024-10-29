@@ -16,9 +16,14 @@ Refer to [the docs](./docs/index.md) to find out how to use Rocket Show.
 Warning: Delete `node_modules/@angular-devkit/build-optimizer/src/.cache` after each NPM package update to make sure,
 the devkit is not caching an old version (see https://github.com/angular/devkit/issues/913).
 
-1. Build the Java JAR: `mvn install`
-2. Start the backend server from target directory: `java -jar rocketshow.jar`
+1. Go to the target directory: `cd target`
+2. Build and start the backend server: `mvn package -f ../pom.xml && java -jar rocketshow.jar`
 3. Open the web app on http://localhost:8080
+
+Use this command to skip tests and NPM build:
+```shell
+mvn package -f ../pom.xml -Dskip.npm -Dmaven.test.skip=true && java -jar rocketshow.jar
+```
 
 For frequent builds, you might want to comment out the frontend-maven-plugin in the POM and make use of the Maven
 parameter `-DskipTests`.
@@ -34,6 +39,13 @@ Pipelines can be tested using gst-launch-1.0. E.g.:
 ```shell
 gst-launch-1.0 videotestsrc ! videoconvert ! autovideosink
 gst-launch-1.0 uridecodebin uri=file:///opt/rocketshow/media/video/clouds.mp4 ! queue ! kmssink
+gst-launch-1.0 uridecodebin uri=file:///opt/rocketshow/media/audio/head_smashed_far_away.wav ! audioconvert ! audioresample ! "audio/x-raw,rate=44100" ! alsasink device=rocketshow
+```
+
+To test audio playback with alsa:
+
+```shell
+aplay -D rocketshow /opt/rocketshow/media/audio/head_smashed_far_away.wav
 ```
 
 While developing the web app, it might be convenient to start an Angular server:
@@ -69,6 +81,24 @@ Launch Rocket Show on the mac:
 
 ```shell
 ./start.sh
+```
+
+### Build OLA
+
+To build the OLA Client jar required by Rocket Show, follow these steps on a mac:
+
+```
+# install protobuf 21 (newer versions of protobuf don't work by OCT 2024, because of too old cpp versions used in dependencies, see https://github.com/protocolbuffers/protobuf/issues/12393)
+brew install protobuf@21 autoconf automake libtool cppunit
+
+echo 'export PATH="/opt/homebrew/opt/protobuf@21/bin:$PATH"' >> ~/.zshrc
+export LDFLAGS="-L/opt/homebrew/opt/protobuf@21/lib"                
+export CPPFLAGS="-I/opt/homebrew/opt/protobuf@21/include"
+export PKG_CONFIG_PATH="/opt/homebrew/opt/protobuf@21/lib/pkgconfig"
+
+autoreconf -i
+./configure --enable-java-libs
+make -j$(nproc)
 ```
 
 ## Deployment
@@ -116,18 +146,22 @@ EOF
 Login using `ssh pi@raspberrypi.local` and password `raspberry`
 
 Switch to user root:
+
 ````shell
 sudo su - root
 ````
 
 Update apt:
+
 ````shell
 apt-get update
 ````
 
-Prepare the environment according to [https://github.com/RPi-distro/pi-gen](pi-gen Readme) (e.g. install the required dependencies)
+Prepare the environment according to [https://github.com/RPi-distro/pi-gen](pi-gen Readme) (e.g. install the required
+dependencies)
 
 Run the following script (might take about 45 minutes)
+
 ```shell
 cd /opt
 rm -rf build
@@ -175,11 +209,12 @@ mv "$(date '+%Y-%m-%d')-RocketShow.zip" /home/pi
 
 ### Update process
 
-- Update POM and dist/currentversion2.xml versions
-- Add the release notes in dist/currentversion2.xml and update the date on top
-- Build the jar with Maven
+- Update POM
+- Update dist/currentversion2.xml version/date on top and add the release notes
+- Build the jar with Maven `mvn clean package`
 - Copy target/rocketshow.jar to rocketshow.net/update/test/rocketshow.jar (and parent-directory to release it directly)
-- Copy dist/currentversion2.xml to rocketshow.net/update/test/currentversion2.xml (and parent-directory to release it directly)
+- Copy dist/currentversion2.xml to rocketshow.net/update/test/currentversion2.xml (and parent-directory to release it
+  directly)
 - GIT merge DEV branch to MASTER
 - GIT tag with the current version
 - Switch back to DEV

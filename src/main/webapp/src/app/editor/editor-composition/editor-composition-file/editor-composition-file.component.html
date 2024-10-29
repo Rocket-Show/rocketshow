@@ -201,6 +201,37 @@
                 </select>
               </div>
 
+              <!-- Audio Volume -->
+              <div class="form-group" *ngIf="file?.type == 'AUDIO'">
+                <label class="col-form-label">{{
+                  "settings.audio-volume" | translate
+                }}</label>
+
+                <div class="d-flex">
+                  <div class="my-auto" style="float: left; width: 100%">
+                    <mv-slider
+                      min="0"
+                      tooltip="hide"
+                      [min]="0"
+                      [max]="1"
+                      [step]="0.01"
+                      [(value)]="file.volume"
+                      (change)="changeDetectorRef.detectChanges()"
+                    >
+                    </mv-slider>
+                  </div>
+                  <div class="my-auto">
+                    <input
+                      type="text"
+                      class="slider-input"
+                      [ngModel]="getVolume()"
+                      (ngModelChange)="setVolume($event)"
+                    />
+                  </div>
+                  <div class="m-auto" style="padding-left: 5px;">%</div>
+                </div>
+              </div>
+
               <!-- Delay (offset) -->
               <div class="form-group">
                 <label class="col-form-label" for="offsetMillis">{{

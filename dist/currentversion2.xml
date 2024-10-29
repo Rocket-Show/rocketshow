@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <versionInfo>
-    <version>2.4.0</version>
-    <date>2024-07-31</date>
+    <version>2.4.2</version>
+    <date>2024-10-29</date>
     <changeNoteList>
+        <changeNote>
+            <version>2.4.2</version>
+            <changes>Ability to adjust the volume of separate audio files in the composition.</changes>
+        </changeNote>
+        <changeNote>
+            <version>2.4.1</version>
+            <changes>Better display of fixture capabilities in the designer. Performance improvements.</changes>
+        </changeNote>
         <changeNote>
             <version>2.4.0</version>
             <changes>Support designer fixtures with multiple beams, various bugfixes</changes>
