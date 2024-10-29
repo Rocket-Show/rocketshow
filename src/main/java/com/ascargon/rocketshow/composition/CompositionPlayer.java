@@ -452,7 +452,7 @@ public class CompositionPlayer {
                                     audioBus,
                                     j,
                                     k,
-                                    audioCompositionFile.getVolume()
+                                    audioCompositionFile.getVolume() * composition.getAudioVolume()
                             );
 
                             inputChannel.setValue(channelVolume);

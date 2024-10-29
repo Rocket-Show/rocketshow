@@ -9,10 +9,15 @@ import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;
 import jakarta.xml.bind.annotation.XmlElements;
 import jakarta.xml.bind.annotation.XmlRootElement;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.List;
 
 @XmlRootElement
+@Getter
+@Setter
 public class Composition {
 
     private String name;
@@ -27,6 +32,8 @@ public class Composition {
 
     private List<LeadSheet> leadSheetList = new ArrayList<>();
 
+    private float audioVolume = 1;
+
     @XmlElementWrapper(name = "fileList")
     @XmlElements({@XmlElement(type = MidiCompositionFile.class, name = "midiFile"),
             @XmlElement(type = VideoCompositionFile.class, name = "videoFile"),
@@ -37,48 +44,4 @@ public class Composition {
         return compositionFileList;
     }
 
-    @SuppressWarnings("unused")
-    public void setCompositionFileList(List<CompositionFile> compositionFileList) {
-        this.compositionFileList = compositionFileList;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public long getDurationMillis() {
-        return durationMillis;
-    }
-
-    public void setDurationMillis(long durationMillis) {
-        this.durationMillis = durationMillis;
-    }
-
-    public String getNotes() {
-        return notes;
-    }
-
-    public void setNotes(String notes) {
-        this.notes = notes;
-    }
-
-    public boolean isLoop() {
-        return loop;
-    }
-
-    public void setLoop(boolean loop) {
-        this.loop = loop;
-    }
-
-    public List<LeadSheet> getLeadSheetList() {
-        return leadSheetList;
-    }
-
-    public void setLeadSheetList(List<LeadSheet> leadSheetList) {
-        this.leadSheetList = leadSheetList;
-    }
 }

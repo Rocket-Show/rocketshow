@@ -12,6 +12,7 @@ export class Composition {
     autoStartNextComposition: boolean = false;
     leadSheetList: LeadSheet[] = [];
     loop: boolean;
+    audioVolume: number;
 
     constructor(data?: any) {
         if (!data) {
@@ -32,6 +33,7 @@ export class Composition {
         }
 
         this.loop = data.loop;
+        this.audioVolume = data.audioVolume;
     }
 
     // Return a file object based on its type
