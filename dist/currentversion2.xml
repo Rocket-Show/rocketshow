@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <versionInfo>
-    <version>2.4.2</version>
-    <date>2024-10-29</date>
+    <version>2.4.3</version>
+    <date>2024-11-01</date>
     <changeNoteList>
+        <changeNote>
+            <version>2.4.3</version>
+            <changes>Increased compatibility with older browsers.</changes>
+        </changeNote>
         <changeNote>
             <version>2.4.2</version>
             <changes>Ability to adjust the volume of separate audio files in the composition.</changes>
