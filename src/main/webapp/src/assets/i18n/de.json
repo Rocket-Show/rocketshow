@@ -120,7 +120,7 @@
     "band": "Band",
     "advanced": "Erweitert",
     "info": "Information",
-    "reset-intro": "Wizard zurücksetzen",
+    "reset-intro": "Installations-Wizard zurücksetzen",
     "restart-required": "Ein Neustart des Gerätes ist nötig, damit diese Einstellungen übernommen werden.",
     "wlan-ap": "WLAN Access Point",
     "wlan-ap-status": "Access Point",

@@ -120,7 +120,7 @@
     "band": "Band",
     "advanced": "Advanced",
     "info": "Information",
-    "reset-intro": "Reset wizard",
+    "reset-intro": "Reset setup-wizard",
     "restart-required": "Please restart the device for these settings to take effect.",
     "wlan-ap": "Wireless access point",
     "wlan-ap-status": "Access point",
