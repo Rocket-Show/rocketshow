@@ -10,6 +10,7 @@ import lombok.Setter;
 @Setter
 public class AudioCompositionFile extends CompositionFile {
 
+    // the name of the audio bus
     private String outputBus;
     private int channels = 2;
     private float volume = 1;

@@ -1,6 +1,9 @@
 package com.ascargon.rocketshow.audio;
 
+import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
+import org.freedesktop.gstreamer.ElementFactory;
+import org.freedesktop.gstreamer.elements.BaseSink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -160,6 +163,36 @@ public class DefaultAudioService implements AudioService {
 //        }
 
         return maxChannels.get();
+    }
+
+    @Override
+    public String getAudioDeviceAlsaName(AudioDevice audioDevice) {
+        // The audio device key could contain spaces and, while quite uncommon, also
+        // other special characters. we need to change it to get a name suitable for
+        // ALSA devices used in .asoundrc.
+        String formatted = audioDevice.getKey().replace(" ", "_");
+
+        // Remove all special characters using regex
+        formatted = formatted.replaceAll("[^a-zA-Z0-9_]", "");
+
+        return formatted;
+    }
+
+    @Override
+    public BaseSink getGstAudioSink(AudioDevice audioDevice) {
+        String sinkName = "alsasink";
+
+        if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+            sinkName = "osxaudiosink";
+        }
+
+        BaseSink sink = (BaseSink) ElementFactory.make(sinkName, "audiosink_" + getAudioDeviceAlsaName(audioDevice));
+
+        if (!OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+            sink.set("device", "rs_" + getAudioDeviceAlsaName(audioDevice));
+        }
+
+        return sink;
     }
 
 }

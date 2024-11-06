@@ -9,6 +9,7 @@ import { RemoteDevice } from "./remote-device";
 import { MidiMapping } from './midi-mapping';
 
 export class Settings {
+    version: number;
     basePath: string;
     mediaPath: string;
     midiPath: string;
@@ -34,7 +35,6 @@ export class Settings {
     deviceName: string;
     resetUsbAfterBoot: boolean;
     audioOutput: string;
-    audioDevice: AudioDevice;
     audioRate: number;
     alsaBufferSize: number;
     alsaPeriodSize: number;
@@ -62,6 +62,7 @@ export class Settings {
             return;
         }
 
+        this.version = data.version;
         this.basePath = data.basePath;
         this.mediaPath = data.mediaPath;
         this.midiPath = data.midiPath;
@@ -136,10 +137,6 @@ export class Settings {
         this.alsaPeriodSize = data.alsaPeriodSize;
         this.alsaBufferSize = data.alsaBufferSize;
         this.alsaPeriodTime = data.alsaPeriodTime;
-
-        if (data.audioDevice) {
-            this.audioDevice = new AudioDevice(data.audioDevice);
-        }
 
         if (data.audioBusList) {
             this.audioBusList = [];

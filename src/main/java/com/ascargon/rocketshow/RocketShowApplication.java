@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow;
 
 import com.ascargon.rocketshow.api.NotificationService;
+import com.ascargon.rocketshow.audio.AudioDeviceKeepOpenService;
 import com.ascargon.rocketshow.image.ImageDisplayingService;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.lighting.designer.FixtureService;
@@ -12,13 +13,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import java.io.IOException;
-
 @SpringBootApplication(exclude = SecurityAutoConfiguration.class)
 public class RocketShowApplication {
 
     private static String[] args;
     private static ConfigurableApplicationContext context;
+
+    private AudioDeviceKeepOpenService audioDeviceKeepOpenService;
 
     public static void main(String[] args) {
         ConfigurableApplicationContext context = SpringApplication.run(RocketShowApplication.class, args);
@@ -40,6 +41,9 @@ public class RocketShowApplication {
 
         // Connect to the MIDI out device, if available
         context.getBean(MidiDeviceOutService.class);
+
+        // Initialize the player to start the default composition, if required
+        context.getBean(AudioDeviceKeepOpenService.class);
 
         // Start the designer preview, if necessary
         context.getBean(DesignerService.class);
