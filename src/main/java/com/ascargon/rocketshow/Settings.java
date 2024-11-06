@@ -31,6 +31,7 @@ public class Settings {
         DEFAULT, HEADPHONES, HDMI, DEVICE
     }
 
+    private Integer version;
     private String basePath;
     private String mediaPath;
     private String midiPath;
@@ -65,7 +66,13 @@ public class Settings {
     private String deviceName;
     private boolean resetUsbAfterBoot = false;
     private AudioOutput audioOutput;
+
+    /**
+     * @deprecated Not used since settings version 2 anymore. The device is set in the audiobus instead.
+     */
+    @Deprecated
     private AudioDevice audioDevice;
+
     private Integer audioRate;
     private Integer alsaPeriodSize;
     private Integer alsaBufferSize;

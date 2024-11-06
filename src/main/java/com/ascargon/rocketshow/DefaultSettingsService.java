@@ -1,6 +1,8 @@
 package com.ascargon.rocketshow;
 
 import com.ascargon.rocketshow.audio.AudioBus;
+import com.ascargon.rocketshow.audio.AudioDevice;
+import com.ascargon.rocketshow.audio.AudioService;
 import com.ascargon.rocketshow.midi.MidiDevice;
 import com.ascargon.rocketshow.midi.MidiDirection;
 import com.ascargon.rocketshow.midi.MidiMapping;
@@ -15,6 +17,7 @@ import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.freedesktop.gstreamer.Gst;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.system.ApplicationHome;
@@ -22,7 +25,9 @@ import org.springframework.stereotype.Service;
 
 import javax.sound.midi.MidiUnavailableException;
 import java.io.*;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -30,6 +35,7 @@ public class DefaultSettingsService implements SettingsService {
 
     private final static Logger logger = LoggerFactory.getLogger(Settings.class);
 
+    private final int CURRENT_SETTINGS_VERSION = 2;
     private final String FILE_NAME = "settings";
 
     private final String ROCKET_SHOW_SETTINGS_START = "# ROCKETSHOWSTART";
@@ -38,15 +44,22 @@ public class DefaultSettingsService implements SettingsService {
     private final OperatingSystemInformationService operatingSystemInformationService;
     private final RaspberryResetUsbService raspberryResetUsbService;
     private final MidiService midiService;
+    private final AudioService audioService;
 
     private Settings settings;
 
     private final ApplicationHome applicationHome = new ApplicationHome(RocketShowApplication.class);
 
-    public DefaultSettingsService(RaspberryResetUsbService raspberryResetUsbService, OperatingSystemInformationService operatingSystemInformationService, MidiService midiService) {
+    public DefaultSettingsService(
+            RaspberryResetUsbService raspberryResetUsbService,
+            OperatingSystemInformationService operatingSystemInformationService,
+            MidiService midiService,
+            AudioService audioService
+    ) {
         this.operatingSystemInformationService = operatingSystemInformationService;
         this.raspberryResetUsbService = raspberryResetUsbService;
         this.midiService = midiService;
+        this.audioService = audioService;
 
         // Load the settings
         try {
@@ -58,7 +71,7 @@ public class DefaultSettingsService implements SettingsService {
         // Apply default settings (if not loaded)
         initDefaultSettings();
 
-        // Save the settings (in case none were already existant)
+        // Save the settings to store migrations, default values, etc.
         try {
             save();
         } catch (JAXBException e) {
@@ -71,6 +84,7 @@ public class DefaultSettingsService implements SettingsService {
 
         if (settings == null) {
             settings = new Settings();
+            settings.setVersion(CURRENT_SETTINGS_VERSION);
         }
 
         if (settings.getBasePath() == null) {
@@ -111,7 +125,7 @@ public class DefaultSettingsService implements SettingsService {
             try {
                 List<MidiDevice> midiInDeviceList;
                 midiInDeviceList = midiService.getMidiDevices(MidiDirection.IN);
-                if (midiInDeviceList.size() > 0) {
+                if (!midiInDeviceList.isEmpty()) {
                     settings.setMidiInDevice(midiInDeviceList.get(0));
                 }
             } catch (MidiUnavailableException e) {
@@ -125,7 +139,7 @@ public class DefaultSettingsService implements SettingsService {
             try {
                 List<MidiDevice> midiOutDeviceList;
                 midiOutDeviceList = midiService.getMidiDevices(MidiDirection.OUT);
-                if (midiOutDeviceList.size() > 0) {
+                if (!midiOutDeviceList.isEmpty()) {
                     settings.setMidiOutDevice(midiOutDeviceList.get(0));
                 }
             } catch (MidiUnavailableException e) {
@@ -220,7 +234,7 @@ public class DefaultSettingsService implements SettingsService {
             settings.setWlanApCountryCode("US");
         }
 
-        if (settings.getInstrumentList().size() == 0) {
+        if (settings.getInstrumentList().isEmpty()) {
             Instrument instrument;
 
             instrument = new Instrument();
@@ -258,9 +272,9 @@ public class DefaultSettingsService implements SettingsService {
     }
 
     @Override
-    public AudioBus getAudioBusFromName(String outputBus) {
+    public AudioBus getAudioBusByName(String outputBus) {
         if (outputBus == null) {
-            if (settings.getAudioBusList().size() > 0) {
+            if (!settings.getAudioBusList().isEmpty()) {
                 return settings.getAudioBusList().get(0);
             } else {
                 return null;
@@ -275,7 +289,7 @@ public class DefaultSettingsService implements SettingsService {
         }
 
         // Return a default bus, if none is found
-        if (settings.getAudioBusList().size() > 0) {
+        if (!settings.getAudioBusList().isEmpty()) {
             return settings.getAudioBusList().get(0);
         }
 
@@ -300,14 +314,16 @@ public class DefaultSettingsService implements SettingsService {
     }
 
     @Override
-    public int getTotalAudioChannels() {
-        int total = 0;
+    public int getChannelCountByAudioDevice(AudioDevice audioDevice) {
+        int count = 0;
 
         for (AudioBus audioBus : settings.getAudioBusList()) {
-            total += audioBus.getChannels();
+            if (audioBus.getAudioDevice().getId() == audioDevice.getId()) {
+                count += audioBus.getChannels();
+            }
         }
 
-        return total;
+        return count;
     }
 
     private String getBusNameFromId(int id) {
@@ -330,7 +346,7 @@ public class DefaultSettingsService implements SettingsService {
         }
 
         // Return a default bus, if none is found
-        if (settings.getAudioBusList().size() > 0) {
+        if (!settings.getAudioBusList().isEmpty()) {
             return getBusNameFromId(0);
         }
 
@@ -340,9 +356,10 @@ public class DefaultSettingsService implements SettingsService {
     private String getAlsaSettings() {
         // Generate the ALSA settings
         StringBuilder alsaSettings = new StringBuilder();
-        int currentChannel = 0;
 
-        if (settings.getAudioDevice() == null) {
+        List<AudioDevice> audioDeviceList = getAudioDeviceInUseList();
+
+        if (audioDeviceList.isEmpty()) {
             // We got no audio device
             return "";
         }
@@ -350,51 +367,78 @@ public class DefaultSettingsService implements SettingsService {
         alsaSettings.append(ROCKET_SHOW_SETTINGS_START);
         alsaSettings.append(System.lineSeparator());
 
-        // Build the dshare device
-        alsaSettings.append(
-                        "pcm.dshare {\n" +
-                                "  type dmix\n" +
-                                "  ipc_key 2048\n" +
-                                "  slave {\n" +
-                                "    pcm \"hw:").append(settings.getAudioDevice().getKey()).append("\"\n")
-                .append("    channels ").append(getTotalAudioChannels()).append("\n");
+        // Build the dmix device
+        for (AudioDevice audioDevice : audioDeviceList) {
+            int currentChannel = 0;
 
-        if (settings.getAlsaPeriodTime() != null) {
-            alsaSettings.append("    period_time ").append(settings.getAlsaPeriodTime()).append("\n");
+            String audioDeviceAlsaName = audioService.getAudioDeviceAlsaName(audioDevice);
+            int channelCount = getChannelCountByAudioDevice(audioDevice);
+
+            alsaSettings.append("pcm.dmix_").append(audioDeviceAlsaName).
+                    append(" {\n").
+                    append("  type dmix\n").
+                    append("  ipc_key 2048\n").
+                    append("  slave {\n").
+                    append("    pcm \"hw:").append(audioDevice.getKey()).append("\"\n")
+                    .append("    channels ").append(channelCount).append("\n");
+
+            if (settings.getAlsaPeriodTime() != null) {
+                alsaSettings.append("    period_time ").append(settings.getAlsaPeriodTime()).append("\n");
+            }
+
+            if (settings.getAlsaPeriodSize() != null) {
+                alsaSettings.append("    period_size ").append(settings.getAlsaPeriodSize()).append("\n");
+            }
+
+            if (settings.getAlsaBufferSize() != null && settings.getAlsaPeriodSize() != null) {
+                alsaSettings.append("    buffer_size ").append(settings.getAlsaBufferSize() * settings.getAlsaPeriodSize()).append("\n");
+            }
+
+            alsaSettings.append("  }\n")
+                    .append("  bindings {\n");
+
+            // Add all channels
+            for (int i = 0; i < channelCount; i++) {
+                alsaSettings.append("    ").append(i).append(" ").append(i).append("\n");
+            }
+
+            alsaSettings.append("""
+                      }
+                    }
+                    """);
+
+            // Create the rocketshow device
+            alsaSettings.append("\n" + "pcm.rs_").append(audioDeviceAlsaName).append(" {\n").
+                    append("  type plug\n").
+                    append("  slave {\n").
+                    append("    pcm \"dmix_").append(audioDeviceAlsaName).append("\"\n").
+                    append("    channels ").append(channelCount).append("\n").
+                    append("  }\n");
+
+            // Add each channel to the bus
+            for (int j = 0; j < channelCount; j++) {
+                alsaSettings.append("  ttable.").append(j).append(".").append(currentChannel).append(" 1\n");
+                currentChannel++;
+            }
+
+            alsaSettings.append("}\n");
         }
-
-        if (settings.getAlsaPeriodSize() != null) {
-            alsaSettings.append("    period_size ").append(settings.getAlsaPeriodSize()).append("\n");
-        }
-
-        if (settings.getAlsaBufferSize() != null && settings.getAlsaPeriodSize() != null) {
-            alsaSettings.append("    buffer_size ").append(settings.getAlsaBufferSize() * settings.getAlsaPeriodSize()).append("\n");
-        }
-
-        alsaSettings.append("  }\n")
-                .append("  bindings {\n");
-
-        // Add all channels
-        for (int i = 0; i < getTotalAudioChannels(); i++) {
-            alsaSettings.append("    ").append(i).append(" ").append(i).append("\n");
-        }
-
-        alsaSettings.append("  }\n" + "}\n");
-
-        // Create the default bus
-        alsaSettings.append("\n" + "pcm.").append("rocketshow").append(" {\n").append("  type plug\n").append("  slave {\n").append("    pcm \"dshare\"\n").append("    channels ").append(getTotalAudioChannels()).append("\n").append("  }\n");
-
-        // Add each channel to the bus
-        for (int j = 0; j < getTotalAudioChannels(); j++) {
-            alsaSettings.append("  ttable.").append(j).append(".").append(currentChannel).append(" 1\n");
-            currentChannel++;
-        }
-
-        alsaSettings.append("}\n");
 
         alsaSettings.append(ROCKET_SHOW_SETTINGS_END);
 
         return alsaSettings.toString();
+    }
+
+    @Override
+    public List<AudioDevice> getAudioDeviceInUseList() {
+        // Get all uniquely used audio devices
+        Set<AudioDevice> audioDeviceSet = new HashSet<>();
+        for (AudioBus audioBus : settings.getAudioBusList()) {
+            if (audioBus.getAudioDevice() != null) {
+                audioDeviceSet.add(audioBus.getAudioDevice());
+            }
+        }
+        return audioDeviceSet.stream().toList();
     }
 
     private void updateAudioSystem() throws Exception {
@@ -439,7 +483,7 @@ public class DefaultSettingsService implements SettingsService {
                     logger.error("Could not read ALSA settings on '" + alsaSettingsPath + "'", e);
                 }
 
-                if (existingAlsaSettings.length() > 0 && !existingAlsaSettings.toString().endsWith(System.lineSeparator())) {
+                if (!existingAlsaSettings.isEmpty() && !existingAlsaSettings.toString().endsWith(System.lineSeparator())) {
                     existingAlsaSettings.append(System.lineSeparator());
                 }
             }
@@ -568,6 +612,8 @@ public class DefaultSettingsService implements SettingsService {
 
         jaxbMarshaller.marshal(settings, file);
 
+        updateSystem();
+
         logger.info("Settings saved");
     }
 
@@ -586,6 +632,12 @@ public class DefaultSettingsService implements SettingsService {
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
         this.setSettings((Settings) jaxbUnmarshaller.unmarshal(file));
 
+        if (settings.getVersion() == null || settings.getVersion() < CURRENT_SETTINGS_VERSION) {
+            migrateFromOldProject();
+        } else if (settings.getVersion() > CURRENT_SETTINGS_VERSION) {
+            throw new Exception("The settings have been saved with a newer version of Rocket Show and cannot be used with the current one.");
+        }
+
         // Reset the USB interface, if needed
         try {
             if (settings.isResetUsbAfterBoot()) {
@@ -597,6 +649,29 @@ public class DefaultSettingsService implements SettingsService {
         }
 
         logger.info("Settings loaded");
+    }
+
+    private void migrateToVersion2() {
+        // move the audio device into all buses
+        for (AudioBus audioBus : settings.getAudioBusList()) {
+            audioBus.setAudioDevice(settings.getAudioDevice());
+        }
+
+        settings.setVersion(2);
+    }
+
+    public void migrateFromOldProject() throws JAXBException {
+        boolean migrated = false;
+
+        if (settings.getVersion() == null) {
+            // Migrate from version 1
+            this.migrateToVersion2();
+            migrated = true;
+        }
+
+        if (migrated) {
+            logger.warn("The settings have been migrated from an older version");
+        }
     }
 
     @Override

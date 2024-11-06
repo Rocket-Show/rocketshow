@@ -67,9 +67,9 @@ public class DefaultPlayerService implements PlayerService {
         this.designerService = designerService;
         this.operatingSystemInformationService = operatingSystemInformationService;
 
-        currentCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, capabilitiesService, activityNotificationAudioService, setService, midi2LightingConvertService, lightingService, midiDeviceOutService, audioService, designerService, operatingSystemInformationService);
+        currentCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, capabilitiesService, activityNotificationAudioService, setService, midi2LightingConvertService, lightingService, midiDeviceOutService, designerService, operatingSystemInformationService, audioService);
 
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, capabilitiesService, activityNotificationAudioService, setService, midi2LightingConvertService, lightingService, midiDeviceOutService, audioService, designerService, operatingSystemInformationService);
+        defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, capabilitiesService, activityNotificationAudioService, setService, midi2LightingConvertService, lightingService, midiDeviceOutService, designerService, operatingSystemInformationService, audioService);
         defaultCompositionPlayer.setDefaultComposition(true);
 
         try {
@@ -256,7 +256,7 @@ public class DefaultPlayerService implements PlayerService {
         // to share the same instance) and play it
         Composition composition = compositionService
                 .cloneComposition(compositionService.getComposition(compositionName));
-        CompositionPlayer compositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, capabilitiesService, activityNotificationAudioService, setService, midi2LightingConvertService, lightingService, midiDeviceOutService, audioService, designerService, operatingSystemInformationService);
+        CompositionPlayer compositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, capabilitiesService, activityNotificationAudioService, setService, midi2LightingConvertService, lightingService, midiDeviceOutService, designerService, operatingSystemInformationService, audioService);
         compositionPlayer.setSample(true);
         compositionPlayer.setComposition(composition);
         sampleCompositionPlayerList.add(compositionPlayer);
@@ -307,7 +307,7 @@ public class DefaultPlayerService implements PlayerService {
 
         // Wait for all devices to be stopped
         executor.shutdown();
-        if(!executor.awaitTermination(60, TimeUnit.SECONDS)){
+        if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
             logger.error("Timeout while waiting for the compositions to stop on remote devices");
         }
 
