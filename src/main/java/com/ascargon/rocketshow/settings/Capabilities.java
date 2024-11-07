@@ -1,4 +1,4 @@
-package com.ascargon.rocketshow;
+package com.ascargon.rocketshow.settings;
 
 import jakarta.xml.bind.annotation.XmlRootElement;
 

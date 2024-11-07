@@ -1,7 +1,7 @@
 package com.ascargon.rocketshow.util;
 
-import com.ascargon.rocketshow.SessionService;
-import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.session.SessionService;
+import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.api.NotificationService;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.Unmarshaller;

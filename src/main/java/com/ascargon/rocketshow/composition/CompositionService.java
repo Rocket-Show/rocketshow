@@ -1,7 +1,6 @@
 package com.ascargon.rocketshow.composition;
 
-import com.ascargon.rocketshow.PlayerService;
-import com.ascargon.rocketshow.audio.AudioBus;
+import com.ascargon.rocketshow.play.PlayerService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

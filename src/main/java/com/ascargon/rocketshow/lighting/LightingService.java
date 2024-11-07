@@ -2,14 +2,16 @@ package com.ascargon.rocketshow.lighting;
 
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public interface LightingService {
 
     void reset();
 
-    void send();
+    void send(int sendDelayMillis, boolean enableMonitor);
 
-    void sendExternalSync();
+    void sendExternalSync(boolean enableMonitor);
 
     void addLightingUniverse(LightingUniverse lightingUniverse);
 
@@ -18,5 +20,9 @@ public interface LightingService {
     void setExternalSync(boolean externalSync);
 
     void close();
+
+    List<OlaPlugin> getOlaPlugins();
+
+    void enablePlugin(int pluginId);
 
 }

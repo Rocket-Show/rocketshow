@@ -1,4 +1,4 @@
-package com.ascargon.rocketshow;
+package com.ascargon.rocketshow.api;
 
 import jakarta.xml.bind.annotation.XmlRootElement;
 import org.apache.http.HttpResponse;

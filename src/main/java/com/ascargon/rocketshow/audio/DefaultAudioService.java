@@ -1,5 +1,7 @@
 package com.ascargon.rocketshow.audio;
 
+import com.ascargon.rocketshow.settings.Settings;
+import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import org.freedesktop.gstreamer.ElementFactory;
@@ -12,7 +14,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -63,13 +67,11 @@ public class DefaultAudioService implements AudioService {
                             if (!line.startsWith("---")) {
                                 AudioDevice audioDevice = getAudioDeviceFromString(line);
 
-                                if (audioDevice.getName() != null && audioDevice.getName().length() > 0
-                                        && !audioDevice.getKey().equals("ALSA")
+                                if (audioDevice.getName() != null && audioDevice.getName().length() > 0 && !audioDevice.getKey().equals("ALSA")
 
                                         // Does not work with Gstreamer. Currently disabled.
                                         // see https://github.com/moritzvieli/rocketshow/issues/19
-                                        && !audioDevice.getKey().equals("Headphones")
-                                ) {
+                                        && !audioDevice.getKey().equals("Headphones")) {
 
                                     audioDeviceList.add(audioDevice);
                                 }
@@ -193,6 +195,31 @@ public class DefaultAudioService implements AudioService {
         }
 
         return sink;
+    }
+
+    @Override
+    public int getChannelCountByAudioDevice(Settings settings, AudioDevice audioDevice) {
+        int count = 0;
+
+        for (AudioBus audioBus : settings.getAudioBusList()) {
+            if (audioBus.getAudioDevice().getId() == audioDevice.getId()) {
+                count += audioBus.getChannels();
+            }
+        }
+
+        return count;
+    }
+
+    @Override
+    public List<AudioDevice> getAudioDeviceInUseList(Settings settings) {
+        // Get all uniquely used audio devices
+        Set<AudioDevice> audioDeviceSet = new HashSet<>();
+        for (AudioBus audioBus : settings.getAudioBusList()) {
+            if (audioBus.getAudioDevice() != null) {
+                audioDeviceSet.add(audioBus.getAudioDevice());
+            }
+        }
+        return audioDeviceSet.stream().toList();
     }
 
 }

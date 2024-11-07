@@ -7,6 +7,7 @@ import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.lighting.designer.FixtureService;
 import com.ascargon.rocketshow.midi.MidiDeviceInService;
 import com.ascargon.rocketshow.midi.MidiDeviceOutService;
+import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.raspberry.RaspberryGpioControlActionExecutionService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

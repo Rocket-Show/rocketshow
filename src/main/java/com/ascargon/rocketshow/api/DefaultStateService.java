@@ -1,7 +1,7 @@
 package com.ascargon.rocketshow.api;
 
-import com.ascargon.rocketshow.PlayerService;
-import com.ascargon.rocketshow.composition.CompositionPlayer;
+import com.ascargon.rocketshow.play.PlayerService;
+import com.ascargon.rocketshow.play.CompositionPlayer;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
 import org.springframework.stereotype.Service;

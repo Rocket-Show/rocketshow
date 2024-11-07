@@ -1,17 +1,17 @@
-import { HttpClient } from '@angular/common/http';
-import { AudioBus } from './../models/audio-bus';
-import { TranslateService } from '@ngx-translate/core';
-import { AudioDevice } from './../models/audio-device';
-import { MidiDevice } from './../models/midi-device';
-import { Subject, Observable, of } from 'rxjs';
+import { HttpClient } from "@angular/common/http";
+import { AudioBus } from "./../models/audio-bus";
+import { TranslateService } from "@ngx-translate/core";
+import { AudioDevice } from "./../models/audio-device";
+import { MidiDevice } from "./../models/midi-device";
+import { Subject, Observable, of } from "rxjs";
 import { map } from "rxjs/operators";
-import { Settings } from './../models/settings';
-import { Injectable } from '@angular/core';
-import { Language } from '../models/language';
+import { Settings } from "./../models/settings";
+import { Injectable } from "@angular/core";
+import { Language } from "../models/language";
+import { OlaPlugin } from "../models/ola-plugin";
 
 @Injectable()
 export class SettingsService {
-
   // Fires, when the settings have changed
   settingsChanged: Subject<void> = new Subject<void>();
 
@@ -21,18 +21,18 @@ export class SettingsService {
 
   constructor(
     private http: HttpClient,
-    private translateService: TranslateService) {
-
+    private translateService: TranslateService
+  ) {
     let language: Language;
 
     language = new Language();
-    language.key = 'en';
-    language.name = 'English';
+    language.key = "en";
+    language.name = "English";
     this.languages.push(language);
 
     language = new Language();
-    language.key = 'de';
-    language.name = 'Deutsch';
+    language.key = "de";
+    language.name = "Deutsch";
     this.languages.push(language);
   }
 
@@ -50,26 +50,27 @@ export class SettingsService {
       return this.observable;
     }
 
-    this.observable = this.http.get('system/settings')
-      .pipe(map(response => {
+    this.observable = this.http.get("system/settings").pipe(
+      map((response) => {
         if (!this.settings) {
           this.settings = new Settings(response);
         }
         this.observable = undefined;
 
         return this.settings;
-      }));
+      })
+    );
 
     return this.observable;
   }
 
   saveSettings(settings: Settings): Observable<Object> {
-    return this.http.post('system/settings', JSON.stringify(settings));
+    return this.http.post("system/settings", JSON.stringify(settings));
   }
 
   private apiGetMidiDevices(url: string) {
-    return this.http.get('midi/' + url)
-      .pipe(map((response: Array<Object>) => {
+    return this.http.get("midi/" + url).pipe(
+      map((response: Array<Object>) => {
         let deviceList: MidiDevice[] = [];
 
         for (let midiDevice of response) {
@@ -77,20 +78,21 @@ export class SettingsService {
         }
 
         return deviceList;
-      }));
+      })
+    );
   }
 
   getMidiInDevices(): Observable<MidiDevice[]> {
-    return this.apiGetMidiDevices('in-devices');
+    return this.apiGetMidiDevices("in-devices");
   }
 
   getMidiOutDevices(): Observable<MidiDevice[]> {
-    return this.apiGetMidiDevices('out-devices');
+    return this.apiGetMidiDevices("out-devices");
   }
 
   getAudioDevices(): Observable<AudioDevice[]> {
-    return this.http.get('audio/devices')
-      .pipe(map((response: Array<Object>) => {
+    return this.http.get("audio/devices").pipe(
+      map((response: Array<Object>) => {
         let deviceList: AudioDevice[] = [];
 
         for (let audioDevice of response) {
@@ -98,22 +100,41 @@ export class SettingsService {
         }
 
         return deviceList;
-      }));
+      })
+    );
+  }
+
+  getOlaPluginList(): Observable<OlaPlugin[]> {
+    return this.http.get("lighting/ola-plugins").pipe(
+      map((response: Array<Object>) => {
+        let olaPluginList: OlaPlugin[] = [];
+
+        for (let olaPlugin of response) {
+          olaPluginList.push(new OlaPlugin(olaPlugin));
+        }
+
+        return olaPluginList;
+      })
+    );
   }
 
   getMaxAudioChannels(): Observable<number> {
-    return this.http.get('audio/max-channels')
-      .pipe(map((response: number) => {
+    return this.http.get("audio/max-channels").pipe(
+      map((response: number) => {
         return response;
-      }));
+      })
+    );
   }
 
   addAudioBus(settings: Settings): Observable<void> {
-    return this.translateService.get('settings.audio-bus-name-placeholder').pipe(map(result => {
-      let audioBus: AudioBus = new AudioBus();
-      audioBus.name = result + ' ' + (settings.audioBusList.length + 1);
-      settings.audioBusList.push(audioBus);
-    }));
+    return this.translateService
+      .get("settings.audio-bus-name-placeholder")
+      .pipe(
+        map((result) => {
+          let audioBus: AudioBus = new AudioBus();
+          audioBus.name = result + " " + (settings.audioBusList.length + 1);
+          settings.audioBusList.push(audioBus);
+        })
+      );
   }
-
 }

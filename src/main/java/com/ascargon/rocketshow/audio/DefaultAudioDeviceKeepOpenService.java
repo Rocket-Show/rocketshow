@@ -1,6 +1,6 @@
 package com.ascargon.rocketshow.audio;
 
-import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.gstreamer.GstApi;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
@@ -42,7 +42,7 @@ public class DefaultAudioDeviceKeepOpenService implements AudioDeviceKeepOpenSer
             return;
         }
 
-        for (AudioDevice audioDevice : settingsService.getAudioDeviceInUseList()) {
+        for (AudioDevice audioDevice : audioService.getAudioDeviceInUseList(settingsService.getSettings())) {
             // Run in an infinite thread to not dispose the class/pipeline after it's not used anymore
             Thread infiniteThread = new Thread(() -> {
                 Pipeline pipeline = new Pipeline();

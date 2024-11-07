@@ -1,8 +1,8 @@
 package com.ascargon.rocketshow.util;
 
-import com.ascargon.rocketshow.RemoteDevice;
+import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.RocketShowApplication;
-import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.settings.SettingsService;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;

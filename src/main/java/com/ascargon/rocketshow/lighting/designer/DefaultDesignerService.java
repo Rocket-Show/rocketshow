@@ -1,7 +1,7 @@
 package com.ascargon.rocketshow.lighting.designer;
 
-import com.ascargon.rocketshow.SettingsService;
-import com.ascargon.rocketshow.composition.CompositionPlayer;
+import com.ascargon.rocketshow.settings.SettingsService;
+import com.ascargon.rocketshow.play.CompositionPlayer;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.LightingUniverse;
 import com.ascargon.rocketshow.util.FileFilterService;
@@ -1050,7 +1050,7 @@ public class DefaultDesignerService implements DesignerService {
 //                } else {
                 // Calculate and send the current state
                 calculateUniverse(getCurrentPositionMillis());
-                lightingService.sendExternalSync();
+                lightingService.sendExternalSync(settingsService.getSettings().getEnableMonitor());
 //                }
             }
         };

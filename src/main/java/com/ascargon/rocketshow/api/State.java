@@ -1,6 +1,6 @@
 package com.ascargon.rocketshow.api;
 
-import com.ascargon.rocketshow.composition.CompositionPlayer;
+import com.ascargon.rocketshow.play.CompositionPlayer;
 import com.ascargon.rocketshow.util.UpdateService;
 
 import jakarta.xml.bind.annotation.XmlRootElement;

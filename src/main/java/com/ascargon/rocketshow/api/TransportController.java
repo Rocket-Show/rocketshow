@@ -1,8 +1,7 @@
 package com.ascargon.rocketshow.api;
 
-import com.ascargon.rocketshow.PlayerService;
+import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.composition.SetService;
-import org.apache.catalina.Manager;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 

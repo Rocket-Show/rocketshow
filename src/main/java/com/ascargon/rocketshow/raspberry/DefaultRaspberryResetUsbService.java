@@ -3,7 +3,7 @@ package com.ascargon.rocketshow.raspberry;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
-import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.ShellManager;
 import org.springframework.stereotype.Service;
 

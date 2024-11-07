@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.lighting;
 
 import com.ascargon.rocketshow.lighting.Midi2LightingMapping.MappingType;
+import com.ascargon.rocketshow.settings.SettingsService;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.ShortMessage;
@@ -9,9 +10,18 @@ import javax.sound.midi.ShortMessage;
 public class DefaultMidi2LightingConvertService implements Midi2LightingConvertService {
 
     private final LightingService lightingService;
+    private final SettingsService settingsService;
 
-    public DefaultMidi2LightingConvertService(LightingService lightingService) {
+    public DefaultMidi2LightingConvertService(
+            LightingService lightingService,
+            SettingsService settingsService
+    ) {
         this.lightingService = lightingService;
+        this.settingsService = settingsService;
+    }
+
+    private void sendLightingUniverse() {
+        lightingService.send(settingsService.getSettings().getLightingSendDelayMillis(), settingsService.getSettings().getEnableMonitor());
     }
 
     private void mapSimple(ShortMessage shortMessage, LightingUniverse lightingUniverse) {
@@ -25,12 +35,12 @@ public class DefaultMidi2LightingConvertService implements Midi2LightingConvertS
             }
 
             lightingUniverse.getUniverse().put(shortMessage.getData1(), valueTo);
-            lightingService.send();
+            sendLightingUniverse();
         } else if (shortMessage.getCommand() == ShortMessage.NOTE_OFF) {
             int valueTo = 0;
 
             lightingUniverse.getUniverse().put(shortMessage.getData1(), valueTo);
-            lightingService.send();
+            sendLightingUniverse();
         }
     }
 

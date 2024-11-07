@@ -1,8 +1,10 @@
-package com.ascargon.rocketshow.composition;
+package com.ascargon.rocketshow.play;
 
-import com.ascargon.rocketshow.CapabilitiesService;
-import com.ascargon.rocketshow.PlayerService;
-import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.composition.Composition;
+import com.ascargon.rocketshow.composition.CompositionFile;
+import com.ascargon.rocketshow.composition.SetService;
+import com.ascargon.rocketshow.settings.CapabilitiesService;
+import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.api.ActivityNotificationAudioService;
 import com.ascargon.rocketshow.api.ActivityNotificationMidiService;
 import com.ascargon.rocketshow.api.NotificationService;
@@ -38,8 +40,6 @@ import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -341,7 +341,7 @@ public class CompositionPlayer {
         GValueAPI.GVALUE_API.g_value_init(mixMatrix, GstApi.GST_API.gst_value_array_get_type());
 
         // Repeat for each output channel
-        for (int j = 0; j < settingsService.getChannelCountByAudioDevice(audioDevice); j++) {
+        for (int j = 0; j < audioService.getChannelCountByAudioDevice(settingsService.getSettings(), audioDevice); j++) {
             GValueAPI.GValue outputChannel = new GValueAPI.GValue();
             GValueAPI.GVALUE_API.g_value_init(outputChannel, GstApi.GST_API.gst_value_array_get_type());
 
@@ -412,7 +412,7 @@ public class CompositionPlayer {
 
             // Add a capsfilter to enforce multi-channel out. Otherwise only 2 will be mixed
             Element capsFilter = ElementFactory.make("capsfilter", "capsfilter_" + audioDeviceAlsaName);
-            Caps caps = GstApi.GST_API.gst_caps_from_string("audio/x-raw,rate=" + settingsService.getSettings().getAudioRate() + ",channels=" + settingsService.getChannelCountByAudioDevice(audioDevice));
+            Caps caps = GstApi.GST_API.gst_caps_from_string("audio/x-raw,rate=" + settingsService.getSettings().getAudioRate() + ",channels=" + audioService.getChannelCountByAudioDevice(settingsService.getSettings(), audioDevice));
             capsFilter.set("caps", caps);
             pipeline.add(capsFilter);
 

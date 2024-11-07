@@ -1,17 +1,20 @@
-package com.ascargon.rocketshow;
+package com.ascargon.rocketshow.play;
 
+import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.api.ActivityNotificationAudioService;
 import com.ascargon.rocketshow.api.ActivityNotificationMidiService;
 import com.ascargon.rocketshow.api.NotificationService;
 import com.ascargon.rocketshow.audio.AudioService;
 import com.ascargon.rocketshow.composition.Composition;
-import com.ascargon.rocketshow.composition.CompositionPlayer;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.Midi2LightingConvertService;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.midi.MidiDeviceOutService;
+import com.ascargon.rocketshow.session.SessionService;
+import com.ascargon.rocketshow.settings.CapabilitiesService;
+import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import com.sun.jna.Platform;
 import org.freedesktop.gstreamer.Gst;
@@ -27,6 +30,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Manage play states, sets and compositions. A single composition is played in the
+ * CompositionPlayer.
+ */
 @Service
 public class DefaultPlayerService implements PlayerService {
 
@@ -103,7 +110,7 @@ public class DefaultPlayerService implements PlayerService {
 
         // Load the last set/composition
         try {
-            if (sessionService.getSession() != null && sessionService.getSession().getCurrentSetName() != null && sessionService.getSession().getCurrentSetName().length() > 0) {
+            if (sessionService.getSession() != null && sessionService.getSession().getCurrentSetName() != null && !sessionService.getSession().getCurrentSetName().isEmpty()) {
                 // Load the last set
                 loadSetAndComposition(sessionService.getSession().getCurrentSetName());
             } else {
@@ -117,7 +124,7 @@ public class DefaultPlayerService implements PlayerService {
 
     @Override
     public void loadSetAndComposition(String setName) throws Exception {
-        if (setName.length() > 0) {
+        if (!setName.isEmpty()) {
             setService.setCurrentSet(compositionService.getSet(setName));
         } else {
             setService.setCurrentSet(null);
@@ -130,7 +137,7 @@ public class DefaultPlayerService implements PlayerService {
 
             List<Composition> compositions = compositionService.getAllCompositions();
 
-            if (compositions.size() > 0) {
+            if (!compositions.isEmpty()) {
                 logger.debug("Set initial composition '" + compositions.get(0).getName() + "'...");
 
                 setComposition(compositions.get(0));
@@ -139,7 +146,7 @@ public class DefaultPlayerService implements PlayerService {
             }
         } else {
             // We got a set loaded
-            if (setService.getCurrentSet().getSetCompositionList().size() > 0) {
+            if (!setService.getCurrentSet().getSetCompositionList().isEmpty()) {
                 setCompositionName(setService.getCurrentSet().getSetCompositionList().get(0).getName());
             } else {
                 setComposition(null);
@@ -338,7 +345,7 @@ public class DefaultPlayerService implements PlayerService {
             return;
         }
 
-        if (settingsService.getSettings().getDefaultComposition() == null || settingsService.getSettings().getDefaultComposition().length() == 0) {
+        if (settingsService.getSettings().getDefaultComposition() == null || settingsService.getSettings().getDefaultComposition().isEmpty()) {
             return;
         }
 

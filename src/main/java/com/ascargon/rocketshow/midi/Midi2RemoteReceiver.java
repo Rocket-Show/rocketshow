@@ -1,7 +1,7 @@
 package com.ascargon.rocketshow.midi;
 
-import com.ascargon.rocketshow.RemoteDevice;
-import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.api.RemoteDevice;
+import com.ascargon.rocketshow.settings.SettingsService;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
