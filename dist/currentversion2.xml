@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <versionInfo>
-    <version>2.4.3</version>
-    <date>2024-11-01</date>
+    <version>2.4.4</version>
+    <date>2024-11-06</date>
     <changeNoteList>
+        <changeNote>
+            <version>2.4.4</version>
+            <changes>Reduced audio artifacts when starting/stopping audio files. Allow different audio devices for each audio bus. Enable/disable a single OLA plugin with Rocket Show.</changes>
+        </changeNote>
         <changeNote>
             <version>2.4.3</version>
             <changes>Increased compatibility with older browsers.</changes>
