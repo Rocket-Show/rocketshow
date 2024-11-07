@@ -1,10 +1,11 @@
 package com.ascargon.rocketshow.lighting;
 
-import com.ascargon.rocketshow.CapabilitiesService;
-import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.settings.CapabilitiesService;
+import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.api.ActivityNotificationLightingService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ola.OlaClient;
+import ola.proto.Ola;
 import ola.proto.Ola.UniverseInfoReply;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -31,7 +32,6 @@ public class DefaultLightingService implements LightingService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultLightingService.class);
 
-    private final SettingsService settingsService;
     private final CapabilitiesService capabilitiesService;
     private final ActivityNotificationLightingService activityNotificationLightingService;
 
@@ -59,8 +59,7 @@ public class DefaultLightingService implements LightingService {
     // is OLA initialized and at least one universe prepared?
     private boolean olaReady = false;
 
-    public DefaultLightingService(SettingsService settingsService, CapabilitiesService capabilitiesService, ActivityNotificationLightingService activityNotificationLightingService) {
-        this.settingsService = settingsService;
+    public DefaultLightingService(CapabilitiesService capabilitiesService, ActivityNotificationLightingService activityNotificationLightingService) {
         this.capabilitiesService = capabilitiesService;
         this.activityNotificationLightingService = activityNotificationLightingService;
 
@@ -106,10 +105,10 @@ public class DefaultLightingService implements LightingService {
             }
         }
 
-        sendUniverse();
+        sendUniverse(false);
     }
 
-    private void sendUniverse() {
+    private void sendUniverse(boolean enableMonitor) {
         logger.trace("Send the lighting universe");
 
         // Mix all current universes into one -> highest value per channel wins
@@ -136,7 +135,7 @@ public class DefaultLightingService implements LightingService {
             olaClient.sendDmx(1, mixedUniverse);
         }
 
-        if (settingsService.getSettings().getEnableMonitor()) {
+        if (enableMonitor) {
             HashMap<Integer, Integer> mixedActivityUniverse = new HashMap<>();
             for (int i = 0; i < 512; i++) {
                 mixedActivityUniverse.put(i, (int) mixedUniverse[i]);
@@ -151,7 +150,7 @@ public class DefaultLightingService implements LightingService {
     // some timers are started in parallel, because different threads send at
     // the same time. This will cause the OLA rpc stream to break and a restart
     // is required.
-    public synchronized void send() {
+    public synchronized void send(int sendDelayMillis, boolean enableMonitor) {
         logger.trace("Sending a lighting value");
 
         if (externalSync) {
@@ -170,7 +169,7 @@ public class DefaultLightingService implements LightingService {
             public void run() {
                 try {
                     // Send the universe
-                    sendUniverse();
+                    sendUniverse(enableMonitor);
                 } catch (Exception e) {
                     logger.error("Could not send the lighting universe", e);
                 }
@@ -184,11 +183,11 @@ public class DefaultLightingService implements LightingService {
         };
 
         sendUniverseTimer = new Timer();
-        sendUniverseTimer.schedule(timerTask, settingsService.getSettings().getLightingSendDelayMillis());
+        sendUniverseTimer.schedule(timerTask, sendDelayMillis);
     }
 
     @Override
-    public void sendExternalSync() {
+    public void sendExternalSync(boolean enableMonitor) {
         if (!externalSync) {
             logger.debug("Cannot send external sync, because it is not enabled");
             return;
@@ -196,7 +195,7 @@ public class DefaultLightingService implements LightingService {
 
         try {
             // Send the universe immediately
-            sendUniverse();
+            sendUniverse(enableMonitor);
         } catch (Exception e) {
             logger.error("Could not send the lighting universe", e);
         }
@@ -293,7 +292,7 @@ public class DefaultLightingService implements LightingService {
             logger.error("Could not get an output port", e);
         }
 
-        if (portId == null || portId.length() == 0) {
+        if (portId == null || portId.isEmpty()) {
             // No connected lighting device-port found
             logger.trace("No connected lighting output device found");
             return;
@@ -336,6 +335,33 @@ public class DefaultLightingService implements LightingService {
         }
 
         reset();
+    }
+
+    @Override
+    public List<OlaPlugin> getOlaPlugins() {
+        List<OlaPlugin> olaPluginList = new ArrayList<>();
+
+        List<Ola.PluginInfo> pluginInfoList = olaClient.getPlugins().getPluginList();
+        for (Ola.PluginInfo pluginInfo : pluginInfoList) {
+            OlaPlugin olaPlugin = new OlaPlugin();
+            olaPlugin.setId(pluginInfo.getPluginId());
+            olaPlugin.setName(pluginInfo.getName());
+            olaPluginList.add(olaPlugin);
+        }
+
+        return olaPluginList;
+    }
+
+    @Override
+    public void enablePlugin(int pluginId) {
+        // Disable all plugins, except the one to be enabled
+        for (OlaPlugin olaPlugin : getOlaPlugins()) {
+            boolean enabled = false;
+            if (olaPlugin.getId() == pluginId) {
+                enabled = true;
+            }
+            olaClient.setPluginState(olaPlugin.getId(), enabled);
+        }
     }
 
 }

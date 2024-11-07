@@ -1,6 +1,6 @@
 package com.ascargon.rocketshow.lighting.designer;
 
-import com.ascargon.rocketshow.composition.CompositionPlayer;
+import com.ascargon.rocketshow.play.CompositionPlayer;
 import org.freedesktop.gstreamer.Pipeline;
 import org.springframework.stereotype.Service;
 

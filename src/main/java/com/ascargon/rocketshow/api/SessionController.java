@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.api;
 
-import com.ascargon.rocketshow.SessionService;
+import com.ascargon.rocketshow.session.SessionService;
+import com.ascargon.rocketshow.session.Session;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +25,7 @@ public class SessionController {
     }
 
     @GetMapping
-    public com.ascargon.rocketshow.Session getSession() {
+    public Session getSession() {
         return sessionService.getSession();
     }
 

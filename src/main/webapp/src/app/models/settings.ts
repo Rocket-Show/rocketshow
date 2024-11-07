@@ -25,6 +25,7 @@ export class Settings {
     midiMapping: MidiMapping;
     raspberryGpioControlList: RaspberryGpioControl[];
     lightingSendDelayMillis: number;
+    lightingOlaPluginId: number;
     defaultComposition: string;
     offsetMillisMidi: number;
     offsetMillisAudio: number;
@@ -56,6 +57,7 @@ export class Settings {
     designerFrequencyHertz: number;
     designerLivePreview: boolean;
     updateTestBranch: boolean;
+    readyToUseVersion: number;
 
     constructor(data?: any) {
         if (!data) {
@@ -123,6 +125,7 @@ export class Settings {
         }
 
         this.lightingSendDelayMillis = data.lightingSendDelayMillis;
+        this.lightingOlaPluginId = data.lightingOlaPluginId;
         this.defaultComposition = data.defaultComposition;
         this.offsetMillisMidi = data.offsetMillisMidi;
         this.offsetMillisAudio = data.offsetMillisAudio;
@@ -170,6 +173,7 @@ export class Settings {
         this.designerFrequencyHertz = data.designerFrequencyHertz;
         this.designerLivePreview = data.designerLivePreview;
         this.updateTestBranch = data.updateTestBranch;
+        this.readyToUseVersion = data.readyToUseVersion;
     }
 
 }

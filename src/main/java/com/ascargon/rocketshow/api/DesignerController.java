@@ -1,7 +1,6 @@
 package com.ascargon.rocketshow.api;
 
-import com.ascargon.rocketshow.SettingsService;
-import com.ascargon.rocketshow.composition.DefaultCompositionFileService;
+import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.lighting.designer.FixtureService;
 import com.ascargon.rocketshow.lighting.designer.Project;

@@ -1,7 +1,8 @@
-package com.ascargon.rocketshow;
+package com.ascargon.rocketshow.session;
 
 import com.ascargon.rocketshow.api.NotificationService;
 import com.ascargon.rocketshow.composition.SetService;
+import com.ascargon.rocketshow.settings.SettingsService;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;

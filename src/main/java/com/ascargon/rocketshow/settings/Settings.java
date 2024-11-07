@@ -1,5 +1,6 @@
-package com.ascargon.rocketshow;
+package com.ascargon.rocketshow.settings;
 
+import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.audio.AudioDevice;
 import com.ascargon.rocketshow.midi.MidiControl;
@@ -53,6 +54,9 @@ public class Settings {
     // To set a delay on lighting events coming from MIDI, use offsetMillisMidi (or the offset on the composition file).
     private Integer lightingSendDelayMillis;
 
+    // The active OLA plugin
+    private Integer lightingOlaPluginId;
+
     // Global play offset on file types
     private Integer offsetMillisMidi;
     private Integer offsetMillisAudio;
@@ -97,6 +101,9 @@ public class Settings {
     private Integer designerFrequencyHertz;
     private Boolean designerLivePreview = false;
     private Boolean updateTestBranch = false;
+
+    // Only filled, if it's a ready to use version
+    private Integer readyToUseVersion;
 
     @XmlElement(name = "remoteDevice")
     @XmlElementWrapper(name = "remoteDeviceList")

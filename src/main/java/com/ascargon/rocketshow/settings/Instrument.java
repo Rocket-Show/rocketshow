@@ -1,4 +1,4 @@
-package com.ascargon.rocketshow;
+package com.ascargon.rocketshow.settings;
 
 import com.ascargon.rocketshow.composition.DefaultCompositionService;
 import org.slf4j.Logger;

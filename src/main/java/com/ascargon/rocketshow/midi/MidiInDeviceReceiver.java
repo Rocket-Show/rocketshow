@@ -1,6 +1,6 @@
 package com.ascargon.rocketshow.midi;
 
-import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.api.ActivityNotificationMidiService;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.Midi2LightingConvertService;
@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
-import javax.sound.midi.ShortMessage;
 
 /**
  * Handle the MIDI events from the currently connected MIDI input device.

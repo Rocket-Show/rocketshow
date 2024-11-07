@@ -1,6 +1,6 @@
 package com.ascargon.rocketshow.raspberry;
 
-import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.ControlActionExecutionService;
 import com.pi4j.io.gpio.*;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;

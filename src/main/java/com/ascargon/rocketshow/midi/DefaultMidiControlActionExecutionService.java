@@ -3,7 +3,7 @@ package com.ascargon.rocketshow.midi;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.ShortMessage;
 
-import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.ControlActionExecutionService;
 import org.springframework.stereotype.Service;
 

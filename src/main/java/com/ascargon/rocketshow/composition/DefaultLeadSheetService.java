@@ -1,6 +1,6 @@
 package com.ascargon.rocketshow.composition;
 
-import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.ChunkedFileUploadService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +12,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.ZipOutputStream;
 
 @Service
 public class DefaultLeadSheetService implements LeadSheetService {

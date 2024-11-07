@@ -1,9 +1,9 @@
 package com.ascargon.rocketshow.api;
 
-import com.ascargon.rocketshow.PlayerService;
-import com.ascargon.rocketshow.SessionService;
-import com.ascargon.rocketshow.Settings;
-import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.play.PlayerService;
+import com.ascargon.rocketshow.session.SessionService;
+import com.ascargon.rocketshow.settings.Settings;
+import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;

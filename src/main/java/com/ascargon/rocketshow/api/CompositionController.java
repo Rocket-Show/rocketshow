@@ -1,10 +1,9 @@
 package com.ascargon.rocketshow.api;
 
-import com.ascargon.rocketshow.PlayerService;
+import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.composition.Composition;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
-import com.ascargon.rocketshow.midi.MidiCompositionFile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

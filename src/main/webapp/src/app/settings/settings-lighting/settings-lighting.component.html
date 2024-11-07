@@ -1,37 +1,82 @@
 <div class="form-group row">
-  <label class="col-lg-3 col-form-label">{{ 'settings.lighting-send-delay' | translate }}</label>
+  <label class="col-lg-3 col-form-label">{{
+    "settings.lighting-ola-plugin" | translate
+  }}</label>
   <div class="col-lg-9">
-    <input type="text" class="form-control" [ngModel]="settings?.lightingSendDelayMillis"
-      (ngModelChange)="settings.lightingSendDelayMillis = $event">
+    <select
+      class="custom-select"
+      [ngModel]="settings?.lightingOlaPluginId"
+      (ngModelChange)="settings.lightingOlaPluginId = $event"
+    >
+      <option *ngFor="let olaPlugin of olaPluginList" [ngValue]="olaPlugin.id">
+        {{ olaPlugin.name }}
+      </option>
+    </select>
   </div>
 </div>
 
 <div class="form-group row">
-  <label class="col-lg-3 col-form-label">{{ 'settings.lighting-designer-frequency-hertz' | translate }}</label>
+  <label class="col-lg-3 col-form-label">{{
+    "settings.lighting-send-delay" | translate
+  }}</label>
   <div class="col-lg-9">
-    <input type="text" class="form-control" [ngModel]="settings?.designerFrequencyHertz"
-      (ngModelChange)="settings.designerFrequencyHertz = $event">
+    <input
+      type="text"
+      class="form-control"
+      [ngModel]="settings?.lightingSendDelayMillis"
+      (ngModelChange)="settings.lightingSendDelayMillis = $event"
+    />
   </div>
 </div>
 
 <div class="form-group row">
-  <div class="col-lg-3 col-form-label">{{ 'settings.designer-live-preview' | translate }}</div>
+  <label class="col-lg-3 col-form-label">{{
+    "settings.lighting-designer-frequency-hertz" | translate
+  }}</label>
+  <div class="col-lg-9">
+    <input
+      type="text"
+      class="form-control"
+      [ngModel]="settings?.designerFrequencyHertz"
+      (ngModelChange)="settings.designerFrequencyHertz = $event"
+    />
+  </div>
+</div>
+
+<div class="form-group row">
+  <div class="col-lg-3 col-form-label">
+    {{ "settings.designer-live-preview" | translate }}
+  </div>
   <div class="col-lg-9 d-flex">
     <div class="form-check my-auto">
-      <input type="checkbox" [ngModel]="settings?.designerLivePreview"
-        (ngModelChange)="settings.designerLivePreview = $event" class="form-check-input" id="enableLivePreview">
+      <input
+        type="checkbox"
+        [ngModel]="settings?.designerLivePreview"
+        (ngModelChange)="settings.designerLivePreview = $event"
+        class="form-check-input"
+        id="enableLivePreview"
+      />
 
       <label class="form-check-label" for="enableLivePreview">
-        {{ 'settings.designer-live-preview-enable' | translate }}
+        {{ "settings.designer-live-preview-enable" | translate }}
       </label>
     </div>
   </div>
 </div>
 
 <div class="form-group row">
-  <label class="col-lg-3 col-form-label">{{ 'settings.lighting-console' | translate }}</label>
+  <label class="col-lg-3 col-form-label">{{
+    "settings.lighting-console" | translate
+  }}</label>
   <div class="col-lg-9 d-flex">
-    <a class="my-auto" href="/" onclick="javascript:event.target.port=9090" target="_blank">
-      <i class="fa fa-external-link"></i> {{ 'settings.lighting-console-open' | translate }}</a>
+    <a
+      class="my-auto"
+      href="/"
+      onclick="javascript:event.target.port=9090"
+      target="_blank"
+    >
+      <i class="fa fa-external-link"></i>
+      {{ "settings.lighting-console-open" | translate }}</a
+    >
   </div>
 </div>

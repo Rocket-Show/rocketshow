@@ -1,5 +1,6 @@
-package com.ascargon.rocketshow;
+package com.ascargon.rocketshow.settings;
 
+import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.audio.AudioDevice;
 import jakarta.xml.bind.JAXBException;
@@ -20,12 +21,8 @@ public interface SettingsService {
 
     RemoteDevice getRemoteDeviceByName(String name);
 
-    int getChannelCountByAudioDevice(AudioDevice audioDevice);
-
     void load() throws Exception;
 
     void save() throws JAXBException;
-
-    List<AudioDevice> getAudioDeviceInUseList();
 
 }
