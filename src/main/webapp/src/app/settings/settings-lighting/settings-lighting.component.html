@@ -1,4 +1,4 @@
-<div class="form-group row">
+<div *ngIf="!settings?.readyToUseVersion" class="form-group row">
   <label class="col-lg-3 col-form-label">{{
     "settings.lighting-ola-plugin" | translate
   }}</label>
