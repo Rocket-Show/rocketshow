@@ -878,12 +878,16 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     private void mixEffects(long timeMillis, int fixtureIndex, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double intensityPercentage) {
+        long effectTimeMillis = timeMillis;
+
+        if (preset.getRegion() != null) {
+            effectTimeMillis = timeMillis - preset.getRegion().getStartMillis();
+        }
+
         for (Effect effect : preset.getPreset().getEffects()) {
             if (effect.isVisible()) {
                 // EffectCurve
-                if (effect instanceof EffectCurve) {
-                    EffectCurve effectCurve = (EffectCurve) effect;
-
+                if (effect instanceof EffectCurve effectCurve) {
                     // capabilities
                     for (FixtureCapability capability : effectCurve.getCapabilities()) {
                         for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
@@ -892,7 +896,7 @@ public class DefaultDesignerService implements DesignerService {
                                     FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
                                     fixtureChannelValue.setChannelName(cachedChannel.getName());
                                     fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
-                                    fixtureChannelValue.setValue(cachedChannel.getMaxValue() * effectCurve.getValueAtMillis(timeMillis, fixtureIndex));
+                                    fixtureChannelValue.setValue(cachedChannel.getMaxValue() * effectCurve.getValueAtMillis(effectTimeMillis, fixtureIndex));
                                     mixChannelValue(values, fixtureChannelValue, intensityPercentage);
                                 }
                             }
@@ -908,7 +912,7 @@ public class DefaultDesignerService implements DesignerService {
                                         FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
                                         fixtureChannelValue.setChannelName(cachedChannel.getName());
                                         fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
-                                        fixtureChannelValue.setValue(cachedChannel.getMaxValue() * effectCurve.getValueAtMillis(timeMillis, fixtureIndex));
+                                        fixtureChannelValue.setValue(cachedChannel.getMaxValue() * effectCurve.getValueAtMillis(effectTimeMillis, fixtureIndex));
                                         mixChannelValue(values, fixtureChannelValue, intensityPercentage);
                                     }
                                 }
