@@ -31,7 +31,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Manage play states, sets and compositions. A single composition is played in the
+ * Manage play states, sets and compositions. The composition is read and played in the
  * CompositionPlayer.
  */
 @Service

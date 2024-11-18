@@ -43,7 +43,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Play a single composition.
+ * Manage the playing of a composition. Read all files and create the Gstreamer pipeline.
  */
 @Service
 public class CompositionPlayer {
@@ -304,6 +304,14 @@ public class CompositionPlayer {
         queue.link(midiSink);
     }
 
+    private float getCombinedVolume(float compositionVolume, float fileVolume) {
+        float combinedVolume = compositionVolume * fileVolume;
+
+        // scale should be logarithmic. a "good-enough"-curve is just x^4.
+        // also see: https://www.dr-lex.be/info-stuff/volumecontrols.html
+        return (float) Math.pow(combinedVolume, 4);
+    }
+
     private void addAudioToPipeline(AudioCompositionFile audioCompositionFile, Map<AudioDevice, Element> audioMixerList, int index) throws Exception {
         logger.debug("Add audio file to pipeline");
 
@@ -349,7 +357,7 @@ public class CompositionPlayer {
             for (int k = 0; k < audioCompositionFile.getChannels(); k++) {
                 GValueAPI.GValue inputChannel = new GValueAPI.GValue(GType.FLOAT);
 
-                float channelVolume = getChannelVolume(audioBus, j, k, audioCompositionFile.getVolume() * composition.getAudioVolume());
+                float channelVolume = getChannelVolume(audioBus, j, k, getCombinedVolume(audioCompositionFile.getVolume(), composition.getAudioVolume()));
 
                 inputChannel.setValue(channelVolume);
                 GstApi.GST_API.gst_value_array_append_value(outputChannel, inputChannel.getPointer());
