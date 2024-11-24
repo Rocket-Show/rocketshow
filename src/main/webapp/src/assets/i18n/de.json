@@ -208,7 +208,7 @@
     "no-audio-devices": "Keine Audio Geräte verfügbar",
     "logging-level": "Logging Level",
     "lighting-send-delay": "Gruppierungs-Verzögerung in Millisekunden",
-    "lighting-ola-plugin": "Plugin",
+    "lighting-ola-plugins": "Plugins",
     "global-play-offset": "Globale Abspiel-Verzögerung in Millisekunden",
     "device-in-midi-routing": "MIDI Gerät Ausgabe",
     "remote-midi-routing": "Netzwerk MIDI Ausgang",

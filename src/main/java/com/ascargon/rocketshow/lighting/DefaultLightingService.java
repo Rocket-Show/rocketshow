@@ -337,29 +337,36 @@ public class DefaultLightingService implements LightingService {
         reset();
     }
 
+    private OlaPlugin createOlaPluginFromInfo(Ola.PluginInfo pluginInfo) {
+        OlaPlugin olaPlugin = new OlaPlugin();
+        olaPlugin.setId(pluginInfo.getPluginId());
+        olaPlugin.setName(pluginInfo.getName());
+        return olaPlugin;
+    }
+
     @Override
     public List<OlaPlugin> getOlaPlugins() {
         List<OlaPlugin> olaPluginList = new ArrayList<>();
 
         List<Ola.PluginInfo> pluginInfoList = olaClient.getPlugins().getPluginList();
         for (Ola.PluginInfo pluginInfo : pluginInfoList) {
-            OlaPlugin olaPlugin = new OlaPlugin();
-            olaPlugin.setId(pluginInfo.getPluginId());
-            olaPlugin.setName(pluginInfo.getName());
+            OlaPlugin olaPlugin = createOlaPluginFromInfo(pluginInfo);
             olaPluginList.add(olaPlugin);
+
+            for (Ola.PluginInfo conflictingPluginInfo : olaClient.getPluginState(olaPlugin.getId()).getConflictsWithList()) {
+                olaPlugin.getConflictList().add(createOlaPluginFromInfo(conflictingPluginInfo));
+            }
         }
 
         return olaPluginList;
     }
 
     @Override
-    public void enablePlugin(int pluginId) {
+    public void enablePlugins(List<OlaPlugin> olaPluginList) {
         // Disable all plugins, except the one to be enabled
         for (OlaPlugin olaPlugin : getOlaPlugins()) {
-            boolean enabled = false;
-            if (olaPlugin.getId() == pluginId) {
-                enabled = true;
-            }
+            boolean enabled = olaPluginList.stream()
+                    .anyMatch(plugin -> plugin.getName().equals(olaPlugin.getName()));
             olaClient.setPluginState(olaPlugin.getId(), enabled);
         }
     }

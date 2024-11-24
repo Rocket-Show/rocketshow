@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <versionInfo>
-    <version>2.4.4</version>
-    <date>2024-11-06</date>
+    <version>2.4.6</version>
+    <date>2024-11-24</date>
     <changeNoteList>
+        <changeNote>
+            <version>2.4.6</version>
+            <changes>Allow adding multiple lighting plugins.</changes>
+        </changeNote>
+        <changeNote>
+            <version>2.4.5</version>
+            <changes>Added volume control for the composition and for files. Fixed lighting designer curve effect phasing when played with a timeline.</changes>
+        </changeNote>
         <changeNote>
             <version>2.4.4</version>
             <changes>Reduced audio artifacts when starting/stopping audio files. Allow different audio devices for each audio bus. Enable/disable a single OLA plugin with Rocket Show.</changes>

@@ -283,7 +283,7 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
         }
 
         try {
-            lightingService.enablePlugin(settings.getLightingOlaPluginId());
+            lightingService.enablePlugins(settings.getLightingOlaPluginList());
         } catch (Exception e) {
             logger.error("Could not activate the OLA plugin", e);
         }
