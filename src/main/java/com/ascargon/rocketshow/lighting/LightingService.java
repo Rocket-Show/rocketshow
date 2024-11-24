@@ -23,6 +23,6 @@ public interface LightingService {
 
     List<OlaPlugin> getOlaPlugins();
 
-    void enablePlugin(int pluginId);
+    void enablePlugins(List<OlaPlugin> olaPluginList);
 
 }

@@ -5,6 +5,7 @@ import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.audio.AudioDevice;
 import com.ascargon.rocketshow.audio.AudioService;
+import com.ascargon.rocketshow.lighting.OlaPlugin;
 import com.ascargon.rocketshow.midi.MidiDevice;
 import com.ascargon.rocketshow.midi.MidiDirection;
 import com.ascargon.rocketshow.midi.MidiMapping;
@@ -48,12 +49,7 @@ public class DefaultSettingsService implements SettingsService {
 
     private final ApplicationHome applicationHome = new ApplicationHome(RocketShowApplication.class);
 
-    public DefaultSettingsService(
-            RaspberryResetUsbService raspberryResetUsbService,
-            OperatingSystemInformationService operatingSystemInformationService,
-            MidiService midiService,
-            SettingsUpdateSystemService settingsUpdateSystemService
-    ) {
+    public DefaultSettingsService(RaspberryResetUsbService raspberryResetUsbService, OperatingSystemInformationService operatingSystemInformationService, MidiService midiService, SettingsUpdateSystemService settingsUpdateSystemService) {
         this.operatingSystemInformationService = operatingSystemInformationService;
         this.raspberryResetUsbService = raspberryResetUsbService;
         this.midiService = midiService;
@@ -204,8 +200,11 @@ public class DefaultSettingsService implements SettingsService {
             settings.setAlsaBufferSize(5);
         }
 
-        if (settings.getLightingOlaPluginId() == null) {
-            settings.setLightingOlaPluginId(1);
+        if (settings.getLightingOlaPluginList().isEmpty()) {
+            OlaPlugin olaPlugin = new OlaPlugin();
+            olaPlugin.setId(1);
+            olaPlugin.setName("Dummy");
+            settings.getLightingOlaPluginList().add(olaPlugin);
         }
 
         if (settings.getLoggingLevel() == null) {

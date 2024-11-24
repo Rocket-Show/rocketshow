@@ -68,6 +68,13 @@ export class SettingsService {
     return this.http.post("system/settings", JSON.stringify(settings));
   }
 
+  updateLightingOlaPlugins(olaPluginList: OlaPlugin[]): Observable<Object> {
+    return this.http.post(
+      "system/settings-lighting-ola-plugins",
+      JSON.stringify(olaPluginList)
+    );
+  }
+
   private apiGetMidiDevices(url: string) {
     return this.http.get("midi/" + url).pipe(
       map((response: Array<Object>) => {

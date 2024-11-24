@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.api;
 
+import com.ascargon.rocketshow.lighting.OlaPlugin;
 import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.session.SessionService;
 import com.ascargon.rocketshow.settings.Settings;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileInputStream;
+import java.util.List;
 
 @RestController()
 @RequestMapping("${spring.data.rest.base-path}/system")
@@ -139,6 +141,13 @@ class SystemController {
             designerService.stopPreview();
         }
 
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("settings-lighting-ola-plugins")
+    public ResponseEntity<Void> updateLightingOlaPlugins(@RequestBody List<OlaPlugin> olaPluginList) throws JAXBException {
+        settingsService.getSettings().setLightingOlaPluginList(olaPluginList);
+        settingsService.save();
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

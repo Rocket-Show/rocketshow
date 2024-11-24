@@ -3,6 +3,7 @@ package com.ascargon.rocketshow.settings;
 import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.audio.AudioDevice;
+import com.ascargon.rocketshow.lighting.OlaPlugin;
 import com.ascargon.rocketshow.midi.MidiControl;
 import com.ascargon.rocketshow.midi.MidiDevice;
 import com.ascargon.rocketshow.midi.MidiMapping;
@@ -55,7 +56,7 @@ public class Settings {
     private Integer lightingSendDelayMillis;
 
     // The active OLA plugin
-    private Integer lightingOlaPluginId;
+    private List<OlaPlugin> lightingOlaPluginList = new ArrayList<>();;
 
     // Global play offset on file types
     private Integer offsetMillisMidi;

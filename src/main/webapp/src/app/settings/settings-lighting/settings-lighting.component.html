@@ -1,9 +1,68 @@
 <div *ngIf="!settings?.readyToUseVersion" class="form-group row">
   <label class="col-lg-3 col-form-label">{{
-    "settings.lighting-ola-plugin" | translate
+    "settings.lighting-ola-plugins" | translate
   }}</label>
   <div class="col-lg-9">
-    <select
+    <div
+      class="card border-secondary"
+      style="max-height: 450px; overflow-y: auto"
+    >
+      <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+          <div
+            class="list-group-item"
+            *ngFor="let olaPlugin of settings?.lightingOlaPluginList"
+          >
+            <div class="row">
+              <div
+                class="col-auto flex-grow text-break-word col-auto my-auto pl-0"
+              >
+                <p class="mb-0">{{ olaPlugin.name }}</p>
+                <p
+                  *ngFor="let olaPlugin of getConflictingPlugins(olaPlugin)"
+                  class="mb-0 text-danger"
+                >
+                  - Conflicts with {{ olaPlugin.name }}
+                </p>
+              </div>
+              <div class="col-auto my-auto">
+                <a
+                  class="btn btn-primary btn-sm float-right"
+                  href="#"
+                  role="button"
+                  (click)="removeOlaPlugin(olaPlugin); (false)"
+                >
+                  <i class="fa fa-minus" aria-hidden="true"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-group w-100">
+      <!-- Dropdown -->
+      <select class="custom-select" [(ngModel)]="selectedOlaPlugin">
+        <option
+          *ngFor="let olaPlugin of availableOlaPluginList"
+          [ngValue]="olaPlugin"
+        >
+          {{ olaPlugin.name }}
+        </option>
+      </select>
+
+      <!-- Add Button -->
+      <button
+        (click)="addOlaPlugin()"
+        type="button"
+        class="btn btn-primary d-flex align-items-center"
+      >
+        <i class="fa fa-plus pr-1" aria-hidden="true"></i> Add
+      </button>
+    </div>
+
+    <!-- <select
       class="custom-select"
       [ngModel]="settings?.lightingOlaPluginId"
       (ngModelChange)="settings.lightingOlaPluginId = $event"
@@ -11,7 +70,7 @@
       <option *ngFor="let olaPlugin of olaPluginList" [ngValue]="olaPlugin.id">
         {{ olaPlugin.name }}
       </option>
-    </select>
+    </select> -->
   </div>
 </div>
 
