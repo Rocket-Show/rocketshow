@@ -185,6 +185,7 @@ public class DefaultAudioService implements AudioService {
         String sinkName = "alsasink";
 
         if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+            logger.debug("Create audio sink for OS X...");
             sinkName = "osxaudiosink";
         }
 
@@ -200,6 +201,10 @@ public class DefaultAudioService implements AudioService {
     @Override
     public int getChannelCountByAudioDevice(Settings settings, AudioDevice audioDevice) {
         int count = 0;
+
+        if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+            return 2;
+        }
 
         for (AudioBus audioBus : settings.getAudioBusList()) {
             if (audioBus.getAudioDevice().getId() == audioDevice.getId()) {

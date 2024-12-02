@@ -17,6 +17,7 @@ import com.ascargon.rocketshow.settings.CapabilitiesService;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import com.sun.jna.Platform;
+import lombok.Getter;
 import org.freedesktop.gstreamer.Gst;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,23 +40,42 @@ public class DefaultPlayerService implements PlayerService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultPlayerService.class);
 
+    @Getter
     private final NotificationService notificationService;
+    @Getter
     private final ActivityNotificationMidiService activityNotificationMidiService;
+    @Getter
     private final SettingsService settingsService;
     private final CompositionService compositionService;
+    @Getter
     private final SetService setService;
     private final SessionService sessionService;
+    @Getter
     private final LightingService lightingService;
+    @Getter
     private final CapabilitiesService capabilitiesService;
+    @Getter
     private final ActivityNotificationAudioService activityNotificationAudioService;
+    @Getter
     private final Midi2LightingConvertService midi2LightingConvertService;
+    @Getter
     private final MidiDeviceOutService midiDeviceOutService;
+    @Getter
     private final AudioService audioService;
+    @Getter
     private final DesignerService designerService;
+    @Getter
     private final OperatingSystemInformationService operatingSystemInformationService;
 
-    private final CompositionPlayer defaultCompositionPlayer;
+    // Regular composition player
     private final CompositionPlayer currentCompositionPlayer;
+
+    // The composition, which is being played in between other compositions (like a screensaver)
+    private final CompositionPlayer defaultCompositionPlayer;
+
+    // Used to play the composition from the editor to test it/try it out before saving
+    private final CompositionPlayer testCompositionPlayer;
+
     private final List<CompositionPlayer> sampleCompositionPlayerList = new ArrayList<>();
 
     public DefaultPlayerService(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, SettingsService settingsService, CompositionService compositionService, SetService setService, SessionService sessionService, LightingService lightingService, CapabilitiesService capabilitiesService, ActivityNotificationAudioService activityNotificationAudioService, Midi2LightingConvertService midi2LightingConvertService, MidiDeviceOutService midiDeviceOutService, AudioService audioService, DesignerService designerService, OperatingSystemInformationService operatingSystemInformationService) {
@@ -74,10 +94,10 @@ public class DefaultPlayerService implements PlayerService {
         this.designerService = designerService;
         this.operatingSystemInformationService = operatingSystemInformationService;
 
-        currentCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, capabilitiesService, activityNotificationAudioService, setService, midi2LightingConvertService, lightingService, midiDeviceOutService, designerService, operatingSystemInformationService, audioService);
-
-        defaultCompositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, capabilitiesService, activityNotificationAudioService, setService, midi2LightingConvertService, lightingService, midiDeviceOutService, designerService, operatingSystemInformationService, audioService);
+        currentCompositionPlayer = new CompositionPlayer(this);
+        defaultCompositionPlayer = new CompositionPlayer(this);
         defaultCompositionPlayer.setDefaultComposition(true);
+        testCompositionPlayer = new CompositionPlayer(this);
 
         try {
             // Setup the Gstreamer paths
@@ -215,6 +235,7 @@ public class DefaultPlayerService implements PlayerService {
         }
 
         stopDefaultComposition();
+        testCompositionPlayer.stop();
 
         logger.debug("Start playing on all devices...");
 
@@ -263,7 +284,7 @@ public class DefaultPlayerService implements PlayerService {
         // to share the same instance) and play it
         Composition composition = compositionService
                 .cloneComposition(compositionService.getComposition(compositionName));
-        CompositionPlayer compositionPlayer = new CompositionPlayer(notificationService, activityNotificationMidiService, this, settingsService, capabilitiesService, activityNotificationAudioService, setService, midi2LightingConvertService, lightingService, midiDeviceOutService, designerService, operatingSystemInformationService, audioService);
+        CompositionPlayer compositionPlayer = new CompositionPlayer(this);
         compositionPlayer.setSample(true);
         compositionPlayer.setComposition(composition);
         sampleCompositionPlayerList.add(compositionPlayer);
@@ -484,6 +505,25 @@ public class DefaultPlayerService implements PlayerService {
 
     public void setCompositionName(String name) throws Exception {
         setComposition(compositionService.getComposition(name));
+    }
+
+    @Override
+    public void playTestComposition(Composition composition) throws Exception {
+        stop(false);
+        testCompositionPlayer.stop();
+        testCompositionPlayer.setComposition(composition);
+        testCompositionPlayer.play();
+    }
+
+    @Override
+    public void stopTestComposition() throws Exception {
+        testCompositionPlayer.stop();
+        playDefaultComposition();
+    }
+
+    @Override
+    public CompositionPlayer getTestCompositionPlayer() {
+        return testCompositionPlayer;
     }
 
 }

@@ -56,13 +56,54 @@
   <!-- Edit the selected/new composition -->
   <div class="col-md-8" *ngIf="currentComposition && !loadingComposition">
     <div class="card border-secondary">
-      <div class="card-header">
-        <span *ngIf="currentComposition?.name">{{
-          currentComposition?.name
-        }}</span>
-        <span *ngIf="!currentComposition?.name">{{
-          "editor.default-composition-name" | translate
-        }}</span>
+      <div class="card-header d-flex">
+        <div class="flex-grow">
+          <span *ngIf="currentComposition?.name">{{
+            currentComposition?.name
+          }}</span>
+          <span *ngIf="!currentComposition?.name">{{
+            "editor.default-composition-name" | translate
+          }}</span>
+        </div>
+        <button
+          *ngIf="!isTestPlaying"
+          type="button"
+          class="btn btn-primary transport-button"
+          (click)="play(); (false)"
+          role="button"
+        >
+          <i
+            *ngIf="!savingComposition"
+            class="fa fa-play fa-fw"
+            aria-hidden="true"
+          ></i>
+        </button>
+        <mv-slider
+          *ngIf="isTestPlaying"
+          style="width: 100px"
+          class="mr-3"
+          tooltip="hide"
+          [min]="0"
+          [max]="testPlayDurationMillis"
+          [step]="1"
+          [(value)]="testPlayPositionMillis"
+          (slideStart)="slideStart($event)"
+          (slideStop)="seek($event)"
+        >
+        </mv-slider>
+        <button
+          *ngIf="isTestPlaying"
+          type="button"
+          class="btn btn-primary transport-button"
+          (click)="stop(); (false)"
+          role="button"
+        >
+          <i
+            *ngIf="!savingComposition"
+            class="fa fa-stop fa-fw"
+            aria-hidden="true"
+          ></i>
+        </button>
       </div>
       <div class="card-body">
         <!-- Name -->
@@ -124,7 +165,7 @@
                 (ngModelChange)="setVolume($event)"
               />
             </div>
-            <div class="m-auto" style="padding-left: 5px">%</div>
+            <div class="m-auto" style="padding-left: 5px">dB</div>
           </div>
         </div>
 

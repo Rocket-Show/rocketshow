@@ -1,13 +1,13 @@
-import { HttpClient } from '@angular/common/http';
-import { Subject, Observable, of } from 'rxjs';
+import { HttpClient } from "@angular/common/http";
+import { Subject, Observable, of } from "rxjs";
 import { map } from "rxjs/operators";
-import { Composition } from './../models/composition';
-import { Set } from './../models/set';
-import { Injectable } from '@angular/core';
+import { Composition } from "./../models/composition";
+import { Set } from "./../models/set";
+import { Injectable } from "@angular/core";
+import { TestPlayResponse } from "../models/test-play-response";
 
 @Injectable()
 export class CompositionService {
-
   private compositions: Composition[];
   private sets: Set[];
 
@@ -16,18 +16,19 @@ export class CompositionService {
   // Fires, when compositions have changed (new ones, deleted)
   compositionsChanged: Subject<void> = new Subject<void>();
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   getCurrentSet(clearCache: boolean = false): Observable<Set> {
     if (this.currentSet && !clearCache) {
       return of(this.currentSet);
     }
 
-    return this.http.get('set')
-      .pipe(map(response => {
+    return this.http.get("set").pipe(
+      map((response) => {
         this.currentSet = new Set(response);
         return this.currentSet;
-      }));
+      })
+    );
   }
 
   getCompositions(clearCache: boolean = false): Observable<Composition[]> {
@@ -35,8 +36,8 @@ export class CompositionService {
       return of(this.compositions);
     }
 
-    return this.http.get('composition/list')
-      .pipe(map((response: Array<Object>) => {
+    return this.http.get("composition/list").pipe(
+      map((response: Array<Object>) => {
         this.compositions = [];
 
         for (let composition of response) {
@@ -44,7 +45,8 @@ export class CompositionService {
         }
 
         return this.compositions;
-      }));
+      })
+    );
   }
 
   getSets(clearCache: boolean = false): Observable<Set[]> {
@@ -52,8 +54,8 @@ export class CompositionService {
       return of(this.sets);
     }
 
-    return this.http.get('set/list')
-      .pipe(map((response: Array<Object>) => {
+    return this.http.get("set/list").pipe(
+      map((response: Array<Object>) => {
         this.sets = [];
 
         for (let set of response) {
@@ -61,44 +63,71 @@ export class CompositionService {
         }
 
         return this.sets;
-      }));
+      })
+    );
   }
 
   getComposition(compositionName: string): Observable<Composition> {
     // TODO Cache the composition and reload on change
-    return this.http.get('composition?name=' + compositionName)
-      .pipe(map(response => {
+    return this.http.get("composition?name=" + compositionName).pipe(
+      map((response) => {
         return new Composition(response);
-      }));
+      })
+    );
   }
 
   // Load a set on the device
   loadSet(name: string): Observable<Object> {
-    return this.http.post('set/load?name=' + name, undefined);
+    return this.http.post("set/load?name=" + name, undefined);
   }
 
   // Get a set from the device
   getSet(setName: string): Observable<Set> {
-    return this.http.get('set/details?name=' + setName)
-      .pipe(map(response => {
+    return this.http.get("set/details?name=" + setName).pipe(
+      map((response) => {
         return new Set(response);
-      }));
+      })
+    );
   }
 
   saveComposition(composition: Composition): Observable<Object> {
-    return this.http.post('composition', composition.stringify());
+    return this.http.post("composition", composition.stringify());
   }
 
   deleteComposition(name: string): Observable<Object> {
-    return this.http.post('composition/delete?name=' + name, undefined);
+    return this.http.post("composition/delete?name=" + name, undefined);
   }
 
   saveSet(set: Set): Observable<Object> {
-    return this.http.post('set', set.stringify());
+    return this.http.post("set", set.stringify());
   }
 
   deleteSet(name: string): Observable<Object> {
-    return this.http.post('set/delete?name=' + name, undefined);
+    return this.http.post("set/delete?name=" + name, undefined);
   }
 
+  testPlay(composition: Composition): Observable<TestPlayResponse> {
+    return this.http
+      .post("composition/test-play", composition.stringify())
+      .pipe(
+        map((response) => {
+          return new TestPlayResponse(response);
+        })
+      );
+  }
+
+  testStop(): Observable<Object> {
+    return this.http.post("composition/test-stop", undefined);
+  }
+
+  testPause(): Observable<Object> {
+    return this.http.post("composition/test-pause", undefined);
+  }
+
+  testSeek(positionMillis: number): Observable<Object> {
+    return this.http.post(
+      "composition/test-seek?positionMillis=" + positionMillis,
+      undefined
+    );
+  }
 }

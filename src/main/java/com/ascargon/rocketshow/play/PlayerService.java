@@ -49,4 +49,10 @@ public interface PlayerService {
 
     void compositionPlayerFinishedPlaying(CompositionPlayer compositionPlayer) throws Exception;
 
+
+    void playTestComposition(Composition composition) throws Exception;
+
+    void stopTestComposition() throws Exception;
+
+    CompositionPlayer getTestCompositionPlayer();
 }

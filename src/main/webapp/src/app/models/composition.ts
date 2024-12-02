@@ -12,7 +12,7 @@ export class Composition {
     autoStartNextComposition: boolean = false;
     leadSheetList: LeadSheet[] = [];
     loop: boolean;
-    audioVolume: number;
+    audioVolume: number = 1;
 
     constructor(data?: any) {
         if (!data) {

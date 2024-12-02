@@ -223,7 +223,7 @@ public class DefaultCompositionService implements CompositionService {
     }
 
     @Override
-    public synchronized void saveComposition(Composition composition) throws Exception {
+    public void analyzeComposition(Composition composition) throws Exception {
         // Set additional information for each file
         for (CompositionFile compositionFile : composition.getCompositionFileList()) {
             String path = settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator;
@@ -260,7 +260,13 @@ public class DefaultCompositionService implements CompositionService {
                 maxDuration = compositionFile.getDurationMillis();
             }
         }
+
         composition.setDurationMillis(maxDuration);
+    }
+
+    @Override
+    public synchronized void saveComposition(Composition composition) throws Exception {
+        analyzeComposition(composition);
 
         // Save the composition in XML
         String directory = settingsService.getSettings().getBasePath() + File.separator + COMPOSITIONS_PATH;

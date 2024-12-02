@@ -73,7 +73,7 @@ public class DefaultSessionService implements SessionService {
 
             logger.info("Session saved");
         } catch (JAXBException | IOException e) {
-            e.printStackTrace();
+            logger.error("Could not save the session", e);
         }
     }
 
