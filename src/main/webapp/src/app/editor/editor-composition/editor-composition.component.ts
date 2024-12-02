@@ -7,7 +7,7 @@ import { CompositionService } from "./../../services/composition.service";
 import { ChangeDetectorRef, Component, OnInit } from "@angular/core";
 import { BsModalService } from "ngx-bootstrap/modal";
 import { PendingChangesDialogService } from "../../services/pending-changes-dialog.service";
-import { Observable } from "rxjs";
+import { Observable, Subscription, timer } from "rxjs";
 import { map, catchError, finalize } from "rxjs/operators";
 import { ToastrService } from "ngx-toastr";
 import { TranslateService } from "@ngx-translate/core";
@@ -38,6 +38,15 @@ export class EditorCompositionComponent implements OnInit {
 
   // The composition, as it was when we loaded it
   initialComposition: Composition;
+
+  isTestPlaying: boolean = false;
+  testPlayDurationMillis: number = 0;
+  stopTimer: any;
+  playUpdateSubscription: Subscription;
+  testPlayPositionMillis: number = 0;
+  lastPlayTime: Date;
+  lastPlayPositionMillis: number = 0;
+  sliding: boolean = false;
 
   constructor(
     private compositionService: CompositionService,
@@ -433,5 +442,59 @@ export class EditorCompositionComponent implements OnInit {
     if (!isNaN(value) && value >= 0 && value <= 100) {
       this.currentComposition.audioVolume = value / 100;
     }
+  }
+
+  private setStopTimer(millis: number) {
+    if (this.stopTimer) {
+      clearTimeout(this.stopTimer);
+    }
+
+    this.stopTimer = setTimeout(() => {
+      this.stop();
+      this.stopTimer = undefined;
+    }, millis);
+  }
+
+  play() {
+    this.compositionService
+      .testPlay(this.currentComposition)
+      .subscribe((result) => {
+        this.testPlayDurationMillis = result.durationMillis;
+        this.lastPlayTime = new Date();
+        this.lastPlayPositionMillis = 0;
+        this.isTestPlaying = true;
+        this.setStopTimer(this.testPlayDurationMillis);
+        let playUpdater = timer(0, 10);
+
+        this.playUpdateSubscription = playUpdater.subscribe(() => {
+          if (!this.sliding) {
+            let currentTime = new Date();
+            this.testPlayPositionMillis =
+              currentTime.getTime() - this.lastPlayTime.getTime() + this.lastPlayPositionMillis;
+          }
+        });
+      });
+  }
+
+  stop() {
+    this.compositionService.testStop().subscribe(() => {
+      this.isTestPlaying = false;
+      if (this.playUpdateSubscription) {
+        this.playUpdateSubscription.unsubscribe;
+      }
+    });
+  }
+
+  seek(positionMillis: number) {
+    this.lastPlayPositionMillis = positionMillis;
+    this.lastPlayTime = new Date();
+    this.sliding = false;
+    this.compositionService.testSeek(positionMillis).subscribe(() => {
+      this.setStopTimer(this.testPlayDurationMillis - positionMillis);
+    });
+  }
+
+  slideStart(event: any) {
+    this.sliding = true;
   }
 }

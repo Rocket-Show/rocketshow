@@ -129,6 +129,9 @@ public class DefaultUpdateService implements UpdateService {
         sessionService.getSession().setUpdateFinished(true);
         sessionService.save();
 
+        // Wait for the save to be completed (sometimes, the flag is missing otherwise)
+        Thread.sleep(3000);
+
         rebootService.reboot();
     }
 

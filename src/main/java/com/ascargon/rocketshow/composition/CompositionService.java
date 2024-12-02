@@ -25,6 +25,8 @@ public interface CompositionService {
 
     void loadAllSets();
 
+    void analyzeComposition(Composition composition) throws Exception;
+
     void saveComposition(Composition composition) throws Exception;
 
     void saveSet(Set set, boolean checkCompositions) throws Exception;

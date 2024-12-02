@@ -94,34 +94,20 @@ public class CompositionPlayer {
     // All MIDI routers
     private List<MidiRouter> midiRouterList = new ArrayList<>();
 
-    public CompositionPlayer(
-            NotificationService notificationService,
-            ActivityNotificationMidiService activityNotificationMidiService,
-            PlayerService playerService,
-            SettingsService settingsService,
-            CapabilitiesService capabilitiesService,
-            ActivityNotificationAudioService activityNotificationAudioService,
-            SetService setService,
-            Midi2LightingConvertService midi2LightingConvertService,
-            LightingService lightingService,
-            MidiDeviceOutService midiDeviceOutService,
-            DesignerService designerService,
-            OperatingSystemInformationService operatingSystemInformationService,
-            AudioService audioService
-    ) {
-        this.notificationService = notificationService;
-        this.activityNotificationMidiService = activityNotificationMidiService;
+    public CompositionPlayer(DefaultPlayerService playerService) {
         this.playerService = playerService;
-        this.settingsService = settingsService;
-        this.capabilitiesService = capabilitiesService;
-        this.activityNotificationAudioService = activityNotificationAudioService;
-        this.setService = setService;
-        this.midi2LightingConvertService = midi2LightingConvertService;
-        this.lightingService = lightingService;
-        this.midiDeviceOutService = midiDeviceOutService;
-        this.designerService = designerService;
-        this.operatingSystemInformationService = operatingSystemInformationService;
-        this.audioService = audioService;
+        this.notificationService = playerService.getNotificationService();
+        this.activityNotificationMidiService = playerService.getActivityNotificationMidiService();
+        this.settingsService = playerService.getSettingsService();
+        this.capabilitiesService = playerService.getCapabilitiesService();
+        this.activityNotificationAudioService = playerService.getActivityNotificationAudioService();
+        this.setService = playerService.getSetService();
+        this.midi2LightingConvertService = playerService.getMidi2LightingConvertService();
+        this.lightingService = playerService.getLightingService();
+        this.midiDeviceOutService = playerService.getMidiDeviceOutService();
+        this.designerService = playerService.getDesignerService();
+        this.operatingSystemInformationService = playerService.getOperatingSystemInformationService();
+        this.audioService = playerService.getAudioService();
 
         this.midiMapping.setParent(settingsService.getSettings().getMidiMapping());
     }
@@ -173,6 +159,10 @@ public class CompositionPlayer {
 
     private int getAudioBusStartChannel(AudioBus audioBus) {
         int startChannelIndex = 0;
+
+        if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+            return 0;
+        }
 
         // Get the starting channel of the current bus
         for (AudioBus settingsAudioBus : settingsService.getSettings().getAudioBusList()) {
@@ -313,12 +303,12 @@ public class CompositionPlayer {
     }
 
     private void addAudioToPipeline(AudioCompositionFile audioCompositionFile, Map<AudioDevice, Element> audioMixerList, int index) throws Exception {
-        logger.debug("Add audio file to pipeline");
+        logger.debug("Add audio file to pipeline...");
 
         AudioBus audioBus = settingsService.getAudioBusByName(audioCompositionFile.getOutputBus());
         AudioDevice audioDevice = audioBus.getAudioDevice();
 
-        if (audioDevice == null) {
+        if (audioDevice == null && !OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
             // no audio device configured -> no output
             return;
         }
@@ -344,20 +334,22 @@ public class CompositionPlayer {
         Element audioResample = ElementFactory.make("audioresample", "audioresample" + index);
         pipeline.add(audioResample);
 
+        logger.debug("Apply mix matrix...");
+
         // Apply the mix matrix
         GValueAPI.GValue mixMatrix = new GValueAPI.GValue();
         GValueAPI.GVALUE_API.g_value_init(mixMatrix, GstApi.GST_API.gst_value_array_get_type());
 
         // Repeat for each output channel
-        for (int j = 0; j < audioService.getChannelCountByAudioDevice(settingsService.getSettings(), audioDevice); j++) {
+        for (int i = 0; i < audioService.getChannelCountByAudioDevice(settingsService.getSettings(), audioDevice); i++) {
             GValueAPI.GValue outputChannel = new GValueAPI.GValue();
             GValueAPI.GVALUE_API.g_value_init(outputChannel, GstApi.GST_API.gst_value_array_get_type());
 
             // Fill the channel with the input channels
-            for (int k = 0; k < audioCompositionFile.getChannels(); k++) {
+            for (int j = 0; j < audioCompositionFile.getChannels(); j++) {
                 GValueAPI.GValue inputChannel = new GValueAPI.GValue(GType.FLOAT);
 
-                float channelVolume = getChannelVolume(audioBus, j, k, getCombinedVolume(audioCompositionFile.getVolume(), composition.getAudioVolume()));
+                float channelVolume = getChannelVolume(audioBus, i, j, getCombinedVolume(audioCompositionFile.getVolume(), composition.getAudioVolume()));
 
                 inputChannel.setValue(channelVolume);
                 GstApi.GST_API.gst_value_array_append_value(outputChannel, inputChannel.getPointer());
@@ -375,10 +367,15 @@ public class CompositionPlayer {
 
         // Find the mixer belonging to the current bus' devices
         Element audioMixer = null;
-        for (Map.Entry<AudioDevice, Element> entry : audioMixerList.entrySet()) {
-            if (entry.getKey().getId() == audioDevice.getId()) {
-                audioMixer = entry.getValue();
-                break;
+
+        if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+            audioMixer = audioMixerList.entrySet().iterator().next().getValue();
+        } else {
+            for (Map.Entry<AudioDevice, Element> entry : audioMixerList.entrySet()) {
+                if (entry.getKey().getId() == audioDevice.getId()) {
+                    audioMixer = entry.getValue();
+                    break;
+                }
             }
         }
 
@@ -394,6 +391,16 @@ public class CompositionPlayer {
     // Get All audio devices used in the composition
     private List<AudioDevice> getAudioDeviceInCompositionList(Composition composition) {
         Set<AudioDevice> audioDeviceSet = new HashSet<>();
+
+        // Add a dummy audio device for OSX
+        if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+            AudioDevice audioDevice = new AudioDevice();
+            audioDevice.setId(0);
+            audioDevice.setName("dummy");
+            audioDevice.setKey("dummy");
+            audioDeviceSet.add(audioDevice);
+        }
+
         for (CompositionFile compositionFile : composition.getCompositionFileList()) {
             if (compositionFile instanceof AudioCompositionFile audioCompositionFile) {
                 AudioBus audioBus = settingsService.getAudioBusByName(audioCompositionFile.getOutputBus());
