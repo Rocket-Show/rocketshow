@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <versionInfo>
-    <version>2.4.6</version>
-    <date>2024-11-24</date>
+    <version>2.4.7</version>
+    <date>2024-12-03</date>
     <changeNoteList>
+        <changeNote>
+            <version>2.4.7</version>
+            <changes>Play compositions from the editor to try them out directly. Minor bugfixes.</changes>
+        </changeNote>
         <changeNote>
             <version>2.4.6</version>
             <changes>Allow adding multiple lighting plugins.</changes>
