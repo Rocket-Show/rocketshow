@@ -56,8 +56,7 @@ export class EditorCompositionComponent implements OnInit {
     private toastrService: ToastrService,
     private translateService: TranslateService,
     private toastGeneralErrorService: ToastGeneralErrorService,
-    private settingsService: SettingsService,
-    public changeDetectorRef: ChangeDetectorRef
+    private settingsService: SettingsService
   ) {}
 
   private loadSettings() {
@@ -434,16 +433,6 @@ export class EditorCompositionComponent implements OnInit {
     return false;
   }
 
-  getVolume() {
-    return Math.round(this.currentComposition.audioVolume * 100);
-  }
-
-  setVolume(value: any) {
-    if (!isNaN(value) && value >= 0 && value <= 100) {
-      this.currentComposition.audioVolume = value / 100;
-    }
-  }
-
   private setStopTimer(millis: number) {
     if (this.stopTimer) {
       clearTimeout(this.stopTimer);
@@ -470,7 +459,9 @@ export class EditorCompositionComponent implements OnInit {
           if (!this.sliding) {
             let currentTime = new Date();
             this.testPlayPositionMillis =
-              currentTime.getTime() - this.lastPlayTime.getTime() + this.lastPlayPositionMillis;
+              currentTime.getTime() -
+              this.lastPlayTime.getTime() +
+              this.lastPlayPositionMillis;
           }
         });
       });

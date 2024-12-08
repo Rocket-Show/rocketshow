@@ -68,6 +68,7 @@ import { SettingsPersonalComponent } from './settings/settings-personal/settings
 import { DesignerComponent } from './designer/designer.component';
 import { BackupRestoreDialogComponent } from './settings/backup-restore-dialog/backup-restore-dialog.component';
 import { DropzoneComponent } from './dropzone/dropzone.component';
+import { VolumeSliderComponent } from './volume-slider/volume-slider.component';
 
 const appRoutes: Routes = [
   { path: 'intro', component: IntroComponent },
@@ -117,7 +118,8 @@ const appRoutes: Routes = [
         SettingsBandComponent,
         SettingsPersonalComponent,
         DesignerComponent,
-        DropzoneComponent
+        DropzoneComponent,
+        VolumeSliderComponent,
     ],
     imports: [
         BrowserModule,
