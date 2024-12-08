@@ -16,9 +16,8 @@ Refer to [the docs](./docs/index.md) to find out how to use Rocket Show.
 Warning: Delete `node_modules/@angular-devkit/build-optimizer/src/.cache` after each NPM package update to make sure,
 the devkit is not caching an old version (see https://github.com/angular/devkit/issues/913).
 
-1. Go to the target directory: `cd target`
-2. Build and start the backend server: `mvn package -f ../pom.xml && java -jar rocketshow.jar`
-3. Open the web app on http://localhost:8080
+1. Build and start the backend server: `mvn package && java -jar target/rocketshow.jar`
+2. Open the web app on http://localhost:8080
 
 Use this command to skip tests and NPM build:
 ```shell

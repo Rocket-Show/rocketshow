@@ -299,7 +299,8 @@ public class CompositionPlayer {
 
         // scale should be logarithmic. a "good-enough"-curve is just x^4.
         // also see: https://www.dr-lex.be/info-stuff/volumecontrols.html
-        return (float) Math.pow(combinedVolume, 4);
+//        return (float) Math.pow(combinedVolume, 4);
+        return combinedVolume;
     }
 
     private void addAudioToPipeline(AudioCompositionFile audioCompositionFile, Map<AudioDevice, Element> audioMixerList, int index) throws Exception {
