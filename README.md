@@ -21,7 +21,7 @@ the devkit is not caching an old version (see https://github.com/angular/devkit/
 
 Use this command to skip tests and NPM build:
 ```shell
-mvn package -f ../pom.xml -Dskip.npm -Dmaven.test.skip=true && java -jar rocketshow.jar
+mvn package -Dskip.npm -Dmaven.test.skip=true && java -jar rocketshow.jar
 ```
 
 For frequent builds, you might want to comment out the frontend-maven-plugin in the POM and make use of the Maven
@@ -203,7 +203,7 @@ mv "$(date '+%Y-%m-%d')-RocketShow-lite.img" "$(date '+%Y-%m-%d')-RocketShow.img
 zip "$(date '+%Y-%m-%d')-RocketShow.zip" "$(date '+%Y-%m-%d')-RocketShow.img"
 
 # copy the zip to a folder where we can get it with SFTP:
-mv "$(date '+%Y-%m-%d')-RocketShow.zip" /home/pi
+mv "$(date '+%Y-%m-%d')-RocketShow.zip" /home/rocketshow
 ```
 
 ### Update process

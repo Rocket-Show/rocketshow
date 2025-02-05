@@ -4,11 +4,15 @@
 # This script needs to be executed as root.
 # 
 
-# Install all required packages (libnss-mdns installs the Bonjour service, if not already installed)
+# Install all required packages
+# - libnss-mdns installs the Bonjour service, if not already installed
+# - dhcpcd is used to set a static IP address for the wifi hotspot feature
+# - dnsmasq is a DHCP server
+# - hostapd installs the wifi host features
 apt-get update
 apt-get upgrade -y
 
-apt-get -y install unzip openjdk-17-jdk dnsmasq hostapd fbi ola libnss-mdns iptables libasound2 alsa-utils openssh-sftp-server libgstreamer1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl
+apt-get -y install unzip openjdk-17-jdk dhcpcd dnsmasq hostapd fbi ola libnss-mdns iptables libasound2 alsa-utils openssh-sftp-server libgstreamer1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl
 
 # Add the rocketshow user
 adduser \
@@ -57,22 +61,6 @@ wget https://rocketshow.net/designer/downloads/fixtures.zip
 unzip fixtures.zip -d fixtures
 rm fixtures.zip
 
-# TODO not required for raspberry pi 5 anymore?
-# Overclock the raspberry to sustain streams without underruns
-# - Set more memory for the GPU to play larger video files with omx
-# - Enable turbo-mode by default (boot_delay avoids sdcard corruption)
-# - Overclock the sdcard a little bit to prevent bufferunderruns with ALSA
-# - Hide warnings (e.g. temperature icon)
-sed -i '1i# ROCKETSHOWSTART\ngpu_mem=256\nforce_turbo=1\nboot_delay=1\ndtparam=sd_overclock=100\navoid_warnings=1\n# ROCKETSHOWEND\n' /boot/config.txt
-
-# TODO not required for raspberry pi 5 anymore?
-# Set rocketshows nice priority to 10
-sed -i '1irocketshow soft priority 10' /etc/security/limits.conf
-
-# TODO not required for raspberry pi 5 anymore?
-# Add realtime permissions to the audio group
-sed -i '1i@audio   -  rtprio     99\n@audio   -  memlock    unlimited' /etc/security/limits.d/audio.conf
-
 # Download current JAR and version info
 wget https://www.rocketshow.net/update/rocketshow.jar
 wget https://www.rocketshow.net/update/currentversion2.xml
@@ -88,10 +76,11 @@ systemctl enable hostapd
 systemctl stop dnsmasq
 systemctl stop hostapd
 
-# Required in order for the wireless AP to work
-printf "\n# ROCKETSHOWSTART\ninterface wlan0\nnohook wpa_supplicant\nstatic ip_address=192.168.4.1/24\n# ROCKETSHOWEND\n" | tee -a /etc/dhcpcd.conf
+# Configure the wlan0 interface to have a static ip address
+nmcli connection modify "wlan0" ipv4.addresses "192.168.4.1/24"
 
-printf "\n# ROCKETSHOWSTART\ninterface=wlan0\n  dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h\naddress=/rocketshow.local/192.168.4.1\n# ROCKETSHOWEND\n" | tee -a /etc/dnsmasq.conf
+# Configure dnsmasq (DHCP server)
+printf "\n# ROCKETSHOWSTART\naddress=/rocketshow.local/192.168.4.1\ninterface=wlan0\nlisten-address=192.168.4.1\ndhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h\n# ROCKETSHOWEND\n" | tee -a /etc/dnsmasq.conf
 
 touch /etc/hostapd/hostapd.conf
 
@@ -116,11 +105,20 @@ EOF
 
 printf "\n# ROCKETSHOWSTART\nnet.ipv4.ip_forward=1\n# ROCKETSHOWEND\n" | tee -a /etc/sysctl.conf
 
-# set the country code (required in order for wlan0 and hostapd to work)
+# Set the country code (required in order for wlan0 and hostapd to work)
 raspi-config nonint do_wifi_country US
-#printf "\ncountry=CH" | tee -a /etc/wpa_supplicant/wpa_supplicant.conf
-# manually unblock wifi, because we set a country code
-#rfkill unblock wifi
+
+# Delay hostapd startup to make sure it waits for the interfaces to be ready
+HOSTAPD_OVERRIDE_CONF="[Unit]
+After=network.target sys-subsystem-net-devices-wlan0.device
+Requires=sys-subsystem-net-devices-wlan0.device
+
+[Service]
+ExecStartPre=/bin/sleep 5
+"
+HOSTAPD_OVERRIDE_DIR="/etc/systemd/system/hostapd.service.d"
+sudo mkdir -p "$HOSTAPD_OVERRIDE_DIR"
+echo "$HOSTAPD_OVERRIDE_CONF" | sudo tee "$HOSTAPD_OVERRIDE_DIR/override.conf" > /dev/null
 
 # Install pi4j
 curl -s get.pi4j.com | bash
@@ -176,21 +174,6 @@ chown -R rocketshow:rocketshow /opt/rocketshow_reset.sh
 
 chmod 755 /opt/rocketshow_factory.tar.gz
 chmod 755 /opt/rocketshow_reset.sh
-
-# Apply a patch to make seeking videos work on the Raspberry Pi 4
-# https://github.com/moritzvieli/rocketshow/issues/7
-# See: https://github.com/raspberrypi/linux/issues/3325#issuecomment-684040830
-#firmware=$(zgrep "firmware as of" \
-# "/usr/share/doc/raspberrypi-kernel/changelog.Debian.gz" | \
-# head -n1 | sed  -n 's|.* \([^ ]*\)$|\1|p')
-#uname="$(curl -k -s -L "https://github.com/raspberrypi/firmware/raw/$firmware/extra/uname_string7l")"
-#KVER="$(echo ${uname} | grep -Po '\b(Linux version )\K(?<price>[^\ ]+)' | cat)"
-#
-#cd /lib/modules/${KVER}/kernel/drivers/staging/vc04_services/bcm2835-codec
-#rm -rf bcm2835-codec.ko
-#wget https://rocketshow.net/install/patches/bcm2835-codec.ko
-#mkdir -p /lib/modules/${KVER}/extra
-#cp bcm2835-codec.ko /lib/modules/${KVER}/extra/bcm2835-codec.ko
 
 # Give the setup some time, because umount won't work afterwards if called too fast ("umount: device is busy")
 echo "Wait 5 seconds..."
