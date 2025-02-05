@@ -714,11 +714,6 @@ public class CompositionPlayer {
             midiRouter.close();
         }
 
-        // Now would be a good moment to run the GC
-        if (!isSample) {
-            System.gc();
-        }
-
         playState = PlayState.STOPPED;
 
         if (!isSample && !isDefaultComposition) {
