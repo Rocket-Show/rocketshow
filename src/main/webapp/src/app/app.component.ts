@@ -3,7 +3,7 @@ import { StateService } from './services/state.service';
 import { CompositionService } from './services/composition.service';
 import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
-import { Router, NavigationEnd, NavigationStart, NavigationCancel } from '@angular/router';
+import { Router, NavigationEnd, NavigationStart, NavigationCancel, ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { SessionService } from './services/session.service';
 import { SettingsService } from './services/settings.service';
@@ -24,6 +24,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   loaded: boolean = false;
   loadingPage: boolean = false;
   settings: Settings;
+  mobileAppHost: boolean = false;
 
   constructor(
     private translateService: TranslateService,
@@ -34,7 +35,8 @@ export class AppComponent implements OnInit, AfterViewInit {
     private settingsService: SettingsService,
     private titleService: Title,
     private leadSheetService: LeadSheetService,
-    private operatingSystemInformationService: OperatingSystemInformationService) {
+    private operatingSystemInformationService: OperatingSystemInformationService,
+    private route: ActivatedRoute) {
 
     this.loadingPage = true;
     translateService.setDefaultLang('en');
@@ -51,6 +53,11 @@ export class AppComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.router.events.subscribe((e) => {
       if (e instanceof NavigationEnd) {
+        const mobileAppHost = this.route.snapshot.queryParamMap.get('mobileAppHost');
+        if(mobileAppHost === 'true') {
+          this.mobileAppHost = true;
+        }
+
         this.isIntro = false;
         this.isPlay = false;
 
@@ -124,6 +131,10 @@ export class AppComponent implements OnInit, AfterViewInit {
     }
 
     return false;
+  }
+
+  mobileHostBack() {
+    (<any>window).ReactNativeWebView.postMessage("navigateBack");
   }
 
 }

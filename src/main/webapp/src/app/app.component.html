@@ -25,11 +25,23 @@
 <!-- Navigation -->
 <nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light border-secondary" style="border-bottom: 1px solid #444;"
   *ngIf="loaded && !isIntro">
-  <a class="navbar-brand d-flex" href="#" routerLink="/">
+
+  <!-- Branding/Back button-->
+  <a *ngIf="!mobileAppHost" class="navbar-brand d-flex" href="#" routerLink="/">
     <img class="my-auto d-none d-sm-block" src="assets/img/logo.png?v=1.4" height="30px" style="margin-right: 0px;">
     <span class="my-auto d-none d-sm-block">&nbsp;|&nbsp;</span>
     <span class="my-auto">{{ settings.deviceName }}</span>
   </a>
+  <div *ngIf="mobileAppHost" class="d-flex navbar-brand">
+    <a href="#" (click)="mobileHostBack()" class="my-auto" style="color: white; font-size: 1rem; text-decoration: none;"><i class="fa fa-chevron-left" aria-hidden="true"></i> Back</a>
+    <a href="#" routerLink="/" class="my-auto ml-3" style="color: white; text-decoration: none">{{ settings.deviceName }}</a>
+  </div>
+
+  <!-- Hamburger -->
+  <button class="navbar-toggler navbar-toggler-left ml-3" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
 
   <!-- Menu buttons -->
   <div class="collapse navbar-collapse" id="navbarSupportedContent">
@@ -54,12 +66,6 @@
     <a *ngIf="isPlay" href="#" (click)="showLeadSheet(); false;" class="btn btn-primary">
       <i class="fa fa-file-text-o" aria-hidden="true"></i></a>
   </div>
-
-  <!-- Hamburger -->
-  <button class="navbar-toggler navbar-toggler-left ml-3" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
 </nav>
 
 <!-- Loading component for slow loading pages -->
