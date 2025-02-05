@@ -114,6 +114,7 @@ export class SettingsComponent implements OnInit {
 
   canDeactivate(): Observable<boolean> {
     return this.settingsService.getSettings().pipe(flatMap(result => {
+      console.log(this.initialSettings, result);
       return this.pendingChangesDialogService.check(this.initialSettings, result, 'settings.warning-settings-changes');
     }));
   }
@@ -146,7 +147,7 @@ export class SettingsComponent implements OnInit {
       this.translateService.get(['intro.default-unit-name', 'settings.remote-device-name-placeholder']).subscribe((translations) => {
         // Save the personal settings
         this.settingsPersonalService.save(this.settingsPersonalService.getSettings());
-        
+
         // Set some default settings
         if (!result.deviceName) {
           result.deviceName = translations['intro.default-unit-name'];
@@ -195,5 +196,5 @@ export class SettingsComponent implements OnInit {
       });
     })).subscribe();
   }
-  
+
 }
