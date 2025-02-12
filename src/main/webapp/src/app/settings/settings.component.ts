@@ -114,7 +114,6 @@ export class SettingsComponent implements OnInit {
 
   canDeactivate(): Observable<boolean> {
     return this.settingsService.getSettings().pipe(flatMap(result => {
-      console.log(this.initialSettings, result);
       return this.pendingChangesDialogService.check(this.initialSettings, result, 'settings.warning-settings-changes');
     }));
   }

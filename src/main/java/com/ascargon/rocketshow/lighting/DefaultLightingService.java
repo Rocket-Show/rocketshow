@@ -348,13 +348,15 @@ public class DefaultLightingService implements LightingService {
     public List<OlaPlugin> getOlaPlugins() {
         List<OlaPlugin> olaPluginList = new ArrayList<>();
 
-        List<Ola.PluginInfo> pluginInfoList = olaClient.getPlugins().getPluginList();
-        for (Ola.PluginInfo pluginInfo : pluginInfoList) {
-            OlaPlugin olaPlugin = createOlaPluginFromInfo(pluginInfo);
-            olaPluginList.add(olaPlugin);
+        if (olaClient != null) {
+            List<Ola.PluginInfo> pluginInfoList = olaClient.getPlugins().getPluginList();
+            for (Ola.PluginInfo pluginInfo : pluginInfoList) {
+                OlaPlugin olaPlugin = createOlaPluginFromInfo(pluginInfo);
+                olaPluginList.add(olaPlugin);
 
-            for (Ola.PluginInfo conflictingPluginInfo : olaClient.getPluginState(olaPlugin.getId()).getConflictsWithList()) {
-                olaPlugin.getConflictList().add(createOlaPluginFromInfo(conflictingPluginInfo));
+                for (Ola.PluginInfo conflictingPluginInfo : olaClient.getPluginState(olaPlugin.getId()).getConflictsWithList()) {
+                    olaPlugin.getConflictList().add(createOlaPluginFromInfo(conflictingPluginInfo));
+                }
             }
         }
 

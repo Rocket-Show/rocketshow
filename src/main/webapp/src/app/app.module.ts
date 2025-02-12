@@ -79,7 +79,7 @@ const appRoutes: Routes = [
   {
     path: '',
     redirectTo: '/play',
-    pathMatch: 'full'
+    pathMatch: 'full',
   },
   { path: '**', component: PlayComponent }
 ];

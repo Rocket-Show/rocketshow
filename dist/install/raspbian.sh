@@ -108,6 +108,16 @@ printf "\n# ROCKETSHOWSTART\nnet.ipv4.ip_forward=1\n# ROCKETSHOWEND\n" | tee -a 
 # Set the country code (required in order for wlan0 and hostapd to work)
 raspi-config nonint do_wifi_country US
 
+# Disable serial port over console
+sudo raspi-config nonint do_serial_cons 1
+
+# Enable hardware serial port
+sudo raspi-config nonint do_serial_hw 0
+
+# Disable other services which might use UART
+sudo systemctl disable serial-getty@ttyAMA0.service
+sudo systemctl disable hciuart
+
 # Delay hostapd startup to make sure it waits for the interfaces to be ready
 HOSTAPD_OVERRIDE_CONF="[Unit]
 After=network.target sys-subsystem-net-devices-wlan0.device
