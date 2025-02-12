@@ -94,10 +94,26 @@ public class Settings {
     private Integer wlanApChannel;
     private String wlanApCountryCode;
     private Boolean enableRaspberryGpio = false;
-    private int raspberryGpioDebounceMillis = 500;
+    private Long raspberryGpioDebounceMillis = 3L;
+
+    /**
+     * @deprecated Was never really in use
+     */
+    @Deprecated
     private boolean raspberryGpioNoHardwareTrigger = false;
+
+    /**
+     * @deprecated Was never really in use
+     */
+    @Deprecated
     private int raspberryGpioTimerPeriodMillis = 2;
+
+    /**
+     * @deprecated Was never really in use
+     */
+    @Deprecated
     private int raspberryGpioCyclesHigh = 3;
+
     private Boolean enableMonitor;
     private Integer designerFrequencyHertz;
     private Boolean designerLivePreview = false;
