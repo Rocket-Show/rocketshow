@@ -1,13 +1,12 @@
 package com.ascargon.rocketshow.midi;
 
-import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.api.ActivityNotificationMidiService;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.Midi2LightingConvertService;
+import com.ascargon.rocketshow.settings.SettingsService;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.Transmitter;
 import java.util.ArrayList;
@@ -68,14 +67,14 @@ public class MidiRouter {
     }
 
     // Connect two transmitters, the processing one and another one to monitor the signals to all routings
-    void connectTransmitter(Transmitter processingTransmitter, Transmitter monitoringTransmmitter) {
+    void connectTransmitter(Transmitter processingTransmitter, Transmitter monitoringTransmitter) {
         for (Map.Entry<MidiRouting, Receiver> entry : receiverList.entrySet()) {
             // Connect the processing transmitter
             processingTransmitter.setReceiver(entry.getValue());
 
             // Connect the monitoring transmitter
             Midi2MonitorReceiver midi2MonitorReceiver = new Midi2MonitorReceiver(activityNotificationMidiService, entry.getKey());
-            monitoringTransmmitter.setReceiver(midi2MonitorReceiver);
+            monitoringTransmitter.setReceiver(midi2MonitorReceiver);
             midi2MonitorReceiverList.add(midi2MonitorReceiver);
         }
     }
