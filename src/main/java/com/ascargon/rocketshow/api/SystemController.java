@@ -1,7 +1,9 @@
 package com.ascargon.rocketshow.api;
 
+import com.ascargon.rocketshow.lighting.LightingAction;
 import com.ascargon.rocketshow.lighting.OlaPlugin;
 import com.ascargon.rocketshow.play.PlayerService;
+import com.ascargon.rocketshow.raspberry.RaspberryGpioAction;
 import com.ascargon.rocketshow.session.SessionService;
 import com.ascargon.rocketshow.settings.Settings;
 import com.ascargon.rocketshow.settings.SettingsService;

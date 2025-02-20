@@ -2,6 +2,7 @@ package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.lighting.LightingAction;
 import com.ascargon.rocketshow.midi.MidiSignal;
+import com.ascargon.rocketshow.raspberry.RaspberryGpioAction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
@@ -157,6 +158,10 @@ public class RemoteDevice {
 
     public void executeLightingAction(LightingAction lightingAction) {
         doPost("lighting/execute-action", lightingAction);
+    }
+
+    public void executeRaspberryGpioAction(RaspberryGpioAction raspberryGpioAction) {
+        doPost("raspberry-gpio/execute-action", raspberryGpioAction);
     }
 
 }

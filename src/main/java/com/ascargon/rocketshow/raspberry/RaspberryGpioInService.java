@@ -3,5 +3,5 @@ package com.ascargon.rocketshow.raspberry;
 import org.springframework.stereotype.Service;
 
 @Service
-public interface RaspberryGpioService {
+public interface RaspberryGpioInService {
 }

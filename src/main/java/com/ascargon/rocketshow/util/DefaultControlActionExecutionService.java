@@ -4,9 +4,9 @@ import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.midi.MidiRouter;
 import com.ascargon.rocketshow.midi.MidiRouterFactory;
-import com.ascargon.rocketshow.midi.MidiService;
 import com.ascargon.rocketshow.midi.MidiSource;
 import com.ascargon.rocketshow.play.PlayerService;
+import com.ascargon.rocketshow.raspberry.RaspberryGpioOutService;
 import com.ascargon.rocketshow.settings.SettingsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,12 +22,14 @@ public class DefaultControlActionExecutionService implements ControlActionExecut
     private final RebootService rebootService;
     private final LightingService lightingService;
     private final MidiRouter midiRouter;
+    private final RaspberryGpioOutService raspberryGpioOutService;
 
-    public DefaultControlActionExecutionService(PlayerService playerService, SettingsService settingsService, RebootService rebootService, LightingService lightingService, MidiRouterFactory midiRouterFactory) {
+    public DefaultControlActionExecutionService(PlayerService playerService, SettingsService settingsService, RebootService rebootService, LightingService lightingService, MidiRouterFactory midiRouterFactory, RaspberryGpioOutService raspberryGpioOutService) {
         this.playerService = playerService;
         this.settingsService = settingsService;
         this.rebootService = rebootService;
         this.lightingService = lightingService;
+        this.raspberryGpioOutService = raspberryGpioOutService;
 
         midiRouter = midiRouterFactory.getMidiRouter(settingsService.getSettings().getRemoteMidiRoutingList());
     }
@@ -67,6 +69,9 @@ public class DefaultControlActionExecutionService implements ControlActionExecut
                 break;
             case LIGHTING:
                 remoteDevice.executeLightingAction(controlAction.getLightingAction());
+                break;
+            case GPIO:
+                remoteDevice.executeRaspberryGpioAction(controlAction.getRaspberryGpioAction());
                 break;
             case REBOOT:
                 remoteDevice.reboot();
@@ -116,6 +121,9 @@ public class DefaultControlActionExecutionService implements ControlActionExecut
                 break;
             case LIGHTING:
                 lightingService.executeAction(controlAction.getLightingAction());
+                break;
+            case GPIO:
+                raspberryGpioOutService.executeAction(controlAction.getRaspberryGpioAction());
                 break;
             case REBOOT:
                 rebootService.reboot();
