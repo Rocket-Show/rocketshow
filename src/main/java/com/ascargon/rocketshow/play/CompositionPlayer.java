@@ -68,12 +68,11 @@ public class CompositionPlayer {
     private final CapabilitiesService capabilitiesService;
     private final ActivityNotificationAudioService activityNotificationAudioService;
     private final SetService setService;
-    private final Midi2LightingConvertService midi2LightingConvertService;
     private final LightingService lightingService;
-    private final MidiDeviceOutService midiDeviceOutService;
     private final DesignerService designerService;
     private final OperatingSystemInformationService operatingSystemInformationService;
     private final AudioService audioService;
+    private final MidiRouterFactory midiRouterFactory;
 
     private Composition composition;
     private PlayState playState = PlayState.STOPPED;
@@ -92,9 +91,9 @@ public class CompositionPlayer {
     private List<Element> volumeList = new ArrayList<>();
 
     // All MIDI routers
-    private List<MidiRouter> midiRouterList = new ArrayList<>();
+    private final List<MidiRouter> midiRouterList = new ArrayList<>();
 
-    public CompositionPlayer(DefaultPlayerService playerService) {
+    public CompositionPlayer(DefaultPlayerService playerService, MidiRouterFactory midiRouterFactory) {
         this.playerService = playerService;
         this.notificationService = playerService.getNotificationService();
         this.activityNotificationMidiService = playerService.getActivityNotificationMidiService();
@@ -102,12 +101,11 @@ public class CompositionPlayer {
         this.capabilitiesService = playerService.getCapabilitiesService();
         this.activityNotificationAudioService = playerService.getActivityNotificationAudioService();
         this.setService = playerService.getSetService();
-        this.midi2LightingConvertService = playerService.getMidi2LightingConvertService();
         this.lightingService = playerService.getLightingService();
-        this.midiDeviceOutService = playerService.getMidiDeviceOutService();
         this.designerService = playerService.getDesignerService();
         this.operatingSystemInformationService = playerService.getOperatingSystemInformationService();
         this.audioService = playerService.getAudioService();
+        this.midiRouterFactory = midiRouterFactory;
 
         this.midiMapping.setParent(settingsService.getSettings().getMidiMapping());
     }
@@ -131,21 +129,11 @@ public class CompositionPlayer {
             } catch (Exception exception) {
             }
 
-            ShortMessage shortMessage = new ShortMessage();
+            ActivityMidiSignal activityMidiSignal = new ActivityMidiSignal(command, channel, data1, data2);
             try {
-                shortMessage.setMessage(command, channel, data1, data2);
-
-                try {
-                    midiRouter.sendSignal(shortMessage);
-                } catch (InvalidMidiDataException e) {
-                    logger.error("Could not send MIDI signal from MIDI file", e);
-                }
-
-                if (settingsService.getSettings().getEnableMonitor()) {
-                    activityNotificationMidiService.notifyClients(shortMessage, MidiDirection.IN, MidiSource.MIDI_FILE, null);
-                }
+                midiRouter.sendSignal(activityMidiSignal, MidiSource.MIDI_FILE);
             } catch (InvalidMidiDataException e) {
-                logger.error("Could not process MIDI signal from MIDI file", e);
+                logger.error("Could not send MIDI signal from MIDI file", e);
             }
         }
     }
@@ -245,7 +233,7 @@ public class CompositionPlayer {
     }
 
     private void addMidiToPipeline(MidiCompositionFile midiCompositionFile, int index) {
-        MidiRouter midiRouter = new MidiRouter(settingsService, midi2LightingConvertService, lightingService, midiDeviceOutService, activityNotificationMidiService, midiCompositionFile.getMidiRoutingList());
+        MidiRouter midiRouter = midiRouterFactory.getMidiRouter(midiCompositionFile.getMidiRoutingList());
 
         midiRouterList.add(midiRouter);
 

@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
+import javax.sound.midi.ShortMessage;
 
 /**
  * Handle the MIDI events from the currently connected MIDI input device.
@@ -23,20 +24,17 @@ class MidiInDeviceReceiver implements Receiver {
     private final ActivityNotificationMidiService activityNotificationMidiService;
     private final MidiControlActionExecutionService midiControlActionExecutionService;
 
-    private MidiRouter midiRouter;
+    private final MidiRouter midiRouter;
 
-    MidiInDeviceReceiver(ActivityNotificationMidiService activityNotificationMidiService, MidiControlActionExecutionService midiControlActionExecutionService, SettingsService settingsService, Midi2LightingConvertService midi2LightingConvertService, LightingService lightingService, MidiDeviceOutService midiDeviceOutService) {
+    MidiInDeviceReceiver(ActivityNotificationMidiService activityNotificationMidiService, MidiControlActionExecutionService midiControlActionExecutionService, SettingsService settingsService, MidiRouterFactory midiRouterFactory) {
         this.activityNotificationMidiService = activityNotificationMidiService;
         this.midiControlActionExecutionService = midiControlActionExecutionService;
 
-        midiRouter = new MidiRouter(settingsService, midi2LightingConvertService, lightingService, midiDeviceOutService, activityNotificationMidiService, settingsService.getSettings().getDeviceInMidiRoutingList());
+        midiRouter = midiRouterFactory.getMidiRouter(settingsService.getSettings().getDeviceInMidiRoutingList());
     }
 
     @Override
     public void send(MidiMessage midiMessage, long timeStamp) {
-        // Notify the frontend, if midi learn is activated
-        activityNotificationMidiService.notifyClients(midiMessage, MidiDirection.IN, MidiSource.IN_DEVICE, null);
-
         // Process MIDI events as actions according to the settings
         try {
             midiControlActionExecutionService.processMidiSignal(midiMessage);
@@ -46,7 +44,9 @@ class MidiInDeviceReceiver implements Receiver {
 
         // Process the MIDI events through the defined routings
         try {
-            midiRouter.sendSignal(midiMessage);
+            if (midiMessage instanceof ShortMessage) {
+                midiRouter.sendSignal(new ActivityMidiSignal((ShortMessage) midiMessage), MidiSource.IN_DEVICE);
+            }
         } catch (InvalidMidiDataException e) {
             logger.error("Could not route event from MIDI device", e);
         }
