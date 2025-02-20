@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.api;
 
+import com.ascargon.rocketshow.lighting.LightingAction;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.OlaPlugin;
 import org.springframework.http.HttpStatus;
@@ -35,6 +36,11 @@ public class LightingController {
     @GetMapping("ola-plugins")
     public List<OlaPlugin> getOlaPlugins() {
         return lightingService.getOlaPlugins();
+    }
+
+    @PostMapping("execute-action")
+    public void executeAction(@RequestBody LightingAction lightingAction) {
+        lightingService.executeAction(lightingAction);
     }
 
 }

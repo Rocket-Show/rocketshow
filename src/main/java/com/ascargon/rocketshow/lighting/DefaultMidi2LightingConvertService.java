@@ -10,18 +10,13 @@ import javax.sound.midi.ShortMessage;
 public class DefaultMidi2LightingConvertService implements Midi2LightingConvertService {
 
     private final LightingService lightingService;
-    private final SettingsService settingsService;
 
-    public DefaultMidi2LightingConvertService(
-            LightingService lightingService,
-            SettingsService settingsService
-    ) {
+    public DefaultMidi2LightingConvertService(LightingService lightingService) {
         this.lightingService = lightingService;
-        this.settingsService = settingsService;
     }
 
     private void sendLightingUniverse() {
-        lightingService.send(settingsService.getSettings().getLightingSendDelayMillis(), settingsService.getSettings().getEnableMonitor());
+        lightingService.send();
     }
 
     private void mapSimple(ShortMessage shortMessage, LightingUniverse lightingUniverse) {
