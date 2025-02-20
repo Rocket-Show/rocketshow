@@ -2,6 +2,10 @@ package com.ascargon.rocketshow.util;
 
 import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.lighting.LightingService;
+import com.ascargon.rocketshow.midi.MidiRouter;
+import com.ascargon.rocketshow.midi.MidiRouterFactory;
+import com.ascargon.rocketshow.midi.MidiService;
+import com.ascargon.rocketshow.midi.MidiSource;
 import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.settings.SettingsService;
 import org.slf4j.Logger;
@@ -17,12 +21,15 @@ public class DefaultControlActionExecutionService implements ControlActionExecut
     private final SettingsService settingsService;
     private final RebootService rebootService;
     private final LightingService lightingService;
+    private final MidiRouter midiRouter;
 
-    public DefaultControlActionExecutionService(PlayerService playerService, SettingsService settingsService, RebootService rebootService, LightingService lightingService) {
+    public DefaultControlActionExecutionService(PlayerService playerService, SettingsService settingsService, RebootService rebootService, LightingService lightingService, MidiRouterFactory midiRouterFactory) {
         this.playerService = playerService;
         this.settingsService = settingsService;
         this.rebootService = rebootService;
         this.lightingService = lightingService;
+
+        midiRouter = midiRouterFactory.getMidiRouter(settingsService.getSettings().getRemoteMidiRoutingList());
     }
 
     private void executeActionOnRemoteDevice(ControlAction controlAction, RemoteDevice remoteDevice) {
@@ -54,6 +61,9 @@ public class DefaultControlActionExecutionService implements ControlActionExecut
             case SELECT_COMPOSITION_BY_NAME_AND_PLAY:
                 remoteDevice.setCompositionName(controlAction.getCompositionName());
                 remoteDevice.play();
+                break;
+            case MIDI:
+                remoteDevice.sendMidiSignal(controlAction.getMidiSignal());
                 break;
             case LIGHTING:
                 remoteDevice.executeLightingAction(controlAction.getLightingAction());
@@ -100,6 +110,9 @@ public class DefaultControlActionExecutionService implements ControlActionExecut
             case SELECT_COMPOSITION_BY_NAME_AND_PLAY:
                 playerService.setCompositionName(controlAction.getCompositionName());
                 playerService.play();
+                break;
+            case MIDI:
+                midiRouter.sendSignal(controlAction.getMidiSignal(), MidiSource.ACTION);
                 break;
             case LIGHTING:
                 lightingService.executeAction(controlAction.getLightingAction());

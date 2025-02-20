@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.api;
 
+import com.ascargon.rocketshow.midi.ActivityMidiSignal;
 import com.ascargon.rocketshow.midi.MidiDestination;
 import com.ascargon.rocketshow.midi.MidiDirection;
 import com.ascargon.rocketshow.midi.MidiSource;
@@ -10,6 +11,6 @@ import javax.sound.midi.MidiMessage;
 @Service
 public interface ActivityNotificationMidiService {
 
-    void notifyClients(MidiMessage midiMessage, MidiDirection midiDirection, MidiSource midiSource, MidiDestination midiDestination);
+    void notifyClients(ActivityMidiSignal activityMidiSignal, MidiDirection midiDirection, MidiSource midiSource, MidiDestination midiDestination);
 
 }

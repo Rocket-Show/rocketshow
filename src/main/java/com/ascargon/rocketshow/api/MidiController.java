@@ -22,15 +22,15 @@ class MidiController {
     private final MidiService midiService;
     private final MidiControlActionExecutionService midiControlActionExecutionService;
 
-    private MidiRouter midiRouter;
+    private final MidiRouter midiRouter;
 
-    private MidiController(ControllerService controllerService, SettingsService settingsService, ActivityNotificationMidiService activityNotificationMidiService, MidiService midiService, MidiControlActionExecutionService midiControlActionExecutionService, Midi2LightingConvertService midi2LightingConvertService, LightingService lightingService, MidiDeviceOutService midiDeviceOutService) {
+    private MidiController(ControllerService controllerService, SettingsService settingsService, ActivityNotificationMidiService activityNotificationMidiService, MidiService midiService, MidiControlActionExecutionService midiControlActionExecutionService, MidiRouterFactory midiRouterFactory) {
         this.controllerService = controllerService;
         this.activityNotificationMidiService = activityNotificationMidiService;
         this.midiService = midiService;
         this.midiControlActionExecutionService = midiControlActionExecutionService;
 
-        midiRouter = new MidiRouter(settingsService, midi2LightingConvertService, lightingService, midiDeviceOutService, activityNotificationMidiService, settingsService.getSettings().getRemoteMidiRoutingList());
+        midiRouter = midiRouterFactory.getMidiRouter(settingsService.getSettings().getRemoteMidiRoutingList());
     }
 
     @ExceptionHandler(Exception.class)
@@ -52,12 +52,13 @@ class MidiController {
     public ResponseEntity<Void> sendMessage(@RequestParam("command") int command, @RequestParam("channel") int channel,
                                             @RequestParam("note") int note, @RequestParam("velocity") int velocity) throws InvalidMidiDataException {
 
-        ShortMessage shortMessage = new ShortMessage();
-        shortMessage.setMessage(command, channel, note, velocity);
+        ActivityMidiSignal activityMidiSignal = new ActivityMidiSignal();
+        activityMidiSignal.setCommand(command);
+        activityMidiSignal.setChannel(channel);
+        activityMidiSignal.setNote(note);
+        activityMidiSignal.setVelocity(velocity);
 
-        midiRouter.sendSignal(shortMessage);
-
-        activityNotificationMidiService.notifyClients(shortMessage, MidiDirection.IN, MidiSource.REMOTE, null);
+        midiRouter.sendSignal(activityMidiSignal, MidiSource.REMOTE);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

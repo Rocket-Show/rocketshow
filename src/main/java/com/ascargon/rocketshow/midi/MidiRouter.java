@@ -27,9 +27,8 @@ public class MidiRouter {
     private final MidiDeviceOutService midiDeviceOutService;
     private final ActivityNotificationMidiService activityNotificationMidiService;
 
-    private Map<MidiRouting, Receiver> receiverList = new HashMap<>();
-
-    private List<Midi2MonitorReceiver> midi2MonitorReceiverList = new ArrayList<>();
+    private final Map<MidiRouting, Receiver> receiverList = new HashMap<>();
+    private final List<Midi2MonitorReceiver> midi2MonitorReceiverList = new ArrayList<>();
 
     public MidiRouter(SettingsService settingsService, Midi2LightingConvertService midi2LightingConvertService, LightingService lightingService, MidiDeviceOutService midiDeviceOutService, ActivityNotificationMidiService activityNotificationMidiService, List<MidiRouting> midiRoutingList) {
         this.settingsService = settingsService;
@@ -81,12 +80,13 @@ public class MidiRouter {
         }
     }
 
-    public void sendSignal(MidiMessage midiMessage) throws InvalidMidiDataException {
+    public void sendSignal(ActivityMidiSignal activityMidiSignal, MidiSource midiSource) throws InvalidMidiDataException {
+        activityNotificationMidiService.notifyClients(activityMidiSignal, MidiDirection.IN, midiSource, null);
+
         // Send the signal to each receiver
         for (Map.Entry<MidiRouting, Receiver> entry : receiverList.entrySet()) {
-            entry.getValue().send(midiMessage, -1);
-
-            activityNotificationMidiService.notifyClients(midiMessage, MidiDirection.OUT, null, entry.getKey().getMidiDestination());
+            entry.getValue().send(activityMidiSignal.getShortMessage(), -1);
+            activityNotificationMidiService.notifyClients(activityMidiSignal, MidiDirection.OUT, midiSource, entry.getKey().getMidiDestination());
         }
     }
 

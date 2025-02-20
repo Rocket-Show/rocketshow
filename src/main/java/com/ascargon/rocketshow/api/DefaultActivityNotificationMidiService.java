@@ -4,6 +4,7 @@ import com.ascargon.rocketshow.midi.ActivityMidiSignal;
 import com.ascargon.rocketshow.midi.MidiDestination;
 import com.ascargon.rocketshow.midi.MidiDirection;
 import com.ascargon.rocketshow.midi.MidiSource;
+import com.ascargon.rocketshow.settings.SettingsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,8 +14,6 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import javax.sound.midi.MidiMessage;
-import javax.sound.midi.ShortMessage;
 import java.io.IOException;
 import java.util.List;
 import java.util.Timer;
@@ -31,9 +30,15 @@ public class DefaultActivityNotificationMidiService extends TextWebSocketHandler
 
     private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
 
+    private final SettingsService settingsService;
+
     private Timer sendActivityTimer;
 
     private ActivityMidi activityMidi;
+
+    public DefaultActivityNotificationMidiService(SettingsService settingsService) {
+        this.settingsService = settingsService;
+    }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
@@ -65,20 +70,17 @@ public class DefaultActivityNotificationMidiService extends TextWebSocketHandler
     }
 
     @Override
-    public void notifyClients(MidiMessage midiMessage, MidiDirection midiDirection, MidiSource midiSource, MidiDestination midiDestination) {
-        // only notify short messages
-        if (!(midiMessage instanceof ShortMessage)) {
+    public void notifyClients(ActivityMidiSignal activityMidiSignal, MidiDirection midiDirection, MidiSource midiSource, MidiDestination midiDestination) {
+        if (!settingsService.getSettings().getEnableMonitor()) {
             return;
         }
-
-        ShortMessage shortMessage = (ShortMessage) midiMessage;
 
         // Mix the current event into the pending activity or create a new one
         if (activityMidi == null) {
             // Create a new MIDI activity
             activityMidi = new ActivityMidi();
 
-            activityMidi.setMidiSignal(new ActivityMidiSignal(shortMessage));
+            activityMidi.setMidiSignal(activityMidiSignal);
             activityMidi.setMidiDirection(midiDirection);
             if (midiSource != null) {
                 activityMidi.getMidiSources().add(midiSource);
