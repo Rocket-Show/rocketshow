@@ -2,37 +2,30 @@ package com.ascargon.rocketshow.raspberry;
 
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.ControlActionExecutionService;
-import com.pi4j.Pi4J;
 import com.pi4j.context.Context;
-import com.pi4j.io.gpio.digital.*;
+import com.pi4j.io.gpio.digital.DigitalInput;
+import com.pi4j.io.gpio.digital.DigitalInputConfigBuilder;
+import com.pi4j.io.gpio.digital.DigitalState;
+import com.pi4j.io.gpio.digital.PullResistance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PreDestroy;
-import java.util.ArrayList;
-import java.util.List;
-
 @Service
-public class DefaultRaspberryGpioService implements RaspberryGpioService {
+public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
 
-    private Context pi4j;
+    private final static Logger logger = LoggerFactory.getLogger(DefaultRaspberryGpioInService.class);
 
-    private final static Logger logger = LoggerFactory.getLogger(DefaultRaspberryGpioService.class);
+    private Context pi4j = null;
 
-    private List<DigitalOutput> digitalOutputList = new ArrayList<>();
-
-    public DefaultRaspberryGpioService(SettingsService settingsService, ControlActionExecutionService controlActionExecutionService) {
+    public DefaultRaspberryGpioInService(SettingsService settingsService, ControlActionExecutionService controlActionExecutionService, Pi4jService pi4jService) {
         if (!settingsService.getSettings().getEnableRaspberryGpio()) {
             return;
         }
 
-        // Initialize the Pi4J instance
-        pi4j = Pi4J.newAutoContext();
+        pi4j = pi4jService.getContext();
 
         initializeInput(settingsService, controlActionExecutionService);
-        initializeOutput(settingsService);
-
     }
 
     private void initializeInput(SettingsService settingsService, ControlActionExecutionService controlActionExecutionService) {
@@ -56,34 +49,6 @@ public class DefaultRaspberryGpioService implements RaspberryGpioService {
                     }
                 }
             });
-        }
-    }
-
-    private void initializeOutput(SettingsService settingsService) {
-        // Add a input for each configured input
-        // TODO
-//        DigitalOutput digitalOutput = pi4j.digitalOutput().create(bcmPinId);
-//        digitalOutputList.add(digitalOutput);
-    }
-
-//    @Override
-//    public void setPinState(int bcmPinId, boolean active) {
-//        for (DigitalOutput digitalOutput : digitalOutputList) {
-//            if (digitalOutput.getAddress().equals(bcmPinId)) {
-//                if (active) {
-//                    digitalOutput.high();
-//                } else {
-//                    digitalOutput.low();
-//                }
-//                break;
-//            }
-//        }
-//    }
-
-    @PreDestroy
-    public void close() {
-        if (pi4j != null) {
-            pi4j.shutdown();
         }
     }
 
