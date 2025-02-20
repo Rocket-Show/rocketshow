@@ -47,7 +47,12 @@ public class Settings {
     private List<RemoteDevice> remoteDeviceList = new ArrayList<>();
     private List<MidiControl> midiControlList = new ArrayList<>();
     private MidiMapping midiMapping;
+
+    // Execute actions based on pressed buttons, connected to GPIO pins
     private List<RaspberryGpioControl> raspberryGpioControlList = new ArrayList<>();
+
+    // All configured GPIO pins to be able to send commands to (high/low)
+    private List<Integer> raspberryGpioOutputPinBcmList = new ArrayList<>();
 
     // Used to collect all lighting events within a certain amount of time and send them alltogether, not
     // one by one as soon as they occur, for performance reasons. The higher, the more events will be "merged",
@@ -56,7 +61,7 @@ public class Settings {
     private Integer lightingSendDelayMillis;
 
     // The active OLA plugin
-    private List<OlaPlugin> lightingOlaPluginList = new ArrayList<>();;
+    private List<OlaPlugin> lightingOlaPluginList = new ArrayList<>();
 
     // Global play offset on file types
     private Integer offsetMillisMidi;
