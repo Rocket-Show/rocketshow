@@ -1,6 +1,5 @@
 package com.ascargon.rocketshow.midi;
 
-import com.ascargon.rocketshow.api.ActivityNotificationMidiService;
 import com.ascargon.rocketshow.settings.SettingsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

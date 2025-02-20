@@ -1,8 +1,6 @@
 package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.settings.SettingsService;
-import com.ascargon.rocketshow.lighting.LightingService;
-import com.ascargon.rocketshow.lighting.Midi2LightingConvertService;
 import com.ascargon.rocketshow.midi.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,13 +50,13 @@ class MidiController {
     public ResponseEntity<Void> sendMessage(@RequestParam("command") int command, @RequestParam("channel") int channel,
                                             @RequestParam("note") int note, @RequestParam("velocity") int velocity) throws InvalidMidiDataException {
 
-        ActivityMidiSignal activityMidiSignal = new ActivityMidiSignal();
-        activityMidiSignal.setCommand(command);
-        activityMidiSignal.setChannel(channel);
-        activityMidiSignal.setNote(note);
-        activityMidiSignal.setVelocity(velocity);
+        MidiSignal midiSignal = new MidiSignal();
+        midiSignal.setCommand(command);
+        midiSignal.setChannel(channel);
+        midiSignal.setNote(note);
+        midiSignal.setVelocity(velocity);
 
-        midiRouter.sendSignal(activityMidiSignal, MidiSource.REMOTE);
+        midiRouter.sendSignal(midiSignal, MidiSource.REMOTE);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

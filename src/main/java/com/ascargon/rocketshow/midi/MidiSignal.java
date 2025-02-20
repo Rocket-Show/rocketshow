@@ -10,24 +10,24 @@ import lombok.Setter;
 @XmlRootElement
 @Getter
 @Setter
-public class ActivityMidiSignal {
+public class MidiSignal {
 
     private int command;
     private int channel;
     private int note;
     private int velocity;
 
-    public ActivityMidiSignal() {
+    public MidiSignal() {
     }
 
-    public ActivityMidiSignal(int command, int channel, int note, int velocity) {
+    public MidiSignal(int command, int channel, int note, int velocity) {
         this.command = command;
         this.channel = channel;
         this.note = note;
         this.velocity = velocity;
     }
 
-    public ActivityMidiSignal(ShortMessage shortMessage) {
+    public MidiSignal(ShortMessage shortMessage) {
         command = shortMessage.getCommand();
         channel = shortMessage.getChannel();
         note = shortMessage.getData1();

@@ -5,8 +5,8 @@ import com.ascargon.rocketshow.composition.CompositionFile;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.settings.CapabilitiesService;
 import com.ascargon.rocketshow.settings.SettingsService;
-import com.ascargon.rocketshow.api.ActivityNotificationAudioService;
-import com.ascargon.rocketshow.api.ActivityNotificationMidiService;
+import com.ascargon.rocketshow.audio.ActivityNotificationAudioService;
+import com.ascargon.rocketshow.midi.ActivityNotificationMidiService;
 import com.ascargon.rocketshow.api.NotificationService;
 import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
@@ -14,7 +14,6 @@ import com.ascargon.rocketshow.audio.AudioDevice;
 import com.ascargon.rocketshow.audio.AudioService;
 import com.ascargon.rocketshow.gstreamer.GstApi;
 import com.ascargon.rocketshow.lighting.LightingService;
-import com.ascargon.rocketshow.lighting.Midi2LightingConvertService;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.lighting.designer.Project;
 import com.ascargon.rocketshow.midi.*;
@@ -35,7 +34,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.ShortMessage;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -129,9 +127,9 @@ public class CompositionPlayer {
             } catch (Exception exception) {
             }
 
-            ActivityMidiSignal activityMidiSignal = new ActivityMidiSignal(command, channel, data1, data2);
+            MidiSignal midiSignal = new MidiSignal(command, channel, data1, data2);
             try {
-                midiRouter.sendSignal(activityMidiSignal, MidiSource.MIDI_FILE);
+                midiRouter.sendSignal(midiSignal, MidiSource.MIDI_FILE);
             } catch (InvalidMidiDataException e) {
                 logger.error("Could not send MIDI signal from MIDI file", e);
             }

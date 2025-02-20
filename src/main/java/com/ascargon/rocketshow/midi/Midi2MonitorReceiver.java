@@ -1,7 +1,5 @@
 package com.ascargon.rocketshow.midi;
 
-import com.ascargon.rocketshow.api.ActivityNotificationMidiService;
-
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 import javax.sound.midi.ShortMessage;
@@ -19,7 +17,7 @@ public class Midi2MonitorReceiver implements Receiver {
     @Override
     public void send(MidiMessage midiMessage, long timeStamp) {
         if (midiMessage instanceof ShortMessage) {
-            activityNotificationMidiService.notifyClients(new ActivityMidiSignal((ShortMessage) midiMessage), MidiDirection.OUT, null, midiRouting.getMidiDestination());
+            activityNotificationMidiService.notifyClients(new MidiSignal((ShortMessage) midiMessage), MidiDirection.OUT, null, midiRouting.getMidiDestination());
         }
     }
 

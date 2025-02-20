@@ -46,7 +46,7 @@ class Midi2RemoteReceiver implements Receiver {
             logger.error("Could not process MIDI event to remote", e);
         }
 
-        ActivityMidiSignal midiSignal = new ActivityMidiSignal(shortMessage);
+        MidiSignal midiSignal = new MidiSignal(shortMessage);
 
         for (String name : remoteDeviceNameList) {
             RemoteDevice remoteDevice = settingsService.getRemoteDeviceByName(name);

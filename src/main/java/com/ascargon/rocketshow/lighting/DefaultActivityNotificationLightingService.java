@@ -1,6 +1,5 @@
-package com.ascargon.rocketshow.api;
+package com.ascargon.rocketshow.lighting;
 
-import com.ascargon.rocketshow.lighting.LightingUniverse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
