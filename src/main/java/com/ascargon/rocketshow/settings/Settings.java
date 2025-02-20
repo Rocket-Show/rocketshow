@@ -124,6 +124,8 @@ public class Settings {
     private Boolean designerLivePreview = false;
     private Boolean updateTestBranch = false;
 
+    private List<Instrument> instrumentList = new ArrayList<>();
+
     // Only filled, if it's a ready to use version
     private Integer readyToUseVersion;
 
@@ -157,7 +159,11 @@ public class Settings {
         return raspberryGpioControlList;
     }
 
-    private List<Instrument> instrumentList = new ArrayList<>();
+    @XmlElement(name = "raspberryGpioOutputPinBcm")
+    @XmlElementWrapper(name = "raspberryGpioOutputPinBcmList")
+    public List<Integer> getRaspberryGpioOutputPinBcmList() {
+        return raspberryGpioOutputPinBcmList;
+    }
 
     @XmlElement(name = "audioBus")
     @XmlElementWrapper(name = "audioBusList")
