@@ -1,4 +1,4 @@
-package com.ascargon.rocketshow.api;
+package com.ascargon.rocketshow.audio;
 
 import org.springframework.stereotype.Service;
 

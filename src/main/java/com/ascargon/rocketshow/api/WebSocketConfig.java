@@ -1,5 +1,8 @@
 package com.ascargon.rocketshow.api;
 
+import com.ascargon.rocketshow.audio.DefaultActivityNotificationAudioService;
+import com.ascargon.rocketshow.lighting.DefaultActivityNotificationLightingService;
+import com.ascargon.rocketshow.midi.DefaultActivityNotificationMidiService;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;

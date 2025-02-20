@@ -1,7 +1,7 @@
 package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.lighting.LightingAction;
-import com.ascargon.rocketshow.midi.ActivityMidiSignal;
+import com.ascargon.rocketshow.midi.MidiSignal;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
@@ -150,7 +150,7 @@ public class RemoteDevice {
         doPost("transport/set-composition-name?name=" + compositionName, null, true);
     }
 
-    public void sendMidiSignal(ActivityMidiSignal midiSignal) {
+    public void sendMidiSignal(MidiSignal midiSignal) {
         doPost("midi/send-message?command=" + midiSignal.getCommand() + "&channel=" + midiSignal.getChannel()
                 + "&note=" + midiSignal.getNote() + "&velocity" + midiSignal.getVelocity());
     }

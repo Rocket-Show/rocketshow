@@ -1,7 +1,6 @@
 package com.ascargon.rocketshow.lighting;
 
 import com.ascargon.rocketshow.settings.CapabilitiesService;
-import com.ascargon.rocketshow.api.ActivityNotificationLightingService;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ola.OlaClient;

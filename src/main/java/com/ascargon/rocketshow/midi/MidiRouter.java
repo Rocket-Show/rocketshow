@@ -1,6 +1,5 @@
 package com.ascargon.rocketshow.midi;
 
-import com.ascargon.rocketshow.api.ActivityNotificationMidiService;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.Midi2LightingConvertService;
 import com.ascargon.rocketshow.settings.SettingsService;
@@ -79,13 +78,13 @@ public class MidiRouter {
         }
     }
 
-    public void sendSignal(ActivityMidiSignal activityMidiSignal, MidiSource midiSource) throws InvalidMidiDataException {
-        activityNotificationMidiService.notifyClients(activityMidiSignal, MidiDirection.IN, midiSource, null);
+    public void sendSignal(MidiSignal midiSignal, MidiSource midiSource) throws InvalidMidiDataException {
+        activityNotificationMidiService.notifyClients(midiSignal, MidiDirection.IN, midiSource, null);
 
         // Send the signal to each receiver
         for (Map.Entry<MidiRouting, Receiver> entry : receiverList.entrySet()) {
-            entry.getValue().send(activityMidiSignal.getShortMessage(), -1);
-            activityNotificationMidiService.notifyClients(activityMidiSignal, MidiDirection.OUT, midiSource, entry.getKey().getMidiDestination());
+            entry.getValue().send(midiSignal.getShortMessage(), -1);
+            activityNotificationMidiService.notifyClients(midiSignal, MidiDirection.OUT, midiSource, entry.getKey().getMidiDestination());
         }
     }
 

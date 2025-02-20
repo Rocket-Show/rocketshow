@@ -1,9 +1,5 @@
-package com.ascargon.rocketshow.api;
+package com.ascargon.rocketshow.midi;
 
-import com.ascargon.rocketshow.midi.ActivityMidiSignal;
-import com.ascargon.rocketshow.midi.MidiDestination;
-import com.ascargon.rocketshow.midi.MidiDirection;
-import com.ascargon.rocketshow.midi.MidiSource;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -70,7 +66,7 @@ public class DefaultActivityNotificationMidiService extends TextWebSocketHandler
     }
 
     @Override
-    public void notifyClients(ActivityMidiSignal activityMidiSignal, MidiDirection midiDirection, MidiSource midiSource, MidiDestination midiDestination) {
+    public void notifyClients(MidiSignal midiSignal, MidiDirection midiDirection, MidiSource midiSource, MidiDestination midiDestination) {
         if (!settingsService.getSettings().getEnableMonitor()) {
             return;
         }
@@ -80,7 +76,7 @@ public class DefaultActivityNotificationMidiService extends TextWebSocketHandler
             // Create a new MIDI activity
             activityMidi = new ActivityMidi();
 
-            activityMidi.setMidiSignal(activityMidiSignal);
+            activityMidi.setMidiSignal(midiSignal);
             activityMidi.setMidiDirection(midiDirection);
             if (midiSource != null) {
                 activityMidi.getMidiSources().add(midiSource);

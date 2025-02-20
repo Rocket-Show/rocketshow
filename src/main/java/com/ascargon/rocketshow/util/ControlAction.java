@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.ascargon.rocketshow.lighting.LightingAction;
-import com.ascargon.rocketshow.midi.ActivityMidiSignal;
+import com.ascargon.rocketshow.midi.MidiSignal;
 import com.ascargon.rocketshow.raspberry.RaspberryGpioAction;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;
@@ -43,7 +43,7 @@ public class ControlAction {
     private String compositionName;
 
     // Used for MIDI
-    private ActivityMidiSignal midiSignal;
+    private MidiSignal midiSignal;
 
     // Used for LIGHTING
     private LightingAction lightingAction;

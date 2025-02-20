@@ -1,7 +1,7 @@
 package com.ascargon.rocketshow.play;
 
-import com.ascargon.rocketshow.api.ActivityNotificationAudioService;
-import com.ascargon.rocketshow.api.ActivityNotificationMidiService;
+import com.ascargon.rocketshow.audio.ActivityNotificationAudioService;
+import com.ascargon.rocketshow.midi.ActivityNotificationMidiService;
 import com.ascargon.rocketshow.api.NotificationService;
 import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.audio.AudioService;

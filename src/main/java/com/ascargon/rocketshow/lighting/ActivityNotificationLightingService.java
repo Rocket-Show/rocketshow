@@ -1,4 +1,4 @@
-package com.ascargon.rocketshow.api;
+package com.ascargon.rocketshow.lighting;
 
 import com.ascargon.rocketshow.lighting.LightingUniverse;
 import org.springframework.stereotype.Service;
