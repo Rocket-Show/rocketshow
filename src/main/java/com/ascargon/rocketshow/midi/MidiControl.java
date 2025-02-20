@@ -2,6 +2,8 @@ package com.ascargon.rocketshow.midi;
 
 import com.ascargon.rocketshow.util.ControlAction;
 import jakarta.xml.bind.annotation.XmlRootElement;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Map one specific MIDI event to an action.
@@ -9,28 +11,14 @@ import jakarta.xml.bind.annotation.XmlRootElement;
  * @author Moritz Vieli
  */
 @XmlRootElement
+@Getter
+@Setter
 public class MidiControl extends ControlAction {
 
-	// If null -> all channels
-	private Integer channelFrom;
+    // If null -> all channels
+    private Integer channelFrom;
 
-	// The note, this action should be triggered. If null -> all notes
-	private Integer noteFrom;
-
-	public Integer getChannelFrom() {
-		return channelFrom;
-	}
-
-	public void setChannelFrom(Integer channelFrom) {
-		this.channelFrom = channelFrom;
-	}
-
-	public Integer getNoteFrom() {
-		return noteFrom;
-	}
-
-	public void setNoteFrom(Integer noteFrom) {
-		this.noteFrom = noteFrom;
-	}
+    // The note, this action should be triggered. If null -> all notes
+    private Integer noteFrom;
 
 }

@@ -8,6 +8,12 @@ import com.ascargon.rocketshow.lighting.designer.FixtureService;
 import com.ascargon.rocketshow.midi.MidiDeviceInService;
 import com.ascargon.rocketshow.midi.MidiDeviceOutService;
 import com.ascargon.rocketshow.play.PlayerService;
+import com.ascargon.rocketshow.settings.Settings;
+import com.ascargon.rocketshow.settings.SettingsService;
+import com.ascargon.rocketshow.settings.SettingsUpdateSystemService;
+import jakarta.xml.bind.JAXBException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
@@ -16,11 +22,16 @@ import org.springframework.context.ConfigurableApplicationContext;
 @SpringBootApplication(exclude = SecurityAutoConfiguration.class)
 public class RocketShowApplication {
 
+    private final static Logger logger = LoggerFactory.getLogger(RocketShowApplication.class);
+
     private static String[] args;
     private static ConfigurableApplicationContext context;
 
     public static void main(String[] args) {
         ConfigurableApplicationContext context = SpringApplication.run(RocketShowApplication.class, args);
+
+        // Initially update the system, based on the settings
+        context.getBean(SettingsUpdateSystemService.class);
 
         // Initialize the notification service
         context.getBean(NotificationService.class);

@@ -3,8 +3,6 @@ package com.ascargon.rocketshow.settings;
 import com.ascargon.rocketshow.RocketShowApplication;
 import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.audio.AudioBus;
-import com.ascargon.rocketshow.audio.AudioDevice;
-import com.ascargon.rocketshow.audio.AudioService;
 import com.ascargon.rocketshow.lighting.OlaPlugin;
 import com.ascargon.rocketshow.midi.MidiDevice;
 import com.ascargon.rocketshow.midi.MidiDirection;
@@ -13,13 +11,10 @@ import com.ascargon.rocketshow.midi.MidiService;
 import com.ascargon.rocketshow.raspberry.RaspberryResetUsbService;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
-import com.ascargon.rocketshow.util.ShellManager;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.system.ApplicationHome;
@@ -27,9 +22,7 @@ import org.springframework.stereotype.Service;
 
 import javax.sound.midi.MidiUnavailableException;
 import java.io.*;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -43,19 +36,16 @@ public class DefaultSettingsService implements SettingsService {
     private final OperatingSystemInformationService operatingSystemInformationService;
     private final RaspberryResetUsbService raspberryResetUsbService;
     private final MidiService midiService;
-    private final SettingsUpdateSystemService settingsUpdateSystemService;
 
     private Settings settings;
 
     private final ApplicationHome applicationHome = new ApplicationHome(RocketShowApplication.class);
 
-    public DefaultSettingsService(RaspberryResetUsbService raspberryResetUsbService, OperatingSystemInformationService operatingSystemInformationService, MidiService midiService, SettingsUpdateSystemService settingsUpdateSystemService) {
+    public DefaultSettingsService(RaspberryResetUsbService raspberryResetUsbService, OperatingSystemInformationService operatingSystemInformationService, MidiService midiService) {
         this.operatingSystemInformationService = operatingSystemInformationService;
         this.raspberryResetUsbService = raspberryResetUsbService;
         this.midiService = midiService;
-        this.settingsUpdateSystemService = settingsUpdateSystemService;
 
-        // Load the settings
         try {
             load();
         } catch (Exception e) {
@@ -346,8 +336,6 @@ public class DefaultSettingsService implements SettingsService {
 
         jaxbMarshaller.marshal(settings, file);
 
-        settingsUpdateSystemService.update(settings);
-
         logger.info("Settings saved");
     }
 
@@ -381,8 +369,6 @@ public class DefaultSettingsService implements SettingsService {
         } catch (Exception e) {
             logger.error("Could not reset the USB devices", e);
         }
-
-        settingsUpdateSystemService.update(settings);
 
         logger.info("Settings loaded");
     }
