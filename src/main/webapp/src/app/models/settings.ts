@@ -1,6 +1,5 @@
 import { RaspberryGpioControl } from "./raspberry-gpio-control";
 import { Instrument } from "./instrument";
-import { AudioDevice } from "./audio-device";
 import { MidiRouting } from "./midi-routing";
 import { AudioBus } from "./audio-bus";
 import { MidiControl } from "./midi-control";
@@ -25,6 +24,7 @@ export class Settings {
   midiControlList: MidiControl[];
   midiMapping: MidiMapping;
   raspberryGpioControlList: RaspberryGpioControl[];
+  raspberryGpioOutputPinBcmList: number[];
   lightingSendDelayMillis: number;
   lightingOlaPluginList: OlaPlugin[] = [];
   defaultComposition: string;
@@ -124,6 +124,14 @@ export class Settings {
         this.raspberryGpioControlList.push(
           new RaspberryGpioControl(raspberryGpioControl)
         );
+      }
+    }
+
+    if (data.raspberryGpioOutputPinBcmList) {
+      this.raspberryGpioOutputPinBcmList = [];
+
+      for (let raspberryGpioOutputPinBcm of data.raspberryGpioOutputPinBcmList) {
+        this.raspberryGpioOutputPinBcmList.push(raspberryGpioOutputPinBcm);
       }
     }
 
