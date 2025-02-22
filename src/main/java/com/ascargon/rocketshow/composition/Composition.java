@@ -21,17 +21,11 @@ import java.util.List;
 public class Composition {
 
     private String name;
-
     private String notes;
-
     private long durationMillis;
-
     private boolean loop = false;
-
     private List<CompositionFile> compositionFileList = new ArrayList<>();
-
     private List<LeadSheet> leadSheetList = new ArrayList<>();
-
     private float audioVolume = 1;
 
     @XmlElementWrapper(name = "fileList")
