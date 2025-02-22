@@ -10,7 +10,6 @@ import lombok.Setter;
  *
  * @author Moritz Vieli
  */
-@XmlRootElement
 @Getter
 @Setter
 public class MidiControl extends ControlAction {
