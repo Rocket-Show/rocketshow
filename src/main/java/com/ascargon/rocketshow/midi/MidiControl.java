@@ -6,10 +6,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Map one specific MIDI event to an action.
- *
- * @author Moritz Vieli
+ * @deprecated Not used since settings version 3 anymore. Use ActionTrigger instead.
  */
+@Deprecated
 @Getter
 @Setter
 public class MidiControl extends ControlAction {

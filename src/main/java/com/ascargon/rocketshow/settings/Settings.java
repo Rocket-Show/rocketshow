@@ -4,11 +4,8 @@ import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.audio.AudioDevice;
 import com.ascargon.rocketshow.lighting.OlaPlugin;
-import com.ascargon.rocketshow.midi.MidiControl;
-import com.ascargon.rocketshow.midi.MidiDevice;
-import com.ascargon.rocketshow.midi.MidiMapping;
-import com.ascargon.rocketshow.midi.MidiRouting;
-import com.ascargon.rocketshow.raspberry.RaspberryGpioControl;
+import com.ascargon.rocketshow.midi.*;
+import com.ascargon.rocketshow.raspberry.RaspberryGpioActionTrigger;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;
 import jakarta.xml.bind.annotation.XmlRootElement;
@@ -45,11 +42,20 @@ public class Settings {
     private MidiDevice midiInDevice;
     private MidiDevice midiOutDevice;
     private List<RemoteDevice> remoteDeviceList = new ArrayList<>();
+
+    /**
+     * @deprecated Not used since settings version 3 anymore. Use midiActionTriggerInstead.
+     */
+    @Deprecated
     private List<MidiControl> midiControlList = new ArrayList<>();
+
+    // Execute actions based on received MIDI events
+    private List<MidiActionTrigger> midiActionTriggerList = new ArrayList<>();
+
     private MidiMapping midiMapping;
 
     // Execute actions based on pressed buttons, connected to GPIO pins
-    private List<RaspberryGpioControl> raspberryGpioControlList = new ArrayList<>();
+    private List<RaspberryGpioActionTrigger> raspberryGpioActionTriggerList = new ArrayList<>();
 
     // All configured GPIO pins to be able to send commands to (high/low)
     private List<Integer> raspberryGpioOutputPinBcmList = new ArrayList<>();
@@ -155,8 +161,8 @@ public class Settings {
 
     @XmlElement(name = "raspberryGpioControl")
     @XmlElementWrapper(name = "raspberryGpioControlList")
-    public List<RaspberryGpioControl> getRaspberryGpioControlList() {
-        return raspberryGpioControlList;
+    public List<RaspberryGpioActionTrigger> getRaspberryGpioActionTriggerList() {
+        return raspberryGpioActionTriggerList;
     }
 
     @XmlElement(name = "raspberryGpioOutputPinBcm")

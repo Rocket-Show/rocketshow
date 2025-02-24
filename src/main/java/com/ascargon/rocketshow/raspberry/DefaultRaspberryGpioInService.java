@@ -1,7 +1,7 @@
 package com.ascargon.rocketshow.raspberry;
 
 import com.ascargon.rocketshow.settings.SettingsService;
-import com.ascargon.rocketshow.util.ControlActionExecutionService;
+import com.ascargon.rocketshow.util.ActionExecutionService;
 import com.pi4j.context.Context;
 import com.pi4j.io.gpio.digital.DigitalInput;
 import com.pi4j.io.gpio.digital.DigitalInputConfigBuilder;
@@ -18,23 +18,23 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
 
     private Context pi4j = null;
 
-    public DefaultRaspberryGpioInService(SettingsService settingsService, ControlActionExecutionService controlActionExecutionService, Pi4jService pi4jService) {
+    public DefaultRaspberryGpioInService(SettingsService settingsService, ActionExecutionService actionExecutionService, Pi4jService pi4jService) {
         if (!settingsService.getSettings().getEnableRaspberryGpio()) {
             return;
         }
 
         pi4j = pi4jService.getContext();
 
-        initializeInput(settingsService, controlActionExecutionService);
+        initializeInput(settingsService, actionExecutionService);
     }
 
-    private void initializeInput(SettingsService settingsService, ControlActionExecutionService controlActionExecutionService) {
+    private void initializeInput(SettingsService settingsService, ActionExecutionService actionExecutionService) {
         // Add a button for each configured control
-        for (RaspberryGpioControl raspberryGpioControl : settingsService.getSettings().getRaspberryGpioControlList()) {
+        for (RaspberryGpioActionTrigger raspberryGpioActionTrigger : settingsService.getSettings().getRaspberryGpioActionTriggerList()) {
             DigitalInputConfigBuilder buttonConfig = DigitalInput.newConfigBuilder(pi4j)
                     .id("button")
                     .name("Press button")
-                    .address(raspberryGpioControl.getPinId())
+                    .address(raspberryGpioActionTrigger.getPinId())
                     .pull(PullResistance.PULL_DOWN)
                     .debounce(settingsService.getSettings().getRaspberryGpioDebounceMillis() * 1000);
             DigitalInput digitalInput = pi4j.create(buttonConfig);
@@ -43,9 +43,9 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
                     logger.debug("Input high from GPIO BCM " + event.source().address() + " ID recognized");
 
                     try {
-                        controlActionExecutionService.execute(raspberryGpioControl);
+                        actionExecutionService.executeFromTrigger(raspberryGpioActionTrigger);
                     } catch (Exception e) {
-                        logger.error("Could not execute action from Raspberry GPIO", e);
+                        logger.error("Could not executeFromTrigger action from Raspberry GPIO", e);
                     }
                 }
             });

@@ -14,29 +14,29 @@ public class MidiSignal {
 
     private int command;
     private int channel;
-    private int note;
-    private int velocity;
+    private int data1;
+    private int data2;
 
     public MidiSignal() {
     }
 
-    public MidiSignal(int command, int channel, int note, int velocity) {
+    public MidiSignal(int command, int channel, int data1, int data2) {
         this.command = command;
         this.channel = channel;
-        this.note = note;
-        this.velocity = velocity;
+        this.data1 = data1;
+        this.data2 = data2;
     }
 
     public MidiSignal(ShortMessage shortMessage) {
         command = shortMessage.getCommand();
         channel = shortMessage.getChannel();
-        note = shortMessage.getData1();
-        velocity = shortMessage.getData2();
+        data1 = shortMessage.getData1();
+        data2 = shortMessage.getData2();
     }
 
     public ShortMessage getShortMessage() throws InvalidMidiDataException {
         ShortMessage shortMessage = new ShortMessage();
-        shortMessage.setMessage(command, channel, note, velocity);
+        shortMessage.setMessage(command, channel, data1, data2);
         return shortMessage;
     }
 

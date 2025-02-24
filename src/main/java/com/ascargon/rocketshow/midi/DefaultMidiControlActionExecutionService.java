@@ -1,53 +1,59 @@
 package com.ascargon.rocketshow.midi;
 
-import javax.sound.midi.MidiMessage;
-import javax.sound.midi.ShortMessage;
-
 import com.ascargon.rocketshow.settings.SettingsService;
-import com.ascargon.rocketshow.util.ControlActionExecutionService;
+import com.ascargon.rocketshow.util.ActionExecutionService;
 import org.springframework.stereotype.Service;
+
+import javax.sound.midi.ShortMessage;
 
 @Service
 public class DefaultMidiControlActionExecutionService implements MidiControlActionExecutionService {
 
     private final SettingsService settingsService;
-    private final ControlActionExecutionService controlActionExecutionService;
+    private final ActionExecutionService actionExecutionService;
 
-    public DefaultMidiControlActionExecutionService(SettingsService settingsService, ControlActionExecutionService controlActionExecutionService) {
+    public DefaultMidiControlActionExecutionService(SettingsService settingsService, ActionExecutionService actionExecutionService) {
         this.settingsService = settingsService;
-        this.controlActionExecutionService = controlActionExecutionService;
+        this.actionExecutionService = actionExecutionService;
     }
 
     /**
      * Does this action mapping match to the current MIDI message and should the
      * action be executed?
      */
-    private boolean isActionMappingMatch(MidiControl midiControl, int channel, int note) {
-        return (midiControl.getChannelFrom() == null || midiControl.getChannelFrom() == channel)
-                && (midiControl.getNoteFrom() == null || midiControl.getNoteFrom() == note);
+    private boolean isActionMappingMatch(MidiActionTrigger midiActionTrigger, ShortMessage shortMessage) {
+        if (shortMessage.getCommand() != ShortMessage.NOTE_ON
+                && shortMessage.getCommand() != ShortMessage.PROGRAM_CHANGE) {
+            return false;
+        }
+
+        if (midiActionTrigger.getChannel() != null && midiActionTrigger.getChannel() != shortMessage.getChannel()) {
+            return false;
+        }
+
+        if (shortMessage.getCommand() == ShortMessage.NOTE_ON
+                && midiActionTrigger.getMidiActionTriggerType() == MidiActionTrigger.MidiActionTriggerType.NOTE_ON) {
+
+            return midiActionTrigger.getNote() == null || midiActionTrigger.getProgram() == shortMessage.getData1();
+        }
+
+        if (shortMessage.getCommand() == ShortMessage.PROGRAM_CHANGE
+                && midiActionTrigger.getMidiActionTriggerType() == MidiActionTrigger.MidiActionTriggerType.PROGRAM_CHANGE) {
+
+            return midiActionTrigger.getProgram() == null || midiActionTrigger.getProgram() == shortMessage.getData1();
+        }
+
+        return false;
     }
 
     @Override
-    public void processMidiSignal(MidiMessage midiMessage) throws Exception {
-        // Map the MIDI event and execute the appropriate actions
+    public void processMidiSignal(ShortMessage shortMessage) throws Exception {
+        // Map the MIDI event and executeFromTrigger the appropriate actions
 
-        // Only process short messages
-        if (!(midiMessage instanceof ShortMessage)) {
-            return;
-        }
-
-        ShortMessage shortMessage = (ShortMessage) midiMessage;
-
-        // Only react to NOTE_ON events with a velocity higher than 0
-        // TODO Disable velocity check in settings
-        if (shortMessage.getCommand() != ShortMessage.NOTE_ON || shortMessage.getData2() == 0) {
-            return;
-        }
-
-        // Search for and execute all required actions
-        for (MidiControl midiControl : settingsService.getSettings().getMidiControlList()) {
-            if (isActionMappingMatch(midiControl, shortMessage.getChannel(), shortMessage.getData1())) {
-                controlActionExecutionService.execute(midiControl);
+        // Search for and executeFromTrigger all required actions
+        for (MidiActionTrigger midiActionTrigger : settingsService.getSettings().getMidiActionTriggerList()) {
+            if (isActionMappingMatch(midiActionTrigger, shortMessage)) {
+                actionExecutionService.executeFromTrigger(midiActionTrigger);
             }
         }
     }

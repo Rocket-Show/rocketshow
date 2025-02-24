@@ -3,59 +3,57 @@ package com.ascargon.rocketshow.util;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.ascargon.rocketshow.lighting.LightingAction;
-import com.ascargon.rocketshow.midi.MidiSignal;
-import com.ascargon.rocketshow.raspberry.RaspberryGpioAction;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;
 import jakarta.xml.bind.annotation.XmlRootElement;
-import lombok.Getter;
-import lombok.Setter;
 
+/**
+ * @deprecated Not used since settings version 3 anymore. Use Action instead.
+ */
+@Deprecated
 @XmlRootElement
-@Getter
-@Setter
 public class ControlAction {
 
     // Actions to be executed (e.g. by MIDI control or Raspberry GPIO events)
     public enum Action {
-        PLAY,
-        PLAY_AS_SAMPLE,
-        TOGGLE_PLAY,
-        PAUSE,
-        NEXT_COMPOSITION,
-        PREVIOUS_COMPOSITION,
-        STOP,
-        REBOOT,
-        SELECT_COMPOSITION_BY_NAME,
-        SELECT_COMPOSITION_BY_NAME_AND_PLAY,
-        MIDI,
-        LIGHTING,
-        GPIO
+        PLAY, PLAY_AS_SAMPLE, TOGGLE_PLAY, PAUSE, NEXT_COMPOSITION, PREVIOUS_COMPOSITION, STOP, SET_COMPOSITION_INDEX, REBOOT, SELECT_COMPOSITION_BY_NAME, SELECT_COMPOSITION_BY_NAME_AND_PLAY
     }
 
     // The Action to be executed
     private Action action;
 
-    // Used for:
-    // - SELECT_COMPOSITION_BY_NAME
-    // - SELECT_COMPOSITION_BY_NAME_AND_PLAY
+    // The composition to be selected or player, if such an action is executed
     private String compositionName;
 
-    // Used for MIDI
-    private MidiSignal midiSignal;
-
-    // Used for LIGHTING
-    private LightingAction lightingAction;
-
-    // Used for GPIO
-    private RaspberryGpioAction raspberryGpioAction;
-
-    // Execute this action on remote devices
+    // Should this action apply to a remote device?
     private List<String> remoteDeviceNames = new ArrayList<>();
 
-    // Execute this action locally?
+    // Should this action apply locally?
     private boolean executeLocally = true;
+
+    public Action getAction() {
+        return action;
+    }
+
+    public void setAction(Action action) {
+        this.action = action;
+    }
+
+    public String getCompositionName() {
+        return compositionName;
+    }
+
+    public void setCompositionName(String compositionName) {
+        this.compositionName = compositionName;
+    }
+
+    public boolean isExecuteLocally() {
+        return executeLocally;
+    }
+
+    public void setExecuteLocally(boolean executeLocally) {
+        this.executeLocally = executeLocally;
+    }
 
     @XmlElement(name = "remoteDevice")
     @XmlElementWrapper(name = "remoteDeviceList")

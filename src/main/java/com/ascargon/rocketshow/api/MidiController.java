@@ -47,26 +47,17 @@ class MidiController {
     }
 
     @PostMapping("send-message")
-    public ResponseEntity<Void> sendMessage(@RequestParam("command") int command, @RequestParam("channel") int channel,
-                                            @RequestParam("note") int note, @RequestParam("velocity") int velocity) throws InvalidMidiDataException {
-
-        MidiSignal midiSignal = new MidiSignal();
-        midiSignal.setCommand(command);
-        midiSignal.setChannel(channel);
-        midiSignal.setNote(note);
-        midiSignal.setVelocity(velocity);
-
-        midiRouter.sendSignal(midiSignal, MidiSource.REMOTE);
-
+    public ResponseEntity<Void> sendMessage(@RequestBody MidiSignal midiSignal) throws InvalidMidiDataException {
+        midiRouter.sendSignal(midiSignal.getShortMessage(), MidiSource.REMOTE);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("test-control")
     public ResponseEntity<Void> testControl(@RequestParam("command") int command, @RequestParam("channel") int channel,
-                                            @RequestParam("note") int note, @RequestParam("velocity") int velocity) throws Exception {
+                                            @RequestParam("data1") int data1, @RequestParam("data2") int data2) throws Exception {
 
         ShortMessage shortMessage = new ShortMessage();
-        shortMessage.setMessage(command, channel, note, velocity);
+        shortMessage.setMessage(command, channel, data1, data2);
 
         midiControlActionExecutionService.processMidiSignal(shortMessage);
 

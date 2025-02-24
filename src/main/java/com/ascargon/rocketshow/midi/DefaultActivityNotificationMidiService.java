@@ -10,6 +10,8 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import javax.sound.midi.MidiMessage;
+import javax.sound.midi.ShortMessage;
 import java.io.IOException;
 import java.util.List;
 import java.util.Timer;
@@ -66,10 +68,12 @@ public class DefaultActivityNotificationMidiService extends TextWebSocketHandler
     }
 
     @Override
-    public void notifyClients(MidiSignal midiSignal, MidiDirection midiDirection, MidiSource midiSource, MidiDestination midiDestination) {
+    public void notifyClients(ShortMessage shortMessage, MidiDirection midiDirection, MidiSource midiSource, MidiDestination midiDestination) {
         if (!settingsService.getSettings().getEnableMonitor()) {
             return;
         }
+
+        MidiSignal midiSignal = new MidiSignal(shortMessage);
 
         // Mix the current event into the pending activity or create a new one
         if (activityMidi == null) {

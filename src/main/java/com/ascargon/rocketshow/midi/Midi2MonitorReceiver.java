@@ -17,7 +17,7 @@ public class Midi2MonitorReceiver implements Receiver {
     @Override
     public void send(MidiMessage midiMessage, long timeStamp) {
         if (midiMessage instanceof ShortMessage) {
-            activityNotificationMidiService.notifyClients(new MidiSignal((ShortMessage) midiMessage), MidiDirection.OUT, null, midiRouting.getMidiDestination());
+            activityNotificationMidiService.notifyClients((ShortMessage) midiMessage, MidiDirection.OUT, null, midiRouting.getMidiDestination());
         }
     }
 

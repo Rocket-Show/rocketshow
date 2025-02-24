@@ -38,9 +38,4 @@ public class LightingController {
         return lightingService.getOlaPlugins();
     }
 
-    @PostMapping("execute-action")
-    public void executeAction(@RequestBody LightingAction lightingAction) {
-        lightingService.executeAction(lightingAction);
-    }
-
 }

@@ -26,12 +26,12 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
 
     private final MidiInDeviceReceiver midiInDeviceReceiver;
 
-    public DefaultMidiDeviceInService(SettingsService settingsService, ActivityNotificationMidiService activityNotificationMidiService, MidiControlActionExecutionService midiControlActionExecutionService, MidiService midiService, MidiRouterFactory midiRouterFactory) {
+    public DefaultMidiDeviceInService(SettingsService settingsService, MidiControlActionExecutionService midiControlActionExecutionService, MidiService midiService, MidiRouterFactory midiRouterFactory) {
         this.settingsService = settingsService;
         this.midiService = midiService;
 
-        // Initialize the MIDI in device receiver to execute MIDI control actions
-        midiInDeviceReceiver = new MidiInDeviceReceiver(activityNotificationMidiService, midiControlActionExecutionService, settingsService, midiRouterFactory);
+        // Initialize the MIDI in device receiver to executeFromTrigger MIDI control actions
+        midiInDeviceReceiver = new MidiInDeviceReceiver(midiControlActionExecutionService, settingsService, midiRouterFactory);
 
         // Initialize the MIDI router
         midiRouter = midiRouterFactory.getMidiRouter(settingsService.getSettings().getDeviceInMidiRoutingList());

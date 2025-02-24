@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.Receiver;
+import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Transmitter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -78,13 +79,13 @@ public class MidiRouter {
         }
     }
 
-    public void sendSignal(MidiSignal midiSignal, MidiSource midiSource) throws InvalidMidiDataException {
-        activityNotificationMidiService.notifyClients(midiSignal, MidiDirection.IN, midiSource, null);
+    public void sendSignal(ShortMessage shortMessage, MidiSource midiSource) throws InvalidMidiDataException {
+        activityNotificationMidiService.notifyClients(shortMessage, MidiDirection.IN, midiSource, null);
 
         // Send the signal to each receiver
         for (Map.Entry<MidiRouting, Receiver> entry : receiverList.entrySet()) {
-            entry.getValue().send(midiSignal.getShortMessage(), -1);
-            activityNotificationMidiService.notifyClients(midiSignal, MidiDirection.OUT, midiSource, entry.getKey().getMidiDestination());
+            entry.getValue().send(shortMessage, -1);
+            activityNotificationMidiService.notifyClients(shortMessage, MidiDirection.OUT, midiSource, entry.getKey().getMidiDestination());
         }
     }
 
