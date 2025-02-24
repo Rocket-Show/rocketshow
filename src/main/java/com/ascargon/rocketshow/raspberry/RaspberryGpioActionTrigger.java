@@ -1,12 +1,13 @@
 package com.ascargon.rocketshow.raspberry;
 
+import com.ascargon.rocketshow.util.ActionTrigger;
 import com.ascargon.rocketshow.util.ControlAction;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class RaspberryGpioControl extends ControlAction {
+public class RaspberryGpioActionTrigger extends ActionTrigger {
 
     // A BCM GPIO pin ID (e.g. BCM 22 = pin 15)
     // See: https://www.pi4j.com/documentation/pin-numbering/

@@ -238,7 +238,7 @@ export class SettingsMidiComponent implements OnInit, OnDestroy {
   }
 
   testControl(midiControl: MidiControl): void {
-    this.http.post('midi/test-control?command=144&channel=' + midiControl.channelFrom + '&note=' + midiControl.noteFrom + '&velocity=' + 127, null).subscribe((result) => {
+    this.http.post('midi/test-control?command=144&channel=' + midiControl.channelFrom + '&data1=' + midiControl.noteFrom + '&data2=' + 127, null).subscribe((result) => {
       this.translateService.get(['settings.midi-control-test-success', 'settings.midi-control-test-success-title']).subscribe(result => {
         this.toastrService.success(result['settings.midi-control-test-success'], result['settings.midi-control-test-success-title']);
       });

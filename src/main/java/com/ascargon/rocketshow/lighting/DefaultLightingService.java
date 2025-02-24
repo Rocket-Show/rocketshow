@@ -388,7 +388,7 @@ public class DefaultLightingService implements LightingService {
             }
 
             if (lightingUniverse == null) {
-                logger.warn("Could not execute lighting action on universe " + lightingActionUniverse.getUniverseName() + " because no matching universe was found");
+                logger.warn("Could not executeFromTrigger lighting action on universe " + lightingActionUniverse.getUniverseName() + " because no matching universe was found");
                 return;
             }
 

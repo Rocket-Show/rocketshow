@@ -1,9 +1,7 @@
 package com.ascargon.rocketshow.api;
 
-import com.ascargon.rocketshow.lighting.LightingAction;
 import com.ascargon.rocketshow.lighting.OlaPlugin;
 import com.ascargon.rocketshow.play.PlayerService;
-import com.ascargon.rocketshow.raspberry.RaspberryGpioAction;
 import com.ascargon.rocketshow.session.SessionService;
 import com.ascargon.rocketshow.settings.Settings;
 import com.ascargon.rocketshow.settings.SettingsService;
@@ -53,8 +51,9 @@ class SystemController {
     private final DesignerService designerService;
     private final BackupService backupService;
     private final SettingsUpdateSystemService settingsUpdateSystemService;
+    private final ActionExecutionService actionExecutionService;
 
-    public SystemController(ControllerService controllerService, StateService stateService, SetService setService, PlayerService playerService, RebootService rebootService, ShutdownService shutdownService, SettingsService settingsService, MidiDeviceInService midiDeviceInService, MidiDeviceOutService midiDeviceOutService, UpdateService updateService, FactoryResetService factoryResetService, LogDownloadService logDownloadService, DiskSpaceService diskSpaceService, OperatingSystemInformationService operatingSystemInformationService, SessionService sessionService, CompositionService compositionService, DesignerService designerService, BackupService backupService, SettingsUpdateSystemService settingsUpdateSystemService) {
+    public SystemController(ControllerService controllerService, StateService stateService, SetService setService, PlayerService playerService, RebootService rebootService, ShutdownService shutdownService, SettingsService settingsService, MidiDeviceInService midiDeviceInService, MidiDeviceOutService midiDeviceOutService, UpdateService updateService, FactoryResetService factoryResetService, LogDownloadService logDownloadService, DiskSpaceService diskSpaceService, OperatingSystemInformationService operatingSystemInformationService, SessionService sessionService, CompositionService compositionService, DesignerService designerService, BackupService backupService, SettingsUpdateSystemService settingsUpdateSystemService, ActionExecutionService actionExecutionService) {
         this.controllerService = controllerService;
         this.stateService = stateService;
         this.setService = setService;
@@ -74,6 +73,7 @@ class SystemController {
         this.designerService = designerService;
         this.backupService = backupService;
         this.settingsUpdateSystemService = settingsUpdateSystemService;
+        this.actionExecutionService = actionExecutionService;
     }
 
     private void settingsUpdateSystem() {
@@ -203,6 +203,12 @@ class SystemController {
         if (dzchunkindex.equals(dztotalchunkcount - 1)) {
             backupService.restoreFinish();
         }
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("execute-action")
+    public ResponseEntity<Void> executeAction(@RequestBody Action action) throws Exception {
+        actionExecutionService.execute(action);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

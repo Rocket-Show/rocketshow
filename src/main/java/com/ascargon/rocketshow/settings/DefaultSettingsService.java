@@ -4,13 +4,9 @@ import com.ascargon.rocketshow.RocketShowApplication;
 import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.lighting.OlaPlugin;
-import com.ascargon.rocketshow.midi.MidiDevice;
-import com.ascargon.rocketshow.midi.MidiDirection;
-import com.ascargon.rocketshow.midi.MidiMapping;
-import com.ascargon.rocketshow.midi.MidiService;
+import com.ascargon.rocketshow.midi.*;
 import com.ascargon.rocketshow.raspberry.RaspberryResetUsbService;
-import com.ascargon.rocketshow.util.OperatingSystemInformation;
-import com.ascargon.rocketshow.util.OperatingSystemInformationService;
+import com.ascargon.rocketshow.util.*;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
@@ -355,7 +351,7 @@ public class DefaultSettingsService implements SettingsService {
         this.setSettings((Settings) jaxbUnmarshaller.unmarshal(file));
 
         if (settings.getVersion() == null || settings.getVersion() < CURRENT_SETTINGS_VERSION) {
-            migrateFromOldProject();
+            migrateFromOldSettings();
         } else if (settings.getVersion() > CURRENT_SETTINGS_VERSION) {
             throw new Exception("The settings have been saved with a newer version of Rocket Show and cannot be used with the current one.");
         }
@@ -382,12 +378,96 @@ public class DefaultSettingsService implements SettingsService {
         settings.setVersion(2);
     }
 
-    public void migrateFromOldProject() throws JAXBException {
+    private void migrateToVersion3() {
+        // migrate from old control action system
+        for (MidiControl midiControl : settings.getMidiControlList()) {
+            Action action = null;
+
+            switch (midiControl.getAction()) {
+                case PLAY:
+                    action = new TransportAction();
+                    action.setActionType(Action.ActionType.TRANSPORT);
+                    ((TransportAction) action).setTransportActionType(TransportAction.TransportActionType.PLAY);
+                    break;
+                case PLAY_AS_SAMPLE:
+                    action = new TransportAction();
+                    action.setActionType(Action.ActionType.TRANSPORT);
+                    ((TransportAction) action).setTransportActionType(TransportAction.TransportActionType.PLAY_AS_SAMPLE);
+                    break;
+                case TOGGLE_PLAY:
+                    action = new TransportAction();
+                    action.setActionType(Action.ActionType.TRANSPORT);
+                    ((TransportAction) action).setTransportActionType(TransportAction.TransportActionType.TOGGLE_PLAY);
+                    break;
+                case PAUSE:
+                    action = new TransportAction();
+                    action.setActionType(Action.ActionType.TRANSPORT);
+                    ((TransportAction) action).setTransportActionType(TransportAction.TransportActionType.PAUSE);
+                    break;
+                case NEXT_COMPOSITION:
+                    action = new TransportAction();
+                    action.setActionType(Action.ActionType.TRANSPORT);
+                    ((TransportAction) action).setTransportActionType(TransportAction.TransportActionType.NEXT_COMPOSITION);
+                    break;
+                case PREVIOUS_COMPOSITION:
+                    action = new TransportAction();
+                    action.setActionType(Action.ActionType.TRANSPORT);
+                    ((TransportAction) action).setTransportActionType(TransportAction.TransportActionType.PREVIOUS_COMPOSITION);
+                    break;
+                case STOP:
+                    action = new TransportAction();
+                    action.setActionType(Action.ActionType.TRANSPORT);
+                    ((TransportAction) action).setTransportActionType(TransportAction.TransportActionType.STOP);
+                    break;
+                case SELECT_COMPOSITION_BY_NAME:
+                    action = new TransportAction();
+                    action.setActionType(Action.ActionType.TRANSPORT);
+                    ((TransportAction) action).setTransportActionType(TransportAction.TransportActionType.SELECT_COMPOSITION_BY_NAME);
+                    ((TransportAction) action).setCompositionName(midiControl.getCompositionName());
+                    break;
+                case SELECT_COMPOSITION_BY_NAME_AND_PLAY:
+                    action = new TransportAction();
+                    action.setActionType(Action.ActionType.TRANSPORT);
+                    ((TransportAction) action).setTransportActionType(TransportAction.TransportActionType.SELECT_COMPOSITION_BY_NAME_AND_PLAY);
+                    ((TransportAction) action).setCompositionName(midiControl.getCompositionName());
+                    break;
+                case SET_COMPOSITION_INDEX:
+                    // Not migrated because not used currently
+                    break;
+                case REBOOT:
+                    action = new SystemAction();
+                    action.setActionType(Action.ActionType.SYSTEM);
+                    ((SystemAction) action).setSystemActionType(SystemAction.SystemActionType.REBOOT);
+                    break;
+            }
+
+            if (action != null) {
+                action.setExecuteLocally(midiControl.isExecuteLocally());
+                action.setRemoteDeviceNames(midiControl.getRemoteDeviceNames());
+
+                MidiActionTrigger midiActionTrigger = new MidiActionTrigger();
+                midiActionTrigger.setMidiActionTriggerType(MidiActionTrigger.MidiActionTriggerType.NOTE_ON);
+                midiActionTrigger.setChannel(midiControl.getChannelFrom());
+                midiActionTrigger.setNote(midiControl.getNoteFrom());
+                midiActionTrigger.getActionList().add(action);
+            }
+        }
+
+        settings.setVersion(3);
+    }
+
+    public void migrateFromOldSettings() throws JAXBException {
         boolean migrated = false;
 
         if (settings.getVersion() == null) {
             // Migrate from version 1
             this.migrateToVersion2();
+            migrated = true;
+        }
+
+        if (settings.getVersion() == 2) {
+            // Migrate from version 2
+            this.migrateToVersion3();
             migrated = true;
         }
 

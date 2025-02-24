@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.ShortMessage;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -127,9 +128,8 @@ public class CompositionPlayer {
             } catch (Exception exception) {
             }
 
-            MidiSignal midiSignal = new MidiSignal(command, channel, data1, data2);
             try {
-                midiRouter.sendSignal(midiSignal, MidiSource.MIDI_FILE);
+                midiRouter.sendSignal(new ShortMessage(command, channel, data1, data2), MidiSource.MIDI_FILE);
             } catch (InvalidMidiDataException e) {
                 logger.error("Could not send MIDI signal from MIDI file", e);
             }

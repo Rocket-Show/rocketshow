@@ -2,7 +2,6 @@ package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.lighting.LightingAction;
 import com.ascargon.rocketshow.midi.MidiSignal;
-import com.ascargon.rocketshow.raspberry.RaspberryGpioAction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
@@ -77,10 +76,10 @@ public class RemoteDevice {
             }
 
             if (response.getStatusLine().getStatusCode() != 200) {
-                logger.error("Could not execute action on remote device with url '" + url + "'. Reason: '" + response.getStatusLine().getReasonPhrase() + "'. Body: " + EntityUtils.toString(response.getEntity()));
+                logger.error("Could not executeFromTrigger action on remote device with url '" + url + "'. Reason: '" + response.getStatusLine().getReasonPhrase() + "'. Body: " + EntityUtils.toString(response.getEntity()));
             }
         } catch (Exception e) {
-            logger.error("Could not execute action on remote device '" + name + "' with url '" + url + "'", e);
+            logger.error("Could not executeFromTrigger action on remote device '" + name + "' with url '" + url + "'", e);
         }
     }
 
@@ -152,16 +151,7 @@ public class RemoteDevice {
     }
 
     public void sendMidiSignal(MidiSignal midiSignal) {
-        doPost("midi/send-message?command=" + midiSignal.getCommand() + "&channel=" + midiSignal.getChannel()
-                + "&note=" + midiSignal.getNote() + "&velocity" + midiSignal.getVelocity());
-    }
-
-    public void executeLightingAction(LightingAction lightingAction) {
-        doPost("lighting/execute-action", lightingAction);
-    }
-
-    public void executeRaspberryGpioAction(RaspberryGpioAction raspberryGpioAction) {
-        doPost("raspberry-gpio/execute-action", raspberryGpioAction);
+        doPost("midi/send-message", midiSignal);
     }
 
 }

@@ -18,13 +18,11 @@ class MidiInDeviceReceiver implements Receiver {
 
     private final static Logger logger = LoggerFactory.getLogger(MidiInDeviceReceiver.class);
 
-    private final ActivityNotificationMidiService activityNotificationMidiService;
     private final MidiControlActionExecutionService midiControlActionExecutionService;
 
     private final MidiRouter midiRouter;
 
-    MidiInDeviceReceiver(ActivityNotificationMidiService activityNotificationMidiService, MidiControlActionExecutionService midiControlActionExecutionService, SettingsService settingsService, MidiRouterFactory midiRouterFactory) {
-        this.activityNotificationMidiService = activityNotificationMidiService;
+    MidiInDeviceReceiver(MidiControlActionExecutionService midiControlActionExecutionService, SettingsService settingsService, MidiRouterFactory midiRouterFactory) {
         this.midiControlActionExecutionService = midiControlActionExecutionService;
 
         midiRouter = midiRouterFactory.getMidiRouter(settingsService.getSettings().getDeviceInMidiRoutingList());
@@ -32,18 +30,20 @@ class MidiInDeviceReceiver implements Receiver {
 
     @Override
     public void send(MidiMessage midiMessage, long timeStamp) {
+        if (!(midiMessage instanceof ShortMessage shortMessage)) {
+            return;
+        }
+
         // Process MIDI events as actions according to the settings
         try {
-            midiControlActionExecutionService.processMidiSignal(midiMessage);
+            midiControlActionExecutionService.processMidiSignal(shortMessage);
         } catch (Exception e) {
-            logger.error("Could not execute action from MIDI device", e);
+            logger.error("Could not executeFromTrigger action from MIDI device", e);
         }
 
         // Process the MIDI events through the defined routings
         try {
-            if (midiMessage instanceof ShortMessage) {
-                midiRouter.sendSignal(new MidiSignal((ShortMessage) midiMessage), MidiSource.IN_DEVICE);
-            }
+            midiRouter.sendSignal(shortMessage, MidiSource.IN_DEVICE);
         } catch (InvalidMidiDataException e) {
             logger.error("Could not route event from MIDI device", e);
         }
