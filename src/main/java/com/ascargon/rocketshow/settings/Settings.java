@@ -159,12 +159,6 @@ public class Settings {
         return midiControlList;
     }
 
-    @XmlElement(name = "raspberryGpioControl")
-    @XmlElementWrapper(name = "raspberryGpioControlList")
-    public List<RaspberryGpioActionTrigger> getRaspberryGpioActionTriggerList() {
-        return raspberryGpioActionTriggerList;
-    }
-
     @XmlElement(name = "raspberryGpioOutputPinBcm")
     @XmlElementWrapper(name = "raspberryGpioOutputPinBcmList")
     public List<Integer> getRaspberryGpioOutputPinBcmList() {
@@ -182,5 +176,18 @@ public class Settings {
     public List<Instrument> getInstrumentList() {
         return instrumentList;
     }
+
+    @XmlElement(name = "raspberryGpioActionTrigger")
+    @XmlElementWrapper(name = "raspberryGpioActionTriggerList")
+    public List<RaspberryGpioActionTrigger> getRaspberryGpioActionTriggerList() {
+        return raspberryGpioActionTriggerList;
+    }
+
+    @XmlElement(name = "midiActionTrigger")
+    @XmlElementWrapper(name = "midiActionTriggerList")
+    public List<MidiActionTrigger> getMidiActionTriggerList() {
+        return midiActionTriggerList;
+    }
+
 
 }

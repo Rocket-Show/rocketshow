@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.play;
 
 import com.ascargon.rocketshow.composition.Composition;
+import com.ascargon.rocketshow.composition.CompositionActionTrigger;
 import com.ascargon.rocketshow.composition.CompositionFile;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.settings.CapabilitiesService;
@@ -17,6 +18,7 @@ import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.lighting.designer.Project;
 import com.ascargon.rocketshow.midi.*;
+import com.ascargon.rocketshow.util.ActionExecutionService;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
@@ -39,7 +41,9 @@ import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * Manage the playing of a composition. Read all files and create the Gstreamer pipeline.
@@ -72,10 +76,13 @@ public class CompositionPlayer {
     private final OperatingSystemInformationService operatingSystemInformationService;
     private final AudioService audioService;
     private final MidiRouterFactory midiRouterFactory;
+    private final ActionExecutionService actionExecutionService;
 
     private Composition composition;
     private PlayState playState = PlayState.STOPPED;
-    private long startPosition = 0;
+    private long startPosition = 0; // The position, the composition started the last play
+    private long lastPlayTimeMillis; // The system time, when playing started
+    private ScheduledFuture<?> autoStopHandle;
 
     private final MidiMapping midiMapping = new MidiMapping();
 
@@ -88,6 +95,14 @@ public class CompositionPlayer {
     // The gstreamer pipeline, used to sync all files in this composition
     private Pipeline pipeline;
     private List<Element> volumeList = new ArrayList<>();
+
+    // Execute the action triggers at the specified positions
+    private ScheduledExecutorService scheduler;
+    private ScheduledFuture<?> scheduleActionTriggerHandle;
+    private List<ScheduledFuture<?>> actionTriggerHandleList = new ArrayList<>();
+
+    // Ensure, each trigger is executed only once (during inconsistencies when re-scheduling periodically)
+    private List<CompositionActionTrigger> remainingCompositionActionTriggerList;
 
     // All MIDI routers
     private final List<MidiRouter> midiRouterList = new ArrayList<>();
@@ -105,6 +120,7 @@ public class CompositionPlayer {
         this.operatingSystemInformationService = playerService.getOperatingSystemInformationService();
         this.audioService = playerService.getAudioService();
         this.midiRouterFactory = midiRouterFactory;
+        this.actionExecutionService = playerService.getActionExecutionService();
 
         this.midiMapping.setParent(settingsService.getSettings().getMidiMapping());
     }
@@ -569,6 +585,13 @@ public class CompositionPlayer {
         volumeList = new ArrayList<>();
     }
 
+    private void calculateRemainingActionTriggerList() {
+        remainingCompositionActionTriggerList = new CopyOnWriteArrayList<>();
+        remainingCompositionActionTriggerList.addAll(composition.getActionTriggerList().stream().
+                filter(trigger -> trigger.getPositionMillis() >= getPositionMillis()).toList()
+        );
+    }
+
     // Load all files and construct the complete GST pipeline
     public void loadFiles() throws Exception {
         boolean hasActiveFile = false;
@@ -619,6 +642,9 @@ public class CompositionPlayer {
             createGstreamerPipeline();
         }
 
+        // Prepare the scheduler for all contained action triggers (and some buffer for overlapping runs)
+        scheduler = Executors.newScheduledThreadPool(composition.getActionTriggerList().size() + 5);
+
         logger.debug("Composition '" + composition.getName() + "' loaded");
 
         // Maybe we are stopping meanwhile
@@ -626,6 +652,94 @@ public class CompositionPlayer {
             playState = PlayState.LOADED;
             notificationService.notifyClients(playerService, setService);
         }
+
+        startPosition = 0;
+    }
+
+    private void startAutoStopTimer() {
+        if (pipeline != null) {
+            // We have a pipeline to handle the stop -> no need for the timer
+            return;
+        }
+
+        final Runnable runnable = () -> {
+            try {
+                stop();
+            } catch (Exception e) {
+                logger.error("Could not auto stop the composition after the timer ran out", e);
+            }
+        };
+
+        // Add a small buffer before stopping the composition to ensure, the last triggers are executed
+        autoStopHandle = scheduler.schedule(runnable, composition.getDurationMillis() - getPositionMillis() + 50, MILLISECONDS);
+    }
+
+    private void stopAutoStopTimer() {
+        if (autoStopHandle == null) {
+            return;
+        }
+
+        autoStopHandle.cancel(true);
+        autoStopHandle = null;
+    }
+
+    private void startActionTriggerTimer() {
+        // Schedule all action triggers in the future of the current position
+
+        // Cancel all current schedules
+        for (ScheduledFuture<?> handle : actionTriggerHandleList) {
+            handle.cancel(false);
+        }
+
+        // Create new schedules for each trigger
+        long currentPositionMillis = getPositionMillis();
+        for (CompositionActionTrigger compositionActionTrigger : remainingCompositionActionTriggerList) {
+            final Runnable runnable = () -> {
+                try {
+                    actionExecutionService.executeFromTrigger(compositionActionTrigger);
+                } catch (Exception e) {
+                    logger.error("Could not execute actions triggered at position " + compositionActionTrigger.getPositionMillis());
+                }
+                remainingCompositionActionTriggerList.remove(compositionActionTrigger);
+            };
+            ScheduledFuture<?> handle = scheduler.schedule(runnable, compositionActionTrigger.getPositionMillis() - currentPositionMillis, MILLISECONDS);
+            actionTriggerHandleList.add(handle);
+        }
+    }
+
+    private void scheduleActionTriggerTimers() {
+        // Schedule the timers to execute the actions
+
+        if (composition.getActionTriggerList().isEmpty()) {
+            // No actions to trigger
+            return;
+        }
+
+        if (pipeline == null) {
+            // Only schedule once
+            startActionTriggerTimer();
+            return;
+        }
+
+        // Schedule periodically to stay in sync with the pipeline, which might drift under certain circumstances
+
+        if (scheduleActionTriggerHandle != null) {
+            // Timer already started
+            return;
+        }
+
+        final Runnable runnable = this::startActionTriggerTimer;
+        scheduleActionTriggerHandle = scheduler.scheduleAtFixedRate(runnable, 0, 2000, MILLISECONDS);
+    }
+
+    private void stopActionTriggerTimer() {
+        if (scheduleActionTriggerHandle == null) {
+            // No timer running currently
+            return;
+        }
+
+        scheduleActionTriggerHandle.cancel(false);
+        scheduleActionTriggerHandle = null;
     }
 
     public void play() throws Exception {
@@ -652,6 +766,13 @@ public class CompositionPlayer {
             pipeline.play();
         }
 
+        lastPlayTimeMillis = System.currentTimeMillis();
+
+        calculateRemainingActionTriggerList();
+
+        startAutoStopTimer();
+        scheduleActionTriggerTimers();
+
         designerService.play();
     }
 
@@ -669,7 +790,12 @@ public class CompositionPlayer {
 
         designerService.pause();
 
+        startPosition = getPositionMillis();
+
         playState = PlayState.PAUSED;
+
+        stopAutoStopTimer();
+        stopActionTriggerTimer();
 
         if (!isDefaultComposition && !isSample) {
             notificationService.notifyClients(playerService, setService);
@@ -702,6 +828,9 @@ public class CompositionPlayer {
 
         playState = PlayState.STOPPED;
 
+        stopAutoStopTimer();
+        stopActionTriggerTimer();
+
         if (!isSample && !isDefaultComposition) {
             notificationService.notifyClients(playerService, setService);
         }
@@ -727,7 +856,10 @@ public class CompositionPlayer {
             pipeline.seek(positionMillis, TimeUnit.MILLISECONDS);
         }
 
-        designerService.seek(positionMillis);
+        this.lastPlayTimeMillis = System.currentTimeMillis();
+
+        calculateRemainingActionTriggerList();
+        scheduleActionTriggerTimers();
 
         if (!isSample) {
             notificationService.notifyClients(playerService, setService);
@@ -735,21 +867,21 @@ public class CompositionPlayer {
     }
 
     public long getPositionMillis() {
-        if (startPosition > 0) {
-            return startPosition;
-        }
-
         if (composition == null) {
             return 0;
         }
 
+        // Priority 1: If there is a pipeline -> use it
         if (pipeline != null) {
             return pipeline.queryPosition(TimeUnit.MILLISECONDS);
         }
 
-        designerService.getPositionMillis();
-
-        return 0;
+        // Priority 2: If there is no pipeline (e.g. only actions) -> fallback
+        if (playState == PlayState.PLAYING) {
+            return System.currentTimeMillis() - lastPlayTimeMillis + startPosition;
+        } else {
+            return startPosition;
+        }
     }
 
     @Override

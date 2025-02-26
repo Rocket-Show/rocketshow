@@ -14,6 +14,7 @@ import com.ascargon.rocketshow.midi.MidiRouterFactory;
 import com.ascargon.rocketshow.session.SessionService;
 import com.ascargon.rocketshow.settings.CapabilitiesService;
 import com.ascargon.rocketshow.settings.SettingsService;
+import com.ascargon.rocketshow.util.ActionExecutionService;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import com.sun.jna.Platform;
 import lombok.Getter;
@@ -63,6 +64,9 @@ public class DefaultPlayerService implements PlayerService {
     private final OperatingSystemInformationService operatingSystemInformationService;
     @Getter
     private final MidiRouterFactory midiRouterFactory;
+    @Getter
+    private final ActionExecutionService actionExecutionService;
+
 
     // Regular composition player
     private final CompositionPlayer currentCompositionPlayer;
@@ -75,7 +79,7 @@ public class DefaultPlayerService implements PlayerService {
 
     private final List<CompositionPlayer> sampleCompositionPlayerList = new ArrayList<>();
 
-    public DefaultPlayerService(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, SettingsService settingsService, CompositionService compositionService, SetService setService, SessionService sessionService, LightingService lightingService, CapabilitiesService capabilitiesService, ActivityNotificationAudioService activityNotificationAudioService, AudioService audioService, DesignerService designerService, OperatingSystemInformationService operatingSystemInformationService, MidiRouterFactory midiRouterFactory) {
+    public DefaultPlayerService(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, SettingsService settingsService, CompositionService compositionService, SetService setService, SessionService sessionService, LightingService lightingService, CapabilitiesService capabilitiesService, ActivityNotificationAudioService activityNotificationAudioService, AudioService audioService, DesignerService designerService, OperatingSystemInformationService operatingSystemInformationService, MidiRouterFactory midiRouterFactory, ActionExecutionService actionExecutionService) {
         this.notificationService = notificationService;
         this.activityNotificationMidiService = activityNotificationMidiService;
         this.settingsService = settingsService;
@@ -92,6 +96,7 @@ public class DefaultPlayerService implements PlayerService {
 
         currentCompositionPlayer = new CompositionPlayer(this, midiRouterFactory);
         defaultCompositionPlayer = new CompositionPlayer(this, midiRouterFactory);
+        this.actionExecutionService = actionExecutionService;
         defaultCompositionPlayer.setDefaultComposition(true);
         testCompositionPlayer = new CompositionPlayer(this, midiRouterFactory);
 

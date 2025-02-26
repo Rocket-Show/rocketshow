@@ -26,11 +26,7 @@ public interface DesignerService {
 
     void pause();
 
-    void seek(long positionMillis);
-
     void close();
-
-    long getPositionMillis();
 
     void startPreview(long positionMillis);
 

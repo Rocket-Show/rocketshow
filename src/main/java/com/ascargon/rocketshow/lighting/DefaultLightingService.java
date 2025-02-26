@@ -2,6 +2,8 @@ package com.ascargon.rocketshow.lighting;
 
 import com.ascargon.rocketshow.settings.CapabilitiesService;
 import com.ascargon.rocketshow.settings.SettingsService;
+import com.ascargon.rocketshow.util.OperatingSystemInformation;
+import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ola.OlaClient;
 import ola.proto.Ola;
@@ -34,6 +36,7 @@ public class DefaultLightingService implements LightingService {
     private final CapabilitiesService capabilitiesService;
     private final ActivityNotificationLightingService activityNotificationLightingService;
     private final SettingsService settingsService;
+    private final OperatingSystemInformationService operatingSystemInformationService;
 
     private final String OLA_URL = "http://localhost:9090/";
 
@@ -59,19 +62,22 @@ public class DefaultLightingService implements LightingService {
     // is OLA initialized and at least one universe prepared?
     private boolean olaReady = false;
 
-    public DefaultLightingService(CapabilitiesService capabilitiesService, ActivityNotificationLightingService activityNotificationLightingService, SettingsService settingsService) {
+    public DefaultLightingService(CapabilitiesService capabilitiesService, ActivityNotificationLightingService activityNotificationLightingService, SettingsService settingsService, OperatingSystemInformationService operatingSystemInformationService) {
         this.capabilitiesService = capabilitiesService;
         this.activityNotificationLightingService = activityNotificationLightingService;
         this.settingsService = settingsService;
+        this.operatingSystemInformationService = operatingSystemInformationService;
 
         RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).build();
         httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
 
-        try {
-            olaClient = new OlaClient();
-        } catch (Exception e) {
-            logger.error("Could not initialize OLA client", e);
-            capabilitiesService.getCapabilities().setOla(false);
+        if (OperatingSystemInformation.SubType.RASPBERRYOS.equals(this.operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+            try {
+                olaClient = new OlaClient();
+                capabilitiesService.getCapabilities().setOla(true);
+            } catch (Exception e) {
+                logger.error("Could not initialize OLA client", e);
+            }
         }
 
         if (!capabilitiesService.getCapabilities().isOla()) {

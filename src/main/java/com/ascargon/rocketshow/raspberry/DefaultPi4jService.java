@@ -9,15 +9,15 @@ import javax.annotation.PreDestroy;
 @Service
 public class DefaultPi4jService implements Pi4jService {
 
-    private final Context pi4j;
-
-    public DefaultPi4jService() {
-        // Initialize the Pi4J instance
-        pi4j = Pi4J.newAutoContext();
-    }
+    private Context pi4j;
 
     @Override
     public Context getContext() {
+        if (pi4j == null) {
+            // Initialize the Pi4J instance
+            pi4j = Pi4J.newAutoContext();
+        }
+
         return pi4j;
     }
 

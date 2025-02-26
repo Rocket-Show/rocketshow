@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.util;
 
 import com.ascargon.rocketshow.api.HttpAction;
+import com.ascargon.rocketshow.composition.CompositionFile;
 import com.ascargon.rocketshow.lighting.LightingAction;
 import com.ascargon.rocketshow.midi.MidiAction;
 import com.ascargon.rocketshow.raspberry.RaspberryGpioAction;
@@ -18,6 +19,8 @@ import java.util.List;
 @Setter
 public abstract class ActionTrigger {
 
+    private List<Action> actionList = new ArrayList<>();
+
     @XmlElementWrapper(name = "actionList")
     @XmlElements({@XmlElement(type = SystemAction.class, name = "systemAction"),
             @XmlElement(type = TransportAction.class, name = "transportAction"),
@@ -26,6 +29,8 @@ public abstract class ActionTrigger {
             @XmlElement(type = RaspberryGpioAction.class, name = "raspberryGpioAction"),
             @XmlElement(type = HttpAction.class, name = "httpAction")})
     @JsonProperty("actionList")
-    protected List<Action> actionList = new ArrayList<>();
+    public List<Action> getActionList() {
+        return actionList;
+    }
 
 }

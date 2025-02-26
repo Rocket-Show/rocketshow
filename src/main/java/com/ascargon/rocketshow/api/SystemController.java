@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController()
@@ -208,6 +209,10 @@ class SystemController {
 
     @PostMapping("execute-action")
     public ResponseEntity<Void> executeAction(@RequestBody Action action) throws Exception {
+        // ensure, the action is only executed locally
+        action.setExecuteLocally(true);
+        action.setRemoteDeviceNames(new ArrayList<>());
+
         actionExecutionService.execute(action);
         return new ResponseEntity<>(HttpStatus.OK);
     }
