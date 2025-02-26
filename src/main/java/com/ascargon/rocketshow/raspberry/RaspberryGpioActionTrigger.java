@@ -1,7 +1,6 @@
 package com.ascargon.rocketshow.raspberry;
 
 import com.ascargon.rocketshow.util.ActionTrigger;
-import com.ascargon.rocketshow.util.ControlAction;
 import lombok.Getter;
 import lombok.Setter;
 

@@ -10,7 +10,6 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import javax.sound.midi.MidiMessage;
 import javax.sound.midi.ShortMessage;
 import java.io.IOException;
 import java.util.List;

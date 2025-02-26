@@ -21,7 +21,7 @@ the devkit is not caching an old version (see https://github.com/angular/devkit/
 
 Use this command to skip tests and NPM build:
 ```shell
-mvn package -Dskip.npm -Dmaven.test.skip=true && java -jar rocketshow.jar
+mvn package -Dskip.npm -Dmaven.test.skip=true && java -jar target/rocketshow.jar
 ```
 
 For frequent builds, you might want to comment out the frontend-maven-plugin in the POM and make use of the Maven

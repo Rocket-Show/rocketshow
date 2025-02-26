@@ -47,7 +47,7 @@ public class RemoteDevice {
 
     private RemoteDevice() {
         // TODO Add this timeout to the settings
-        RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).build();
+        RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(10000 /* 10 seconds */).build();
         httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
     }
 
@@ -64,19 +64,10 @@ public class RemoteDevice {
 
             response = httpClient.execute(httpPost);
 
-            // Read the response. The POST connection will not be
-            // released
-            // otherwise
-            BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
-
-            String line;
-
-            while ((line = rd.readLine()) != null) {
-                logger.debug("Response from remote device POST: " + line);
-            }
+            logger.debug("Response from remote device POST: " + EntityUtils.toString(response.getEntity()));
 
             if (response.getStatusLine().getStatusCode() != 200) {
-                logger.error("Could not executeFromTrigger action on remote device with url '" + url + "'. Reason: '" + response.getStatusLine().getReasonPhrase() + "'. Body: " + EntityUtils.toString(response.getEntity()));
+                logger.error("Could not executeFromTrigger action on remote device with URL '" + url + "'. Reason: '" + response.getStatusLine().getReasonPhrase() + "'. Body: " + EntityUtils.toString(response.getEntity()));
             }
         } catch (Exception e) {
             logger.error("Could not executeFromTrigger action on remote device '" + name + "' with url '" + url + "'", e);

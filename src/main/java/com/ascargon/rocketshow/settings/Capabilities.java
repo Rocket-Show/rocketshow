@@ -5,7 +5,7 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class Capabilities {
 
-    private boolean ola = true;
+    private boolean ola = false;
     private boolean gstreamer = true;
 
     public boolean isOla() {

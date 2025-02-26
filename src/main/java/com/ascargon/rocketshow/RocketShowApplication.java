@@ -31,7 +31,8 @@ public class RocketShowApplication {
         ConfigurableApplicationContext context = SpringApplication.run(RocketShowApplication.class, args);
 
         // Initially update the system, based on the settings
-        context.getBean(SettingsUpdateSystemService.class);
+        SettingsUpdateSystemService settingsUpdateSystemService = context.getBean(SettingsUpdateSystemService.class);
+        settingsUpdateSystemService.update();
 
         // Initialize the notification service
         context.getBean(NotificationService.class);
@@ -66,6 +67,8 @@ public class RocketShowApplication {
 
         RocketShowApplication.args = args;
         RocketShowApplication.context = context;
+
+        logger.info("*** SYSTEM READY ***");
     }
 
     public static void restart() {

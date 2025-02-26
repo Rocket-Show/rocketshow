@@ -1,16 +1,30 @@
 package com.ascargon.rocketshow.util;
 
+import com.ascargon.rocketshow.api.HttpAction;
 import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.lighting.LightingAction;
 import com.ascargon.rocketshow.lighting.LightingService;
-import com.ascargon.rocketshow.midi.*;
+import com.ascargon.rocketshow.midi.MidiAction;
+import com.ascargon.rocketshow.midi.MidiRouter;
+import com.ascargon.rocketshow.midi.MidiRouterFactory;
+import com.ascargon.rocketshow.midi.MidiSource;
 import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.raspberry.RaspberryGpioAction;
 import com.ascargon.rocketshow.raspberry.RaspberryGpioOutService;
 import com.ascargon.rocketshow.settings.SettingsService;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.*;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 @Service
 public class DefaultActionExecutionService implements ActionExecutionService {
@@ -24,7 +38,11 @@ public class DefaultActionExecutionService implements ActionExecutionService {
     private final MidiRouter midiRouter;
     private final RaspberryGpioOutService raspberryGpioOutService;
 
-    public DefaultActionExecutionService(PlayerService playerService, SettingsService settingsService, RebootService rebootService, LightingService lightingService, MidiRouterFactory midiRouterFactory, RaspberryGpioOutService raspberryGpioOutService) {
+    private final HttpClient httpClient;
+
+    // Lazy load the playerService to avoid a circular dependency, because the playerService can execute actions and
+    // is called by this service for transport actions.
+    public DefaultActionExecutionService(@Lazy PlayerService playerService, SettingsService settingsService, RebootService rebootService, LightingService lightingService, MidiRouterFactory midiRouterFactory, RaspberryGpioOutService raspberryGpioOutService) {
         this.playerService = playerService;
         this.settingsService = settingsService;
         this.rebootService = rebootService;
@@ -32,6 +50,56 @@ public class DefaultActionExecutionService implements ActionExecutionService {
         this.raspberryGpioOutService = raspberryGpioOutService;
 
         midiRouter = midiRouterFactory.getMidiRouter(settingsService.getSettings().getRemoteMidiRoutingList());
+
+        RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(60000 /* 60 seconds */).build();
+        httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
+    }
+
+    private void executeHttpAction(HttpAction httpAction) {
+        try {
+            logger.debug("Execute HTTP action to URL " + httpAction.getUrl());
+
+            HttpRequestBase request;
+
+            switch (httpAction.getHttpMethod()) {
+                case POST:
+                    HttpPost postRequest = new HttpPost(httpAction.getUrl());
+                    postRequest.setEntity(new StringEntity(httpAction.getBody()));
+                    request = postRequest;
+                    break;
+                case PUT:
+                    HttpPut putRequest = new HttpPut(httpAction.getUrl());
+                    putRequest.setEntity(new StringEntity(httpAction.getBody()));
+                    request = putRequest;
+                    break;
+                case DELETE:
+                    request = new HttpDelete(httpAction.getUrl());
+                    break;
+                case PATCH:
+                    HttpPatch patchRequest = new HttpPatch(httpAction.getUrl());
+                    patchRequest.setEntity(new StringEntity(httpAction.getBody()));
+                    request = patchRequest;
+                    break;
+                case GET:
+                default:
+                    request = new HttpGet(httpAction.getUrl());
+                    break;
+            }
+
+            for (Map.Entry<String, String> header : httpAction.getHeaderList().entrySet()) {
+                request.setHeader(header.getKey(), header.getValue());
+            }
+
+            HttpResponse response;
+            response = httpClient.execute(request);
+
+            logger.debug("Received response from HTTP action");
+            logger.debug("Status code: " + response.getStatusLine().getStatusCode());
+            logger.debug("Status phrase: " + response.getStatusLine().getReasonPhrase());
+            logger.debug("Response body: " + EntityUtils.toString(response.getEntity()));
+        } catch (Exception e) {
+            logger.error("Could not execute HTTP action with URL '" + httpAction.getUrl() + "'", e);
+        }
     }
 
     private void executeActionOnRemoteDevice(Action action, RemoteDevice remoteDevice) {
@@ -68,6 +136,7 @@ public class DefaultActionExecutionService implements ActionExecutionService {
                     case REBOOT -> rebootService.reboot();
                 }
             }
+            case HTTP -> executeHttpAction((HttpAction) action);
             default -> logger.warn("Action '" + action.getActionType() + "' is unknown and cannot be executed");
         }
     }
