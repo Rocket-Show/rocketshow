@@ -67,7 +67,6 @@ public class DefaultPlayerService implements PlayerService {
     @Getter
     private final ActionExecutionService actionExecutionService;
 
-
     // Regular composition player
     private final CompositionPlayer currentCompositionPlayer;
 

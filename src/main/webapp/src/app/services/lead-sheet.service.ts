@@ -1,19 +1,18 @@
-import { Subject ,  Observable ,  forkJoin } from 'rxjs';
-import { Injectable } from '@angular/core';
+import { Subject, Observable, forkJoin } from "rxjs";
+import { Injectable } from "@angular/core";
 import { map } from "rxjs/operators";
-import { HttpClient } from '@angular/common/http';
-import { LeadSheet } from '../models/lead-sheet';
-import { StateService } from './state.service';
-import { State } from '../models/state';
-import { SettingsPersonalService } from './settings-personal.service';
-import { CompositionService } from './composition.service';
-import { environment } from '../../environments/environment';
+import { HttpClient } from "@angular/common/http";
+import { LeadSheet } from "../models/lead-sheet";
+import { StateService } from "./state.service";
+import { State } from "../models/state";
+import { SettingsPersonalService } from "./settings-personal.service";
+import { CompositionService } from "./composition.service";
+import { environment } from "../../environments/environment";
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: "root",
 })
 export class LeadSheetService {
-
   showLeadSheet: boolean = false;
   doShow: Subject<void> = new Subject<void>();
   currentCompositionName: string;
@@ -26,52 +25,65 @@ export class LeadSheetService {
     private settingsPersonalService: SettingsPersonalService,
     private compositionService: CompositionService
   ) {
-    this.updateCurrentLeadSheet();
+    this.stateService.getState().subscribe((state) => {
+      this.updateCurrentLeadSheet(state);
+    });
 
     this.stateService.state.subscribe((state: State) => {
-      this.updateCurrentLeadSheet();
+      this.updateCurrentLeadSheet(state);
     });
 
     this.settingsPersonalService.settingsChanged.subscribe(() => {
-      this.updateCurrentLeadSheet();
+      this.stateService.getState().subscribe((state) => {
+        this.updateCurrentLeadSheet(state);
+      });
     });
   }
 
-  private loadCurrentLeadSheet(compositionName: string, instrumentUuid: string) {
+  private loadCurrentLeadSheet(
+    compositionName: string,
+    instrumentUuid: string
+  ) {
     this.currentLeadSheetUrl = undefined;
-    
-    this.compositionService.getComposition(compositionName).subscribe(composition => {
-      // Check, whether this composition has a lead sheet with the user's instrument UUID
-      for(let leadSheet of composition.leadSheetList) {
-        if(leadSheet.instrumentUuid == instrumentUuid) {
-          // There is a lead sheet for the user available
-          if (environment.name == 'dev') {
-            this.currentLeadSheetUrl = 'http://' + environment.localBackend + '/';
-          } else {
-            this.currentLeadSheetUrl = '/'
-          }
 
-          this.currentLeadSheetUrl += 'api/lead-sheet/image?name=' + leadSheet.name;
-          break;
+    this.compositionService
+      .getComposition(compositionName)
+      .subscribe((composition) => {
+        // Check, whether this composition has a lead sheet with the user's instrument UUID
+        for (let leadSheet of composition.leadSheetList) {
+          if (leadSheet.instrumentUuid == instrumentUuid) {
+            // There is a lead sheet for the user available
+            if (environment.name == "dev") {
+              this.currentLeadSheetUrl =
+                "http://" + environment.localBackend + "/";
+            } else {
+              this.currentLeadSheetUrl = "/";
+            }
+
+            this.currentLeadSheetUrl +=
+              "api/lead-sheet/image?name=" + leadSheet.name;
+            break;
+          }
         }
-      }
-    });
+      });
 
     this.currentCompositionName = compositionName;
     this.currentInstrumentUuid = instrumentUuid;
   }
 
-  private updateCurrentLeadSheet() {
+  private updateCurrentLeadSheet(state: State) {
     // Check, whether the current composition or instrument have changed and
     // reload the current lead sheet, if necessary
-    this.stateService.getState().subscribe(state => {
-      let newCompositionName = state.currentCompositionName;
-      let newInstrumentUuid = this.settingsPersonalService.getSettings().instrumentUuid;
+    let newCompositionName = state.currentCompositionName;
+    let newInstrumentUuid =
+      this.settingsPersonalService.getSettings().instrumentUuid;
 
-      if(newCompositionName != this.currentCompositionName || newInstrumentUuid != this.currentInstrumentUuid) {
-        this.loadCurrentLeadSheet(newCompositionName, newInstrumentUuid);
-      }
-    });
+    if (
+      newCompositionName != this.currentCompositionName ||
+      newInstrumentUuid != this.currentInstrumentUuid
+    ) {
+      this.loadCurrentLeadSheet(newCompositionName, newInstrumentUuid);
+    }
   }
 
   show() {
@@ -88,8 +100,8 @@ export class LeadSheetService {
   }
 
   getLeadSheets(): Observable<LeadSheet[]> {
-    return this.http.get('lead-sheet/list')
-      .pipe(map((response: Array<Object>) => {
+    return this.http.get("lead-sheet/list").pipe(
+      map((response: Array<Object>) => {
         let files: LeadSheet[] = [];
 
         for (let file of response) {
@@ -97,13 +109,17 @@ export class LeadSheetService {
         }
 
         return files;
-      }));
+      })
+    );
   }
 
   deleteLeadSheet(leadSheet: LeadSheet): Observable<void> {
-    return this.http.post('lead-sheet/delete?name=' + leadSheet.name, undefined).pipe(map((response: Response) => {
-      return null;
-    }));
+    return this.http
+      .post("lead-sheet/delete?name=" + leadSheet.name, undefined)
+      .pipe(
+        map((response: Response) => {
+          return null;
+        })
+      );
   }
-
 }
