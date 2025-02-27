@@ -80,6 +80,8 @@ public class CompositionPlayer {
 
     private Composition composition;
     private PlayState playState = PlayState.STOPPED;
+    private boolean seekAfterPlay = false; // Seek, as soon as the pipeline is playing
+    private boolean firstPlayDone = false; // Has the pipeline played at least once?
     private long startPosition = 0; // The position, the composition started the last play
     private long lastPlayTimeMillis; // The system time, when playing started
     private ScheduledFuture<?> autoStopHandle;
@@ -492,14 +494,17 @@ public class CompositionPlayer {
         bus.connect((GstObject source, State old, State newState, State pending) -> {
             if (source.getTypeName().equals("GstPipeline")) {
                 if (newState == State.PLAYING) {
-                    // We changed to playing, maybe we need to seek to the start position (not possible before playing)
-                    if (startPosition > 0) {
+                    firstPlayDone = true;
+
+                    // We changed to playing, maybe we need to seek to the startPosition (not possible before first play)
+                    if (seekAfterPlay) {
+                        seekAfterPlay = false;
+
                         try {
                             seek(startPosition);
                         } catch (Exception e) {
                             logger.error("Could not set start position when changed to playing", e);
                         }
-                        startPosition = 0;
                     }
 
                     playState = PlayState.PLAYING;
@@ -595,6 +600,7 @@ public class CompositionPlayer {
     // Load all files and construct the complete GST pipeline
     public void loadFiles() throws Exception {
         boolean hasActiveFile = false;
+        firstPlayDone = false;
 
         if (playState != PlayState.STOPPED) {
             return;
@@ -652,8 +658,6 @@ public class CompositionPlayer {
             playState = PlayState.LOADED;
             notificationService.notifyClients(playerService, setService);
         }
-
-        startPosition = 0;
     }
 
     private void startAutoStopTimer() {
@@ -847,7 +851,9 @@ public class CompositionPlayer {
     }
 
     public void seek(long positionMillis) throws Exception {
-        // When we seek before pressing play
+        if (!firstPlayDone) {
+            seekAfterPlay = true;
+        }
         startPosition = positionMillis;
 
         logger.debug("Seek to position " + positionMillis);
@@ -871,17 +877,22 @@ public class CompositionPlayer {
             return 0;
         }
 
-        // Priority 1: If there is a pipeline -> use it
-        if (pipeline != null) {
-            return pipeline.queryPosition(TimeUnit.MILLISECONDS);
-        }
-
-        // Priority 2: If there is no pipeline (e.g. only actions) -> fallback
-        if (playState == PlayState.PLAYING) {
-            return System.currentTimeMillis() - lastPlayTimeMillis + startPosition;
-        } else {
+        // If we're not playing, just return the current start position to resume playing
+        if (playState != PlayState.PLAYING) {
             return startPosition;
         }
+
+        // If there is a pipeline -> use it (only if playing, querying its status is not reliably otherwise)
+        if (pipeline != null) {
+            long queriedMillis = pipeline.queryPosition(TimeUnit.MILLISECONDS);
+            if (queriedMillis >= startPosition) {
+                // only return, if the query worked (shortly after seeking it's 0, even if we're playing)
+                return queriedMillis;
+            }
+        }
+
+        // If there is no pipeline (e.g. only actions) and we're playing -> fallback
+        return System.currentTimeMillis() - lastPlayTimeMillis + startPosition;
     }
 
     @Override
