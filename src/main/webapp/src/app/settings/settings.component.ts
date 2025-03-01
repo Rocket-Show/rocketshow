@@ -174,7 +174,7 @@ export class SettingsComponent implements OnInit {
         }
 
         // Save the settings on the device
-        this.settingsService.saveSettings(result).pipe(map(() => {
+        this.settingsService.saveSettings().pipe(map(() => {
           this.copyInitialSettings(result);
           this.translateService.use(result.language);
 

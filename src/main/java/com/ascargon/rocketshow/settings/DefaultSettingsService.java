@@ -17,7 +17,7 @@ import org.springframework.boot.system.ApplicationHome;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.MidiUnavailableException;
-import java.io.*;
+import java.io.File;
 import java.util.List;
 import java.util.UUID;
 
@@ -445,11 +445,11 @@ public class DefaultSettingsService implements SettingsService {
                 action.setExecuteLocally(midiControl.isExecuteLocally());
                 action.setRemoteDeviceNames(midiControl.getRemoteDeviceNames());
 
-                MidiActionTrigger midiActionTrigger = new MidiActionTrigger();
-                midiActionTrigger.setMidiActionTriggerType(MidiActionTrigger.MidiActionTriggerType.NOTE_ON);
-                midiActionTrigger.setChannel(midiControl.getChannelFrom());
-                midiActionTrigger.setNote(midiControl.getNoteFrom());
-                midiActionTrigger.getActionList().add(action);
+                MidiActionTriggerNoteOn midiActionTriggerNoteOn = new MidiActionTriggerNoteOn();
+                midiActionTriggerNoteOn.setMidiActionTriggerType(MidiActionTrigger.MidiActionTriggerType.NOTE_ON);
+                midiActionTriggerNoteOn.setChannel(midiControl.getChannelFrom());
+                midiActionTriggerNoteOn.setNote(midiControl.getNoteFrom());
+                midiActionTriggerNoteOn.getActionList().add(action);
             }
         }
 

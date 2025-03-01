@@ -18,15 +18,15 @@ class MidiController {
     private final ControllerService controllerService;
     private final ActivityNotificationMidiService activityNotificationMidiService;
     private final MidiService midiService;
-    private final MidiControlActionExecutionService midiControlActionExecutionService;
+    private final MidiActionExecutionService midiActionExecutionService;
 
     private final MidiRouter midiRouter;
 
-    private MidiController(ControllerService controllerService, SettingsService settingsService, ActivityNotificationMidiService activityNotificationMidiService, MidiService midiService, MidiControlActionExecutionService midiControlActionExecutionService, MidiRouterFactory midiRouterFactory) {
+    private MidiController(ControllerService controllerService, SettingsService settingsService, ActivityNotificationMidiService activityNotificationMidiService, MidiService midiService, MidiActionExecutionService midiActionExecutionService, MidiRouterFactory midiRouterFactory) {
         this.controllerService = controllerService;
         this.activityNotificationMidiService = activityNotificationMidiService;
         this.midiService = midiService;
-        this.midiControlActionExecutionService = midiControlActionExecutionService;
+        this.midiActionExecutionService = midiActionExecutionService;
 
         midiRouter = midiRouterFactory.getMidiRouter(settingsService.getSettings().getRemoteMidiRoutingList());
     }
@@ -59,7 +59,7 @@ class MidiController {
         ShortMessage shortMessage = new ShortMessage();
         shortMessage.setMessage(command, channel, data1, data2);
 
-        midiControlActionExecutionService.processMidiSignal(shortMessage);
+        midiActionExecutionService.processMidiSignal(shortMessage);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
