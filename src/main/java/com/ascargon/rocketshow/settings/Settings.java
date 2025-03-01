@@ -2,12 +2,16 @@ package com.ascargon.rocketshow.settings;
 
 import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.audio.AudioBus;
+import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.audio.AudioDevice;
 import com.ascargon.rocketshow.lighting.OlaPlugin;
 import com.ascargon.rocketshow.midi.*;
 import com.ascargon.rocketshow.raspberry.RaspberryGpioActionTrigger;
+import com.ascargon.rocketshow.video.VideoCompositionFile;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;
+import jakarta.xml.bind.annotation.XmlElements;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
@@ -183,8 +187,9 @@ public class Settings {
         return raspberryGpioActionTriggerList;
     }
 
-    @XmlElement(name = "midiActionTrigger")
     @XmlElementWrapper(name = "midiActionTriggerList")
+    @XmlElements({@XmlElement(type = MidiActionTriggerNoteOn.class, name = "midiActionTriggerNoteOn"),
+            @XmlElement(type = MidiActionTriggerProgramChange.class, name = "midiActionTriggerProgramChange")})
     public List<MidiActionTrigger> getMidiActionTriggerList() {
         return midiActionTriggerList;
     }

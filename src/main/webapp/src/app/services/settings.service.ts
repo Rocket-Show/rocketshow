@@ -3,7 +3,7 @@ import { AudioBus } from "./../models/audio-bus";
 import { TranslateService } from "@ngx-translate/core";
 import { AudioDevice } from "./../models/audio-device";
 import { MidiDevice } from "./../models/midi-device";
-import { Subject, Observable, of } from "rxjs";
+import { Subject, Observable, of, merge } from "rxjs";
 import { map } from "rxjs/operators";
 import { Settings } from "./../models/settings";
 import { Injectable } from "@angular/core";
@@ -16,7 +16,9 @@ export class SettingsService {
   settingsChanged: Subject<void> = new Subject<void>();
 
   languages: Language[] = [];
+  originalSettings: any; // Raw settings response to keep attributes unknown to the webapp
   settings: Settings;
+
   observable: Observable<Settings>;
 
   constructor(
@@ -53,6 +55,7 @@ export class SettingsService {
     this.observable = this.http.get("system/settings").pipe(
       map((response) => {
         if (!this.settings) {
+          this.originalSettings = response;
           this.settings = new Settings(response);
         }
         this.observable = undefined;
@@ -64,8 +67,10 @@ export class SettingsService {
     return this.observable;
   }
 
-  saveSettings(settings: Settings): Observable<Object> {
-    return this.http.post("system/settings", JSON.stringify(settings));
+  saveSettings(): Observable<Object> {
+    const mergedSettings = { ...this.originalSettings, ...this.settings }; // Merge known and unknown fields
+    console.log(this.originalSettings, this.settings, mergedSettings);
+    return this.http.post("system/settings", JSON.stringify(mergedSettings));
   }
 
   updateLightingOlaPlugins(olaPluginList: OlaPlugin[]): Observable<Object> {
