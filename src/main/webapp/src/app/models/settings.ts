@@ -10,18 +10,15 @@ import { OlaPlugin } from "./ola-plugin";
 
 export class Settings {
   version: number;
-  basePath: string;
-  mediaPath: string;
-  midiPath: string;
-  audioPath: string;
-  videoPath: string;
-  leadSheetPath: string;
   midiInDevice: MidiDevice;
   midiOutDevice: MidiDevice;
   remoteDeviceList: RemoteDevice[];
   deviceInMidiRoutingList: MidiRouting[];
   remoteMidiRoutingList: MidiRouting[];
+
+  // TODO remove
   midiControlList: MidiControl[];
+
   midiMapping: MidiMapping;
   raspberryGpioControlList: RaspberryGpioControl[];
   raspberryGpioOutputPinBcmList: number[];
@@ -31,7 +28,6 @@ export class Settings {
   offsetMillisMidi: number;
   offsetMillisAudio: number;
   offsetMillisVideo: number;
-  audioPlayerType: string;
   loggingLevel: string;
   language: string;
   deviceName: string;
@@ -64,14 +60,6 @@ export class Settings {
     if (!data) {
       return;
     }
-
-    this.version = data.version;
-    this.basePath = data.basePath;
-    this.mediaPath = data.mediaPath;
-    this.midiPath = data.midiPath;
-    this.audioPath = data.audioPath;
-    this.videoPath = data.videoPath;
-    this.leadSheetPath = data.leadSheetPath;
 
     if (data.midiInDevice) {
       this.midiInDevice = new MidiDevice(data.midiInDevice);
@@ -149,7 +137,6 @@ export class Settings {
     this.offsetMillisMidi = data.offsetMillisMidi;
     this.offsetMillisAudio = data.offsetMillisAudio;
     this.offsetMillisVideo = data.offsetMillisVideo;
-    this.audioPlayerType = data.audioPlayerType;
     this.loggingLevel = data.loggingLevel;
     this.language = data.language;
     this.deviceName = data.deviceName;
