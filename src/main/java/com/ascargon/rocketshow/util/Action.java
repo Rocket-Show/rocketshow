@@ -18,6 +18,7 @@ import java.util.List;
         use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.WRAPPER_OBJECT)
 @JsonSubTypes({
+        @JsonSubTypes.Type(value = NullAction.class, name = "nullAction"),
         @JsonSubTypes.Type(value = SystemAction.class, name = "systemAction"),
         @JsonSubTypes.Type(value = TransportAction.class, name = "transportAction"),
         @JsonSubTypes.Type(value = MidiAction.class, name = "midiAction"),
@@ -31,6 +32,7 @@ public abstract class Action {
 
     // Actions to be executed (e.g. by MIDI control or Raspberry GPIO events)
     public enum ActionType {
+        NULL,
         SYSTEM,
         TRANSPORT,
         MIDI,
