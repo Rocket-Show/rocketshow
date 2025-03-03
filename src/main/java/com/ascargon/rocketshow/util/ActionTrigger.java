@@ -22,7 +22,8 @@ public abstract class ActionTrigger {
     private List<Action> actionList = new ArrayList<>();
 
     @XmlElementWrapper(name = "actionList")
-    @XmlElements({@XmlElement(type = SystemAction.class, name = "systemAction"),
+    @XmlElements({@XmlElement(type = NullAction.class, name = "nullAction"),
+            @XmlElement(type = SystemAction.class, name = "systemAction"),
             @XmlElement(type = TransportAction.class, name = "transportAction"),
             @XmlElement(type = MidiAction.class, name = "midiAction"),
             @XmlElement(type = LightingAction.class, name = "lightingAction"),
