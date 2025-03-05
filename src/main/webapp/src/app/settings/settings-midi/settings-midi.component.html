@@ -1,153 +1,131 @@
 <div class="alert alert-warning mb-2" role="alert">
-  <i class="fa fa-exclamation-triangle" aria-hidden="true"></i> {{ 'settings.restart-required' | translate }}
+  <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+  {{ "settings.restart-required" | translate }}
 </div>
 
 <div *ngIf="settings && !settings?.readyToUseVersion" class="form-group row">
-  <label class="col-lg-3 col-form-label">{{ 'settings.midi-device-in' | translate }}</label>
+  <label class="col-lg-3 col-form-label">{{
+    "settings.midi-device-in" | translate
+  }}</label>
   <div class="col-lg-9 d-flex">
-    <div class="my-auto" *ngIf="midiInDevices?.length == 0">- {{ 'settings.no-midi-devices' | translate }} -</div>
-    <select *ngIf="midiInDevices?.length > 0" class="custom-select" [compareWith]="midiDeviceEqual"
-            [(ngModel)]="settings.midiInDevice">
-      <option *ngFor="let midiDevice of midiInDevices" [ngValue]="midiDevice">{{ midiDevice.name }}</option>
+    <div class="my-auto" *ngIf="midiInDevices?.length == 0">
+      - {{ "settings.no-midi-devices" | translate }} -
+    </div>
+    <select
+      *ngIf="midiInDevices?.length > 0"
+      class="custom-select"
+      [compareWith]="midiDeviceEqual"
+      [(ngModel)]="settings.midiInDevice"
+    >
+      <option *ngFor="let midiDevice of midiInDevices" [ngValue]="midiDevice">
+        {{ midiDevice.name }}
+      </option>
     </select>
   </div>
 </div>
 
 <div *ngIf="settings && !settings?.readyToUseVersion" class="form-group row">
-  <label class="col-lg-3 col-form-label">{{ 'settings.midi-device-out' | translate }}</label>
+  <label class="col-lg-3 col-form-label">{{
+    "settings.midi-device-out" | translate
+  }}</label>
   <div class="col-lg-9 d-flex">
-    <div class="my-auto" *ngIf="midiOutDevices?.length == 0">- {{ 'settings.no-midi-devices' | translate }} -</div>
-    <select *ngIf="midiOutDevices?.length > 0" class="custom-select" [compareWith]="midiDeviceEqual"
-            [(ngModel)]="settings.midiOutDevice">
-      <option *ngFor="let midiDevice of midiOutDevices" [ngValue]="midiDevice">{{ midiDevice.name }}</option>
+    <div class="my-auto" *ngIf="midiOutDevices?.length == 0">
+      - {{ "settings.no-midi-devices" | translate }} -
+    </div>
+    <select
+      *ngIf="midiOutDevices?.length > 0"
+      class="custom-select"
+      [compareWith]="midiDeviceEqual"
+      [(ngModel)]="settings.midiOutDevice"
+    >
+      <option *ngFor="let midiDevice of midiOutDevices" [ngValue]="midiDevice">
+        {{ midiDevice.name }}
+      </option>
     </select>
   </div>
 </div>
 
 <div class="form-group row">
-  <label class="col-lg-3 col-form-label">{{ 'settings.global-play-offset' | translate }}</label>
+  <label class="col-lg-3 col-form-label">{{
+    "settings.global-play-offset" | translate
+  }}</label>
   <div class="col-lg-9">
-    <input type="text" class="form-control" [ngModel]="settings?.offsetMillisMidi"
-           (ngModelChange)="settings.offsetMillisMidi = $event">
+    <input
+      type="text"
+      class="form-control"
+      [ngModel]="settings?.offsetMillisMidi"
+      (ngModelChange)="settings.offsetMillisMidi = $event"
+    />
   </div>
 </div>
 
 <div class="form-group row">
-  <label class="col-lg-3 col-form-label">{{ 'settings.device-in-midi-routing' | translate }}</label>
+  <label class="col-lg-3 col-form-label">{{
+    "settings.device-in-midi-routing" | translate
+  }}</label>
   <div class="col-lg-9">
-    <app-midi-routing [midiRoutingList]="settings?.deviceInMidiRoutingList"></app-midi-routing>
+    <app-midi-routing
+      [midiRoutingList]="settings?.deviceInMidiRoutingList"
+    ></app-midi-routing>
   </div>
 </div>
 
 <div class="form-group row">
-  <label class="col-lg-3 col-form-label">{{ 'settings.remote-midi-routing' | translate }}</label>
+  <label class="col-lg-3 col-form-label">{{
+    "settings.remote-midi-routing" | translate
+  }}</label>
   <div class="col-lg-9">
-    <app-midi-routing [midiRoutingList]="settings?.remoteMidiRoutingList"></app-midi-routing>
+    <app-midi-routing
+      [midiRoutingList]="settings?.remoteMidiRoutingList"
+    ></app-midi-routing>
   </div>
 </div>
 
 <div class="form-group row">
-  <label class="col-lg-3 col-form-label">{{ 'settings.global-midi-mapping' | translate }}</label>
+  <label class="col-lg-3 col-form-label">{{
+    "settings.global-midi-mapping" | translate
+  }}</label>
   <div class="col-lg-9">
     <div class="card border-secondary">
       <div class="card-body">
-        <app-midi-mapping [midiMapping]="settings?.midiMapping"></app-midi-mapping>
+        <app-midi-mapping
+          [midiMapping]="settings?.midiMapping"
+        ></app-midi-mapping>
       </div>
     </div>
   </div>
 </div>
 
 <div class="form-group row">
-  <label class="col-lg-3 col-form-label">{{ 'settings.midi-control' | translate }}</label>
+  <label class="col-lg-3 col-form-label">{{
+    "settings.midi-control" | translate
+  }}</label>
   <div class="col-lg-9">
-    <div class="list-group" [sortablejs]="settings?.midiControlList" [sortablejsOptions]="{ onMove: sortMove }">
-      <div class="list-group-item" *ngFor="let midiControl of settings?.midiControlList; let i = index">
-
-        <div class="form-group row" style="margin-top: 10px; margin-bottom: -30px;">
-          <div class="col d-flex">
-            <a class="my-auto ml-auto text-danger" href="#" role="button" (click)="deleteMidiControl(i); false">
-              <i class="fa fa-trash-o" aria-hidden="true"></i>
-            </a>
-          </div>
-        </div>
-        <div class="form-group row">
-          <label class="col-md-3 col-form-label">{{ 'settings.midi-control-channel-in' | translate }}</label>
-          <div class="col-md-8">
-            <select class="custom-select" [ngModel]="midiControl.channelFrom"
-                    (ngModelChange)="midiControl.channelFrom = $event">
-              <option *ngFor="let channel of channelList" [ngValue]="channel">{{ (channel + 1) }}</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group row">
-          <label class="col-md-3 col-form-label">{{ 'settings.midi-control-note-in' | translate }}</label>
-          <div class="col-md-9">
-            <select class="custom-select" [ngModel]="midiControl.noteFrom"
-                    (ngModelChange)="midiControl.noteFrom = $event">
-              <option *ngFor="let note of noteList" [ngValue]="note">{{ (note + 1) + ' - ' + midiIdToNote(note) }}
-              </option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group row">
-          <label class="col-md-3 col-form-label">{{ 'settings.midi-control-action' | translate }}</label>
-          <div class="col-md-9">
-            <select class="custom-select" [ngModel]="midiControl.action" (ngModelChange)="midiControl.action = $event">
-              <option *ngFor="let midiAction of midiActionList" [ngValue]="midiAction">{{ 'settings.midi-control-enum.'
-                +
-                midiAction | translate }}
-              </option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group row"
-             *ngIf="midiControl.action == 'SELECT_COMPOSITION_BY_NAME' || midiControl.action == 'SELECT_COMPOSITION_BY_NAME_AND_PLAY'">
-          <label class="col-md-3 col-form-label">{{ 'settings.midi-control-select-composition' | translate }}</label>
-          <div class="col-md-9">
-            <select class="custom-select" [ngModel]="midiControl.compositionName"
-                    (ngModelChange)="midiControl.compositionName = $event">
-              <option [ngValue]="selectUndefinedOptionValue">- {{ 'settings.no-composition' | translate }} -</option>
-              <option *ngFor="let composition of compositions" [ngValue]="composition.name">{{ composition.name }}
-              </option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group row">
-          <label class="col-md-3 col-form-label"></label>
-          <div class="col-md-9">
-            <div class="form-check">
-              <input type="checkbox" [ngModel]="midiControl.executeLocally"
-                     (ngModelChange)="midiControl.executeLocally = $event"
-                     class="form-check-input" id="execLoc_{{ i }}">
-
-              <label class="form-check-label" for="execLoc_{{ i }}">
-                {{ 'settings.midi-control-exec-locally' | translate }}
-              </label>
-            </div>
-          </div>
-        </div>
-        <div class="form-group row mb-2">
-          <label class="col-md-3 col-form-label">{{ 'routing.remote-devices' | translate }}</label>
-          <div class="col-md-9">
-            <div class="card border-secondary mb-0">
-              <div class="card-body">
-                <app-remote-device-selection
-                  [remoteDeviceList]="midiControl.remoteDeviceList"></app-remote-device-selection>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="form-group row mb-2 mt-3">
-          <label class="col-md-3 col-form-label"></label>
-          <div class="col-md-9">
-            <a href="#" class="btn btn-primary btn-sm" (click)="testControl(midiControl); false;">
-              <i class="fa fa-flask" aria-hidden="true"></i> {{ 'settings.midi-control-test' | translate }}</a>
-          </div>
-        </div>
-
+    <div
+      class="list-group"
+      [sortablejs]="settings?.actionTriggerMidiList"
+      [sortablejsOptions]="{ onMove: sortMove }"
+    >
+      <div
+        class="list-group-item"
+        *ngFor="
+          let actionTriggerMidi of settings?.actionTriggerMidiList;
+          let i = index
+        "
+      >
+        <app-action-trigger
+          [index]="i"
+          (delete)="deleteActionTrigger($event)"
+          [trigger]="actionTriggerMidi"
+        ></app-action-trigger>
       </div>
-      <a href="#" (click)="addMidiControl(); false" class="no-sortjs list-group-item text-center">
-        <i class="fa fa-plus" aria-hidden="true"></i> {{ 'settings.midi-control-add' | translate }}
+      <a
+        href="#"
+        (click)="addActionTrigger(); (false)"
+        class="no-sortjs list-group-item text-center"
+      >
+        <i class="fa fa-plus" aria-hidden="true"></i>
+        {{ "settings.midi-control-add" | translate }}
       </a>
     </div>
   </div>

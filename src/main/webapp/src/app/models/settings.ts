@@ -2,11 +2,13 @@ import { RaspberryGpioControl } from "./raspberry-gpio-control";
 import { Instrument } from "./instrument";
 import { MidiRouting } from "./midi-routing";
 import { AudioBus } from "./audio-bus";
-import { MidiControl } from "./midi-control";
 import { MidiDevice } from "./midi-device";
 import { RemoteDevice } from "./remote-device";
 import { MidiMapping } from "./midi-mapping";
 import { OlaPlugin } from "./ola-plugin";
+import { ActionTriggerMidi } from "./action-trigger-midi";
+import { ActionTriggerMidiNoteOn } from "./action-trigger-midi-note-on";
+import { ActionTriggerMidiProgramChange } from "./action-trigger-midi-program-change";
 
 export class Settings {
   version: number;
@@ -15,12 +17,9 @@ export class Settings {
   remoteDeviceList: RemoteDevice[];
   deviceInMidiRoutingList: MidiRouting[];
   remoteMidiRoutingList: MidiRouting[];
-
-  // TODO remove
-  midiControlList: MidiControl[];
-
+  actionTriggerMidiList: ActionTriggerMidi[] = [];
   midiMapping: MidiMapping;
-  raspberryGpioControlList: RaspberryGpioControl[];
+  // raspberryGpioControlList: RaspberryGpioControl[];
   raspberryGpioOutputPinBcmList: number[];
   lightingSendDelayMillis: number;
   lightingOlaPluginList: OlaPlugin[] = [];
@@ -93,11 +92,17 @@ export class Settings {
       }
     }
 
-    if (data.midiControlList) {
-      this.midiControlList = [];
+    if (data.actionTriggerMidiList) {
+      this.actionTriggerMidiList = [];
 
-      for (let midiControl of data.midiControlList) {
-        this.midiControlList.push(new MidiControl(midiControl));
+      for (let actionTriggerMidi of data.actionTriggerMidiList) {
+        let trigger: ActionTriggerMidi;
+        if (actionTriggerMidi.actionTriggerMidiNoteOn) {
+          trigger = new ActionTriggerMidiNoteOn(actionTriggerMidi.actionTriggerMidiNoteOn);
+        } else if (actionTriggerMidi.ActionTriggerMidiProgramChange) {
+          trigger = new ActionTriggerMidiProgramChange(actionTriggerMidi.ActionTriggerMidiProgramChange);
+        }
+        this.actionTriggerMidiList.push(trigger);
       }
     }
 
@@ -105,15 +110,15 @@ export class Settings {
       this.midiMapping = new MidiMapping(data.midiMapping);
     }
 
-    if (data.raspberryGpioControlList) {
-      this.raspberryGpioControlList = [];
+    // if (data.raspberryGpioControlList) {
+    //   this.raspberryGpioControlList = [];
 
-      for (let raspberryGpioControl of data.raspberryGpioControlList) {
-        this.raspberryGpioControlList.push(
-          new RaspberryGpioControl(raspberryGpioControl)
-        );
-      }
-    }
+    //   for (let raspberryGpioControl of data.raspberryGpioControlList) {
+    //     this.raspberryGpioControlList.push(
+    //       new RaspberryGpioControl(raspberryGpioControl)
+    //     );
+    //   }
+    // }
 
     if (data.raspberryGpioOutputPinBcmList) {
       this.raspberryGpioOutputPinBcmList = [];

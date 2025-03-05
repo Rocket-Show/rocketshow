@@ -158,7 +158,7 @@
     "midi-device-in": "Eingang",
     "midi-device-out": "Ausgang",
     "midi-control": "Steuerung",
-    "midi-control-add": "Aktion hinzufügen",
+    "midi-control-add": "Steuerung hinzufügen",
     "midi-control-exec-locally": "Lokal ausführen",
     "midi-control-channel-in": "Eingangskanal",
     "midi-control-note-in": "Eingangsnote",

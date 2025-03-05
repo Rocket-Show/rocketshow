@@ -1,6 +1,5 @@
 package com.ascargon.rocketshow.api;
 
-import com.ascargon.rocketshow.lighting.LightingAction;
 import com.ascargon.rocketshow.midi.MidiSignal;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.xml.bind.annotation.XmlRootElement;
@@ -17,8 +16,6 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 

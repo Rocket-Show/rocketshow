@@ -1,7 +1,7 @@
 package com.ascargon.rocketshow.play;
 
 import com.ascargon.rocketshow.composition.Composition;
-import com.ascargon.rocketshow.composition.CompositionActionTrigger;
+import com.ascargon.rocketshow.composition.ActionTriggerComposition;
 import com.ascargon.rocketshow.composition.CompositionFile;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.settings.CapabilitiesService;
@@ -104,7 +104,7 @@ public class CompositionPlayer {
     private List<ScheduledFuture<?>> actionTriggerHandleList = new ArrayList<>();
 
     // Ensure, each trigger is executed only once (during inconsistencies when re-scheduling periodically)
-    private List<CompositionActionTrigger> remainingCompositionActionTriggerList;
+    private List<ActionTriggerComposition> remainingActionTriggerCompositionList;
 
     // All MIDI routers
     private final List<MidiRouter> midiRouterList = new ArrayList<>();
@@ -591,8 +591,8 @@ public class CompositionPlayer {
     }
 
     private void calculateRemainingActionTriggerList() {
-        remainingCompositionActionTriggerList = new CopyOnWriteArrayList<>();
-        remainingCompositionActionTriggerList.addAll(composition.getActionTriggerList().stream().
+        remainingActionTriggerCompositionList = new CopyOnWriteArrayList<>();
+        remainingActionTriggerCompositionList.addAll(composition.getActionTriggerList().stream().
                 filter(trigger -> trigger.getPositionMillis() >= getPositionMillis()).toList()
         );
     }
@@ -697,16 +697,16 @@ public class CompositionPlayer {
 
         // Create new schedules for each trigger
         long currentPositionMillis = getPositionMillis();
-        for (CompositionActionTrigger compositionActionTrigger : remainingCompositionActionTriggerList) {
+        for (ActionTriggerComposition actionTriggerComposition : remainingActionTriggerCompositionList) {
             final Runnable runnable = () -> {
                 try {
-                    actionExecutionService.executeFromTrigger(compositionActionTrigger);
+                    actionExecutionService.executeFromTrigger(actionTriggerComposition);
                 } catch (Exception e) {
-                    logger.error("Could not execute actions triggered at position " + compositionActionTrigger.getPositionMillis());
+                    logger.error("Could not execute actions triggered at position " + actionTriggerComposition.getPositionMillis());
                 }
-                remainingCompositionActionTriggerList.remove(compositionActionTrigger);
+                remainingActionTriggerCompositionList.remove(actionTriggerComposition);
             };
-            ScheduledFuture<?> handle = scheduler.schedule(runnable, compositionActionTrigger.getPositionMillis() - currentPositionMillis, MILLISECONDS);
+            ScheduledFuture<?> handle = scheduler.schedule(runnable, actionTriggerComposition.getPositionMillis() - currentPositionMillis, MILLISECONDS);
             actionTriggerHandleList.add(handle);
         }
     }

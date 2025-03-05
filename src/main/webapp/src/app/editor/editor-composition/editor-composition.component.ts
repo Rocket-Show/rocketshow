@@ -118,7 +118,7 @@ export class EditorCompositionComponent implements OnInit {
   }
 
   private copyInitialComposition() {
-    let compositionString = this.currentComposition.stringify();
+    let compositionString = JSON.stringify(this.currentComposition);
 
     this.currentComposition = new Composition(JSON.parse(compositionString));
     this.initialComposition = new Composition(JSON.parse(compositionString));
@@ -301,7 +301,7 @@ export class EditorCompositionComponent implements OnInit {
   editCompositionFileDetails(fileIndex: number, addNew: boolean = false) {
     // Create a backup of the current composition
     let compositionCopy: Composition = new Composition(
-      JSON.parse(this.currentComposition.stringify())
+      JSON.parse(JSON.stringify(this.currentComposition))
     );
 
     if (addNew) {
@@ -339,7 +339,7 @@ export class EditorCompositionComponent implements OnInit {
   editLeadSheet(leadSheetIndex: number, addNew: boolean = false) {
     // Create a backup of the current composition
     let compositionCopy: Composition = new Composition(
-      JSON.parse(this.currentComposition.stringify())
+      JSON.parse(JSON.stringify(this.currentComposition))
     );
 
     if (addNew) {

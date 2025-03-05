@@ -2,13 +2,10 @@ package com.ascargon.rocketshow.settings;
 
 import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.audio.AudioBus;
-import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.audio.AudioDevice;
 import com.ascargon.rocketshow.lighting.OlaPlugin;
 import com.ascargon.rocketshow.midi.*;
-import com.ascargon.rocketshow.raspberry.RaspberryGpioActionTrigger;
-import com.ascargon.rocketshow.video.VideoCompositionFile;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.ascargon.rocketshow.raspberry.ActionTriggerRaspberryGpio;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;
 import jakarta.xml.bind.annotation.XmlElements;
@@ -48,18 +45,18 @@ public class Settings {
     private List<RemoteDevice> remoteDeviceList = new ArrayList<>();
 
     /**
-     * @deprecated Not used since settings version 3 anymore. Use midiActionTriggerInstead.
+     * @deprecated Not used since settings version 3 anymore. Use actionTriggerMidiList Instead.
      */
     @Deprecated
     private List<MidiControl> midiControlList = new ArrayList<>();
 
     // Execute actions based on received MIDI events
-    private List<MidiActionTrigger> midiActionTriggerList = new ArrayList<>();
+    private List<ActionTriggerMidi> actionTriggerMidiList = new ArrayList<>();
 
     private MidiMapping midiMapping;
 
     // Execute actions based on pressed buttons, connected to GPIO pins
-    private List<RaspberryGpioActionTrigger> raspberryGpioActionTriggerList = new ArrayList<>();
+    private List<ActionTriggerRaspberryGpio> actionTriggerRaspberryGpioList = new ArrayList<>();
 
     // All configured GPIO pins to be able to send commands to (high/low)
     private List<Integer> raspberryGpioOutputPinBcmList = new ArrayList<>();
@@ -181,18 +178,17 @@ public class Settings {
         return instrumentList;
     }
 
-    @XmlElement(name = "raspberryGpioActionTrigger")
-    @XmlElementWrapper(name = "raspberryGpioActionTriggerList")
-    public List<RaspberryGpioActionTrigger> getRaspberryGpioActionTriggerList() {
-        return raspberryGpioActionTriggerList;
+    @XmlElement(name = "actionTriggerRaspberryGpio")
+    @XmlElementWrapper(name = "actionTriggerRaspberryGpioList")
+    public List<ActionTriggerRaspberryGpio> getActionTriggerRaspberryGpioList() {
+        return actionTriggerRaspberryGpioList;
     }
 
-    @XmlElementWrapper(name = "midiActionTriggerList")
-    @XmlElements({@XmlElement(type = MidiActionTriggerNoteOn.class, name = "midiActionTriggerNoteOn"),
-            @XmlElement(type = MidiActionTriggerProgramChange.class, name = "midiActionTriggerProgramChange")})
-    public List<MidiActionTrigger> getMidiActionTriggerList() {
-        return midiActionTriggerList;
+    @XmlElementWrapper(name = "actionTriggerMidiList")
+    @XmlElements({@XmlElement(type = ActionTriggerMidiNoteOn.class, name = "actionTriggerMidiNoteOn"),
+            @XmlElement(type = ActionTriggerMidiProgramChange.class, name = "actionTriggerMidiProgramChange")})
+    public List<ActionTriggerMidi> getActionTriggerMidiList() {
+        return actionTriggerMidiList;
     }
-
 
 }

@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class MidiActionTriggerProgramChange extends MidiActionTrigger {
+public class ActionTriggerMidiProgramChange extends ActionTriggerMidi {
 
     // If null -> all programs
     private Integer program;

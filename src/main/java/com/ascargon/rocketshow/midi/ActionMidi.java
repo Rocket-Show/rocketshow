@@ -4,11 +4,9 @@ import com.ascargon.rocketshow.util.Action;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.sound.midi.ShortMessage;
-
 @Getter
 @Setter
-public class MidiAction extends Action {
+public class ActionMidi extends Action {
 
     private MidiSignal midiSignal;
 

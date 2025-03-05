@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class SystemAction extends Action {
+public class ActionSystem extends Action {
 
     public enum SystemActionType {
         REBOOT

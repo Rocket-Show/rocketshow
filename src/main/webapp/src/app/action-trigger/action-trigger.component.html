@@ -1,0 +1,22 @@
+<!-- The specific trigger -->
+<app-action-trigger-midi
+  *ngIf="getTriggerType() == 'MIDI'"
+  [trigger]="trigger"
+></app-action-trigger-midi>
+
+<!-- Delete the trigger footer -->
+<div class="form-group row">
+  <div class="col-md-12">
+    <div class="float-right">
+      <a
+        class="mr-3 my-auto text-danger"
+        href="#"
+        role="button"
+        (click)="delete.next(index); (false)"
+      >
+        <i class="fa fa-trash-o" aria-hidden="true"></i>
+        {{ "misc.delete" | translate }}
+      </a>
+    </div>
+  </div>
+</div>

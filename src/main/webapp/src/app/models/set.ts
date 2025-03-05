@@ -1,47 +1,43 @@
-import { Composition } from './composition'; 
+import { Composition } from "./composition";
 
 export class Set {
-    currentCompositionIndex: number;
-    compositionList: Composition[] = [];
-    name: string;
-    notes: string;
+  currentCompositionIndex: number;
+  compositionList: Composition[] = [];
+  name: string;
+  notes: string;
 
-    constructor(data?: any) {
-        if(!data) {
-        	return;
-        }
-        
-        this.currentCompositionIndex = data.currentCompositionIndex;
-        this.notes = data.notes;
-        this.name = data.name;
-
-        this.compositionList = [];
-
-        if(data.compositionList) {
-            for(let composition of data.compositionList) {
-                this.compositionList.push(new Composition(composition));
-            }
-        }
+  constructor(data?: any) {
+    if (!data) {
+      return;
     }
 
-    stringify(): string {
-        let string = JSON.stringify(this);
-        let object = JSON.parse(string);
+    this.currentCompositionIndex = data.currentCompositionIndex;
+    this.notes = data.notes;
+    this.name = data.name;
 
-        object.compositionList = [];
-        object.currentCompositionIndex = undefined;
+    this.compositionList = [];
 
-        if(this.compositionList) {
-            for (let composition of this.compositionList) {
-                let compositionObj: any = {};
-                compositionObj.name = composition.name;
-                compositionObj.durationMillis = composition.durationMillis;
-                compositionObj.autoStartNextComposition = composition.autoStartNextComposition;
-
-                object.compositionList.push(compositionObj);
-            }
-        }
-
-        return JSON.stringify(object);
+    if (data.compositionList) {
+      for (let composition of data.compositionList) {
+        this.compositionList.push(new Composition(composition));
+      }
     }
+  }
+
+  toJSON() {
+    return {
+      ...this,
+      compositionList:
+        this.compositionList?.map(
+          ({ name, durationMillis, autoStartNextComposition }) => ({
+            name,
+            durationMillis,
+            autoStartNextComposition,
+          })
+        ) || [],
+
+      // Exclude some properties
+      currentCompositionIndex: undefined,
+    };
+  }
 }

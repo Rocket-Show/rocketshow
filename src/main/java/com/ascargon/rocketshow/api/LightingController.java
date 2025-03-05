@@ -1,6 +1,5 @@
 package com.ascargon.rocketshow.api;
 
-import com.ascargon.rocketshow.lighting.LightingAction;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.OlaPlugin;
 import org.springframework.http.HttpStatus;

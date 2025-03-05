@@ -8,7 +8,7 @@ import java.util.HashMap;
 
 @Getter
 @Setter
-public class HttpAction extends Action {
+public class ActionHttp extends Action {
 
     public enum HttpMethod {
         GET, POST, PUT, DELETE, PATCH

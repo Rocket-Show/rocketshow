@@ -10,19 +10,12 @@ import lombok.Setter;
         use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.WRAPPER_OBJECT)
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = MidiActionTriggerNoteOn.class, name = "midiActionTriggerNoteOn"),
-        @JsonSubTypes.Type(value = MidiActionTriggerProgramChange.class, name = "midiActionTriggerProgramChange"),
+        @JsonSubTypes.Type(value = ActionTriggerMidiNoteOn.class, name = "actionTriggerMidiNoteOn"),
+        @JsonSubTypes.Type(value = ActionTriggerMidiProgramChange.class, name = "actionTriggerMidiProgramChange"),
 })
 @Getter
 @Setter
-public class MidiActionTrigger extends ActionTrigger {
-
-    public enum MidiActionTriggerType {
-        NOTE_ON,
-        PROGRAM_CHANGE
-    }
-
-    private MidiActionTriggerType midiActionTriggerType;
+public class ActionTriggerMidi extends ActionTrigger {
 
     // If null -> all channels
     private Integer channel;

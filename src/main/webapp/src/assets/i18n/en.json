@@ -158,7 +158,7 @@
     "midi-device-in": "MIDI input",
     "midi-device-out": "MIDI output",
     "midi-control": "Control",
-    "midi-control-add": "Add action",
+    "midi-control-add": "Add control",
     "midi-control-exec-locally": "Execute locally",
     "midi-control-channel-in": "Input channel",
     "midi-control-note-in": "Input note",
