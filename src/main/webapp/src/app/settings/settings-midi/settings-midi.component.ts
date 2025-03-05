@@ -99,6 +99,11 @@ export class SettingsMidiComponent implements OnInit, OnDestroy {
     this.settings.actionTriggerMidiList.splice(triggerIndex, 1);
   }
 
+  onTriggerChange(event: { index: number; newTrigger: ActionTriggerMidi }) {
+    this.settings.actionTriggerMidiList[event.index] = event.newTrigger;
+    console.log(this.settings.actionTriggerMidiList);
+  }
+
   midiDeviceEqual(device1: MidiDevice, device2: MidiDevice): boolean {
     return device1 && device2 ? device1.id === device2.id : false;
   }

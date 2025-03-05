@@ -2,6 +2,8 @@
 <app-action-trigger-midi
   *ngIf="getTriggerType() == 'MIDI'"
   [trigger]="trigger"
+  [index]="index"
+  (change)="onTriggerChange($event)"
 ></app-action-trigger-midi>
 
 <!-- Delete the trigger footer -->

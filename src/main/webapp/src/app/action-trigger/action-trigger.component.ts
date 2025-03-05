@@ -17,7 +17,11 @@ export class ActionTriggerComponent {
   @Output()
   delete = new EventEmitter<number>();
 
+  @Output()
+  change = new EventEmitter<{ index: number; newTrigger: ActionTriggerMidi }>();
+
   getTriggerType(): string {
+    console.log(this.trigger);
     if (this.trigger instanceof ActionTriggerMidi) {
       return "MIDI";
     }
@@ -27,5 +31,9 @@ export class ActionTriggerComponent {
     //   return "RASPBERRY_GPIO";
     // }
     return "UNKNOWN";
+  }
+
+  onTriggerChange(event: any) {
+    this.change.emit(event);
   }
 }

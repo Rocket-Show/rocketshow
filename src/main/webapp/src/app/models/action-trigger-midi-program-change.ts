@@ -1,7 +1,7 @@
 import { ActionTriggerMidi } from "./action-trigger-midi";
 
 export class ActionTriggerMidiProgramChange extends ActionTriggerMidi {
-  program: number = 0;
+  program: number;
 
   constructor(data?: any) {
     super(data);
@@ -11,6 +11,10 @@ export class ActionTriggerMidiProgramChange extends ActionTriggerMidi {
     }
 
     this.program = data.program;
+
+    if(!this.program) {
+      this.program = 0;
+    }
   }
 
   toJSON() {

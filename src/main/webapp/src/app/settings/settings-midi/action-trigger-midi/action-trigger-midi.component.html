@@ -5,6 +5,22 @@
   <div class="col-md-9">
     <select
       class="custom-select"
+      [ngModel]="getTriggerMidiType()"
+      (ngModelChange)="onTriggerMidiTypeChange($event)"
+    >
+      <option value="NOTE_ON">NOTE_ON</option>
+      <option value="PROGRAM_CHANGE">PROGRAM_CHANGE</option>
+    </select>
+  </div>
+</div>
+
+<div class="form-group row">
+  <label class="col-md-3 col-form-label">{{
+    "settings.midi-control-channel-in" | translate
+  }}</label>
+  <div class="col-md-9">
+    <select
+      class="custom-select"
       [ngModel]="trigger.channel"
       (ngModelChange)="trigger.channel = $event"
     >
@@ -15,7 +31,6 @@
   </div>
 </div>
 
-<!-- The specific trigger -->
 <app-action-trigger-midi-note-on
   *ngIf="getTriggerMidiType() == 'NOTE_ON'"
   [trigger]="trigger"
