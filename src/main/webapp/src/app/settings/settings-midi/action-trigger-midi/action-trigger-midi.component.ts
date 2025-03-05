@@ -1,4 +1,4 @@
-import { Component, Input } from "@angular/core";
+import { Component, EventEmitter, Input, Output } from "@angular/core";
 import { ActionTriggerMidi } from "../../../models/action-trigger-midi";
 import { ActionTriggerMidiNoteOn } from "../../../models/action-trigger-midi-note-on";
 import { ActionTriggerMidiProgramChange } from "../../../models/action-trigger-midi-program-change";
@@ -11,6 +11,12 @@ import { ActionTriggerMidiProgramChange } from "../../../models/action-trigger-m
 export class ActionTriggerMidiComponent {
   @Input()
   trigger: ActionTriggerMidi;
+
+  @Input()
+  index: number;
+
+  @Output()
+  change = new EventEmitter<{ index: number; newTrigger: ActionTriggerMidi }>();
 
   channelList: number[] = [];
 
@@ -27,5 +33,19 @@ export class ActionTriggerMidiComponent {
       return "PROGRAM_CHANGE";
     }
     return "UNKNOWN";
+  }
+
+  onTriggerMidiTypeChange(newValue: string): void {
+    if (newValue === this.getTriggerMidiType()) {
+      return;
+    }
+
+    if (newValue === "NOTE_ON") {
+      this.trigger = new ActionTriggerMidiNoteOn(this.trigger);
+    } else if (newValue === "PROGRAM_CHANGE") {
+      this.trigger = new ActionTriggerMidiProgramChange(this.trigger);
+    }
+
+    this.change.emit({ index: this.index, newTrigger: this.trigger });
   }
 }

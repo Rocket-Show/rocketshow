@@ -98,9 +98,13 @@ export class Settings {
       for (let actionTriggerMidi of data.actionTriggerMidiList) {
         let trigger: ActionTriggerMidi;
         if (actionTriggerMidi.actionTriggerMidiNoteOn) {
-          trigger = new ActionTriggerMidiNoteOn(actionTriggerMidi.actionTriggerMidiNoteOn);
-        } else if (actionTriggerMidi.ActionTriggerMidiProgramChange) {
-          trigger = new ActionTriggerMidiProgramChange(actionTriggerMidi.ActionTriggerMidiProgramChange);
+          trigger = new ActionTriggerMidiNoteOn(
+            actionTriggerMidi.actionTriggerMidiNoteOn
+          );
+        } else if (actionTriggerMidi.actionTriggerMidiProgramChange) {
+          trigger = new ActionTriggerMidiProgramChange(
+            actionTriggerMidi.actionTriggerMidiProgramChange
+          );
         }
         this.actionTriggerMidiList.push(trigger);
       }
