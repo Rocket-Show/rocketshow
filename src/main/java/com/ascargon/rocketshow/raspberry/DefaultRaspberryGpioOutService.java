@@ -55,7 +55,7 @@ public class DefaultRaspberryGpioOutService implements RaspberryGpioOutService {
     }
 
     @Override
-    public void executeAction(RaspberryGpioAction gpioAction) {
+    public void executeAction(ActionRaspberryGpio gpioAction) {
         setPinState(gpioAction.getPinId(), gpioAction.getHigh());
     }
 

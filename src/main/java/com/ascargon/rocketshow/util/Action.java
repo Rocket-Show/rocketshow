@@ -1,9 +1,9 @@
 package com.ascargon.rocketshow.util;
 
-import com.ascargon.rocketshow.api.HttpAction;
-import com.ascargon.rocketshow.lighting.LightingAction;
-import com.ascargon.rocketshow.midi.MidiAction;
-import com.ascargon.rocketshow.raspberry.RaspberryGpioAction;
+import com.ascargon.rocketshow.api.ActionHttp;
+import com.ascargon.rocketshow.lighting.ActionLighting;
+import com.ascargon.rocketshow.midi.ActionMidi;
+import com.ascargon.rocketshow.raspberry.ActionRaspberryGpio;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import jakarta.xml.bind.annotation.XmlElement;
@@ -18,13 +18,13 @@ import java.util.List;
         use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.WRAPPER_OBJECT)
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = NullAction.class, name = "nullAction"),
-        @JsonSubTypes.Type(value = SystemAction.class, name = "systemAction"),
-        @JsonSubTypes.Type(value = TransportAction.class, name = "transportAction"),
-        @JsonSubTypes.Type(value = MidiAction.class, name = "midiAction"),
-        @JsonSubTypes.Type(value = LightingAction.class, name = "lightingAction"),
-        @JsonSubTypes.Type(value = RaspberryGpioAction.class, name = "raspberryGpioAction"),
-        @JsonSubTypes.Type(value = HttpAction.class, name = "httpAction")
+        @JsonSubTypes.Type(value = ActionNull.class, name = "actionNull"),
+        @JsonSubTypes.Type(value = ActionSystem.class, name = "actionSystem"),
+        @JsonSubTypes.Type(value = ActionTransport.class, name = "actionTransport"),
+        @JsonSubTypes.Type(value = ActionMidi.class, name = "actionMidi"),
+        @JsonSubTypes.Type(value = ActionLighting.class, name = "actionLighting"),
+        @JsonSubTypes.Type(value = ActionRaspberryGpio.class, name = "actionRaspberryGpio"),
+        @JsonSubTypes.Type(value = ActionHttp.class, name = "actionHttp")
 })
 @Getter
 @Setter

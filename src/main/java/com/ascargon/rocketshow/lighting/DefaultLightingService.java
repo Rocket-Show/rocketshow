@@ -380,8 +380,8 @@ public class DefaultLightingService implements LightingService {
     }
 
     @Override
-    public void executeAction(LightingAction lightingAction) {
-        for (LightingActionUniverse lightingActionUniverse : lightingAction.getLightingActionUniverseList()) {
+    public void executeAction(ActionLighting actionLighting) {
+        for (LightingActionUniverse lightingActionUniverse : actionLighting.getLightingActionUniverseList()) {
             LightingUniverse lightingUniverse = null;
 
             if (lightingUniverseList.size() > 1) {

@@ -30,11 +30,11 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
 
     private void initializeInput(SettingsService settingsService, ActionExecutionService actionExecutionService) {
         // Add a button for each configured control
-        for (RaspberryGpioActionTrigger raspberryGpioActionTrigger : settingsService.getSettings().getRaspberryGpioActionTriggerList()) {
+        for (ActionTriggerRaspberryGpio actionTriggerRaspberryGpio : settingsService.getSettings().getActionTriggerRaspberryGpioList()) {
             DigitalInputConfigBuilder buttonConfig = DigitalInput.newConfigBuilder(pi4j)
                     .id("button")
                     .name("Press button")
-                    .address(raspberryGpioActionTrigger.getPinId())
+                    .address(actionTriggerRaspberryGpio.getPinId())
                     .pull(PullResistance.PULL_DOWN)
                     .debounce(settingsService.getSettings().getRaspberryGpioDebounceMillis() * 1000);
             DigitalInput digitalInput = pi4j.create(buttonConfig);
@@ -43,7 +43,7 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
                     logger.debug("Input high from GPIO BCM " + event.source().address() + " ID recognized");
 
                     try {
-                        actionExecutionService.executeFromTrigger(raspberryGpioActionTrigger);
+                        actionExecutionService.executeFromTrigger(actionTriggerRaspberryGpio);
                     } catch (Exception e) {
                         logger.error("Could not executeFromTrigger action from Raspberry GPIO", e);
                     }

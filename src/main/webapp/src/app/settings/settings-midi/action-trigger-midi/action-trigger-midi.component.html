@@ -1,0 +1,27 @@
+<div class="form-group row">
+  <label class="col-md-3 col-form-label">{{
+    "settings.midi-control-channel-in" | translate
+  }}</label>
+  <div class="col-md-9">
+    <select
+      class="custom-select"
+      [ngModel]="trigger.channel"
+      (ngModelChange)="trigger.channel = $event"
+    >
+      <option *ngFor="let channel of channelList" [ngValue]="channel">
+        {{ channel + 1 }}
+      </option>
+    </select>
+  </div>
+</div>
+
+<!-- The specific trigger -->
+<app-action-trigger-midi-note-on
+  *ngIf="getTriggerMidiType() == 'NOTE_ON'"
+  [trigger]="trigger"
+></app-action-trigger-midi-note-on>
+
+<app-action-trigger-midi-program-change
+  *ngIf="getTriggerMidiType() == 'PROGRAM_CHANGE'"
+  [trigger]="trigger"
+></app-action-trigger-midi-program-change>

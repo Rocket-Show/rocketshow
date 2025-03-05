@@ -18,12 +18,12 @@ class MidiInDeviceReceiver implements Receiver {
 
     private final static Logger logger = LoggerFactory.getLogger(MidiInDeviceReceiver.class);
 
-    private final MidiActionExecutionService midiActionExecutionService;
+    private final ActionMidiExecutionService actionMidiExecutionService;
 
     private final MidiRouter midiRouter;
 
-    MidiInDeviceReceiver(MidiActionExecutionService midiActionExecutionService, SettingsService settingsService, MidiRouterFactory midiRouterFactory) {
-        this.midiActionExecutionService = midiActionExecutionService;
+    MidiInDeviceReceiver(ActionMidiExecutionService actionMidiExecutionService, SettingsService settingsService, MidiRouterFactory midiRouterFactory) {
+        this.actionMidiExecutionService = actionMidiExecutionService;
 
         midiRouter = midiRouterFactory.getMidiRouter(settingsService.getSettings().getDeviceInMidiRoutingList());
     }
@@ -36,7 +36,7 @@ class MidiInDeviceReceiver implements Receiver {
 
         // Process MIDI events as actions according to the settings
         try {
-            midiActionExecutionService.processMidiSignal(shortMessage);
+            actionMidiExecutionService.processMidiSignal(shortMessage);
         } catch (Exception e) {
             logger.error("Could not executeFromTrigger action from MIDI device", e);
         }

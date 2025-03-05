@@ -32,6 +32,4 @@ public abstract class CompositionFile {
     private boolean loop = false;
     private int offsetMillis = 0;
 
-    public abstract CompositionFileType getType();
-
 }

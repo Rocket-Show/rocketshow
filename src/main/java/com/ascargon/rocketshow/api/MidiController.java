@@ -18,15 +18,15 @@ class MidiController {
     private final ControllerService controllerService;
     private final ActivityNotificationMidiService activityNotificationMidiService;
     private final MidiService midiService;
-    private final MidiActionExecutionService midiActionExecutionService;
+    private final ActionMidiExecutionService actionMidiExecutionService;
 
     private final MidiRouter midiRouter;
 
-    private MidiController(ControllerService controllerService, SettingsService settingsService, ActivityNotificationMidiService activityNotificationMidiService, MidiService midiService, MidiActionExecutionService midiActionExecutionService, MidiRouterFactory midiRouterFactory) {
+    private MidiController(ControllerService controllerService, SettingsService settingsService, ActivityNotificationMidiService activityNotificationMidiService, MidiService midiService, ActionMidiExecutionService actionMidiExecutionService, MidiRouterFactory midiRouterFactory) {
         this.controllerService = controllerService;
         this.activityNotificationMidiService = activityNotificationMidiService;
         this.midiService = midiService;
-        this.midiActionExecutionService = midiActionExecutionService;
+        this.actionMidiExecutionService = actionMidiExecutionService;
 
         midiRouter = midiRouterFactory.getMidiRouter(settingsService.getSettings().getRemoteMidiRoutingList());
     }
@@ -49,18 +49,6 @@ class MidiController {
     @PostMapping("send-message")
     public ResponseEntity<Void> sendMessage(@RequestBody MidiSignal midiSignal) throws InvalidMidiDataException {
         midiRouter.sendSignal(midiSignal.getShortMessage(), MidiSource.REMOTE);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @PostMapping("test-control")
-    public ResponseEntity<Void> testControl(@RequestParam("command") int command, @RequestParam("channel") int channel,
-                                            @RequestParam("data1") int data1, @RequestParam("data2") int data2) throws Exception {
-
-        ShortMessage shortMessage = new ShortMessage();
-        shortMessage.setMessage(command, channel, data1, data2);
-
-        midiActionExecutionService.processMidiSignal(shortMessage);
-
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

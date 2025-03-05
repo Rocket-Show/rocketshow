@@ -385,59 +385,59 @@ public class DefaultSettingsService implements SettingsService {
 
             switch (midiControl.getAction()) {
                 case PLAY:
-                    action = new TransportAction();
+                    action = new ActionTransport();
                     action.setActionType(Action.ActionType.TRANSPORT);
-                    ((TransportAction) action).setTransportActionType(TransportAction.TransportActionType.PLAY);
+                    ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.PLAY);
                     break;
                 case PLAY_AS_SAMPLE:
-                    action = new TransportAction();
+                    action = new ActionTransport();
                     action.setActionType(Action.ActionType.TRANSPORT);
-                    ((TransportAction) action).setTransportActionType(TransportAction.TransportActionType.PLAY_AS_SAMPLE);
+                    ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.PLAY_AS_SAMPLE);
                     break;
                 case TOGGLE_PLAY:
-                    action = new TransportAction();
+                    action = new ActionTransport();
                     action.setActionType(Action.ActionType.TRANSPORT);
-                    ((TransportAction) action).setTransportActionType(TransportAction.TransportActionType.TOGGLE_PLAY);
+                    ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.TOGGLE_PLAY);
                     break;
                 case PAUSE:
-                    action = new TransportAction();
+                    action = new ActionTransport();
                     action.setActionType(Action.ActionType.TRANSPORT);
-                    ((TransportAction) action).setTransportActionType(TransportAction.TransportActionType.PAUSE);
+                    ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.PAUSE);
                     break;
                 case NEXT_COMPOSITION:
-                    action = new TransportAction();
+                    action = new ActionTransport();
                     action.setActionType(Action.ActionType.TRANSPORT);
-                    ((TransportAction) action).setTransportActionType(TransportAction.TransportActionType.NEXT_COMPOSITION);
+                    ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.NEXT_COMPOSITION);
                     break;
                 case PREVIOUS_COMPOSITION:
-                    action = new TransportAction();
+                    action = new ActionTransport();
                     action.setActionType(Action.ActionType.TRANSPORT);
-                    ((TransportAction) action).setTransportActionType(TransportAction.TransportActionType.PREVIOUS_COMPOSITION);
+                    ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.PREVIOUS_COMPOSITION);
                     break;
                 case STOP:
-                    action = new TransportAction();
+                    action = new ActionTransport();
                     action.setActionType(Action.ActionType.TRANSPORT);
-                    ((TransportAction) action).setTransportActionType(TransportAction.TransportActionType.STOP);
+                    ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.STOP);
                     break;
                 case SELECT_COMPOSITION_BY_NAME:
-                    action = new TransportAction();
+                    action = new ActionTransport();
                     action.setActionType(Action.ActionType.TRANSPORT);
-                    ((TransportAction) action).setTransportActionType(TransportAction.TransportActionType.SELECT_COMPOSITION_BY_NAME);
-                    ((TransportAction) action).setCompositionName(midiControl.getCompositionName());
+                    ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.SELECT_COMPOSITION_BY_NAME);
+                    ((ActionTransport) action).setCompositionName(midiControl.getCompositionName());
                     break;
                 case SELECT_COMPOSITION_BY_NAME_AND_PLAY:
-                    action = new TransportAction();
+                    action = new ActionTransport();
                     action.setActionType(Action.ActionType.TRANSPORT);
-                    ((TransportAction) action).setTransportActionType(TransportAction.TransportActionType.SELECT_COMPOSITION_BY_NAME_AND_PLAY);
-                    ((TransportAction) action).setCompositionName(midiControl.getCompositionName());
+                    ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.SELECT_COMPOSITION_BY_NAME_AND_PLAY);
+                    ((ActionTransport) action).setCompositionName(midiControl.getCompositionName());
                     break;
                 case SET_COMPOSITION_INDEX:
                     // Not migrated because not used currently
                     break;
                 case REBOOT:
-                    action = new SystemAction();
+                    action = new ActionSystem();
                     action.setActionType(Action.ActionType.SYSTEM);
-                    ((SystemAction) action).setSystemActionType(SystemAction.SystemActionType.REBOOT);
+                    ((ActionSystem) action).setSystemActionType(ActionSystem.SystemActionType.REBOOT);
                     break;
             }
 
@@ -445,11 +445,10 @@ public class DefaultSettingsService implements SettingsService {
                 action.setExecuteLocally(midiControl.isExecuteLocally());
                 action.setRemoteDeviceNames(midiControl.getRemoteDeviceNames());
 
-                MidiActionTriggerNoteOn midiActionTriggerNoteOn = new MidiActionTriggerNoteOn();
-                midiActionTriggerNoteOn.setMidiActionTriggerType(MidiActionTrigger.MidiActionTriggerType.NOTE_ON);
-                midiActionTriggerNoteOn.setChannel(midiControl.getChannelFrom());
-                midiActionTriggerNoteOn.setNote(midiControl.getNoteFrom());
-                midiActionTriggerNoteOn.getActionList().add(action);
+                ActionTriggerMidiNoteOn actionTriggerMidiNoteOn = new ActionTriggerMidiNoteOn();
+                actionTriggerMidiNoteOn.setChannel(midiControl.getChannelFrom());
+                actionTriggerMidiNoteOn.setNote(midiControl.getNoteFrom());
+                actionTriggerMidiNoteOn.getActionList().add(action);
             }
         }
 

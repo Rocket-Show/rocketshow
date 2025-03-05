@@ -69,7 +69,6 @@ export class SettingsService {
 
   saveSettings(): Observable<Object> {
     const mergedSettings = { ...this.originalSettings, ...this.settings }; // Merge known and unknown fields
-    console.log(this.originalSettings, this.settings, mergedSettings);
     return this.http.post("system/settings", JSON.stringify(mergedSettings));
   }
 

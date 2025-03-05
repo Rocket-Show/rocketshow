@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class MidiActionTriggerNoteOn extends MidiActionTrigger {
+public class ActionTriggerMidiNoteOn extends ActionTriggerMidi {
 
     // The note, this action should be triggered. If null -> all notes
     private Integer note;

@@ -1,15 +1,15 @@
 package com.ascargon.rocketshow.util;
 
-import com.ascargon.rocketshow.api.HttpAction;
+import com.ascargon.rocketshow.api.ActionHttp;
 import com.ascargon.rocketshow.api.RemoteDevice;
-import com.ascargon.rocketshow.lighting.LightingAction;
+import com.ascargon.rocketshow.lighting.ActionLighting;
 import com.ascargon.rocketshow.lighting.LightingService;
-import com.ascargon.rocketshow.midi.MidiAction;
+import com.ascargon.rocketshow.midi.ActionMidi;
 import com.ascargon.rocketshow.midi.MidiRouter;
 import com.ascargon.rocketshow.midi.MidiRouterFactory;
 import com.ascargon.rocketshow.midi.MidiSource;
 import com.ascargon.rocketshow.play.PlayerService;
-import com.ascargon.rocketshow.raspberry.RaspberryGpioAction;
+import com.ascargon.rocketshow.raspberry.ActionRaspberryGpio;
 import com.ascargon.rocketshow.raspberry.RaspberryGpioOutService;
 import com.ascargon.rocketshow.settings.SettingsService;
 import org.apache.http.HttpResponse;
@@ -55,38 +55,38 @@ public class DefaultActionExecutionService implements ActionExecutionService {
         httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
     }
 
-    private void executeHttpAction(HttpAction httpAction) {
+    private void executeActionHttp(ActionHttp actionHttp) {
         try {
-            logger.debug("Execute HTTP action to URL " + httpAction.getUrl());
+            logger.debug("Execute HTTP action to URL " + actionHttp.getUrl());
 
             HttpRequestBase request;
 
-            switch (httpAction.getHttpMethod()) {
+            switch (actionHttp.getHttpMethod()) {
                 case POST:
-                    HttpPost postRequest = new HttpPost(httpAction.getUrl());
-                    postRequest.setEntity(new StringEntity(httpAction.getBody()));
+                    HttpPost postRequest = new HttpPost(actionHttp.getUrl());
+                    postRequest.setEntity(new StringEntity(actionHttp.getBody()));
                     request = postRequest;
                     break;
                 case PUT:
-                    HttpPut putRequest = new HttpPut(httpAction.getUrl());
-                    putRequest.setEntity(new StringEntity(httpAction.getBody()));
+                    HttpPut putRequest = new HttpPut(actionHttp.getUrl());
+                    putRequest.setEntity(new StringEntity(actionHttp.getBody()));
                     request = putRequest;
                     break;
                 case DELETE:
-                    request = new HttpDelete(httpAction.getUrl());
+                    request = new HttpDelete(actionHttp.getUrl());
                     break;
                 case PATCH:
-                    HttpPatch patchRequest = new HttpPatch(httpAction.getUrl());
-                    patchRequest.setEntity(new StringEntity(httpAction.getBody()));
+                    HttpPatch patchRequest = new HttpPatch(actionHttp.getUrl());
+                    patchRequest.setEntity(new StringEntity(actionHttp.getBody()));
                     request = patchRequest;
                     break;
                 case GET:
                 default:
-                    request = new HttpGet(httpAction.getUrl());
+                    request = new HttpGet(actionHttp.getUrl());
                     break;
             }
 
-            for (Map.Entry<String, String> header : httpAction.getHeaderList().entrySet()) {
+            for (Map.Entry<String, String> header : actionHttp.getHeaderList().entrySet()) {
                 request.setHeader(header.getKey(), header.getValue());
             }
 
@@ -98,7 +98,7 @@ public class DefaultActionExecutionService implements ActionExecutionService {
             logger.debug("Status phrase: " + response.getStatusLine().getReasonPhrase());
             logger.debug("Response body: " + EntityUtils.toString(response.getEntity()));
         } catch (Exception e) {
-            logger.error("Could not execute HTTP action with URL '" + httpAction.getUrl() + "'", e);
+            logger.error("Could not execute HTTP action with URL '" + actionHttp.getUrl() + "'", e);
         }
     }
 
@@ -109,34 +109,34 @@ public class DefaultActionExecutionService implements ActionExecutionService {
     private void executeActionLocally(Action action) throws Exception {
         switch (action.getActionType()) {
             case TRANSPORT -> {
-                TransportAction transportAction = (TransportAction) action;
-                switch (transportAction.getTransportActionType()) {
+                ActionTransport actionTransport = (ActionTransport) action;
+                switch (actionTransport.getTransportActionType()) {
                     case PLAY -> playerService.play();
-                    case PLAY_AS_SAMPLE -> playerService.playAsSample(transportAction.getCompositionName());
+                    case PLAY_AS_SAMPLE -> playerService.playAsSample(actionTransport.getCompositionName());
                     case TOGGLE_PLAY -> playerService.togglePlay();
                     case PAUSE -> playerService.pause();
                     case NEXT_COMPOSITION -> playerService.setNextComposition();
                     case PREVIOUS_COMPOSITION -> playerService.setPreviousComposition();
                     case STOP -> playerService.stop();
                     case SELECT_COMPOSITION_BY_NAME ->
-                            playerService.setCompositionName(transportAction.getCompositionName());
+                            playerService.setCompositionName(actionTransport.getCompositionName());
                     case SELECT_COMPOSITION_BY_NAME_AND_PLAY -> {
-                        playerService.setCompositionName(transportAction.getCompositionName());
+                        playerService.setCompositionName(actionTransport.getCompositionName());
                         playerService.play();
                     }
                 }
             }
             case MIDI ->
-                    midiRouter.sendSignal(((MidiAction) action).getMidiSignal().getShortMessage(), MidiSource.ACTION);
-            case LIGHTING -> lightingService.executeAction((LightingAction) action);
-            case RASPBERRY_GPIO -> raspberryGpioOutService.executeAction((RaspberryGpioAction) action);
+                    midiRouter.sendSignal(((ActionMidi) action).getMidiSignal().getShortMessage(), MidiSource.ACTION);
+            case LIGHTING -> lightingService.executeAction((ActionLighting) action);
+            case RASPBERRY_GPIO -> raspberryGpioOutService.executeAction((ActionRaspberryGpio) action);
             case SYSTEM -> {
-                SystemAction systemAction = (SystemAction) action;
-                switch (systemAction.getSystemActionType()) {
+                ActionSystem actionSystem = (ActionSystem) action;
+                switch (actionSystem.getSystemActionType()) {
                     case REBOOT -> rebootService.reboot();
                 }
             }
-            case HTTP -> executeHttpAction((HttpAction) action);
+            case HTTP -> executeActionHttp((ActionHttp) action);
             default -> logger.warn("Action '" + action.getActionType() + "' is unknown and cannot be executed");
         }
     }

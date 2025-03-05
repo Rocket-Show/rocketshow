@@ -25,5 +25,5 @@ public interface LightingService {
 
     void enablePlugins(List<OlaPlugin> olaPluginList);
 
-    void executeAction(LightingAction lightingAction);
+    void executeAction(ActionLighting actionLighting);
 }

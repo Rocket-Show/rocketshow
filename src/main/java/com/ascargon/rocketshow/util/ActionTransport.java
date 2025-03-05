@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class TransportAction extends Action {
+public class ActionTransport extends Action {
 
     public enum TransportActionType {
         PLAY,

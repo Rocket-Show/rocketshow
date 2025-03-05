@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class CompositionActionTrigger extends ActionTrigger {
+public class ActionTriggerComposition extends ActionTrigger {
 
     private long positionMillis;
 

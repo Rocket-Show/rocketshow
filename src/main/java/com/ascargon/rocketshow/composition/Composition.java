@@ -27,7 +27,7 @@ public class Composition {
     private List<CompositionFile> compositionFileList = new ArrayList<>();
     private List<LeadSheet> leadSheetList = new ArrayList<>();
     private float audioVolume = 1;
-    private List<CompositionActionTrigger> actionTriggerList = new ArrayList<>();
+    private List<ActionTriggerComposition> actionTriggerList = new ArrayList<>();
 
     @XmlElementWrapper(name = "fileList")
     @XmlElements({@XmlElement(type = MidiCompositionFile.class, name = "midiFile"),

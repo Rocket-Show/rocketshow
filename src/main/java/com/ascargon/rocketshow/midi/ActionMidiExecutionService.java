@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import javax.sound.midi.ShortMessage;
 
 @Service
-public interface MidiActionExecutionService {
+public interface ActionMidiExecutionService {
 
     void processMidiSignal(ShortMessage shortMessage) throws Exception;
 

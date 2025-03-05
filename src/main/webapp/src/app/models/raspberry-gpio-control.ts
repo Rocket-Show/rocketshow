@@ -1,6 +1,6 @@
-import { ControlAction } from './control-action';
+import { ActionTrigger } from "./action-trigger";
 
-export class RaspberryGpioControl extends ControlAction {
+export class RaspberryGpioControl extends ActionTrigger {
     pinId: number = 0;
 
     constructor(data?: any) {

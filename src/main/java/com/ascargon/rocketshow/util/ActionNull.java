@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class NullAction extends Action {
+public class ActionNull extends Action {
 
     @Override
     public ActionType getType() {
