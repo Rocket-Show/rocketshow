@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, Output } from "@angular/core";
 import { ActionTriggerMidi } from "../../../models/action-trigger-midi";
 import { ActionTriggerMidiNoteOn } from "../../../models/action-trigger-midi-note-on";
 import { ActionTriggerMidiProgramChange } from "../../../models/action-trigger-midi-program-change";
+import { Settings } from "../../../models/settings";
 
 @Component({
   selector: "app-action-trigger-midi",
@@ -40,10 +41,14 @@ export class ActionTriggerMidiComponent {
       return;
     }
 
+    // stringify and parse, take the first wrapped trigger, to keep the data (e.g. actions)
+    let oldTrigger = JSON.parse(JSON.stringify(this.trigger));
+    oldTrigger = oldTrigger[Object.keys(oldTrigger)[0]];
+
     if (newValue === "NOTE_ON") {
-      this.trigger = new ActionTriggerMidiNoteOn(this.trigger);
+      this.trigger = new ActionTriggerMidiNoteOn(oldTrigger);
     } else if (newValue === "PROGRAM_CHANGE") {
-      this.trigger = new ActionTriggerMidiProgramChange(this.trigger);
+      this.trigger = new ActionTriggerMidiProgramChange(oldTrigger);
     }
 
     this.change.emit({ index: this.index, newTrigger: this.trigger });

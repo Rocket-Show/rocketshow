@@ -49,7 +49,6 @@
     "search-compositions": "Suche...",
     "search-sets": "Suche...",
     "search-files": "Suche...",
-    "add-file": "Datei hinzufügen",
     "select-composition": "Wähle eine bestehende Komposition aus oder erstelle eine neue.",
     "select-set": "Wähle ein bestehendes Set aus oder erstelle ein neues.",
     "composition-name": "Komposition Name",
@@ -58,9 +57,9 @@
     "default-set-name": "Mein neues Set",
     "notes": "Notizen",
     "lead-sheets": "Leadsheets",
-    "lead-sheets-add": "Leadsheet hinzufügen",
+    "lead-sheet": "Leadsheet",
     "lead-sheets-library": "Bibliothek",
-    "files": "Dateien",
+    "files": "Mediendateien",
     "mute": "Stumm",
     "offset-millis": "Verzögerung in Millisekunden",
     "offset-placeholder": "Verzögerung in Millisekunden",
@@ -68,6 +67,7 @@
     "routing": "MIDI Ausgabe",
     "add-routing": "Ausgabe hinzufügen",
     "edit-file": "Datei bearbeiten",
+    "file": "Mediendatei",
     "choose-file": "Datei auswählen",
     "upload": "Hochladen",
     "media-library": "Mediathek",
@@ -89,7 +89,13 @@
     "toast-delete-success-title": "Gelöscht",
     "toast-error-title": "Error",
     "toast-composition-save-error": "Die Komposition konnte nicht gespeichert werden. Bitte prüfe das Log für weitere Details.",
-    "toast-set-save-error": "Das Set konnte nicht gespeichert werden. Bitte prüfe das Log für weitere Details."
+    "toast-set-save-error": "Das Set konnte nicht gespeichert werden. Bitte prüfe das Log für weitere Details.",
+    "add": "Hinzufügen",
+    "action": {
+      "actions": "Aktionen",
+      "action": "Aktion",
+      "position-millis": "Position in Millisekunden"
+    }
   },
   "connection": {
     "title": "Keine Verbindung",
@@ -158,15 +164,15 @@
     "midi-device-in": "Eingang",
     "midi-device-out": "Ausgang",
     "midi-control": "Steuerung",
+    "midi-control-type": "Art",
     "midi-control-add": "Steuerung hinzufügen",
-    "midi-control-exec-locally": "Lokal ausführen",
     "midi-control-channel-in": "Eingangskanal",
     "midi-control-note-in": "Eingangsnote",
-    "midi-control-action": "Aktion",
-    "midi-control-select-composition": "Komposition",
-    "midi-control-test": "Testen",
-    "midi-control-test-success-title": "Ausgeführt",
-    "midi-control-test-success": "Der Test wurde ausgeführt.",
+    "midi-control-program": "Programm",
+    "midi-control-type-enum": {
+      "NOTE_ON": "Note ein",
+      "PROGRAM_CHANGE": "Programm Änderung"
+    },
     "no-midi-devices": "No MIDI devices available",
     "version": "Aktuelle Version",
     "remote-version": "Neueste Version",
@@ -243,15 +249,6 @@
       "LIGHTING": "Lichtsteuerung",
       "REMOTE": "Entfernte Geräte"
     },
-    "midi-control-enum": {
-      "PLAY": "Abspielen",
-      "NEXT_COMPOSITION": "Nächste Komposition auswählen",
-      "PREVIOUS_COMPOSITION": "Vorherige Komposition auswählen",
-      "STOP": "Stop",
-      "REBOOT": "Gerät neu starten",
-      "SELECT_COMPOSITION_BY_NAME": "Komposition auswählen",
-      "SELECT_COMPOSITION_BY_NAME_AND_PLAY": "Komposition auswählen und abspielen"
-    },
     "audio-output-enum": {
       "DEFAULT": "Standard",
       "HEADPHONES": "Kopfhörerbuchse",
@@ -270,6 +267,66 @@
       "wait-create": "Das Backup wird erstellt...",
       "restore-done": "Das Backup wurde wieder hergestellt.",
       "wait-restore": "Das Backup wird wieder hergestellt..."
+    },
+    "external-control": {
+      "title": "Externe Steuerung",
+      "bcm-pin-id": "BCM Pin ID"
+    }
+  },
+  "action": {
+    "action": "Aktion",
+    "list": "Aktionen",
+    "type": "Art",
+    "add": "Hinzufügen",
+    "exec-locally": "Lokal ausführen",
+    "type-enum": {
+      "NULL": "Null",
+      "SYSTEM": "System",
+      "TRANSPORT": "Transport",
+      "MIDI": "MIDI",
+      "LIGHTING": "Lichtsteuerung",
+      "RASPBERRY_GPIO": "Externe Steuerung",
+      "HTTP": "HTTP"
+    },
+    "system": {
+      "type": "System Art",
+      "type-enum": {
+        "REBOOT": "Neu starten"
+      }
+    },
+    "midi": {
+      "command": "Befehl",
+      "command-enum": {
+        "NOTE_OFF": "Note Aus",
+        "NOTE_ON": "Note An",
+        "AFTERTOUCH": "Aftertouch",
+        "CONTROL_CHANGE": "Controllerwechsel",
+        "PROGRAM_CHANGE": "Programmwechsel",
+        "CHANNEL_PRESSURE": "Kanalanschlag",
+        "PITCH_BEND": "Tonhöhenänderung (Pitch Bend)"
+      },
+      "channel": "Kanal",
+      "data1": "Daten 1",
+      "data2": "Daten 2",
+      "note": "Note",
+      "controller": "Controller",
+      "program": "Programm",
+      "velocity": "Anschlagsstärke"
+    },
+    "transport": {
+      "composition-name": "Kompositionsname",
+      "type-enum": {
+        "PLAY": "Abspielen",
+        "PLAY_AS_SAMPLE": "Als Sample abspielen",
+        "TOGGLE_PLAY": "Wiedergabe umschalten",
+        "PAUSE": "Pause",
+        "NEXT_COMPOSITION": "Nächste Komposition",
+        "PREVIOUS_COMPOSITION": "Vorherige Komposition",
+        "STOP": "Stopp",
+        "SELECT_COMPOSITION_BY_NAME": "Komposition nach Name auswählen",
+        "SELECT_COMPOSITION_BY_NAME_AND_PLAY": "Komposition nach Name auswählen und abspielen"
+
+      }
     }
   }
 }

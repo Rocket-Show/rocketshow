@@ -1,4 +1,4 @@
-import { RaspberryGpioControl } from "./raspberry-gpio-control";
+import { ActionTriggerRaspberryGpio } from "./action-trigger-raspberry-gpio";
 import { Instrument } from "./instrument";
 import { MidiRouting } from "./midi-routing";
 import { AudioBus } from "./audio-bus";
@@ -19,7 +19,7 @@ export class Settings {
   remoteMidiRoutingList: MidiRouting[];
   actionTriggerMidiList: ActionTriggerMidi[] = [];
   midiMapping: MidiMapping;
-  // raspberryGpioControlList: RaspberryGpioControl[];
+  actionTriggerRaspberryGpioList: ActionTriggerRaspberryGpio[];
   raspberryGpioOutputPinBcmList: number[];
   lightingSendDelayMillis: number;
   lightingOlaPluginList: OlaPlugin[] = [];
@@ -96,17 +96,9 @@ export class Settings {
       this.actionTriggerMidiList = [];
 
       for (let actionTriggerMidi of data.actionTriggerMidiList) {
-        let trigger: ActionTriggerMidi;
-        if (actionTriggerMidi.actionTriggerMidiNoteOn) {
-          trigger = new ActionTriggerMidiNoteOn(
-            actionTriggerMidi.actionTriggerMidiNoteOn
-          );
-        } else if (actionTriggerMidi.actionTriggerMidiProgramChange) {
-          trigger = new ActionTriggerMidiProgramChange(
-            actionTriggerMidi.actionTriggerMidiProgramChange
-          );
-        }
-        this.actionTriggerMidiList.push(trigger);
+        this.actionTriggerMidiList.push(
+          Settings.createActionTriggerMidi(actionTriggerMidi)
+        );
       }
     }
 
@@ -114,15 +106,15 @@ export class Settings {
       this.midiMapping = new MidiMapping(data.midiMapping);
     }
 
-    // if (data.raspberryGpioControlList) {
-    //   this.raspberryGpioControlList = [];
+    if (data.actionTriggerRaspberryGpioList) {
+      this.actionTriggerRaspberryGpioList = [];
 
-    //   for (let raspberryGpioControl of data.raspberryGpioControlList) {
-    //     this.raspberryGpioControlList.push(
-    //       new RaspberryGpioControl(raspberryGpioControl)
-    //     );
-    //   }
-    // }
+      for (let actionTriggerRaspberryGpio of data.actionTriggerRaspberryGpioList) {
+        this.actionTriggerRaspberryGpioList.push(
+          new ActionTriggerRaspberryGpio(actionTriggerRaspberryGpio)
+        );
+      }
+    }
 
     if (data.raspberryGpioOutputPinBcmList) {
       this.raspberryGpioOutputPinBcmList = [];
@@ -189,5 +181,21 @@ export class Settings {
     this.designerLivePreview = data.designerLivePreview;
     this.updateTestBranch = data.updateTestBranch;
     this.readyToUseVersion = data.readyToUseVersion;
+  }
+
+  public static createActionTriggerMidi(
+    actionTriggerMidi: any
+  ): ActionTriggerMidi {
+    let trigger: ActionTriggerMidi;
+    if (actionTriggerMidi.actionTriggerMidiNoteOn) {
+      trigger = new ActionTriggerMidiNoteOn(
+        actionTriggerMidi.actionTriggerMidiNoteOn
+      );
+    } else if (actionTriggerMidi.actionTriggerMidiProgramChange) {
+      trigger = new ActionTriggerMidiProgramChange(
+        actionTriggerMidi.actionTriggerMidiProgramChange
+      );
+    }
+    return trigger;
   }
 }

@@ -3,6 +3,7 @@ import { CompositionVideoFile } from "./composition-video-file";
 import { CompositionMidiFile } from "./composition-midi-file";
 import { CompositionAudioFile } from "./composition-audio-file";
 import { CompositionFile } from "./composition-file";
+import { ActionTriggerComposition } from "./action-trigger-composition";
 
 export class Composition {
   name: string;
@@ -13,6 +14,7 @@ export class Composition {
   leadSheetList: LeadSheet[] = [];
   loop: boolean;
   audioVolume: number = 1;
+  actionTriggerList: ActionTriggerComposition[] = [];
 
   constructor(data?: any) {
     if (!data) {
@@ -34,6 +36,16 @@ export class Composition {
 
     this.loop = data.loop;
     this.audioVolume = data.audioVolume;
+
+    if (data.actionTriggerList) {
+      this.actionTriggerList = [];
+
+      for (let actionTrigger of data.actionTriggerList) {
+        this.actionTriggerList.push(
+          new ActionTriggerComposition(actionTrigger)
+        );
+      }
+    }
   }
 
   public static getFileObjectByType(data: any) {

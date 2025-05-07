@@ -1,6 +1,8 @@
 import { Component, EventEmitter, Input, Output } from "@angular/core";
 import { ActionTrigger } from "../models/action-trigger";
 import { ActionTriggerMidi } from "../models/action-trigger-midi";
+import { ActionTriggerComposition } from "../models/action-trigger-composition";
+import { ActionTriggerRaspberryGpio } from "../models/action-trigger-raspberry-gpio";
 
 @Component({
   selector: "app-action-trigger",
@@ -14,6 +16,9 @@ export class ActionTriggerComponent {
   @Input()
   index: number;
 
+  @Input()
+  listHandle: boolean = true;
+
   @Output()
   delete = new EventEmitter<number>();
 
@@ -21,15 +26,13 @@ export class ActionTriggerComponent {
   change = new EventEmitter<{ index: number; newTrigger: ActionTriggerMidi }>();
 
   getTriggerType(): string {
-    console.log(this.trigger);
     if (this.trigger instanceof ActionTriggerMidi) {
       return "MIDI";
+    } else if (this.trigger instanceof ActionTriggerComposition) {
+      return "COMPOSITION";
+    } else if (this.trigger instanceof ActionTriggerRaspberryGpio) {
+      return "RASPBERRY_GPIO";
     }
-    // else if (this.trigger instanceof ActionTriggerCompo) {
-    //   return "COMPOSITION";
-    // } else if (this.trigger instanceof ActionTriggerRaspberryGpio) {
-    //   return "RASPBERRY_GPIO";
-    // }
     return "UNKNOWN";
   }
 

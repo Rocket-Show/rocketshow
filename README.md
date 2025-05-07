@@ -169,7 +169,7 @@ cd build
 
 git clone https://github.com/RPi-distro/pi-gen.git
 cd pi-gen
-git checkout tags/2024-03-15-raspios-bookworm-arm64
+git checkout tags/2024-11-19-raspios-bookworm-arm64
 
 echo "IMG_NAME='RocketShow'" > config
 

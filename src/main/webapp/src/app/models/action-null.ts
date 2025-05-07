@@ -12,6 +12,6 @@ export class ActionNull extends Action {
   }
 
   toJSON() {
-    return { nullAction: { ...this } };
+    return { actionNull: { ...this } };
   }
 }

@@ -8,8 +8,8 @@
       [ngModel]="trigger.note"
       (ngModelChange)="trigger.note = $event"
     >
-      <option *ngFor="let note of noteList" [ngValue]="note">
-        {{ note + 1 + ": " + midiIdToNote(note) }}
+      <option *ngFor="let note of midiService.noteList" [ngValue]="note">
+        {{ note + 1 + ": " + midiService.midiIdToNote(note) }}
       </option>
     </select>
   </div>
