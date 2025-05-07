@@ -1,6 +1,3 @@
-import { HttpClient } from "@angular/common/http";
-import { TranslateService } from "@ngx-translate/core";
-import { ToastrService } from "ngx-toastr";
 import { CompositionService } from "./../../services/composition.service";
 import { Composition } from "./../../models/composition";
 import { SettingsService } from "./../../services/settings.service";
@@ -10,6 +7,7 @@ import { Settings } from "../../models/settings";
 import { map } from "rxjs/operators";
 import { Subscription } from "rxjs";
 import { ActionTriggerMidi } from "../../models/action-trigger-midi";
+import { ActionTriggerMidiNoteOn } from "../../models/action-trigger-midi-note-on";
 
 @Component({
   selector: "app-settings-midi",
@@ -26,30 +24,17 @@ export class SettingsMidiComponent implements OnInit, OnDestroy {
   midiInDevices: MidiDevice[];
   midiOutDevices: MidiDevice[];
 
-  midiActionList: string[] = [];
-
   compositions: Composition[];
 
   constructor(
     private settingsService: SettingsService,
-    private compositionService: CompositionService,
-    private http: HttpClient,
-    private translateService: TranslateService,
-    private toastrService: ToastrService
+    private compositionService: CompositionService
   ) {
     this.compositionService
       .getCompositions(true)
       .subscribe((compositions: Composition[]) => {
         this.compositions = compositions;
       });
-
-    this.midiActionList.push("PLAY");
-    this.midiActionList.push("NEXT_COMPOSITION");
-    this.midiActionList.push("PREVIOUS_COMPOSITION");
-    this.midiActionList.push("STOP");
-    this.midiActionList.push("REBOOT");
-    this.midiActionList.push("SELECT_COMPOSITION_BY_NAME");
-    this.midiActionList.push("SELECT_COMPOSITION_BY_NAME_AND_PLAY");
   }
 
   private loadSettings() {
@@ -91,7 +76,7 @@ export class SettingsMidiComponent implements OnInit, OnDestroy {
   }
 
   addActionTrigger() {
-    let trigger = new ActionTriggerMidi();
+    let trigger = new ActionTriggerMidiNoteOn();
     this.settings.actionTriggerMidiList.push(trigger);
   }
 
@@ -101,7 +86,6 @@ export class SettingsMidiComponent implements OnInit, OnDestroy {
 
   onTriggerChange(event: { index: number; newTrigger: ActionTriggerMidi }) {
     this.settings.actionTriggerMidiList[event.index] = event.newTrigger;
-    console.log(this.settings.actionTriggerMidiList);
   }
 
   midiDeviceEqual(device1: MidiDevice, device2: MidiDevice): boolean {

@@ -1,7 +1,7 @@
 import { ActionTrigger } from "./action-trigger";
 
-export class RaspberryGpioControl extends ActionTrigger {
-    pinId: number = 0;
+export class ActionTriggerRaspberryGpio extends ActionTrigger {
+    pinId: number = 4;
 
     constructor(data?: any) {
         super(data);

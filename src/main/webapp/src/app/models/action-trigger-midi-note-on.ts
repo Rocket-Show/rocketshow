@@ -1,7 +1,7 @@
 import { ActionTriggerMidi } from "./action-trigger-midi";
 
 export class ActionTriggerMidiNoteOn extends ActionTriggerMidi {
-  note: number;
+  note: number = 0;
 
   constructor(data?: any) {
     super(data);

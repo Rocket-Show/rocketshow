@@ -149,20 +149,52 @@
           ></app-volume-slider>
         </div>
 
-        <!-- Notes -->
+        <!-- Add -->
         <div class="form-group">
-          <label for="compositionNotes">{{ "editor.notes" | translate }}</label>
-          <textarea
-            [(ngModel)]="currentComposition.notes"
-            class="form-control"
-            id="compositionNotes"
-            rows="2"
-          ></textarea>
+          <div class="dropdown">
+            <button
+              class="btn btn-primary dropdown-toggle w-100"
+              type="button"
+              id="dropdownMenuButton"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+              <i class="fa fa-plus" aria-hidden="true"></i>
+              {{ "editor.add" | translate }}
+            </button>
+            <div
+              class="dropdown-menu w-100"
+              aria-labelledby="dropdownMenuButton"
+            >
+              <a
+                class="dropdown-item"
+                href="#"
+                (click)="addCompositionFile(); (false)"
+                ><i class="fa fa-fw fa-music mr-2" aria-hidden="true"></i
+                >{{ "editor.file" | translate }}</a
+              >
+              <a class="dropdown-item" href="#" (click)="addAction(); (false)"
+                ><i class="fa fa-fw fa-bolt mr-2" aria-hidden="true"></i
+                >{{ "editor.action.action" | translate }}</a
+              >
+              <a
+                class="dropdown-item"
+                href="#"
+                (click)="addLeadSheet(); (false)"
+                ><i class="fa fa-fw fa-file-text-o mr-2" aria-hidden="true"></i
+                >{{ "editor.lead-sheet" | translate }}</a
+              >
+            </div>
+          </div>
         </div>
 
-        <!-- Files -->
-        <div class="form-group">
-          <label>{{ "editor.files" | translate }}</label>
+        <!-- Media files -->
+        <div *ngIf="currentComposition?.fileList.length > 0" class="form-group">
+          <label
+            ><i class="fa fa-fw fa-music mr-2" aria-hidden="true"></i
+            >{{ "editor.files" | translate }}</label
+          >
 
           <div
             class="list-group"
@@ -180,6 +212,16 @@
                 >
                   <i class="fa fa-bars" aria-hidden="true"></i>
                 </div>
+                <div class="col-auto flex-grow text-break-word my-auto pl-0">
+                  <a href="#" (click)="editCompositionFileDetails(i); (false)">
+                    <p class="mb-0">
+                      {{ file.name
+                      }}<span *ngIf="file.type == 'AUDIO' && file.outputBus">
+                        - {{ file.outputBus }}</span
+                      >
+                    </p>
+                  </a>
+                </div>
                 <a
                   href="#"
                   class="col-auto col-auto my-auto pl-0"
@@ -192,16 +234,6 @@
                     aria-hidden="true"
                   ></i>
                 </a>
-                <div class="col-auto flex-grow text-break-word my-auto pl-0">
-                  <a href="#" (click)="editCompositionFileDetails(i); (false)">
-                    <p class="mb-0">
-                      {{ file.name
-                      }}<span *ngIf="file.type == 'AUDIO' && file.outputBus">
-                        - {{ file.outputBus }}</span
-                      >
-                    </p>
-                  </a>
-                </div>
                 <div class="col-auto my-auto pl-0 pr-0">
                   <a
                     class="text-danger float-right"
@@ -223,22 +255,85 @@
                 </div>
               </div>
             </div>
-            <a
-              href="#"
-              (click)="addCompositionFile(); (false)"
-              class="no-sortjs list-group-item text-center"
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div
+          *ngIf="currentComposition?.actionTriggerList.length > 0"
+          class="form-group"
+        >
+          <label
+            ><i class="fa fa-fw fa-bolt mr-2" aria-hidden="true"></i
+            >{{ "editor.action.actions" | translate }}</label
+          >
+
+          <div
+            class="list-group"
+            [sortablejs]="currentComposition?.actionTriggerList"
+            [sortablejsOptions]="{ onMove: sortMove }"
+          >
+            <div
+              class="list-group-item"
+              *ngFor="
+                let actionTrigger of currentComposition?.actionTriggerList;
+                let i = index
+              "
             >
-              <i class="fa fa-plus" aria-hidden="true"></i>
-              {{ "editor.add-file" | translate }}
-            </a>
+              <div class="row">
+                <div
+                  class="col-auto list-sort-handle my-auto"
+                  style="cursor: move; cursor: -webkit-grabbing"
+                >
+                  <i class="fa fa-bars" aria-hidden="true"></i>
+                </div>
+                <div class="col-auto flex-grow text-break-word my-auto pl-0">
+                  <a href="#" (click)="editActionTriggerDetails(i); (false)">
+                    <p class="mb-0">
+                      {{ "editor.action.position-millis" | translate }}:
+                      {{ actionTrigger.positionMillis }}
+                    </p>
+                  </a>
+                </div>
+                <div class="col-auto my-auto pl-0 pr-0">
+                  <a
+                    class="text-danger float-right"
+                    href="#"
+                    role="button"
+                    (click)="deleteActionTrigger(i); (false)"
+                  >
+                    <i class="fa fa-trash-o" aria-hidden="true"></i>
+                  </a>
+                </div>
+                <div class="col-auto my-auto">
+                  <a
+                    class="btn btn-secondary btn-sm float-right"
+                    href="#"
+                    role="button"
+                    (click)="editActionTriggerDetails(i); (false)"
+                    >...</a
+                  >
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- Lead sheets -->
-        <div class="form-group">
-          <label>{{ "editor.lead-sheets" | translate }}</label>
+        <div
+          *ngIf="currentComposition?.leadSheetList.length > 0"
+          class="form-group"
+        >
+          <label
+            ><i class="fa fa-fw fa-file-text-o mr-2" aria-hidden="true"></i
+            >{{ "editor.lead-sheets" | translate }}</label
+          >
 
-          <div class="list-group">
+          <div
+            class="list-group"
+            [sortablejs]="currentComposition?.leadSheetList"
+            [sortablejsOptions]="{ onMove: sortMove }"
+          >
             <div
               class="list-group-item"
               *ngFor="
@@ -247,10 +342,15 @@
               "
             >
               <div class="row">
+                <div
+                  class="col-auto list-sort-handle my-auto"
+                  style="cursor: move; cursor: -webkit-grabbing"
+                >
+                  <i class="fa fa-bars" aria-hidden="true"></i>
+                </div>
                 <div class="col-auto flex-grow text-break-word my-auto pl-0">
                   <a href="#" (click)="editLeadSheet(i); (false)">
-                    <p class="mb-0 ml-3">
-                      <i class="fa fa-fw fa-file-text-o" aria-hidden="true"></i>
+                    <p class="mb-0">
                       {{ leadSheet.name }} -
                       {{ instrumentNameFromUuid(leadSheet.instrumentUuid) }}
                     </p>
@@ -277,15 +377,18 @@
                 </div>
               </div>
             </div>
-            <a
-              href="#"
-              (click)="addLeadSheet(); (false)"
-              class="no-sortjs list-group-item text-center"
-            >
-              <i class="fa fa-plus" aria-hidden="true"></i>
-              {{ "editor.lead-sheets-add" | translate }}
-            </a>
           </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="form-group">
+          <label for="compositionNotes">{{ "editor.notes" | translate }}</label>
+          <textarea
+            [(ngModel)]="currentComposition.notes"
+            class="form-control"
+            id="compositionNotes"
+            rows="2"
+          ></textarea>
         </div>
 
         <!-- More than one video/image -->

@@ -1,6 +1,6 @@
 <div class="form-group row">
   <label class="col-md-3 col-form-label">{{
-    "settings.midi-control-channel-in" | translate
+    "settings.midi-control-type" | translate
   }}</label>
   <div class="col-md-9">
     <select
@@ -8,8 +8,8 @@
       [ngModel]="getTriggerMidiType()"
       (ngModelChange)="onTriggerMidiTypeChange($event)"
     >
-      <option value="NOTE_ON">NOTE_ON</option>
-      <option value="PROGRAM_CHANGE">PROGRAM_CHANGE</option>
+      <option value="NOTE_ON">{{ 'settings.midi-control-type-enum.NOTE_ON' | translate }}</option>
+      <option value="PROGRAM_CHANGE">{{ 'settings.midi-control-type-enum.PROGRAM_CHANGE' | translate }}</option>
     </select>
   </div>
 </div>

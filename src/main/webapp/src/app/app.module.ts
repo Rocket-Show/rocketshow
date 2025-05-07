@@ -77,6 +77,19 @@ import { ActionTriggerMidiComponent } from "./settings/settings-midi/action-trig
 import { ActionTriggerMidiProgramChangeComponent } from "./settings/settings-midi/action-trigger-midi/action-trigger-midi-program-change/action-trigger-midi-program-change.component";
 import { ActionTriggerMidiNoteOnComponent } from "./settings/settings-midi/action-trigger-midi/action-trigger-midi-note-on/action-trigger-midi-note-on.component";
 import { ActionTriggerComponent } from "./action-trigger/action-trigger.component";
+import { ActionListComponent } from "./action-list/action-list.component";
+import { ActionComponent } from "./action/action.component";
+import { EditorCompositionActionComponent } from "./editor/editor-composition/editor-composition-action/editor-composition-action.component";
+import { ActionTriggerCompositionComponent } from "./editor/editor-composition/action-trigger-composition/action-trigger-composition.component";
+import { SettingsExternalControlComponent } from "./settings/settings-external-control/settings-external-control.component";
+import { ActionTriggerRaspberryGpioComponent } from "./settings/settings-external-control/action-trigger-raspberry-gpio/action-trigger-raspberry-gpio.component";
+import { ActionNullComponent } from "./action/action-null/action-null.component";
+import { ActionSystemComponent } from "./action/action-system/action-system.component";
+import { ActionTransportComponent } from "./action/action-transport/action-transport.component";
+import { ActionRaspberryGpioComponent } from "./action/action-raspberry-gpio/action-raspberry-gpio.component";
+import { ActionHttpComponent } from "./action/action-http/action-http.component";
+import { ActionLightingComponent } from "./action/action-lighting/action-lighting.component";
+import { ActionMidiComponent } from "./action/action-midi/action-midi.component";
 
 const appRoutes: Routes = [
   { path: "intro", component: IntroComponent },
@@ -116,6 +129,7 @@ const appRoutes: Routes = [
     EditorSetComponent,
     ConnectionComponent,
     EditorCompositionFileComponent,
+    EditorCompositionActionComponent,
     RoutingDetailsComponent,
     SettingsSystemComponent,
     WarningDialogComponent,
@@ -140,10 +154,22 @@ const appRoutes: Routes = [
     DesignerComponent,
     DropzoneComponent,
     VolumeSliderComponent,
+    ActionComponent,
+    ActionListComponent,
     ActionTriggerComponent,
     ActionTriggerMidiComponent,
     ActionTriggerMidiNoteOnComponent,
     ActionTriggerMidiProgramChangeComponent,
+    ActionTriggerCompositionComponent,
+    SettingsExternalControlComponent,
+    ActionTriggerRaspberryGpioComponent,
+    ActionNullComponent,
+    ActionSystemComponent,
+    ActionTransportComponent,
+    ActionRaspberryGpioComponent,
+    ActionHttpComponent,
+    ActionLightingComponent,
+    ActionMidiComponent,
   ],
   imports: [
     BrowserModule,

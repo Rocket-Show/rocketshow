@@ -9,6 +9,9 @@ import { Settings } from "./../models/settings";
 import { Injectable } from "@angular/core";
 import { Language } from "../models/language";
 import { OlaPlugin } from "../models/ola-plugin";
+import { ActionTriggerMidi } from "../models/action-trigger-midi";
+import { ActionTriggerMidiNoteOn } from "../models/action-trigger-midi-note-on";
+import { ActionTriggerMidiProgramChange } from "../models/action-trigger-midi-program-change";
 
 @Injectable()
 export class SettingsService {

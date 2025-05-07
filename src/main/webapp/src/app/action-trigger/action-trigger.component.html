@@ -6,10 +6,29 @@
   (change)="onTriggerChange($event)"
 ></app-action-trigger-midi>
 
-<!-- Delete the trigger footer -->
-<div class="form-group row">
-  <div class="col-md-12">
-    <div class="float-right">
+<app-action-trigger-composition
+  *ngIf="getTriggerType() == 'COMPOSITION'"
+  [trigger]="trigger"
+></app-action-trigger-composition>
+
+<app-action-trigger-raspberry-gpio
+  *ngIf="getTriggerType() == 'RASPBERRY_GPIO'"
+  [trigger]="trigger"
+></app-action-trigger-raspberry-gpio>
+
+<!-- Action list -->
+<app-action-list [actionList]="trigger.actionList"></app-action-list>
+
+<!-- Move/delete -->
+<div *ngIf="listHandle" class="form-group row">
+  <div class="col-md-12 d-flex">
+    <div
+      class="flex-grow-1 list-sort-handle my-auto"
+      style="cursor: move; cursor: -webkit-grabbing"
+    >
+      <i class="fa fa-bars" aria-hidden="true"></i>
+    </div>
+    <div class="ml-auto">
       <a
         class="mr-3 my-auto text-danger"
         href="#"
