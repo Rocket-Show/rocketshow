@@ -326,6 +326,21 @@
         "SELECT_COMPOSITION_BY_NAME": "Select Composition by Name",
         "SELECT_COMPOSITION_BY_NAME_AND_PLAY": "Select Composition by Name and Play"
       }
+    },
+    "lighting": {
+      "universe-name": "Universe",
+      "channel-value": "Channel/Val"
+    },
+    "http": {
+      "method": "Method",
+      "url": "URL",
+      "body": "Body",
+      "headers": "Headers"
+    },
+    "raspberry-gpio": {
+      "pin": "Pin",
+      "status": "Status",
+      "high": "High"
     }
   }
 }

@@ -325,8 +325,22 @@
         "STOP": "Stopp",
         "SELECT_COMPOSITION_BY_NAME": "Komposition nach Name auswählen",
         "SELECT_COMPOSITION_BY_NAME_AND_PLAY": "Komposition nach Name auswählen und abspielen"
-
       }
+    },
+    "lighting": {
+      "universe-name": "Universe",
+      "channel-value": "Kanal/Wert"
+    },
+    "http": {
+      "method": "Methode",
+      "url": "URL",
+      "body": "Body",
+      "headers": "Headers"
+    },
+    "raspberry-gpio": {
+      "pin": "Pin",
+      "status": "Status",
+      "high": "High"
     }
   }
 }

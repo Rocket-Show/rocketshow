@@ -8,8 +8,8 @@
       [ngModel]="trigger.pinId"
       (ngModelChange)="trigger.pinId = $event"
     >
-      <option *ngFor="let pinId of pinIdList" [ngValue]="pinId">
-        {{ pinId }}
+      <option *ngFor="let pinId of pinList" [ngValue]="pin.id">
+        {{ pin.displayText }}
       </option>
     </select>
   </div>
