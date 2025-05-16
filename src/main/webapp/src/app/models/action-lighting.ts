@@ -1,7 +1,8 @@
 import { Action } from "./action";
+import { LightingActionUniverse } from "./lighting-action-universe";
 
 export class ActionLighting extends Action {
-  systemActionType: string = 'REBOOT';
+  lightingActionUniverseList: LightingActionUniverse[] = [];
 
   constructor(data?: any) {
     super(data);
@@ -10,7 +11,17 @@ export class ActionLighting extends Action {
       return;
     }
 
-    this.systemActionType = data.systemActionType;
+    if (data.lightingActionUniverseList) {
+      for (let lightingActionUniverse of data.lightingActionUniverseList) {
+        this.lightingActionUniverseList.push(
+          new LightingActionUniverse(lightingActionUniverse)
+        );
+      }
+    }
+
+    if (this.lightingActionUniverseList.length === 0) {
+      this.lightingActionUniverseList.push(new LightingActionUniverse());
+    }
   }
 
   toJSON() {

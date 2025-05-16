@@ -1,7 +1,8 @@
 import { Action } from "./action";
 
 export class ActionRaspberryGpio extends Action {
-  systemActionType: string = 'REBOOT';
+  pinId: number;
+  high: boolean;
 
   constructor(data?: any) {
     super(data);
@@ -10,7 +11,12 @@ export class ActionRaspberryGpio extends Action {
       return;
     }
 
-    this.systemActionType = data.systemActionType;
+    this.pinId = data.pinId;
+    this.high = data.high;
+
+    if(!this.pinId) {
+      this.pinId = 4;
+    }
   }
 
   toJSON() {

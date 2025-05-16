@@ -1,5 +1,7 @@
 import { Component, Input } from "@angular/core";
 import { ActionTriggerRaspberryGpio } from "../../../models/action-trigger-raspberry-gpio";
+import { SettingsService } from "../../../services/settings.service";
+import { RaspberryPiPin } from "../../../models/raspberry-pi-pin";
 
 @Component({
   selector: "app-action-trigger-raspberry-gpio",
@@ -10,32 +12,16 @@ export class ActionTriggerRaspberryGpioComponent {
   @Input()
   trigger: ActionTriggerRaspberryGpio;
 
-  pinIdList: number[] = [];
+  pinList: RaspberryPiPin[] = [];
 
-  constructor() {
-    this.pinIdList.push(4);
-    this.pinIdList.push(5);
-    this.pinIdList.push(6);
-    this.pinIdList.push(7);
-    this.pinIdList.push(8);
-    this.pinIdList.push(9);
-    this.pinIdList.push(10);
-    this.pinIdList.push(11);
-    this.pinIdList.push(12);
-    this.pinIdList.push(13);
-    this.pinIdList.push(14);
-    this.pinIdList.push(15);
-    this.pinIdList.push(16);
-    this.pinIdList.push(17);
-    this.pinIdList.push(18);
-    this.pinIdList.push(19);
-    this.pinIdList.push(20);
-    this.pinIdList.push(21);
-    this.pinIdList.push(22);
-    this.pinIdList.push(23);
-    this.pinIdList.push(24);
-    this.pinIdList.push(25);
-    this.pinIdList.push(26);
-    this.pinIdList.push(27);
+  constructor(private settingsService: SettingsService) {
+    if (this.settingsService.settings.readyToUseVersion) {
+      this.pinList.push(new RaspberryPiPin(27, "1"));
+      this.pinList.push(new RaspberryPiPin(22, "2"));
+      this.pinList.push(new RaspberryPiPin(23, "3"));
+      this.pinList.push(new RaspberryPiPin(24, "4"));
+    } else {
+      this.pinList = this.settingsService.raspberryPiPinIdList;
+    }
   }
 }

@@ -12,6 +12,7 @@ import { OlaPlugin } from "../models/ola-plugin";
 import { ActionTriggerMidi } from "../models/action-trigger-midi";
 import { ActionTriggerMidiNoteOn } from "../models/action-trigger-midi-note-on";
 import { ActionTriggerMidiProgramChange } from "../models/action-trigger-midi-program-change";
+import { RaspberryPiPin } from "../models/raspberry-pi-pin";
 
 @Injectable()
 export class SettingsService {
@@ -23,6 +24,8 @@ export class SettingsService {
   settings: Settings;
 
   observable: Observable<Settings>;
+
+  raspberryPiPinIdList: RaspberryPiPin[] = [];
 
   constructor(
     private http: HttpClient,
@@ -39,6 +42,31 @@ export class SettingsService {
     language.key = "de";
     language.name = "Deutsch";
     this.languages.push(language);
+
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(4));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(5));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(6));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(7));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(8));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(9));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(10));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(11));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(12));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(13));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(14));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(15));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(16));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(17));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(18));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(19));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(20));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(21));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(22));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(23));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(24));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(25));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(26));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(27));
   }
 
   getSettings(clearCache: boolean = false): Observable<Settings> {
