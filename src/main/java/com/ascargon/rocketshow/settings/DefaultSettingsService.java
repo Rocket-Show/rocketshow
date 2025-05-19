@@ -3,33 +3,22 @@ package com.ascargon.rocketshow.settings;
 import com.ascargon.rocketshow.RocketShowApplication;
 import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.audio.AudioBus;
-import com.ascargon.rocketshow.audio.AudioDevice;
-import com.ascargon.rocketshow.audio.AudioService;
 import com.ascargon.rocketshow.lighting.OlaPlugin;
-import com.ascargon.rocketshow.midi.MidiDevice;
-import com.ascargon.rocketshow.midi.MidiDirection;
-import com.ascargon.rocketshow.midi.MidiMapping;
-import com.ascargon.rocketshow.midi.MidiService;
+import com.ascargon.rocketshow.midi.*;
 import com.ascargon.rocketshow.raspberry.RaspberryResetUsbService;
-import com.ascargon.rocketshow.util.OperatingSystemInformation;
-import com.ascargon.rocketshow.util.OperatingSystemInformationService;
-import com.ascargon.rocketshow.util.ShellManager;
+import com.ascargon.rocketshow.util.*;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.system.ApplicationHome;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.MidiUnavailableException;
-import java.io.*;
-import java.util.HashSet;
+import java.io.File;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -43,19 +32,16 @@ public class DefaultSettingsService implements SettingsService {
     private final OperatingSystemInformationService operatingSystemInformationService;
     private final RaspberryResetUsbService raspberryResetUsbService;
     private final MidiService midiService;
-    private final SettingsUpdateSystemService settingsUpdateSystemService;
 
     private Settings settings;
 
     private final ApplicationHome applicationHome = new ApplicationHome(RocketShowApplication.class);
 
-    public DefaultSettingsService(RaspberryResetUsbService raspberryResetUsbService, OperatingSystemInformationService operatingSystemInformationService, MidiService midiService, SettingsUpdateSystemService settingsUpdateSystemService) {
+    public DefaultSettingsService(RaspberryResetUsbService raspberryResetUsbService, OperatingSystemInformationService operatingSystemInformationService, MidiService midiService) {
         this.operatingSystemInformationService = operatingSystemInformationService;
         this.raspberryResetUsbService = raspberryResetUsbService;
         this.midiService = midiService;
-        this.settingsUpdateSystemService = settingsUpdateSystemService;
 
-        // Load the settings
         try {
             load();
         } catch (Exception e) {
@@ -346,8 +332,6 @@ public class DefaultSettingsService implements SettingsService {
 
         jaxbMarshaller.marshal(settings, file);
 
-        settingsUpdateSystemService.update(settings);
-
         logger.info("Settings saved");
     }
 
@@ -367,7 +351,7 @@ public class DefaultSettingsService implements SettingsService {
         this.setSettings((Settings) jaxbUnmarshaller.unmarshal(file));
 
         if (settings.getVersion() == null || settings.getVersion() < CURRENT_SETTINGS_VERSION) {
-            migrateFromOldProject();
+            migrateFromOldSettings();
         } else if (settings.getVersion() > CURRENT_SETTINGS_VERSION) {
             throw new Exception("The settings have been saved with a newer version of Rocket Show and cannot be used with the current one.");
         }
@@ -382,8 +366,6 @@ public class DefaultSettingsService implements SettingsService {
             logger.error("Could not reset the USB devices", e);
         }
 
-        settingsUpdateSystemService.update(settings);
-
         logger.info("Settings loaded");
     }
 
@@ -396,12 +378,95 @@ public class DefaultSettingsService implements SettingsService {
         settings.setVersion(2);
     }
 
-    public void migrateFromOldProject() throws JAXBException {
+    private void migrateToVersion3() {
+        // migrate from old control action system
+        for (MidiControl midiControl : settings.getMidiControlList()) {
+            Action action = null;
+
+            switch (midiControl.getAction()) {
+                case PLAY:
+                    action = new ActionTransport();
+                    action.setActionType(Action.ActionType.TRANSPORT);
+                    ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.PLAY);
+                    break;
+                case PLAY_AS_SAMPLE:
+                    action = new ActionTransport();
+                    action.setActionType(Action.ActionType.TRANSPORT);
+                    ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.PLAY_AS_SAMPLE);
+                    break;
+                case TOGGLE_PLAY:
+                    action = new ActionTransport();
+                    action.setActionType(Action.ActionType.TRANSPORT);
+                    ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.TOGGLE_PLAY);
+                    break;
+                case PAUSE:
+                    action = new ActionTransport();
+                    action.setActionType(Action.ActionType.TRANSPORT);
+                    ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.PAUSE);
+                    break;
+                case NEXT_COMPOSITION:
+                    action = new ActionTransport();
+                    action.setActionType(Action.ActionType.TRANSPORT);
+                    ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.NEXT_COMPOSITION);
+                    break;
+                case PREVIOUS_COMPOSITION:
+                    action = new ActionTransport();
+                    action.setActionType(Action.ActionType.TRANSPORT);
+                    ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.PREVIOUS_COMPOSITION);
+                    break;
+                case STOP:
+                    action = new ActionTransport();
+                    action.setActionType(Action.ActionType.TRANSPORT);
+                    ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.STOP);
+                    break;
+                case SELECT_COMPOSITION_BY_NAME:
+                    action = new ActionTransport();
+                    action.setActionType(Action.ActionType.TRANSPORT);
+                    ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.SELECT_COMPOSITION_BY_NAME);
+                    ((ActionTransport) action).setCompositionName(midiControl.getCompositionName());
+                    break;
+                case SELECT_COMPOSITION_BY_NAME_AND_PLAY:
+                    action = new ActionTransport();
+                    action.setActionType(Action.ActionType.TRANSPORT);
+                    ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.SELECT_COMPOSITION_BY_NAME_AND_PLAY);
+                    ((ActionTransport) action).setCompositionName(midiControl.getCompositionName());
+                    break;
+                case SET_COMPOSITION_INDEX:
+                    // Not migrated because not used currently
+                    break;
+                case REBOOT:
+                    action = new ActionSystem();
+                    action.setActionType(Action.ActionType.SYSTEM);
+                    ((ActionSystem) action).setSystemActionType(ActionSystem.SystemActionType.REBOOT);
+                    break;
+            }
+
+            if (action != null) {
+                action.setExecuteLocally(midiControl.isExecuteLocally());
+                action.setRemoteDeviceNames(midiControl.getRemoteDeviceNames());
+
+                ActionTriggerMidiNoteOn actionTriggerMidiNoteOn = new ActionTriggerMidiNoteOn();
+                actionTriggerMidiNoteOn.setChannel(midiControl.getChannelFrom());
+                actionTriggerMidiNoteOn.setNote(midiControl.getNoteFrom());
+                actionTriggerMidiNoteOn.getActionList().add(action);
+            }
+        }
+
+        settings.setVersion(3);
+    }
+
+    public void migrateFromOldSettings() throws JAXBException {
         boolean migrated = false;
 
         if (settings.getVersion() == null) {
             // Migrate from version 1
             this.migrateToVersion2();
+            migrated = true;
+        }
+
+        if (settings.getVersion() == 2) {
+            // Migrate from version 2
+            this.migrateToVersion3();
             migrated = true;
         }
 

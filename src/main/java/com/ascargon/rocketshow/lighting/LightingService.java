@@ -9,7 +9,7 @@ public interface LightingService {
 
     void reset();
 
-    void send(int sendDelayMillis, boolean enableMonitor);
+    void send();
 
     void sendExternalSync(boolean enableMonitor);
 
@@ -25,4 +25,5 @@ public interface LightingService {
 
     void enablePlugins(List<OlaPlugin> olaPluginList);
 
+    void executeAction(ActionLighting actionLighting);
 }

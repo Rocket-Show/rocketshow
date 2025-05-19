@@ -1,9 +1,6 @@
 package com.ascargon.rocketshow.midi;
 
 import com.ascargon.rocketshow.settings.SettingsService;
-import com.ascargon.rocketshow.api.ActivityNotificationMidiService;
-import com.ascargon.rocketshow.lighting.LightingService;
-import com.ascargon.rocketshow.lighting.Midi2LightingConvertService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -21,7 +18,7 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
     private final SettingsService settingsService;
     private final MidiService midiService;
 
-    private MidiRouter midiRouter;
+    private final MidiRouter midiRouter;
 
     private Timer connectMidiDeviceTimer;
 
@@ -29,15 +26,15 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
 
     private final MidiInDeviceReceiver midiInDeviceReceiver;
 
-    public DefaultMidiDeviceInService(SettingsService settingsService, ActivityNotificationMidiService activityNotificationMidiService, MidiControlActionExecutionService midiControlActionExecutionService, MidiService midiService, Midi2LightingConvertService midi2LightingConvertService, LightingService lightingService, MidiDeviceOutService midiDeviceOutService) {
+    public DefaultMidiDeviceInService(SettingsService settingsService, ActionMidiExecutionService actionMidiExecutionService, MidiService midiService, MidiRouterFactory midiRouterFactory) {
         this.settingsService = settingsService;
         this.midiService = midiService;
 
-        // Initialize the MIDI in device receiver to execute MIDI control actions
-        midiInDeviceReceiver = new MidiInDeviceReceiver(activityNotificationMidiService, midiControlActionExecutionService, settingsService, midi2LightingConvertService, lightingService, midiDeviceOutService);
+        // Initialize the MIDI in device receiver to executeFromTrigger MIDI control actions
+        midiInDeviceReceiver = new MidiInDeviceReceiver(actionMidiExecutionService, settingsService, midiRouterFactory);
 
         // Initialize the MIDI router
-        midiRouter = new MidiRouter(settingsService, midi2LightingConvertService, lightingService, midiDeviceOutService, activityNotificationMidiService, settingsService.getSettings().getDeviceInMidiRoutingList());
+        midiRouter = midiRouterFactory.getMidiRouter(settingsService.getSettings().getDeviceInMidiRoutingList());
 
         // Try to connect to MIDI in devices
         try {

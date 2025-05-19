@@ -1,22 +1,20 @@
-import { BsModalRef } from 'ngx-bootstrap/modal';
-import { Subject } from 'rxjs';
-import { Component, OnInit } from '@angular/core';
+import { BsModalRef } from "ngx-bootstrap/modal";
+import { Observable, Subject } from "rxjs";
+import { Component, OnInit } from "@angular/core";
 
 @Component({
-  selector: 'app-warning-dialog',
-  templateUrl: './warning-dialog.component.html',
-  styleUrls: ['./warning-dialog.component.scss']
+  selector: "app-warning-dialog",
+  templateUrl: "./warning-dialog.component.html",
+  styleUrls: ["./warning-dialog.component.scss"],
 })
 export class WarningDialogComponent implements OnInit {
-  onClose: Subject<number>;
+  onClose: Subject<number> = new Subject();
 
   message: string;
 
-  constructor(private bsModalRef: BsModalRef) { }
+  constructor(private bsModalRef: BsModalRef) {}
 
-  ngOnInit() {
-    this.onClose = new Subject();
-  }
+  ngOnInit() {}
 
   public ok(): void {
     this.onClose.next(1);
@@ -27,5 +25,4 @@ export class WarningDialogComponent implements OnInit {
     this.onClose.next(2);
     this.bsModalRef.hide();
   }
-
 }

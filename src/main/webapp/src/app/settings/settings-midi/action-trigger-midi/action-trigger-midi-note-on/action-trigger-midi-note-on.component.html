@@ -1,0 +1,16 @@
+<div class="form-group row">
+  <label class="col-md-3 col-form-label">{{
+    "settings.midi-control-note-in" | translate
+  }}</label>
+  <div class="col-md-9">
+    <select
+      class="custom-select"
+      [ngModel]="trigger.note"
+      (ngModelChange)="trigger.note = $event"
+    >
+      <option *ngFor="let note of midiService.noteList" [ngValue]="note">
+        {{ note + 1 + ": " + midiService.midiIdToNote(note) }}
+      </option>
+    </select>
+  </div>
+</div>

@@ -117,8 +117,8 @@ Requires=sys-subsystem-net-devices-wlan0.device
 ExecStartPre=/bin/sleep 5
 "
 HOSTAPD_OVERRIDE_DIR="/etc/systemd/system/hostapd.service.d"
-sudo mkdir -p "$HOSTAPD_OVERRIDE_DIR"
-echo "$HOSTAPD_OVERRIDE_CONF" | sudo tee "$HOSTAPD_OVERRIDE_DIR/override.conf" > /dev/null
+mkdir -p "$HOSTAPD_OVERRIDE_DIR"
+echo "$HOSTAPD_OVERRIDE_CONF" | tee "$HOSTAPD_OVERRIDE_DIR/override.conf" > /dev/null
 
 # Install pi4j
 curl -s get.pi4j.com | bash
@@ -127,13 +127,33 @@ curl -s get.pi4j.com | bash
 chmod +x start.sh
 
 # Add a service to automatically start the app on boot and redirect port 80 to 8080
-cat <<'EOF' >/etc/rc.local
-#!/bin/sh -e
-#
-iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
-su - rocketshow -c 'cd /opt/rocketshow && /opt/rocketshow/start.sh &'
-exit 0
+cat <<'EOF' >/etc/systemd/system/rocketshow.service
+[Unit]
+Description=Rocketshow Startup Service
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/rocketshow/start-service.sh
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target
 EOF
+
+cat <<'EOF' >/opt/rocketshow/start-service.sh
+#!/bin/bash
+
+# Redirect port 80 to 8080
+iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
+
+# Run your application as the "rocketshow" user
+su - rocketshow -c 'cd /opt/rocketshow && ./start.sh &'
+EOF
+
+chmod +x /opt/rocketshow/start-service.sh
+
+systemctl enable rocketshow.service
 
 # Keep the whole directory in its current state for the factory reset
 cd /opt

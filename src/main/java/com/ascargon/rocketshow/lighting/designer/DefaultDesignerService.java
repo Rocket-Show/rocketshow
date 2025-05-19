@@ -53,12 +53,8 @@ public class DefaultDesignerService implements DesignerService {
 
     private List<LightingUniverse> lightingUniverses = new ArrayList<>();
 
-    // TODO what is a good corePoolSize?
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(20);
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
     private ScheduledFuture<?> universeSenderHandle;
-
-    private long lastPlayTimeMillis;
-    private long lastPositionMillis;
 
     private List<CachedFixture> cachedFixtures;
 
@@ -221,14 +217,6 @@ public class DefaultDesignerService implements DesignerService {
         }
 
         return null;
-    }
-
-    private long getCurrentPositionMillis() {
-        if (pipeline != null) {
-            return pipeline.queryPosition(MILLISECONDS);
-        }
-
-        return System.currentTimeMillis() - lastPlayTimeMillis + lastPositionMillis;
     }
 
     private List<PresetRegionScene> getPresetsInTime(long timeMillis) {
@@ -1053,7 +1041,7 @@ public class DefaultDesignerService implements DesignerService {
 //                    }
 //                } else {
                 // Calculate and send the current state
-                calculateUniverse(getCurrentPositionMillis());
+                calculateUniverse(compositionPlayer.getPositionMillis());
                 lightingService.sendExternalSync(settingsService.getSettings().getEnableMonitor());
 //                }
             }
@@ -1390,7 +1378,6 @@ public class DefaultDesignerService implements DesignerService {
         }
 
         lightingService.setExternalSync(true);
-        lastPositionMillis = 0;
     }
 
     @Override
@@ -1399,7 +1386,6 @@ public class DefaultDesignerService implements DesignerService {
             return;
         }
 
-        lastPlayTimeMillis = System.currentTimeMillis();
         startTimer();
     }
 
@@ -1410,22 +1396,6 @@ public class DefaultDesignerService implements DesignerService {
         }
 
         stopTimer();
-        lastPositionMillis = getCurrentPositionMillis();
-    }
-
-    @Override
-    public void seek(long positionMillis) {
-        if (project == null) {
-            return;
-        }
-
-        if (pipeline != null) {
-            // Rely on the pipeline position
-            return;
-        }
-
-        this.lastPlayTimeMillis = System.currentTimeMillis();
-        this.lastPositionMillis = positionMillis;
     }
 
     @Override
@@ -1450,9 +1420,6 @@ public class DefaultDesignerService implements DesignerService {
             logger.debug("No project available to preview");
             return;
         }
-
-        this.lastPlayTimeMillis = System.currentTimeMillis();
-        this.lastPositionMillis = positionMillis;
 
         startTimer();
     }
@@ -1480,15 +1447,6 @@ public class DefaultDesignerService implements DesignerService {
             composition = getCompositionByName(project, compositionName);
             playPreview = true;
         }
-    }
-
-    @Override
-    public long getPositionMillis() {
-        if (project == null) {
-            return 0;
-        }
-
-        return getCurrentPositionMillis();
     }
 
     @Override

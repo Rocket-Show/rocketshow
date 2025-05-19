@@ -2,7 +2,8 @@ package com.ascargon.rocketshow.lighting;
 
 import com.ascargon.rocketshow.settings.CapabilitiesService;
 import com.ascargon.rocketshow.settings.SettingsService;
-import com.ascargon.rocketshow.api.ActivityNotificationLightingService;
+import com.ascargon.rocketshow.util.OperatingSystemInformation;
+import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ola.OlaClient;
 import ola.proto.Ola;
@@ -34,6 +35,8 @@ public class DefaultLightingService implements LightingService {
 
     private final CapabilitiesService capabilitiesService;
     private final ActivityNotificationLightingService activityNotificationLightingService;
+    private final SettingsService settingsService;
+    private final OperatingSystemInformationService operatingSystemInformationService;
 
     private final String OLA_URL = "http://localhost:9090/";
 
@@ -59,18 +62,22 @@ public class DefaultLightingService implements LightingService {
     // is OLA initialized and at least one universe prepared?
     private boolean olaReady = false;
 
-    public DefaultLightingService(CapabilitiesService capabilitiesService, ActivityNotificationLightingService activityNotificationLightingService) {
+    public DefaultLightingService(CapabilitiesService capabilitiesService, ActivityNotificationLightingService activityNotificationLightingService, SettingsService settingsService, OperatingSystemInformationService operatingSystemInformationService) {
         this.capabilitiesService = capabilitiesService;
         this.activityNotificationLightingService = activityNotificationLightingService;
+        this.settingsService = settingsService;
+        this.operatingSystemInformationService = operatingSystemInformationService;
 
         RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).build();
         httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
 
-        try {
-            olaClient = new OlaClient();
-        } catch (Exception e) {
-            logger.error("Could not initialize OLA client", e);
-            capabilitiesService.getCapabilities().setOla(false);
+        if (OperatingSystemInformation.SubType.RASPBERRYOS.equals(this.operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+            try {
+                olaClient = new OlaClient();
+                capabilitiesService.getCapabilities().setOla(true);
+            } catch (Exception e) {
+                logger.error("Could not initialize OLA client", e);
+            }
         }
 
         if (!capabilitiesService.getCapabilities().isOla()) {
@@ -111,6 +118,7 @@ public class DefaultLightingService implements LightingService {
     private void sendUniverse(boolean enableMonitor) {
         logger.trace("Send the lighting universe");
 
+        // TODO support for multiple universes -> mapped over universe name to an OLA output port
         // Mix all current universes into one -> highest value per channel wins
         short[] mixedUniverse = new short[512];
 
@@ -150,7 +158,7 @@ public class DefaultLightingService implements LightingService {
     // some timers are started in parallel, because different threads send at
     // the same time. This will cause the OLA rpc stream to break and a restart
     // is required.
-    public synchronized void send(int sendDelayMillis, boolean enableMonitor) {
+    public synchronized void send() {
         logger.trace("Sending a lighting value");
 
         if (externalSync) {
@@ -169,7 +177,7 @@ public class DefaultLightingService implements LightingService {
             public void run() {
                 try {
                     // Send the universe
-                    sendUniverse(enableMonitor);
+                    sendUniverse(settingsService.getSettings().getEnableMonitor());
                 } catch (Exception e) {
                     logger.error("Could not send the lighting universe", e);
                 }
@@ -183,7 +191,7 @@ public class DefaultLightingService implements LightingService {
         };
 
         sendUniverseTimer = new Timer();
-        sendUniverseTimer.schedule(timerTask, sendDelayMillis);
+        sendUniverseTimer.schedule(timerTask, settingsService.getSettings().getLightingSendDelayMillis());
     }
 
     @Override
@@ -230,8 +238,7 @@ public class DefaultLightingService implements LightingService {
         return null;
     }
 
-    private void createOlaUniverse(String portId)
-            throws IOException {
+    private void createOlaUniverse(String portId) throws IOException {
 
         int universeId = 1;
         String name = "Standard";
@@ -348,13 +355,15 @@ public class DefaultLightingService implements LightingService {
     public List<OlaPlugin> getOlaPlugins() {
         List<OlaPlugin> olaPluginList = new ArrayList<>();
 
-        List<Ola.PluginInfo> pluginInfoList = olaClient.getPlugins().getPluginList();
-        for (Ola.PluginInfo pluginInfo : pluginInfoList) {
-            OlaPlugin olaPlugin = createOlaPluginFromInfo(pluginInfo);
-            olaPluginList.add(olaPlugin);
+        if (olaClient != null) {
+            List<Ola.PluginInfo> pluginInfoList = olaClient.getPlugins().getPluginList();
+            for (Ola.PluginInfo pluginInfo : pluginInfoList) {
+                OlaPlugin olaPlugin = createOlaPluginFromInfo(pluginInfo);
+                olaPluginList.add(olaPlugin);
 
-            for (Ola.PluginInfo conflictingPluginInfo : olaClient.getPluginState(olaPlugin.getId()).getConflictsWithList()) {
-                olaPlugin.getConflictList().add(createOlaPluginFromInfo(conflictingPluginInfo));
+                for (Ola.PluginInfo conflictingPluginInfo : olaClient.getPluginState(olaPlugin.getId()).getConflictsWithList()) {
+                    olaPlugin.getConflictList().add(createOlaPluginFromInfo(conflictingPluginInfo));
+                }
             }
         }
 
@@ -365,10 +374,37 @@ public class DefaultLightingService implements LightingService {
     public void enablePlugins(List<OlaPlugin> olaPluginList) {
         // Disable all plugins, except the one to be enabled
         for (OlaPlugin olaPlugin : getOlaPlugins()) {
-            boolean enabled = olaPluginList.stream()
-                    .anyMatch(plugin -> plugin.getName().equals(olaPlugin.getName()));
+            boolean enabled = olaPluginList.stream().anyMatch(plugin -> plugin.getName().equals(olaPlugin.getName()));
             olaClient.setPluginState(olaPlugin.getId(), enabled);
         }
+    }
+
+    @Override
+    public void executeAction(ActionLighting actionLighting) {
+        for (LightingActionUniverse lightingActionUniverse : actionLighting.getLightingActionUniverseList()) {
+            LightingUniverse lightingUniverse = null;
+
+            if (lightingUniverseList.size() > 1) {
+                Optional<LightingUniverse> lightingUniverseOptional = lightingUniverseList.stream().filter(universe -> universe.getName().equals(lightingActionUniverse.getUniverseName())).findFirst();
+                if (lightingUniverseOptional.isPresent()) {
+                    lightingUniverse = lightingUniverseOptional.get();
+                }
+            } else if (lightingUniverseList.size() == 1) {
+                lightingUniverse = lightingUniverseList.get(0);
+            }
+
+            if (lightingUniverse == null) {
+                logger.warn("Could not executeFromTrigger lighting action on universe " + lightingActionUniverse.getUniverseName() + " because no matching universe was found");
+                return;
+            }
+
+
+            for (LightingActionChannelValue channelValue : lightingActionUniverse.getChannelValueList()) {
+                lightingUniverse.getUniverse().put(channelValue.getChannel(), channelValue.getValue());
+            }
+        }
+
+        send();
     }
 
 }

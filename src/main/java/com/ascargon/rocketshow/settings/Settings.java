@@ -4,13 +4,11 @@ import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.audio.AudioDevice;
 import com.ascargon.rocketshow.lighting.OlaPlugin;
-import com.ascargon.rocketshow.midi.MidiControl;
-import com.ascargon.rocketshow.midi.MidiDevice;
-import com.ascargon.rocketshow.midi.MidiMapping;
-import com.ascargon.rocketshow.midi.MidiRouting;
-import com.ascargon.rocketshow.raspberry.RaspberryGpioControl;
+import com.ascargon.rocketshow.midi.*;
+import com.ascargon.rocketshow.raspberry.ActionTriggerRaspberryGpio;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;
+import jakarta.xml.bind.annotation.XmlElements;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
@@ -45,9 +43,23 @@ public class Settings {
     private MidiDevice midiInDevice;
     private MidiDevice midiOutDevice;
     private List<RemoteDevice> remoteDeviceList = new ArrayList<>();
+
+    /**
+     * @deprecated Not used since settings version 3 anymore. Use actionTriggerMidiList Instead.
+     */
+    @Deprecated
     private List<MidiControl> midiControlList = new ArrayList<>();
+
+    // Execute actions based on received MIDI events
+    private List<ActionTriggerMidi> actionTriggerMidiList = new ArrayList<>();
+
     private MidiMapping midiMapping;
-    private List<RaspberryGpioControl> raspberryGpioControlList = new ArrayList<>();
+
+    // Execute actions based on pressed buttons, connected to GPIO pins
+    private List<ActionTriggerRaspberryGpio> actionTriggerRaspberryGpioList = new ArrayList<>();
+
+    // All configured GPIO pins to be able to send commands to (high/low)
+    private List<Integer> raspberryGpioOutputPinBcmList = new ArrayList<>();
 
     // Used to collect all lighting events within a certain amount of time and send them alltogether, not
     // one by one as soon as they occur, for performance reasons. The higher, the more events will be "merged",
@@ -56,7 +68,7 @@ public class Settings {
     private Integer lightingSendDelayMillis;
 
     // The active OLA plugin
-    private List<OlaPlugin> lightingOlaPluginList = new ArrayList<>();;
+    private List<OlaPlugin> lightingOlaPluginList = new ArrayList<>();
 
     // Global play offset on file types
     private Integer offsetMillisMidi;
@@ -94,14 +106,32 @@ public class Settings {
     private Integer wlanApChannel;
     private String wlanApCountryCode;
     private Boolean enableRaspberryGpio = false;
-    private int raspberryGpioDebounceMillis = 500;
+    private Long raspberryGpioDebounceMillis = 3L;
+
+    /**
+     * @deprecated Was never really in use
+     */
+    @Deprecated
     private boolean raspberryGpioNoHardwareTrigger = false;
+
+    /**
+     * @deprecated Was never really in use
+     */
+    @Deprecated
     private int raspberryGpioTimerPeriodMillis = 2;
+
+    /**
+     * @deprecated Was never really in use
+     */
+    @Deprecated
     private int raspberryGpioCyclesHigh = 3;
+
     private Boolean enableMonitor;
     private Integer designerFrequencyHertz;
     private Boolean designerLivePreview = false;
     private Boolean updateTestBranch = false;
+
+    private List<Instrument> instrumentList = new ArrayList<>();
 
     // Only filled, if it's a ready to use version
     private Integer readyToUseVersion;
@@ -130,13 +160,11 @@ public class Settings {
         return midiControlList;
     }
 
-    @XmlElement(name = "raspberryGpioControl")
-    @XmlElementWrapper(name = "raspberryGpioControlList")
-    public List<RaspberryGpioControl> getRaspberryGpioControlList() {
-        return raspberryGpioControlList;
+    @XmlElement(name = "raspberryGpioOutputPinBcm")
+    @XmlElementWrapper(name = "raspberryGpioOutputPinBcmList")
+    public List<Integer> getRaspberryGpioOutputPinBcmList() {
+        return raspberryGpioOutputPinBcmList;
     }
-
-    private List<Instrument> instrumentList = new ArrayList<>();
 
     @XmlElement(name = "audioBus")
     @XmlElementWrapper(name = "audioBusList")
@@ -148,6 +176,19 @@ public class Settings {
     @XmlElementWrapper(name = "instrumentList")
     public List<Instrument> getInstrumentList() {
         return instrumentList;
+    }
+
+    @XmlElement(name = "actionTriggerRaspberryGpio")
+    @XmlElementWrapper(name = "actionTriggerRaspberryGpioList")
+    public List<ActionTriggerRaspberryGpio> getActionTriggerRaspberryGpioList() {
+        return actionTriggerRaspberryGpioList;
+    }
+
+    @XmlElementWrapper(name = "actionTriggerMidiList")
+    @XmlElements({@XmlElement(type = ActionTriggerMidiNoteOn.class, name = "actionTriggerMidiNoteOn"),
+            @XmlElement(type = ActionTriggerMidiProgramChange.class, name = "actionTriggerMidiProgramChange")})
+    public List<ActionTriggerMidi> getActionTriggerMidiList() {
+        return actionTriggerMidiList;
     }
 
 }

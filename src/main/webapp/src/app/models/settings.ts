@@ -1,37 +1,32 @@
-import { RaspberryGpioControl } from "./raspberry-gpio-control";
+import { ActionTriggerRaspberryGpio } from "./action-trigger-raspberry-gpio";
 import { Instrument } from "./instrument";
-import { AudioDevice } from "./audio-device";
 import { MidiRouting } from "./midi-routing";
 import { AudioBus } from "./audio-bus";
-import { MidiControl } from "./midi-control";
 import { MidiDevice } from "./midi-device";
 import { RemoteDevice } from "./remote-device";
 import { MidiMapping } from "./midi-mapping";
 import { OlaPlugin } from "./ola-plugin";
+import { ActionTriggerMidi } from "./action-trigger-midi";
+import { ActionTriggerMidiNoteOn } from "./action-trigger-midi-note-on";
+import { ActionTriggerMidiProgramChange } from "./action-trigger-midi-program-change";
 
 export class Settings {
   version: number;
-  basePath: string;
-  mediaPath: string;
-  midiPath: string;
-  audioPath: string;
-  videoPath: string;
-  leadSheetPath: string;
   midiInDevice: MidiDevice;
   midiOutDevice: MidiDevice;
   remoteDeviceList: RemoteDevice[];
   deviceInMidiRoutingList: MidiRouting[];
   remoteMidiRoutingList: MidiRouting[];
-  midiControlList: MidiControl[];
+  actionTriggerMidiList: ActionTriggerMidi[] = [];
   midiMapping: MidiMapping;
-  raspberryGpioControlList: RaspberryGpioControl[];
+  actionTriggerRaspberryGpioList: ActionTriggerRaspberryGpio[];
+  raspberryGpioOutputPinBcmList: number[];
   lightingSendDelayMillis: number;
   lightingOlaPluginList: OlaPlugin[] = [];
   defaultComposition: string;
   offsetMillisMidi: number;
   offsetMillisAudio: number;
   offsetMillisVideo: number;
-  audioPlayerType: string;
   loggingLevel: string;
   language: string;
   deviceName: string;
@@ -65,14 +60,6 @@ export class Settings {
       return;
     }
 
-    this.version = data.version;
-    this.basePath = data.basePath;
-    this.mediaPath = data.mediaPath;
-    this.midiPath = data.midiPath;
-    this.audioPath = data.audioPath;
-    this.videoPath = data.videoPath;
-    this.leadSheetPath = data.leadSheetPath;
-
     if (data.midiInDevice) {
       this.midiInDevice = new MidiDevice(data.midiInDevice);
     }
@@ -105,11 +92,13 @@ export class Settings {
       }
     }
 
-    if (data.midiControlList) {
-      this.midiControlList = [];
+    if (data.actionTriggerMidiList) {
+      this.actionTriggerMidiList = [];
 
-      for (let midiControl of data.midiControlList) {
-        this.midiControlList.push(new MidiControl(midiControl));
+      for (let actionTriggerMidi of data.actionTriggerMidiList) {
+        this.actionTriggerMidiList.push(
+          Settings.createActionTriggerMidi(actionTriggerMidi)
+        );
       }
     }
 
@@ -117,13 +106,21 @@ export class Settings {
       this.midiMapping = new MidiMapping(data.midiMapping);
     }
 
-    if (data.raspberryGpioControlList) {
-      this.raspberryGpioControlList = [];
+    if (data.actionTriggerRaspberryGpioList) {
+      this.actionTriggerRaspberryGpioList = [];
 
-      for (let raspberryGpioControl of data.raspberryGpioControlList) {
-        this.raspberryGpioControlList.push(
-          new RaspberryGpioControl(raspberryGpioControl)
+      for (let actionTriggerRaspberryGpio of data.actionTriggerRaspberryGpioList) {
+        this.actionTriggerRaspberryGpioList.push(
+          new ActionTriggerRaspberryGpio(actionTriggerRaspberryGpio)
         );
+      }
+    }
+
+    if (data.raspberryGpioOutputPinBcmList) {
+      this.raspberryGpioOutputPinBcmList = [];
+
+      for (let raspberryGpioOutputPinBcm of data.raspberryGpioOutputPinBcmList) {
+        this.raspberryGpioOutputPinBcmList.push(raspberryGpioOutputPinBcm);
       }
     }
 
@@ -141,7 +138,6 @@ export class Settings {
     this.offsetMillisMidi = data.offsetMillisMidi;
     this.offsetMillisAudio = data.offsetMillisAudio;
     this.offsetMillisVideo = data.offsetMillisVideo;
-    this.audioPlayerType = data.audioPlayerType;
     this.loggingLevel = data.loggingLevel;
     this.language = data.language;
     this.deviceName = data.deviceName;
@@ -185,5 +181,21 @@ export class Settings {
     this.designerLivePreview = data.designerLivePreview;
     this.updateTestBranch = data.updateTestBranch;
     this.readyToUseVersion = data.readyToUseVersion;
+  }
+
+  public static createActionTriggerMidi(
+    actionTriggerMidi: any
+  ): ActionTriggerMidi {
+    let trigger: ActionTriggerMidi;
+    if (actionTriggerMidi.actionTriggerMidiNoteOn) {
+      trigger = new ActionTriggerMidiNoteOn(
+        actionTriggerMidi.actionTriggerMidiNoteOn
+      );
+    } else if (actionTriggerMidi.actionTriggerMidiProgramChange) {
+      trigger = new ActionTriggerMidiProgramChange(
+        actionTriggerMidi.actionTriggerMidiProgramChange
+      );
+    }
+    return trigger;
   }
 }

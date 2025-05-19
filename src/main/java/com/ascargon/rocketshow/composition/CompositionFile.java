@@ -7,8 +7,9 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import jakarta.xml.bind.annotation.XmlRootElement;
+import lombok.Getter;
+import lombok.Setter;
 
-@XmlRootElement
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.WRAPPER_OBJECT)
@@ -17,10 +18,12 @@ import jakarta.xml.bind.annotation.XmlRootElement;
         @JsonSubTypes.Type(value = AudioCompositionFile.class, name = "audioFile"),
         @JsonSubTypes.Type(value = VideoCompositionFile.class, name = "videoFile")
 })
-abstract public class CompositionFile {
+@Getter
+@Setter
+public abstract class CompositionFile {
 
     public enum CompositionFileType {
-        MIDI, AUDIO, VIDEO, UNKNOWN
+        MIDI, AUDIO, VIDEO
     }
 
     private String name;
@@ -28,52 +31,5 @@ abstract public class CompositionFile {
     private long durationMillis;
     private boolean loop = false;
     private int offsetMillis = 0;
-
-    protected CompositionFile() {
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public int getOffsetMillis() {
-        return offsetMillis;
-    }
-
-    public void setOffsetMillis(int offsetMillis) {
-        this.offsetMillis = offsetMillis;
-    }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
-    }
-
-    public long getDurationMillis() {
-        return durationMillis;
-    }
-
-    public void setDurationMillis(long durationMillis) {
-        this.durationMillis = durationMillis;
-    }
-
-    public boolean isLoop() {
-        return loop;
-    }
-
-    public void setLoop(boolean loop) {
-        this.loop = loop;
-    }
-
-    public CompositionFileType getType() {
-        return CompositionFileType.UNKNOWN;
-    }
 
 }

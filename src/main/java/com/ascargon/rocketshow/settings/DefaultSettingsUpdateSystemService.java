@@ -26,15 +26,17 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
     private final String ROCKET_SHOW_SETTINGS_START = "# ROCKETSHOWSTART";
     private final String ROCKET_SHOW_SETTINGS_END = "# ROCKETSHOWEND";
 
+    private final SettingsService settingsService;
     private final OperatingSystemInformationService operatingSystemInformationService;
     private final AudioService audioService;
     private final LightingService lightingService;
 
     public DefaultSettingsUpdateSystemService(
-            AudioService audioService,
+            SettingsService settingsService, AudioService audioService,
             OperatingSystemInformationService operatingSystemInformationService,
             LightingService lightingService
     ) {
+        this.settingsService = settingsService;
         this.audioService = audioService;
         this.operatingSystemInformationService = operatingSystemInformationService;
         this.lightingService = lightingService;
@@ -257,8 +259,10 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
     }
 
     @Override
-    public void update(Settings settings) {
+    public void update() {
         // Update all system settings
+
+        Settings settings = settingsService.getSettings();
 
         if (OperatingSystemInformation.Type.LINUX.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
             try {

@@ -91,7 +91,7 @@ export class CompositionService {
   }
 
   saveComposition(composition: Composition): Observable<Object> {
-    return this.http.post("composition", composition.stringify());
+    return this.http.post("composition", JSON.stringify(composition));
   }
 
   deleteComposition(name: string): Observable<Object> {
@@ -99,7 +99,7 @@ export class CompositionService {
   }
 
   saveSet(set: Set): Observable<Object> {
-    return this.http.post("set", set.stringify());
+    return this.http.post("set", JSON.stringify(set));
   }
 
   deleteSet(name: string): Observable<Object> {
@@ -108,7 +108,7 @@ export class CompositionService {
 
   testPlay(composition: Composition): Observable<TestPlayResponse> {
     return this.http
-      .post("composition/test-play", composition.stringify())
+      .post("composition/test-play", JSON.stringify(composition))
       .pipe(
         map((response) => {
           return new TestPlayResponse(response);

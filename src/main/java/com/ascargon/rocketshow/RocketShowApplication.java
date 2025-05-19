@@ -8,7 +8,9 @@ import com.ascargon.rocketshow.lighting.designer.FixtureService;
 import com.ascargon.rocketshow.midi.MidiDeviceInService;
 import com.ascargon.rocketshow.midi.MidiDeviceOutService;
 import com.ascargon.rocketshow.play.PlayerService;
-import com.ascargon.rocketshow.raspberry.RaspberryGpioControlActionExecutionService;
+import com.ascargon.rocketshow.settings.SettingsUpdateSystemService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
@@ -17,22 +19,23 @@ import org.springframework.context.ConfigurableApplicationContext;
 @SpringBootApplication(exclude = SecurityAutoConfiguration.class)
 public class RocketShowApplication {
 
+    private final static Logger logger = LoggerFactory.getLogger(RocketShowApplication.class);
+
     private static String[] args;
     private static ConfigurableApplicationContext context;
 
-    private AudioDeviceKeepOpenService audioDeviceKeepOpenService;
-
     public static void main(String[] args) {
         ConfigurableApplicationContext context = SpringApplication.run(RocketShowApplication.class, args);
+
+        // Initially update the system, based on the settings
+        SettingsUpdateSystemService settingsUpdateSystemService = context.getBean(SettingsUpdateSystemService.class);
+        settingsUpdateSystemService.update();
 
         // Initialize the notification service
         context.getBean(NotificationService.class);
 
         // Load the image displayer service to initially display a black screen, if required
         context.getBean(ImageDisplayingService.class);
-
-        // Initialize the Raspberry GPIO listener
-        context.getBean(RaspberryGpioControlActionExecutionService.class);
 
         // Initialize the player to start the default composition, if required
         context.getBean(PlayerService.class);
@@ -61,6 +64,8 @@ public class RocketShowApplication {
 
         RocketShowApplication.args = args;
         RocketShowApplication.context = context;
+
+        logger.info("*** SYSTEM READY ***");
     }
 
     public static void restart() {

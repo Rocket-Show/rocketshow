@@ -10,6 +10,7 @@ import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.midi.MidiDeviceInService;
 import com.ascargon.rocketshow.midi.MidiDeviceOutService;
+import com.ascargon.rocketshow.settings.SettingsUpdateSystemService;
 import com.ascargon.rocketshow.util.*;
 import jakarta.xml.bind.JAXBException;
 import org.slf4j.Logger;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController()
@@ -49,8 +51,10 @@ class SystemController {
     private final CompositionService compositionService;
     private final DesignerService designerService;
     private final BackupService backupService;
+    private final SettingsUpdateSystemService settingsUpdateSystemService;
+    private final ActionExecutionService actionExecutionService;
 
-    public SystemController(ControllerService controllerService, StateService stateService, SetService setService, PlayerService playerService, RebootService rebootService, ShutdownService shutdownService, SettingsService settingsService, MidiDeviceInService midiDeviceInService, MidiDeviceOutService midiDeviceOutService, UpdateService updateService, FactoryResetService factoryResetService, LogDownloadService logDownloadService, DiskSpaceService diskSpaceService, OperatingSystemInformationService operatingSystemInformationService, SessionService sessionService, CompositionService compositionService, DesignerService designerService, BackupService backupService) {
+    public SystemController(ControllerService controllerService, StateService stateService, SetService setService, PlayerService playerService, RebootService rebootService, ShutdownService shutdownService, SettingsService settingsService, MidiDeviceInService midiDeviceInService, MidiDeviceOutService midiDeviceOutService, UpdateService updateService, FactoryResetService factoryResetService, LogDownloadService logDownloadService, DiskSpaceService diskSpaceService, OperatingSystemInformationService operatingSystemInformationService, SessionService sessionService, CompositionService compositionService, DesignerService designerService, BackupService backupService, SettingsUpdateSystemService settingsUpdateSystemService, ActionExecutionService actionExecutionService) {
         this.controllerService = controllerService;
         this.stateService = stateService;
         this.setService = setService;
@@ -69,6 +73,12 @@ class SystemController {
         this.compositionService = compositionService;
         this.designerService = designerService;
         this.backupService = backupService;
+        this.settingsUpdateSystemService = settingsUpdateSystemService;
+        this.actionExecutionService = actionExecutionService;
+    }
+
+    private void settingsUpdateSystem() {
+        settingsUpdateSystemService.update();
     }
 
     @ExceptionHandler(Exception.class)
@@ -134,6 +144,7 @@ class SystemController {
     public ResponseEntity<Void> saveSettings(@RequestBody Settings settings) throws JAXBException {
         settingsService.setSettings(settings);
         settingsService.save();
+        settingsUpdateSystem();
 
         if (settings.getDesignerLivePreview()) {
             designerService.startPreview(0);
@@ -148,6 +159,7 @@ class SystemController {
     public ResponseEntity<Void> updateLightingOlaPlugins(@RequestBody List<OlaPlugin> olaPluginList) throws JAXBException {
         settingsService.getSettings().setLightingOlaPluginList(olaPluginList);
         settingsService.save();
+        settingsUpdateSystem();
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -192,6 +204,16 @@ class SystemController {
         if (dzchunkindex.equals(dztotalchunkcount - 1)) {
             backupService.restoreFinish();
         }
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("execute-action")
+    public ResponseEntity<Void> executeAction(@RequestBody Action action) throws Exception {
+        // ensure, the action is only executed locally
+        action.setExecuteLocally(true);
+        action.setRemoteDeviceNames(new ArrayList<>());
+
+        actionExecutionService.execute(action);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

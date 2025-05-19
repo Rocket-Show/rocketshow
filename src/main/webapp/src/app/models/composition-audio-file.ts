@@ -19,4 +19,8 @@ export class CompositionAudioFile extends CompositionFile {
       this.volume = data.volume;
     }
   }
+
+  toJSON() {
+    return { audioFile: { ...this } };
+  }
 }

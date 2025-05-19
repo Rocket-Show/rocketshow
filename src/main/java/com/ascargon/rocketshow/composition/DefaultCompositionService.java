@@ -251,13 +251,18 @@ public class DefaultCompositionService implements CompositionService {
             }
         }
 
-        // Set the duration of the composition to the maximum duration of the
-        // files
+        // Set the duration of the composition to the maximum duration of the files or action trigger positions
         long maxDuration = 0;
 
         for (CompositionFile compositionFile : composition.getCompositionFileList()) {
             if (compositionFile.getDurationMillis() > maxDuration) {
                 maxDuration = compositionFile.getDurationMillis();
+            }
+        }
+
+        for(ActionTriggerComposition actionTriggerComposition : composition.getActionTriggerList()) {
+            if(actionTriggerComposition.getPositionMillis() > maxDuration) {
+                maxDuration = actionTriggerComposition.getPositionMillis();
             }
         }
 

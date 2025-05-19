@@ -16,6 +16,8 @@ import { EditorCompositionLeadSheetComponent } from "./editor-composition-lead-s
 import { LeadSheet } from "../../models/lead-sheet";
 import { Settings } from "../../models/settings";
 import { SettingsService } from "../../services/settings.service";
+import { ActionTriggerComposition } from "../../models/action-trigger-composition";
+import { EditorCompositionActionComponent } from "./editor-composition-action/editor-composition-action.component";
 
 @Component({
   selector: "app-editor-composition",
@@ -118,7 +120,7 @@ export class EditorCompositionComponent implements OnInit {
   }
 
   private copyInitialComposition() {
-    let compositionString = this.currentComposition.stringify();
+    let compositionString = JSON.stringify(this.currentComposition);
 
     this.currentComposition = new Composition(JSON.parse(compositionString));
     this.initialComposition = new Composition(JSON.parse(compositionString));
@@ -278,12 +280,14 @@ export class EditorCompositionComponent implements OnInit {
       .subscribe();
   }
 
-  // Add a new file to the composition
   addCompositionFile() {
     this.editCompositionFileDetails(0, true);
   }
 
-  // Add a new lead sheet to the composition
+  addAction() {
+    this.editActionTriggerDetails(0, true);
+  }
+
   addLeadSheet() {
     this.editLeadSheet(0, true);
   }
@@ -297,11 +301,10 @@ export class EditorCompositionComponent implements OnInit {
     this.currentComposition.fileList.splice(fileIndex, 1);
   }
 
-  // Edit a composition file's details
   editCompositionFileDetails(fileIndex: number, addNew: boolean = false) {
     // Create a backup of the current composition
     let compositionCopy: Composition = new Composition(
-      JSON.parse(this.currentComposition.stringify())
+      JSON.parse(JSON.stringify(this.currentComposition))
     );
 
     if (addNew) {
@@ -335,11 +338,47 @@ export class EditorCompositionComponent implements OnInit {
     );
   }
 
-  // Edit a lead sheet's details
+  editActionTriggerDetails(actionIndex: number, addNew: boolean = false) {
+    // Create a backup of the current composition
+    let compositionCopy: Composition = new Composition(
+      JSON.parse(JSON.stringify(this.currentComposition))
+    );
+
+    if (addNew) {
+      // Add a new action, if necessary
+      let newAction: ActionTriggerComposition = new ActionTriggerComposition();
+      compositionCopy.actionTriggerList.push(newAction);
+      actionIndex = compositionCopy.actionTriggerList.length - 1;
+    }
+
+    // Show the file details dialog
+    let fileDialog = this.modalService.show(EditorCompositionActionComponent, {
+      keyboard: true,
+      ignoreBackdropClick: true,
+      class: "modal-lg",
+      initialState: {
+        actionIndex: actionIndex,
+        actionTrigger: compositionCopy.actionTriggerList[actionIndex],
+        composition: compositionCopy,
+      },
+    });
+
+    (<EditorCompositionActionComponent>fileDialog.content).onClose.subscribe(
+      (result) => {
+        if (result === 1) {
+          // OK has been pressed -> save
+          this.currentComposition.actionTriggerList[actionIndex] = (<
+            EditorCompositionActionComponent
+          >fileDialog.content).actionTrigger;
+        }
+      }
+    );
+  }
+
   editLeadSheet(leadSheetIndex: number, addNew: boolean = false) {
     // Create a backup of the current composition
     let compositionCopy: Composition = new Composition(
-      JSON.parse(this.currentComposition.stringify())
+      JSON.parse(JSON.stringify(this.currentComposition))
     );
 
     if (addNew) {
@@ -378,6 +417,10 @@ export class EditorCompositionComponent implements OnInit {
 
   deleteLeadSheet(leadSheetIndex: number) {
     this.currentComposition.leadSheetList.splice(leadSheetIndex, 1);
+  }
+
+  deleteActionTrigger(actionTriggerIndex: number) {
+    this.currentComposition.actionTriggerList.splice(actionTriggerIndex, 1);
   }
 
   multipleVideoImage(): boolean {

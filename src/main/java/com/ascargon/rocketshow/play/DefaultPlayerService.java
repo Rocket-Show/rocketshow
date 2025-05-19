@@ -1,20 +1,20 @@
 package com.ascargon.rocketshow.play;
 
-import com.ascargon.rocketshow.api.RemoteDevice;
-import com.ascargon.rocketshow.api.ActivityNotificationAudioService;
-import com.ascargon.rocketshow.api.ActivityNotificationMidiService;
+import com.ascargon.rocketshow.audio.ActivityNotificationAudioService;
+import com.ascargon.rocketshow.midi.ActivityNotificationMidiService;
 import com.ascargon.rocketshow.api.NotificationService;
+import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.audio.AudioService;
 import com.ascargon.rocketshow.composition.Composition;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.lighting.LightingService;
-import com.ascargon.rocketshow.lighting.Midi2LightingConvertService;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
-import com.ascargon.rocketshow.midi.MidiDeviceOutService;
+import com.ascargon.rocketshow.midi.MidiRouterFactory;
 import com.ascargon.rocketshow.session.SessionService;
 import com.ascargon.rocketshow.settings.CapabilitiesService;
 import com.ascargon.rocketshow.settings.SettingsService;
+import com.ascargon.rocketshow.util.ActionExecutionService;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import com.sun.jna.Platform;
 import lombok.Getter;
@@ -57,15 +57,15 @@ public class DefaultPlayerService implements PlayerService {
     @Getter
     private final ActivityNotificationAudioService activityNotificationAudioService;
     @Getter
-    private final Midi2LightingConvertService midi2LightingConvertService;
-    @Getter
-    private final MidiDeviceOutService midiDeviceOutService;
-    @Getter
     private final AudioService audioService;
     @Getter
     private final DesignerService designerService;
     @Getter
     private final OperatingSystemInformationService operatingSystemInformationService;
+    @Getter
+    private final MidiRouterFactory midiRouterFactory;
+    @Getter
+    private final ActionExecutionService actionExecutionService;
 
     // Regular composition player
     private final CompositionPlayer currentCompositionPlayer;
@@ -78,7 +78,7 @@ public class DefaultPlayerService implements PlayerService {
 
     private final List<CompositionPlayer> sampleCompositionPlayerList = new ArrayList<>();
 
-    public DefaultPlayerService(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, SettingsService settingsService, CompositionService compositionService, SetService setService, SessionService sessionService, LightingService lightingService, CapabilitiesService capabilitiesService, ActivityNotificationAudioService activityNotificationAudioService, Midi2LightingConvertService midi2LightingConvertService, MidiDeviceOutService midiDeviceOutService, AudioService audioService, DesignerService designerService, OperatingSystemInformationService operatingSystemInformationService) {
+    public DefaultPlayerService(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, SettingsService settingsService, CompositionService compositionService, SetService setService, SessionService sessionService, LightingService lightingService, CapabilitiesService capabilitiesService, ActivityNotificationAudioService activityNotificationAudioService, AudioService audioService, DesignerService designerService, OperatingSystemInformationService operatingSystemInformationService, MidiRouterFactory midiRouterFactory, ActionExecutionService actionExecutionService) {
         this.notificationService = notificationService;
         this.activityNotificationMidiService = activityNotificationMidiService;
         this.settingsService = settingsService;
@@ -88,16 +88,16 @@ public class DefaultPlayerService implements PlayerService {
         this.lightingService = lightingService;
         this.capabilitiesService = capabilitiesService;
         this.activityNotificationAudioService = activityNotificationAudioService;
-        this.midi2LightingConvertService = midi2LightingConvertService;
-        this.midiDeviceOutService = midiDeviceOutService;
         this.audioService = audioService;
         this.designerService = designerService;
         this.operatingSystemInformationService = operatingSystemInformationService;
+        this.midiRouterFactory = midiRouterFactory;
 
-        currentCompositionPlayer = new CompositionPlayer(this);
-        defaultCompositionPlayer = new CompositionPlayer(this);
+        currentCompositionPlayer = new CompositionPlayer(this, midiRouterFactory);
+        defaultCompositionPlayer = new CompositionPlayer(this, midiRouterFactory);
+        this.actionExecutionService = actionExecutionService;
         defaultCompositionPlayer.setDefaultComposition(true);
-        testCompositionPlayer = new CompositionPlayer(this);
+        testCompositionPlayer = new CompositionPlayer(this, midiRouterFactory);
 
         try {
             // Setup the Gstreamer paths
@@ -284,7 +284,7 @@ public class DefaultPlayerService implements PlayerService {
         // to share the same instance) and play it
         Composition composition = compositionService
                 .cloneComposition(compositionService.getComposition(compositionName));
-        CompositionPlayer compositionPlayer = new CompositionPlayer(this);
+        CompositionPlayer compositionPlayer = new CompositionPlayer(this, midiRouterFactory);
         compositionPlayer.setSample(true);
         compositionPlayer.setComposition(composition);
         sampleCompositionPlayerList.add(compositionPlayer);

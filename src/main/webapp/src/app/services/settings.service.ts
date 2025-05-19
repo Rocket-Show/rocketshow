@@ -3,12 +3,16 @@ import { AudioBus } from "./../models/audio-bus";
 import { TranslateService } from "@ngx-translate/core";
 import { AudioDevice } from "./../models/audio-device";
 import { MidiDevice } from "./../models/midi-device";
-import { Subject, Observable, of } from "rxjs";
+import { Subject, Observable, of, merge } from "rxjs";
 import { map } from "rxjs/operators";
 import { Settings } from "./../models/settings";
 import { Injectable } from "@angular/core";
 import { Language } from "../models/language";
 import { OlaPlugin } from "../models/ola-plugin";
+import { ActionTriggerMidi } from "../models/action-trigger-midi";
+import { ActionTriggerMidiNoteOn } from "../models/action-trigger-midi-note-on";
+import { ActionTriggerMidiProgramChange } from "../models/action-trigger-midi-program-change";
+import { RaspberryPiPin } from "../models/raspberry-pi-pin";
 
 @Injectable()
 export class SettingsService {
@@ -16,8 +20,12 @@ export class SettingsService {
   settingsChanged: Subject<void> = new Subject<void>();
 
   languages: Language[] = [];
+  originalSettings: any; // Raw settings response to keep attributes unknown to the webapp
   settings: Settings;
+
   observable: Observable<Settings>;
+
+  raspberryPiPinIdList: RaspberryPiPin[] = [];
 
   constructor(
     private http: HttpClient,
@@ -34,6 +42,31 @@ export class SettingsService {
     language.key = "de";
     language.name = "Deutsch";
     this.languages.push(language);
+
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(4));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(5));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(6));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(7));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(8));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(9));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(10));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(11));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(12));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(13));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(14));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(15));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(16));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(17));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(18));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(19));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(20));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(21));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(22));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(23));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(24));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(25));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(26));
+    this.raspberryPiPinIdList.push(new RaspberryPiPin(27));
   }
 
   getSettings(clearCache: boolean = false): Observable<Settings> {
@@ -53,6 +86,7 @@ export class SettingsService {
     this.observable = this.http.get("system/settings").pipe(
       map((response) => {
         if (!this.settings) {
+          this.originalSettings = response;
           this.settings = new Settings(response);
         }
         this.observable = undefined;
@@ -64,8 +98,9 @@ export class SettingsService {
     return this.observable;
   }
 
-  saveSettings(settings: Settings): Observable<Object> {
-    return this.http.post("system/settings", JSON.stringify(settings));
+  saveSettings(): Observable<Object> {
+    const mergedSettings = { ...this.originalSettings, ...this.settings }; // Merge known and unknown fields
+    return this.http.post("system/settings", JSON.stringify(mergedSettings));
   }
 
   updateLightingOlaPlugins(olaPluginList: OlaPlugin[]): Observable<Object> {
