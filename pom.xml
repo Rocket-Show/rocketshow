@@ -184,6 +184,13 @@
             <version>1.5</version>
         </dependency>
 
+        <!-- Read/write data on serial ports (used for MIDI communication) -->
+        <dependency>
+            <groupId>com.fazecast</groupId>
+            <artifactId>jSerialComm</artifactId>
+            <version>2.11.0</version>
+        </dependency>
+
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>

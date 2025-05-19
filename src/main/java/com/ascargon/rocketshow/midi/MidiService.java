@@ -1,6 +1,9 @@
 package com.ascargon.rocketshow.midi;
 
+import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.MidiMessage;
 import javax.sound.midi.MidiUnavailableException;
+import java.nio.ByteBuffer;
 import java.util.List;
 
 public interface MidiService {

@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.MidiMessage;
 import javax.sound.midi.ShortMessage;
 import java.io.File;
 import java.nio.ByteBuffer;
@@ -77,6 +78,7 @@ public class CompositionPlayer {
     private final AudioService audioService;
     private final MidiRouterFactory midiRouterFactory;
     private final ActionExecutionService actionExecutionService;
+    private final MidiService midiService;
 
     private Composition composition;
     private PlayState playState = PlayState.STOPPED;
@@ -109,6 +111,9 @@ public class CompositionPlayer {
     // All MIDI routers
     private final List<MidiRouter> midiRouterList = new ArrayList<>();
 
+    // A MIDI message parser for MIDI files inside this composition
+    private MidiMessageParser midiMessageParser = new MidiMessageParser();
+
     public CompositionPlayer(DefaultPlayerService playerService, MidiRouterFactory midiRouterFactory) {
         this.playerService = playerService;
         this.notificationService = playerService.getNotificationService();
@@ -123,34 +128,27 @@ public class CompositionPlayer {
         this.audioService = playerService.getAudioService();
         this.midiRouterFactory = midiRouterFactory;
         this.actionExecutionService = playerService.getActionExecutionService();
+        this.midiService = playerService.getMidiService();
 
         this.midiMapping.setParent(settingsService.getSettings().getMidiMapping());
     }
 
-    // Taken from gstreamers gstfluiddec.c -> handle_buffer
     private void processMidiBuffer(ByteBuffer byteBuffer, MidiRouter midiRouter) {
-        int event = byteBuffer.get(0);
-        int type = event & 0xf0;
+        try {
+            Optional<MidiMessage> maybeMessage = midiMessageParser.offerByteBuffer(byteBuffer);
+            maybeMessage.ifPresent(midiMessage -> {
+                try {
+                    midiRouter.sendSignal(midiMessage);
+                } catch (InvalidMidiDataException e) {
+                    logger.error("Could not send MIDI signal from composition file", e);
+                }
 
-        if (type != 0xf0) {
-            // Common messages
-            int channel = event & 0x0f;
-            int command = event & 0xf0;
-            int data1 = byteBuffer.get(1) & 0x7f;
-
-            // TODO Can result in index out of bounds exception
-            int data2 = 0;
-
-            try {
-                data2 = byteBuffer.get(2) & 0x7f;
-            } catch (Exception exception) {
-            }
-
-            try {
-                midiRouter.sendSignal(new ShortMessage(command, channel, data1, data2), MidiSource.MIDI_FILE);
-            } catch (InvalidMidiDataException e) {
-                logger.error("Could not send MIDI signal from MIDI file", e);
-            }
+                if (settingsService.getSettings().getEnableMonitor()) {
+                    activityNotificationMidiService.notifyClients(midiMessage, MidiDirection.IN, MidiSource.MIDI_FILE, null);
+                }
+            });
+        } catch (InvalidMidiDataException e) {
+            logger.error("Could not create MIDI signal from composition file", e);
         }
     }
 

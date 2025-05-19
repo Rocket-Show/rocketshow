@@ -1,12 +1,13 @@
 package com.ascargon.rocketshow.midi;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.sound.midi.*;
 import javax.sound.midi.MidiDevice;
-import javax.sound.midi.MidiSystem;
-import javax.sound.midi.MidiUnavailableException;
 
+import com.fazecast.jSerialComm.SerialPort;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
@@ -110,6 +111,19 @@ public class DefaultMidiService implements MidiService {
                 midiDevice.setDescription(midiDeviceInfos[i].getDescription());
                 midiDeviceList.add(midiDevice);
             }
+        }
+
+        // Add all available serial ports
+        SerialPort[] serialPorts = SerialPort.getCommPorts();
+        int index = midiDeviceList.size();
+        for (SerialPort serialPort : serialPorts) {
+            com.ascargon.rocketshow.midi.MidiDevice midiDevice = new com.ascargon.rocketshow.midi.MidiDevice();
+            midiDevice.setSerialPort(true);
+            midiDevice.setId(index);
+            midiDevice.setName(serialPort.getSystemPortName());
+            midiDevice.setDescription(serialPort.getDescriptivePortName());
+            midiDeviceList.add(midiDevice);
+            index++;
         }
 
         return midiDeviceList;
