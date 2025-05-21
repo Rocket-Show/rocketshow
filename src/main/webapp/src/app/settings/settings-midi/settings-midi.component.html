@@ -18,7 +18,7 @@
       [(ngModel)]="settings.midiInDevice"
     >
       <option *ngFor="let midiDevice of midiInDevices" [ngValue]="midiDevice">
-        {{ midiDevice.name }}
+        {{ midiDevice.name }}<span *ngIf="midiDevice.serialPort"> ({{ 'settings.midi-serial' | translate }})</span>
       </option>
     </select>
   </div>
@@ -39,7 +39,7 @@
       [(ngModel)]="settings.midiOutDevice"
     >
       <option *ngFor="let midiDevice of midiOutDevices" [ngValue]="midiDevice">
-        {{ midiDevice.name }}
+        {{ midiDevice.name }}<span *ngIf="midiDevice.serialPort"> ({{ 'settings.midi-serial' | translate }})</span>
       </option>
     </select>
   </div>

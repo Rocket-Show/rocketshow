@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.midi;
 
+import com.fazecast.jSerialComm.SerialPort;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.MidiUnavailableException;
@@ -10,8 +11,9 @@ import javax.sound.midi.MidiUnavailableException;
 @Service
 public interface MidiDeviceOutService {
 
-    void reconnectMidiDevice() throws MidiUnavailableException;
+    void reconnectMidiDevice();
 
-    javax.sound.midi.MidiDevice getMidiOutDevice();
+    javax.sound.midi.MidiDevice getMidiDevice();
 
+    SerialPort getMidiSerialDevice();
 }

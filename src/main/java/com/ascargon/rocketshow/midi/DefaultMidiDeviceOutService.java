@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.midi;
 
 import com.ascargon.rocketshow.settings.SettingsService;
+import com.fazecast.jSerialComm.SerialPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -17,26 +18,57 @@ public class DefaultMidiDeviceOutService implements MidiDeviceOutService {
 
     private final SettingsService settingsService;
     private final MidiService midiService;
-
     private Timer connectMidiDeviceTimer;
-
-    private javax.sound.midi.MidiDevice midiOutDevice;
+    private javax.sound.midi.MidiDevice midiDevice;
+    private SerialPort midiSerialDevice;
 
     public DefaultMidiDeviceOutService(SettingsService settingsService, MidiService midiService) {
         this.settingsService = settingsService;
         this.midiService = midiService;
 
-        // Try to connect to MIDI out devices
+        // Try to connect to the MIDI out devices
+        connectMidiDevices();
+    }
+
+    private boolean connectMidiDevice(MidiDevice settingsMidiDevice) {
+        // Connect to a real MIDI device
+        javax.sound.midi.MidiDevice midiDevice;
+
         try {
-            connectMidiDevices();
-        } catch (MidiUnavailableException e) {
-            logger.error("Could not initialize the MIDI out device", e);
+            midiDevice = midiService.getHardwareMidiDevice(settingsMidiDevice, MidiDirection.OUT);
+
+            if (this.midiDevice == null) {
+                logger.trace("MIDI OUT device not found. Try again in 10 seconds.");
+            } else {
+                midiDevice.open();
+                logger.info("Successfully connected to MIDI OUT device " + this.midiDevice.getDeviceInfo().getName());
+                this.midiDevice = midiDevice;
+                return true;
+            }
+        } catch (MidiUnavailableException midiUnavailableException) {
+            logger.debug("Could not connect to MIDI OUT device", midiUnavailableException);
         }
+
+        return false;
+    }
+
+    private boolean connectMidiSerialDevice(MidiDevice settingsMidiDevice) {
+        // Connect to a MIDI device, which is a serial port in reality
+        SerialPort midiSerialDevice = midiService.getHardwareMidiSerialDevice(settingsMidiDevice, MidiDirection.OUT);
+
+        if (midiSerialDevice == null) {
+            logger.trace("MIDI IN serial device not found.");
+            return false;
+        }
+
+        this.midiSerialDevice = midiSerialDevice;
+        return true;
     }
 
     // Connect to out devices. Retry, if it failed.
-    private void connectMidiDevices() throws MidiUnavailableException {
-        com.ascargon.rocketshow.midi.MidiDevice midiDevice;
+    private void connectMidiDevices() {
+        com.ascargon.rocketshow.midi.MidiDevice settingsMidiDevice;
+        boolean connected = false;
 
         // Cancel an eventually existing timer
         if (connectMidiDeviceTimer != null) {
@@ -44,66 +76,64 @@ public class DefaultMidiDeviceOutService implements MidiDeviceOutService {
             connectMidiDeviceTimer = null;
         }
 
-        if (midiOutDevice == null) {
-            midiDevice = settingsService.getSettings().getMidiOutDevice();
+        if (midiDevice != null || midiSerialDevice != null) {
+            // Already connected
+            return;
+        }
 
-            if (midiDevice != null) {
-                logger.trace(
-                        "Try connecting to MIDI out device " + midiDevice.getId() + " \"" + midiDevice.getName() + "\"");
-            }
+        settingsMidiDevice = settingsService.getSettings().getMidiOutDevice();
 
-            midiOutDevice = midiService.getHardwareMidiDevice(midiDevice, MidiDirection.OUT);
+        if (settingsMidiDevice != null) {
+            logger.trace("Try connecting to MIDI OUT device " + settingsMidiDevice.getId() + " \"" + settingsMidiDevice.getName() + "\"");
 
-            if (midiOutDevice == null) {
-                logger.trace("MIDI out device not found. Try again in 10 seconds.");
+            if (settingsMidiDevice.isSerialPort()) {
+                connected = connectMidiSerialDevice(settingsMidiDevice);
             } else {
-                midiOutDevice.open();
-
-                logger.info("Successfully connected to MIDI out device " + midiOutDevice.getDeviceInfo().getName());
+                connected = connectMidiDevice(settingsMidiDevice);
             }
         }
 
-        if (midiOutDevice == null) {
-            TimerTask timerTask = new TimerTask() {
-                @Override
-                public void run() {
-                    try {
-                        connectMidiDevices();
-                    } catch (Exception e) {
-                        logger.debug("Could not connect to MIDI out device", e);
-                    }
-                }
-            };
-
-            connectMidiDeviceTimer = new Timer();
-            connectMidiDeviceTimer.schedule(timerTask, 10000);
-        } else {
+        if (connected) {
             // We found a MIDI out device
             if (connectMidiDeviceTimer != null) {
                 connectMidiDeviceTimer.cancel();
                 connectMidiDeviceTimer = null;
             }
-        }
+        } else {
+            TimerTask timerTask = new TimerTask() {
+                @Override
+                public void run() {
+                    connectMidiDevices();
+                }
+            };
 
+            connectMidiDeviceTimer = new Timer();
+            connectMidiDeviceTimer.schedule(timerTask, 10000);
+        }
     }
 
     @PreDestroy
     private void close() {
-        if (midiOutDevice != null) {
-            midiOutDevice.close();
-            midiOutDevice = null;
+        if (midiDevice != null) {
+            midiDevice.close();
+            midiDevice = null;
         }
     }
 
     @Override
-    public void reconnectMidiDevice() throws MidiUnavailableException {
+    public void reconnectMidiDevice() {
         close();
         connectMidiDevices();
     }
 
     @Override
-    public javax.sound.midi.MidiDevice getMidiOutDevice() {
-        return midiOutDevice;
+    public javax.sound.midi.MidiDevice getMidiDevice() {
+        return midiDevice;
+    }
+
+    @Override
+    public SerialPort getMidiSerialDevice() {
+        return midiSerialDevice;
     }
 
 }

@@ -1,12 +1,17 @@
 package com.ascargon.rocketshow.midi;
 
 import com.ascargon.rocketshow.settings.SettingsService;
+import com.fazecast.jSerialComm.SerialPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
+import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.MidiMessage;
 import javax.sound.midi.MidiUnavailableException;
+import java.nio.ByteBuffer;
+import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -17,13 +22,10 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
 
     private final SettingsService settingsService;
     private final MidiService midiService;
-
     private final MidiRouter midiRouter;
-
     private Timer connectMidiDeviceTimer;
-
-    private javax.sound.midi.MidiDevice midiInDevice;
-
+    private javax.sound.midi.MidiDevice midiDevice;
+    private SerialPort midiSerialDevice;
     private final MidiInDeviceReceiver midiInDeviceReceiver;
 
     public DefaultMidiDeviceInService(SettingsService settingsService, ActionMidiExecutionService actionMidiExecutionService, MidiService midiService, MidiRouterFactory midiRouterFactory) {
@@ -37,16 +39,89 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
         midiRouter = midiRouterFactory.getMidiRouter(settingsService.getSettings().getDeviceInMidiRoutingList());
 
         // Try to connect to MIDI in devices
+        connectMidiDevices();
+    }
+
+    private boolean connectMidiDevice(MidiDevice settingsMidiDevice) {
+        // Connect to a real MIDI device
+        javax.sound.midi.MidiDevice midiDevice;
+
         try {
-            connectMidiDevices();
-        } catch (MidiUnavailableException e) {
-            logger.error("Could not initialize the MIDI in device", e);
+            midiDevice = midiService.getHardwareMidiDevice(settingsMidiDevice, MidiDirection.IN);
+
+            if (midiDevice == null) {
+                logger.trace("MIDI IN device not found. Try again in 10 seconds.");
+                return false;
+            }
+
+            midiDevice.open();
+
+            // Connect the transmitters (getTransmitter() returns a new transmitter each call)
+            midiRouter.connectTransmitter(midiDevice.getTransmitter(), midiDevice.getTransmitter());
+
+            midiDevice.getTransmitter().setReceiver(midiInDeviceReceiver);
+
+            logger.info("Successfully connected to MIDI IN device " + midiDevice.getDeviceInfo().getName());
+            this.midiDevice = midiDevice;
+            return true;
+        } catch (MidiUnavailableException midiUnavailableException) {
+            logger.debug("Could not connect to MIDI IN device", midiUnavailableException);
         }
+
+        return false;
+    }
+
+    private boolean connectMidiSerialDevice(MidiDevice settingsMidiDevice) {
+        // Connect to a MIDI device, which is a serial port in reality
+        SerialPort midiSerialDevice = midiService.getHardwareMidiSerialDevice(settingsMidiDevice, MidiDirection.IN);
+
+        if (midiSerialDevice == null) {
+            logger.trace("MIDI IN serial device not found.");
+            return false;
+        }
+
+        MidiMessageParser parser = new MidiMessageParser();
+        ByteBuffer buffer = ByteBuffer.allocate(256);
+
+        new Thread(() -> {
+            byte[] temp = new byte[64];
+            while (true) {
+                int numRead = midiSerialDevice.readBytes(temp, temp.length);
+                if (numRead > 0) {
+                    buffer.clear();
+                    buffer.put(temp, 0, numRead);
+                    buffer.flip();
+
+                    try {
+                        while (buffer.hasRemaining()) {
+                            Optional<MidiMessage> maybeMessage = parser.offerByte(buffer.get());
+                            maybeMessage.ifPresent(midiMessage -> {
+                                logger.trace("Received MIDI message over serial: " + midiMessage);
+                                midiInDeviceReceiver.send(midiMessage, -1);
+                            });
+                        }
+                    } catch (InvalidMidiDataException e) {
+                        logger.error("Invalid MIDI data received on MIDI serial device: " + e.getMessage());
+                    }
+                }
+
+                try {
+                    Thread.sleep(1); // Prevent tight loop
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        }).start();
+
+        this.midiSerialDevice = midiSerialDevice;
+        return true;
     }
 
     // Connect to midi in devices. Retry, if it failed.
-    private void connectMidiDevices() throws MidiUnavailableException {
-        MidiDevice midiDevice;
+    private void connectMidiDevices() {
+        MidiDevice settingsMidiDevice;
+        boolean connected = false;
 
         // Cancel an eventually existing timer
         if (connectMidiDeviceTimer != null) {
@@ -54,59 +129,48 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
             connectMidiDeviceTimer = null;
         }
 
-        if (midiInDevice == null) {
-            midiDevice = settingsService.getSettings().getMidiInDevice();
+        if (midiDevice != null || midiSerialDevice != null) {
+            // Already connected
+            return;
+        }
 
-            if (midiDevice != null) {
-                logger.trace(
-                        "Try connecting to MIDI in device " + midiDevice.getId() + " \"" + midiDevice.getName() + "\"");
-            }
+        settingsMidiDevice = settingsService.getSettings().getMidiInDevice();
 
-            midiInDevice = midiService.getHardwareMidiDevice(midiDevice, MidiDirection.IN);
+        if (settingsMidiDevice != null) {
+            logger.trace("Try connecting to MIDI IN device " + settingsMidiDevice.getId() + " \"" + settingsMidiDevice.getName() + "\"");
 
-            if (midiInDevice == null) {
-                logger.trace("MIDI in device not found. Try again in 10 seconds.");
+            if (settingsMidiDevice.isSerialPort()) {
+                connected = connectMidiSerialDevice(settingsMidiDevice);
             } else {
-                midiInDevice.open();
-
-                // Connect the transmitters (getTransmitter() returns a new transmitter each call)
-                midiRouter.connectTransmitter(midiInDevice.getTransmitter(), midiInDevice.getTransmitter());
-
-                midiInDevice.getTransmitter().setReceiver(midiInDeviceReceiver);
-
-                logger.info("Successfully connected to MIDI in device " + midiInDevice.getDeviceInfo().getName());
+                connected = connectMidiDevice(settingsMidiDevice);
             }
         }
 
-        if (midiInDevice == null) {
+        if (connected) {
+            // We connected to a MIDI in device
+            if (connectMidiDeviceTimer != null) {
+                connectMidiDeviceTimer.cancel();
+                connectMidiDeviceTimer = null;
+            }
+        } else {
+            // Connection did not work, try again later
             TimerTask timerTask = new TimerTask() {
                 @Override
                 public void run() {
-                    try {
-                        connectMidiDevices();
-                    } catch (Exception e) {
-                        logger.debug("Could not connect to MIDI in device", e);
-                    }
+                    connectMidiDevices();
                 }
             };
 
             connectMidiDeviceTimer = new Timer();
             connectMidiDeviceTimer.schedule(timerTask, 10000);
-        } else {
-            // We found a MIDI in device
-            if (connectMidiDeviceTimer != null) {
-                connectMidiDeviceTimer.cancel();
-                connectMidiDeviceTimer = null;
-            }
         }
-
     }
 
     @PreDestroy
     private void close() {
-        if (midiInDevice != null) {
-            midiInDevice.close();
-            midiInDevice = null;
+        if (midiDevice != null) {
+            midiDevice.close();
+            midiDevice = null;
         }
 
         midiRouter.close();
@@ -119,8 +183,8 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
     }
 
     @Override
-    public javax.sound.midi.MidiDevice getMidiInDevice() {
-        return midiInDevice;
+    public javax.sound.midi.MidiDevice getMidiDevice() {
+        return midiDevice;
     }
 
 }

@@ -5,10 +5,7 @@ import com.ascargon.rocketshow.lighting.Midi2LightingConvertService;
 import com.ascargon.rocketshow.settings.SettingsService;
 import org.springframework.stereotype.Service;
 
-import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.Receiver;
-import javax.sound.midi.ShortMessage;
-import javax.sound.midi.Transmitter;
+import javax.sound.midi.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -79,13 +76,17 @@ public class MidiRouter {
         }
     }
 
-    public void sendSignal(ShortMessage shortMessage, MidiSource midiSource) throws InvalidMidiDataException {
-        activityNotificationMidiService.notifyClients(shortMessage, MidiDirection.IN, midiSource, null);
+    public void sendSignal(MidiMessage midiMessage, MidiSource midiSource) throws InvalidMidiDataException {
+        if (midiMessage instanceof ShortMessage) {
+            activityNotificationMidiService.notifyClients((ShortMessage) midiMessage, MidiDirection.IN, midiSource, null);
+        }
 
         // Send the signal to each receiver
         for (Map.Entry<MidiRouting, Receiver> entry : receiverList.entrySet()) {
-            entry.getValue().send(shortMessage, -1);
-            activityNotificationMidiService.notifyClients(shortMessage, MidiDirection.OUT, midiSource, entry.getKey().getMidiDestination());
+            entry.getValue().send(midiMessage, -1);
+            if (midiMessage instanceof ShortMessage) {
+                activityNotificationMidiService.notifyClients((ShortMessage) midiMessage, MidiDirection.OUT, midiSource, entry.getKey().getMidiDestination());
+            }
         }
     }
 

@@ -176,6 +176,16 @@
             <artifactId>pi4j-core</artifactId>
             <version>2.7.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.pi4j</groupId>
+            <artifactId>pi4j-plugin-raspberrypi</artifactId>
+            <version>2.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.pi4j</groupId>
+            <artifactId>pi4j-plugin-gpiod</artifactId>
+            <version>2.7.0</version>
+        </dependency>
 
         <!-- Support file uploads -->
         <dependency>

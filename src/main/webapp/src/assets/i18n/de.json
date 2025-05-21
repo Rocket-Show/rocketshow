@@ -120,6 +120,7 @@
     "personal": "Persönlich",
     "network": "Netzwerk",
     "midi": "MIDI",
+    "midi-serial": "Serial Port",
     "audio": "Audio",
     "video": "Video",
     "lighting": "Lichtsteuerung",

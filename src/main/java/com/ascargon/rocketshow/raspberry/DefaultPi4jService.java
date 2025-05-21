@@ -2,6 +2,9 @@ package com.ascargon.rocketshow.raspberry;
 
 import com.pi4j.Pi4J;
 import com.pi4j.context.Context;
+import com.pi4j.plugin.raspberrypi.platform.RaspberryPiPlatform;
+import com.pi4j.plugin.raspberrypi.provider.gpio.digital.RpiDigitalInputProvider;
+import com.pi4j.plugin.raspberrypi.provider.gpio.digital.RpiDigitalOutputProvider;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;

@@ -112,7 +112,7 @@ public class CompositionPlayer {
     private final List<MidiRouter> midiRouterList = new ArrayList<>();
 
     // A MIDI message parser for MIDI files inside this composition
-    private MidiMessageParser midiMessageParser = new MidiMessageParser();
+    private final MidiMessageParser midiMessageParser = new MidiMessageParser();
 
     public CompositionPlayer(DefaultPlayerService playerService, MidiRouterFactory midiRouterFactory) {
         this.playerService = playerService;
@@ -138,13 +138,13 @@ public class CompositionPlayer {
             Optional<MidiMessage> maybeMessage = midiMessageParser.offerByteBuffer(byteBuffer);
             maybeMessage.ifPresent(midiMessage -> {
                 try {
-                    midiRouter.sendSignal(midiMessage);
+                    midiRouter.sendSignal(midiMessage, MidiSource.MIDI_FILE);
                 } catch (InvalidMidiDataException e) {
                     logger.error("Could not send MIDI signal from composition file", e);
                 }
 
-                if (settingsService.getSettings().getEnableMonitor()) {
-                    activityNotificationMidiService.notifyClients(midiMessage, MidiDirection.IN, MidiSource.MIDI_FILE, null);
+                if (settingsService.getSettings().getEnableMonitor() && midiMessage instanceof ShortMessage) {
+                    activityNotificationMidiService.notifyClients((ShortMessage) midiMessage, MidiDirection.IN, MidiSource.MIDI_FILE, null);
                 }
             });
         } catch (InvalidMidiDataException e) {
@@ -590,9 +590,7 @@ public class CompositionPlayer {
 
     private void calculateRemainingActionTriggerList() {
         remainingActionTriggerCompositionList = new CopyOnWriteArrayList<>();
-        remainingActionTriggerCompositionList.addAll(composition.getActionTriggerList().stream().
-                filter(trigger -> trigger.getPositionMillis() >= getPositionMillis()).toList()
-        );
+        remainingActionTriggerCompositionList.addAll(composition.getActionTriggerList().stream().filter(trigger -> trigger.getPositionMillis() >= getPositionMillis()).toList());
     }
 
     // Load all files and construct the complete GST pipeline
