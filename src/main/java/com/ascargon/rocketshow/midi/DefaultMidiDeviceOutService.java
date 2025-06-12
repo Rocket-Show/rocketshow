@@ -1,10 +1,10 @@
 package com.ascargon.rocketshow.midi;
 
 import com.ascargon.rocketshow.settings.SettingsService;
-import com.fazecast.jSerialComm.SerialPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import purejavacomm.SerialPort;
 
 import javax.annotation.PreDestroy;
 import javax.sound.midi.MidiUnavailableException;
@@ -57,7 +57,7 @@ public class DefaultMidiDeviceOutService implements MidiDeviceOutService {
         SerialPort midiSerialDevice = midiService.getHardwareMidiSerialDevice(settingsMidiDevice, MidiDirection.OUT);
 
         if (midiSerialDevice == null) {
-            logger.trace("MIDI IN serial device not found.");
+            logger.trace("MIDI OUT serial device not found.");
             return false;
         }
 

@@ -5,9 +5,11 @@ import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 
-import com.fazecast.jSerialComm.SerialPort;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import purejavacomm.SerialPort;
+
+import java.io.OutputStream;
 
 /**
  * Receive MIDI messages and send them to the out device.
@@ -52,9 +54,11 @@ class Midi2DeviceOutReceiver implements Receiver {
 
             try {
                 byte[] data = message.getMessage();
-                midiSerialDevice.writeBytes(data, data.length);
+                OutputStream output = midiSerialDevice.getOutputStream();
+                output.write(data);
+                output.flush(); // optional, but ensures immediate transmission
             } catch (Exception e) {
-                logger.error("Could not send MIDI signal to serial out device receiver " + midiSerialDevice.getSystemPortPath(), e);
+                logger.error("Could not send MIDI signal to serial out device receiver", e);
             }
         }
     }

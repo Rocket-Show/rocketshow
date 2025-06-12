@@ -1,6 +1,6 @@
 package com.ascargon.rocketshow.midi;
 
-import com.fazecast.jSerialComm.SerialPort;
+import purejavacomm.SerialPort;
 
 import javax.sound.midi.MidiUnavailableException;
 import java.util.List;

@@ -1,15 +1,18 @@
 package com.ascargon.rocketshow.midi;
 
 import com.ascargon.rocketshow.settings.SettingsService;
-import com.fazecast.jSerialComm.SerialPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import purejavacomm.SerialPort;
+import purejavacomm.SerialPortEvent;
 
 import javax.annotation.PreDestroy;
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.MidiUnavailableException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.Timer;
@@ -82,34 +85,48 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
 
         MidiMessageParser parser = new MidiMessageParser();
         ByteBuffer buffer = ByteBuffer.allocate(256);
+        InputStream input = null;
 
+        try {
+            input = midiSerialDevice.getInputStream();
+        } catch (IOException e) {
+            logger.error("Could not open MIDI serial port input stream", e);
+        }
+
+        InputStream finalInput = input;
         new Thread(() -> {
             byte[] temp = new byte[64];
             while (true) {
-                int numRead = midiSerialDevice.readBytes(temp, temp.length);
-                if (numRead > 0) {
-                    buffer.clear();
-                    buffer.put(temp, 0, numRead);
-                    buffer.flip();
-
-                    try {
-                        while (buffer.hasRemaining()) {
-                            Optional<MidiMessage> maybeMessage = parser.offerByte(buffer.get());
-                            maybeMessage.ifPresent(midiMessage -> {
-                                logger.trace("Received MIDI message over serial: " + midiMessage);
-                                midiInDeviceReceiver.send(midiMessage, -1);
-                            });
-                        }
-                    } catch (InvalidMidiDataException e) {
-                        logger.error("Invalid MIDI data received on MIDI serial device: " + e.getMessage());
-                    }
-                }
-
                 try {
-                    Thread.sleep(1); // Prevent tight loop
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
+                    if (finalInput.available() > 0) {
+                        int numRead = finalInput.read(temp);
+                        if (numRead > 0) {
+                            buffer.clear();
+                            buffer.put(temp, 0, numRead);
+                            buffer.flip();
+
+                            try {
+                                while (buffer.hasRemaining()) {
+                                    Optional<MidiMessage> maybeMessage = parser.offerByte(buffer.get());
+                                    maybeMessage.ifPresent(midiMessage -> {
+                                        logger.trace("Received MIDI message over serial: " + midiMessage);
+                                        midiInDeviceReceiver.send(midiMessage, -1);
+                                    });
+                                }
+                            } catch (InvalidMidiDataException e) {
+                                logger.error("Invalid MIDI data received on MIDI serial device: " + e.getMessage());
+                            }
+                        }
+
+                        try {
+                            Thread.sleep(1); // Prevent tight loop
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                            break;
+                        }
+                    }
+                } catch (IOException e) {
+                    logger.error("Error while reading data from MIDI serial port", e);
                 }
             }
         }).start();

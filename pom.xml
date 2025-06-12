@@ -160,11 +160,6 @@
 
         <!-- For Gstreamer -->
         <dependency>
-            <groupId>net.java.dev.jna</groupId>
-            <artifactId>jna</artifactId>
-            <version>5.13.0</version>
-        </dependency>
-        <dependency>
             <groupId>org.freedesktop.gstreamer</groupId>
             <artifactId>gst1-java-core</artifactId>
             <version>1.4.0</version>
@@ -195,10 +190,11 @@
         </dependency>
 
         <!-- Read/write data on serial ports (used for MIDI communication) -->
+        <!-- jSerialComm does not seem to support FT232 and MIDI baudrates -->
         <dependency>
-            <groupId>com.fazecast</groupId>
-            <artifactId>jSerialComm</artifactId>
-            <version>2.11.0</version>
+            <groupId>org.bidib.com.github.purejavacomm</groupId>
+            <artifactId>purejavacomm</artifactId>
+            <version>1.0.5</version>
         </dependency>
 
         <!-- Lombok -->

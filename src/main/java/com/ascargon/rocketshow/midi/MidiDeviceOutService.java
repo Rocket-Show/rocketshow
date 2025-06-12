@@ -1,9 +1,7 @@
 package com.ascargon.rocketshow.midi;
 
-import com.fazecast.jSerialComm.SerialPort;
 import org.springframework.stereotype.Service;
-
-import javax.sound.midi.MidiUnavailableException;
+import purejavacomm.SerialPort;
 
 /**
  * Handle locally connected MIDI in devices.

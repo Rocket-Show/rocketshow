@@ -1,23 +1,28 @@
 package com.ascargon.rocketshow.midi;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import purejavacomm.CommPort;
+import purejavacomm.CommPortIdentifier;
+import purejavacomm.SerialPort;
+import purejavacomm.SerialPortEvent;
 
 import javax.annotation.PreDestroy;
-import javax.sound.midi.*;
 import javax.sound.midi.MidiDevice;
-
-import com.fazecast.jSerialComm.SerialPort;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-import org.springframework.stereotype.Service;
+import javax.sound.midi.MidiSystem;
+import javax.sound.midi.MidiUnavailableException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 
 @Service
 public class DefaultMidiService implements MidiService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultMidiService.class);
 
-    private List<SerialPort> openMidiSerialDevices = new ArrayList<>();
+    private final List<SerialPort> openMidiSerialDevices = new ArrayList<>();
 
     private boolean isDeviceAllowed(String name) {
         return !(name.equals("Real Time Sequencer") || name.equals("Gervill"));
@@ -85,30 +90,33 @@ public class DefaultMidiService implements MidiService {
     public SerialPort getHardwareMidiSerialDevice(com.ascargon.rocketshow.midi.MidiDevice midiDevice,
                                                   MidiDirection midiDirection) {
 
-        // The port name is system-wide unique
-        SerialPort[] serialPorts = SerialPort.getCommPorts();
-        for (SerialPort serialPort : serialPorts) {
-            if (serialPort.getSystemPortName().equals(midiDevice.getName())) {
-                if (serialPort.isOpen()) {
-                    return serialPort;
-                }
+        logger.trace("Search for a serial MIDI device with name '" + midiDevice.getName() + "'...");
 
-                logger.trace("Try opening serial port " + serialPort.getSystemPortName());
+        try {
+            CommPortIdentifier portId = CommPortIdentifier.getPortIdentifier(midiDevice.getName());
 
-                serialPort.setComPortParameters(31250, 8, SerialPort.ONE_STOP_BIT, SerialPort.NO_PARITY);
-                serialPort.setComPortTimeouts(SerialPort.TIMEOUT_NONBLOCKING, 0, 0);
+            if (portId.isCurrentlyOwned()) {
+                logger.error("Could not open MIDI serial port, because it is already in use.");
+                return null;
+            }
 
-                if (!serialPort.openPort()) {
-                    logger.trace("Could not open serial port " + serialPort.getSystemPortName() + ". Errorcode: " + serialPort.getLastErrorCode());
-                    return null;
-                }
+            CommPort commPort = portId.open("MidiSerialApp", 2000);
+            if (commPort instanceof SerialPort serialPort) {
+                serialPort.setSerialPortParams(
+                        31250, // MIDI baud rate
+                        SerialPort.DATABITS_8,
+                        SerialPort.STOPBITS_1,
+                        SerialPort.PARITY_NONE
+                );
 
                 openMidiSerialDevices.add(serialPort);
 
-                logger.trace("Serial port opened. Ready to receive and send MIDI data...");
+                logger.trace("Serial port opened. Ready to receive and send MIDI data.");
 
                 return serialPort;
             }
+        } catch (Exception e) {
+            logger.error("Could not open MIDI serial port", e);
         }
 
         return null;
@@ -137,17 +145,21 @@ public class DefaultMidiService implements MidiService {
         }
 
         // Add all available serial ports
-        SerialPort[] serialPorts = SerialPort.getCommPorts();
         int index = midiDeviceList.size();
-        for (SerialPort serialPort : serialPorts) {
-            com.ascargon.rocketshow.midi.MidiDevice midiDevice = new com.ascargon.rocketshow.midi.MidiDevice();
-            midiDevice.setSerialPort(true);
-            midiDevice.setId(index);
-            midiDevice.setName(serialPort.getSystemPortName());
-            midiDevice.setDescription(serialPort.getDescriptivePortName());
-            midiDeviceList.add(midiDevice);
+        Enumeration<CommPortIdentifier> portList = CommPortIdentifier.getPortIdentifiers();
 
-            index++;
+        while (portList.hasMoreElements()) {
+            CommPortIdentifier portId = portList.nextElement();
+            if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
+                com.ascargon.rocketshow.midi.MidiDevice midiDevice = new com.ascargon.rocketshow.midi.MidiDevice();
+                midiDevice.setSerialPort(true);
+                midiDevice.setId(index);
+                midiDevice.setName(portId.getName());
+                midiDevice.setDescription("Serial port");
+                midiDeviceList.add(midiDevice);
+
+                index++;
+            }
         }
 
         return midiDeviceList;
@@ -157,7 +169,7 @@ public class DefaultMidiService implements MidiService {
     @PreDestroy
     private void close() {
         for (SerialPort openMidiSerialDevice : openMidiSerialDevices) {
-            openMidiSerialDevice.closePort();
+            openMidiSerialDevice.close();
         }
     }
 
