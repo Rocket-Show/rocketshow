@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.play;
 
 import com.ascargon.rocketshow.audio.ActivityNotificationAudioService;
+import com.ascargon.rocketshow.gstreamer.GstreamerInitService;
 import com.ascargon.rocketshow.lighting.Midi2LightingConvertService;
 import com.ascargon.rocketshow.midi.ActivityNotificationMidiService;
 import com.ascargon.rocketshow.api.NotificationService;
@@ -56,8 +57,6 @@ public class DefaultPlayerService implements PlayerService {
     @Getter
     private final LightingService lightingService;
     @Getter
-    private final CapabilitiesService capabilitiesService;
-    @Getter
     private final ActivityNotificationAudioService activityNotificationAudioService;
     @Getter
     private final AudioService audioService;
@@ -71,6 +70,8 @@ public class DefaultPlayerService implements PlayerService {
     private final ActionExecutionService actionExecutionService;
     @Getter
     private final MidiService midiService;
+    @Getter
+    private final CapabilitiesService capabilitiesService;
 
     // Regular composition player
     private final CompositionPlayer currentCompositionPlayer;
@@ -83,7 +84,27 @@ public class DefaultPlayerService implements PlayerService {
 
     private final List<CompositionPlayer> sampleCompositionPlayerList = new ArrayList<>();
 
-    public DefaultPlayerService(NotificationService notificationService, ActivityNotificationMidiService activityNotificationMidiService, SettingsService settingsService, CompositionService compositionService, SetService setService, SessionService sessionService, LightingService lightingService, CapabilitiesService capabilitiesService, ActivityNotificationAudioService activityNotificationAudioService, Midi2LightingConvertService midi2LightingConvertService, MidiDeviceOutService midiDeviceOutService, AudioService audioService, DesignerService designerService, OperatingSystemInformationService operatingSystemInformationService, MidiService midiService, MidiRouterFactory midiRouterFactory, ActionExecutionService actionExecutionService) {
+    public DefaultPlayerService(
+            NotificationService notificationService,
+            ActivityNotificationMidiService activityNotificationMidiService,
+            SettingsService settingsService,
+            CompositionService compositionService,
+            SetService setService,
+            SessionService sessionService,
+            LightingService lightingService,
+            ActivityNotificationAudioService activityNotificationAudioService,
+            AudioService audioService,
+            DesignerService designerService,
+            OperatingSystemInformationService operatingSystemInformationService,
+            MidiService midiService,
+            MidiRouterFactory midiRouterFactory,
+            ActionExecutionService actionExecutionService,
+            CapabilitiesService capabilitiesService,
+
+            // import to make sure, Gstreamer is initialized before using it here
+            GstreamerInitService gstreamerInitService
+    ) {
+
         this.notificationService = notificationService;
         this.activityNotificationMidiService = activityNotificationMidiService;
         this.settingsService = settingsService;
@@ -91,7 +112,6 @@ public class DefaultPlayerService implements PlayerService {
         this.setService = setService;
         this.sessionService = sessionService;
         this.lightingService = lightingService;
-        this.capabilitiesService = capabilitiesService;
         this.activityNotificationAudioService = activityNotificationAudioService;
         this.audioService = audioService;
         this.designerService = designerService;
@@ -99,34 +119,12 @@ public class DefaultPlayerService implements PlayerService {
         this.midiRouterFactory = midiRouterFactory;
         this.midiService = midiService;
         this.actionExecutionService = actionExecutionService;
+        this.capabilitiesService = capabilitiesService;
 
         currentCompositionPlayer = new CompositionPlayer(this, midiRouterFactory);
         defaultCompositionPlayer = new CompositionPlayer(this, midiRouterFactory);
         defaultCompositionPlayer.setDefaultComposition(true);
         testCompositionPlayer = new CompositionPlayer(this, midiRouterFactory);
-
-        try {
-            // Setup the Gstreamer paths
-            if (Platform.isMac()) {
-                // libs path
-                String gstPath = System.getProperty("gstreamer.path", "/opt/homebrew/lib");
-
-                if (!gstPath.isEmpty()) {
-                    String jnaPath = System.getProperty("jna.library.path", "").trim();
-                    if (jnaPath.isEmpty()) {
-                        System.setProperty("jna.library.path", gstPath);
-                    } else {
-                        System.setProperty("jna.library.path", jnaPath + File.pathSeparator + gstPath);
-                    }
-                }
-            }
-
-            Gst.init();
-        } catch (Exception | UnsatisfiedLinkError e) {
-            // Gstreamer might not be installed properly or not be installed at all
-            logger.error("Could not initialize Gstreamer", e);
-            capabilitiesService.getCapabilities().setGstreamer(false);
-        }
 
         try {
             playDefaultComposition();

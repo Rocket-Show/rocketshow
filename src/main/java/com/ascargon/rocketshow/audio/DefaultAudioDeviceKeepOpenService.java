@@ -1,5 +1,7 @@
 package com.ascargon.rocketshow.audio;
 
+import com.ascargon.rocketshow.gstreamer.GstreamerInitService;
+import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.gstreamer.GstApi;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
@@ -28,7 +30,10 @@ public class DefaultAudioDeviceKeepOpenService implements AudioDeviceKeepOpenSer
     public DefaultAudioDeviceKeepOpenService(
             SettingsService settingsService,
             AudioService audioService,
-            OperatingSystemInformationService operatingSystemInformationService
+            OperatingSystemInformationService operatingSystemInformationService,
+
+            // import to make sure, Gstreamer is initialized before we use it here
+            GstreamerInitService gstreamerInitService
     ) {
         this.settingsService = settingsService;
         this.audioService = audioService;

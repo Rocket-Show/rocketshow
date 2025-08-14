@@ -1,19 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
     <Properties>
+        <!-- Change log dir here; relative to working dir -->
         <Property name="PATH">./log</Property>
+        <!-- You can tweak these without editing patterns -->
+        <Property name="LOG_DATEFORMAT_PATTERN">yyyy-MM-dd HH:mm:ss.SSS</Property>
+        <Property name="LOG_EXCEPTION_CONVERSION_WORD">%wEx</Property>
     </Properties>
 
     <Appenders>
+        <!-- Console with highlighting; follow="true" keeps logging if stdout is redirected -->
         <Console name="Console" target="SYSTEM_OUT" follow="true">
             <PatternLayout
-                    pattern="%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}} %highlight{${LOG_LEVEL_PATTERN:-%p}}{FATAL=red blink, ERROR=red, WARN=yellow bold, INFO=green, DEBUG=green bold, TRACE=blue} %style{%-40.40C{1.}}{cyan} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+                    pattern="%d{${LOG_DATEFORMAT_PATTERN}} %highlight{%-5p}{FATAL=red blink, ERROR=red, WARN=yellow bold, INFO=green, DEBUG=green bold, TRACE=blue} %style{%logger{36}}{cyan} : %m%n${LOG_EXCEPTION_CONVERSION_WORD}"/>
         </Console>
-        <RollingFile name="RollingFile"
-                     fileName="${PATH}/rocketshow.log"
-                     filePattern="${PATH}/rocketshow-%d{yyyy-MM-dd}-%i.log">
+
+        <!-- Rolling file: 1 MB chunks, keep many, auto-delete when total exceeds 5 MB -->
+        <RollingFile
+                name="RollingFile"
+                fileName="${PATH}/rocketshow.log"
+                filePattern="${PATH}/rocketshow-%d{yyyy-MM-dd}-%i.log">
             <PatternLayout
-                    pattern="%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}} %p %-40.40C{1.} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+                    pattern="%d{${LOG_DATEFORMAT_PATTERN}} %-5p %logger{36} : %m%n${LOG_EXCEPTION_CONVERSION_WORD}"/>
             <Policies>
                 <SizeBasedTriggeringPolicy size="1MB"/>
             </Policies>
@@ -26,7 +34,7 @@
     </Appenders>
 
     <Loggers>
-        <Root>
+        <Root level="INFO">
             <AppenderRef ref="RollingFile"/>
             <AppenderRef ref="Console"/>
         </Root>

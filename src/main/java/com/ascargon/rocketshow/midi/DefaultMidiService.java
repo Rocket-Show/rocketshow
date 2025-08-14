@@ -6,23 +6,19 @@ import org.springframework.stereotype.Service;
 import purejavacomm.CommPort;
 import purejavacomm.CommPortIdentifier;
 import purejavacomm.SerialPort;
-import purejavacomm.SerialPortEvent;
 
 import javax.annotation.PreDestroy;
 import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class DefaultMidiService implements MidiService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultMidiService.class);
 
-    private final List<SerialPort> openMidiSerialDevices = new ArrayList<>();
+    private final Map<String, SerialPort> openMidiSerialDevices = new HashMap<>();
 
     private boolean isDeviceAllowed(String name) {
         return !(name.equals("Real Time Sequencer") || name.equals("Gervill"));
@@ -87,10 +83,16 @@ public class DefaultMidiService implements MidiService {
     }
 
     @Override
-    public SerialPort getHardwareMidiSerialDevice(com.ascargon.rocketshow.midi.MidiDevice midiDevice,
-                                                  MidiDirection midiDirection) {
+    public synchronized SerialPort getHardwareMidiSerialDevice(com.ascargon.rocketshow.midi.MidiDevice midiDevice,
+                                                               MidiDirection midiDirection) {
 
         logger.trace("Search for a serial MIDI device with name '" + midiDevice.getName() + "'...");
+
+        // Return the already opened device, if available
+        SerialPort openSerialPort = openMidiSerialDevices.get(midiDevice.getName());
+        if (openSerialPort != null) {
+            return openSerialPort;
+        }
 
         try {
             CommPortIdentifier portId = CommPortIdentifier.getPortIdentifier(midiDevice.getName());
@@ -99,6 +101,8 @@ public class DefaultMidiService implements MidiService {
                 logger.error("Could not open MIDI serial port, because it is already in use.");
                 return null;
             }
+
+            logger.info("Open MIDI serial port...");
 
             CommPort commPort = portId.open("MidiSerialApp", 2000);
             if (commPort instanceof SerialPort serialPort) {
@@ -109,9 +113,8 @@ public class DefaultMidiService implements MidiService {
                         SerialPort.PARITY_NONE
                 );
 
-                openMidiSerialDevices.add(serialPort);
-
-                logger.trace("Serial port opened. Ready to receive and send MIDI data.");
+                logger.info("MIDI serial port opened. Ready to receive and send MIDI data.");
+                openMidiSerialDevices.put(midiDevice.getName(), serialPort);
 
                 return serialPort;
             }
@@ -168,8 +171,9 @@ public class DefaultMidiService implements MidiService {
 
     @PreDestroy
     private void close() {
-        for (SerialPort openMidiSerialDevice : openMidiSerialDevices) {
-            openMidiSerialDevice.close();
+        for (Map.Entry<String, SerialPort> entry : openMidiSerialDevices.entrySet()) {
+            SerialPort port = entry.getValue();
+            port.close();
         }
     }
 
