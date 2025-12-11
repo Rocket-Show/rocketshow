@@ -113,6 +113,10 @@ public class DefaultMidiService implements MidiService {
                         SerialPort.PARITY_NONE
                 );
 
+                serialPort.notifyOnDataAvailable(true);
+                serialPort.notifyOnOutputEmpty(true);
+                serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
+
                 logger.info("MIDI serial port opened. Ready to receive and send MIDI data.");
                 openMidiSerialDevices.put(midiDevice.getName(), serialPort);
 

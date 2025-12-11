@@ -113,7 +113,7 @@ public class DefaultActivityNotificationMidiService extends TextWebSocketHandler
             @Override
             public void run() {
                 try {
-                    // Send the universe
+                    // Send the current MIDI state
                     sendWebsocketMessage();
                 } catch (Exception e) {
                     logger.error("Could not send the MIDI activity", e);

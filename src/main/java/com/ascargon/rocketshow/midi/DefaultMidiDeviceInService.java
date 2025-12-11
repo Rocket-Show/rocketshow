@@ -5,6 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import purejavacomm.SerialPort;
+import purejavacomm.SerialPortEvent;
+import purejavacomm.SerialPortEventListener;
 
 import javax.annotation.PreDestroy;
 import javax.sound.midi.InvalidMidiDataException;
@@ -16,6 +18,7 @@ import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.TooManyListenersException;
 
 @Service
 public class DefaultMidiDeviceInService implements MidiDeviceInService {
@@ -93,42 +96,82 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
         }
 
         InputStream finalInput = input;
-        new Thread(() -> {
-            byte[] temp = new byte[64];
-            while (true) {
-                try {
-                    if (finalInput.available() > 0) {
-                        int numRead = finalInput.read(temp);
-                        if (numRead > 0) {
-                            buffer.clear();
-                            buffer.put(temp, 0, numRead);
-                            buffer.flip();
 
-                            try {
-                                while (buffer.hasRemaining()) {
-                                    Optional<MidiMessage> maybeMessage = parser.offerByte(buffer.get());
-                                    maybeMessage.ifPresent(midiMessage -> {
-                                        logger.trace("Received MIDI message over serial: " + midiMessage);
-                                        midiInDeviceReceiver.send(midiMessage, -1);
-                                    });
-                                }
-                            } catch (InvalidMidiDataException e) {
-                                logger.error("Invalid MIDI data received on MIDI serial device: " + e.getMessage());
-                            }
-                        }
 
+//        new Thread(() -> {
+//            byte[] temp = new byte[64];
+//            while (true) {
+//                try {
+//                    int numRead = finalInput.read(temp);
+//                    if (numRead > 0) {
+//                        buffer.clear();
+//                        buffer.put(temp, 0, numRead);
+//                        buffer.flip();
+//
+//                        try {
+//                            while (buffer.hasRemaining()) {
+//                                Optional<MidiMessage> maybeMessage = parser.offerByte(buffer.get());
+//                                maybeMessage.ifPresent(midiMessage -> {
+//                                    logger.info("Received MIDI message over serial: " + midiMessage);
+//                                    midiInDeviceReceiver.send(midiMessage, -1);
+//                                });
+//                            }
+//                        } catch (InvalidMidiDataException e) {
+//                            logger.error("Invalid MIDI data received on MIDI serial device: " + e.getMessage());
+//                        }
+//                    }
+//
+//                    try {
+//                        Thread.sleep(1000); // Prevent tight loop
+//                    } catch (InterruptedException e) {
+//                        Thread.currentThread().interrupt();
+//                        break;
+//                    }
+//                } catch (IOException e) {
+//                    logger.error("Error while reading data from MIDI serial port", e);
+//                }
+//            }
+//        }).start();
+
+
+        try {
+            midiSerialDevice.addEventListener(new SerialPortEventListener() {
+                private final byte[] buffer = new byte[64];
+
+                @Override
+                public void serialEvent(SerialPortEvent event) {
+                    if (event.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
                         try {
-                            Thread.sleep(1); // Prevent tight loop
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                            break;
+                            int n;
+                            // Read everything that’s currently buffered
+                            while ((n = finalInput.read(buffer)) > 0) {
+                                for (int i = 0; i < n; i++) {
+                                    byte b = buffer[i];
+                                    try {
+                                        Optional<MidiMessage> maybe = parser.offerByte(b);
+                                        maybe.ifPresent(midiMessage -> {
+                                            logger.info("Received MIDI message over serial: {}", midiMessage.toString());
+                                            midiInDeviceReceiver.send(midiMessage, -1);
+                                        });
+                                    } catch (InvalidMidiDataException e) {
+                                        logger.error("Invalid MIDI data received: {}", e.getMessage());
+                                    }
+                                }
+
+                                // If nothing more is available, stop this event iteration
+                                if (finalInput.available() == 0) {
+                                    break;
+                                }
+                            }
+                        } catch (IOException e) {
+                            logger.error("Error while reading MIDI data from serial port", e);
                         }
                     }
-                } catch (IOException e) {
-                    logger.error("Error while reading data from MIDI serial port", e);
                 }
-            }
-        }).start();
+            });
+        } catch (TooManyListenersException e) {
+            logger.error("Could not add listener to MIDI serial port", e);
+        }
 
         this.midiSerialDevice = midiSerialDevice;
         return true;

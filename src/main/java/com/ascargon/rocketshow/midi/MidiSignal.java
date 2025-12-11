@@ -3,6 +3,7 @@ package com.ascargon.rocketshow.midi;
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.ShortMessage;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
@@ -34,6 +35,7 @@ public class MidiSignal {
         data2 = shortMessage.getData2();
     }
 
+    @JsonIgnore
     public ShortMessage getShortMessage() throws InvalidMidiDataException {
         ShortMessage shortMessage = new ShortMessage();
         shortMessage.setMessage(command, channel, data1, data2);
