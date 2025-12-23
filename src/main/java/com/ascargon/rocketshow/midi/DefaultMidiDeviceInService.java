@@ -97,43 +97,6 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
 
         InputStream finalInput = input;
 
-
-//        new Thread(() -> {
-//            byte[] temp = new byte[64];
-//            while (true) {
-//                try {
-//                    int numRead = finalInput.read(temp);
-//                    if (numRead > 0) {
-//                        buffer.clear();
-//                        buffer.put(temp, 0, numRead);
-//                        buffer.flip();
-//
-//                        try {
-//                            while (buffer.hasRemaining()) {
-//                                Optional<MidiMessage> maybeMessage = parser.offerByte(buffer.get());
-//                                maybeMessage.ifPresent(midiMessage -> {
-//                                    logger.info("Received MIDI message over serial: " + midiMessage);
-//                                    midiInDeviceReceiver.send(midiMessage, -1);
-//                                });
-//                            }
-//                        } catch (InvalidMidiDataException e) {
-//                            logger.error("Invalid MIDI data received on MIDI serial device: " + e.getMessage());
-//                        }
-//                    }
-//
-//                    try {
-//                        Thread.sleep(1000); // Prevent tight loop
-//                    } catch (InterruptedException e) {
-//                        Thread.currentThread().interrupt();
-//                        break;
-//                    }
-//                } catch (IOException e) {
-//                    logger.error("Error while reading data from MIDI serial port", e);
-//                }
-//            }
-//        }).start();
-
-
         try {
             midiSerialDevice.addEventListener(new SerialPortEventListener() {
                 private final byte[] buffer = new byte[64];
