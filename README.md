@@ -20,8 +20,9 @@ the devkit is not caching an old version (see https://github.com/angular/devkit/
 2. Open the web app on http://localhost:8080
 
 Use this command to skip tests and NPM build:
+
 ```shell
-mvn package -Dskip.npm -Dmaven.test.skip=true && java -jar target/rocketshow.jar
+./mvnw package -Dskip.npm -Dmaven.test.skip=true && java -jar target/rocketshow.jar
 ```
 
 For frequent builds, you might want to comment out the frontend-maven-plugin in the POM and make use of the Maven
@@ -169,7 +170,7 @@ cd build
 
 git clone https://github.com/RPi-distro/pi-gen.git
 cd pi-gen
-git checkout tags/2024-11-19-raspios-bookworm-arm64
+git checkout tags/2025-12-04-raspios-trixie-arm64
 
 echo "IMG_NAME='RocketShow'" > config
 
@@ -210,7 +211,7 @@ mv "$(date '+%Y-%m-%d')-RocketShow.zip" /home/rocketshow
 
 - Update POM
 - Update dist/currentversion2.xml version/date on top and add the release notes
-- Build the jar with Maven `mvn clean package`
+- Build the jar with Maven `./mvnw clean package`
 - Copy target/rocketshow.jar to rocketshow.net/update/test/rocketshow.jar (and parent-directory to release it directly)
 - Copy dist/currentversion2.xml to rocketshow.net/update/test/currentversion2.xml (and parent-directory to release it
   directly)

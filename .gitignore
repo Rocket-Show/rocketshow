@@ -1,3 +1,4 @@
+*.DS_Store
 /WebContent/*
 src/main/resources/static/*
 /target/

@@ -123,7 +123,7 @@ public class DefaultMidiService implements MidiService {
                 return serialPort;
             }
         } catch (Exception e) {
-            logger.error("Could not open MIDI serial port", e);
+            logger.error("Could not open MIDI serial port '" + midiDevice.getName() + "'", e);
         }
 
         return null;

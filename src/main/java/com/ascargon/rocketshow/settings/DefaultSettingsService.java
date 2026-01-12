@@ -59,6 +59,17 @@ public class DefaultSettingsService implements SettingsService {
         }
     }
 
+    private MidiDevice getFirstMidiNonSerialDevice(MidiDirection midiDirection) throws MidiUnavailableException {
+        // Use the first real MIDI device, if there is one, automatically.
+        // Don't use a MIDI serial device automatically, because it could be something that does not work as MIDI device.
+        for (MidiDevice midiDevice : midiService.getMidiDevices(midiDirection)) {
+            if (!midiDevice.isSerialPort()) {
+                return midiDevice;
+            }
+        }
+        return null;
+    }
+
     private void initDefaultSettings() {
         // Initialize default settings
 
@@ -100,14 +111,8 @@ public class DefaultSettingsService implements SettingsService {
         }
 
         if (settings.getMidiInDevice() == null) {
-            settings.setMidiInDevice(new MidiDevice());
-
             try {
-                List<MidiDevice> midiInDeviceList;
-                midiInDeviceList = midiService.getMidiDevices(MidiDirection.IN);
-                if (!midiInDeviceList.isEmpty()) {
-                    settings.setMidiInDevice(midiInDeviceList.get(0));
-                }
+                settings.setMidiInDevice(getFirstMidiNonSerialDevice(MidiDirection.IN));
             } catch (MidiUnavailableException e) {
                 logger.error("Could not get any MIDI IN devices", e);
             }
@@ -117,11 +122,7 @@ public class DefaultSettingsService implements SettingsService {
             settings.setMidiOutDevice(new MidiDevice());
 
             try {
-                List<MidiDevice> midiOutDeviceList;
-                midiOutDeviceList = midiService.getMidiDevices(MidiDirection.OUT);
-                if (!midiOutDeviceList.isEmpty()) {
-                    settings.setMidiOutDevice(midiOutDeviceList.get(0));
-                }
+                settings.setMidiInDevice(getFirstMidiNonSerialDevice(MidiDirection.OUT));
             } catch (MidiUnavailableException e) {
                 logger.error("Could not get any MIDI OUT devices", e);
             }
