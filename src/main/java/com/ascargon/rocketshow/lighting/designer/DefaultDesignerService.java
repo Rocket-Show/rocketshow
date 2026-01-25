@@ -1103,6 +1103,9 @@ public class DefaultDesignerService implements DesignerService {
 
     private List<String> getAllPixelKeys(FixtureProfile profile) {
         List<String> result = new ArrayList<>();
+        if (profile.getMatrix() == null || profile.getMatrix().getPixelKeys() == null) {
+            return result;
+        }
         for (List<List<String>> pixelKeyX : profile.getMatrix().getPixelKeys()) {
             for (List<String> pixelKeyY : pixelKeyX) {
                 for (String pixelKeyZ : pixelKeyY) {
@@ -1117,6 +1120,9 @@ public class DefaultDesignerService implements DesignerService {
 
     private List<String> getAllPixelGroups(FixtureProfile profile) {
         List<String> result = new ArrayList<>();
+        if (profile.getMatrix() == null || profile.getMatrix().getPixelGroups() == null) {
+            return result;
+        }
         for (FixtureMatrixPixelGroup fixtureMatrixPixelGroup : profile.getMatrix().getPixelGroups()) {
             result.add(fixtureMatrixPixelGroup.getName());
         }
