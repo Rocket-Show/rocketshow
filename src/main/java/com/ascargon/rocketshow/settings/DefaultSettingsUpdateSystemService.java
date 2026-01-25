@@ -186,21 +186,23 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
         // Set the proper logging level (map from the log4j enum to our own
         // enum)
 
+        String loggerName = "com.ascargon.rocketshow";
+
         switch (settings.getLoggingLevel()) {
             case INFO:
-                Configurator.setRootLevel(Level.INFO);
+                Configurator.setLevel(loggerName, Level.INFO);
                 break;
             case WARN:
-                Configurator.setRootLevel(Level.WARN);
+                Configurator.setLevel(loggerName, Level.WARN);
                 break;
             case ERROR:
-                Configurator.setRootLevel(Level.ERROR);
+                Configurator.setLevel(loggerName, Level.ERROR);
                 break;
             case DEBUG:
-                Configurator.setRootLevel(Level.DEBUG);
+                Configurator.setLevel(loggerName, Level.DEBUG);
                 break;
             case TRACE:
-                Configurator.setRootLevel(Level.TRACE);
+                Configurator.setLevel(loggerName, Level.TRACE);
                 break;
         }
     }

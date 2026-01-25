@@ -42,7 +42,7 @@ export class SettingsComponent implements OnInit {
     private translateService: TranslateService,
     private toastrService: ToastrService,
     private toastGeneralErrorService: ToastGeneralErrorService
-  ) {}
+  ) { }
 
   private finishInit(settings: Settings) {
     this.copyInitialSettings(settings);
@@ -97,26 +97,33 @@ export class SettingsComponent implements OnInit {
                 let midiOutDevices = <MidiDevice[]>data[1];
                 let audioDevices = <AudioDevice[]>data[2];
 
+                const noneDevice: MidiDevice = {
+                  id: -1,
+                  name: "[None]",
+                  vendor: "",
+                  description: "",
+                  serialPort: false,
+                };
+
                 // Set the initial devices where none are set
                 if (
                   (!result.midiInDevice ||
-                    (result.midiInDevice && result.midiInDevice.id == 0)) &&
-                  midiInDevices.length > 0
+                    (result.midiInDevice && result.midiInDevice.id == 0))
                 ) {
-                  result.midiInDevice = midiInDevices[0];
+                  result.midiInDevice = noneDevice;
                 }
 
                 if (
                   (!result.midiOutDevice ||
-                    (result.midiOutDevice && result.midiOutDevice.id == 0)) &&
-                  midiOutDevices.length > 0
+                    (result.midiOutDevice && result.midiOutDevice.id == 0))
                 ) {
-                  result.midiOutDevice = midiOutDevices[0];
+                  result.midiOutDevice = noneDevice;
                 }
 
                 // Remove/change the devices, if they current ones are not available anymore
                 if (
                   result.midiInDevice &&
+                  result.midiInDevice.id != -1 &&
                   !this.midiDeviceAvailable(result.midiInDevice, midiInDevices)
                 ) {
                   if (midiInDevices.length > 0) {
@@ -128,6 +135,7 @@ export class SettingsComponent implements OnInit {
 
                 if (
                   result.midiOutDevice &&
+                  result.midiOutDevice.id != -1 &&
                   !this.midiDeviceAvailable(
                     result.midiOutDevice,
                     midiOutDevices

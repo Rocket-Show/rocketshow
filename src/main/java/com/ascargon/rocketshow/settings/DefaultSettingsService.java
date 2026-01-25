@@ -119,8 +119,6 @@ public class DefaultSettingsService implements SettingsService {
         }
 
         if (settings.getMidiOutDevice() == null) {
-            settings.setMidiOutDevice(new MidiDevice());
-
             try {
                 settings.setMidiInDevice(getFirstMidiNonSerialDevice(MidiDirection.OUT));
             } catch (MidiUnavailableException e) {

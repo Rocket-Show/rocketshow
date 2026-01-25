@@ -44,12 +44,20 @@ export class SettingsMidiComponent implements OnInit, OnDestroy {
         map((result) => {
           this.settings = result;
 
+          const noneDevice: MidiDevice = {
+            id: -1,
+            name: "[None]",
+            vendor: "",
+            description: "",
+            serialPort: false,
+          };
+
           this.settingsService.getMidiInDevices().subscribe((response) => {
-            this.midiInDevices = response;
+            this.midiInDevices = [noneDevice, ...(response || [])];
           });
 
           this.settingsService.getMidiOutDevices().subscribe((response) => {
-            this.midiOutDevices = response;
+            this.midiOutDevices = [noneDevice, ...(response || [])];
           });
         })
       )

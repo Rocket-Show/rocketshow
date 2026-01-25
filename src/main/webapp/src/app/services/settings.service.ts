@@ -100,7 +100,18 @@ export class SettingsService {
 
   saveSettings(): Observable<Object> {
     const mergedSettings = { ...this.originalSettings, ...this.settings }; // Merge known and unknown fields
+    this.removeNoneMidiDevices(mergedSettings);
     return this.http.post("system/settings", JSON.stringify(mergedSettings));
+  }
+
+  private removeNoneMidiDevices(settings: Settings) {
+    // Remove any MIDI device placeholders (id === -1) so server sees them as not selected
+    if (settings.midiInDevice && settings.midiInDevice.id === -1) {
+      settings.midiInDevice = null;
+    }
+    if (settings.midiOutDevice && settings.midiOutDevice.id === -1) {
+      settings.midiOutDevice = null;
+    }
   }
 
   updateLightingOlaPlugins(olaPluginList: OlaPlugin[]): Observable<Object> {

@@ -610,8 +610,11 @@ public class CompositionPlayer {
             }
         }
 
-        if (!hasActiveFile && designerService.getProjectByCompositionName(composition.getName()) == null) {
-            // No files to be played and no designer project (maybe a lead sheet)
+        if (!hasActiveFile
+                && designerService.getProjectByCompositionName(composition.getName()) == null
+                && composition.getActionTriggerList().isEmpty()
+        ) {
+            // No files to be played, no actions and no designer project (maybe a lead sheet)
             if (!isDefaultComposition && !isSample) {
                 notificationService.notifyClients(playerService, setService);
             }
@@ -664,6 +667,7 @@ public class CompositionPlayer {
 
         final Runnable runnable = () -> {
             try {
+                logger.info("Composition finished. Stopping...");
                 stop();
             } catch (Exception e) {
                 logger.error("Could not auto stop the composition after the timer ran out", e);
@@ -698,7 +702,7 @@ public class CompositionPlayer {
                 try {
                     actionExecutionService.executeFromTrigger(actionTriggerComposition);
                 } catch (Exception e) {
-                    logger.error("Could not execute actions triggered at position " + actionTriggerComposition.getPositionMillis());
+                    logger.error("Could not execute actions triggered at position " + actionTriggerComposition.getPositionMillis(), e);
                 }
                 remainingActionTriggerCompositionList.remove(actionTriggerComposition);
             };

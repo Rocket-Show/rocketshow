@@ -233,7 +233,9 @@ public class DefaultPlayerService implements PlayerService {
 
         logger.debug("All devices loaded");
 
-        if (currentCompositionPlayer.getPlayState() != CompositionPlayer.PlayState.LOADED && currentCompositionPlayer.getPlayState() != CompositionPlayer.PlayState.PAUSED) {
+        if (currentCompositionPlayer.getPlayState() != CompositionPlayer.PlayState.LOADED
+                && currentCompositionPlayer.getPlayState() != CompositionPlayer.PlayState.PAUSED
+        ) {
             // Maybe the composition stopped meanwhile
             return;
         }
@@ -241,7 +243,7 @@ public class DefaultPlayerService implements PlayerService {
         stopDefaultComposition();
         testCompositionPlayer.stop();
 
-        logger.debug("Start playing on all devices...");
+        logger.debug("Prepare playing on all devices...");
 
         // Play the composition on all remote devices
         for (RemoteDevice remoteDevice : settingsService.getSettings().getRemoteDeviceList()) {
@@ -253,7 +255,7 @@ public class DefaultPlayerService implements PlayerService {
         // Play the composition locally
         currentCompositionPlayer.play();
 
-        logger.debug("Playing on all devices");
+        logger.debug("Playing on all devices...");
     }
 
     @Override
