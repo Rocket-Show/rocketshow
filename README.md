@@ -265,6 +265,19 @@ interfaces are exposed as well as some web sockets for time critical topics or w
 
 Services related to audio playback.
 
+The Gstreamer audio pipeline looks like this:
+```
+uridecodebin
+-> audioconvert mix-matrix=...
+-> audioresample
+-> audiomixer
+-> capsfilter audio/x-raw,rate=48000,channels=2
+(-> level)
+-> queue
+-> volume
+-> alsasink
+```
+
 ##### Composition
 
 Handling the composition and the composition player.

@@ -1,9 +1,8 @@
 package com.ascargon.rocketshow.audio;
 
-import com.ascargon.rocketshow.gstreamer.GstreamerInitService;
-import com.ascargon.rocketshow.play.PlayerService;
-import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.gstreamer.GstApi;
+import com.ascargon.rocketshow.gstreamer.GstreamerInitService;
+import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import org.freedesktop.gstreamer.Caps;
@@ -47,8 +46,12 @@ public class DefaultAudioDeviceKeepOpenService implements AudioDeviceKeepOpenSer
             return;
         }
 
+        // Just set the first sink to i
+        boolean provideClock = true;
+
         for (AudioDevice audioDevice : audioService.getAudioDeviceInUseList(settingsService.getSettings())) {
             // Run in an infinite thread to not dispose the class/pipeline after it's not used anymore
+            boolean finalProvideClock = provideClock;
             Thread infiniteThread = new Thread(() -> {
                 Pipeline pipeline = new Pipeline();
 
@@ -67,7 +70,7 @@ public class DefaultAudioDeviceKeepOpenService implements AudioDeviceKeepOpenSer
                 capsFilter.set("caps", caps);
                 pipeline.add(capsFilter);
 
-                BaseSink sink = audioService.getGstAudioSink(audioDevice);
+                BaseSink sink = audioService.getGstAudioSink(audioDevice, finalProvideClock);
                 pipeline.add(sink);
 
                 audiotestsrc.link(audioConvert);
@@ -90,6 +93,7 @@ public class DefaultAudioDeviceKeepOpenService implements AudioDeviceKeepOpenSer
                 }
             });
             infiniteThread.start();
+            provideClock = false;
         }
     }
 

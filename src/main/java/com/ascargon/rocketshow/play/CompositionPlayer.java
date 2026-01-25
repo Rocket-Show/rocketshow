@@ -240,6 +240,7 @@ public class CompositionPlayer {
         pipeline.add(videoQueue);
 
         Element kmssink = getGstVideoSink();
+        kmssink.set("sync", true);
         pipeline.add(kmssink);
 
         videoSource.link(videoQueue);
@@ -416,8 +417,11 @@ public class CompositionPlayer {
     }
 
     // Prepare each used audio device for output
-    private Map<AudioDevice, Element> prepareAudioDevices(Composition composition) {
+    private Map<AudioDevice, Element> prepareAudioDevices(Composition composition, boolean provideClock) {
         Map<AudioDevice, Element> audioMixerList = new HashMap<>();
+
+        // Only use the first audio device as clock master (if audio should provide a clock at all)
+        boolean provideClockFirstAudioDevice = provideClock;
 
         for (AudioDevice audioDevice : getAudioDeviceInCompositionList(composition)) {
             String audioDeviceAlsaName = audioService.getAudioDeviceAlsaName(audioDevice);
@@ -439,7 +443,7 @@ public class CompositionPlayer {
             Element queue = ElementFactory.make("queue", "audiosinkqueue_" + audioDeviceAlsaName);
             pipeline.add(queue);
 
-            BaseSink sink = audioService.getGstAudioSink(audioDevice);
+            BaseSink sink = audioService.getGstAudioSink(audioDevice, provideClockFirstAudioDevice);
             pipeline.add(sink);
 
             Element level = null;
@@ -465,12 +469,27 @@ public class CompositionPlayer {
             queue.link(volume);
 
             volume.link(sink);
+
+            provideClockFirstAudioDevice = false;
         }
 
         return audioMixerList;
     }
 
+    private boolean hasVideo() {
+        for (int i = 0; i < composition.getCompositionFileList().size(); i++) {
+            CompositionFile compositionFile = composition.getCompositionFileList().get(i);
+
+            if (compositionFile.isActive() && compositionFile instanceof VideoCompositionFile && capabilitiesService.getCapabilities().isGstreamer()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void createGstreamerPipeline() throws Exception {
+        boolean hasVideo = hasVideo();
         pipeline = new Pipeline();
         Bus bus = GstApi.GST_API.gst_element_get_bus(pipeline);
 
@@ -545,8 +564,10 @@ public class CompositionPlayer {
 
         GstApi.GST_API.gst_object_unref(bus);
 
-        // prepare a mixer for each configured audio device
-        Map<AudioDevice, Element> audioMixerList = prepareAudioDevices(composition);
+        // Prepare the audio devices and keep the mixer as links to connect to.
+        // Use audio to provide a clock, if there's no video. Otherwise, let video provide the clock
+        // (more stable, avoids jittering issues).
+        Map<AudioDevice, Element> audioMixerList = prepareAudioDevices(composition, !hasVideo);
 
         // Load all files, create the pipeline and handle exceptions to pipeline-playing
         for (int i = 0; i < composition.getCompositionFileList().size(); i++) {

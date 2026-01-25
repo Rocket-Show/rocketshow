@@ -63,6 +63,10 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
         alsaSettings.append(System.lineSeparator());
 
         // Build the dmix device
+
+        // Just a random number above 100'000
+        int ipcKey = 104401;
+
         for (AudioDevice audioDevice : audioDeviceList) {
             int currentChannel = 0;
 
@@ -72,7 +76,7 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
             alsaSettings.append("pcm.dmix_").append(audioDeviceAlsaName).
                     append(" {\n").
                     append("  type dmix\n").
-                    append("  ipc_key 2048\n").
+                    append("  ipc_key ").append(ipcKey).append("\n").
                     append("  slave {\n").
                     append("    pcm \"hw:").append(audioDevice.getKey()).append("\"\n")
                     .append("    channels ").append(channelCount).append("\n");
@@ -117,6 +121,9 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
             }
 
             alsaSettings.append("}\n");
+
+            // Ensure uniqueness of the key
+            ipcKey += 10;
         }
 
         alsaSettings.append(ROCKET_SHOW_SETTINGS_END);

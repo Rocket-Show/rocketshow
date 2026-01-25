@@ -385,48 +385,39 @@ public class DefaultSettingsService implements SettingsService {
             switch (midiControl.getAction()) {
                 case PLAY:
                     action = new ActionTransport();
-                    action.setActionType(Action.ActionType.TRANSPORT);
                     ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.PLAY);
                     break;
                 case PLAY_AS_SAMPLE:
                     action = new ActionTransport();
-                    action.setActionType(Action.ActionType.TRANSPORT);
                     ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.PLAY_AS_SAMPLE);
                     break;
                 case TOGGLE_PLAY:
                     action = new ActionTransport();
-                    action.setActionType(Action.ActionType.TRANSPORT);
                     ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.TOGGLE_PLAY);
                     break;
                 case PAUSE:
                     action = new ActionTransport();
-                    action.setActionType(Action.ActionType.TRANSPORT);
                     ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.PAUSE);
                     break;
                 case NEXT_COMPOSITION:
                     action = new ActionTransport();
-                    action.setActionType(Action.ActionType.TRANSPORT);
                     ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.NEXT_COMPOSITION);
                     break;
                 case PREVIOUS_COMPOSITION:
                     action = new ActionTransport();
-                    action.setActionType(Action.ActionType.TRANSPORT);
                     ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.PREVIOUS_COMPOSITION);
                     break;
                 case STOP:
                     action = new ActionTransport();
-                    action.setActionType(Action.ActionType.TRANSPORT);
                     ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.STOP);
                     break;
                 case SELECT_COMPOSITION_BY_NAME:
                     action = new ActionTransport();
-                    action.setActionType(Action.ActionType.TRANSPORT);
                     ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.SELECT_COMPOSITION_BY_NAME);
                     ((ActionTransport) action).setCompositionName(midiControl.getCompositionName());
                     break;
                 case SELECT_COMPOSITION_BY_NAME_AND_PLAY:
                     action = new ActionTransport();
-                    action.setActionType(Action.ActionType.TRANSPORT);
                     ((ActionTransport) action).setTransportActionType(ActionTransport.TransportActionType.SELECT_COMPOSITION_BY_NAME_AND_PLAY);
                     ((ActionTransport) action).setCompositionName(midiControl.getCompositionName());
                     break;
@@ -435,7 +426,6 @@ public class DefaultSettingsService implements SettingsService {
                     break;
                 case REBOOT:
                     action = new ActionSystem();
-                    action.setActionType(Action.ActionType.SYSTEM);
                     ((ActionSystem) action).setSystemActionType(ActionSystem.SystemActionType.REBOOT);
                     break;
             }

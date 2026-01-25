@@ -107,7 +107,7 @@ public class DefaultActionExecutionService implements ActionExecutionService {
     }
 
     private void executeActionLocally(Action action) throws Exception {
-        switch (action.getActionType()) {
+        switch (action.getType()) {
             case TRANSPORT -> {
                 ActionTransport actionTransport = (ActionTransport) action;
                 switch (actionTransport.getTransportActionType()) {
@@ -137,7 +137,7 @@ public class DefaultActionExecutionService implements ActionExecutionService {
                 }
             }
             case HTTP -> executeActionHttp((ActionHttp) action);
-            default -> logger.warn("Action '" + action.getActionType() + "' is unknown and cannot be executed");
+            default -> logger.warn("Action '" + action.getType() + "' is unknown and cannot be executed");
         }
     }
 

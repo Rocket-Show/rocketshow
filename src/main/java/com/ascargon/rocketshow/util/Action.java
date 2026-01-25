@@ -26,8 +26,6 @@ import java.util.List;
         @JsonSubTypes.Type(value = ActionRaspberryGpio.class, name = "actionRaspberryGpio"),
         @JsonSubTypes.Type(value = ActionHttp.class, name = "actionHttp")
 })
-@Getter
-@Setter
 public abstract class Action {
 
     // Actions to be executed (e.g. by MIDI control or Raspberry GPIO events)
@@ -41,13 +39,12 @@ public abstract class Action {
         HTTP
     }
 
-    // The Action to be executed
-    private ActionType actionType;
-
     // Execute this action on remote devices
     private List<String> remoteDeviceNames = new ArrayList<>();
 
     // Execute this action locally?
+    @Getter
+    @Setter
     private boolean executeLocally = true;
 
     @XmlElement(name = "remoteDevice")
