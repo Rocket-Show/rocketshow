@@ -181,7 +181,7 @@ public class DefaultAudioService implements AudioService {
     }
 
     @Override
-    public BaseSink getGstAudioSink(AudioDevice audioDevice) {
+    public BaseSink getGstAudioSink(AudioDevice audioDevice, boolean provideClock) {
         String sinkName = "alsasink";
 
         if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
@@ -193,6 +193,11 @@ public class DefaultAudioService implements AudioService {
 
         if (!OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
             sink.set("device", "rs_" + getAudioDeviceAlsaName(audioDevice));
+
+            // Should be set by default but make sure it's really n'sync
+            sink.set("sync", true);
+
+            sink.set("provide-clock", provideClock);
         }
 
         return sink;

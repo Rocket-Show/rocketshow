@@ -15,7 +15,7 @@ public interface AudioService {
 
     String getAudioDeviceAlsaName(AudioDevice audioDevice);
 
-    BaseSink getGstAudioSink(AudioDevice audioDevice);
+    BaseSink getGstAudioSink(AudioDevice audioDevice, boolean provideClock);
 
     int getChannelCountByAudioDevice(Settings settings, AudioDevice audioDevice);
 

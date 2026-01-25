@@ -260,8 +260,8 @@ public class DefaultCompositionService implements CompositionService {
             }
         }
 
-        for(ActionTriggerComposition actionTriggerComposition : composition.getActionTriggerList()) {
-            if(actionTriggerComposition.getPositionMillis() > maxDuration) {
+        for (ActionTriggerComposition actionTriggerComposition : composition.getActionTriggerList()) {
+            if (actionTriggerComposition.getPositionMillis() > maxDuration) {
                 maxDuration = actionTriggerComposition.getPositionMillis();
             }
         }
