@@ -64,12 +64,16 @@ public class DefaultActionExecutionService implements ActionExecutionService {
             switch (actionHttp.getHttpMethod()) {
                 case POST:
                     HttpPost postRequest = new HttpPost(actionHttp.getUrl());
-                    postRequest.setEntity(new StringEntity(actionHttp.getBody()));
+                    if (actionHttp.getBody() != null) {
+                        postRequest.setEntity(new StringEntity(actionHttp.getBody()));
+                    }
                     request = postRequest;
                     break;
                 case PUT:
                     HttpPut putRequest = new HttpPut(actionHttp.getUrl());
-                    putRequest.setEntity(new StringEntity(actionHttp.getBody()));
+                    if (actionHttp.getBody() != null) {
+                        putRequest.setEntity(new StringEntity(actionHttp.getBody()));
+                    }
                     request = putRequest;
                     break;
                 case DELETE:
@@ -77,7 +81,9 @@ public class DefaultActionExecutionService implements ActionExecutionService {
                     break;
                 case PATCH:
                     HttpPatch patchRequest = new HttpPatch(actionHttp.getUrl());
-                    patchRequest.setEntity(new StringEntity(actionHttp.getBody()));
+                    if (actionHttp.getBody() != null) {
+                        patchRequest.setEntity(new StringEntity(actionHttp.getBody()));
+                    }
                     request = patchRequest;
                     break;
                 case GET:

@@ -704,7 +704,8 @@ public class CompositionPlayer {
             return;
         }
 
-        autoStopHandle.cancel(true);
+        // Don't interrupt the thread, because it might need to notify some websocket sessions
+        autoStopHandle.cancel(false);
         autoStopHandle = null;
     }
 
@@ -724,6 +725,9 @@ public class CompositionPlayer {
                     actionExecutionService.executeFromTrigger(actionTriggerComposition);
                 } catch (Exception e) {
                     logger.error("Could not execute actions triggered at position " + actionTriggerComposition.getPositionMillis(), e);
+                    try {
+                        notificationService.notifyClients(e.getMessage());
+                    } catch (Exception ex) {}
                 }
                 remainingActionTriggerCompositionList.remove(actionTriggerComposition);
             };
@@ -799,6 +803,12 @@ public class CompositionPlayer {
         scheduleActionTriggerTimers();
 
         designerService.play();
+
+        if (pipeline == null) {
+            // No pipeline to trigger playing state -> just issue it right now
+            playState = PlayState.PLAYING;
+            notificationService.notifyClients(playerService, setService);
+        }
     }
 
     public void pause() throws Exception {

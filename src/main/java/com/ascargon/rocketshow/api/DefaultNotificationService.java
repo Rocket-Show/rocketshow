@@ -1,10 +1,13 @@
 package com.ascargon.rocketshow.api;
 
+import com.ascargon.rocketshow.play.CompositionPlayer;
 import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.util.UpdateService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -20,6 +23,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 @Service
 public class DefaultNotificationService extends TextWebSocketHandler implements NotificationService {
+
+    private final static Logger logger = LoggerFactory.getLogger(DefaultNotificationService.class);
 
     private final StateService stateService;
     private final CompositionService compositionService;
@@ -41,7 +46,7 @@ public class DefaultNotificationService extends TextWebSocketHandler implements 
         sessions.remove(session);
     }
 
-    private synchronized void notifyClients(PlayerService playerService, SetService setService, UpdateService.UpdateState updateState, Boolean isUpdateFinished, String error) throws IOException {
+    private void notifyClients(PlayerService playerService, SetService setService, UpdateService.UpdateState updateState, Boolean isUpdateFinished, String error) throws IOException {
         State currentState = stateService.getCurrentState(playerService, setService, compositionService);
         currentState.setUpdateState(updateState);
         currentState.setUpdateFinished(isUpdateFinished);
@@ -54,6 +59,7 @@ public class DefaultNotificationService extends TextWebSocketHandler implements 
             try {
                 webSocketSession.sendMessage(new TextMessage(returnValue));
             } catch (Exception e) {
+                logger.error("Could not send WebSocket message. Close the session...", e);
                 sessions.remove(webSocketSession);
             }
         }

@@ -53,6 +53,7 @@ export class StateService {
     });
 
     this.websocket.onClose(() => {
+      console.log('WebSocket connection closed');
       this.connected = false;
     });
 

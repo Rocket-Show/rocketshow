@@ -207,31 +207,33 @@ public class DefaultPlayerService implements PlayerService {
             return;
         }
 
-        ExecutorService playExecutor;
+        if (!settingsService.getSettings().getRemoteDeviceList().isEmpty()) {
+            ExecutorService playExecutor;
 
-        // Make sure all remote devices and the local one have loaded the
-        // composition before playing it
-        playExecutor = Executors.newFixedThreadPool(30);
+            // Make sure all remote devices and the local one have loaded the
+            // composition before playing it
+            playExecutor = Executors.newFixedThreadPool(30);
 
-        // Load the composition on all remote devices
-        for (RemoteDevice remoteDevice : settingsService.getSettings().getRemoteDeviceList()) {
-            if (remoteDevice.isSynchronize()) {
-                playExecutor.execute(() -> remoteDevice.load(true, currentCompositionPlayer.getComposition().getName()));
+            // Load the composition on all remote devices
+            for (RemoteDevice remoteDevice : settingsService.getSettings().getRemoteDeviceList()) {
+                if (remoteDevice.isSynchronize()) {
+                    playExecutor.execute(() -> remoteDevice.load(true, currentCompositionPlayer.getComposition().getName()));
+                }
             }
-        }
 
-        logger.debug("Wait for all devices to be loaded...");
+            logger.debug("Wait for all devices to be loaded...");
 
-        // Wait for the compositions on all devices to be loaded
-        playExecutor.shutdown();
-        if (!playExecutor.awaitTermination(60, TimeUnit.SECONDS)) {
-            logger.error("Timeout while waiting for the compositions to load on remote devices");
+            // Wait for the compositions on all devices to be loaded
+            playExecutor.shutdown();
+            if (!playExecutor.awaitTermination(60, TimeUnit.SECONDS)) {
+                logger.error("Timeout while waiting for the compositions to load on remote devices");
+            }
         }
 
         // Load the local files outside the executor for better error handling
         currentCompositionPlayer.loadFiles();
 
-        logger.debug("All devices loaded");
+        logger.debug("Files loaded");
 
         if (currentCompositionPlayer.getPlayState() != CompositionPlayer.PlayState.LOADED
                 && currentCompositionPlayer.getPlayState() != CompositionPlayer.PlayState.PAUSED

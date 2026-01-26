@@ -18,8 +18,11 @@ public class DefaultRaspberryGpioOutService implements RaspberryGpioOutService {
 
     private Context pi4j;
     private final List<DigitalOutput> digitalOutputList = new ArrayList<>();
+    private final SettingsService settingsService;
 
     public DefaultRaspberryGpioOutService(SettingsService settingsService, Pi4jService pi4jService) {
+        this.settingsService = settingsService;
+
         if (!settingsService.getSettings().getEnableRaspberryGpio()) {
             return;
         }
@@ -56,6 +59,11 @@ public class DefaultRaspberryGpioOutService implements RaspberryGpioOutService {
 
     @Override
     public void executeAction(ActionRaspberryGpio gpioAction) {
+        if (!settingsService.getSettings().getEnableRaspberryGpio()) {
+            logger.warn("Will not execute GPIO action, because GPIO is disabled in the settings");
+            return;
+        }
+
         setPinState(gpioAction.getPinId(), gpioAction.getHigh());
     }
 
