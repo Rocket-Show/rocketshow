@@ -1014,8 +1014,6 @@ public class DefaultDesignerService implements DesignerService {
 
             // TODO make the dimmer value adjustable and fall back to the project settings
             setUniverseValues(calculatedFixtures);
-
-            logger.trace("DMX universe: " + lightingUniverses.get(0).getUniverse().toString());
         } catch (Exception e) {
             logger.error("Could not calculate the universe", e);
         }
@@ -1031,19 +1029,21 @@ public class DefaultDesignerService implements DesignerService {
 
         final Runnable universeSender = new Runnable() {
             public void run() {
-                // TODO
-//                if (pipeline == null && getCurrentTimeMillis() > project.duration) {
-//                    // There is no Gstreamer pipeline and the designer project finished
-//                    try {
-//                        compositionPlayer.stop();
-//                    } catch (Exception e) {
-//                        logger.error("Could not automatically stop the composition from the designer project", e);
-//                    }
-//                } else {
-                // Calculate and send the current state
-                calculateUniverse(compositionPlayer.getPositionMillis());
-                lightingService.sendExternalSync(settingsService.getSettings().getEnableMonitor());
-//                }
+                try {
+                    long positionMillis;
+                    if (compositionPlayer == null) {
+                        // No compositionPlayer, e.g. only designer preview -> just use the current time as reference
+                        positionMillis = System.currentTimeMillis();
+                    } else {
+                        // We have a compositionPlayer -> use it to sync
+                        positionMillis = compositionPlayer.getPositionMillis();
+                    }
+                    logger.debug("Calculate universe at position {}...", positionMillis);
+                    calculateUniverse(positionMillis);
+                    lightingService.sendExternalSync(settingsService.getSettings().getEnableMonitor());
+                } catch (Exception e) {
+                    logger.error("Could not send universe", e);
+                }
             }
         };
 
@@ -1053,6 +1053,8 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     private void stopTimer() {
+        logger.debug("Stop universe send timer...");
+
         if (universeSenderHandle == null) {
             return;
         }
