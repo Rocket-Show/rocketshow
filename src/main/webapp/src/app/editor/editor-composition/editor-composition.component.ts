@@ -18,6 +18,7 @@ import { Settings } from "../../models/settings";
 import { SettingsService } from "../../services/settings.service";
 import { ActionTriggerComposition } from "../../models/action-trigger-composition";
 import { EditorCompositionActionComponent } from "./editor-composition-action/editor-composition-action.component";
+import { ActionTrigger } from "../../models/action-trigger";
 
 @Component({
   selector: "app-editor-composition",
@@ -59,7 +60,8 @@ export class EditorCompositionComponent implements OnInit {
     private translateService: TranslateService,
     private toastGeneralErrorService: ToastGeneralErrorService,
     private settingsService: SettingsService
-  ) {}
+  ) {
+  }
 
   private loadSettings() {
     this.settingsService
@@ -332,7 +334,7 @@ export class EditorCompositionComponent implements OnInit {
           // OK has been pressed -> save
           this.currentComposition.fileList[fileIndex] = (<
             EditorCompositionFileComponent
-          >fileDialog.content).file;
+            >fileDialog.content).file;
         }
       }
     );
@@ -369,7 +371,7 @@ export class EditorCompositionComponent implements OnInit {
           // OK has been pressed -> save
           this.currentComposition.actionTriggerList[actionIndex] = (<
             EditorCompositionActionComponent
-          >fileDialog.content).actionTrigger;
+            >fileDialog.content).actionTrigger;
         }
       }
     );
@@ -410,7 +412,7 @@ export class EditorCompositionComponent implements OnInit {
         // OK has been pressed -> save
         this.currentComposition.leadSheetList[leadSheetIndex] = (<
           EditorCompositionLeadSheetComponent
-        >leadSheetDialog.content).leadSheet;
+          >leadSheetDialog.content).leadSheet;
       }
     });
   }
@@ -531,4 +533,5 @@ export class EditorCompositionComponent implements OnInit {
   slideStart(event: any) {
     this.sliding = true;
   }
+
 }

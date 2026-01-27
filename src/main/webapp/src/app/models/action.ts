@@ -2,6 +2,7 @@ export class Action {
   compositionName: string;
   remoteDeviceList: string[] = [];
   executeLocally: boolean = true;
+  type: string;
 
   constructor(data?: any) {
     if (!data) {
@@ -17,5 +18,6 @@ export class Action {
     }
 
     this.executeLocally = data.executeLocally;
+    this.type = data.type;
   }
 }

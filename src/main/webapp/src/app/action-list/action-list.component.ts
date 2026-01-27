@@ -19,6 +19,7 @@ export class ActionListComponent {
 
   addAction() {
     let action = new ActionNull();
+    action.type = "NULL";
     this.actionList.push(action);
   }
 

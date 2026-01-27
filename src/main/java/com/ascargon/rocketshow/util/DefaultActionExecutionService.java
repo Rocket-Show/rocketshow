@@ -55,57 +55,53 @@ public class DefaultActionExecutionService implements ActionExecutionService {
         httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
     }
 
-    private void executeActionHttp(ActionHttp actionHttp) {
-        try {
-            logger.debug("Execute HTTP action to URL " + actionHttp.getUrl());
+    private void executeActionHttp(ActionHttp actionHttp) throws Exception {
+        logger.debug("Execute HTTP action to URL " + actionHttp.getUrl());
 
-            HttpRequestBase request;
+        HttpRequestBase request;
 
-            switch (actionHttp.getHttpMethod()) {
-                case POST:
-                    HttpPost postRequest = new HttpPost(actionHttp.getUrl());
-                    if (actionHttp.getBody() != null) {
-                        postRequest.setEntity(new StringEntity(actionHttp.getBody()));
-                    }
-                    request = postRequest;
-                    break;
-                case PUT:
-                    HttpPut putRequest = new HttpPut(actionHttp.getUrl());
-                    if (actionHttp.getBody() != null) {
-                        putRequest.setEntity(new StringEntity(actionHttp.getBody()));
-                    }
-                    request = putRequest;
-                    break;
-                case DELETE:
-                    request = new HttpDelete(actionHttp.getUrl());
-                    break;
-                case PATCH:
-                    HttpPatch patchRequest = new HttpPatch(actionHttp.getUrl());
-                    if (actionHttp.getBody() != null) {
-                        patchRequest.setEntity(new StringEntity(actionHttp.getBody()));
-                    }
-                    request = patchRequest;
-                    break;
-                case GET:
-                default:
-                    request = new HttpGet(actionHttp.getUrl());
-                    break;
-            }
-
-            for (Map.Entry<String, String> header : actionHttp.getHeaderList().entrySet()) {
-                request.setHeader(header.getKey(), header.getValue());
-            }
-
-            HttpResponse response;
-            response = httpClient.execute(request);
-
-            logger.debug("Received response from HTTP action");
-            logger.debug("Status code: " + response.getStatusLine().getStatusCode());
-            logger.debug("Status phrase: " + response.getStatusLine().getReasonPhrase());
-            logger.debug("Response body: " + EntityUtils.toString(response.getEntity()));
-        } catch (Exception e) {
-            logger.error("Could not execute HTTP action with URL '" + actionHttp.getUrl() + "'", e);
+        switch (actionHttp.getHttpMethod()) {
+            case POST:
+                HttpPost postRequest = new HttpPost(actionHttp.getUrl());
+                if (actionHttp.getBody() != null) {
+                    postRequest.setEntity(new StringEntity(actionHttp.getBody()));
+                }
+                request = postRequest;
+                break;
+            case PUT:
+                HttpPut putRequest = new HttpPut(actionHttp.getUrl());
+                if (actionHttp.getBody() != null) {
+                    putRequest.setEntity(new StringEntity(actionHttp.getBody()));
+                }
+                request = putRequest;
+                break;
+            case DELETE:
+                request = new HttpDelete(actionHttp.getUrl());
+                break;
+            case PATCH:
+                HttpPatch patchRequest = new HttpPatch(actionHttp.getUrl());
+                if (actionHttp.getBody() != null) {
+                    patchRequest.setEntity(new StringEntity(actionHttp.getBody()));
+                }
+                request = patchRequest;
+                break;
+            case GET:
+            default:
+                request = new HttpGet(actionHttp.getUrl());
+                break;
         }
+
+        for (Map.Entry<String, String> header : actionHttp.getHeaderList().entrySet()) {
+            request.setHeader(header.getKey(), header.getValue());
+        }
+
+        HttpResponse response;
+        response = httpClient.execute(request);
+
+        logger.debug("Received response from HTTP action");
+        logger.debug("Status code: " + response.getStatusLine().getStatusCode());
+        logger.debug("Status phrase: " + response.getStatusLine().getReasonPhrase());
+        logger.debug("Response body: " + EntityUtils.toString(response.getEntity()));
     }
 
     private void executeActionOnRemoteDevice(Action action, RemoteDevice remoteDevice) {

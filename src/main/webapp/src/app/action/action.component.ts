@@ -37,29 +37,12 @@ export class ActionComponent {
     this.uuid = this.uuidService.getUuid();
   }
 
-  getActionType(): string {
-    if (this.action instanceof ActionNull) {
-      return "NULL";
-    } else if (this.action instanceof ActionSystem) {
-      return "SYSTEM";
-    } else if (this.action instanceof ActionTransport) {
-      return "TRANSPORT";
-    } else if (this.action instanceof ActionMidi) {
-      return "MIDI";
-    } else if (this.action instanceof ActionLighting) {
-      return "LIGHTING";
-    } else if (this.action instanceof ActionRaspberryGpio) {
-      return "RASPBERRY_GPIO";
-    } else if (this.action instanceof ActionHttp) {
-      return "HTTP";
-    }
-    return "UNKNOWN";
-  }
-
   onActionTypeChange(newValue: string): void {
-    if (newValue === this.getActionType()) {
+    if (newValue === this.action.type) {
       return;
     }
+
+    this.action.type = newValue;
 
     if (newValue === "NULL") {
       this.action = new ActionNull(this.action);

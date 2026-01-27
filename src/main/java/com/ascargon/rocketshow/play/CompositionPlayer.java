@@ -724,9 +724,9 @@ public class CompositionPlayer {
                 try {
                     actionExecutionService.executeFromTrigger(actionTriggerComposition);
                 } catch (Exception e) {
-                    logger.error("Could not execute actions triggered at position " + actionTriggerComposition.getPositionMillis(), e);
+                    logger.error("Could not execute actions triggered at position {}", actionTriggerComposition.getPositionMillis(), e);
                     try {
-                        notificationService.notifyClients(e.getMessage());
+                        notificationService.notifyClients("Could not execute action: " + e.getCause());
                     } catch (Exception ex) {}
                 }
                 remainingActionTriggerCompositionList.remove(actionTriggerComposition);

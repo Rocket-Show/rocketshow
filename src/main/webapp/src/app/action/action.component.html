@@ -3,7 +3,7 @@
   <div class="col-md-9">
     <select
       class="custom-select"
-      [ngModel]="getActionType()"
+      [ngModel]="action.type"
       (ngModelChange)="onActionTypeChange($event)"
     >
       <option value="TRANSPORT">
@@ -27,31 +27,31 @@
 
 <!-- The specific action -->
 <app-action-transport
-  *ngIf="getActionType() == 'TRANSPORT'"
+  *ngIf="action.type == 'TRANSPORT'"
   [action]="action"
 ></app-action-transport>
 <app-action-system
-  *ngIf="getActionType() == 'SYSTEM'"
+  *ngIf="action.type == 'SYSTEM'"
   [action]="action"
 ></app-action-system>
 <app-action-midi
-  *ngIf="getActionType() == 'MIDI'"
+  *ngIf="action.type == 'MIDI'"
   [action]="action"
 ></app-action-midi>
 <app-action-lighting
-  *ngIf="getActionType() == 'LIGHTING'"
+  *ngIf="action.type == 'LIGHTING'"
   [action]="action"
 ></app-action-lighting>
 <app-action-http
-  *ngIf="getActionType() == 'HTTP'"
+  *ngIf="action.type == 'HTTP'"
   [action]="action"
 ></app-action-http>
 <app-action-raspberry-gpio
-  *ngIf="getActionType() == 'RASPBERRY_GPIO'"
+  *ngIf="action.type == 'RASPBERRY_GPIO'"
   [action]="action"
 ></app-action-raspberry-gpio>
 <app-action-null
-  *ngIf="getActionType() == 'NULL'"
+  *ngIf="action.type == 'NULL'"
   [action]="action"
 ></app-action-null>
 

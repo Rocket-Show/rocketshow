@@ -55,6 +55,7 @@ public class DefaultNotificationService extends TextWebSocketHandler implements 
         ObjectMapper mapper = new ObjectMapper();
         String returnValue = mapper.writeValueAsString(currentState);
 
+        logger.debug("Sending WebSocket message to {} clients", sessions.size());
         for (WebSocketSession webSocketSession : sessions) {
             try {
                 webSocketSession.sendMessage(new TextMessage(returnValue));
