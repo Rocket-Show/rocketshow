@@ -17,9 +17,6 @@ public class DefaultStateService implements StateService {
     public State getCurrentState(PlayerService playerService, SetService setService, CompositionService compositionService) {
         State currentState = new State();
 
-        currentState.setPlayState(CompositionPlayer.PlayState.STOPPED);
-        currentState.setCurrentCompositionIndex(0);
-
         if (playerService != null) {
             currentState.setPlayState(playerService.getPlayState());
             currentState.setCurrentCompositionName(playerService.getCompositionName());

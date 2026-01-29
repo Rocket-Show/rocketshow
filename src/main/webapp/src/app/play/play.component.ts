@@ -358,6 +358,14 @@ export class PlayComponent implements OnInit, OnDestroy {
   }
 
   private stateChanged(newState: State) {
+    if (newState.error) {
+      this.toastGeneralErrorService.showMessage(newState.error);
+    }
+
+    if (!newState.playState) {
+      return;
+    }
+
     // as we have a new sync-point for the position millis, reset the last play time
     this.lastPlayTime = new Date();
 
@@ -366,10 +374,6 @@ export class PlayComponent implements OnInit, OnDestroy {
     }, 0);
 
     this.playTime = this.msToTime(newState.positionMillis);
-
-    if (newState.error) {
-      this.toastGeneralErrorService.showMessage(newState.error);
-    }
 
     if (
       newState.playState == "PLAYING" &&

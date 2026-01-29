@@ -65,10 +65,6 @@ rm fixtures.zip
 wget https://www.rocketshow.net/update/rocketshow.jar
 wget https://www.rocketshow.net/update/currentversion2.xml
 
-# Set the user rocketshow as owner and add execution permissions
-# on the update script
-chown -R rocketshow:rocketshow /opt/rocketshow
-
 # Install the wireless access point feature
 # https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
 systemctl unmask hostapd
@@ -188,11 +184,13 @@ pcm.!default {
 
 EOF
 
+# Set the user rocketshow as owner
 chown -R rocketshow:rocketshow /home/rocketshow
-chown -R rocketshow:rocketshow /opt/rocketshow_factory.tar.gz
-chown -R rocketshow:rocketshow /opt/rocketshow_reset.sh
+chown -R rocketshow:rocketshow /opt/rocketshow
+chown rocketshow:rocketshow /opt/rocketshow_factory.tar.gz
+chown rocketshow:rocketshow /opt/rocketshow_reset.sh
 
-chmod 755 /opt/rocketshow_factory.tar.gz
+# Add execution permissions
 chmod 755 /opt/rocketshow_reset.sh
 
 # Give the setup some time, because umount won't work afterwards if called too fast ("umount: device is busy")
