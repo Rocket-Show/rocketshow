@@ -51,7 +51,12 @@ public class DesignerController {
     }
 
     @PostMapping("preview")
-    public synchronized void preview(@RequestBody Project project, @RequestParam("positionMillis") long positionMillis, @RequestParam(value = "compositionName", required = false, defaultValue = "") String compositionName) {
+    public synchronized void preview(
+            @RequestBody Project project,
+            @RequestParam("positionMillis") long positionMillis,
+            @RequestParam(value = "compositionName", required = false, defaultValue = "") String compositionName
+    ) {
+
         if (!settingsService.getSettings().getDesignerLivePreview()) {
             logger.debug("Live preview disabled");
             return;
@@ -60,14 +65,15 @@ public class DesignerController {
         logger.debug("Preview designer...");
 
         designerService.stopPreview();
+
+        // Stop currently playing stuff
         designerService.load(null, project, null);
 
         designerService.setPreviewPreset(project.isPreviewPreset());
         designerService.setSelectedPresetUuid(project.getSelectedPresetUuid());
         designerService.setSelectedSceneUuids(project.getSelectedSceneUuids());
-        if (compositionName != null && !compositionName.isEmpty()) {
-            designerService.setPreviewComposition(compositionName);
-        }
+        designerService.setPreviewComposition(compositionName);
+
         designerService.startPreview(positionMillis);
     }
 

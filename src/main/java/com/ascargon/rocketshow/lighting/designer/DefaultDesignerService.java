@@ -44,9 +44,10 @@ public class DefaultDesignerService implements DesignerService {
     private Pipeline pipeline;
     private CompositionPlayer compositionPlayer;
     private Composition composition;
+    private long startPositionMillis = 0;
 
     // Live preview
-    private boolean playPreview = false;
+    private boolean playPreview = false; // Is the preview playing a composition?
     private boolean previewPreset = false;
     private String selectedPresetUuid;
     private List<String> selectedSceneUuids = new ArrayList<>();
@@ -57,6 +58,8 @@ public class DefaultDesignerService implements DesignerService {
     private ScheduledFuture<?> universeSenderHandle;
 
     private List<CachedFixture> cachedFixtures;
+
+    private long lastPlayTimeMillis;
 
     public DefaultDesignerService(SettingsService settingsService, FileFilterService fileFilterService, LightingService lightingService) {
         this.settingsService = settingsService;
@@ -1019,35 +1022,36 @@ public class DefaultDesignerService implements DesignerService {
         }
     }
 
+    private long getCurrentPositionMillis() {
+        if (compositionPlayer != null) {
+            // We have a compositionPlayer -> use it to sync
+            return compositionPlayer.getPositionMillis();
+        }
+
+        // No compositionPlayer, e.g. only designer preview -> just use the current time as reference
+        return System.currentTimeMillis() - lastPlayTimeMillis + startPositionMillis;
+    }
+
     private void startTimer() {
         if (universeSenderHandle != null || settingsService.getSettings().getDesignerFrequencyHertz() == null) {
-            logger.debug("Could not start preview timer (universeSenderHandle = " + universeSenderHandle + ", designerFrequencyHertz = " + settingsService.getSettings().getDesignerFrequencyHertz() + ")");
+            logger.debug("Could not start preview timer (universeSenderHandle = {}, designerFrequencyHertz = {})", universeSenderHandle, settingsService.getSettings().getDesignerFrequencyHertz());
             return;
         }
 
         logger.debug("Start designer universe send timer...");
 
-        final Runnable universeSender = new Runnable() {
-            public void run() {
-                try {
-                    long positionMillis;
-                    if (compositionPlayer == null) {
-                        // No compositionPlayer, e.g. only designer preview -> just use the current time as reference
-                        positionMillis = System.currentTimeMillis();
-                    } else {
-                        // We have a compositionPlayer -> use it to sync
-                        positionMillis = compositionPlayer.getPositionMillis();
-                    }
-                    logger.debug("Calculate universe at position {}...", positionMillis);
-                    calculateUniverse(positionMillis);
-                    lightingService.sendExternalSync(settingsService.getSettings().getEnableMonitor());
-                } catch (Exception e) {
-                    logger.error("Could not send universe", e);
-                }
+        lastPlayTimeMillis = System.currentTimeMillis();
+
+        final Runnable universeSender = () -> {
+            try {
+                calculateUniverse(getCurrentPositionMillis());
+                lightingService.sendExternalSync(settingsService.getSettings().getEnableMonitor());
+            } catch (Exception e) {
+                logger.error("Could not send universe", e);
             }
         };
 
-        logger.debug("Designer universe send timer triggering each " + 1000 / settingsService.getSettings().getDesignerFrequencyHertz() + " milliseconds");
+        logger.debug("Designer universe send timer triggering each {} milliseconds", 1000 / settingsService.getSettings().getDesignerFrequencyHertz());
 
         universeSenderHandle = scheduler.scheduleAtFixedRate(universeSender, 0, 1000 / settingsService.getSettings().getDesignerFrequencyHertz(), MILLISECONDS);
     }
@@ -1429,6 +1433,7 @@ public class DefaultDesignerService implements DesignerService {
             return;
         }
 
+        this.startPositionMillis = positionMillis;
         startTimer();
     }
 
@@ -1449,7 +1454,7 @@ public class DefaultDesignerService implements DesignerService {
 
     @Override
     public void setPreviewComposition(String compositionName) {
-        if (compositionName == null) {
+        if (compositionName == null || compositionName.isEmpty()) {
             this.playPreview = false;
         } else {
             composition = getCompositionByName(project, compositionName);

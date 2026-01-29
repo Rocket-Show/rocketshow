@@ -849,7 +849,7 @@ public class CompositionPlayer {
         if (!isDefaultComposition && !isSample) {
             notificationService.notifyClients(playerService, setService);
         }
-        logger.info("Stopping composition '" + composition.getName() + "'");
+        logger.info("Stopping composition '{}'", composition.getName());
 
         // Stop the composition
         stopPipeline();
