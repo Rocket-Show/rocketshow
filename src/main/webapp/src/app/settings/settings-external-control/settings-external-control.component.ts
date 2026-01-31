@@ -6,9 +6,10 @@ import { map } from "rxjs/operators";
 import { ActionTriggerRaspberryGpio } from "../../models/action-trigger-raspberry-gpio";
 
 @Component({
-  selector: "app-settings-external-control",
-  templateUrl: "./settings-external-control.component.html",
-  styleUrl: "./settings-external-control.component.scss",
+    selector: "app-settings-external-control",
+    templateUrl: "./settings-external-control.component.html",
+    styleUrl: "./settings-external-control.component.scss",
+    standalone: false
 })
 export class SettingsExternalControlComponent {
   private settingsChangedSubscription: Subscription;

@@ -5,9 +5,10 @@ import { BsModalRef } from "ngx-bootstrap/modal";
 import { Composition } from "../../../models/composition";
 
 @Component({
-  selector: "app-editor-composition-action",
-  templateUrl: "./editor-composition-action.component.html",
-  styleUrl: "./editor-composition-action.component.scss",
+    selector: "app-editor-composition-action",
+    templateUrl: "./editor-composition-action.component.html",
+    styleUrl: "./editor-composition-action.component.scss",
+    standalone: false
 })
 export class EditorCompositionActionComponent implements OnInit {
   selectUndefinedOptionValue: any = undefined;

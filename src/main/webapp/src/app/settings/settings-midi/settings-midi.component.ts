@@ -10,9 +10,10 @@ import { ActionTriggerMidi } from "../../models/action-trigger-midi";
 import { ActionTriggerMidiNoteOn } from "../../models/action-trigger-midi-note-on";
 
 @Component({
-  selector: "app-settings-midi",
-  templateUrl: "./settings-midi.component.html",
-  styleUrls: ["./settings-midi.component.scss"],
+    selector: "app-settings-midi",
+    templateUrl: "./settings-midi.component.html",
+    styleUrls: ["./settings-midi.component.scss"],
+    standalone: false
 })
 export class SettingsMidiComponent implements OnInit, OnDestroy {
   private settingsChangedSubscription: Subscription;

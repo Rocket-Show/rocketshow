@@ -11,9 +11,10 @@ import { Settings } from '../../../models/settings';
 import { SettingsService } from '../../../services/settings.service';
 
 @Component({
-  selector: 'app-editor-composition-lead-sheet',
-  templateUrl: './editor-composition-lead-sheet.component.html',
-  styleUrls: ['./editor-composition-lead-sheet.component.scss']
+    selector: 'app-editor-composition-lead-sheet',
+    templateUrl: './editor-composition-lead-sheet.component.html',
+    styleUrls: ['./editor-composition-lead-sheet.component.scss'],
+    standalone: false
 })
 export class EditorCompositionLeadSheetComponent implements OnInit {
 

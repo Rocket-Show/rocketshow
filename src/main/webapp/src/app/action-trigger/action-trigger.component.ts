@@ -5,9 +5,10 @@ import { ActionTriggerComposition } from "../models/action-trigger-composition";
 import { ActionTriggerRaspberryGpio } from "../models/action-trigger-raspberry-gpio";
 
 @Component({
-  selector: "app-action-trigger",
-  templateUrl: "./action-trigger.component.html",
-  styleUrl: "./action-trigger.component.scss",
+    selector: "app-action-trigger",
+    templateUrl: "./action-trigger.component.html",
+    styleUrl: "./action-trigger.component.scss",
+    standalone: false
 })
 export class ActionTriggerComponent {
   @Input()

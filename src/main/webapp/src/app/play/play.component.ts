@@ -21,9 +21,10 @@ import { ActivityLightingService } from "../services/activity-lighting.service";
 import { ActivityLighting } from "../models/activity-lighting";
 
 @Component({
-  selector: "app-play",
-  templateUrl: "./play.component.html",
-  styleUrls: ["./play.component.scss"],
+    selector: "app-play",
+    templateUrl: "./play.component.html",
+    styleUrls: ["./play.component.scss"],
+    standalone: false
 })
 export class PlayComponent implements OnInit, OnDestroy {
   stateServiceSubscription: Subscription;

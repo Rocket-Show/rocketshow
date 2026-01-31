@@ -3,9 +3,10 @@ import { Observable, Subject } from "rxjs";
 import { Component, OnInit } from "@angular/core";
 
 @Component({
-  selector: "app-warning-dialog",
-  templateUrl: "./warning-dialog.component.html",
-  styleUrls: ["./warning-dialog.component.scss"],
+    selector: "app-warning-dialog",
+    templateUrl: "./warning-dialog.component.html",
+    styleUrls: ["./warning-dialog.component.scss"],
+    standalone: false
 })
 export class WarningDialogComponent implements OnInit {
   onClose: Subject<number> = new Subject();

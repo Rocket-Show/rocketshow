@@ -9,9 +9,10 @@ import { Version } from '../../models/version';
 import { ReloadClearCacheService } from '../../services/reload-clear-cache.service';
 
 @Component({
-  selector: 'app-update-dialog',
-  templateUrl: './update-dialog.component.html',
-  styleUrls: ['./update-dialog.component.scss']
+    selector: 'app-update-dialog',
+    templateUrl: './update-dialog.component.html',
+    styleUrls: ['./update-dialog.component.scss'],
+    standalone: false
 })
 export class UpdateDialogComponent implements OnInit, OnDestroy {
   onClose: Subject<number>;

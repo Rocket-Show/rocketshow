@@ -9,9 +9,10 @@ import { InfoDialogService } from "../../services/info-dialog.service";
 import { ReloadClearCacheService } from "../../services/reload-clear-cache.service";
 
 @Component({
-  selector: "app-backup-restore-dialog",
-  templateUrl: "./backup-restore-dialog.component.html",
-  styleUrl: "./backup-restore-dialog.component.scss",
+    selector: "app-backup-restore-dialog",
+    templateUrl: "./backup-restore-dialog.component.html",
+    styleUrl: "./backup-restore-dialog.component.scss",
+    standalone: false
 })
 export class BackupRestoreDialogComponent implements OnInit, OnDestroy {
   onClose: Subject<number>;

@@ -7,9 +7,10 @@ import { map } from "rxjs/operators";
 import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-settings-band',
-  templateUrl: './settings-band.component.html',
-  styleUrls: ['./settings-band.component.scss']
+    selector: 'app-settings-band',
+    templateUrl: './settings-band.component.html',
+    styleUrls: ['./settings-band.component.scss'],
+    standalone: false
 })
 export class SettingsBandComponent implements OnInit, OnDestroy {
 

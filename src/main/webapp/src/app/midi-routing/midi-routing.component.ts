@@ -4,9 +4,10 @@ import { MidiRouting } from "./../models/midi-routing";
 import { Component, OnInit, Input } from "@angular/core";
 
 @Component({
-  selector: "app-midi-routing",
-  templateUrl: "./midi-routing.component.html",
-  styleUrls: ["./midi-routing.component.scss"],
+    selector: "app-midi-routing",
+    templateUrl: "./midi-routing.component.html",
+    styleUrls: ["./midi-routing.component.scss"],
+    standalone: false
 })
 export class MidiRoutingComponent implements OnInit {
   @Input() midiRoutingList: MidiRouting[];

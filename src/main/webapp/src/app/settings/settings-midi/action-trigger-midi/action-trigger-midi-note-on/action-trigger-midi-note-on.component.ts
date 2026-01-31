@@ -3,9 +3,10 @@ import { ActionTriggerMidiNoteOn } from "../../../../models/action-trigger-midi-
 import { MidiService } from "../../../../services/midi.service";
 
 @Component({
-  selector: "app-action-trigger-midi-note-on",
-  templateUrl: "./action-trigger-midi-note-on.component.html",
-  styleUrl: "./action-trigger-midi-note-on.component.scss",
+    selector: "app-action-trigger-midi-note-on",
+    templateUrl: "./action-trigger-midi-note-on.component.html",
+    styleUrl: "./action-trigger-midi-note-on.component.scss",
+    standalone: false
 })
 export class ActionTriggerMidiNoteOnComponent {
   @Input()

@@ -5,9 +5,10 @@ import { ActionTriggerMidiProgramChange } from "../../../models/action-trigger-m
 import { Settings } from "../../../models/settings";
 
 @Component({
-  selector: "app-action-trigger-midi",
-  templateUrl: "./action-trigger-midi.component.html",
-  styleUrl: "./action-trigger-midi.component.scss",
+    selector: "app-action-trigger-midi",
+    templateUrl: "./action-trigger-midi.component.html",
+    styleUrl: "./action-trigger-midi.component.scss",
+    standalone: false
 })
 export class ActionTriggerMidiComponent {
   @Input()

@@ -12,10 +12,11 @@ import { Title } from "@angular/platform-browser";
 import { OperatingSystemInformationService } from "./services/operating-system-information.service";
 
 @Component({
-  selector: "body",
-  templateUrl: "./app.component.html",
-  styleUrls: ["./app.component.scss"],
-  host: { "[class.body-bg-moving]": "this.isIntro" },
+    selector: "body",
+    templateUrl: "./app.component.html",
+    styleUrls: ["./app.component.scss"],
+    host: { "[class.body-bg-moving]": "this.isIntro" },
+    standalone: false
 })
 export class AppComponent implements OnInit {
   isIntro: boolean = false;

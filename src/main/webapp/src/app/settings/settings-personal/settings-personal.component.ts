@@ -7,9 +7,10 @@ import { map } from "rxjs/operators";
 import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-settings-personal',
-  templateUrl: './settings-personal.component.html',
-  styleUrls: ['./settings-personal.component.scss']
+    selector: 'app-settings-personal',
+    templateUrl: './settings-personal.component.html',
+    styleUrls: ['./settings-personal.component.scss'],
+    standalone: false
 })
 export class SettingsPersonalComponent implements OnInit, OnDestroy {
 

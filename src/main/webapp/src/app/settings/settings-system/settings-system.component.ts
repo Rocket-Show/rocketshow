@@ -19,9 +19,10 @@ import { WaitDialogService } from "../../services/wait-dialog.service";
 import { ToastGeneralErrorService } from "../../services/toast-general-error.service";
 
 @Component({
-  selector: "app-settings-system",
-  templateUrl: "./settings-system.component.html",
-  styleUrls: ["./settings-system.component.scss"],
+    selector: "app-settings-system",
+    templateUrl: "./settings-system.component.html",
+    styleUrls: ["./settings-system.component.scss"],
+    standalone: false
 })
 export class SettingsSystemComponent implements OnInit, OnDestroy {
   private settingsChangedSubscription: Subscription;

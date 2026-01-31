@@ -8,22 +8,23 @@ import { TranslateService } from '@ngx-translate/core';
 import { map } from "rxjs/operators";
 
 @Component({
-  selector: 'app-intro',
-  templateUrl: './intro.component.html',
-  styleUrls: ['./intro.component.scss'],
-  animations: [
-    trigger('wizardState', [
-      state('inactive', style({
-        opacity: 0,
-        marginTop: "-100px"
-      })),
-      state('active', style({
-        opacity: 1,
-        marginTop: 0
-      })),
-      transition('active => inactive', animate('500ms ease-out'))
-    ])
-  ]
+    selector: 'app-intro',
+    templateUrl: './intro.component.html',
+    styleUrls: ['./intro.component.scss'],
+    animations: [
+        trigger('wizardState', [
+            state('inactive', style({
+                opacity: 0,
+                marginTop: "-100px"
+            })),
+            state('active', style({
+                opacity: 1,
+                marginTop: 0
+            })),
+            transition('active => inactive', animate('500ms ease-out'))
+        ])
+    ],
+    standalone: false
 })
 export class IntroComponent implements OnInit {
 

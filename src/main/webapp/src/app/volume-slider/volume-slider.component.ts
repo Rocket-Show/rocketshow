@@ -7,9 +7,10 @@ import {
 } from "@angular/core";
 
 @Component({
-  selector: "app-volume-slider",
-  templateUrl: "./volume-slider.component.html",
-  styleUrl: "./volume-slider.component.scss",
+    selector: "app-volume-slider",
+    templateUrl: "./volume-slider.component.html",
+    styleUrl: "./volume-slider.component.scss",
+    standalone: false
 })
 export class VolumeSliderComponent {
   // Displayed volume control based on https://www.dr-lex.be/info-stuff/volumecontrols.html

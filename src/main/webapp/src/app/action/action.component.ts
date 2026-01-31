@@ -11,9 +11,10 @@ import { ActionRaspberryGpio } from "../models/action-raspberry-gpio";
 import { ActionHttp } from "../models/action-http";
 
 @Component({
-  selector: "app-action",
-  templateUrl: "./action.component.html",
-  styleUrl: "./action.component.scss",
+    selector: "app-action",
+    templateUrl: "./action.component.html",
+    styleUrl: "./action.component.scss",
+    standalone: false
 })
 export class ActionComponent {
   @Input()

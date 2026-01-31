@@ -4,9 +4,10 @@ import { SettingsService } from "../../../services/settings.service";
 import { RaspberryPiPin } from "../../../models/raspberry-pi-pin";
 
 @Component({
-  selector: "app-action-trigger-raspberry-gpio",
-  templateUrl: "./action-trigger-raspberry-gpio.component.html",
-  styleUrl: "./action-trigger-raspberry-gpio.component.scss",
+    selector: "app-action-trigger-raspberry-gpio",
+    templateUrl: "./action-trigger-raspberry-gpio.component.html",
+    styleUrl: "./action-trigger-raspberry-gpio.component.scss",
+    standalone: false
 })
 export class ActionTriggerRaspberryGpioComponent {
   @Input()

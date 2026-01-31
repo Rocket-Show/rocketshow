@@ -16,9 +16,10 @@ import { SessionService } from "../../services/session.service";
 import { ReloadClearCacheService } from "../../services/reload-clear-cache.service";
 
 @Component({
-  selector: "app-settings-advanced",
-  templateUrl: "./settings-advanced.component.html",
-  styleUrls: ["./settings-advanced.component.scss"],
+    selector: "app-settings-advanced",
+    templateUrl: "./settings-advanced.component.html",
+    styleUrls: ["./settings-advanced.component.scss"],
+    standalone: false
 })
 export class SettingsAdvancedComponent implements OnInit, OnDestroy {
   private settingsChangedSubscription: Subscription;

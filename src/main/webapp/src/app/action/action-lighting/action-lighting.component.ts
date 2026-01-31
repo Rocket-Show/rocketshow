@@ -4,9 +4,10 @@ import { LightingActionUniverse } from "../../models/lighting-action-universe";
 import { LightingActionChannelValue } from "../../models/lighting-action-channel-value";
 
 @Component({
-  selector: "app-action-lighting",
-  templateUrl: "./action-lighting.component.html",
-  styleUrl: "./action-lighting.component.scss",
+    selector: "app-action-lighting",
+    templateUrl: "./action-lighting.component.html",
+    styleUrl: "./action-lighting.component.scss",
+    standalone: false
 })
 export class ActionLightingComponent {
   @Input()

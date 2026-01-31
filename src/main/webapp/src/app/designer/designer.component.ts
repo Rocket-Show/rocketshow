@@ -4,9 +4,10 @@ import { AppHttpInterceptor } from '../app-http-interceptor/app-http-interceptor
 import { SettingsService } from '../services/settings.service';
 
 @Component({
-  selector: 'app-designer',
-  templateUrl: './designer.component.html',
-  styleUrls: ['./designer.component.scss']
+    selector: 'app-designer',
+    templateUrl: './designer.component.html',
+    styleUrls: ['./designer.component.scss'],
+    standalone: false
 })
 export class DesignerComponent implements OnInit {
 

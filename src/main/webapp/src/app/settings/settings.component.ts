@@ -23,9 +23,10 @@ import { ToastrService } from "ngx-toastr";
 import { Router } from "@angular/router";
 
 @Component({
-  selector: "app-settings",
-  templateUrl: "./settings.component.html",
-  styleUrls: ["./settings.component.scss"],
+    selector: "app-settings",
+    templateUrl: "./settings.component.html",
+    styleUrls: ["./settings.component.scss"],
+    standalone: false
 })
 export class SettingsComponent implements OnInit {
   // The settings as they were, when we loaded them

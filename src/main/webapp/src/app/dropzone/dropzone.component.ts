@@ -5,9 +5,10 @@ import { map } from "rxjs/operators";
 import { AppHttpInterceptor } from "../app-http-interceptor/app-http-interceptor";
 
 @Component({
-  selector: "app-dropzone",
-  templateUrl: "./dropzone.component.html",
-  styleUrl: "./dropzone.component.scss",
+    selector: "app-dropzone",
+    templateUrl: "./dropzone.component.html",
+    styleUrl: "./dropzone.component.scss",
+    standalone: false
 })
 export class DropzoneComponent {
   @Output() error = new EventEmitter();

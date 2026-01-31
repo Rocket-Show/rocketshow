@@ -14,9 +14,10 @@ import { CompositionAudioFile } from "../../../models/composition-audio-file";
 import { AudioBus } from "../../../models/audio-bus";
 
 @Component({
-  selector: "app-editor-composition-file",
-  templateUrl: "./editor-composition-file.component.html",
-  styleUrls: ["./editor-composition-file.component.scss"],
+    selector: "app-editor-composition-file",
+    templateUrl: "./editor-composition-file.component.html",
+    styleUrls: ["./editor-composition-file.component.scss"],
+    standalone: false
 })
 export class EditorCompositionFileComponent implements OnInit {
   selectUndefinedOptionValue: any = undefined;

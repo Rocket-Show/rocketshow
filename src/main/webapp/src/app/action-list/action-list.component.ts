@@ -3,9 +3,10 @@ import { Action } from "../models/action";
 import { ActionNull } from "../models/action-null";
 
 @Component({
-  selector: "app-action-list",
-  templateUrl: "./action-list.component.html",
-  styleUrl: "./action-list.component.scss",
+    selector: "app-action-list",
+    templateUrl: "./action-list.component.html",
+    styleUrl: "./action-list.component.scss",
+    standalone: false
 })
 export class ActionListComponent {
   @Input()

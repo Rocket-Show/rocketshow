@@ -2,9 +2,10 @@ import { Component, Input, SimpleChanges } from "@angular/core";
 import { ActionHttp } from "../../models/action-http";
 
 @Component({
-  selector: "app-action-http",
-  templateUrl: "./action-http.component.html",
-  styleUrl: "./action-http.component.scss",
+    selector: "app-action-http",
+    templateUrl: "./action-http.component.html",
+    styleUrl: "./action-http.component.scss",
+    standalone: false
 })
 export class ActionHttpComponent {
   @Input()

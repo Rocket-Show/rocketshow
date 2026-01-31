@@ -3,9 +3,10 @@ import { ActionMidi } from "../../models/action-midi";
 import { MidiService } from "../../services/midi.service";
 
 @Component({
-  selector: "app-action-midi",
-  templateUrl: "./action-midi.component.html",
-  styleUrl: "./action-midi.component.scss",
+    selector: "app-action-midi",
+    templateUrl: "./action-midi.component.html",
+    styleUrl: "./action-midi.component.scss",
+    standalone: false
 })
 export class ActionMidiComponent {
   @Input()

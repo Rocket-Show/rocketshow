@@ -7,9 +7,10 @@ import { map } from "rxjs/operators";
 import { WaitDialogService } from "../../services/wait-dialog.service";
 
 @Component({
-  selector: "app-settings-lighting",
-  templateUrl: "./settings-lighting.component.html",
-  styleUrls: ["./settings-lighting.component.scss"],
+    selector: "app-settings-lighting",
+    templateUrl: "./settings-lighting.component.html",
+    styleUrls: ["./settings-lighting.component.scss"],
+    standalone: false
 })
 export class SettingsLightingComponent implements OnInit {
   settings: Settings;

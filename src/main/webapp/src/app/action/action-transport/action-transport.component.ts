@@ -4,9 +4,10 @@ import { CompositionService } from "../../services/composition.service";
 import { Composition } from "../../models/composition";
 
 @Component({
-  selector: "app-action-transport",
-  templateUrl: "./action-transport.component.html",
-  styleUrl: "./action-transport.component.scss",
+    selector: "app-action-transport",
+    templateUrl: "./action-transport.component.html",
+    styleUrl: "./action-transport.component.scss",
+    standalone: false
 })
 export class ActionTransportComponent {
   @Input()

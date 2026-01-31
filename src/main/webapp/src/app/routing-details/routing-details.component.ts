@@ -6,9 +6,10 @@ import { RemoteDevice } from '../models/remote-device';
 import { SettingsService } from '../services/settings.service';
 
 @Component({
-  selector: 'app-routing-details',
-  templateUrl: './routing-details.component.html',
-  styleUrls: ['./routing-details.component.scss'],
+    selector: 'app-routing-details',
+    templateUrl: './routing-details.component.html',
+    styleUrls: ['./routing-details.component.scss'],
+    standalone: false
 })
 export class RoutingDetailsComponent implements OnInit {
 

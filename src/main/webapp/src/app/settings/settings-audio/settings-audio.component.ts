@@ -7,9 +7,10 @@ import { map } from "rxjs/operators";
 import { Subscription } from "rxjs";
 
 @Component({
-  selector: "app-settings-audio",
-  templateUrl: "./settings-audio.component.html",
-  styleUrls: ["./settings-audio.component.scss"],
+    selector: "app-settings-audio",
+    templateUrl: "./settings-audio.component.html",
+    styleUrls: ["./settings-audio.component.scss"],
+    standalone: false
 })
 export class SettingsAudioComponent implements OnInit, OnDestroy {
   selectUndefinedOptionValue: any;

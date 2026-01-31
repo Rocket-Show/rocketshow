@@ -7,9 +7,10 @@ import { map } from "rxjs/operators";
 import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-settings-network',
-  templateUrl: './settings-network.component.html',
-  styleUrls: ['./settings-network.component.scss']
+    selector: 'app-settings-network',
+    templateUrl: './settings-network.component.html',
+    styleUrls: ['./settings-network.component.scss'],
+    standalone: false
 })
 export class SettingsNetworkComponent implements OnInit, OnDestroy {
 

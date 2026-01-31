@@ -21,9 +21,10 @@ import { EditorCompositionActionComponent } from "./editor-composition-action/ed
 import { ActionTrigger } from "../../models/action-trigger";
 
 @Component({
-  selector: "app-editor-composition",
-  templateUrl: "./editor-composition.component.html",
-  styleUrls: ["./editor-composition.component.scss"],
+    selector: "app-editor-composition",
+    templateUrl: "./editor-composition.component.html",
+    styleUrls: ["./editor-composition.component.scss"],
+    standalone: false
 })
 export class EditorCompositionComponent implements OnInit {
   searchName: string = "";
