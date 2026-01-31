@@ -11,7 +11,9 @@
                 <h6 class="card-subtitle mb-2">{{ 'intro.welcome-language' | translate }}</h6>
 
                 <select class="custom-select" [ngModel]="settings?.language" (ngModelChange)="switchLanguage($event)">
-                  <option *ngFor="let language of settingsService?.languages" [ngValue]="language.key">{{ language.name }}</option>
+                  @for (language of settingsService?.languages; track language) {
+                    <option [ngValue]="language.key">{{ language.name }}</option>
+                  }
                 </select>
               </div>
               <div class="card-footer text-muted">

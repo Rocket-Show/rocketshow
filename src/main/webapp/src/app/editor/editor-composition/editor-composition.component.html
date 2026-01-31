@@ -16,157 +16,178 @@
     <div class="card border-secondary" style="height: 400px; overflow-y: scroll">
       <div class="card-body p-0">
         <div class="list-group list-group-flush">
-          <a *ngIf="loadingCompositions" (click)="selectComposition(composition); (false)" href="#"
-            class="list-group-item flex-column align-items-start d-flex">
-            <p class="mb-0 mx-auto">
-              <i class="fa fa-spinner fa-pulse fa-fw"></i>
-            </p>
-          </a>
+          @if (loadingCompositions) {
+            <a (click)="selectComposition(composition); (false)" href="#"
+              class="list-group-item flex-column align-items-start d-flex">
+              <p class="mb-0 mx-auto">
+                <i class="fa fa-spinner fa-pulse fa-fw"></i>
+              </p>
+            </a>
+          }
 
-          <a *ngFor="let composition of filteredCompositions" (click)="selectComposition(composition); (false)" href="#"
-            class="list-group-item flex-column align-items-start"
-            [class.active]="initialComposition?.name == composition.name">
-            <p class="mb-0">{{ composition.name }}</p>
-          </a>
+          @for (composition of filteredCompositions; track composition) {
+            <a (click)="selectComposition(composition); (false)" href="#"
+              class="list-group-item flex-column align-items-start"
+              [class.active]="initialComposition?.name == composition.name">
+              <p class="mb-0">{{ composition.name }}</p>
+            </a>
+          }
         </div>
       </div>
     </div>
   </div>
 
   <!-- Edit the selected/new composition -->
-  <div class="col-md-8" *ngIf="currentComposition && !loadingComposition">
-    <div class="card border-secondary">
-      <div class="card-header d-flex">
-        <div class="flex-grow">
-          <span *ngIf="currentComposition?.name">{{
-            currentComposition?.name
-            }}</span>
-          <span *ngIf="!currentComposition?.name">{{
-            "editor.default-composition-name" | translate
-            }}</span>
-        </div>
-        <button *ngIf="!isTestPlaying" type="button" class="btn btn-primary transport-button" (click)="play(); (false)"
-          role="button">
-          <i *ngIf="!savingComposition" class="fa fa-play fa-fw" aria-hidden="true"></i>
-        </button>
-        <mv-slider *ngIf="isTestPlaying" style="width: 100px" class="mr-3" tooltip="hide" [min]="0"
-          [max]="testPlayDurationMillis" [step]="1" [(value)]="testPlayPositionMillis" (slideStart)="slideStart($event)"
-          (slideStop)="seek($event)">
-        </mv-slider>
-        <button *ngIf="isTestPlaying" type="button" class="btn btn-primary transport-button" (click)="stop(); (false)"
-          role="button">
-          <i *ngIf="!savingComposition" class="fa fa-stop fa-fw" aria-hidden="true"></i>
-        </button>
-      </div>
-      <div class="card-body">
-        <!-- Name -->
-        <div class="form-group">
-          <label for="compositionName">{{
-            "editor.composition-name" | translate
-            }}</label>
-          <input type="text" class="form-control" maxlength="50" [(ngModel)]="currentComposition.name"
-            id="compositionName" placeholder="{{ 'editor.default-composition-name' | translate }}" />
-        </div>
-
-        <!-- Loop -->
-        <div class="form-group">
-          <div class="form-check">
-            <input type="checkbox" [ngModel]="currentComposition.loop"
-              (ngModelChange)="currentComposition.loop = $event" class="form-check-input" id="loop" />
-
-            <label class="form-check-label" for="loop">
-              {{ "editor.loop" | translate }}
-            </label>
+  @if (currentComposition && !loadingComposition) {
+    <div class="col-md-8">
+      <div class="card border-secondary">
+        <div class="card-header d-flex">
+          <div class="flex-grow">
+            @if (currentComposition?.name) {
+              <span>{{
+                currentComposition?.name
+              }}</span>
+            }
+            @if (!currentComposition?.name) {
+              <span>{{
+                "editor.default-composition-name" | translate
+              }}</span>
+            }
           </div>
-        </div>
-
-        <!-- Audio volume -->
-        <div *ngIf="hasAudioFile()" class="form-group">
-          <label class="col-form-label">{{
-            "settings.audio-volume" | translate
-            }}</label>
-
-          <app-volume-slider [(volume)]="currentComposition.audioVolume"></app-volume-slider>
-        </div>
-
-        <!-- Add -->
-        <div class="form-group">
-          <div class="dropdown">
-            <button class="btn btn-primary dropdown-toggle w-100" type="button" id="dropdownMenuButton"
-              data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              <i class="fa fa-plus" aria-hidden="true"></i>
-              {{ "editor.add" | translate }}
+          @if (!isTestPlaying) {
+            <button type="button" class="btn btn-primary transport-button" (click)="play(); (false)"
+              role="button">
+              @if (!savingComposition) {
+                <i class="fa fa-play fa-fw" aria-hidden="true"></i>
+              }
             </button>
-            <div class="dropdown-menu w-100" aria-labelledby="dropdownMenuButton">
-              <a class="dropdown-item" href="#" (click)="addCompositionFile(); (false)"><i
-                  class="fa fa-fw fa-music mr-2" aria-hidden="true"></i>{{ "editor.file" | translate }}</a>
-              <a class="dropdown-item" href="#" (click)="addAction(); (false)"><i class="fa fa-fw fa-bolt mr-2"
-                  aria-hidden="true"></i>{{ "editor.action.action" | translate }}</a>
-              <a class="dropdown-item" href="#" (click)="addLeadSheet(); (false)"><i
-                  class="fa fa-fw fa-file-text-o mr-2" aria-hidden="true"></i>{{ "editor.lead-sheet" | translate }}</a>
+          }
+          @if (isTestPlaying) {
+            <mv-slider style="width: 100px" class="mr-3" tooltip="hide" [min]="0"
+              [max]="testPlayDurationMillis" [step]="1" [(value)]="testPlayPositionMillis" (slideStart)="slideStart($event)"
+              (slideStop)="seek($event)">
+            </mv-slider>
+          }
+          @if (isTestPlaying) {
+            <button type="button" class="btn btn-primary transport-button" (click)="stop(); (false)"
+              role="button">
+              @if (!savingComposition) {
+                <i class="fa fa-stop fa-fw" aria-hidden="true"></i>
+              }
+            </button>
+          }
+        </div>
+        <div class="card-body">
+          <!-- Name -->
+          <div class="form-group">
+            <label for="compositionName">{{
+              "editor.composition-name" | translate
+            }}</label>
+            <input type="text" class="form-control" maxlength="50" [(ngModel)]="currentComposition.name"
+              id="compositionName" placeholder="{{ 'editor.default-composition-name' | translate }}" />
+          </div>
+          <!-- Loop -->
+          <div class="form-group">
+            <div class="form-check">
+              <input type="checkbox" [ngModel]="currentComposition.loop"
+                (ngModelChange)="currentComposition.loop = $event" class="form-check-input" id="loop" />
+              <label class="form-check-label" for="loop">
+                {{ "editor.loop" | translate }}
+              </label>
             </div>
           </div>
-        </div>
-
-        <!-- Media files -->
-        <div *ngIf="currentComposition?.fileList.length > 0" class="form-group">
-          <label><i class="fa fa-fw fa-music mr-2" aria-hidden="true"></i>{{ "editor.files" | translate }}</label>
-
-          <div class="list-group" [sortablejs]="currentComposition?.fileList"
-            [sortablejsOptions]="{ onMove: sortMove }">
-            <div class="list-group-item" *ngFor="let file of currentComposition?.fileList; let i = index">
-              <div class="row">
-                <div class="col-auto list-sort-handle my-auto" style="cursor: move; cursor: -webkit-grabbing">
-                  <i class="fa fa-bars" aria-hidden="true"></i>
-                </div>
-                <div class="col-auto flex-grow text-break-word my-auto pl-0">
-                  <a href="#" (click)="editCompositionFileDetails(i); (false)">
-                    <p class="mb-0">
-                      {{ file.name
-                      }}<span *ngIf="file.type == 'AUDIO' && file.outputBus">
-                        - {{ file.outputBus }}</span>
-                    </p>
-                  </a>
-                </div>
-                <a href="#" class="col-auto col-auto my-auto pl-0" (click)="toggleActive(file); (false)"
-                  [class.text-white]="!file.active">
-                  <i class="fa fa-fw" [ngClass]="file.getFontAwesomeIconClass()" aria-hidden="true"></i>
-                </a>
-                <div class="col-auto my-auto pl-0 pr-0">
-                  <a class="text-danger float-right" href="#" role="button" (click)="deleteFile(i); (false)">
-                    <i class="fa fa-trash-o" aria-hidden="true"></i>
-                  </a>
-                </div>
-                <div class="col-auto my-auto">
-                  <a class="btn btn-secondary btn-sm float-right" href="#" role="button"
-                    (click)="editCompositionFileDetails(i); (false)">...</a>
-                </div>
+          <!-- Audio volume -->
+          @if (hasAudioFile()) {
+            <div class="form-group">
+              <label class="col-form-label">{{
+                "settings.audio-volume" | translate
+              }}</label>
+              <app-volume-slider [(volume)]="currentComposition.audioVolume"></app-volume-slider>
+            </div>
+          }
+          <!-- Add -->
+          <div class="form-group">
+            <div class="dropdown">
+              <button class="btn btn-primary dropdown-toggle w-100" type="button" id="dropdownMenuButton"
+                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="fa fa-plus" aria-hidden="true"></i>
+                {{ "editor.add" | translate }}
+              </button>
+              <div class="dropdown-menu w-100" aria-labelledby="dropdownMenuButton">
+                <a class="dropdown-item" href="#" (click)="addCompositionFile(); (false)"><i
+                class="fa fa-fw fa-music mr-2" aria-hidden="true"></i>{{ "editor.file" | translate }}</a>
+                <a class="dropdown-item" href="#" (click)="addAction(); (false)"><i class="fa fa-fw fa-bolt mr-2"
+                aria-hidden="true"></i>{{ "editor.action.action" | translate }}</a>
+                <a class="dropdown-item" href="#" (click)="addLeadSheet(); (false)"><i
+                class="fa fa-fw fa-file-text-o mr-2" aria-hidden="true"></i>{{ "editor.lead-sheet" | translate }}</a>
               </div>
             </div>
           </div>
-        </div>
-
+          <!-- Media files -->
+          @if (currentComposition?.fileList.length > 0) {
+            <div class="form-group">
+              <label><i class="fa fa-fw fa-music mr-2" aria-hidden="true"></i>{{ "editor.files" | translate }}</label>
+              <div class="list-group" [sortablejs]="currentComposition?.fileList"
+                [sortablejsOptions]="{ onMove: sortMove }">
+                @for (file of currentComposition?.fileList; track file; let i = $index) {
+                  <div class="list-group-item">
+                    <div class="row">
+                      <div class="col-auto list-sort-handle my-auto" style="cursor: move; cursor: -webkit-grabbing">
+                        <i class="fa fa-bars" aria-hidden="true"></i>
+                      </div>
+                      <div class="col-auto flex-grow text-break-word my-auto pl-0">
+                        <a href="#" (click)="editCompositionFileDetails(i); (false)">
+                          <p class="mb-0">
+                            {{ file.name
+                            }}@if (file.type == 'AUDIO' && file.outputBus) {
+                            <span>
+                            - {{ file.outputBus }}</span>
+                          }
+                        </p>
+                      </a>
+                    </div>
+                    <a href="#" class="col-auto col-auto my-auto pl-0" (click)="toggleActive(file); (false)"
+                      [class.text-white]="!file.active">
+                      <i class="fa fa-fw" [ngClass]="file.getFontAwesomeIconClass()" aria-hidden="true"></i>
+                    </a>
+                    <div class="col-auto my-auto pl-0 pr-0">
+                      <a class="text-danger float-right" href="#" role="button" (click)="deleteFile(i); (false)">
+                        <i class="fa fa-trash-o" aria-hidden="true"></i>
+                      </a>
+                    </div>
+                    <div class="col-auto my-auto">
+                      <a class="btn btn-secondary btn-sm float-right" href="#" role="button"
+                      (click)="editCompositionFileDetails(i); (false)">...</a>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
         <!-- Actions -->
-        <div *ngIf="currentComposition?.actionTriggerList.length > 0" class="form-group">
-          <label><i class="fa fa-fw fa-bolt mr-2" aria-hidden="true"></i>{{ "editor.action.actions" | translate
-            }}</label>
-
+        @if (currentComposition?.actionTriggerList.length > 0) {
+          <div class="form-group">
+            <label><i class="fa fa-fw fa-bolt mr-2" aria-hidden="true"></i>{{ "editor.action.actions" | translate
+          }}</label>
           <div class="list-group" [sortablejs]="currentComposition?.actionTriggerList"
             [sortablejsOptions]="{ onMove: sortMove }">
-            <div class="list-group-item" *ngFor="
-                let actionTrigger of currentComposition?.actionTriggerList;
-                let i = index
-              ">
-              <div class="row">
-                <div class="col-auto list-sort-handle my-auto" style="cursor: move; cursor: -webkit-grabbing">
-                  <i class="fa fa-bars" aria-hidden="true"></i>
-                </div>
-                <div class="col-auto flex-grow text-break-word my-auto pl-0">
-                  <a href="#" (click)="editActionTriggerDetails(i); (false)">
-                    <p class="mb-0">
-                      {{ "editor.action.position-millis" | translate }}: {{ actionTrigger.positionMillis }} - <span
-                        style="margin-right: 10px" *ngFor="let action of actionTrigger.actionList">{{
+            @for (
+              actionTrigger of currentComposition?.actionTriggerList; track
+              actionTrigger; let i = $index) {
+              <div class="list-group-item">
+                <div class="row">
+                  <div class="col-auto list-sort-handle my-auto" style="cursor: move; cursor: -webkit-grabbing">
+                    <i class="fa fa-bars" aria-hidden="true"></i>
+                  </div>
+                  <div class="col-auto flex-grow text-break-word my-auto pl-0">
+                    <a href="#" (click)="editActionTriggerDetails(i); (false)">
+                      <p class="mb-0">
+                        {{ "editor.action.position-millis" | translate }}: {{ actionTrigger.positionMillis }} - @for (action of actionTrigger.actionList; track action) {
+                        <span
+                          style="margin-right: 10px">{{
                         "action.type-enum." + action.type | translate }}</span>
+                      }
                     </p>
                   </a>
                 </div>
@@ -177,80 +198,83 @@
                 </div>
                 <div class="col-auto my-auto">
                   <a class="btn btn-secondary btn-sm float-right" href="#" role="button"
-                    (click)="editActionTriggerDetails(i); (false)">...</a>
+                  (click)="editActionTriggerDetails(i); (false)">...</a>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-
-        <!-- Lead sheets -->
-        <div *ngIf="currentComposition?.leadSheetList.length > 0" class="form-group">
-          <label><i class="fa fa-fw fa-file-text-o mr-2" aria-hidden="true"></i>{{ "editor.lead-sheets" | translate
-            }}</label>
-
-          <div class="list-group" [sortablejs]="currentComposition?.leadSheetList"
-            [sortablejsOptions]="{ onMove: sortMove }">
-            <div class="list-group-item" *ngFor="
-                let leadSheet of currentComposition?.leadSheetList;
-                let i = index
-              ">
-              <div class="row">
-                <div class="col-auto list-sort-handle my-auto" style="cursor: move; cursor: -webkit-grabbing">
-                  <i class="fa fa-bars" aria-hidden="true"></i>
-                </div>
-                <div class="col-auto flex-grow text-break-word my-auto pl-0">
-                  <a href="#" (click)="editLeadSheet(i); (false)">
-                    <p class="mb-0">
-                      {{ leadSheet.name }} -
-                      {{ instrumentNameFromUuid(leadSheet.instrumentUuid) }}
-                    </p>
-                  </a>
-                </div>
-                <div class="col-auto my-auto pl-0 pr-0">
-                  <a class="text-danger float-right" href="#" role="button" (click)="deleteLeadSheet(i); (false)">
-                    <i class="fa fa-trash-o" aria-hidden="true"></i>
-                  </a>
-                </div>
-                <div class="col-auto my-auto">
-                  <a class="btn btn-secondary btn-sm float-right" href="#" role="button"
-                    (click)="editLeadSheet(i); (false)">...</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Notes -->
-        <div class="form-group">
-          <label for="compositionNotes">{{ "editor.notes" | translate }}</label>
-          <textarea [(ngModel)]="currentComposition.notes" class="form-control" id="compositionNotes"
-            rows="2"></textarea>
-        </div>
-
-        <!-- More than one video/image -->
-        <div *ngIf="multipleVideoImage()" class="alert alert-danger mb-0 text-center" role="alert">
-          <h3>
-            <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
-            {{ "editor.error-multiple-video-images-title" | translate }}
-          </h3>
-          <p class="mb-0">
-            {{ "editor.error-multiple-video-images" | translate }}
-          </p>
+          }
         </div>
       </div>
-
-      <div class="card-footer d-flex" style="justify-content: space-between">
-        <a class="mr-3 my-auto text-danger" *ngIf="!currentComposition?.isNew" href="#" role="button"
-          (click)="delete(); (false)">
-          <i class="fa fa-trash-o" aria-hidden="true"></i>
-          {{ "misc.delete" | translate }}
-        </a>
-
-        <div class="d-flex">
-          <a class="mr-3 my-auto" href="#" role="button" (click)="unselect(); (false)">
-            {{ "misc.cancel" | translate }}
-          </a>
+    }
+    <!-- Lead sheets -->
+    @if (currentComposition?.leadSheetList.length > 0) {
+      <div class="form-group">
+        <label><i class="fa fa-fw fa-file-text-o mr-2" aria-hidden="true"></i>{{ "editor.lead-sheets" | translate
+      }}</label>
+      <div class="list-group" [sortablejs]="currentComposition?.leadSheetList"
+        [sortablejsOptions]="{ onMove: sortMove }">
+        @for (
+          leadSheet of currentComposition?.leadSheetList; track
+          leadSheet; let i = $index) {
+          <div class="list-group-item">
+            <div class="row">
+              <div class="col-auto list-sort-handle my-auto" style="cursor: move; cursor: -webkit-grabbing">
+                <i class="fa fa-bars" aria-hidden="true"></i>
+              </div>
+              <div class="col-auto flex-grow text-break-word my-auto pl-0">
+                <a href="#" (click)="editLeadSheet(i); (false)">
+                  <p class="mb-0">
+                    {{ leadSheet.name }} -
+                    {{ instrumentNameFromUuid(leadSheet.instrumentUuid) }}
+                  </p>
+                </a>
+              </div>
+              <div class="col-auto my-auto pl-0 pr-0">
+                <a class="text-danger float-right" href="#" role="button" (click)="deleteLeadSheet(i); (false)">
+                  <i class="fa fa-trash-o" aria-hidden="true"></i>
+                </a>
+              </div>
+              <div class="col-auto my-auto">
+                <a class="btn btn-secondary btn-sm float-right" href="#" role="button"
+                (click)="editLeadSheet(i); (false)">...</a>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+  <!-- Notes -->
+  <div class="form-group">
+    <label for="compositionNotes">{{ "editor.notes" | translate }}</label>
+    <textarea [(ngModel)]="currentComposition.notes" class="form-control" id="compositionNotes"
+    rows="2"></textarea>
+  </div>
+  <!-- More than one video/image -->
+  @if (multipleVideoImage()) {
+    <div class="alert alert-danger mb-0 text-center" role="alert">
+      <h3>
+        <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+        {{ "editor.error-multiple-video-images-title" | translate }}
+      </h3>
+      <p class="mb-0">
+        {{ "editor.error-multiple-video-images" | translate }}
+      </p>
+    </div>
+  }
+</div>
+<div class="card-footer d-flex" style="justify-content: space-between">
+  @if (!currentComposition?.isNew) {
+    <a class="mr-3 my-auto text-danger" href="#" role="button"
+      (click)="delete(); (false)">
+      <i class="fa fa-trash-o" aria-hidden="true"></i>
+      {{ "misc.delete" | translate }}
+    </a>
+  }
+  <div class="d-flex">
+    <a class="mr-3 my-auto" href="#" role="button" (click)="unselect(); (false)">
+      {{ "misc.cancel" | translate }}
+    </a>
           <button type="button" class="btn btn-primary" (click)="save(currentComposition); (false)" [disabled]="
               savingComposition ||
               multipleVideoImage() ||
@@ -259,26 +283,35 @@
               currentComposition.name.length < 1 ||
               currentComposition.name.length > 50
             " role="button">
-            <i *ngIf="savingComposition" class="fa fa-spinner fa-pulse fa-fw" aria-hidden="true"></i>
-            <i *ngIf="!savingComposition" class="fa fa-floppy-o fa-fw" aria-hidden="true"></i>
-            {{ "misc.save" | translate }}
-          </button>
-        </div>
-      </div>
-    </div>
+      @if (savingComposition) {
+        <i class="fa fa-spinner fa-pulse fa-fw" aria-hidden="true"></i>
+      }
+      @if (!savingComposition) {
+        <i class="fa fa-floppy-o fa-fw" aria-hidden="true"></i>
+      }
+      {{ "misc.save" | translate }}
+    </button>
   </div>
+</div>
+</div>
+</div>
+}
 
-  <!-- No current composition selected -->
-  <div class="col-md-8 text-center d-flex" *ngIf="!currentComposition && !loadingComposition">
+<!-- No current composition selected -->
+@if (!currentComposition && !loadingComposition) {
+  <div class="col-md-8 text-center d-flex">
     <div class="d-flex m-auto">
       <i>{{ "editor.select-composition" | translate }}</i>
     </div>
   </div>
+}
 
-  <!-- Loading a composition -->
-  <div class="col-md-8 text-center d-flex" *ngIf="loadingComposition">
+<!-- Loading a composition -->
+@if (loadingComposition) {
+  <div class="col-md-8 text-center d-flex">
     <div class="d-flex m-auto">
       <i class="fa fa-spinner fa-pulse fa-2x fa-fw"></i>
     </div>
   </div>
+}
 </div>

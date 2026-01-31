@@ -13,7 +13,7 @@
       class="form-control"
       [ngModel]="settings?.offsetMillisAudio"
       (ngModelChange)="settings.offsetMillisAudio = $event"
-    />
+      />
   </div>
 </div>
 
@@ -26,7 +26,7 @@
       class="custom-select"
       [ngModel]="settings?.audioRate"
       (ngModelChange)="settings.audioRate = $event"
-    >
+      >
       <option [ngValue]="selectUndefinedOptionValue">
         {{ "settings.default" | translate }}
       </option>
@@ -36,210 +36,226 @@
   </div>
 </div>
 
-<div class="form-group row" *ngIf="settings?.audioOutput == 'DEVICE' && !settings?.readyToUseVersion">
-  <label class="col-sm-3 col-form-label">{{
-    "settings.alsa-period-size" | translate
-  }}</label>
-  <div class="col-sm-9">
-    <select
-      class="custom-select"
-      [ngModel]="settings?.alsaPeriodSize"
-      (ngModelChange)="settings.alsaPeriodSize = $event"
-    >
-      <option [ngValue]="selectUndefinedOptionValue">
-        {{ "settings.default" | translate }}
-      </option>
-      <option [ngValue]="1024">1'024</option>
-      <option [ngValue]="2048">2'048</option>
-      <option [ngValue]="4096">4'096</option>
-      <option [ngValue]="8192">8'192</option>
-      <option [ngValue]="16384">16'384</option>
-      <option [ngValue]="32768">32'768</option>
-      <option [ngValue]="65536">65'536</option>
-    </select>
+@if (settings?.audioOutput == 'DEVICE' && !settings?.readyToUseVersion) {
+  <div class="form-group row">
+    <label class="col-sm-3 col-form-label">{{
+      "settings.alsa-period-size" | translate
+    }}</label>
+    <div class="col-sm-9">
+      <select
+        class="custom-select"
+        [ngModel]="settings?.alsaPeriodSize"
+        (ngModelChange)="settings.alsaPeriodSize = $event"
+        >
+        <option [ngValue]="selectUndefinedOptionValue">
+          {{ "settings.default" | translate }}
+        </option>
+        <option [ngValue]="1024">1'024</option>
+        <option [ngValue]="2048">2'048</option>
+        <option [ngValue]="4096">4'096</option>
+        <option [ngValue]="8192">8'192</option>
+        <option [ngValue]="16384">16'384</option>
+        <option [ngValue]="32768">32'768</option>
+        <option [ngValue]="65536">65'536</option>
+      </select>
+    </div>
   </div>
-</div>
+}
 
-<div class="form-group row" *ngIf="settings?.audioOutput == 'DEVICE' && !settings?.readyToUseVersion">
-  <label class="col-sm-3 col-form-label">{{
-    "settings.alsa-buffer-size" | translate
-  }}</label>
-  <div class="col-sm-9">
-    <select
-      class="custom-select"
-      [ngModel]="settings?.alsaBufferSize"
-      (ngModelChange)="settings.alsaBufferSize = $event"
-    >
-      <option [ngValue]="selectUndefinedOptionValue">
-        {{ "settings.default" | translate }}
-      </option>
-      <option [ngValue]="1">1</option>
-      <option [ngValue]="2">2</option>
-      <option [ngValue]="3">3</option>
-      <option [ngValue]="4">4</option>
-      <option [ngValue]="5">5</option>
-      <option [ngValue]="6">6</option>
-      <option [ngValue]="7">7</option>
-      <option [ngValue]="8">8</option>
-      <option [ngValue]="9">9</option>
-      <option [ngValue]="10">10</option>
-    </select>
+@if (settings?.audioOutput == 'DEVICE' && !settings?.readyToUseVersion) {
+  <div class="form-group row">
+    <label class="col-sm-3 col-form-label">{{
+      "settings.alsa-buffer-size" | translate
+    }}</label>
+    <div class="col-sm-9">
+      <select
+        class="custom-select"
+        [ngModel]="settings?.alsaBufferSize"
+        (ngModelChange)="settings.alsaBufferSize = $event"
+        >
+        <option [ngValue]="selectUndefinedOptionValue">
+          {{ "settings.default" | translate }}
+        </option>
+        <option [ngValue]="1">1</option>
+        <option [ngValue]="2">2</option>
+        <option [ngValue]="3">3</option>
+        <option [ngValue]="4">4</option>
+        <option [ngValue]="5">5</option>
+        <option [ngValue]="6">6</option>
+        <option [ngValue]="7">7</option>
+        <option [ngValue]="8">8</option>
+        <option [ngValue]="9">9</option>
+        <option [ngValue]="10">10</option>
+      </select>
+    </div>
   </div>
-</div>
+}
 
-<div class="form-group row" *ngIf="audioOutputList.length > 1">
-  <label class="col-sm-3 col-form-label">{{
-    "settings.audio-output" | translate
-  }}</label>
-  <div class="col-sm-9">
-    <select
-      class="custom-select"
-      [ngModel]="settings?.audioOutput"
-      (ngModelChange)="settings.audioOutput = $event"
-    >
-      <option
-        *ngFor="let audioOutput of audioOutputList"
-        [ngValue]="audioOutput"
-      >
-        {{ "settings.audio-output-enum." + audioOutput | translate }}
-      </option>
-    </select>
+@if (audioOutputList.length > 1) {
+  <div class="form-group row">
+    <label class="col-sm-3 col-form-label">{{
+      "settings.audio-output" | translate
+    }}</label>
+    <div class="col-sm-9">
+      <select
+        class="custom-select"
+        [ngModel]="settings?.audioOutput"
+        (ngModelChange)="settings.audioOutput = $event"
+        >
+        @for (audioOutput of audioOutputList; track audioOutput) {
+          <option
+            [ngValue]="audioOutput"
+            >
+            {{ "settings.audio-output-enum." + audioOutput | translate }}
+          </option>
+        }
+      </select>
+    </div>
   </div>
-</div>
+}
 
-<div
-  class="form-group row"
-  *ngIf="
-    settings?.audioOutput == 'DEVICE' || settings?.audioOutput == 'DEFAULT'
-  "
->
-  <label class="col-lg-3 col-form-label">{{
-    "settings.audio-buses" | translate
-  }}</label>
-  <div class="col-lg-9">
-    <div
-      class="list-group"
-      [sortablejs]="settings?.audioBusList"
-      [sortablejsOptions]="{ onMove: sortMove }"
+@if (
+  settings?.audioOutput == 'DEVICE' || settings?.audioOutput == 'DEFAULT'
+  ) {
+  <div
+    class="form-group row"
     >
+    <label class="col-lg-3 col-form-label">{{
+      "settings.audio-buses" | translate
+    }}</label>
+    <div class="col-lg-9">
       <div
-        class="list-group-item"
-        *ngFor="let audioBus of settings?.audioBusList; let i = index"
-      >
-        <div class="row">
+        class="list-group"
+        [sortablejs]="settings?.audioBusList"
+        [sortablejsOptions]="{ onMove: sortMove }"
+        >
+        @for (audioBus of settings?.audioBusList; track audioBus; let i = $index) {
           <div
-            class="col-auto list-sort-handle my-auto"
-            style="cursor: move; cursor: -webkit-grabbing"
-          >
-            <i class="fa fa-bars" aria-hidden="true"></i>
-          </div>
-          <div class="col-auto flex-grow">
-            <div class="form-group row">
-              <label class="col-md-3 col-form-label">{{
-                "settings.audio-bus-name" | translate
-              }}</label>
-              <div class="col-md-9">
-                <input
-                  type="text"
-                  class="form-control"
-                  [(ngModel)]="audioBus.name"
-                  id="name"
+            class="list-group-item"
+            >
+            <div class="row">
+              <div
+                class="col-auto list-sort-handle my-auto"
+                style="cursor: move; cursor: -webkit-grabbing"
+                >
+                <i class="fa fa-bars" aria-hidden="true"></i>
+              </div>
+              <div class="col-auto flex-grow">
+                <div class="form-group row">
+                  <label class="col-md-3 col-form-label">{{
+                    "settings.audio-bus-name" | translate
+                  }}</label>
+                  <div class="col-md-9">
+                    <input
+                      type="text"
+                      class="form-control"
+                      [(ngModel)]="audioBus.name"
+                      id="name"
                   placeholder="{{
                     'settings.audio-bus-name-placeholder' | translate
                   }}"
-                />
-              </div>
-            </div>
-            <div class="form-group row">
-              <label class="col-md-3 col-form-label">{{
-                "settings.audio-bus-channels" | translate
-              }}</label>
-              <div class="col-md-9">
-                <select
-                  class="custom-select"
-                  [ngModel]="audioBus.channels"
-                  (ngModelChange)="audioBus.channels = $event"
-                >
-                  <option value="1">
-                    1 {{ "settings.audio-bus-mono" | translate }}
-                  </option>
-                  <option value="2">
-                    2 {{ "settings.audio-bus-stereo" | translate }}
-                  </option>
-                  <option value="3">
-                    3 {{ "settings.audio-bus-surround" | translate }} 2.1
-                  </option>
-                  <option value="4">
-                    4 {{ "settings.audio-bus-quadro" | translate }}
-                  </option>
-                  <option value="6">
-                    6 {{ "settings.audio-bus-surround" | translate }} 5.1
-                  </option>
-                  <option value="7">
-                    7 {{ "settings.audio-bus-surround" | translate }} 6.1
-                  </option>
-                  <option value="8">
-                    8 {{ "settings.audio-bus-surround" | translate }} 7.1
-                  </option>
-                </select>
-              </div>
-            </div>
-            <div class="form-group row">
-              <label class="col-lg-3 col-form-label">{{
-                "settings.audio-device" | translate
-              }}</label>
-              <div class="col-lg-9 d-flex">
-                <div class="my-auto" *ngIf="audioDeviceList?.length == 0">
-                  - {{ "settings.no-audio-devices" | translate }} -
+                      />
+                  </div>
                 </div>
-                <select
-                  *ngIf="audioDeviceList?.length > 0"
-                  class="custom-select"
-                  [ngModel]="audioBus.audioDevice"
-                  (ngModelChange)="audioBus.audioDevice = $event"
-                >
-                  <option [ngValue]="selectUndefinedOptionValue">
-                    - {{ "settings.no-audio-device" | translate }} -
-                  </option>
-                  <option
-                    *ngFor="let audioDevice of audioDeviceList"
-                    [ngValue]="audioDevice"
-                  >
-                    {{ audioDevice.name }} ({{ audioDevice.key }})
-                  </option>
-                </select>
-              </div>
-            </div>
-            <div *ngIf="i > 0" class="form-group row">
-              <div class="col d-flex">
-                <a
-                  class="ml-auto my-auto text-danger"
-                  *ngIf="!currentComposition?.isNew"
-                  href="#"
-                  role="button"
-                  (click)="deleteAudioBus(); (false)"
-                >
-                  <i class="fa fa-trash-o" aria-hidden="true"></i>
-                  {{ "misc.delete" | translate }}
-                </a>
+                <div class="form-group row">
+                  <label class="col-md-3 col-form-label">{{
+                    "settings.audio-bus-channels" | translate
+                  }}</label>
+                  <div class="col-md-9">
+                    <select
+                      class="custom-select"
+                      [ngModel]="audioBus.channels"
+                      (ngModelChange)="audioBus.channels = $event"
+                      >
+                      <option value="1">
+                        1 {{ "settings.audio-bus-mono" | translate }}
+                      </option>
+                      <option value="2">
+                        2 {{ "settings.audio-bus-stereo" | translate }}
+                      </option>
+                      <option value="3">
+                        3 {{ "settings.audio-bus-surround" | translate }} 2.1
+                      </option>
+                      <option value="4">
+                        4 {{ "settings.audio-bus-quadro" | translate }}
+                      </option>
+                      <option value="6">
+                        6 {{ "settings.audio-bus-surround" | translate }} 5.1
+                      </option>
+                      <option value="7">
+                        7 {{ "settings.audio-bus-surround" | translate }} 6.1
+                      </option>
+                      <option value="8">
+                        8 {{ "settings.audio-bus-surround" | translate }} 7.1
+                      </option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label class="col-lg-3 col-form-label">{{
+                    "settings.audio-device" | translate
+                  }}</label>
+                  <div class="col-lg-9 d-flex">
+                    @if (audioDeviceList?.length == 0) {
+                      <div class="my-auto">
+                        - {{ "settings.no-audio-devices" | translate }} -
+                      </div>
+                    }
+                    @if (audioDeviceList?.length > 0) {
+                      <select
+                        class="custom-select"
+                        [ngModel]="audioBus.audioDevice"
+                        (ngModelChange)="audioBus.audioDevice = $event"
+                        >
+                        <option [ngValue]="selectUndefinedOptionValue">
+                          - {{ "settings.no-audio-device" | translate }} -
+                        </option>
+                        @for (audioDevice of audioDeviceList; track audioDevice) {
+                          <option
+                            [ngValue]="audioDevice"
+                            >
+                            {{ audioDevice.name }} ({{ audioDevice.key }})
+                          </option>
+                        }
+                      </select>
+                    }
+                  </div>
+                </div>
+                @if (i > 0) {
+                  <div class="form-group row">
+                    <div class="col d-flex">
+                      @if (!currentComposition?.isNew) {
+                        <a
+                          class="ml-auto my-auto text-danger"
+                          href="#"
+                          role="button"
+                          (click)="deleteAudioBus(); (false)"
+                          >
+                          <i class="fa fa-trash-o" aria-hidden="true"></i>
+                          {{ "misc.delete" | translate }}
+                        </a>
+                      }
+                    </div>
+                  </div>
+                }
               </div>
             </div>
           </div>
-        </div>
+        }
+        <a
+          href="#"
+          (click)="addAudioBus(); (false)"
+          class="no-sortjs list-group-item text-center"
+          >
+          <i class="fa fa-plus" aria-hidden="true"></i>
+          {{ "settings.audio-bus-add" | translate }}
+        </a>
       </div>
-      <a
-        href="#"
-        (click)="addAudioBus(); (false)"
-        class="no-sortjs list-group-item text-center"
-      >
-        <i class="fa fa-plus" aria-hidden="true"></i>
-        {{ "settings.audio-bus-add" | translate }}
-      </a>
     </div>
   </div>
-</div>
+}
 
 <!-- More channels specified than supported -->
 <!-- <div *ngIf="currentAudioChannels > maxAudioChannels" class="alert alert-danger" role="alert">
-  <i class="fa fa-exclamation-circle" aria-hidden="true"></i> {{ 'settings.error-max-audio-channels-exceeded' | translate:{max: maxAudioChannels, current: currentAudioChannels} }}
+<i class="fa fa-exclamation-circle" aria-hidden="true"></i> {{ 'settings.error-max-audio-channels-exceeded' | translate:{max: maxAudioChannels, current: currentAudioChannels} }}
 </div> -->

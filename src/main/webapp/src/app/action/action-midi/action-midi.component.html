@@ -5,9 +5,11 @@
   }}</label>
   <div class="col-md-9">
     <select class="custom-select" [(ngModel)]="action.midiSignal.command">
-      <option *ngFor="let program of programList" value="{{ program[0] }}">
-        {{ "action.midi.command-enum." + program[1] | translate }}
-      </option>
+      @for (program of programList; track program) {
+        <option value="{{ program[0] }}">
+          {{ "action.midi.command-enum." + program[1] | translate }}
+        </option>
+      }
     </select>
   </div>
 </div>
@@ -19,9 +21,11 @@
   }}</label>
   <div class="col-md-9">
     <select class="custom-select" [(ngModel)]="action.midiSignal.channel">
-      <option *ngFor="let channel of channelList" value="{{ channel }}">
-        {{ channel + 1 }}
-      </option>
+      @for (channel of channelList; track channel) {
+        <option value="{{ channel }}">
+          {{ channel + 1 }}
+        </option>
+      }
     </select>
   </div>
 </div>
@@ -29,51 +33,65 @@
 <!-- Data 1 -->
 <div class="form-group row">
   <label class="col-md-3 col-form-label"
-    ><span
-      *ngIf="
-        action.midiSignal.command == 144 || action.midiSignal.command == 128
-      "
-      >{{ "action.midi.note" | translate }}</span
-    >
-    <span *ngIf="action.midiSignal.command == 176">{{
-      "action.midi.controller" | translate
-    }}</span>
-    <span *ngIf="action.midiSignal.command == 192">{{
-      "action.midi.program" | translate
-    }}</span>
+    >@if (
+    action.midiSignal.command == 144 || action.midiSignal.command == 128
+    ) {
     <span
-      *ngIf="
-        action.midiSignal.command == 208 ||
-        action.midiSignal.command == 224 ||
-        action.midiSignal.command == 160
-      "
-      >{{ "action.midi.data1" | translate }}</span
-    >
-  </label>
-  <div class="col-md-9">
-    <select class="custom-select" [(ngModel)]="action.midiSignal.data1">
-      <option *ngFor="let note of midiService.noteList" [ngValue]="note">
-        {{ note + 1 + ": " + midiService.midiIdToNote(note) }}
-      </option>
-    </select>
+      >{{ "action.midi.note" | translate }}</span
+      >
+    }
+    @if (action.midiSignal.command == 176) {
+      <span>{{
+        "action.midi.controller" | translate
+      }}</span>
+    }
+    @if (action.midiSignal.command == 192) {
+      <span>{{
+        "action.midi.program" | translate
+      }}</span>
+    }
+    @if (
+      action.midiSignal.command == 208 ||
+      action.midiSignal.command == 224 ||
+      action.midiSignal.command == 160
+      ) {
+      <span
+        >{{ "action.midi.data1" | translate }}</span
+        >
+      }
+    </label>
+    <div class="col-md-9">
+      <select class="custom-select" [(ngModel)]="action.midiSignal.data1">
+        @for (note of midiService.noteList; track note) {
+          <option [ngValue]="note">
+            {{ note + 1 + ": " + midiService.midiIdToNote(note) }}
+          </option>
+        }
+      </select>
+    </div>
   </div>
-</div>
 
-<!-- Data 2 -->
-<div class="form-group row">
-  <label class="col-md-3 col-form-label"
-    ><span *ngIf="action.midiSignal.command <= 144">
-      {{ "action.midi.velocity" | translate }}</span
-    >
-    <span *ngIf="action.midiSignal.command > 144">{{
-      "action.midi.data2" | translate
-    }}</span></label
-  >
-  <div class="col-md-9">
-    <select class="custom-select" [(ngModel)]="action.midiSignal.data2">
-      <option *ngFor="let note of midiService.noteList" [ngValue]="note">
-        {{ note + 1 }}
-      </option>
-    </select>
-  </div>
-</div>
+  <!-- Data 2 -->
+  <div class="form-group row">
+    <label class="col-md-3 col-form-label"
+      >@if (action.midiSignal.command <= 144) {
+      <span>
+        {{ "action.midi.velocity" | translate }}</span
+        >
+      }
+      @if (action.midiSignal.command > 144) {
+        <span>{{
+          "action.midi.data2" | translate
+        }}</span>
+        }</label
+        >
+        <div class="col-md-9">
+          <select class="custom-select" [(ngModel)]="action.midiSignal.data2">
+            @for (note of midiService.noteList; track note) {
+              <option [ngValue]="note">
+                {{ note + 1 }}
+              </option>
+            }
+          </select>
+        </div>
+      </div>

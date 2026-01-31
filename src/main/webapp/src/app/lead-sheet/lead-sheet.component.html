@@ -6,12 +6,14 @@
     <div class="row justify-content-center align-self-center p-3 h-100 w-100 mx-auto">
       <div class="col p-0" style="overflow: hidden;">
         <div class="justify-content-center align-self-center h-100 w-100">
-          <img *ngIf="leadSheetService.currentLeadSheetUrl" #img [src]="leadSheetService.currentLeadSheetUrl" width="100%" [ngStyle]="imgStyle" (load)="imgLoaded()">
+          @if (leadSheetService.currentLeadSheetUrl) {
+            <img #img [src]="leadSheetService.currentLeadSheetUrl" width="100%" [ngStyle]="imgStyle" (load)="imgLoaded()">
+          }
         </div>
       </div>
     </div>
 
     <a href="#" (click)="close(); false;" class="btn btn-primary" style="position: absolute; right: 0; margin: 10px;">
       <i class="fa fa-times" aria-hidden="true"></i> {{ 'misc.lead-sheet-close' | translate }}</a>
+    </div>
   </div>
-</div>

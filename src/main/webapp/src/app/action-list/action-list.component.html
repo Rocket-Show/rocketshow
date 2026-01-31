@@ -7,23 +7,24 @@
       class="list-group"
       [sortablejs]="actionList"
       [sortablejsOptions]="{ onMove: sortMove }"
-    >
-      <div
-        class="list-group-item"
-        *ngFor="let action of actionList; let i = index"
       >
-        <app-action
-          [index]="i"
-          (delete)="deleteAction($event)"
-          [action]="action"
-          (change)="onActionChange($event)"
-        ></app-action>
-      </div>
+      @for (action of actionList; track action; let i = $index) {
+        <div
+          class="list-group-item"
+          >
+          <app-action
+            [index]="i"
+            (delete)="deleteAction($event)"
+            [action]="action"
+            (change)="onActionChange($event)"
+          ></app-action>
+        </div>
+      }
       <a
         href="#"
         (click)="addAction(); (false)"
         class="no-sortjs list-group-item text-center"
-      >
+        >
         <i class="fa fa-plus" aria-hidden="true"></i>
         {{ "action.add" | translate }}
       </a>

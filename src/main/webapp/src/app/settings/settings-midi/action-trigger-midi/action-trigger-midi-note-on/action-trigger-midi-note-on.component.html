@@ -7,10 +7,12 @@
       class="custom-select"
       [ngModel]="trigger.note"
       (ngModelChange)="trigger.note = $event"
-    >
-      <option *ngFor="let note of midiService.noteList" [ngValue]="note">
-        {{ note + 1 + ": " + midiService.midiIdToNote(note) }}
-      </option>
+      >
+      @for (note of midiService.noteList; track note) {
+        <option [ngValue]="note">
+          {{ note + 1 + ": " + midiService.midiIdToNote(note) }}
+        </option>
+      }
     </select>
   </div>
 </div>

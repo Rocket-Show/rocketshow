@@ -7,7 +7,7 @@
       class="custom-select"
       [ngModel]="getTriggerMidiType()"
       (ngModelChange)="onTriggerMidiTypeChange($event)"
-    >
+      >
       <option value="NOTE_ON">{{ 'settings.midi-control-type-enum.NOTE_ON' | translate }}</option>
       <option value="PROGRAM_CHANGE">{{ 'settings.midi-control-type-enum.PROGRAM_CHANGE' | translate }}</option>
     </select>
@@ -23,20 +23,24 @@
       class="custom-select"
       [ngModel]="trigger.channel"
       (ngModelChange)="trigger.channel = $event"
-    >
-      <option *ngFor="let channel of channelList" [ngValue]="channel">
-        {{ channel + 1 }}
-      </option>
+      >
+      @for (channel of channelList; track channel) {
+        <option [ngValue]="channel">
+          {{ channel + 1 }}
+        </option>
+      }
     </select>
   </div>
 </div>
 
-<app-action-trigger-midi-note-on
-  *ngIf="getTriggerMidiType() == 'NOTE_ON'"
-  [trigger]="trigger"
-></app-action-trigger-midi-note-on>
+@if (getTriggerMidiType() == 'NOTE_ON') {
+  <app-action-trigger-midi-note-on
+    [trigger]="trigger"
+  ></app-action-trigger-midi-note-on>
+}
 
-<app-action-trigger-midi-program-change
-  *ngIf="getTriggerMidiType() == 'PROGRAM_CHANGE'"
-  [trigger]="trigger"
-></app-action-trigger-midi-program-change>
+@if (getTriggerMidiType() == 'PROGRAM_CHANGE') {
+  <app-action-trigger-midi-program-change
+    [trigger]="trigger"
+  ></app-action-trigger-midi-program-change>
+}

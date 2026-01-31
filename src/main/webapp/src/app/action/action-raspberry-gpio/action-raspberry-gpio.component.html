@@ -4,9 +4,11 @@
   }}</label>
   <div class="col-md-9">
     <select class="custom-select" [(ngModel)]="action.pinId">
-      <option *ngFor="let pin of pinList" value="{{ pin.id }}">
-        {{ pin.displayText }}
-      </option>
+      @for (pin of pinList; track pin) {
+        <option value="{{ pin.id }}">
+          {{ pin.displayText }}
+        </option>
+      }
     </select>
   </div>
 </div>
@@ -21,7 +23,7 @@
       [(ngModel)]="action.high"
       class="form-check my-auto mr-2"
       id="pinHigh_{{ uuid }}"
-    />
+      />
 
     <label class="form-check-label my-auto" for="pinHigh_{{ uuid }}">
       {{ "action.raspberry-gpio.high" | translate }}

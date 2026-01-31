@@ -7,10 +7,12 @@
       class="custom-select"
       [ngModel]="trigger.pinId"
       (ngModelChange)="trigger.pinId = $event"
-    >
-      <option *ngFor="let pin of pinList" [ngValue]="pin.id">
-        {{ pin.displayText }}
-      </option>
+      >
+      @for (pin of pinList; track pin) {
+        <option [ngValue]="pin.id">
+          {{ pin.displayText }}
+        </option>
+      }
     </select>
   </div>
 </div>

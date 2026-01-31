@@ -4,9 +4,11 @@
   }}</label>
   <div class="col-md-9">
     <select class="custom-select" [(ngModel)]="action.transportActionType">
-      <option *ngFor="let type of typeList" value="{{ type }}">
-        {{ "action.transport.type-enum." + type | translate }}
-      </option>
+      @for (type of typeList; track type) {
+        <option value="{{ type }}">
+          {{ "action.transport.type-enum." + type | translate }}
+        </option>
+      }
     </select>
   </div>
 </div>
@@ -20,6 +22,6 @@
       [(ngModel)]="action.compositionName"
       [typeahead]="compositionList"
       class="form-control"
-    />
+      />
   </div>
 </div>
