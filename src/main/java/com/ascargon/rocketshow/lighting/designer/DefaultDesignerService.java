@@ -1143,7 +1143,9 @@ public class DefaultDesignerService implements DesignerService {
         } else if (repeatFor.isEmpty()) {
             return result;
         } else if (repeatFor.get(0).equals("eachPixelABC")) {
-            if (profile.getMatrix().getPixelCount().size() == 3) {
+            if (profile.getMatrix().getPixelKeys() != null) {
+                result.addAll(getAllPixelKeys(profile));
+            } else if (profile.getMatrix().getPixelCount().size() == 3) {
                 for (int x = 0; x < profile.getMatrix().getPixelCount().get(0); x++) {
                     for (int y = 0; y < profile.getMatrix().getPixelCount().get(1); y++) {
                         for (int z = 0; z < profile.getMatrix().getPixelCount().get(2); z++) {
@@ -1151,74 +1153,132 @@ public class DefaultDesignerService implements DesignerService {
                         }
                     }
                 }
-            } else {
-                result.addAll(getAllPixelKeys(profile));
             }
             result.sort(this::alphanumericSort);
         } else if (repeatFor.get(0).equals("eachPixelGroup")) {
             result.addAll(getAllPixelGroups(profile));
         } else if (repeatFor.get(0).equals("eachPixelXYZ")) {
-            for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
-                for (int y = 0; y < profile.getMatrix().getPixelKeys().get(x).size(); y++) {
-                    for (int z = 0; z < profile.getMatrix().getPixelKeys().get(x).get(y).size(); z++) {
-                        String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
-                        if (pixel != null) {
-                            result.add(pixel);
+            if (profile.getMatrix().getPixelKeys() != null) {
+                for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
+                    for (int y = 0; y < profile.getMatrix().getPixelKeys().get(x).size(); y++) {
+                        for (int z = 0; z < profile.getMatrix().getPixelKeys().get(x).get(y).size(); z++) {
+                            String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
+                            if (pixel != null) {
+                                result.add(pixel);
+                            }
+                        }
+                    }
+                }
+            } else if (profile.getMatrix().getPixelCount().size() == 3) {
+                for (int x = 0; x < profile.getMatrix().getPixelCount().get(0); x++) {
+                    for (int y = 0; y < profile.getMatrix().getPixelCount().get(1); y++) {
+                        for (int z = 0; z < profile.getMatrix().getPixelCount().get(2); z++) {
+                            result.add("Pixel " + (x + 1) + "-" + (y + 1) + "-" + (z + 1));
                         }
                     }
                 }
             }
         } else if (repeatFor.get(0).equals("eachPixelXZY")) {
-            for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
-                for (int z = 0; z < profile.getMatrix().getPixelKeys().get(x).get(0).size(); z++) {
-                    for (int y = 0; y < profile.getMatrix().getPixelKeys().get(x).size(); y++) {
-                        String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
-                        if (pixel != null) {
-                            result.add(pixel);
+            if (profile.getMatrix().getPixelKeys() != null) {
+                for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
+                    for (int z = 0; z < profile.getMatrix().getPixelKeys().get(x).get(0).size(); z++) {
+                        for (int y = 0; y < profile.getMatrix().getPixelKeys().get(x).size(); y++) {
+                            String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
+                            if (pixel != null) {
+                                result.add(pixel);
+                            }
+                        }
+                    }
+                }
+            } else if (profile.getMatrix().getPixelCount().size() == 3) {
+                for (int x = 0; x < profile.getMatrix().getPixelCount().get(0); x++) {
+                    for (int z = 0; z < profile.getMatrix().getPixelCount().get(2); z++) {
+                        for (int y = 0; y < profile.getMatrix().getPixelCount().get(1); y++) {
+                            result.add("Pixel " + (x + 1) + "-" + (y + 1) + "-" + (z + 1));
                         }
                     }
                 }
             }
         } else if (repeatFor.get(0).equals("eachPixelYXZ")) {
-            for (int y = 0; y < profile.getMatrix().getPixelKeys().get(0).size(); y++) {
-                for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
-                    for (int z = 0; z < profile.getMatrix().getPixelKeys().get(x).get(y).size(); z++) {
-                        String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
-                        if (pixel != null) {
-                            result.add(pixel);
+            if (profile.getMatrix().getPixelKeys() != null) {
+                for (int y = 0; y < profile.getMatrix().getPixelKeys().get(0).size(); y++) {
+                    for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
+                        for (int z = 0; z < profile.getMatrix().getPixelKeys().get(x).get(y).size(); z++) {
+                            String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
+                            if (pixel != null) {
+                                result.add(pixel);
+                            }
+                        }
+                    }
+                }
+            } else if (profile.getMatrix().getPixelCount().size() == 3) {
+                for (int y = 0; y < profile.getMatrix().getPixelCount().get(1); y++) {
+                    for (int x = 0; x < profile.getMatrix().getPixelCount().get(0); x++) {
+                        for (int z = 0; z < profile.getMatrix().getPixelCount().get(2); z++) {
+                            result.add("Pixel " + (x + 1) + "-" + (y + 1) + "-" + (z + 1));
                         }
                     }
                 }
             }
         } else if (repeatFor.get(0).equals("eachPixelYZX")) {
-            for (int y = 0; y < profile.getMatrix().getPixelKeys().get(0).size(); y++) {
-                for (int z = 0; z < profile.getMatrix().getPixelKeys().get(0).get(y).size(); z++) {
-                    for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
-                        String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
-                        if (pixel != null) {
-                            result.add(pixel);
+            if (profile.getMatrix().getPixelKeys() != null) {
+                for (int y = 0; y < profile.getMatrix().getPixelKeys().get(0).size(); y++) {
+                    for (int z = 0; z < profile.getMatrix().getPixelKeys().get(0).get(y).size(); z++) {
+                        for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
+                            String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
+                            if (pixel != null) {
+                                result.add(pixel);
+                            }
+                        }
+                    }
+                }
+            } else if (profile.getMatrix().getPixelCount().size() == 3) {
+                for (int y = 0; y < profile.getMatrix().getPixelCount().get(1); y++) {
+                    for (int z = 0; z < profile.getMatrix().getPixelCount().get(2); z++) {
+                        for (int x = 0; x < profile.getMatrix().getPixelCount().get(0); x++) {
+                            result.add("Pixel " + (x + 1) + "-" + (y + 1) + "-" + (z + 1));
                         }
                     }
                 }
             }
         } else if (repeatFor.get(0).equals("eachPixelZXY")) {
-            for (int z = 0; z < profile.getMatrix().getPixelKeys().get(0).get(0).size(); z++) {
-                for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
-                    for (int y = 0; y < profile.getMatrix().getPixelKeys().get(x).size(); y++) {
-                        String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
-                        if (pixel != null) {
-                            result.add(pixel);
+            if (profile.getMatrix().getPixelKeys() != null) {
+                for (int z = 0; z < profile.getMatrix().getPixelKeys().get(0).get(0).size(); z++) {
+                    for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
+                        for (int y = 0; y < profile.getMatrix().getPixelKeys().get(x).size(); y++) {
+                            String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
+                            if (pixel != null) {
+                                result.add(pixel);
+                            }
+                        }
+                    }
+                }
+            } else if (profile.getMatrix().getPixelCount().size() == 3) {
+                for (int z = 0; z < profile.getMatrix().getPixelCount().get(2); z++) {
+                    for (int x = 0; x < profile.getMatrix().getPixelCount().get(0); x++) {
+                        for (int y = 0; y < profile.getMatrix().getPixelCount().get(1); y++) {
+                            result.add("Pixel " + (x + 1) + "-" + (y + 1) + "-" + (z + 1));
                         }
                     }
                 }
             }
         } else if (repeatFor.get(0).equals("eachPixelZYX")) {
-            for (int z = 0; z < profile.getMatrix().getPixelKeys().get(0).get(0).size(); z++) {
-                for (int y = 0; y < profile.getMatrix().getPixelKeys().get(0).size(); y++) {
-                    for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
-                        String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
-                        if (pixel != null) {
-                            result.add(pixel);
+            if (profile.getMatrix().getPixelKeys() != null) {
+                for (int z = 0; z < profile.getMatrix().getPixelKeys().get(0).get(0).size(); z++) {
+                    for (int y = 0; y < profile.getMatrix().getPixelKeys().get(0).size(); y++) {
+                        for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
+                            String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
+                            if (pixel != null) {
+                                result.add(pixel);
+                            }
+                        }
+                    }
+                }
+            } else if (profile.getMatrix().getPixelCount().size() == 3) {
+                for (int z = 0; z < profile.getMatrix().getPixelCount().get(2); z++) {
+                    for (int y = 0; y < profile.getMatrix().getPixelCount().get(1); y++) {
+                        for (int x = 0; x < profile.getMatrix().getPixelCount().get(0); x++) {
+                            result.add("Pixel " + (x + 1) + "-" + (y + 1) + "-" + (z + 1));
                         }
                     }
                 }
