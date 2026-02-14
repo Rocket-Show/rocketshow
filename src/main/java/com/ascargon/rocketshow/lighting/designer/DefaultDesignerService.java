@@ -648,7 +648,10 @@ public class DefaultDesignerService implements DesignerService {
         for (int i = 0; i < fixtureIndex; i++) {
             CachedFixture calculatedFixture = fixtures.get(i);
 
-            if (calculatedFixture.getFixture().getDmxUniverseUuid().equals(currentFixture.getFixture().getDmxUniverseUuid()) && calculatedFixture.getFixture().getDmxFirstChannel() == currentFixture.getFixture().getDmxFirstChannel() && ((calculatedFixture.getPixelKey() == null && currentFixture.getPixelKey() == null) || Objects.equals(calculatedFixture.getPixelKey(), currentFixture.getPixelKey()))) {
+            if (calculatedFixture.getFixture().getDmxUniverseUuid().equals(currentFixture.getFixture().getDmxUniverseUuid()) &&
+                    calculatedFixture.getFixture().getDmxFirstChannel() == currentFixture.getFixture().getDmxFirstChannel() &&
+                    ((calculatedFixture.getPixelKey() == null && currentFixture.getPixelKey() == null) || Objects.equals(calculatedFixture.getPixelKey(), currentFixture.getPixelKey()))) {
+
                 return calculatedFixture;
             }
         }
