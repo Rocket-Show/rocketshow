@@ -1138,6 +1138,7 @@ public class DefaultDesignerService implements DesignerService {
         return result;
     }
 
+    // get pixel keys in order for a specific channel repeatFor
     private List<String> getPixelKeysInOrder(FixtureProfile profile, List<String> repeatFor) {
         List<String> result = new ArrayList<>();
 
@@ -1368,6 +1369,7 @@ public class DefaultDesignerService implements DesignerService {
         return channels;
     }
 
+    // get all used pixel keys for all channels in the currently used fixture mode
     private List<String> fixtureGetUniquePixelKeys(Fixture fixture) {
         Set<String> pixelKeys = new HashSet<>();
 
