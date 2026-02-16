@@ -12,6 +12,7 @@ public class DefaultHealthService implements HealthService {
 	public HealthStatus getHealthStatus() throws Exception {
         HealthStatus healthStatus = new HealthStatus();
 
+        // TODO called by spring actuator?
         // TODO execute actions over HTTP localhost
         // TODO play the default composition and check for errors
         // TODO check for updates and warn, if no internet connection

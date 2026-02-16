@@ -38,7 +38,10 @@ public class DefaultFixtureService implements FixtureService {
 
     private String basePath = "";
 
-    public DefaultFixtureService(SettingsService settingsService, FileFilterService fileFilterService) {
+    public DefaultFixtureService(
+            SettingsService settingsService,
+            FileFilterService fileFilterService
+    ) {
         this.settingsService = settingsService;
         this.fileFilterService = fileFilterService;
 
