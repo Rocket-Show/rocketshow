@@ -53,8 +53,8 @@
                         </goals>
                         <phase>generate-sources</phase>
                         <configuration>
-                            <nodeVersion>v18.19.1</nodeVersion>
-                            <npmVersion>10.2.4</npmVersion>
+                            <nodeVersion>v24.13.1</nodeVersion>
+                            <npmVersion>11.8.0</npmVersion>
                         </configuration>
                     </execution>
                     <execution>

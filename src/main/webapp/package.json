@@ -24,7 +24,7 @@
     "@angular/router": "^20.3.16",
     "@ngx-translate/core": "^15.0.0",
     "@ngx-translate/http-loader": "^3.0.1",
-    "@rocketshow/designer": "^1.44.0",
+    "@rocketshow/designer": "^1.46.0",
     "angular2-websocket": "^0.9.7",
     "bootstrap": "^4.1.2",
     "core-js": "^2.5.7",
@@ -44,6 +44,7 @@
     "tslib": "^2.0.0",
     "wavesurfer.js": "^3.0.0",
     "web-audio-beat-detector": "^8.1.1",
+    "@ali-hm/angular-tree-component": "^21.0.3",
     "zone.js": "~0.15.1"
   },
   "devDependencies": {
