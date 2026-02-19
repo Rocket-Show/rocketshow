@@ -224,7 +224,7 @@ mkdir -p /etc/systemd/journald.conf.d
 cat >/etc/systemd/journald.conf.d/00-rocketshow-volatile.conf <<'EOF'
 [Journal]
 Storage=volatile
-RuntimeMaxUse=32M
+RuntimeMaxUse=16M
 EOF
 
 # ---- READ-ONLY ROOT ----
