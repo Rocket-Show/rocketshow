@@ -117,51 +117,23 @@ COPYFILE_DISABLE=true tar -c --exclude='.DS_Store' -zf directory.tar.gz rocketsh
 
 Building is recommended on a Raspberry Pi device with enough storage. Steps to follow:
 
-- Flash an SD card with Raspberry Pi OS
-- Unmount and mount the SD card again
-- Run the following script
-
-```shell
-cd /Volumes/bootfs
-touch ssh
-cat <<'EOF' >./userconf.txt
-pi:FHzhxyxnV/C1o
-EOF
-```
-
-Automatically connect to a wifi network (update the country code, SSID and PSK):
-
-```shell
-cd /Volumes/boot
-cat <<'EOF' >./wpa_supplicant.conf
-country=US
-ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-network={
-    ssid="Your SSID"
-    psk="Your Password"
-    key_mgmt=WPA-PSK
-}
-EOF
-```
-
-Login using `ssh pi@raspberrypi.local` and password `raspberry`
-
-Switch to user root:
+- Flash an SD card with Raspberry Pi OS (user `rocketshow`)
+- Switch to user root:
 
 ````shell
 sudo su - root
 ````
 
-Update apt:
+- Update apt:
 
 ````shell
 apt-get update
 ````
 
-Prepare the environment according to [https://github.com/RPi-distro/pi-gen](pi-gen Readme) (e.g. install the required
+- Prepare the environment according to [https://github.com/RPi-distro/pi-gen](pi-gen Readme) (e.g. install the required
 dependencies)
 
-Run the following script (might take about 45 minutes)
+- Run the following script (might take about 45 minutes)
 
 ```shell
 cd /opt
@@ -173,7 +145,12 @@ git clone https://github.com/RPi-distro/pi-gen.git
 cd pi-gen
 git checkout tags/2025-12-04-raspios-trixie-arm64
 
-echo "IMG_NAME='RocketShow'" > config
+# pi-gen config
+cat > config <<'EOF'
+IMG_NAME='RocketShow'
+ENABLE_FIRST_BOOT_USER_RENAME=0
+ENABLE_CLOUD_INIT=0
+EOF
 
 touch ./stage3/SKIP ./stage4/SKIP ./stage5/SKIP
 rm stage4/EXPORT* stage5/EXPORT*
@@ -207,6 +184,8 @@ zip "$(date '+%Y-%m-%d')-RocketShow.zip" "$(date '+%Y-%m-%d')-RocketShow.img"
 # copy the zip to a folder where we can get it with SFTP:
 mv "$(date '+%Y-%m-%d')-RocketShow.zip" /home/rocketshow
 ```
+
+- Grab the image from /home/rocketshow
 
 ### Update process
 

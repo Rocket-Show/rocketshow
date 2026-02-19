@@ -4,7 +4,7 @@
 # This script needs to be executed as root.
 # 
 
-# Install all required packages
+# ---- INSTALL PACKAGES ----
 # - libnss-mdns installs the Bonjour service, if not already installed
 # - dhcpcd is used to set a static IP address for the wifi hotspot feature
 # - dnsmasq is a DHCP server
@@ -14,6 +14,7 @@ apt-get upgrade -y
 
 apt-get -y install unzip openjdk-21-jdk dhcpcd dnsmasq hostapd fbi ola libnss-mdns iptables libasound2 alsa-utils openssh-sftp-server libgstreamer1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl
 
+# ---- USER MANAGEMENT ----
 # Add the rocketshow user
 adduser \
   --system \
@@ -46,6 +47,7 @@ passwd --lock pi
 chmod 777 /etc/wpa_supplicant/wpa_supplicant.conf
 chmod 777 /etc/dhcpcd.conf
 
+# ---- INSTALL ROCKET SHOW ----
 # Download the initial directory structure including samples
 cd /opt
 wget https://rocketshow.net/install/directory.tar.gz
@@ -193,6 +195,30 @@ chown rocketshow:rocketshow /opt/rocketshow_reset.sh
 # Add execution permissions
 chmod 755 /opt/rocketshow_reset.sh
 
+# Enable SSH
+systemctl enable ssh
+
+# ---- DISABLE SWAPPING ----
+# Turn off any active swap (best effort in chroot)
+swapoff -a 2>/dev/null || true
+
+# If dphys-swapfile exists, disable it
+systemctl disable --now dphys-swapfile.service 2>/dev/null || true
+
+# If rpi-resize-swap-file exists, disable + mask it
+systemctl disable --now rpi-resize-swap-file.service 2>/dev/null || true
+systemctl mask rpi-resize-swap-file.service 2>/dev/null || true
+
+# Strongest guarantee: prevent *any* swap activation via systemd
+systemctl mask swap.target 2>/dev/null || true
+
+# Remove SD swapfile if present
+rm -f /var/swap || true
+
+# ---- READ-ONLY ROOT ----
+# TODO
+
+# ---- FINISH ----
 # Give the setup some time, because umount won't work afterwards if called too fast ("umount: device is busy")
 echo "Wait 5 seconds..."
 sleep 5s
