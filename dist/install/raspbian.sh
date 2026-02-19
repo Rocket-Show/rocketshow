@@ -198,7 +198,7 @@ chmod 755 /opt/rocketshow_reset.sh
 # Enable SSH
 systemctl enable ssh
 
-# ---- DISABLE SWAPPING ----
+# ---- DISABLE SWAPPING, VOLATILE LOGGING ----
 # Turn off any active swap (best effort in chroot)
 swapoff -a 2>/dev/null || true
 
@@ -214,6 +214,18 @@ systemctl mask swap.target 2>/dev/null || true
 
 # Remove SD swapfile if present
 rm -f /var/swap || true
+
+# tmpfs for /tmp and /var/log
+grep -qE '^\s*tmpfs\s+/tmp\s+' /etc/fstab || echo "tmpfs /tmp tmpfs nosuid,nodev,size=128m 0 0" >> /etc/fstab
+grep -qE '^\s*tmpfs\s+/var/log\s+' /etc/fstab || echo "tmpfs /var/log tmpfs nosuid,nodev,size=64m 0 0" >> /etc/fstab
+
+# journald volatile (no persistent writes)
+mkdir -p /etc/systemd/journald.conf.d
+cat >/etc/systemd/journald.conf.d/00-rocketshow-volatile.conf <<'EOF'
+[Journal]
+Storage=volatile
+RuntimeMaxUse=32M
+EOF
 
 # ---- READ-ONLY ROOT ----
 # TODO
