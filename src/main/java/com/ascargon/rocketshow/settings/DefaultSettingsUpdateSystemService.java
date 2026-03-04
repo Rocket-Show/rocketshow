@@ -134,9 +134,9 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
             // output audio on the selected device name
             logger.debug("Write ALSA settings");
 
-            String alsaSettingsPath = "/data/rocketshow/.asoundrc";
-            if(settingsService.isLegacyFileSystem()) {
-                alsaSettingsPath = System.getProperty("user.home") + File.separator + ".asoundrc";
+            String alsaSettingsPath = System.getProperty("user.home") + File.separator + ".asoundrc";
+            if (settingsService.isReadOnlyFileSystem()) {
+                alsaSettingsPath = "/data/rocketshow/.asoundrc";
             }
 
             // Create a new file the Rocket Show settings
@@ -207,9 +207,9 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
         apConfig += "rsn_pairwise=CCMP\n";
 
         try {
-            String fileName = "/data/rocketshow/hostapd.conf";
-            if(settingsService.isLegacyFileSystem()) {
-                fileName = "/etc/hostapd/hostapd.conf";
+            String fileName = "/etc/hostapd/hostapd.conf";
+            if (settingsService.isReadOnlyFileSystem()) {
+                fileName = "/data/rocketshow/hostapd.conf";
             }
             FileWriter fileWriter = new FileWriter(fileName, false);
             fileWriter.write(apConfig);

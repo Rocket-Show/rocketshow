@@ -7,7 +7,7 @@ import purejavacomm.CommPort;
 import purejavacomm.CommPortIdentifier;
 import purejavacomm.SerialPort;
 
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PreDestroy;
 import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;

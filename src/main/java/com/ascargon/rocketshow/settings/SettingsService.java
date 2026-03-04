@@ -2,18 +2,15 @@ package com.ascargon.rocketshow.settings;
 
 import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.audio.AudioBus;
-import com.ascargon.rocketshow.audio.AudioDevice;
 import jakarta.xml.bind.JAXBException;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public interface SettingsService {
 
     Settings getSettings();
 
-    boolean isLegacyFileSystem();
+    boolean isReadOnlyFileSystem();
 
     void setSettings(Settings settings);
 

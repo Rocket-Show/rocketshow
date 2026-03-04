@@ -9,6 +9,8 @@
 # - dhcpcd is used to set a static IP address for the wifi hotspot feature
 # - dnsmasq is a DHCP server
 # - hostapd installs the wifi host features
+
+echo "Install packages"
 apt-get update
 apt-get upgrade -y
 
@@ -16,6 +18,8 @@ apt-get -y install unzip openjdk-21-jdk dhcpcd dnsmasq hostapd fbi ola libnss-md
 
 # ---- USER MANAGEMENT ----
 # Add the rocketshow user
+
+echo "User management"
 adduser \
   --system \
   --shell /bin/bash \
@@ -44,8 +48,6 @@ sed -i "s/root\sALL=(ALL:ALL) ALL/root    ALL=(ALL:ALL) ALL\n$insert/" $file
 passwd --lock pi
 
 # Set the required config files to writeable for the rocketshow user
-# chmod 777 /boot/config.txt -> Does not work
-chmod 777 /etc/wpa_supplicant/wpa_supplicant.conf
 chmod 777 /etc/dhcpcd.conf
 
 # Disable initial Raspberry Pi userconfig-service to setup an initial user (don't needed, because we already did it automatically)
@@ -53,6 +55,8 @@ systemctl disable userconfig.service || true
 systemctl mask userconfig.service || true
 
 # ---- INSTALL ROCKET SHOW ----
+
+echo "Install Rocket Show"
 
 # Prepare running directory
 cd /opt
@@ -88,18 +92,28 @@ wget https://rocketshow.net/designer/downloads/fixtures.zip
 unzip fixtures.zip -d fixtures
 rm fixtures.zip
 
-# Install the wireless access point feature
+# Install wireless access point
 # https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
+echo "Install wireless access point"
 systemctl unmask hostapd
 systemctl enable hostapd
 systemctl stop dnsmasq
 systemctl stop hostapd
 
 # Configure the wlan0 interface to have a static ip address
-nmcli connection modify "wlan0" ipv4.addresses "192.168.4.1/24"
+cat >> /etc/dhcpcd.conf <<'EOF'
+interface wlan0
+static ip_address=192.168.4.1/24
+nohook wpa_supplicant
+EOF
 
 # Configure dnsmasq (DHCP server)
-printf "address=/rocketshow.local/192.168.4.1\ninterface=wlan0\nlisten-address=192.168.4.1\ndhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h" | tee -a /etc/dnsmasq.conf
+cat <<'EOF' >> /etc/dnsmasq.conf
+address=/rocketshow.local/192.168.4.1
+interface=wlan0
+listen-address=192.168.4.1
+dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h
+EOF
 
 cat <<'EOF' >hostapd.conf
 interface=wlan0
@@ -120,7 +134,7 @@ EOF
 chmod 777 /etc/hostapd/hostapd.conf
 
 # Enable forwarding in kernel
-printf "net.ipv4.ip_forward=1" | tee -a /etc/sysctl.conf
+echo "net.ipv4.ip_forward=1" > /etc/sysctl.d/99-ipforward.conf
 
 # Set the country code (required in order for wlan0 and hostapd to work)
 raspi-config nonint do_wifi_country US
@@ -154,14 +168,13 @@ sed -i 's/raspberrypi/RocketShow/g' /etc/hostname
 # Enable SSH
 systemctl enable ssh
 
-# Install pi4j
-curl -s get.pi4j.com | bash
-
 # Disable Bluetooth
 sudo systemctl disable bluetooth.service
 sudo systemctl mask hciuart.service 2>/dev/null || true
 
 # ---- SERVICES ----
+
+echo "Install services"
 
 # iptables rules
 cat <<'EOF' >/opt/rocketshow/iptables.sh
@@ -218,6 +231,9 @@ EOF
 systemctl enable rocketshow.service
 
 # ---- FINISH ----
+
+echo "Finish"
+
 # Set owner of directory
 chown -R rocketshow:rocketshow /opt/rocketshow
 

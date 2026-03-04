@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import purejavacomm.SerialPort;
 
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PreDestroy;
 import javax.sound.midi.MidiUnavailableException;
 import java.util.Timer;
 import java.util.TimerTask;

@@ -46,10 +46,9 @@ public class DefaultSettingsService implements SettingsService {
         this.midiService = midiService;
         this.factoryResetService = factoryResetService;
 
-        directory = "/data/rocketshow";
-        if(isLegacyFileSystem()) {
-            final ApplicationHome applicationHome = new ApplicationHome(RocketShowApplication.class);
-            directory = applicationHome.getDir().toString();
+        directory = new ApplicationHome(RocketShowApplication.class).getDir().toString();
+        if (!isReadOnlyFileSystem()) {
+            directory = "/data/rocketshow";
         }
 
         try {
@@ -70,11 +69,9 @@ public class DefaultSettingsService implements SettingsService {
     }
 
     @Override
-    public boolean isLegacyFileSystem() {
-        // Check, whether Rocket Show runs on the new A/B read only filesystem with writable data or not (true)
-        Path path = Paths.get("/data");
-
-        if (Files.exists(path)) {
+    public boolean isReadOnlyFileSystem() {
+        // Check, whether Rocket Show runs on the A/B read only filesystem with writable data or not (true)
+        if (settings == null || settings.getReadyToUseVersion() == null) {
             return false;
         } else {
             return true;
