@@ -1,8 +1,8 @@
 #!/bin/bash
 # 
-# Install Rocket Show on a Raspian Bullseye.
+# Install Rocket Show on a Raspberry Pi Lite OS.
 # This script needs to be executed as root.
-# 
+#
 
 # ---- INSTALL PACKAGES ----
 # - libnss-mdns installs the Bonjour service, if not already installed
@@ -29,6 +29,7 @@ echo rocketshow:thisrocks | chpasswd
 
 # Add the user to the required groups
 usermod -a -G video rocketshow
+usermod -a -G render rocketshow
 usermod -a -G audio rocketshow
 usermod -a -G plugdev rocketshow
 usermod -a -G gpio rocketshow
@@ -47,25 +48,45 @@ passwd --lock pi
 chmod 777 /etc/wpa_supplicant/wpa_supplicant.conf
 chmod 777 /etc/dhcpcd.conf
 
+# Disable initial Raspberry Pi userconfig-service to setup an initial user (don't needed, because we already did it automatically)
+systemctl disable userconfig.service || true
+systemctl mask userconfig.service || true
+
 # ---- INSTALL ROCKET SHOW ----
-# Download the initial directory structure including samples
+
+# Prepare running directory
 cd /opt
-wget https://rocketshow.net/install/directory.tar.gz
-tar xvzf ./directory.tar.gz
-rm directory.tar.gz
+mkdir -p rocketshow
 cd rocketshow
 
-# Add execution permissions on the update script
-chmod +x update.sh
+# Download current JAR and version info
+wget https://www.rocketshow.net/update/rocketshow.jar
+wget https://www.rocketshow.net/update/currentversion2.xml
+
+# Create default config files
+cat <<'EOF' >/home/rocketshow/.asoundrc
+pcm.!default {
+  type plug
+  slave {
+    pcm "hw:0,0"
+  }
+}
+EOF
+
+# Download a black image to be displayed as default
+wget https://www.rocketshow.net/install/black.jpg
+
+# Download the defaults including some sample files
+wget https://rocketshow.net/install/defaults.tar.gz
+tar xvzf ./defaults.tar.gz
+rm defaults.tar.gz
+mv defaults/* .
+rm -rf defaults
 
 # Download the current set of fixtures
 wget https://rocketshow.net/designer/downloads/fixtures.zip
 unzip fixtures.zip -d fixtures
 rm fixtures.zip
-
-# Download current JAR and version info
-wget https://www.rocketshow.net/update/rocketshow.jar
-wget https://www.rocketshow.net/update/currentversion2.xml
 
 # Install the wireless access point feature
 # https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
@@ -78,13 +99,9 @@ systemctl stop hostapd
 nmcli connection modify "wlan0" ipv4.addresses "192.168.4.1/24"
 
 # Configure dnsmasq (DHCP server)
-printf "\n# ROCKETSHOWSTART\naddress=/rocketshow.local/192.168.4.1\ninterface=wlan0\nlisten-address=192.168.4.1\ndhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h\n# ROCKETSHOWEND\n" | tee -a /etc/dnsmasq.conf
+printf "address=/rocketshow.local/192.168.4.1\ninterface=wlan0\nlisten-address=192.168.4.1\ndhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h" | tee -a /etc/dnsmasq.conf
 
-touch /etc/hostapd/hostapd.conf
-
-chmod 777 /etc/hostapd/hostapd.conf
-
-cat <<'EOF' >/etc/hostapd/hostapd.conf
+cat <<'EOF' >hostapd.conf
 interface=wlan0
 driver=nl80211
 ssid=Rocket Show
@@ -100,137 +117,110 @@ wpa_key_mgmt=WPA-PSK
 wpa_pairwise=TKIP
 rsn_pairwise=CCMP
 EOF
+chmod 777 /etc/hostapd/hostapd.conf
 
-printf "\n# ROCKETSHOWSTART\nnet.ipv4.ip_forward=1\n# ROCKETSHOWEND\n" | tee -a /etc/sysctl.conf
+# Enable forwarding in kernel
+printf "net.ipv4.ip_forward=1" | tee -a /etc/sysctl.conf
 
 # Set the country code (required in order for wlan0 and hostapd to work)
 raspi-config nonint do_wifi_country US
 
-# Delay hostapd startup to make sure it waits for the interfaces to be ready
-HOSTAPD_OVERRIDE_CONF="[Unit]
-After=network.target sys-subsystem-net-devices-wlan0.device
-Requires=sys-subsystem-net-devices-wlan0.device
-
-[Service]
-ExecStartPre=/bin/sleep 5
-"
-HOSTAPD_OVERRIDE_DIR="/etc/systemd/system/hostapd.service.d"
-mkdir -p "$HOSTAPD_OVERRIDE_DIR"
-echo "$HOSTAPD_OVERRIDE_CONF" | tee "$HOSTAPD_OVERRIDE_DIR/override.conf" > /dev/null
-
-# Install pi4j
-curl -s get.pi4j.com | bash
-
-# Add execution permissions to the start script
-chmod +x start.sh
-
-# Add a service to automatically start the app on boot and redirect port 80 to 8080
-cat <<'EOF' >/etc/systemd/system/rocketshow.service
+# Delay hostapd startup to make sure it waits for the interfaces to be ready and its config file mount
+install -d /etc/systemd/system/hostapd.service.d
+cat > /etc/systemd/system/hostapd.service.d/override.conf <<'EOF'
 [Unit]
-Description=Rocketshow Startup Service
-After=network.target
+RequiresMountsFor=/etc/hostapd/hostapd.conf
+After=sys-subsystem-net-devices-wlan0.device
+Wants=sys-subsystem-net-devices-wlan0.device
+BindsTo=sys-subsystem-net-devices-wlan0.device
 
 [Service]
-Type=oneshot
-ExecStart=/opt/rocketshow/start-service.sh
-RemainAfterExit=true
-
-[Install]
-WantedBy=multi-user.target
+ExecStartPre=/bin/sh -ec '\
+  for i in $(seq 1 50); do \
+    [ -d /sys/class/net/wlan0 ] && exit 0; \
+    sleep 0.1; \
+  done; \
+  echo "wlan0 did not appear in time" >&2; \
+  exit 1'
+Restart=on-failure
+RestartSec=2
 EOF
 
-cat <<'EOF' >/opt/rocketshow/start-service.sh
-#!/bin/bash
-
-# Redirect port 80 to 8080
-iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
-
-# Run your application as the "rocketshow" user
-su - rocketshow -c 'cd /opt/rocketshow && ./start.sh &'
-EOF
-
-chmod +x /opt/rocketshow/start-service.sh
-
-systemctl enable rocketshow.service
-
-# Keep the whole directory in its current state for the factory reset
-cd /opt
-tar -zcvf rocketshow_factory.tar.gz rocketshow
-
-# Create the factory reset script
-cat <<'EOF' >/opt/rocketshow_reset.sh
-#!/bin/bash
-#
-rm -rf /opt/rocketshow
-cd /opt
-tar xvzf /opt/rocketshow_factory.tar.gz
-sudo reboot
-EOF
-
-chmod +x /opt/rocketshow_reset.sh
-
-# Set the hostname to RocketShow
+# Set the hostname
 sed -i '/127.0.1.1/d' /etc/hosts
 sed -i "\$a127.0.1.1\tRocketShow" /etc/hosts
-
 sed -i 's/raspberrypi/RocketShow/g' /etc/hostname
-
-# Add a default ALSA device for Java sound to work
-cat <<'EOF' >/home/rocketshow/.asoundrc
-pcm.!default {
-  type plug
-  slave {
-    pcm "hw:0,0"
-  }
-}
-
-EOF
-
-# Set the user rocketshow as owner
-chown -R rocketshow:rocketshow /home/rocketshow
-chown -R rocketshow:rocketshow /opt/rocketshow
-chown rocketshow:rocketshow /opt/rocketshow_factory.tar.gz
-chown rocketshow:rocketshow /opt/rocketshow_reset.sh
-
-# Add execution permissions
-chmod 755 /opt/rocketshow_reset.sh
 
 # Enable SSH
 systemctl enable ssh
 
-# ---- DISABLE SWAPPING, VOLATILE LOGGING ----
-# Turn off any active swap (best effort in chroot)
-swapoff -a 2>/dev/null || true
+# Install pi4j
+curl -s get.pi4j.com | bash
 
-# If dphys-swapfile exists, disable it
-systemctl disable --now dphys-swapfile.service 2>/dev/null || true
+# Disable Bluetooth
+sudo systemctl disable bluetooth.service
+sudo systemctl mask hciuart.service 2>/dev/null || true
 
-# If rpi-resize-swap-file exists, disable + mask it
-systemctl disable --now rpi-resize-swap-file.service 2>/dev/null || true
-systemctl mask rpi-resize-swap-file.service 2>/dev/null || true
+# ---- SERVICES ----
 
-# Strongest guarantee: prevent *any* swap activation via systemd
-systemctl mask swap.target 2>/dev/null || true
-
-# Remove SD swapfile if present
-rm -f /var/swap || true
-
-# tmpfs for /tmp and /var/log
-grep -qE '^\s*tmpfs\s+/tmp\s+' /etc/fstab || echo "tmpfs /tmp tmpfs nosuid,nodev,size=128m 0 0" >> /etc/fstab
-grep -qE '^\s*tmpfs\s+/var/log\s+' /etc/fstab || echo "tmpfs /var/log tmpfs nosuid,nodev,size=64m 0 0" >> /etc/fstab
-
-# journald volatile (no persistent writes)
-mkdir -p /etc/systemd/journald.conf.d
-cat >/etc/systemd/journald.conf.d/00-rocketshow-volatile.conf <<'EOF'
-[Journal]
-Storage=volatile
-RuntimeMaxUse=16M
+# iptables rules
+cat <<'EOF' >/opt/rocketshow/iptables.sh
+#!/bin/bash
+set -euo pipefail
+if ! iptables -t nat -C PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8080 2>/dev/null; then
+  iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8080
+fi
 EOF
+sudo chmod +x /opt/rocketshow/iptables.sh
 
-# ---- READ-ONLY ROOT ----
-# TODO
+cat <<'EOF' >/etc/systemd/system/rocketshow-iptables.service
+[Unit]
+Description=RocketShow iptables
+After=network-pre.target
+Before=network.target
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+ExecStart=/opt/rocketshow/iptables.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable rocketshow-iptables.service
+
+# Rocket Show app
+cat <<'EOF' >/etc/systemd/system/rocketshow.service
+[Unit]
+Description=RocketShow
+After=olad.service network-online.target
+Wants=olad.service network-online.target
+
+[Service]
+# Run the main process as rocketshow
+User=rocketshow
+Group=rocketshow
+WorkingDirectory=/opt/rocketshow
+
+# Main process: KEEP IN FOREGROUND (no &)
+# Wait for port 9010 from OLA to be ready before starting the app
+[Service]
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 120); do nc -z 127.0.0.1 9010 && exit 0; echo "Waiting for olad on :9010 ($i/120)"; sleep 1; done; echo "olad not ready"; exit 1'
+ExecStart=/usr/bin/java -Xmx512m -jar /opt/rocketshow/rocketshow.jar
+
+Restart=on-failure
+RestartSec=2s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable rocketshow.service
 
 # ---- FINISH ----
+# Set owner of directory
+chown -R rocketshow:rocketshow /opt/rocketshow
+
 # Give the setup some time, because umount won't work afterwards if called too fast ("umount: device is busy")
 echo "Wait 5 seconds..."
 sleep 5s

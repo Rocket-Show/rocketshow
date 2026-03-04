@@ -1,6 +1,5 @@
 package com.ascargon.rocketshow.session;
 
-import com.ascargon.rocketshow.api.NotificationService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.settings.SettingsService;
 import jakarta.xml.bind.JAXBContext;
@@ -26,14 +25,12 @@ public class DefaultSessionService implements SessionService {
 
     private final SettingsService settingsService;
     private final SetService setService;
-    private final NotificationService notificationService;
 
     private Session session;
 
-    public DefaultSessionService(SettingsService settingsService, SetService setService, NotificationService notificationService) {
+    public DefaultSessionService(SettingsService settingsService, SetService setService) {
         this.settingsService = settingsService;
         this.setService = setService;
-        this.notificationService = notificationService;
 
         try {
             loadSession();
@@ -77,7 +74,7 @@ public class DefaultSessionService implements SessionService {
         }
     }
 
-    private void loadSession() throws Exception {
+    private void loadSession() {
         File file = new File(settingsService.getSettings().getBasePath() + File.separator + FILE_NAME + ".xml");
 
         if (file.exists()) {
@@ -90,7 +87,7 @@ public class DefaultSessionService implements SessionService {
 
                 logger.info("Session restored");
             } catch (JAXBException e) {
-                e.printStackTrace();
+                logger.error("Could not load session", e);
             }
         } else {
             // There is no session existant -> create a default session

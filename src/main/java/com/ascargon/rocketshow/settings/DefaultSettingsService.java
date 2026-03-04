@@ -5,7 +5,6 @@ import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.lighting.OlaPlugin;
 import com.ascargon.rocketshow.midi.*;
-import com.ascargon.rocketshow.raspberry.RaspberryResetUsbService;
 import com.ascargon.rocketshow.util.*;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
@@ -18,7 +17,9 @@ import org.springframework.stereotype.Service;
 
 import javax.sound.midi.MidiUnavailableException;
 import java.io.File;
-import java.util.List;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.UUID;
 
 @Service
@@ -27,20 +28,29 @@ public class DefaultSettingsService implements SettingsService {
     private final static Logger logger = LoggerFactory.getLogger(Settings.class);
 
     private final int CURRENT_SETTINGS_VERSION = 2;
+    private String directory = "/data/rocketshow";
     private final String FILE_NAME = "settings";
 
     private final OperatingSystemInformationService operatingSystemInformationService;
-    private final RaspberryResetUsbService raspberryResetUsbService;
     private final MidiService midiService;
+    private final FactoryResetService factoryResetService;
 
     private Settings settings;
 
-    private final ApplicationHome applicationHome = new ApplicationHome(RocketShowApplication.class);
-
-    public DefaultSettingsService(RaspberryResetUsbService raspberryResetUsbService, OperatingSystemInformationService operatingSystemInformationService, MidiService midiService) {
+    public DefaultSettingsService(
+            OperatingSystemInformationService operatingSystemInformationService,
+            MidiService midiService,
+            FactoryResetService factoryResetService
+    ) {
         this.operatingSystemInformationService = operatingSystemInformationService;
-        this.raspberryResetUsbService = raspberryResetUsbService;
         this.midiService = midiService;
+        this.factoryResetService = factoryResetService;
+
+        directory = "/data/rocketshow";
+        if(isLegacyFileSystem()) {
+            final ApplicationHome applicationHome = new ApplicationHome(RocketShowApplication.class);
+            directory = applicationHome.getDir().toString();
+        }
 
         try {
             load();
@@ -56,6 +66,18 @@ public class DefaultSettingsService implements SettingsService {
             save();
         } catch (JAXBException e) {
             logger.error("Could not save settings", e);
+        }
+    }
+
+    @Override
+    public boolean isLegacyFileSystem() {
+        // Check, whether Rocket Show runs on the new A/B read only filesystem with writable data or not (true)
+        Path path = Paths.get("/data");
+
+        if (Files.exists(path)) {
+            return false;
+        } else {
+            return true;
         }
     }
 
@@ -79,7 +101,7 @@ public class DefaultSettingsService implements SettingsService {
         }
 
         if (settings.getBasePath() == null) {
-            settings.setBasePath(applicationHome.getDir().toString() + File.separator);
+            settings.setBasePath(directory + File.separator);
         }
 
         if (settings.getMediaPath() == null) {
@@ -322,11 +344,20 @@ public class DefaultSettingsService implements SettingsService {
 
     @Override
     public void save() throws JAXBException {
-        File file = new File(applicationHome.getDir() + File.separator + FILE_NAME + ".xml");
+        File directoryFile = new File(directory);
+        if (!directoryFile.exists()) {
+            // Reset the defaults, to create the directory and populate some example data
+            try {
+                factoryResetService.reset();
+            } catch (Exception e) {
+                logger.error("Could not initialize the defaults", e);
+            }
+        }
+
+        File file = new File(directory, FILE_NAME + ".xml");
+
         JAXBContext jaxbContext = JAXBContext.newInstance(Settings.class);
         Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
-
-        // output pretty printed
         jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 
         jaxbMarshaller.marshal(settings, file);
@@ -336,14 +367,14 @@ public class DefaultSettingsService implements SettingsService {
 
     @Override
     public void load() throws Exception {
-        File file = new File(applicationHome.getDir() + File.separator + FILE_NAME + ".xml");
+        File file = new File(directory + File.separator + FILE_NAME + ".xml");
 
         if (!file.exists() || file.isDirectory()) {
             logger.info("Settings file does not exist");
             return;
         }
 
-        // Restore the session from the file
+        // Restore the settings from the file
         JAXBContext jaxbContext = JAXBContext.newInstance(Settings.class);
 
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
@@ -353,16 +384,6 @@ public class DefaultSettingsService implements SettingsService {
             migrateFromOldSettings();
         } else if (settings.getVersion() > CURRENT_SETTINGS_VERSION) {
             throw new Exception("The settings have been saved with a newer version of Rocket Show and cannot be used with the current one.");
-        }
-
-        // Reset the USB interface, if needed
-        try {
-            if (settings.isResetUsbAfterBoot()) {
-                logger.info("Resetting all USB devices");
-                raspberryResetUsbService.resetAllInterfaces(settings.getBasePath());
-            }
-        } catch (Exception e) {
-            logger.error("Could not reset the USB devices", e);
         }
 
         logger.info("Settings loaded");

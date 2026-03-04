@@ -1,5 +1,7 @@
 package com.ascargon.rocketshow.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -8,8 +10,10 @@ import java.io.InputStreamReader;
 @Service
 public class DefaultHealthService implements HealthService {
 
-	@Override
-	public HealthStatus getHealthStatus() throws Exception {
+    private final static Logger logger = LoggerFactory.getLogger(DefaultHealthService.class);
+
+    @Override
+    public HealthStatus getHealthStatus() {
         HealthStatus healthStatus = new HealthStatus();
 
         // TODO called by spring actuator?
@@ -26,6 +30,6 @@ public class DefaultHealthService implements HealthService {
         // TODO show connected USB devices
 
         return healthStatus;
-	}
+    }
 
 }

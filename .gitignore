@@ -5,6 +5,7 @@ src/main/resources/static/*
 /target_template/
 !.mvn/wrapper/maven-wrapper.jar
 logs.zip
+/dist/defaults.tar.gz
 
 # generated from test run
 session.xml

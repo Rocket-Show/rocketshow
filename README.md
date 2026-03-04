@@ -13,15 +13,11 @@ Refer to [the docs](./docs/index.md) to find out how to use Rocket Show.
 
 ### Build
 
-Warning: Delete `node_modules/@angular-devkit/build-optimizer/src/.cache` after each NPM package update to make sure,
-the devkit is not caching an old version (see https://github.com/angular/devkit/issues/913).
-
-1. Build: `mvn clean package`
+1. Build: `./mvnw clean package`
 2. Start: `java -jar target/rocketshow.jar`
 3. Open the web app on http://localhost:8080
 
 Use this command to skip tests and NPM build:
-
 ```shell
 ./mvnw package -Dskip.npm -Dmaven.test.skip=true && java -jar target/rocketshow.jar
 ```
@@ -106,19 +102,18 @@ make -j$(nproc)
 
 ### Seed directory
 
-The seed directory structure '/dist/rocketshow' can be packed on a mac with this commands (assuming you're currently in
-the 'dist' directory):
+The defaults directory `/dist/defaults` can be packed on a mac with this commands:
 
 ```shell
-COPYFILE_DISABLE=true tar -c --exclude='.DS_Store' -zf directory.tar.gz rocketshow
+cd dist
+COPYFILE_DISABLE=true tar -c --exclude='.DS_Store' -zf defaults.tar.gz defaults
 ```
 
 ### Raspberry Pi Image building
 
 Building is recommended on a Raspberry Pi device with enough storage. Steps to follow:
 
-- Flash an SD card with Raspberry Pi OS (user `rocketshow`)
-- Switch to user root:
+- Switch to user `root`:
 
 ````shell
 sudo su - root
@@ -131,7 +126,7 @@ apt-get update
 ````
 
 - Prepare the environment according to [https://github.com/RPi-distro/pi-gen](pi-gen Readme) (e.g. install the required
-dependencies)
+  dependencies)
 
 - Run the following script (might take about 45 minutes)
 
@@ -145,12 +140,7 @@ git clone https://github.com/RPi-distro/pi-gen.git
 cd pi-gen
 git checkout tags/2025-12-04-raspios-trixie-arm64
 
-# pi-gen config
-cat > config <<'EOF'
-IMG_NAME='RocketShow'
-ENABLE_FIRST_BOOT_USER_RENAME=0
-ENABLE_CLOUD_INIT=0
-EOF
+echo "IMG_NAME='RocketShow'" > config
 
 touch ./stage3/SKIP ./stage4/SKIP ./stage5/SKIP
 rm stage4/EXPORT* stage5/EXPORT*
@@ -184,8 +174,6 @@ zip "$(date '+%Y-%m-%d')-RocketShow.zip" "$(date '+%Y-%m-%d')-RocketShow.img"
 # copy the zip to a folder where we can get it with SFTP:
 mv "$(date '+%Y-%m-%d')-RocketShow.zip" /home/rocketshow
 ```
-
-- Grab the image from /home/rocketshow
 
 ### Update process
 

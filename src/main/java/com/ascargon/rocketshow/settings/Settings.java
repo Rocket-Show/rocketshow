@@ -81,7 +81,13 @@ public class Settings {
     private LoggingLevel loggingLevel;
     private String language = "en";
     private String deviceName;
+
+    /**
+     * @deprecated Not used since settings version 3 anymore.
+     */
+    @Deprecated
     private boolean resetUsbAfterBoot = false;
+
     private AudioOutput audioOutput;
 
     /**

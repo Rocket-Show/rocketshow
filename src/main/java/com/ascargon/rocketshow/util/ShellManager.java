@@ -1,21 +1,22 @@
 package com.ascargon.rocketshow.util;
 
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
 public class ShellManager {
 
     private final static Logger logger = LoggerFactory.getLogger(ShellManager.class);
 
-    private Process process;
-    private PrintStream outStream;
+    @Getter
+    private final Process process;
+    private final PrintStream outStream;
 
     public ShellManager(String[] command) throws IOException {
-        logger.debug("Execute shell command: " + String.join(" ", command));
+        logger.debug("Execute shell command: {}", String.join(" ", command));
 
         process = new ProcessBuilder(command).redirectErrorStream(true).start();
         outStream = new PrintStream(process.getOutputStream());
@@ -39,7 +40,7 @@ public class ShellManager {
                 logger.error("Error reading shell command output", e);
             }
 
-            logger.info("Shell command output:\n{}", sb.toString());
+            logger.info("Shell command output:\n{}", sb);
         };
 
         Thread thread = new Thread(task);
@@ -59,10 +60,6 @@ public class ShellManager {
         if (process != null) {
             process.destroy();
         }
-    }
-
-    public Process getProcess() {
-        return process;
     }
 
 }

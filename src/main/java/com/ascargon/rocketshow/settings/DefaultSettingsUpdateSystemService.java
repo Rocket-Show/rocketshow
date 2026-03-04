@@ -23,9 +23,6 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultSettingsUpdateSystemService.class);
 
-    private final String ROCKET_SHOW_SETTINGS_START = "# ROCKETSHOWSTART";
-    private final String ROCKET_SHOW_SETTINGS_END = "# ROCKETSHOWEND";
-
     private final SettingsService settingsService;
     private final OperatingSystemInformationService operatingSystemInformationService;
     private final AudioService audioService;
@@ -58,9 +55,6 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
             // We got no audio device
             return "";
         }
-
-        alsaSettings.append(ROCKET_SHOW_SETTINGS_START);
-        alsaSettings.append(System.lineSeparator());
 
         // Build the dmix device
 
@@ -126,8 +120,6 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
             ipcKey += 10;
         }
 
-        alsaSettings.append(ROCKET_SHOW_SETTINGS_END);
-
         return alsaSettings.toString();
     }
 
@@ -142,46 +134,15 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
             // output audio on the selected device name
             logger.debug("Write ALSA settings");
 
-            String alsaSettingsPath = System.getProperty("user.home") + File.separator + ".asoundrc";
-            StringBuilder existingAlsaSettings = new StringBuilder();
-            File alsaSettings = new File(alsaSettingsPath);
-            boolean isInRocketShowSection = false;
-
-            // Read the existing .asoundrc (without existing Rocket Show settings)
-            if (alsaSettings.exists()) {
-                BufferedReader bufferedReader;
-                try {
-                    bufferedReader = new BufferedReader(new FileReader(alsaSettingsPath));
-                    String line = bufferedReader.readLine();
-                    while (line != null) {
-                        if (ROCKET_SHOW_SETTINGS_START.equals(line)) {
-                            isInRocketShowSection = true;
-                        } else if (ROCKET_SHOW_SETTINGS_END.equals(line)) {
-                            isInRocketShowSection = false;
-                        } else {
-                            if (!isInRocketShowSection) {
-                                existingAlsaSettings.append(line);
-                                existingAlsaSettings.append(System.lineSeparator());
-                            }
-                        }
-
-                        // Read the next line
-                        line = bufferedReader.readLine();
-                    }
-                    bufferedReader.close();
-                } catch (IOException e) {
-                    logger.error("Could not read ALSA settings on '" + alsaSettingsPath + "'", e);
-                }
-
-                if (!existingAlsaSettings.isEmpty() && !existingAlsaSettings.toString().endsWith(System.lineSeparator())) {
-                    existingAlsaSettings.append(System.lineSeparator());
-                }
+            String alsaSettingsPath = "/data/rocketshow/.asoundrc";
+            if(settingsService.isLegacyFileSystem()) {
+                alsaSettingsPath = System.getProperty("user.home") + File.separator + ".asoundrc";
             }
 
-            // Create a new file containing the old settings and the new Rocket Show settings
+            // Create a new file the Rocket Show settings
             try {
                 FileWriter fileWriter = new FileWriter(alsaSettingsPath, false);
-                fileWriter.write(existingAlsaSettings + getAlsaSettings(settings));
+                fileWriter.write(getAlsaSettings(settings));
                 fileWriter.close();
             } catch (IOException e) {
                 logger.error("Could not write .asoundrc", e);
@@ -246,7 +207,11 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
         apConfig += "rsn_pairwise=CCMP\n";
 
         try {
-            FileWriter fileWriter = new FileWriter("/etc/hostapd/hostapd.conf", false);
+            String fileName = "/data/rocketshow/hostapd.conf";
+            if(settingsService.isLegacyFileSystem()) {
+                fileName = "/etc/hostapd/hostapd.conf";
+            }
+            FileWriter fileWriter = new FileWriter(fileName, false);
             fileWriter.write(apConfig);
             fileWriter.close();
         } catch (IOException e) {

@@ -166,6 +166,7 @@ class SystemController {
     @PostMapping("factory-reset")
     public ResponseEntity<Void> factoryReset() throws Exception {
         factoryResetService.reset();
+        rebootService.reboot();
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

@@ -25,14 +25,9 @@ public class DefaultUpdateService implements UpdateService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultUpdateService.class);
 
-    private final static String UPDATE_PATH = "update/";
-    private final static String BEFORE_SCRIPT_NAME = "before.sh";
-    private final static String AFTER_SCRIPT_NAME = "after.sh";
-    private final static String JAR_NAME = "rocketshow.jar";
     private final static String CURRENT_VERSION = "currentversion2.xml";
     private final static String UPDATE_URL = "https://www.rocketshow.net/update/";
     private final static String UPDATE_URL_TEST_SUFFIX = "test/";
-    private final static String UPDATE_SCRIPT = "update.sh";
 
     private final NotificationService notificationService;
     private final SettingsService settingsService;
@@ -75,14 +70,6 @@ public class DefaultUpdateService implements UpdateService {
         return (VersionInfo) jaxbUnmarshaller.unmarshal(inputStream);
     }
 
-    private void downloadUpdateFile(String name, boolean testBranch) throws Exception {
-        URL url = new URL(getRemoteBaseUrl(testBranch) + name);
-        ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
-        FileOutputStream fileOutputStream = new FileOutputStream(settingsService.getSettings().getBasePath() + File.separator + UPDATE_PATH + File.separator + name);
-        fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
-        fileOutputStream.close();
-    }
-
     private void executeScript(String[] command) throws Exception {
         Process process = new ProcessBuilder(command).start();
         process.waitFor();
@@ -104,23 +91,18 @@ public class DefaultUpdateService implements UpdateService {
         sessionService.getSession().setUpdateFinished(false);
         sessionService.save();
 
-        createDirectoryIfNotExists(settingsService.getSettings().getBasePath() + File.separator + UPDATE_PATH);
-
         logger.info("Downloading new version...");
 
+        // TODO use RAUC
+
         notificationService.notifyClients(UpdateState.DOWNLOADING);
-
-        // Download the new version
-        downloadUpdateFile(CURRENT_VERSION, testBranch);
-        downloadUpdateFile(JAR_NAME, testBranch);
-        downloadUpdateFile(BEFORE_SCRIPT_NAME, testBranch);
-        downloadUpdateFile(AFTER_SCRIPT_NAME, testBranch);
-
+        // TODO
         notificationService.notifyClients(UpdateState.INSTALLING);
 
         // Execute the script
         logger.info("Files downloaded. Execute update...");
-        executeScript(new String[]{settingsService.getSettings().getBasePath() + File.separator + UPDATE_SCRIPT});
+        // TODO
+//        executeScript(new String[]{settingsService.getSettings().getBasePath() + File.separator + UPDATE_SCRIPT});
 
         notificationService.notifyClients(UpdateState.REBOOTING);
 

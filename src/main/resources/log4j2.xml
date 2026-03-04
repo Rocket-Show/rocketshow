@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
     <Properties>
-        <!-- Change log dir here; relative to working dir -->
-        <Property name="PATH">./log</Property>
-        <!-- You can tweak these without editing patterns -->
+        <Property name="PATH">${sys:log.path:-./log}</Property>
         <Property name="LOG_DATEFORMAT_PATTERN">yyyy-MM-dd HH:mm:ss.SSS</Property>
         <Property name="LOG_EXCEPTION_CONVERSION_WORD">%wEx</Property>
     </Properties>

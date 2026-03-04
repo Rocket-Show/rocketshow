@@ -13,6 +13,8 @@ public interface SettingsService {
 
     Settings getSettings();
 
+    boolean isLegacyFileSystem();
+
     void setSettings(Settings settings);
 
     AudioBus getAudioBusByName(String outputBus);
