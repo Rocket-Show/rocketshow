@@ -6,6 +6,7 @@ import com.ascargon.rocketshow.audio.AudioDevice;
 import com.ascargon.rocketshow.lighting.OlaPlugin;
 import com.ascargon.rocketshow.midi.*;
 import com.ascargon.rocketshow.raspberry.ActionTriggerRaspberryGpio;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;
 import jakarta.xml.bind.annotation.XmlElements;
@@ -142,6 +143,13 @@ public class Settings {
     // Only filled, if it's a ready to use version
     private Integer readyToUseVersion;
 
+    // GUI admin user
+    @JsonIgnore
+    private String adminPasswordHash;
+
+    @JsonIgnore
+    private List<ApiKeyHash> apiKeyHashHashList = new ArrayList<>();
+
     @XmlElement(name = "remoteDevice")
     @XmlElementWrapper(name = "remoteDeviceList")
     public List<RemoteDevice> getRemoteDeviceList() {
@@ -196,5 +204,12 @@ public class Settings {
     public List<ActionTriggerMidi> getActionTriggerMidiList() {
         return actionTriggerMidiList;
     }
+
+    @XmlElement(name = "apiKey")
+    @XmlElementWrapper(name = "apiKeyList")
+    public List<ApiKeyHash> getApiKeyHashList() {
+        return apiKeyHashHashList;
+    }
+
 
 }

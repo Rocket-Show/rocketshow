@@ -5,11 +5,11 @@ import com.ascargon.rocketshow.play.CompositionPlayer;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.LightingUniverse;
 import com.ascargon.rocketshow.util.FileFilterService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.freedesktop.gstreamer.Pipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -105,14 +105,10 @@ public class DefaultDesignerService implements DesignerService {
                 if (file.isFile() && !fileFilterService.filterFile(file.getName())) {
                     logger.debug("Found project '" + file.getName() + "'");
 
-                    try {
-                        ObjectMapper mapper = new ObjectMapper();
-                        Project project = mapper.readValue(file, Project.class);
+                    ObjectMapper mapper = new ObjectMapper();
+                    Project project = mapper.readValue(file, Project.class);
 
-                        projects.add(project);
-                    } catch (IOException e) {
-                        logger.error("Could not load project '" + file.getName() + "'", e);
-                    }
+                    projects.add(project);
                 }
             }
         }

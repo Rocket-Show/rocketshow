@@ -1,6 +1,8 @@
 package com.ascargon.rocketshow.settings;
 
 import com.ascargon.rocketshow.composition.DefaultCompositionService;
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,31 +15,13 @@ import jakarta.xml.bind.annotation.XmlRootElement;
  * @author Moritz A. Vieli
  */
 @XmlRootElement
+@Getter
+@Setter
 public class Instrument {
-
-    private final static Logger logger = LoggerFactory.getLogger(DefaultCompositionService.class);
 
     private String uuid;
 
     // The name of the instrument
     private String name;
-
-    @XmlElement
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @XmlElement
-    public String getUuid() {
-        return uuid;
-    }
-
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
-    }
 
 }

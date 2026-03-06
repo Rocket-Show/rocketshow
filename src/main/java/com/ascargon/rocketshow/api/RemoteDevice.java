@@ -1,7 +1,6 @@
 package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.midi.MidiSignal;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,6 +14,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.databind.ObjectMapper;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -41,6 +41,8 @@ public class RemoteDevice {
 
     // Synchronize composition plays/stops with the local device
     private boolean synchronize;
+
+    private String apiKey;
 
     private RemoteDevice() {
         // TODO Add this timeout to the settings

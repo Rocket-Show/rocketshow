@@ -2,11 +2,11 @@ package com.ascargon.rocketshow.lighting.designer;
 
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.FileFilterService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.*;
 import java.net.URL;

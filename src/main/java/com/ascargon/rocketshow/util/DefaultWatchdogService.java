@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.util;
 
+import com.ascargon.rocketshow.settings.SettingsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -12,10 +13,18 @@ public class DefaultWatchdogService implements WatchdogService {
 
     private final HealthService healthService;
     private final RebootService rebootService;
+    private final SettingsService settingsService;
+    private final OperatingSystemInformationService operatingSystemInformationService;
 
-    public DefaultWatchdogService(HealthService healthService, RebootService rebootService) {
+    public DefaultWatchdogService(HealthService healthService, RebootService rebootService, SettingsService settingsService, OperatingSystemInformationService operatingSystemInformationService) {
         this.healthService = healthService;
         this.rebootService = rebootService;
+        this.settingsService = settingsService;
+        this.operatingSystemInformationService = operatingSystemInformationService;
+
+        if(!watchdogActive()) {
+            return;
+        }
 
         try {
             ShellManager shellManager = new ShellManager(new String[]{"systemd-notify", "--ready", "--status=RocketShow ready"});
@@ -26,9 +35,27 @@ public class DefaultWatchdogService implements WatchdogService {
         }
     }
 
+    private boolean watchdogActive() {
+        if (settingsService.getSettings().getReadyToUseVersion() == null) {
+            // Only run for the ready to use version
+            return false;
+        }
+
+        if (!operatingSystemInformationService.getOperatingSystemInformation().getRaspberryPi()) {
+            // Only run on Raspberry Pi
+            return false;
+        }
+
+        return true;
+    }
+
     @Override
     @Scheduled(fixedRateString = "${watchdog.interval:30000}")
     public void runWatchdog() {
+        if(!watchdogActive()) {
+            return;
+        }
+
         logger.debug("Watchdog check is running....");
         checkSystemHealth();
         logger.debug("Watchdog check finished");
@@ -37,7 +64,7 @@ public class DefaultWatchdogService implements WatchdogService {
     private void checkSystemHealth() {
         HealthStatus healthStatus = healthService.getHealthStatus();
 
-        if(healthStatus.getSeverity() == Severity.FAIL_REBOOT_DEVICE) {
+        if (healthStatus.getSeverity() == Severity.FAIL_REBOOT_DEVICE) {
             logger.error("System is unhealthy -> Reboot required");
             logger.error(healthStatus.toFailureString());
 
@@ -48,7 +75,7 @@ public class DefaultWatchdogService implements WatchdogService {
             }
         }
 
-        if(healthStatus.getSeverity() == Severity.FAIL_RESTART_APP) {
+        if (healthStatus.getSeverity() == Severity.FAIL_RESTART_APP) {
             logger.error("System is unhealthy -> App restart required");
             logger.error(healthStatus.toFailureString());
 
@@ -59,7 +86,7 @@ public class DefaultWatchdogService implements WatchdogService {
             }
         }
 
-        if(healthStatus.getSeverity() == Severity.DEGRADED) {
+        if (healthStatus.getSeverity() == Severity.DEGRADED) {
             logger.error("System health is degraded");
             logger.error(healthStatus.toFailureString());
 

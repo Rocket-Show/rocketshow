@@ -1,21 +1,18 @@
 package com.ascargon.rocketshow.lighting.designer;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ValueDeserializer;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class StringOrListDeserializer extends JsonDeserializer<List<String>> {
+public class StringOrListDeserializer extends ValueDeserializer<List<String>> {
 
     @Override
-    public List<String> deserialize(JsonParser jp, DeserializationContext ctxt)
-            throws IOException, JsonProcessingException {
-        JsonNode node = jp.getCodec().readTree(jp);
+    public List<String> deserialize(JsonParser jp, DeserializationContext ctxt) {
+        JsonNode node = ctxt.readTree(jp);
         List<String> result = new ArrayList<>();
 
         if (node.isArray()) {

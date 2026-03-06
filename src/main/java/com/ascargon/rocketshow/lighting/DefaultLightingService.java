@@ -4,7 +4,6 @@ import com.ascargon.rocketshow.settings.CapabilitiesService;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import ola.OlaClient;
 import ola.proto.Ola;
 import ola.proto.Ola.UniverseInfoReply;
@@ -22,6 +21,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PreDestroy;
+import tools.jackson.databind.ObjectMapper;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;

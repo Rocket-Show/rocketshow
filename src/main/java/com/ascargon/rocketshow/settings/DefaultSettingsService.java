@@ -28,7 +28,7 @@ public class DefaultSettingsService implements SettingsService {
     private final static Logger logger = LoggerFactory.getLogger(Settings.class);
 
     private final int CURRENT_SETTINGS_VERSION = 2;
-    private String directory = "/data/rocketshow";
+    private String directory;
     private final String FILE_NAME = "settings";
 
     private final OperatingSystemInformationService operatingSystemInformationService;
@@ -47,7 +47,7 @@ public class DefaultSettingsService implements SettingsService {
         this.factoryResetService = factoryResetService;
 
         directory = new ApplicationHome(RocketShowApplication.class).getDir().toString();
-        if (!isReadOnlyFileSystem()) {
+        if (isReadOnlyFileSystem()) {
             directory = "/data/rocketshow";
         }
 
