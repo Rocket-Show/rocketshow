@@ -86,6 +86,7 @@ import { ActionRaspberryGpioComponent } from "./action/action-raspberry-gpio/act
 import { ActionHttpComponent } from "./action/action-http/action-http.component";
 import { ActionLightingComponent } from "./action/action-lighting/action-lighting.component";
 import { ActionMidiComponent } from "./action/action-midi/action-midi.component";
+import { LoginComponent } from "./login/login.component";
 
 const appRoutes: Routes = [
   { path: "intro", component: IntroComponent },
@@ -123,6 +124,7 @@ const appRoutes: Routes = [
         EditorCompositionComponent,
         EditorSetComponent,
         ConnectionComponent,
+        LoginComponent,
         EditorCompositionFileComponent,
         EditorCompositionActionComponent,
         RoutingDetailsComponent,

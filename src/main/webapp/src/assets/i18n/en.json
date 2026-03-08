@@ -26,12 +26,16 @@
     "description": "Please wait while the application is being loaded."
   },
   "intro": {
-    "welcome": "Whoop, whoop!",
-    "welcome-language": "Welcome to Rocket Show! Please select your preferred language.",
+    "step-1-title": "Welcome!",
+    "welcome-language": "Please select your preferred language.",
     "choose-language": "Choose your language",
-    "almost-finished": "We're almost ready!",
+    "step-2-title": "Device Name ",
     "name-unit": "Please name this device.",
-    "default-unit-name": "My Device"
+    "default-unit-name": "My Device",
+    "step-3-title": "Password",
+    "admin-password": "Select a password to login.",
+    "password": "Password",
+    "password-repeat": "Password (repeat)"
   },
   "navigation": {
     "start": "Start",

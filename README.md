@@ -19,7 +19,7 @@ Refer to [the docs](./docs/index.md) to find out how to use Rocket Show.
 
 Use this command to skip tests and NPM build:
 ```shell
-./mvnw clean package -Dskip.npm -Dmaven.test.skip=true && java -jar target/rocketshow.jar
+./mvnw package -Dskip.npm -Dmaven.test.skip=true && java -jar target/rocketshow.jar
 ```
 
 For frequent builds, you might want to comment out the frontend-maven-plugin in the POM and make use of the Maven

@@ -10,13 +10,15 @@ import { SettingsService } from "./services/settings.service";
 import { Settings } from "./models/settings";
 import { Title } from "@angular/platform-browser";
 import { OperatingSystemInformationService } from "./services/operating-system-information.service";
+import { AuthService } from "./services/auth.service";
+import { filter, map, pairwise, startWith } from "rxjs/operators";
 
 @Component({
-    selector: "body",
-    templateUrl: "./app.component.html",
-    styleUrls: ["./app.component.scss"],
-    host: { "[class.body-bg-moving]": "this.isIntro" },
-    standalone: false
+  selector: "body",
+  templateUrl: "./app.component.html",
+  styleUrls: ["./app.component.scss"],
+  host: { "[class.body-bg-moving]": "this.isIntro" },
+  standalone: false
 })
 export class AppComponent implements OnInit {
   isIntro: boolean = false;
@@ -35,7 +37,8 @@ export class AppComponent implements OnInit {
     private titleService: Title,
     private leadSheetService: LeadSheetService,
     private operatingSystemInformationService: OperatingSystemInformationService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    public authService: AuthService,
   ) {
     translateService.setDefaultLang("en");
   }
@@ -78,6 +81,24 @@ export class AppComponent implements OnInit {
     });
 
     // Load some required data
+    if (this.authService.currentState && this.authService.currentState.authenticated) {
+      this.loadInitialData()
+    }
+    this.authService.state.subscribe((state) => {
+      if (state.authenticated) {
+        this.loadInitialData()
+      } else if (!state.passwordConfigured) {
+        // Not logged in and no password yet configured -> show intro wizard
+        this.navigateIntro();
+      }
+    });
+  }
+
+  private navigateIntro() {
+    this.router.navigate(["/intro"]);
+  }
+
+  private loadInitialData() {
     forkJoin(
       this.stateService.getState(),
       this.compositionService.getCompositions(),
@@ -91,7 +112,7 @@ export class AppComponent implements OnInit {
 
       // Show the intro if required
       if (result[3].firstStart) {
-        this.router.navigate(["/intro"]);
+        this.navigateIntro();
       }
 
       // Set the correct language

@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { $WebSocket, WebSocketConfig } from 'angular2-websocket/angular2-websocket';
-import { map } from "rxjs/operators";
-import { Observable, Subject, Subscription, timer } from 'rxjs';
+import { filter, map, pairwise, startWith } from "rxjs/operators";
+import { EMPTY, Observable, Subject, Subscription, timer } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { State } from '../models/state';
 import { HttpClient } from '@angular/common/http';
+import { AuthService } from './auth.service';
 
 @Injectable()
 export class StateService {
@@ -23,8 +24,21 @@ export class StateService {
 
   private reconnectSubscription: Subscription;
 
-  constructor(private http: HttpClient
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService,
   ) {
+    if (this.authService.currentState && this.authService.currentState.authenticated) {
+      this.init;
+    }
+    this.authService.state.subscribe((state) => {
+      if (state.authenticated) {
+        this.init()
+      }
+    });
+  }
+
+  private init() {
     // Create the backend-url
     if (environment.name == 'dev') {
       this.wsUrl = 'ws://' + environment.localBackend + '/';
@@ -62,7 +76,7 @@ export class StateService {
     // each 5 seconds.
     let reconnectTimer = timer(0, 5000);
     this.reconnectSubscription = reconnectTimer.subscribe(() => {
-      if(!this.connected) {
+      if (!this.connected) {
         this.websocket.connect();
       }
     });
@@ -78,11 +92,15 @@ export class StateService {
   }
 
   getState(): Observable<State> {
+    if (!this.authService.currentState || !this.authService.currentState.authenticated) {
+      return EMPTY;
+    }
+
     return this.http.get('system/state')
       .pipe(map(response => {
         this.currentState = new State(response);
 
-        if(!this.connected) {
+        if (!this.connected) {
           this.getsConnected.next();
         }
 
