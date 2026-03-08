@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Subject } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of, Subject } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
 
 export interface AuthState {
   authenticated: boolean;
@@ -18,24 +18,24 @@ export class AuthService {
   public currentState: AuthState;
 
   constructor(private http: HttpClient) {
-    this.init();
+    this.init().subscribe();
   }
 
-  private init() {
-    this.http.get<AuthState>('auth/me', { withCredentials: true })
-      .subscribe({
-        next: result => {
-          this.currentState = result;
-          this.state.next(this.currentState);
-        },
-        error: () => {
-          this.currentState = {
-            authenticated: false,
-            passwordConfigured: true
-          };
-          this.state.next(this.currentState);
-        }
-      });
+  init(): Observable<AuthState> {
+    return this.http.get<AuthState>('auth/me', { withCredentials: true }).pipe(
+      tap(result => {
+        this.currentState = result;
+        this.state.next(this.currentState);
+      }),
+      catchError(() => {
+        this.currentState = {
+          authenticated: false,
+          passwordConfigured: true
+        };
+        this.state.next(this.currentState);
+        return of(this.currentState);
+      })
+    );
   }
 
   setup(language: string, deviceName: string, password: string) {

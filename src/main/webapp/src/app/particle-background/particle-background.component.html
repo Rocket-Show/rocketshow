@@ -1,0 +1,5 @@
+<span class="particle" *ngFor="let particle of particles" [style.left.%]="particle.x" [style.top.%]="particle.y"
+  [style.width.px]="particle.size" [style.height.px]="particle.size" [style.opacity]="particle.opacity"
+  [style.animation-duration.s]="particle.duration" [style.animation-delay.s]="particle.delay"
+  [style.--drift-x]="particle.driftX + 'px'" [style.--drift-y]="particle.driftY + 'px'"
+  [style.--particle-color]="particle.color"></span>

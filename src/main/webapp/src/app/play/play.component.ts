@@ -251,15 +251,15 @@ export class PlayComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.stateServiceSubscription.unsubscribe();
+    this.stateServiceSubscription?.unsubscribe();
 
-    this.activityMidiSubscription.unsubscribe();
-    this.activityAudioSubscription.unsubscribe();
-    this.activityLightingSubscription.unsubscribe();
+    this.activityMidiSubscription?.unsubscribe();
+    this.activityAudioSubscription?.unsubscribe();
+    this.activityLightingSubscription?.unsubscribe();
 
-    this.activityMidiService.stopMonitor();
-    this.activityAudioService.stopMonitor();
-    this.activityLightingService.stopMonitor();
+    this.activityMidiService?.stopMonitor();
+    this.activityAudioService?.stopMonitor();
+    this.activityLightingService?.stopMonitor();
   }
 
   private loadAllSets() {

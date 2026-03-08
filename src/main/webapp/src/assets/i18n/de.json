@@ -37,6 +37,13 @@
     "password": "Passwort",
     "password-repeat": "Passwort (Wiederholung)"
   },
+  "login": {
+    "title": "Login",
+    "description": "Bitte logge dich mit deinem Passwort ein.",
+    "login": "Login",
+    "error-no-match": "Die Passwörter stimmen nicht überein.",
+    "error-pw-wrong": "Das Passwort ist nicht korrekt."
+  },
   "navigation": {
     "start": "Start",
     "compositions": "Kompositionen",
@@ -131,7 +138,6 @@
     "band": "Band",
     "advanced": "Erweitert",
     "info": "Information",
-    "reset-intro": "Installations-Wizard zurücksetzen",
     "restart-required": "Ein Neustart des Gerätes ist nötig, damit diese Einstellungen übernommen werden.",
     "wlan-ap": "WLAN Access Point",
     "wlan-ap-status": "Access Point",

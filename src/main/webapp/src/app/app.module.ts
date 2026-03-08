@@ -87,6 +87,7 @@ import { ActionHttpComponent } from "./action/action-http/action-http.component"
 import { ActionLightingComponent } from "./action/action-lighting/action-lighting.component";
 import { ActionMidiComponent } from "./action/action-midi/action-midi.component";
 import { LoginComponent } from "./login/login.component";
+import { ParticleBackgroundComponent } from "./particle-background/particle-background.component";
 
 const appRoutes: Routes = [
   { path: "intro", component: IntroComponent },
@@ -118,6 +119,7 @@ const appRoutes: Routes = [
         ArraySortPipe,
         AppComponent,
         IntroComponent,
+        ParticleBackgroundComponent,
         PlayComponent,
         SettingsComponent,
         EditorComponent,

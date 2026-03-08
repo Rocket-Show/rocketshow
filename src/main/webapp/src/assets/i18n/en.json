@@ -37,6 +37,13 @@
     "password": "Password",
     "password-repeat": "Password (repeat)"
   },
+  "login": {
+    "title": "Login",
+    "description": "Please login using your password.",
+    "login": "Login",
+    "error-no-match": "The passwords don't match.",
+    "error-pw-wrong": "The password is not correct."
+  },
   "navigation": {
     "start": "Start",
     "compositions": "Compositions",
@@ -131,7 +138,6 @@
     "band": "Band",
     "advanced": "Advanced",
     "info": "Information",
-    "reset-intro": "Reset setup-wizard",
     "restart-required": "Please restart the device for these settings to take effect.",
     "wlan-ap": "Wireless access point",
     "wlan-ap-status": "Access point",

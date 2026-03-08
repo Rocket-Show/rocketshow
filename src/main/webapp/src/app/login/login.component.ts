@@ -9,10 +9,28 @@ import { AuthService } from '../services/auth.service';
 })
 export class LoginComponent {
 
+  password: string;
+  pwWrong: boolean = false;
+
   constructor(
     public authService: AuthService
   ) {
 
+  }
+
+  change() {
+    this.pwWrong = false;
+  }
+
+  login() {
+    this.authService.login(this.password).subscribe({
+      next: () => {
+        this.authService.init().subscribe();
+      },
+      error: (err) => {
+        this.pwWrong = true;
+      }
+    });
   }
 
 }

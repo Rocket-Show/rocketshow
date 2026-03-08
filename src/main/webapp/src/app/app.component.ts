@@ -11,7 +11,6 @@ import { Settings } from "./models/settings";
 import { Title } from "@angular/platform-browser";
 import { OperatingSystemInformationService } from "./services/operating-system-information.service";
 import { AuthService } from "./services/auth.service";
-import { filter, map, pairwise, startWith } from "rxjs/operators";
 
 @Component({
   selector: "body",
@@ -65,7 +64,12 @@ export class AppComponent implements OnInit {
 
         switch (e.url) {
           case "/intro": {
-            this.isIntro = true;
+            if (this.authService.currentState.passwordConfigured) {
+              this.router.navigate(["/"]);
+              this.isPlay = true;
+            } else {
+              this.isIntro = true;
+            }
             break;
           }
           case "/play": {
@@ -96,6 +100,7 @@ export class AppComponent implements OnInit {
 
   private navigateIntro() {
     this.router.navigate(["/intro"]);
+    this.isIntro = true;
   }
 
   private loadInitialData() {
@@ -109,11 +114,6 @@ export class AppComponent implements OnInit {
     ).subscribe((result) => {
       this.loaded = true;
       this.applySettings(result[4]);
-
-      // Show the intro if required
-      if (result[3].firstStart) {
-        this.navigateIntro();
-      }
 
       // Set the correct language
       this.translateService.use(this.settings.language);

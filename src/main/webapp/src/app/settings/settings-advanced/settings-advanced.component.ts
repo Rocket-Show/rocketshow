@@ -112,12 +112,6 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
       .subscribe();
   }
 
-  resetIntro() {
-    this.sessionService.introReset().subscribe(() => {
-      this.reloadClearCacheService.reload();
-    });
-  }
-
   private downloadFile(blob: Blob) {
     saveAs(blob, "logs.zip");
   }

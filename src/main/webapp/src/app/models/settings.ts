@@ -30,7 +30,6 @@ export class Settings {
   loggingLevel: string;
   language: string;
   deviceName: string;
-  resetUsbAfterBoot: boolean;
   audioOutput: string;
   audioRate: number;
   alsaBufferSize: number;
@@ -141,7 +140,6 @@ export class Settings {
     this.loggingLevel = data.loggingLevel;
     this.language = data.language;
     this.deviceName = data.deviceName;
-    this.resetUsbAfterBoot = data.resetUsbAfterBoot;
     this.audioOutput = data.audioOutput;
     this.audioRate = data.audioRate;
     this.alsaPeriodSize = data.alsaPeriodSize;

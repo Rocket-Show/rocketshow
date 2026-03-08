@@ -56,20 +56,14 @@ public class AuthController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
 
-        Authentication authentication =
-                new UsernamePasswordAuthenticationToken(
-                        "admin",
-                        null,
-                        List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
-                );
+        authenticateAdmin(httpRequest, httpResponse);
 
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(authentication);
-        SecurityContextHolder.setContext(context);
-
-        securityContextRepository.saveContext(context, httpRequest, httpResponse);
-
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(Map.of(
+                "authenticated", true,
+                "passwordConfigured", true,
+                "username", "admin",
+                "roles", List.of("ROLE_ADMIN")
+        ));
     }
 
     private boolean hasAdminPassword() {
@@ -115,7 +109,7 @@ public class AuthController {
     public ResponseEntity<?> setup(@RequestBody SetupRequest request,
                                    HttpServletRequest httpRequest,
                                    HttpServletResponse httpResponse) {
-logger.info("Finish setup...");
+
         if (request.getPassword() == null || request.getPassword().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must not be empty");
         }

@@ -1,32 +1,33 @@
-<span class="particle" *ngFor="let particle of particles" [style.left.%]="particle.x" [style.top.%]="particle.y"
-  [style.width.px]="particle.size" [style.height.px]="particle.size" [style.opacity]="particle.opacity"
-  [style.animation-duration.s]="particle.duration" [style.animation-delay.s]="particle.delay"
-  [style.--drift-x]="particle.driftX + 'px'" [style.--drift-y]="particle.driftY + 'px'"
-  [style.--particle-color]="particle.color"></span>
+<app-particle-background></app-particle-background>
 
-
-<div class="container d-flex h-100" [@wizardState]="wizardState">
+<div class="container d-flex h-100">
   <div class="row justify-content-center align-self-center mx-auto">
     <div class="col-xl">
-      <div id="carousel" class="carousel slide" data-ride="carousel" data-interval="false">
+
+      <div class="d-flex w-100">
+        <img class="m-auto pb-2" src="assets/img/icon.png" alt="icon" width="100px">
+      </div>
+
+      <div id="carousel" #carousel class="carousel slide" data-ride="carousel" data-interval="false">
         <div class="carousel-inner">
 
           <!-- Step 1 -->
           <div class="carousel-item active">
-            <div class="card text-center border-secondary">
+            <div class="card border-secondary">
               <img class="card-img-top" src="assets/img/intro_title.jpg" alt="Card image cap">
               <div class="card-body">
                 <h4 class="card-title">{{ 'intro.step-1-title' | translate }}</h4>
                 <h6 class="card-subtitle mb-2">{{ 'intro.welcome-language' | translate }}</h6>
 
-                <select class="custom-select" [ngModel]="language" (ngModelChange)="switchLanguage($event)">
+                <select name="selectLang" class="custom-select" [ngModel]="language"
+                  (ngModelChange)="switchLanguage($event)">
                   @for (language of settingsService?.languages; track language) {
                   <option [ngValue]="language.key">{{ language.name }}</option>
                   }
                 </select>
               </div>
               <div class="card-footer text-muted">
-                <button type="button" class="btn btn-primary" href="#carousel" role="button" data-slide="next">
+                <button type="button" href="#carousel" class="btn btn-primary" role="button" data-slide="next">
                   {{ 'misc.nav-next' | translate }}
                   <i class="fa fa-chevron-right" aria-hidden="true"></i>
                 </button>
@@ -36,13 +37,13 @@
 
           <!-- Step 2 -->
           <div class="carousel-item">
-            <div class="card text-center" style="border: none">
+            <div class="card" style="border: none">
               <img class="card-img-top" src="assets/img/intro_title.jpg" alt="Card image cap">
               <div class="card-body">
                 <h4 class="card-title">{{ 'intro.step-2-title' | translate }}</h4>
                 <h6 class="card-subtitle mb-2">{{ 'intro.name-unit' | translate }}</h6>
 
-                <input type="text" class="form-control text-center" [(ngModel)]="deviceName"
+                <input #deviceNameInput name="deviceName" type="text" class="form-control" [(ngModel)]="deviceName"
                   placeholder="{{ 'intro.default-unit-name' | translate }}">
               </div>
               <div class="card-footer text-muted">
@@ -59,28 +60,36 @@
 
           <!-- Step 3 -->
           <div class="carousel-item">
-            <div class="card text-center" style="border: none">
-              <img class="card-img-top" src="assets/img/intro_title.jpg" alt="Card image cap">
-              <div class="card-body">
-                <h4 class="card-title">{{ 'intro.step-3-title' | translate }}</h4>
-                <h6 class="card-subtitle mb-2">{{ 'intro.admin-password' | translate }}</h6>
+            <form ngSubmit="finish()">
+              <div class="card" style="border: none">
+                <img class="card-img-top" src="assets/img/intro_title.jpg" alt="Card image cap">
+                <div class="card-body">
+                  <h4 class="card-title">{{ 'intro.step-3-title' | translate }}</h4>
+                  <h6 class="card-subtitle mb-2">{{ 'intro.admin-password' | translate }}</h6>
 
-                <input type="password" class="form-control text-center mb-2" [(ngModel)]="adminPassword1"
-                  placeholder="{{ 'intro.password' | translate }}">
-                <input type="password" class="form-control text-center" [(ngModel)]="adminPassword2"
-                  placeholder="{{ 'intro.password-repeat' | translate }}">
+                  <input name="password1" type="password" class="form-control mb-2" [(ngModel)]="adminPassword1"
+                    placeholder="{{ 'intro.password' | translate }}" (ngModelChange)="validate()">
 
+                  <input name="password2" type="password" class="form-control" [(ngModel)]="adminPassword2"
+                    placeholder="{{ 'intro.password-repeat' | translate }}" (ngModelChange)="validate()">
+
+                  <div *ngIf="passwordsDontMatch" class="alert alert-danger mt-3 mb-0">
+                    {{ 'login.error-no-match' | translate }}
+                  </div>
+
+                </div>
+                <div class="card-footer text-muted">
+                  <a class="btn btn-primary" href="#carousel" role="button" data-slide="prev">
+                    <i class="fa fa-chevron-left" aria-hidden="true"></i> {{ 'misc.nav-back' | translate }}
+                  </a>
+
+                  <button type="submit" class="btn btn-primary ml-2" (click)="finish()"
+                    [disabled]="loading || !adminPassword1 || !adminPassword2">@if (loading) {<i
+                      class="fa fa-spinner fa-pulse fa-fw"></i>}@if(!loading){<i class="fa fa-check"
+                      aria-hidden="true"></i>} {{ 'misc.finish' | translate }}</button>
+                </div>
               </div>
-              <div class="card-footer text-muted">
-                <a class="btn btn-primary" href="#carousel" role="button" data-slide="prev">
-                  <i class="fa fa-chevron-left" aria-hidden="true"></i> {{ 'misc.nav-back' | translate }}
-                </a>
-
-                <a class="btn btn-primary ml-2" href="#carousel" role="button" (click)="finish(); false">
-                  <i class="fa fa-check" aria-hidden="true"></i> {{ 'misc.finish' | translate }}
-                </a>
-              </div>
-            </div>
+            </form>
           </div>
         </div>
       </div>
