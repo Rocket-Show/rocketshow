@@ -26,7 +26,7 @@ export class SettingsLightingComponent implements OnInit {
   ) { }
 
   private loadSettings() {
-    if (!this.authService.currentState || !this.authService.currentState.authenticated) {
+    if (!this.authService.currentState?.authenticated) {
       return;
     }
 
@@ -49,6 +49,10 @@ export class SettingsLightingComponent implements OnInit {
   }
 
   private refreshAvailableOlaPlugins() {
+    if (!this.authService.currentState?.authenticated) {
+      return;
+    }
+
     this.availableOlaPluginList = [];
     this.selectedOlaPlugin = null;
 
@@ -72,8 +76,10 @@ export class SettingsLightingComponent implements OnInit {
   ngOnInit() {
     this.loadSettings();
 
-    this.authService.state.subscribe(() => {
-      this.loadSettings();
+    this.authService.state.subscribe((state) => {
+      if (state.authenticated) {
+        this.loadSettings();
+      }
     });
   }
 
