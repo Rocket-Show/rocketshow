@@ -15,16 +15,17 @@
                             <h4 class="card-title">{{ 'login.title' | translate }}</h4>
                             <h6 class="card-subtitle mb-2">{{ 'login.description' | translate }}</h6>
 
-                            <input type="password" name="password" [(ngModel)]="password" (ngModelChange)="change()" class="form-control"
-                                placeholder="Password" autofocus>
+                            <input type="password" name="password" [(ngModel)]="password" (ngModelChange)="change()"
+                                class="form-control" placeholder="Password" autofocus>
 
                             <div *ngIf="pwWrong" class="alert alert-danger mt-3 mb-0">
                                 {{ 'login.error-pw-wrong' | translate }}
                             </div>
                         </div>
                         <div class="card-footer text-muted">
-                            <button type="submit" class="btn btn-primary w-100" role="button">
-                                <i class="fa fa-sign-in" aria-hidden="true"></i>
+                            <button type="submit" [disabled]="loading" ] class="btn btn-primary w-100" role="button">
+                                @if (loading) {<i class="fa fa-spinner fa-pulse fa-fw"></i>}@if(!loading){<i
+                                    class="fa fa-sign-in" aria-hidden="true"></i>}
                                 {{ 'login.login' | translate }}
                             </button>
                         </div>

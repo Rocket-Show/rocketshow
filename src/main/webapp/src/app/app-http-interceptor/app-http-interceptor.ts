@@ -34,6 +34,16 @@ export class AppHttpInterceptor implements HttpInterceptor {
       newUrl = this.restUrl + req.url;
     }
 
+    const methodsWithBody = ['POST', 'PUT', 'PATCH'];
+
+    if (methodsWithBody.includes(req.method) && !req.headers.has('Content-Type')) {
+      req = req.clone({
+        setHeaders: {
+          'Content-Type': 'application/json',
+        },
+      });
+    }
+
     // use withCredentials to send the JSESSIONCOOKIE with each request
     const clonedRequest: HttpRequest<any> = req.clone({
       url: newUrl,

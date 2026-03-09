@@ -5,26 +5,32 @@ import { SettingsService } from "../../services/settings.service";
 import { Component, OnInit } from "@angular/core";
 import { map } from "rxjs/operators";
 import { WaitDialogService } from "../../services/wait-dialog.service";
+import { AuthService } from "../../services/auth.service";
 
 @Component({
-    selector: "app-settings-lighting",
-    templateUrl: "./settings-lighting.component.html",
-    styleUrls: ["./settings-lighting.component.scss"],
-    standalone: false
+  selector: "app-settings-lighting",
+  templateUrl: "./settings-lighting.component.html",
+  styleUrls: ["./settings-lighting.component.scss"],
+  standalone: false
 })
 export class SettingsLightingComponent implements OnInit {
   settings: Settings;
   private allOlaPluginList: OlaPlugin[] = [];
   availableOlaPluginList: OlaPlugin[] = [];
   selectedOlaPlugin: OlaPlugin;
+  loading: boolean = true;
 
   constructor(
     private settingsService: SettingsService,
-    private waitDialogService: WaitDialogService
-  ) {}
+    private authService: AuthService,
+  ) { }
 
   private loadSettings() {
-    this.waitDialogService.show();
+    if (!this.authService.currentState || !this.authService.currentState.authenticated) {
+      return;
+    }
+
+    this.loading = true;
 
     this.settingsService
       .getSettings()
@@ -35,7 +41,7 @@ export class SettingsLightingComponent implements OnInit {
           this.settingsService.getOlaPluginList().subscribe((response) => {
             this.allOlaPluginList = response;
             this.refreshAvailableOlaPlugins();
-            this.waitDialogService.hide();
+            this.loading = false;
           });
         })
       )
@@ -65,14 +71,18 @@ export class SettingsLightingComponent implements OnInit {
 
   ngOnInit() {
     this.loadSettings();
+
+    this.authService.state.subscribe(() => {
+      this.loadSettings();
+    });
   }
 
   private updateOlaPluginList() {
-    this.waitDialogService.show();
+    this.loading = true;
     this.settingsService
       .updateLightingOlaPlugins(this.settings.lightingOlaPluginList)
       .subscribe(() => {
-        this.waitDialogService.hide();
+        this.loading = false;
       });
   }
 

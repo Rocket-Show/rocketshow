@@ -3,16 +3,13 @@ import { AudioDevice } from "./../models/audio-device";
 import { SettingsPersonalService } from "./../services/settings-personal.service";
 import { ToastGeneralErrorService } from "./../services/toast-general-error.service";
 import { Component, OnInit } from "@angular/core";
-import { Observable, Subject, defer, forkJoin, from, of } from "rxjs";
+import { EMPTY, Observable, forkJoin } from "rxjs";
 import {
   map,
-  flatMap,
   catchError,
   finalize,
   mergeMap,
   tap,
-  take,
-  mergeAll,
   switchMap,
 } from "rxjs/operators";
 import { Settings } from "../models/settings";
@@ -20,13 +17,12 @@ import { SettingsService } from "../services/settings.service";
 import { PendingChangesDialogService } from "../services/pending-changes-dialog.service";
 import { TranslateService } from "@ngx-translate/core";
 import { ToastrService } from "ngx-toastr";
-import { Router } from "@angular/router";
 
 @Component({
-    selector: "app-settings",
-    templateUrl: "./settings.component.html",
-    styleUrls: ["./settings.component.scss"],
-    standalone: false
+  selector: "app-settings",
+  templateUrl: "./settings.component.html",
+  styleUrls: ["./settings.component.scss"],
+  standalone: false
 })
 export class SettingsComponent implements OnInit {
   // The settings as they were, when we loaded them
@@ -82,85 +78,60 @@ export class SettingsComponent implements OnInit {
     return false;
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.settingsService
       .getSettings(true)
       .pipe(
-        map((result) => {
-          forkJoin(
-            this.settingsService.getMidiInDevices(),
-            this.settingsService.getMidiOutDevices(),
-            this.settingsService.getAudioDevices()
+        switchMap((result) =>
+          forkJoin({
+            midiInDevices: this.settingsService.getMidiInDevices(),
+            midiOutDevices: this.settingsService.getMidiOutDevices(),
+            audioDevices: this.settingsService.getAudioDevices(),
+          }).pipe(
+            switchMap(({ midiInDevices, midiOutDevices, audioDevices }) => {
+              const noneDevice: MidiDevice = {
+                id: -1,
+                name: '[None]',
+                vendor: '',
+                description: '',
+                serialPort: false,
+              };
+
+              if (!result.midiInDevice || result.midiInDevice.id === 0) {
+                result.midiInDevice = noneDevice;
+              }
+
+              if (!result.midiOutDevice || result.midiOutDevice.id === 0) {
+                result.midiOutDevice = noneDevice;
+              }
+
+              if (
+                result.midiInDevice &&
+                result.midiInDevice.id !== -1 &&
+                !this.midiDeviceAvailable(result.midiInDevice, midiInDevices)
+              ) {
+                result.midiInDevice = midiInDevices.length > 0 ? midiInDevices[0] : undefined;
+              }
+
+              if (
+                result.midiOutDevice &&
+                result.midiOutDevice.id !== -1 &&
+                !this.midiDeviceAvailable(result.midiOutDevice, midiOutDevices)
+              ) {
+                result.midiOutDevice = midiOutDevices.length > 0 ? midiOutDevices[0] : undefined;
+              }
+
+              if (result.audioBusList.length === 0) {
+                return this.settingsService.addAudioBus(result).pipe(
+                  tap(() => this.finishInit(result))
+                );
+              }
+
+              this.finishInit(result);
+              return EMPTY;
+            })
           )
-            .pipe(
-              map((data) => {
-                let midiInDevices = <MidiDevice[]>data[0];
-                let midiOutDevices = <MidiDevice[]>data[1];
-                let audioDevices = <AudioDevice[]>data[2];
-
-                const noneDevice: MidiDevice = {
-                  id: -1,
-                  name: "[None]",
-                  vendor: "",
-                  description: "",
-                  serialPort: false,
-                };
-
-                // Set the initial devices where none are set
-                if (
-                  (!result.midiInDevice ||
-                    (result.midiInDevice && result.midiInDevice.id == 0))
-                ) {
-                  result.midiInDevice = noneDevice;
-                }
-
-                if (
-                  (!result.midiOutDevice ||
-                    (result.midiOutDevice && result.midiOutDevice.id == 0))
-                ) {
-                  result.midiOutDevice = noneDevice;
-                }
-
-                // Remove/change the devices, if they current ones are not available anymore
-                if (
-                  result.midiInDevice &&
-                  result.midiInDevice.id != -1 &&
-                  !this.midiDeviceAvailable(result.midiInDevice, midiInDevices)
-                ) {
-                  if (midiInDevices.length > 0) {
-                    result.midiInDevice = midiInDevices[0];
-                  } else {
-                    result.midiInDevice = undefined;
-                  }
-                }
-
-                if (
-                  result.midiOutDevice &&
-                  result.midiOutDevice.id != -1 &&
-                  !this.midiDeviceAvailable(
-                    result.midiOutDevice,
-                    midiOutDevices
-                  )
-                ) {
-                  if (midiOutDevices.length > 0) {
-                    result.midiOutDevice = midiOutDevices[0];
-                  } else {
-                    result.midiOutDevice = undefined;
-                  }
-                }
-
-                if (result.audioBusList.length == 0) {
-                  // Add a default bus
-                  this.settingsService.addAudioBus(result).subscribe(() => {
-                    this.finishInit(result);
-                  });
-                } else {
-                  this.finishInit(result);
-                }
-              })
-            )
-            .subscribe();
-        })
+        )
       )
       .subscribe();
   }

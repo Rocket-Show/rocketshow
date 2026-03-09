@@ -19,12 +19,13 @@ import { ActivityAudioBus } from "../models/activity-audio-bus";
 import { ActivityAudioChannel } from "../models/activity-audio-channel";
 import { ActivityLightingService } from "../services/activity-lighting.service";
 import { ActivityLighting } from "../models/activity-lighting";
+import { AuthService } from "../services/auth.service";
 
 @Component({
-    selector: "app-play",
-    templateUrl: "./play.component.html",
-    styleUrls: ["./play.component.scss"],
-    standalone: false
+  selector: "app-play",
+  templateUrl: "./play.component.html",
+  styleUrls: ["./play.component.scss"],
+  standalone: false
 })
 export class PlayComponent implements OnInit, OnDestroy {
   stateServiceSubscription: Subscription;
@@ -75,16 +76,24 @@ export class PlayComponent implements OnInit, OnDestroy {
     public activityAudioService: ActivityAudioService,
     public activityLightingService: ActivityLightingService,
     public settingsService: SettingsService,
-    private changeDetectorRef: ChangeDetectorRef
+    private authService: AuthService,
   ) {
     this.loadSettings();
 
     this.settingsService.settingsChanged.subscribe(() => {
       this.loadSettings();
     });
+    this.authService.state.subscribe(() => {
+      this.loadSettings();
+    });
   }
 
   private loadSettings() {
+    if (!this.authService.currentState || !this.authService.currentState.authenticated) {
+      // not yet authenticated
+      return;
+    }
+
     this.settingsService
       .getSettings()
       .pipe(

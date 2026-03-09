@@ -11,6 +11,7 @@ export class LoginComponent {
 
   password: string;
   pwWrong: boolean = false;
+  loading: boolean = false;
 
   constructor(
     public authService: AuthService
@@ -23,11 +24,13 @@ export class LoginComponent {
   }
 
   login() {
+    this.loading = true;
     this.authService.login(this.password).subscribe({
       next: () => {
         this.authService.init().subscribe();
       },
       error: (err) => {
+        this.loading = false;
         this.pwWrong = true;
       }
     });

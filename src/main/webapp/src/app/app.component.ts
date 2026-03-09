@@ -64,9 +64,8 @@ export class AppComponent implements OnInit {
 
         switch (e.url) {
           case "/intro": {
-            if (this.authService.currentState.passwordConfigured) {
-              this.router.navigate(["/"]);
-              this.isPlay = true;
+            if (this.authService.currentState?.passwordConfigured) {
+              this.navigatePlay();
             } else {
               this.isIntro = true;
             }
@@ -81,19 +80,23 @@ export class AppComponent implements OnInit {
             break;
           }
         }
-      }
-    });
 
-    // Load some required data
-    if (this.authService.currentState && this.authService.currentState.authenticated) {
-      this.loadInitialData()
-    }
-    this.authService.state.subscribe((state) => {
-      if (state.authenticated) {
-        this.loadInitialData()
-      } else if (!state.passwordConfigured) {
-        // Not logged in and no password yet configured -> show intro wizard
-        this.navigateIntro();
+        // Load some required data
+        if (this.authService.currentState && this.authService.currentState.authenticated) {
+          this.loadInitialData()
+        }
+        this.authService.state.subscribe((state) => {
+          if (state.authenticated) {
+            this.loadInitialData()
+          } else if (!state.passwordConfigured) {
+            // Not logged in and no password yet configured -> show intro wizard
+            this.navigateIntro();
+          } else if (e.url === "/intro") {
+            // Not logged in but password is already configured -> move away from the intro
+            console.log('aaaa');
+            this.navigatePlay();
+          }
+        });
       }
     });
   }
@@ -101,6 +104,11 @@ export class AppComponent implements OnInit {
   private navigateIntro() {
     this.router.navigate(["/intro"]);
     this.isIntro = true;
+  }
+
+  private navigatePlay() {
+    this.router.navigate(["/"]);
+    this.isPlay = true;
   }
 
   private loadInitialData() {
