@@ -88,6 +88,7 @@ import { ActionLightingComponent } from "./action/action-lighting/action-lightin
 import { ActionMidiComponent } from "./action/action-midi/action-midi.component";
 import { LoginComponent } from "./login/login.component";
 import { ParticleBackgroundComponent } from "./particle-background/particle-background.component";
+import { SettingsSecurityComponent } from "./settings/settings-security/settings-security.component";
 
 const appRoutes: Routes = [
   { path: "intro", component: IntroComponent },
@@ -146,6 +147,7 @@ const appRoutes: Routes = [
         MidiRoutingComponent,
         MidiMappingComponent,
         SettingsInfoComponent,
+        SettingsSecurityComponent,
         LeadSheetComponent,
         EditorCompositionLeadSheetComponent,
         SettingsBandComponent,

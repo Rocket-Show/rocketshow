@@ -93,7 +93,6 @@ export class AppComponent implements OnInit {
             this.navigateIntro();
           } else if (e.url === "/intro") {
             // Not logged in but password is already configured -> move away from the intro
-            console.log('aaaa');
             this.navigatePlay();
           }
         });

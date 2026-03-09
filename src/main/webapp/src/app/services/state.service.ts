@@ -34,6 +34,9 @@ export class StateService {
     this.authService.state.subscribe((state) => {
       if (state.authenticated) {
         this.init()
+      } else {
+        this.websocket?.close(true);
+        this.websocket = null;
       }
     });
   }

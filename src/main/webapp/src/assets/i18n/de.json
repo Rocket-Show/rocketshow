@@ -282,7 +282,9 @@
     "external-control": {
       "title": "Externe Steuerung",
       "bcm-pin-id": "BCM Pin ID"
-    }
+    },
+    "security": "Sicherheit",
+    "logout": "Ausloggen"
   },
   "action": {
     "action": "Aktion",

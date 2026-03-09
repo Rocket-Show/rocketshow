@@ -3,183 +3,104 @@
     <div class="col">
       <div class="card border-secondary">
         @if (loading) {
-          <div class="card-body d-flex m-auto">
-            <i class="fa fa-spinner fa-pulse fa-2x fa-fw"></i>
-          </div>
+        <div class="card-body d-flex m-auto">
+          <i class="fa fa-spinner fa-pulse fa-2x fa-fw"></i>
+        </div>
         }
 
         @if (!loading) {
-          <div class="card-body">
-            <div class="row">
-              <div class="col-md-3 mb-3">
-                <div
-                  class="nav flex-column nav-pills"
-                  id="v-pills-tab"
-                  role="tablist"
-                  >
-                  <a
-                    class="nav-link active"
-                    data-toggle="pill"
-                    href="#system"
-                    role="tab"
-                    >{{ "settings.system" | translate }}</a
-                    >
-                    <a
-                      class="nav-link"
-                      data-toggle="pill"
-                      href="#personal"
-                      role="tab"
-                      >{{ "settings.personal" | translate }}</a
-                      >
-                      <a
-                        class="nav-link"
-                        data-toggle="pill"
-                        href="#network"
-                        role="tab"
-                        >{{ "settings.network" | translate }}</a
-                        >
-                        <a
-                          class="nav-link"
-                          data-toggle="pill"
-                          href="#midi"
-                          role="tab"
-                          >{{ "settings.midi" | translate }}</a
-                          >
-                          <a
-                            class="nav-link"
-                            data-toggle="pill"
-                            href="#audio"
-                            role="tab"
-                            >{{ "settings.audio" | translate }}</a
-                            >
-                            <a
-                              class="nav-link"
-                              data-toggle="pill"
-                              href="#video"
-                              role="tab"
-                              >{{ "settings.video" | translate }}</a
-                              >
-                              <a
-                                class="nav-link"
-                                data-toggle="pill"
-                                href="#lighting"
-                                role="tab"
-                                >{{ "settings.lighting" | translate }}</a
-                                >
-                                <a
-                                  class="nav-link"
-                                  data-toggle="pill"
-                                  href="#external-control"
-                                  role="tab"
-                                  >{{ "settings.external-control.title" | translate }}</a
-                                  >
-                                  <a
-                                    class="nav-link"
-                                    data-toggle="pill"
-                                    href="#band"
-                                    role="tab"
-                                    >{{ "settings.band" | translate }}</a
-                                    >
-                                    <a
-                                      class="nav-link"
-                                      data-toggle="pill"
-                                      href="#advanced"
-                                      role="tab"
-                                      >{{ "settings.advanced" | translate }}</a
-                                      >
-                                      <a
-                                        class="nav-link"
-                                        data-toggle="pill"
-                                        href="#info"
-                                        role="tab"
-                                        >{{ "settings.info" | translate }}</a
-                                        >
-                                      </div>
-                                    </div>
-                                    <div class="col-md-9">
-                                      <div class="card border-secondary">
-                                        <div class="card-body pb-0">
-                                          <div class="tab-content" id="v-pills-tabContent">
-                                            <div
-                                              class="tab-pane show active"
-                                              id="system"
-                                              role="tabpanel"
-                                              >
-                                              <app-settings-system></app-settings-system>
-                                            </div>
-                                            <div class="tab-pane" id="personal" role="tabpanel">
-                                              <app-settings-personal></app-settings-personal>
-                                            </div>
-                                            <div class="tab-pane" id="network" role="tabpanel">
-                                              <app-settings-network></app-settings-network>
-                                            </div>
-                                            <div class="tab-pane" id="midi" role="tabpanel">
-                                              <app-settings-midi></app-settings-midi>
-                                            </div>
-                                            <div class="tab-pane" id="audio" role="tabpanel">
-                                              <app-settings-audio></app-settings-audio>
-                                            </div>
-                                            <div class="tab-pane" id="video" role="tabpanel">
-                                              <app-settings-video></app-settings-video>
-                                            </div>
-                                            <div class="tab-pane" id="lighting" role="tabpanel">
-                                              <app-settings-lighting></app-settings-lighting>
-                                            </div>
-                                            <div class="tab-pane" id="external-control" role="tabpanel">
-                                              <app-settings-external-control></app-settings-external-control>
-                                            </div>
-                                            <div class="tab-pane" id="band" role="tabpanel">
-                                              <app-settings-band></app-settings-band>
-                                            </div>
-                                            <div class="tab-pane" id="advanced" role="tabpanel">
-                                              <app-settings-advanced></app-settings-advanced>
-                                            </div>
-                                            <div class="tab-pane" id="info" role="tabpanel">
-                                              <app-settings-info></app-settings-info>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div class="row mt-3">
-                                    <div class="col">
-                                      <div class="d-flex float-right">
-                                        <a
-                                          class="mr-3 my-auto"
-                                          href="#"
-                                          role="button"
-                                          (click)="discard(); (false)"
-                                          >
-                                          {{ "misc.discard" | translate }}
-                                        </a>
-                                        <button
-                                          type="button"
-                                          class="btn btn-primary"
-                                          (click)="save(currentComposition); (false)"
-                                          [disabled]="savingSettings"
-                                          role="button"
-                                          >
-                                          @if (savingSettings) {
-                                            <i
-                                              class="fa fa-spinner fa-pulse fa-fw"
-                                              aria-hidden="true"
-                                            ></i>
-                                          }
-                                          @if (!savingSettings) {
-                                            <i
-                                              class="fa fa-floppy-o fa-fw"
-                                              aria-hidden="true"
-                                            ></i>
-                                          }
-                                          {{ "misc.save" | translate }}
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              }
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-3 mb-3">
+              <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist">
+                <a class="nav-link active" data-toggle="pill" href="#system" role="tab">{{ "settings.system" | translate
+                  }}</a>
+                <a class="nav-link" data-toggle="pill" href="#personal" role="tab">{{ "settings.personal" | translate
+                  }}</a>
+                <a class="nav-link" data-toggle="pill" href="#network" role="tab">{{ "settings.network" | translate
+                  }}</a>
+                <a class="nav-link" data-toggle="pill" href="#midi" role="tab">{{ "settings.midi" | translate }}</a>
+                <a class="nav-link" data-toggle="pill" href="#audio" role="tab">{{ "settings.audio" | translate }}</a>
+                <a class="nav-link" data-toggle="pill" href="#video" role="tab">{{ "settings.video" | translate }}</a>
+                <a class="nav-link" data-toggle="pill" href="#lighting" role="tab">{{ "settings.lighting" | translate
+                  }}</a>
+                <a class="nav-link" data-toggle="pill" href="#external-control" role="tab">{{
+                  "settings.external-control.title" | translate }}</a>
+                <a class="nav-link" data-toggle="pill" href="#band" role="tab">{{ "settings.band" | translate }}</a>
+                <a class="nav-link" data-toggle="pill" href="#advanced" role="tab">{{ "settings.advanced" | translate
+                  }}</a>
+                <a class="nav-link" data-toggle="pill" href="#security" role="tab">{{ "settings.security" | translate
+                  }}</a>
+                <a class="nav-link" data-toggle="pill" href="#info" role="tab">{{ "settings.info" | translate }}</a>
+              </div>
+            </div>
+            <div class="col-md-9">
+              <div class="card border-secondary">
+                <div class="card-body pb-0">
+                  <div class="tab-content" id="v-pills-tabContent">
+                    <div class="tab-pane show active" id="system" role="tabpanel">
+                      <app-settings-system></app-settings-system>
+                    </div>
+                    <div class="tab-pane" id="personal" role="tabpanel">
+                      <app-settings-personal></app-settings-personal>
+                    </div>
+                    <div class="tab-pane" id="network" role="tabpanel">
+                      <app-settings-network></app-settings-network>
+                    </div>
+                    <div class="tab-pane" id="midi" role="tabpanel">
+                      <app-settings-midi></app-settings-midi>
+                    </div>
+                    <div class="tab-pane" id="audio" role="tabpanel">
+                      <app-settings-audio></app-settings-audio>
+                    </div>
+                    <div class="tab-pane" id="video" role="tabpanel">
+                      <app-settings-video></app-settings-video>
+                    </div>
+                    <div class="tab-pane" id="lighting" role="tabpanel">
+                      <app-settings-lighting></app-settings-lighting>
+                    </div>
+                    <div class="tab-pane" id="external-control" role="tabpanel">
+                      <app-settings-external-control></app-settings-external-control>
+                    </div>
+                    <div class="tab-pane" id="band" role="tabpanel">
+                      <app-settings-band></app-settings-band>
+                    </div>
+                    <div class="tab-pane" id="advanced" role="tabpanel">
+                      <app-settings-advanced></app-settings-advanced>
+                    </div>
+                    <div class="tab-pane" id="security" role="tabpanel">
+                      <app-settings-security></app-settings-security>
+                    </div>
+                    <div class="tab-pane" id="info" role="tabpanel">
+                      <app-settings-info></app-settings-info>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row mt-3">
+            <div class="col">
+              <div class="d-flex float-right">
+                <a class="mr-3 my-auto" href="#" role="button" (click)="discard(); (false)">
+                  {{ "misc.discard" | translate }}
+                </a>
+                <button type="button" class="btn btn-primary" (click)="save(currentComposition); (false)"
+                  [disabled]="savingSettings" role="button">
+                  @if (savingSettings) {
+                  <i class="fa fa-spinner fa-pulse fa-fw" aria-hidden="true"></i>
+                  }
+                  @if (!savingSettings) {
+                  <i class="fa fa-floppy-o fa-fw" aria-hidden="true"></i>
+                  }
+                  {{ "misc.save" | translate }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

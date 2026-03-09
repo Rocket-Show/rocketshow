@@ -28,6 +28,9 @@ export class LoginComponent {
     this.authService.login(this.password).subscribe({
       next: () => {
         this.authService.init().subscribe();
+        this.loading = false;
+        this.password = null;
+        this.pwWrong = false;
       },
       error: (err) => {
         this.loading = false;

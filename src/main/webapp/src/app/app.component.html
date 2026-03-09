@@ -4,7 +4,7 @@
 }
 
 <!-- Connectivity indicator -->
-@if (loaded) {
+@if (loaded && authService.currentState?.authenticated) {
 <app-connection></app-connection>
 }
 
@@ -32,7 +32,7 @@
 }
 
 <!-- Navigation -->
-@if (loaded && !isIntro) {
+@if (loaded && !isIntro && authService.currentState?.authenticated) {
 <nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light border-secondary"
   style="border-bottom: 1px solid #444">
   <!-- Branding/Back button-->
@@ -96,6 +96,6 @@
 }
 
 <!-- Main content -->
-@if (loaded || isIntro) {
+@if ((loaded || isIntro) && authService.currentState?.authenticated) {
 <router-outlet></router-outlet>
 }
