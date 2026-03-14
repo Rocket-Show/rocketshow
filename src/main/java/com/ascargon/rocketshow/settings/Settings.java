@@ -147,8 +147,7 @@ public class Settings {
     @JsonIgnore
     private String adminPasswordHash;
 
-    @JsonIgnore
-    private List<ApiKeyHash> apiKeyHashHashList = new ArrayList<>();
+    private List<ApiKey> apiKeyList = new ArrayList<>();
 
     @XmlElement(name = "remoteDevice")
     @XmlElementWrapper(name = "remoteDeviceList")
@@ -207,8 +206,8 @@ public class Settings {
 
     @XmlElement(name = "apiKey")
     @XmlElementWrapper(name = "apiKeyList")
-    public List<ApiKeyHash> getApiKeyHashList() {
-        return apiKeyHashHashList;
+    public List<ApiKey> getApiKeyList() {
+        return apiKeyList;
     }
 
 

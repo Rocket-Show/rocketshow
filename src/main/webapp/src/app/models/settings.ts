@@ -9,6 +9,7 @@ import { OlaPlugin } from "./ola-plugin";
 import { ActionTriggerMidi } from "./action-trigger-midi";
 import { ActionTriggerMidiNoteOn } from "./action-trigger-midi-note-on";
 import { ActionTriggerMidiProgramChange } from "./action-trigger-midi-program-change";
+import { ApiKey } from "./api-key";
 
 export class Settings {
   version: number;
@@ -53,6 +54,7 @@ export class Settings {
   designerLivePreview: boolean;
   updateTestBranch: boolean;
   readyToUseVersion: number;
+  apiKeyList: ApiKey[] = [];
 
   constructor(data?: any) {
     if (!data) {
@@ -179,6 +181,14 @@ export class Settings {
     this.designerLivePreview = data.designerLivePreview;
     this.updateTestBranch = data.updateTestBranch;
     this.readyToUseVersion = data.readyToUseVersion;
+
+    if (data.apiKeyList) {
+      this.apiKeyList = [];
+
+      for (let apiKey of data.apiKeyList) {
+        this.apiKeyList.push(new ApiKey(apiKey));
+      }
+    }
   }
 
   public static createActionTriggerMidi(

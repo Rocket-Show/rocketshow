@@ -284,6 +284,12 @@
       "bcm-pin-id": "BCM Pin ID"
     },
     "security": "Sicherheit",
+    "session": "Sitzung",
+    "password": "Passwort",
+    "change": "Ändern",
+    "api-keys": "API Schlüssel",
+    "api-key-description": "Beschreibung",
+    "add-api-key": "API Schlüssel hinzufügen",
     "logout": "Ausloggen"
   },
   "action": {

@@ -44,7 +44,7 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        var hashes = settingsService.getSettings().getApiKeyHashList(); // List<String>
+        var hashes = settingsService.getSettings().getApiKeyList(); // List<String>
         boolean match = false;
 
         for (var entry : hashes) { // e.g. List<DeviceKey {id, hash}>

@@ -58,7 +58,12 @@ public class SecurityConfig {
 //                        .requestMatchers("/api/device/**").hasRole("DEVICE")
 
                                 // admin-only
-//                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                                .requestMatchers("/api/auth/**").hasRole("ADMIN")
+                                .requestMatchers("/api/session/**").hasRole("ADMIN")
+                                .requestMatchers("/api/lead-sheet/**").hasRole("ADMIN")
+                                .requestMatchers("/api/lead-sheet/**").hasRole("ADMIN")
+                                .requestMatchers("/api/system/settings").hasRole("ADMIN")
+                                .requestMatchers("/api/system/factory-reset").hasRole("ADMIN")
 
                                 // everything else under /api requires authenticated access
                                 .requestMatchers("/api/**").authenticated()

@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.settings;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,9 +13,14 @@ import lombok.Setter;
 @XmlRootElement
 @Getter
 @Setter
-public class ApiKeyHash {
+public class ApiKey {
 
+    private String uuid;
+    private String key;
+
+    @JsonIgnore
     private String keyHash;
+
     private String description;
 
 }

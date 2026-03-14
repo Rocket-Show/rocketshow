@@ -45,9 +45,13 @@ public class DefaultUpdateService implements UpdateService {
     public VersionInfo getCurrentVersionInfo() throws Exception {
         File file = new File(settingsService.getSettings().getBasePath() + File.separator + CURRENT_VERSION);
 
-        JAXBContext jaxbContext = JAXBContext.newInstance(VersionInfo.class);
+        if (!file.exists()) {
+            return new VersionInfo(); // return empty object if file does not exist
+        }
 
+        JAXBContext jaxbContext = JAXBContext.newInstance(VersionInfo.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+
         return (VersionInfo) jaxbUnmarshaller.unmarshal(file);
     }
 

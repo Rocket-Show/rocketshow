@@ -3,6 +3,7 @@ package com.ascargon.rocketshow.api;
 import com.ascargon.rocketshow.lighting.OlaPlugin;
 import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.session.SessionService;
+import com.ascargon.rocketshow.settings.ApiKey;
 import com.ascargon.rocketshow.settings.Settings;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.composition.CompositionService;
@@ -19,6 +20,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,6 +34,8 @@ import java.util.List;
 class SystemController {
 
     private final static Logger logger = LoggerFactory.getLogger(SystemController.class);
+
+    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     private final ControllerService controllerService;
     private final StateService stateService;
@@ -142,6 +146,23 @@ class SystemController {
 
     @PostMapping("settings")
     public ResponseEntity<Void> saveSettings(@RequestBody Settings settings) throws JAXBException {
+        // Process API keys
+        for (ApiKey apiKey : settings.getApiKeyList()) {
+            if (apiKey.getKey() != null && !apiKey.getKey().isEmpty()) {
+                // New key: Hash it
+                apiKey.setKeyHash(encoder.encode(apiKey.getKey()));
+                apiKey.setKey(null);
+            } else {
+                // Existing key: Keep the old hash (not loaded to the frontend)
+                for (ApiKey existingApiKey : settingsService.getSettings().getApiKeyList()) {
+                    if (existingApiKey.getUuid().equals(apiKey.getUuid())) {
+                        apiKey.setKeyHash(existingApiKey.getKeyHash());
+                        break;
+                    }
+                }
+            }
+        }
+
         settingsService.setSettings(settings);
         settingsService.save();
         settingsUpdateSystem();

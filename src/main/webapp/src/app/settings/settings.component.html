@@ -15,7 +15,7 @@
               <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist">
                 <a class="nav-link active" data-toggle="pill" href="#system" role="tab">{{ "settings.system" | translate
                   }}</a>
-                <a class="nav-link" data-toggle="pill" href="#personal" role="tab">{{ "settings.personal" | translate
+                <a class="nav-link" data-toggle="pill" href="#security" role="tab">{{ "settings.security" | translate
                   }}</a>
                 <a class="nav-link" data-toggle="pill" href="#network" role="tab">{{ "settings.network" | translate
                   }}</a>
@@ -27,9 +27,9 @@
                 <a class="nav-link" data-toggle="pill" href="#external-control" role="tab">{{
                   "settings.external-control.title" | translate }}</a>
                 <a class="nav-link" data-toggle="pill" href="#band" role="tab">{{ "settings.band" | translate }}</a>
-                <a class="nav-link" data-toggle="pill" href="#advanced" role="tab">{{ "settings.advanced" | translate
+                <a class="nav-link" data-toggle="pill" href="#personal" role="tab">{{ "settings.personal" | translate
                   }}</a>
-                <a class="nav-link" data-toggle="pill" href="#security" role="tab">{{ "settings.security" | translate
+                <a class="nav-link" data-toggle="pill" href="#advanced" role="tab">{{ "settings.advanced" | translate
                   }}</a>
                 <a class="nav-link" data-toggle="pill" href="#info" role="tab">{{ "settings.info" | translate }}</a>
               </div>
@@ -41,8 +41,8 @@
                     <div class="tab-pane show active" id="system" role="tabpanel">
                       <app-settings-system></app-settings-system>
                     </div>
-                    <div class="tab-pane" id="personal" role="tabpanel">
-                      <app-settings-personal></app-settings-personal>
+                    <div class="tab-pane" id="security" role="tabpanel">
+                      <app-settings-security></app-settings-security>
                     </div>
                     <div class="tab-pane" id="network" role="tabpanel">
                       <app-settings-network></app-settings-network>
@@ -65,11 +65,11 @@
                     <div class="tab-pane" id="band" role="tabpanel">
                       <app-settings-band></app-settings-band>
                     </div>
+                    <div class="tab-pane" id="personal" role="tabpanel">
+                      <app-settings-personal></app-settings-personal>
+                    </div>
                     <div class="tab-pane" id="advanced" role="tabpanel">
                       <app-settings-advanced></app-settings-advanced>
-                    </div>
-                    <div class="tab-pane" id="security" role="tabpanel">
-                      <app-settings-security></app-settings-security>
                     </div>
                     <div class="tab-pane" id="info" role="tabpanel">
                       <app-settings-info></app-settings-info>
