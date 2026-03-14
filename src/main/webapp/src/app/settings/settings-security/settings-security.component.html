@@ -17,12 +17,12 @@
         <div class="list-group" [sortablejs]="settings?.apiKeyList" [sortablejsOptions]="{ onMove: sortMove }">
             @for (apiKey of settings?.apiKeyList; track apiKey; let i = $index) {
             <div class="list-group-item">
-                <div class="form-group row">
-                    <div class="col-md-8">
+                <div class="form-group row mb-0">
+                    <div class="col-11">
                         <input type="text" class="form-control" [(ngModel)]="apiKey.description" id="description"
                             placeholder="{{ 'settings.api-key-description' | translate }}">
                     </div>
-                    <div class="col">
+                    <div class="col-1">
                         <a class="text-danger" href="#" role="button" (click)="deleteApiKey(i); false">
                             <i class="fa fa-trash-o" aria-hidden="true"></i>
                         </a>

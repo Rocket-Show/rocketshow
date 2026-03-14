@@ -89,6 +89,8 @@ import { ActionMidiComponent } from "./action/action-midi/action-midi.component"
 import { LoginComponent } from "./login/login.component";
 import { ParticleBackgroundComponent } from "./particle-background/particle-background.component";
 import { SettingsSecurityComponent } from "./settings/settings-security/settings-security.component";
+import { ChangePasswordDialogComponent } from './settings/change-password-dialog/change-password-dialog.component';
+import { NewApiKeyDialogComponent } from "./settings/new-api-key-dialog/new-api-key-dialog.component";
 
 const appRoutes: Routes = [
   { path: "intro", component: IntroComponent },
@@ -171,6 +173,8 @@ const appRoutes: Routes = [
         ActionHttpComponent,
         ActionLightingComponent,
         ActionMidiComponent,
+        ChangePasswordDialogComponent,
+        NewApiKeyDialogComponent,
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
         RouterModule.forRoot(appRoutes, { enableTracing: false, useHash: true }),

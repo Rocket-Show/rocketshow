@@ -4,6 +4,9 @@ import { SettingsService } from '../../services/settings.service';
 import { Settings } from '../../models/settings';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { BsModalService } from 'ngx-bootstrap/modal';
+import { NewApiKeyDialogComponent } from '../new-api-key-dialog/new-api-key-dialog.component';
+import { ChangePasswordDialogComponent } from '../change-password-dialog/change-password-dialog.component';
 
 @Component({
   selector: 'app-settings-security',
@@ -18,7 +21,8 @@ export class SettingsSecurityComponent implements OnInit, OnDestroy {
 
   constructor(
     public authService: AuthService,
-    private settingsService: SettingsService
+    private settingsService: SettingsService,
+    private modalService: BsModalService
   ) {
 
   }
@@ -51,11 +55,30 @@ export class SettingsSecurityComponent implements OnInit, OnDestroy {
   }
 
   public changePassword() {
+    let changePasswordDialog = this.modalService.show(ChangePasswordDialogComponent, {
+      keyboard: false,
+      ignoreBackdropClick: true,
+      class: "",
+    });
+
     // TODO
   }
 
   public addApiKey() {
-    // TODO
+    let newApiKeyDialog = this.modalService.show(NewApiKeyDialogComponent, {
+      keyboard: false,
+      ignoreBackdropClick: true,
+      class: "",
+    }).content;;
+
+    newApiKeyDialog.onClose.pipe(
+      map((result) => {
+        if (result === 1) {
+          // Add the new API key
+          this.settings.apiKeyList.push(newApiKeyDialog.apiKey);
+        }
+      })
+    );
   }
 
   // Prevent the last item in the file-list to be draggable.
