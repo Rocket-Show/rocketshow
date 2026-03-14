@@ -4,7 +4,7 @@ import { CompositionFile } from "./../../models/composition-file";
 import { EditorCompositionFileComponent } from "./editor-composition-file/editor-composition-file.component";
 import { Composition } from "./../../models/composition";
 import { CompositionService } from "./../../services/composition.service";
-import { ChangeDetectorRef, Component, OnInit } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
 import { BsModalService } from "ngx-bootstrap/modal";
 import { PendingChangesDialogService } from "../../services/pending-changes-dialog.service";
 import { Observable, Subscription, timer } from "rxjs";
@@ -18,7 +18,6 @@ import { Settings } from "../../models/settings";
 import { SettingsService } from "../../services/settings.service";
 import { ActionTriggerComposition } from "../../models/action-trigger-composition";
 import { EditorCompositionActionComponent } from "./editor-composition-action/editor-composition-action.component";
-import { ActionTrigger } from "../../models/action-trigger";
 
 @Component({
     selector: "app-editor-composition",

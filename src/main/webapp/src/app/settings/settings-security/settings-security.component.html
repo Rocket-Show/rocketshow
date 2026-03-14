@@ -19,8 +19,7 @@
             <div class="list-group-item">
                 <div class="form-group row mb-0">
                     <div class="col-11">
-                        <input type="text" class="form-control" [(ngModel)]="apiKey.description" id="description"
-                            placeholder="{{ 'settings.api-key-description' | translate }}">
+                        {{ apiKey.description }}
                     </div>
                     <div class="col-1">
                         <a class="text-danger" href="#" role="button" (click)="deleteApiKey(i); false">

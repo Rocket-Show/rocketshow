@@ -127,7 +127,7 @@ public class AuthController {
         try {
             settingsService.save();
         } catch (JAXBException e) {
-            logger.error("Could not save settings after setting up the admin password", e);
+            logger.error("Could not save settings after setup", e);
         }
 
         authenticateAdmin(httpRequest, httpResponse);
@@ -145,5 +145,34 @@ public class AuthController {
         SecurityContextHolder.clearContext();
         HttpSession session = request.getSession(false);
         if (session != null) session.invalidate();
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> ChangePassword(@RequestBody ChangePasswordRequest request,
+                                            HttpServletRequest httpRequest,
+                                            HttpServletResponse httpResponse) {
+        String oldPasswordHash = settingsService.getSettings().getAdminPasswordHash();
+
+        if (!passwordEncoder.matches(request.getOldPassword(), oldPasswordHash)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+
+        String newPasswordHash = passwordEncoder.encode(request.getNewPassword());
+        settingsService.getSettings().setAdminPasswordHash(newPasswordHash);
+
+        try {
+            settingsService.save();
+        } catch (JAXBException e) {
+            logger.error("Could not save settings after changing the admin password", e);
+        }
+
+        authenticateAdmin(httpRequest, httpResponse);
+
+        return ResponseEntity.ok(Map.of(
+                "authenticated", true,
+                "passwordConfigured", true,
+                "username", "admin",
+                "roles", List.of("ROLE_ADMIN")
+        ));
     }
 }

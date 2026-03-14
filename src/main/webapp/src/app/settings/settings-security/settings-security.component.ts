@@ -55,30 +55,30 @@ export class SettingsSecurityComponent implements OnInit, OnDestroy {
   }
 
   public changePassword() {
-    let changePasswordDialog = this.modalService.show(ChangePasswordDialogComponent, {
+    this.modalService.show(ChangePasswordDialogComponent, {
       keyboard: false,
       ignoreBackdropClick: true,
       class: "",
     });
-
-    // TODO
   }
 
   public addApiKey() {
     let newApiKeyDialog = this.modalService.show(NewApiKeyDialogComponent, {
       keyboard: false,
       ignoreBackdropClick: true,
-      class: "",
+      class: "modal-lg",
     }).content;;
 
-    newApiKeyDialog.onClose.pipe(
-      map((result) => {
-        if (result === 1) {
-          // Add the new API key
-          this.settings.apiKeyList.push(newApiKeyDialog.apiKey);
-        }
-      })
-    );
+    newApiKeyDialog.onClose.subscribe((result) => {
+      if (result === 1) {
+        // Add the new API key
+        this.settings.apiKeyList.push(newApiKeyDialog.apiKey);
+      }
+    })
+  }
+
+  public deleteApiKey(index: number) {
+    this.settings.apiKeyList.splice(index, 1);
   }
 
   // Prevent the last item in the file-list to be draggable.

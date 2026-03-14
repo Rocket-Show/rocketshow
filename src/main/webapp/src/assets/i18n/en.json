@@ -247,7 +247,7 @@
     "toast-discard-success-title": "Discarded",
     "toast-discard-success": "The settings have been discarded.",
     "toast-general-error-title": "Error",
-    "toast-general-error": "Whoops! An error occured. Please try again or contact the support.",
+    "toast-general-error": "An error occured. Please try again or contact the support.",
     "error-max-audio-channels-exceeded": "The current configuration is not valid: The selected audio device supports only {{ max }} channels, but {{ current }} channels have been specified. Please reduce the channel count.",
     "monitoring": "Monitoring",
     "monitoring-enable": "Enable",
@@ -290,7 +290,19 @@
     "api-keys": "API Keys",
     "api-key-description": "Description",
     "add-api-key": "Add API Key",
-    "logout": "Logout"
+    "logout": "Logout",
+    "new-api-key": {
+      "title": "New API Key",
+      "key": "API Key",
+      "warning": "Copy and save this API key. After closing this window, it will not be revealed anymore."
+    },
+    "change-pw": {
+      "title": "Change Password",
+      "old-pw": "Current Password",
+      "new-pw": "New Password",
+      "new-pw-repeat": "New Password (Repeat)",
+      "error": "An error occured. Please check the current password."
+    }
   },
   "action": {
     "action": "Action",

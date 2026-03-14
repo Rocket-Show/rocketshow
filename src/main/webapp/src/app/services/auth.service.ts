@@ -70,4 +70,12 @@ export class AuthService {
       }))
     );
   }
+
+  changePassword(oldPassword: string, newPassword: string) {
+    return this.http.post<AuthState>(
+      'auth/change-password',
+      { "oldPassword": oldPassword, "newPassword": newPassword },
+      { withCredentials: true }
+    );
+  }
 }

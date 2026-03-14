@@ -247,7 +247,7 @@
     "toast-discard-success-title": "Verworfen",
     "toast-discard-success": "Die Einstellungen wurden verworfen.",
     "toast-general-error-title": "Fehler",
-    "toast-general-error": "Huch! Ein Fehler ist aufgetreten. Bitte versuche es erneut oder wende dich an den Support.",
+    "toast-general-error": "Ein Fehler ist aufgetreten. Bitte versuche es erneut oder wende dich an den Support.",
     "error-max-audio-channels-exceeded": "Die aktuelle Konfiguration ist ungültig: Das ausgewählte Audio Gerät unterstützt maximal {{ max }} Kanäle, es wurden aber {{ current }} eingestellt. Bitte reduziere die Anzahl Kanäle.",
     "monitoring": "Monitoring",
     "monitoring-enable": "Aktivieren",
@@ -290,7 +290,19 @@
     "api-keys": "API Schlüssel",
     "api-key-description": "Beschreibung",
     "add-api-key": "API Schlüssel hinzufügen",
-    "logout": "Ausloggen"
+    "logout": "Ausloggen",
+    "new-api-key": {
+      "title": "Neuer API Schlüssel",
+      "key": "API Schlüssel",
+      "warning": "Kopiere und speichere diesen Schlüssel. Der Schlüssel wird nach dem Schliessen dieses Fensters nicht mehr angezeigt."
+    },
+    "change-pw": {
+      "title": "Passwort Ändern",
+      "old-pw": "Aktuelles Passwort",
+      "new-pw": "Neues Passwort",
+      "new-pw-repeat": "Neues Passwort (Wiederholung)",
+      "error": "Ein Fehler ist aufgetreten. Bitte überprüfe das aktuelle Passwort."
+    }
   },
   "action": {
     "action": "Aktion",

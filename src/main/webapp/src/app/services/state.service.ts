@@ -37,7 +37,9 @@ export class StateService {
       } else {
         this.websocket?.close(true);
         this.websocket = null;
-        this.reconnectSubscription.unsubscribe();
+        if (this.reconnectSubscription) {
+          this.reconnectSubscription.unsubscribe();
+        }
       }
     });
   }
