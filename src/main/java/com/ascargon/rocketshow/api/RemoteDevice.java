@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.midi.MidiSignal;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,6 +32,7 @@ public class RemoteDevice {
 
     private final static Logger logger = LoggerFactory.getLogger(RemoteDevice.class);
 
+    @JsonIgnore
     private final HttpClient httpClient;
 
     // The name of the remote device
@@ -126,14 +128,6 @@ public class RemoteDevice {
 
     public void togglePlay() {
         doPost("transport/toggle-play");
-    }
-
-    public void setNextComposition() {
-        doPost("transport/next-composition");
-    }
-
-    public void setPreviousComposition() {
-        doPost("transport/previous-composition");
     }
 
     public void setCompositionName(String compositionName) {
