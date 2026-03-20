@@ -18,6 +18,8 @@ import java.util.List;
 
 @Component
 public class ApiKeyAuthFilter extends OncePerRequestFilter {
+    public final static String API_KEY_HEADER_NAME = "X-API-Key";
+
     private final SettingsService settingsService;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
@@ -29,7 +31,7 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws IOException, ServletException {
 
-        String apiKey = request.getHeader("X-API-Key");
+        String apiKey = request.getHeader(API_KEY_HEADER_NAME);
 
         // No API key -> let session-based auth or anonymous continue
         if (apiKey == null || apiKey.isBlank()) {

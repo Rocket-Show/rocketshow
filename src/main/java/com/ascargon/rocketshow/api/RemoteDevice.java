@@ -55,6 +55,8 @@ public class RemoteDevice {
     private void executeRequest(String url, Object payload) {
         try {
             HttpPost httpPost = new HttpPost(url);
+            httpPost.addHeader(ApiKeyAuthFilter.API_KEY_HEADER_NAME, apiKey);
+
             HttpResponse response;
 
             if (payload != null) {
@@ -65,13 +67,13 @@ public class RemoteDevice {
 
             response = httpClient.execute(httpPost);
 
-            logger.debug("Response from remote device POST: " + EntityUtils.toString(response.getEntity()));
+            logger.debug("Response from remote device POST: {}", EntityUtils.toString(response.getEntity()));
 
             if (response.getStatusLine().getStatusCode() != 200) {
-                logger.error("Could not executeFromTrigger action on remote device with URL '" + url + "'. Reason: '" + response.getStatusLine().getReasonPhrase() + "'. Body: " + EntityUtils.toString(response.getEntity()));
+                logger.error("Could not executeFromTrigger action on remote device with URL '{}'. Reason: '{}'. Body: {}", url, response.getStatusLine().getReasonPhrase(), EntityUtils.toString(response.getEntity()));
             }
         } catch (Exception e) {
-            logger.error("Could not executeFromTrigger action on remote device '" + name + "' with url '" + url + "'", e);
+            logger.error("Could not executeFromTrigger action on remote device '{}' with url '{}'", name, url, e);
         }
     }
 

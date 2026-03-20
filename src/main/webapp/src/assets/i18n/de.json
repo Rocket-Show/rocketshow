@@ -167,6 +167,7 @@
     "remote-device-name-placeholder": "Mein entferntes Gerät",
     "remote-device-host": "Host",
     "remote-device-synchronize": "Synchronisieren",
+    "remote-device-api-key": "API Schlüssel",
     "video-resolution": "Auflösung",
     "video-resolution-not-set": "Nicht ausgewählt",
     "video-resolution-custom": "Benutzerdefiniert",
