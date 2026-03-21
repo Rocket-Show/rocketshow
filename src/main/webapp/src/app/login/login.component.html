@@ -21,6 +21,9 @@
                             <div *ngIf="pwWrong" class="alert alert-danger mt-3 mb-0">
                                 {{ 'login.error-pw-wrong' | translate }}
                             </div>
+                            <div *ngIf="generalError" class="alert alert-danger mt-3 mb-0">
+                                {{ generalErrorMessage }}
+                            </div>
                         </div>
                         <div class="card-footer text-muted">
                             <button type="submit" [disabled]="loading" ] class="btn btn-primary w-100" role="button">
