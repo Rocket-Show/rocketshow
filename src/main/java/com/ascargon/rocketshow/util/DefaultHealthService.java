@@ -16,20 +16,27 @@ public class DefaultHealthService implements HealthService {
     public HealthStatus getHealthStatus() {
         HealthStatus healthStatus = new HealthStatus();
 
-        // TODO called by spring actuator?
-        // TODO execute actions over HTTP localhost
-        // TODO play the default composition and check for errors
+        // TODO allow without security when setup is not yet finished (no admin pw yet). Afterwards, role ADMIN is required
+
+        // TODO show serial, SKU or whether no data is available
         // TODO check for updates and warn, if no internet connection
         // TODO gather system information (os version, disk space, memory, etc.)
         // TODO check for connected audio, HDMI, MIDI, DMX system (check healthiness of OLA)
         // TODO show GPIO input status
         // TODO show networking info (WIFI, Accesspoint and ethernet)
         // TODO check the logs for errors (rocketshow, OLA and syslogs)
-        // TODO periodically change GPIO output status (e.g. each 3 seconds)
-        // TODO secure reset button and check for status
         // TODO show connected USB devices
 
         return healthStatus;
+    }
+
+    @Override
+    public void testSystem() {
+        // TODO allow without security when setup is not yet finished (no admin pw yet). Afterwards, role ADMIN is required
+
+        // TODO execute actions over HTTP localhost
+        // TODO play the default composition and check for errors
+        // TODO periodically change GPIO output status (e.g. each 3 seconds)
     }
 
 }

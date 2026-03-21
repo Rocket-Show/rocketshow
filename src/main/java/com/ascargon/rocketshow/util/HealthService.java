@@ -7,4 +7,6 @@ public interface HealthService {
 
     HealthStatus getHealthStatus();
 
+    void testSystem();
+
 }

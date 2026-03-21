@@ -1,6 +1,5 @@
 package com.ascargon.rocketshow.util;
 
-import com.ascargon.rocketshow.settings.SettingsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -13,16 +12,16 @@ public class DefaultWatchdogService implements WatchdogService {
 
     private final HealthService healthService;
     private final RebootService rebootService;
-    private final SettingsService settingsService;
+    private final DeviceInformationService deviceInformationService;
     private final OperatingSystemInformationService operatingSystemInformationService;
 
-    public DefaultWatchdogService(HealthService healthService, RebootService rebootService, SettingsService settingsService, OperatingSystemInformationService operatingSystemInformationService) {
+    public DefaultWatchdogService(HealthService healthService, RebootService rebootService, DeviceInformationService deviceInformationService, OperatingSystemInformationService operatingSystemInformationService) {
         this.healthService = healthService;
         this.rebootService = rebootService;
-        this.settingsService = settingsService;
+        this.deviceInformationService = deviceInformationService;
         this.operatingSystemInformationService = operatingSystemInformationService;
 
-        if(!watchdogActive()) {
+        if (!watchdogActive()) {
             return;
         }
 
@@ -36,7 +35,7 @@ public class DefaultWatchdogService implements WatchdogService {
     }
 
     private boolean watchdogActive() {
-        if (settingsService.getSettings().getReadyToUseVersion() == null) {
+        if (deviceInformationService.getDeviceInformation().getModel() == null) {
             // Only run for the ready to use version
             return false;
         }
@@ -52,7 +51,7 @@ public class DefaultWatchdogService implements WatchdogService {
     @Override
     @Scheduled(fixedRateString = "${watchdog.interval:30000}")
     public void runWatchdog() {
-        if(!watchdogActive()) {
+        if (!watchdogActive()) {
             return;
         }
 

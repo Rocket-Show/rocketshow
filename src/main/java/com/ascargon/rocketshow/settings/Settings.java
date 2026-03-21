@@ -140,9 +140,6 @@ public class Settings {
 
     private List<Instrument> instrumentList = new ArrayList<>();
 
-    // Only filled, if it's a ready to use version
-    private Integer readyToUseVersion;
-
     // GUI admin user
     @JsonIgnore
     private String adminPasswordHash;

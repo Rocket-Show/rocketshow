@@ -10,6 +10,7 @@ import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
+import org.freedesktop.gstreamer.device.Device;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.system.ApplicationHome;
@@ -31,17 +32,20 @@ public class DefaultSettingsService implements SettingsService {
     private final OperatingSystemInformationService operatingSystemInformationService;
     private final MidiService midiService;
     private final FactoryResetService factoryResetService;
+    private final DeviceInformationService deviceInformationService;
 
     private Settings settings;
 
     public DefaultSettingsService(
             OperatingSystemInformationService operatingSystemInformationService,
             MidiService midiService,
-            FactoryResetService factoryResetService
+            FactoryResetService factoryResetService,
+            DeviceInformationService deviceInformationService
     ) {
         this.operatingSystemInformationService = operatingSystemInformationService;
         this.midiService = midiService;
         this.factoryResetService = factoryResetService;
+        this.deviceInformationService = deviceInformationService;
 
         directory = new ApplicationHome(RocketShowApplication.class).getDir().toString();
         if (isReadOnlyFileSystem()) {
@@ -68,7 +72,7 @@ public class DefaultSettingsService implements SettingsService {
     @Override
     public boolean isReadOnlyFileSystem() {
         // Check, whether Rocket Show runs on the A/B read only filesystem with writable data or not (true)
-        if (settings == null || settings.getReadyToUseVersion() == null) {
+        if (deviceInformationService.getDeviceInformation().getModel() == null) {
             return false;
         } else {
             return true;

@@ -44,31 +44,35 @@ public class SecurityConfig {
                 .addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class)
 
                 .authorizeHttpRequests(auth -> auth
-                                // public auth endpoints
-                                .requestMatchers("/", "/index.html", "/assets/**", "/*.js", "/*.css", "/*.ico").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/auth/me").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/auth/setup").permitAll()
+                        // Public endpoints
+                        .requestMatchers("/", "/index.html", "/assets/**", "/*.js", "/*.css", "/*.ico").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/auth/me").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
 
-                                // shared endpoints
-//                        .requestMatchers(HttpMethod.POST, "/api/transport/play").hasAnyRole("ADMIN", "DEVICE")
-//                        .requestMatchers(HttpMethod.GET, "/api/system/state").hasAnyRole("ADMIN", "DEVICE")
+                        .requestMatchers(HttpMethod.POST, "/api/auth/setup").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/system/device-information").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/system/device-information").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/system/health").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/system/test-system").permitAll()
 
-                                // device-only
-//                        .requestMatchers("/api/device/**").hasRole("DEVICE")
+                        // Shared endpoints
+                        // .requestMatchers(HttpMethod.POST, "/api/transport/play").hasAnyRole("ADMIN", "DEVICE")
 
-                                // admin-only
-                                .requestMatchers("/api/auth/**").hasRole("ADMIN")
-                                .requestMatchers("/api/session/**").hasRole("ADMIN")
-                                .requestMatchers("/api/lead-sheet/**").hasRole("ADMIN")
-                                .requestMatchers("/api/lead-sheet/**").hasRole("ADMIN")
-                                .requestMatchers("/api/system/settings").hasRole("ADMIN")
-                                .requestMatchers("/api/system/factory-reset").hasRole("ADMIN")
+                        // Device-only
+                        // .requestMatchers("/api/device/**").hasRole("DEVICE")
 
-                                // everything else under /api requires authenticated access
-                                .requestMatchers("/api/**").authenticated()
+                        // Admin-only
+                        .requestMatchers("/api/auth/**").hasRole("ADMIN")
+                        .requestMatchers("/api/session/**").hasRole("ADMIN")
+                        .requestMatchers("/api/lead-sheet/**").hasRole("ADMIN")
+                        .requestMatchers("/api/lead-sheet/**").hasRole("ADMIN")
+                        .requestMatchers("/api/system/settings").hasRole("ADMIN")
+                        .requestMatchers("/api/system/factory-reset").hasRole("ADMIN")
 
-                                .anyRequest().permitAll()
+                        // Everything else under /api requires authenticated access
+                        .requestMatchers("/api/**").authenticated()
+
+                        .anyRequest().permitAll()
                 )
 
                 .formLogin(form -> form.disable())

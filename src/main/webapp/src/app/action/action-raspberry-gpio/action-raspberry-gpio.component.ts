@@ -19,7 +19,7 @@ export class ActionRaspberryGpioComponent {
 
   constructor(
     private uuidService: UuidService,
-    private settingsService: SettingsService
+    private settingsService: SettingsService,
   ) {
     this.uuid = this.uuidService.getUuid();
 

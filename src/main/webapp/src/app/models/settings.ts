@@ -53,7 +53,6 @@ export class Settings {
   designerFrequencyHertz: number;
   designerLivePreview: boolean;
   updateTestBranch: boolean;
-  readyToUseVersion: number;
   apiKeyList: ApiKey[] = [];
 
   constructor(data?: any) {
@@ -180,7 +179,6 @@ export class Settings {
     this.designerFrequencyHertz = data.designerFrequencyHertz;
     this.designerLivePreview = data.designerLivePreview;
     this.updateTestBranch = data.updateTestBranch;
-    this.readyToUseVersion = data.readyToUseVersion;
 
     if (data.apiKeyList) {
       this.apiKeyList = [];

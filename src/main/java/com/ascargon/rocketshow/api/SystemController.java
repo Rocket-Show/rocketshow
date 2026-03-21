@@ -57,8 +57,33 @@ class SystemController {
     private final BackupService backupService;
     private final SettingsUpdateSystemService settingsUpdateSystemService;
     private final ActionExecutionService actionExecutionService;
+    private final DeviceInformationService deviceInformationService;
+    private final HealthService healthService;
 
-    public SystemController(ControllerService controllerService, StateService stateService, SetService setService, PlayerService playerService, RebootService rebootService, ShutdownService shutdownService, SettingsService settingsService, MidiDeviceInService midiDeviceInService, MidiDeviceOutService midiDeviceOutService, UpdateService updateService, FactoryResetService factoryResetService, LogDownloadService logDownloadService, DiskSpaceService diskSpaceService, OperatingSystemInformationService operatingSystemInformationService, SessionService sessionService, CompositionService compositionService, DesignerService designerService, BackupService backupService, SettingsUpdateSystemService settingsUpdateSystemService, ActionExecutionService actionExecutionService) {
+    public SystemController(
+            ControllerService controllerService,
+            StateService stateService,
+            SetService setService,
+            PlayerService playerService,
+            RebootService rebootService,
+            ShutdownService shutdownService,
+            SettingsService settingsService,
+            MidiDeviceInService midiDeviceInService,
+            MidiDeviceOutService midiDeviceOutService,
+            UpdateService updateService,
+            FactoryResetService factoryResetService,
+            LogDownloadService logDownloadService,
+            DiskSpaceService diskSpaceService,
+            OperatingSystemInformationService operatingSystemInformationService,
+            SessionService sessionService,
+            CompositionService compositionService,
+            DesignerService designerService,
+            BackupService backupService,
+            SettingsUpdateSystemService settingsUpdateSystemService,
+            ActionExecutionService actionExecutionService,
+            DeviceInformationService deviceInformationService,
+            HealthService healthService
+    ) {
         this.controllerService = controllerService;
         this.stateService = stateService;
         this.setService = setService;
@@ -79,6 +104,8 @@ class SystemController {
         this.backupService = backupService;
         this.settingsUpdateSystemService = settingsUpdateSystemService;
         this.actionExecutionService = actionExecutionService;
+        this.deviceInformationService = deviceInformationService;
+        this.healthService = healthService;
     }
 
     private void settingsUpdateSystem() {
@@ -236,6 +263,28 @@ class SystemController {
         action.setRemoteDeviceNames(new ArrayList<>());
 
         actionExecutionService.execute(action);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @GetMapping("device-information")
+    public DeviceInformation getDeviceInformation() throws Exception {
+        return deviceInformationService.getDeviceInformation();
+    }
+
+    @PostMapping("device-information")
+    public ResponseEntity<Void> storeDeviceInformation(@RequestBody DeviceInformation deviceInformation) throws Exception {
+        deviceInformationService.storeDeviceInformation(deviceInformation);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @GetMapping("health")
+    public HealthStatus getHealth() {
+        return healthService.getHealthStatus();
+    }
+
+    @PostMapping("test")
+    public ResponseEntity<Void> test() {
+        healthService.testSystem();
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
