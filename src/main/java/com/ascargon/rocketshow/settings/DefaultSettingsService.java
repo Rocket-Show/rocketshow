@@ -72,11 +72,7 @@ public class DefaultSettingsService implements SettingsService {
     @Override
     public boolean isReadOnlyFileSystem() {
         // Check, whether Rocket Show runs on the A/B read only filesystem with writable data or not (true)
-        if (deviceInformationService.getDeviceInformation().getModel() == null) {
-            return false;
-        } else {
-            return true;
-        }
+        return deviceInformationService.getDeviceInformation().isAvailable();
     }
 
     private MidiDevice getFirstMidiNonSerialDevice(MidiDirection midiDirection) throws MidiUnavailableException {

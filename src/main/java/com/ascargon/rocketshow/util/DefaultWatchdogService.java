@@ -35,7 +35,7 @@ public class DefaultWatchdogService implements WatchdogService {
     }
 
     private boolean watchdogActive() {
-        if (deviceInformationService.getDeviceInformation().getModel() == null) {
+        if (!deviceInformationService.getDeviceInformation().isAvailable()) {
             // Only run for the ready to use version
             return false;
         }

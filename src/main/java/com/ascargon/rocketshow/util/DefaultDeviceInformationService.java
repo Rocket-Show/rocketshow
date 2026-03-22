@@ -29,11 +29,13 @@ public class DefaultDeviceInformationService implements DeviceInformationService
         }
 
         DeviceInformation loadedDeviceInformation = new DeviceInformation();
+        deviceInformation = loadedDeviceInformation;
 
         if (!Files.exists(CFG_PATH)) {
-            deviceInformation = loadedDeviceInformation;
             return deviceInformation;
         }
+
+        deviceInformation.setAvailable(true);
 
         try {
             List<String> lines = Files.readAllLines(CFG_PATH, StandardCharsets.UTF_8);
@@ -73,8 +75,13 @@ public class DefaultDeviceInformationService implements DeviceInformationService
             logger.error("Failed to read device information from {}", CFG_PATH, e);
         }
 
-        deviceInformation = loadedDeviceInformation;
         return deviceInformation;
+    }
+
+    private static void append(StringBuilder sb, String key, String value) {
+        if (value != null) {
+            sb.append(key).append('=').append(value).append('\n');
+        }
     }
 
     @Override
@@ -118,12 +125,10 @@ public class DefaultDeviceInformationService implements DeviceInformationService
             dirChannel.force(true);
         }
 
+        // Clear read cache
+        deviceInformation = null;
+
         logger.info("Device information provisioned");
     }
 
-    private static void append(StringBuilder sb, String key, String value) {
-        if (value != null) {
-            sb.append(key).append('=').append(value).append('\n');
-        }
-    }
 }

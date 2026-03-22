@@ -8,6 +8,9 @@ import lombok.Setter;
 @Setter
 public class DeviceInformation {
 
+    // Whether device information is available (this is a ready to use version)
+    private boolean available = false;
+
     // Version of the config file
     private String fileVersion = "1.0";
 

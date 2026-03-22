@@ -201,6 +201,7 @@ RemainAfterExit=yes
 [Install]
 WantedBy=multi-user.target
 EOF
+systemctl daemon-reload
 systemctl enable rocketshow-iptables.service
 
 # Rocket Show app
@@ -228,6 +229,7 @@ RestartSec=2s
 [Install]
 WantedBy=multi-user.target
 EOF
+systemctl daemon-reload
 systemctl enable rocketshow.service
 
 # ---- FINISH ----
