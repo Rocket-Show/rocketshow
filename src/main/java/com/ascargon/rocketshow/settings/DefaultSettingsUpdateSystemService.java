@@ -3,13 +3,16 @@ package com.ascargon.rocketshow.settings;
 import com.ascargon.rocketshow.audio.AudioDevice;
 import com.ascargon.rocketshow.audio.AudioService;
 import com.ascargon.rocketshow.lighting.LightingService;
+import com.ascargon.rocketshow.util.DeviceInformationStoredEvent;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import com.ascargon.rocketshow.util.ShellManager;
+import jakarta.xml.bind.JAXBException;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -265,5 +268,19 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
         } catch (Exception e) {
             logger.error("Could not activate the OLA plugin", e);
         }
+    }
+
+    @EventListener
+    public void onDeviceInformationStored(DeviceInformationStoredEvent event) {
+        // Device information has been updated (once during provisioning)
+        // Update the settings accordingly
+        Settings settings = settingsService.getSettings();
+        settings.setWlanApCountryCode(event.deviceInformation().getCountry());
+        try {
+            settingsService.save();
+        } catch (JAXBException e) {
+            logger.error("Could not store settings after updating device information", e);
+        }
+        updateWlanAp(settings);
     }
 }

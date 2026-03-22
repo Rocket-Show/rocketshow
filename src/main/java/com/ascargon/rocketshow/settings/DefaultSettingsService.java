@@ -10,10 +10,10 @@ import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
-import org.freedesktop.gstreamer.device.Device;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.system.ApplicationHome;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.MidiUnavailableException;

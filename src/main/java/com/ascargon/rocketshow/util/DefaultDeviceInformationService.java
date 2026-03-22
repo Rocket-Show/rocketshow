@@ -2,6 +2,7 @@ package com.ascargon.rocketshow.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -20,7 +21,13 @@ public class DefaultDeviceInformationService implements DeviceInformationService
 
     private static final Path CFG_PATH = Path.of("/boot/firmware/device-information.conf");
 
+    private final ApplicationEventPublisher eventPublisher;
+
     private DeviceInformation deviceInformation;
+
+    public DefaultDeviceInformationService(ApplicationEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
+    }
 
     @Override
     public synchronized DeviceInformation getDeviceInformation() {
@@ -124,6 +131,9 @@ public class DefaultDeviceInformationService implements DeviceInformationService
         )) {
             dirChannel.force(true);
         }
+
+        // Update settings with country and reload wifi AP
+        eventPublisher.publishEvent(new DeviceInformationStoredEvent(toStore));
 
         // Clear read cache
         deviceInformation = null;
