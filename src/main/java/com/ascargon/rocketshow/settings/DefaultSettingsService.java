@@ -13,7 +13,6 @@ import jakarta.xml.bind.Unmarshaller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.system.ApplicationHome;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.MidiUnavailableException;
@@ -270,6 +269,12 @@ public class DefaultSettingsService implements SettingsService {
 
         if (settings.getDesignerLivePreview() == null) {
             settings.setDesignerLivePreview(true);
+        }
+
+        if (settings.getWlanApCountryCode() == null) {
+            if (deviceInformationService.getDeviceInformation().isAvailable()) {
+                settings.setWlanApCountryCode(deviceInformationService.getDeviceInformation().getCountry());
+            }
         }
     }
 

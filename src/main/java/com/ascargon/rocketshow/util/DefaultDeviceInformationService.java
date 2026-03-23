@@ -6,6 +6,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
@@ -95,13 +96,7 @@ public class DefaultDeviceInformationService implements DeviceInformationService
     public synchronized void storeDeviceInformation(DeviceInformation toStore) throws Exception {
         logger.info("Provision device information...");
 
-        if (Files.exists(CFG_PATH)) {
-            logger.error("Device information already provisioned");
-            throw new IllegalStateException("Device information already provisioned");
-        }
-
         if (toStore.getSerial() == null || toStore.getSerial().isEmpty()) {
-            logger.error("Serial is empty");
             throw new IllegalStateException("Serial is empty");
         }
 
@@ -113,31 +108,26 @@ public class DefaultDeviceInformationService implements DeviceInformationService
         append(sb, "HARDWARE_REVISION", toStore.getHardwareRevision());
         append(sb, "SKU", toStore.getSku());
 
-        // Secure write with sync
-        byte[] bytes = sb.toString().getBytes(StandardCharsets.UTF_8);
-        try (FileChannel channel = FileChannel.open(
-                CFG_PATH,
-                StandardOpenOption.CREATE_NEW,
-                StandardOpenOption.WRITE
-        )) {
-            channel.write(ByteBuffer.wrap(bytes));
-            channel.force(true); // <-- fsync: flush content + metadata
+        ProcessBuilder pb = new ProcessBuilder(
+                "sudo",
+                "/usr/local/bin/store-device-info",
+                CFG_PATH.toString()
+        );
+
+        Process p = pb.start();
+
+        try (OutputStream os = p.getOutputStream()) {
+            os.write(sb.toString().getBytes(StandardCharsets.UTF_8));
+            os.flush();
         }
 
-        // Also sync the parent
-        try (FileChannel dirChannel = FileChannel.open(
-                CFG_PATH.getParent(),
-                StandardOpenOption.READ
-        )) {
-            dirChannel.force(true);
+        int rc = p.waitFor();
+        if (rc != 0) {
+            String err = new String(p.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
+            throw new IllegalStateException("Root write failed: " + err);
         }
 
-        // Update settings with country and reload wifi AP
-        eventPublisher.publishEvent(new DeviceInformationStoredEvent(toStore));
-
-        // Clear read cache
         deviceInformation = null;
-
         logger.info("Device information provisioned");
     }
 
