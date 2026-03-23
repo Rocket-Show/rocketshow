@@ -92,11 +92,10 @@ wget https://rocketshow.net/designer/downloads/fixtures.zip
 unzip fixtures.zip -d fixtures
 rm fixtures.zip
 
-# Install wireless access point
+# Install wireless access point, but only enable from the java app (after setting the country)
 # https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
 echo "Install wireless access point"
 systemctl unmask hostapd
-systemctl enable hostapd
 systemctl stop dnsmasq
 systemctl stop hostapd
 
