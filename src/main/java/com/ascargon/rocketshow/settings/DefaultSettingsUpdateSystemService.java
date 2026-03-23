@@ -220,6 +220,13 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
             logger.error("Could not write /etc/hostapd/hostapd.conf", e);
         }
 
+        // Set the country in the raspberry settings
+        try {
+            new ShellManager(new String[]{"sudo", "raspi-config", "nonint", "do_wifi_country", settings.getWlanApCountryCode()});
+        } catch (IOException e) {
+            logger.error("Could not update wifi country '{}'", settings.getWlanApCountryCode(), e);
+        }
+
         // Activate/deactivate the access point completely
         if (settings.getWlanApEnable()) {
             statusCommand = "enable";
@@ -229,8 +236,11 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
 
         try {
             new ShellManager(new String[]{"sudo", "systemctl", statusCommand, "hostapd"});
+
+            // Restart, even if already started, to cater for updated configs
+            new ShellManager(new String[]{"sudo", "systemctl", "restart", "hostapd"});
         } catch (IOException e) {
-            logger.error("Could not update the access point status with '" + statusCommand + "'", e);
+            logger.error("Could not update the access point status with '{}'", statusCommand, e);
         }
     }
 
