@@ -5,12 +5,14 @@ import { Component, OnInit, OnDestroy } from "@angular/core";
 import { OperatingSystemInformationService } from "../../services/operating-system-information.service";
 import { map } from "rxjs/operators";
 import { Subscription } from "rxjs";
+import { DeviceInformationService } from "../../services/device-information.service";
+import { DeviceInformation } from "../../models/device-information";
 
 @Component({
-    selector: "app-settings-audio",
-    templateUrl: "./settings-audio.component.html",
-    styleUrls: ["./settings-audio.component.scss"],
-    standalone: false
+  selector: "app-settings-audio",
+  templateUrl: "./settings-audio.component.html",
+  styleUrls: ["./settings-audio.component.scss"],
+  standalone: false
 })
 export class SettingsAudioComponent implements OnInit, OnDestroy {
   selectUndefinedOptionValue: any;
@@ -18,6 +20,7 @@ export class SettingsAudioComponent implements OnInit, OnDestroy {
   private settingsChangedSubscription: Subscription;
 
   settings: Settings;
+  deviceInformation: DeviceInformation;
   audioDeviceList: AudioDevice[];
   audioOutputList: string[] = [];
   maxAudioChannels: number = 9999;
@@ -25,7 +28,8 @@ export class SettingsAudioComponent implements OnInit, OnDestroy {
 
   constructor(
     private settingsService: SettingsService,
-    private operatingSystemInformationService: OperatingSystemInformationService
+    private operatingSystemInformationService: OperatingSystemInformationService,
+    private deviceInformationService: DeviceInformationService,
   ) {
     this.operatingSystemInformationService
       .getOperatingSystemInformation()
@@ -43,6 +47,10 @@ export class SettingsAudioComponent implements OnInit, OnDestroy {
           this.audioOutputList.push("DEVICE");
         }
       });
+
+    this.deviceInformationService.getDeviceInformation().subscribe((deviceInformation) => {
+      this.deviceInformation = deviceInformation;
+    });
   }
 
   private loadSettings() {

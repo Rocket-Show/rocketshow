@@ -3,7 +3,7 @@
   {{ "settings.restart-required" | translate }}
 </div>
 
-@if (settings && !settings?.readyToUseVersion) {
+@if (settings && !deviceInformation?.available) {
   <div class="form-group row">
     <label class="col-lg-3 col-form-label">{{
       "settings.midi-device-in" | translate
@@ -33,7 +33,7 @@
 </div>
 }
 
-@if (settings && !settings?.readyToUseVersion) {
+@if (settings && !deviceInformation?.available) {
   <div class="form-group row">
     <label class="col-lg-3 col-form-label">{{
       "settings.midi-device-out" | translate

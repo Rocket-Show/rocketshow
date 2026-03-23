@@ -91,6 +91,7 @@ import { ParticleBackgroundComponent } from "./particle-background/particle-back
 import { SettingsSecurityComponent } from "./settings/settings-security/settings-security.component";
 import { ChangePasswordDialogComponent } from './settings/change-password-dialog/change-password-dialog.component';
 import { NewApiKeyDialogComponent } from "./settings/new-api-key-dialog/new-api-key-dialog.component";
+import { DeviceInformationService } from "./services/device-information.service";
 
 const appRoutes: Routes = [
   { path: "intro", component: IntroComponent },
@@ -222,6 +223,7 @@ const appRoutes: Routes = [
         WaitDialogService,
         InfoDialogService,
         ToastGeneralErrorService,
+        DeviceInformationService,
         provideHttpClient(withInterceptorsFromDi()),
     ] })
 export class AppModule {}

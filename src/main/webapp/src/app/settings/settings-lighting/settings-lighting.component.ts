@@ -6,6 +6,8 @@ import { Component, OnInit } from "@angular/core";
 import { map } from "rxjs/operators";
 import { WaitDialogService } from "../../services/wait-dialog.service";
 import { AuthService } from "../../services/auth.service";
+import { DeviceInformationService } from "../../services/device-information.service";
+import { DeviceInformation } from "../../models/device-information";
 
 @Component({
   selector: "app-settings-lighting",
@@ -15,6 +17,7 @@ import { AuthService } from "../../services/auth.service";
 })
 export class SettingsLightingComponent implements OnInit {
   settings: Settings;
+  deviceInformation: DeviceInformation;
   private allOlaPluginList: OlaPlugin[] = [];
   availableOlaPluginList: OlaPlugin[] = [];
   selectedOlaPlugin: OlaPlugin;
@@ -22,8 +25,13 @@ export class SettingsLightingComponent implements OnInit {
 
   constructor(
     private settingsService: SettingsService,
+    private deviceInformationService: DeviceInformationService,
     private authService: AuthService,
-  ) { }
+  ) {
+    this.deviceInformationService.getDeviceInformation().subscribe((deviceInformation) => {
+      this.deviceInformation = deviceInformation;
+    });
+  }
 
   private loadSettings() {
     if (!this.authService.currentState?.authenticated) {

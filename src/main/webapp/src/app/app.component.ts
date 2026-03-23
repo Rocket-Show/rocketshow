@@ -11,6 +11,8 @@ import { Settings } from "./models/settings";
 import { Title } from "@angular/platform-browser";
 import { OperatingSystemInformationService } from "./services/operating-system-information.service";
 import { AuthService } from "./services/auth.service";
+import { DeviceInformation } from "./models/device-information";
+import { DeviceInformationService } from "./services/device-information.service";
 
 @Component({
   selector: "body",
@@ -33,6 +35,7 @@ export class AppComponent implements OnInit {
     private compositionService: CompositionService,
     private sessionService: SessionService,
     private settingsService: SettingsService,
+    private deviceInformationService: DeviceInformationService,
     private titleService: Title,
     private leadSheetService: LeadSheetService,
     private operatingSystemInformationService: OperatingSystemInformationService,
@@ -111,16 +114,17 @@ export class AppComponent implements OnInit {
   }
 
   private loadInitialData() {
-    forkJoin(
-      this.stateService.getState(),
-      this.compositionService.getCompositions(),
-      this.compositionService.getSets(),
-      this.sessionService.getSession(),
-      this.settingsService.getSettings(),
-      this.operatingSystemInformationService.getOperatingSystemInformation()
-    ).subscribe((result) => {
+    forkJoin({
+      state: this.stateService.getState(),
+      compositions: this.compositionService.getCompositions(),
+      sets: this.compositionService.getSets(),
+      session: this.sessionService.getSession(),
+      settings: this.settingsService.getSettings(),
+      osInfo: this.operatingSystemInformationService.getOperatingSystemInformation(),
+      deviceInformation: this.deviceInformationService.getDeviceInformation(),
+    }).subscribe((result) => {
       this.loaded = true;
-      this.applySettings(result[4]);
+      this.applySettings(result.settings);
 
       // Set the correct language
       this.translateService.use(this.settings.language);

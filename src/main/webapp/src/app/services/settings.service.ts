@@ -3,15 +3,12 @@ import { AudioBus } from "./../models/audio-bus";
 import { TranslateService } from "@ngx-translate/core";
 import { AudioDevice } from "./../models/audio-device";
 import { MidiDevice } from "./../models/midi-device";
-import { Subject, Observable, of, merge } from "rxjs";
+import { Subject, Observable, of } from "rxjs";
 import { map } from "rxjs/operators";
 import { Settings } from "./../models/settings";
 import { Injectable } from "@angular/core";
 import { Language } from "../models/language";
 import { OlaPlugin } from "../models/ola-plugin";
-import { ActionTriggerMidi } from "../models/action-trigger-midi";
-import { ActionTriggerMidiNoteOn } from "../models/action-trigger-midi-note-on";
-import { ActionTriggerMidiProgramChange } from "../models/action-trigger-midi-program-change";
 import { RaspberryPiPin } from "../models/raspberry-pi-pin";
 
 @Injectable()

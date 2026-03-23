@@ -8,12 +8,14 @@ import { map } from "rxjs/operators";
 import { Subscription } from "rxjs";
 import { ActionTriggerMidi } from "../../models/action-trigger-midi";
 import { ActionTriggerMidiNoteOn } from "../../models/action-trigger-midi-note-on";
+import { DeviceInformationService } from "../../services/device-information.service";
+import { DeviceInformation } from "../../models/device-information";
 
 @Component({
-    selector: "app-settings-midi",
-    templateUrl: "./settings-midi.component.html",
-    styleUrls: ["./settings-midi.component.scss"],
-    standalone: false
+  selector: "app-settings-midi",
+  templateUrl: "./settings-midi.component.html",
+  styleUrls: ["./settings-midi.component.scss"],
+  standalone: false
 })
 export class SettingsMidiComponent implements OnInit, OnDestroy {
   private settingsChangedSubscription: Subscription;
@@ -21,6 +23,7 @@ export class SettingsMidiComponent implements OnInit, OnDestroy {
   selectUndefinedOptionValue: any;
 
   settings: Settings;
+  deviceInformation: DeviceInformation;
 
   midiInDevices: MidiDevice[];
   midiOutDevices: MidiDevice[];
@@ -29,6 +32,7 @@ export class SettingsMidiComponent implements OnInit, OnDestroy {
 
   constructor(
     private settingsService: SettingsService,
+    private deviceInformationService: DeviceInformationService,
     private compositionService: CompositionService
   ) {
     this.compositionService
@@ -36,6 +40,10 @@ export class SettingsMidiComponent implements OnInit, OnDestroy {
       .subscribe((compositions: Composition[]) => {
         this.compositions = compositions;
       });
+
+    this.deviceInformationService.getDeviceInformation().subscribe((deviceInformation) => {
+      this.deviceInformation = deviceInformation;
+    });
   }
 
   private loadSettings() {
