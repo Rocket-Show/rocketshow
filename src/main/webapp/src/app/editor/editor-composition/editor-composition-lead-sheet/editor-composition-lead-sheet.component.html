@@ -58,12 +58,12 @@
           <div class="tab-content mb-3" id="myTabContent">
             <!-- Upload -->
             <div class="tab-pane fade show active" id="upload" role="tabpanel">
-              <app-dropzone
+              <app-file-dropzone
                 [url]="'lead-sheet/upload'"
                 [acceptedFiles]="'image/*'"
                 (error)="onUploadError($event)"
                 (success)="onUploadSuccess($event)"
-              ></app-dropzone>
+              ></app-file-dropzone>
             </div>
 
             <!-- Library -->

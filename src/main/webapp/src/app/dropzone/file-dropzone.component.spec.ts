@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { DropzoneComponent } from './dropzone.component';
+import { FileDropzoneComponent } from './file-dropzone.component';
 
-describe('DropzoneComponent', () => {
-  let component: DropzoneComponent;
-  let fixture: ComponentFixture<DropzoneComponent>;
+describe('FileDropzoneComponent', () => {
+  let component: FileDropzoneComponent;
+  let fixture: ComponentFixture<FileDropzoneComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DropzoneComponent]
+      imports: [FileDropzoneComponent]
     })
     .compileComponents();
     
-    fixture = TestBed.createComponent(DropzoneComponent);
+    fixture = TestBed.createComponent(FileDropzoneComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

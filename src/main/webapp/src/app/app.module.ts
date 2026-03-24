@@ -5,7 +5,6 @@ import { RouterModule, Routes } from "@angular/router";
 import { HttpClient, HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from "@angular/common/http";
 import { TranslateModule, TranslateLoader } from "@ngx-translate/core";
 import { MultiTranslateHttpLoader } from "ngx-translate-multi-http-loader";
-import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 
 import { ArraySortPipe } from "./array-sort-pipe";
 import { SortablejsModule } from "ngx-sortablejs-plus";
@@ -67,7 +66,7 @@ import { SettingsBandComponent } from "./settings/settings-band/settings-band.co
 import { SettingsPersonalComponent } from "./settings/settings-personal/settings-personal.component";
 import { DesignerComponent } from "./designer/designer.component";
 import { BackupRestoreDialogComponent } from "./settings/backup-restore-dialog/backup-restore-dialog.component";
-import { DropzoneComponent } from "./dropzone/dropzone.component";
+import { FileDropzoneComponent } from "./dropzone/file-dropzone.component";
 import { VolumeSliderComponent } from "./volume-slider/volume-slider.component";
 import { ActionTriggerMidiComponent } from "./settings/settings-midi/action-trigger-midi/action-trigger-midi.component";
 import { ActionTriggerMidiProgramChangeComponent } from "./settings/settings-midi/action-trigger-midi/action-trigger-midi-program-change/action-trigger-midi-program-change.component";
@@ -156,7 +155,7 @@ const appRoutes: Routes = [
         SettingsBandComponent,
         SettingsPersonalComponent,
         DesignerComponent,
-        DropzoneComponent,
+        FileDropzoneComponent,
         VolumeSliderComponent,
         ActionComponent,
         ActionListComponent,
@@ -179,7 +178,6 @@ const appRoutes: Routes = [
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
         RouterModule.forRoot(appRoutes, { enableTracing: false, useHash: true }),
-        BrowserAnimationsModule,
         TranslateModule.forRoot({
             loader: {
                 provide: TranslateLoader,

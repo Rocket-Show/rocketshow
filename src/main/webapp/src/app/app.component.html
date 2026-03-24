@@ -1,10 +1,10 @@
 <!-- Login -->
-@if (!isIntro) {
+@if (stateService.connected && !isIntro && !authService.currentState?.authenticated) {
 <app-login></app-login>
 }
 
 <!-- Connectivity indicator -->
-@if (loaded && authService.currentState?.authenticated) {
+@if ((loaded || authService.noConnection) && !stateService.connected) {
 <app-connection></app-connection>
 }
 

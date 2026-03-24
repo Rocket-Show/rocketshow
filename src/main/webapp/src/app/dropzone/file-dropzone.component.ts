@@ -5,12 +5,12 @@ import { map } from "rxjs/operators";
 import { AppHttpInterceptor } from "../app-http-interceptor/app-http-interceptor";
 
 @Component({
-    selector: "app-dropzone",
-    templateUrl: "./dropzone.component.html",
-    styleUrl: "./dropzone.component.scss",
+    selector: "app-file-dropzone",
+    templateUrl: "./file-dropzone.component.html",
+    styleUrl: "./file-dropzone.component.scss",
     standalone: false
 })
-export class DropzoneComponent {
+export class FileDropzoneComponent {
   @Output() error = new EventEmitter();
   @Output() success = new EventEmitter();
   @Output() addedFile = new EventEmitter();

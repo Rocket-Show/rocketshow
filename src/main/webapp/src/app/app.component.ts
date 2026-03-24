@@ -11,7 +11,6 @@ import { Settings } from "./models/settings";
 import { Title } from "@angular/platform-browser";
 import { OperatingSystemInformationService } from "./services/operating-system-information.service";
 import { AuthService } from "./services/auth.service";
-import { DeviceInformation } from "./models/device-information";
 import { DeviceInformationService } from "./services/device-information.service";
 
 @Component({
@@ -31,7 +30,7 @@ export class AppComponent implements OnInit {
   constructor(
     private translateService: TranslateService,
     private router: Router,
-    private stateService: StateService,
+    public stateService: StateService,
     private compositionService: CompositionService,
     private sessionService: SessionService,
     private settingsService: SettingsService,

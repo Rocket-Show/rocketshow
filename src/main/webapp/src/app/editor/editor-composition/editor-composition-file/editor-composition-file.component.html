@@ -84,12 +84,12 @@
                   </div>
                 </div>
 
-                <app-dropzone
+                <app-file-dropzone
                   [url]="'file/upload'"
                   [acceptedFiles]="'audio/*,video/*'"
                   (error)="onUploadError($event)"
                   (success)="onUploadSuccess($event)"
-                ></app-dropzone>
+                ></app-file-dropzone>
               </div>
 
               <!-- Media library -->

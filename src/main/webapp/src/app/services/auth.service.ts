@@ -16,18 +16,23 @@ export interface AuthState {
 export class AuthService {
   public state: Subject<AuthState> = new Subject();
   public currentState: AuthState;
+  public noConnection: boolean = false;
 
   constructor(private http: HttpClient) {
     this.init().subscribe();
   }
 
   init(): Observable<AuthState> {
+    this.noConnection = false;
     return this.http.get<AuthState>('auth/me', { withCredentials: true }).pipe(
       tap(result => {
         this.currentState = result;
         this.state.next(this.currentState);
       }),
-      catchError(() => {
+      catchError((error) => {
+        if (error.status === 0) {
+          this.noConnection = true;
+        }
         this.currentState = {
           authenticated: false,
           passwordConfigured: true
