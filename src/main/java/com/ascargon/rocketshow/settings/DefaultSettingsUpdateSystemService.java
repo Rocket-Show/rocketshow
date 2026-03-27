@@ -3,6 +3,7 @@ package com.ascargon.rocketshow.settings;
 import com.ascargon.rocketshow.audio.AudioDevice;
 import com.ascargon.rocketshow.audio.AudioService;
 import com.ascargon.rocketshow.lighting.LightingService;
+import com.ascargon.rocketshow.util.DeviceInformationService;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import com.ascargon.rocketshow.util.ShellManager;
@@ -29,16 +30,19 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
     private final OperatingSystemInformationService operatingSystemInformationService;
     private final AudioService audioService;
     private final LightingService lightingService;
+    private final DeviceInformationService deviceInformationService;
 
     public DefaultSettingsUpdateSystemService(
             SettingsService settingsService, AudioService audioService,
             OperatingSystemInformationService operatingSystemInformationService,
-            LightingService lightingService
+            LightingService lightingService,
+            DeviceInformationService deviceInformationService
     ) {
         this.settingsService = settingsService;
         this.audioService = audioService;
         this.operatingSystemInformationService = operatingSystemInformationService;
         this.lightingService = lightingService;
+        this.deviceInformationService = deviceInformationService;
     }
 
     private void setSystemAudioOutput(int id) throws Exception {
@@ -220,10 +224,17 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
             logger.error("Could not write /etc/hostapd/hostapd.conf", e);
         }
 
-        // Set the country in the raspberry settings
+        // Set the country in the raspberry settings (and temporarily remount /boot/firmware as rw to do so
         try {
+            if (deviceInformationService.getDeviceInformation().isAvailable()) {
+                new ShellManager(new String[]{"sudo", "mount", "-o", "remount,rw", "/boot/firmware"});
+            }
             new ShellManager(new String[]{"sudo", "raspi-config", "nonint", "do_wifi_country", settings.getWlanApCountryCode()});
-        } catch (IOException e) {
+            if (deviceInformationService.getDeviceInformation().isAvailable()) {
+                new ShellManager(new String[]{"sudo", "mount", "-o", "remount,ro", "/boot/firmware"});
+            }
+        } catch (
+                IOException e) {
             logger.error("Could not update wifi country '{}'", settings.getWlanApCountryCode(), e);
         }
 
@@ -239,7 +250,8 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
 
             // Restart, even if already started, to cater for updated configs
             new ShellManager(new String[]{"sudo", "systemctl", "restart", "hostapd"});
-        } catch (IOException e) {
+        } catch (
+                IOException e) {
             logger.error("Could not update the access point status with '{}'", statusCommand, e);
         }
     }

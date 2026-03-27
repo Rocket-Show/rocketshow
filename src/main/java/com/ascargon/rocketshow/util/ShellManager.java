@@ -23,11 +23,11 @@ public class ShellManager {
 
         if (logger.isDebugEnabled()) {
             // log the output from the call
-            logInputStreamAsync(process.getInputStream());
+            logInputStreamAsync(process.getInputStream(), command);
         }
     }
 
-    public static void logInputStreamAsync(InputStream inputStream) {
+    public static void logInputStreamAsync(InputStream inputStream, String[] command) {
         Runnable task = () -> {
             StringBuilder sb = new StringBuilder();
             String line;
@@ -40,7 +40,7 @@ public class ShellManager {
                 logger.error("Error reading shell command output", e);
             }
 
-            logger.info("Shell command output:\n{}", sb);
+            logger.info("Shell command output:\n{}\n\nfor command {}", sb, command);
         };
 
         Thread thread = new Thread(task);

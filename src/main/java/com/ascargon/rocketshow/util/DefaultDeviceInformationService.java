@@ -2,17 +2,13 @@ package com.ascargon.rocketshow.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.List;
 
 @Service
@@ -22,13 +18,7 @@ public class DefaultDeviceInformationService implements DeviceInformationService
 
     private static final Path CFG_PATH = Path.of("/boot/firmware/device-information.conf");
 
-    private final ApplicationEventPublisher eventPublisher;
-
     private DeviceInformation deviceInformation;
-
-    public DefaultDeviceInformationService(ApplicationEventPublisher eventPublisher) {
-        this.eventPublisher = eventPublisher;
-    }
 
     @Override
     public synchronized DeviceInformation getDeviceInformation() {
@@ -40,10 +30,12 @@ public class DefaultDeviceInformationService implements DeviceInformationService
         deviceInformation = loadedDeviceInformation;
 
         if (!Files.exists(CFG_PATH)) {
+            logger.debug("No device information available");
             return deviceInformation;
         }
 
         deviceInformation.setAvailable(true);
+        logger.debug("Device information is available");
 
         try {
             List<String> lines = Files.readAllLines(CFG_PATH, StandardCharsets.UTF_8);
