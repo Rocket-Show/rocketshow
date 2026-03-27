@@ -1,5 +1,7 @@
 server:
+  address: 127.0.0.1
   port: 8080
+  forward-headers-strategy: framework
   servlet:
     session:
       timeout: 40d

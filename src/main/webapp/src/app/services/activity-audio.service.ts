@@ -24,10 +24,16 @@ export class ActivityAudioService {
   constructor(private http: HttpClient, settingsService: SettingsService
   ) {
     // Create the backend-url
+    let protocol = 'ws://';
+
+    if (window.location.protocol === 'https:') {
+      protocol = 'wss://';
+    }
+
     if (environment.name == 'dev') {
-      this.wsUrl = 'ws://' + environment.localBackend + '/';
+      this.wsUrl = protocol + environment.localBackend + '/';
     } else {
-      this.wsUrl = 'ws://' + window.location.hostname + ':' + window.location.port + '/';
+      this.wsUrl = protocol + window.location.hostname + ':' + window.location.port + '/';
     }
 
     this.wsUrl += 'api/activity/audio';

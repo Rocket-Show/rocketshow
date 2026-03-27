@@ -3,14 +3,17 @@ package com.ascargon.rocketshow.audio;
 import com.ascargon.rocketshow.settings.SettingsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.PingMessage;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -99,6 +102,20 @@ public class DefaultActivityNotificationAudioService extends TextWebSocketHandle
             }
         });
         thread.start();
+    }
+
+    @Scheduled(fixedRate = 25000) // every 25 seconds
+    public void sendPing() {
+        for (WebSocketSession session : sessions) {
+            if (session.isOpen()) {
+                try {
+                    session.sendMessage(new PingMessage(ByteBuffer.wrap(new byte[]{1})));
+                } catch (IOException e) {
+                    logger.debug("Ping failed, closing websocket session", e);
+                    sessions.remove(session);
+                }
+            }
+        }
     }
 
 }
