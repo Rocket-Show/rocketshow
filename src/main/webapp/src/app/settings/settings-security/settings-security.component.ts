@@ -7,6 +7,8 @@ import { map } from 'rxjs/operators';
 import { BsModalService } from 'ngx-bootstrap/modal';
 import { NewApiKeyDialogComponent } from '../new-api-key-dialog/new-api-key-dialog.component';
 import { ChangePasswordDialogComponent } from '../change-password-dialog/change-password-dialog.component';
+import { DeviceInformationService } from '../../services/device-information.service';
+import { DeviceInformation } from '../../models/device-information';
 
 @Component({
   selector: 'app-settings-security',
@@ -18,13 +20,17 @@ export class SettingsSecurityComponent implements OnInit, OnDestroy {
 
   private settingsChangedSubscription: Subscription;
   settings: Settings;
+  deviceInformation: DeviceInformation;
 
   constructor(
     public authService: AuthService,
     private settingsService: SettingsService,
-    private modalService: BsModalService
+    private modalService: BsModalService,
+    private deviceInformationService: DeviceInformationService,
   ) {
-
+    this.deviceInformationService.getDeviceInformation().subscribe((deviceInformation) => {
+      this.deviceInformation = deviceInformation;
+    });
   }
 
   private loadSettings() {

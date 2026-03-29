@@ -4,6 +4,8 @@ import { TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
 import { ToastGeneralErrorService } from '../services/toast-general-error.service';
+import { DeviceInformationService } from '../services/device-information.service';
+import { DeviceInformation } from '../models/device-information';
 
 @Component({
   selector: 'app-intro',
@@ -12,6 +14,8 @@ import { ToastGeneralErrorService } from '../services/toast-general-error.servic
   standalone: false
 })
 export class IntroComponent {
+
+  deviceInformation: DeviceInformation;
 
   currentStep = 1;
   maxStep = 1;
@@ -36,8 +40,13 @@ export class IntroComponent {
     private translateService: TranslateService,
     private authService: AuthService,
     private router: Router,
-    private toastGeneralErrorService: ToastGeneralErrorService
-  ) { }
+    private toastGeneralErrorService: ToastGeneralErrorService,
+    private deviceInformationService: DeviceInformationService
+  ) {
+    this.deviceInformationService.getDeviceInformation().subscribe((deviceInformation) => {
+      this.deviceInformation = deviceInformation;
+    });
+  }
 
   switchLanguage(language: string) {
     this.language = language;

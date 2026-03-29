@@ -165,9 +165,11 @@
               <button type="button" class="wizard-dot" [class.active]="currentStep === 4" (click)="goToStep(4)"
                 aria-label="Go to step 4">
               </button>
+              @if (deviceInformation?.available) {
               <button type="button" class="wizard-dot" [class.active]="currentStep === 5" (click)="goToStep(5)"
                 aria-label="Go to step 5">
               </button>
+              }
             </div>
           </div>
 
@@ -208,10 +210,18 @@
                   }
 
                   @if(currentStep === 4) {
+                  @if (deviceInformation?.available) {
                   <button type="button"
                     [disabled]="(wifiApEnabled && !wifiApPasswordSame && (!wifiApPassword1 || !wifiApPassword2 || wifiApPassword1.length < 6))"
                     class="btn btn-primary px-4" (click)="nextStepWifiApPw()">{{ 'misc.nav-next' | translate }}
                   </button>
+                  } @else {
+                  <button type="button"
+                    [disabled]="loading || (wifiApEnabled && !wifiApPasswordSame && (!wifiApPassword1 || !wifiApPassword2 || wifiApPassword1.length < 6))"
+                    class="btn btn-primary px-4" (click)="finish()">@if (loading) {<i class="fa fa-spinner fa-pulse fa-fw"></i>}@if(!loading){<i class="fa fa-check"
+                      aria-hidden="true"></i>} {{ 'misc.finish' | translate }}
+                  </button>
+                  }
                   }
 
                   @if(currentStep === 5) {
