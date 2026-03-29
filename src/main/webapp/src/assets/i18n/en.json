@@ -19,7 +19,8 @@
     "please-wait": "Please wait...",
     "info": "Information",
     "default-set": "All compositions",
-    "lead-sheet-close": "Close"
+    "lead-sheet-close": "Close",
+    "enable-tls-info": "Your browser may show a warning because the device uses its own certificate. You can safely continue by clicking “Advanced” → “Proceed” (or similar). This confirmation is only required once."
   },
   "loading": {
     "title": "Loading...",
@@ -27,15 +28,25 @@
   },
   "intro": {
     "step-1-title": "Welcome!",
-    "welcome-language": "Please select your preferred language.",
+    "welcome-language": "Select your preferred language.",
     "choose-language": "Choose your language",
     "step-2-title": "Device Name ",
-    "name-unit": "Please name this device.",
+    "name-unit": "Give this device a name.",
     "default-unit-name": "My Device",
-    "step-3-title": "Password",
+    "step-3-title": "Device Password",
     "admin-password": "Select a password to login.",
     "password": "Password",
-    "password-repeat": "Password (repeat)"
+    "password-repeat": "Password (repeat)",
+    "step-4-title": "Wireless Access Point",
+    "suggest-disable-hotspot": "For security reasons, it is recommended to turn off the Wi-Fi access point after setup when it is not needed.",
+    "wifi-ap-activated": "Activated",
+    "wifi-ap-deactivated": "Deactivated (recommended)",
+    "wifi-ap-same-pw": "Use device password",
+    "wifi-ap-same-pw-warning": "Using the same passwort reduces security.",
+    "step-5-title": "Secure Connection",
+    "tls-enabled": "Activated (recommended)",
+    "tls-disabled": "Deactivated",
+    "suggest-enable-tls": "For better security, please enable TLS (encrypted connection)."
   },
   "login": {
     "title": "Login",
@@ -303,7 +314,9 @@
       "new-pw": "New Password",
       "new-pw-repeat": "New Password (Repeat)",
       "error": "An error occured. Please check the current password."
-    }
+    },
+    "secure-connection": "Secure Connection",
+    "secure-connection-enable": "Activated"
   },
   "action": {
     "action": "Action",

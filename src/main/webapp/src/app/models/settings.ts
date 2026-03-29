@@ -54,6 +54,7 @@ export class Settings {
   designerLivePreview: boolean;
   updateTestBranch: boolean;
   apiKeyList: ApiKey[] = [];
+  tlsEnable: boolean = false;
 
   constructor(data?: any) {
     if (!data) {
@@ -187,6 +188,8 @@ export class Settings {
         this.apiKeyList.push(new ApiKey(apiKey));
       }
     }
+
+    this.tlsEnable = data.tlsEnable;
   }
 
   public static createActionTriggerMidi(

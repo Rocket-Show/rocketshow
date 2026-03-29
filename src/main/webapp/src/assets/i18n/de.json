@@ -19,7 +19,8 @@
     "please-wait": "Bitte warten...",
     "info": "Hinweis",
     "default-set": "Alle Kompositionen",
-    "lead-sheet-close": "Schliessen"
+    "lead-sheet-close": "Schliessen",
+    "enable-tls-info": "Ihr Browser zeigt möglicherweise eine Warnung, da das Gerät ein eigenes Zertifikat verwendet. Sie können sicher fortfahren, indem Sie auf „Erweitert“ → „Weiter“ (oder ähnlich) klicken. Diese Bestätigung ist nur einmal erforderlich."
   },
   "loading": {
     "title": "Laden...",
@@ -27,15 +28,25 @@
   },
   "intro": {
     "step-1-title": "Willkommen!",
-    "welcome-language": "Bitte wähle deine bevorzugte Sprache aus.",
+    "welcome-language": "Wähle deine bevorzugte Sprache aus.",
     "choose-language": "Wähle deine Sprache",
     "step-2-title": "Gerätenamen",
     "name-unit": "Wie soll dieses Gerät heissen?",
     "default-unit-name": "Mein Gerät",
-    "step-3-title": "Passwort",
+    "step-3-title": "Geräte-Passwort",
     "admin-password": "Wähle ein Passwort für das Login.",
     "password": "Passwort",
-    "password-repeat": "Passwort (Wiederholung)"
+    "password-repeat": "Passwort (Wiederholung)",
+    "step-4-title": "WLAN Access Point",
+    "suggest-disable-hotspot": "Aus Sicherheitsgründen ist es empfohlen, den WLAN Access Point auszuschalten, wenn er nicht benötigt wird.",
+    "wifi-ap-activated": "Aktiviert",
+    "wifi-ap-deactivated": "Deaktiviert (empfohlen)",
+    "wifi-ap-same-pw": "Geräte-Passwort verwenden",
+    "wifi-ap-same-pw-warning": "Die Verwendung desselben Passworts reduziert die Sicherheit.",
+    "step-5-title": "Sichere Verbindung",
+    "tls-enabled": "Aktiviert (empfohlen)",
+    "tls-disabled": "Deaktiviert",
+    "suggest-enable-tls": "Für mehr Sicherheit aktivieren Sie bitte TLS (verschlüsselte Verbindung)"
   },
   "login": {
     "title": "Login",
@@ -303,7 +314,9 @@
       "new-pw": "Neues Passwort",
       "new-pw-repeat": "Neues Passwort (Wiederholung)",
       "error": "Ein Fehler ist aufgetreten. Bitte überprüfe das aktuelle Passwort."
-    }
+    },
+    "secure-connection": "Sichere Verbindung",
+    "secure-connection-enable": "Aktiviert"
   },
   "action": {
     "action": "Aktion",

@@ -12,6 +12,7 @@ import { Title } from "@angular/platform-browser";
 import { OperatingSystemInformationService } from "./services/operating-system-information.service";
 import { AuthService } from "./services/auth.service";
 import { DeviceInformationService } from "./services/device-information.service";
+import { ToastrService } from "ngx-toastr";
 
 @Component({
   selector: "body",
@@ -40,6 +41,7 @@ export class AppComponent implements OnInit {
     private operatingSystemInformationService: OperatingSystemInformationService,
     private route: ActivatedRoute,
     public authService: AuthService,
+    private toastrService: ToastrService
   ) {
     translateService.setDefaultLang("en");
   }
@@ -60,6 +62,31 @@ export class AppComponent implements OnInit {
         if (mobileAppHost === "true") {
           this.mobileAppHost = true;
         }
+
+        this.route.queryParamMap.subscribe((params) => {
+          const settingsSaved = params.get('settingsSaved');
+
+          if (settingsSaved) {
+            this.translateService
+              .get([
+                "settings.toast-save-success",
+                "settings.toast-save-success-title",
+              ])
+              .subscribe((result) => {
+                this.toastrService.success(
+                  result["settings.toast-save-success"],
+                  result["settings.toast-save-success-title"]
+                );
+              });
+
+            this.router.navigate([], {
+              relativeTo: this.route,
+              queryParams: { settingsSaved: null },
+              queryParamsHandling: 'merge',
+              replaceUrl: true, // no history entry
+            });
+          }
+        });
 
         this.isIntro = false;
         this.isPlay = false;

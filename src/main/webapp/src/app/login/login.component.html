@@ -1,13 +1,13 @@
 <app-particle-background></app-particle-background>
 
 <div class="container d-flex h-100">
-    <div class="row justify-content-center align-self-center mx-auto">
+    <div class="row m-auto">
         <div class="col-xl">
-            <div class="d-flex flex-column justify-content-center align-items-center h-100">
+            <div class="d-flex flex-column">
 
-                <img class="pb-2" src="assets/img/icon.png" alt="icon" width="100px">
+                <img class="pb-2 mx-auto" src="assets/img/icon.png" alt="icon" width="100px">
 
-                <div id="login" class="card border-secondary">
+                <div id="login" class="card border-secondary text-center">
                     <form (ngSubmit)="login()">
                         <img class="card-img-top" src="assets/img/intro_title.jpg" alt="Card image cap">
                         <div class="card-body">
@@ -24,8 +24,8 @@
                                 {{ generalErrorMessage }}
                             </div>
                         </div>
-                        <div class="card-footer text-muted">
-                            <button type="submit" [disabled]="loading" ] class="btn btn-primary w-100" role="button">
+                        <div class="card-footer d-flex">
+                            <button type="submit" [disabled]="loading" ] class="btn btn-primary mx-auto" role="button">
                                 @if (loading) {<i class="fa fa-spinner fa-pulse fa-fw"></i>}@if(!loading){<i
                                     class="fa fa-sign-in" aria-hidden="true"></i>}
                                 {{ 'login.login' | translate }}

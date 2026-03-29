@@ -145,6 +145,7 @@ public class Settings {
     private String adminPasswordHash;
 
     private List<ApiKey> apiKeyList = new ArrayList<>();
+    private Boolean tlsEnable = false;
 
     @XmlElement(name = "remoteDevice")
     @XmlElementWrapper(name = "remoteDeviceList")

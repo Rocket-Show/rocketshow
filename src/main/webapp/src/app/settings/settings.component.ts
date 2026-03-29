@@ -255,23 +255,31 @@ export class SettingsComponent implements OnInit {
                 .saveSettings()
                 .pipe(
                   map(() => {
+                    // http -> https or vice versa
+                    const protocolChanged = this.initialSettings.tlsEnable != result.tlsEnable;
+
                     this.copyInitialSettings(result);
                     this.translateService.use(result.language);
 
                     this.settingsService.settingsChanged.next();
                     this.settingsPersonalService.settingsChanged.next();
 
-                    this.translateService
-                      .get([
-                        "settings.toast-save-success",
-                        "settings.toast-save-success-title",
-                      ])
-                      .subscribe((result) => {
-                        this.toastrService.success(
-                          result["settings.toast-save-success"],
-                          result["settings.toast-save-success-title"]
-                        );
-                      });
+                    if (protocolChanged) {
+                      window.location.replace('/#/settings?settingsSaved=true');
+                      window.location.reload();
+                    } else {
+                      this.translateService
+                        .get([
+                          "settings.toast-save-success",
+                          "settings.toast-save-success-title",
+                        ])
+                        .subscribe((result) => {
+                          this.toastrService.success(
+                            result["settings.toast-save-success"],
+                            result["settings.toast-save-success-title"]
+                          );
+                        });
+                    }
                   }),
                   catchError((err) => {
                     return this.toastGeneralErrorService.show(err);

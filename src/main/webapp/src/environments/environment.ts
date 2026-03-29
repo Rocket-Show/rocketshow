@@ -8,10 +8,10 @@ export const environment = {
   name: "dev",
 
   // Local backend
-  // localBackend: "localhost:8080",
+  localBackend: "localhost:8080",
 
   // Backend on a Raspberry Pi
-  localBackend: "rocketshow.local",
+  // localBackend: "rocketshow.local",
   // localBackend: "192.168.1.64",
 
   debug: true
