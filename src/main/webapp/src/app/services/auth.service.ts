@@ -43,10 +43,24 @@ export class AuthService {
     );
   }
 
-  setup(language: string, deviceName: string, password: string) {
+  setup(
+    language: string,
+    deviceName: string,
+    password: string,
+    wifiApEnabled: boolean,
+    wifiApPassword: string,
+    tlsEnabled: boolean
+  ) {
     return this.http.post<AuthState>(
       'auth/setup',
-      { "language": language, "deviceName": deviceName, "password": password },
+      {
+        "language": language,
+        "deviceName": deviceName,
+        "password": password,
+        "wifiApEnabled": wifiApEnabled,
+        "wifiApPassword": wifiApPassword,
+        "tlsEnabled": tlsEnabled
+      },
       { withCredentials: true }
     ).pipe(
       tap(res => this.state.next(res))

@@ -97,14 +97,24 @@ export class IntroComponent {
         this.deviceName = result;
       }
 
-      // TODO save wifi AP settings and tls mode
-      this.authService.setup(this.language, this.deviceName, this.adminPassword1).subscribe({
+      this.authService.setup(
+        this.language,
+        this.deviceName,
+        this.adminPassword1,
+        this.wifiApEnabled,
+        this.wifiApPasswordSame ? this.adminPassword1 : this.wifiApPassword1,
+        this.tlsEnable
+      ).subscribe({
         next: () => {
           this.authService.init().subscribe(() => {
             this.settingsService.settingsChanged.next();
 
-            // If protocol/host may have changed, do a real browser navigation with reload
-            window.location.assign('/play');
+            const host = window.location.hostname;
+            const targetUrl = this.tlsEnable
+              ? `https://${host}`
+              : `http://${host}`;
+
+            window.location.replace(targetUrl);
           });
         },
         error: (err) => {

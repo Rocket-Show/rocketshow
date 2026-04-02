@@ -265,8 +265,15 @@ export class SettingsComponent implements OnInit {
                     this.settingsPersonalService.settingsChanged.next();
 
                     if (protocolChanged) {
-                      window.location.replace('/#/settings?settingsSaved=true');
-                      window.location.reload();
+                      const host = window.location.hostname;
+                      const hash = '/#/settings?settingsSaved=true';
+
+                      const targetUrl = result.tlsEnable
+                        ? `https://${host}${hash}`
+                        : `http://${host}${hash}`;
+
+                      window.location.replace(targetUrl);
+                      // window.location.reload();
                     } else {
                       this.translateService
                         .get([

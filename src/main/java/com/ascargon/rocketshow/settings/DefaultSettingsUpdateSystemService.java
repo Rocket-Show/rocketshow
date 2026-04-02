@@ -226,15 +226,8 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
 
         // Set the country in the raspberry settings (and temporarily remount /boot/firmware as rw to do so
         try {
-            if (deviceInformationService.getDeviceInformation().isAvailable()) {
-                new ShellManager(new String[]{"sudo", "mount", "-o", "remount,rw", "/boot/firmware"});
-            }
-            new ShellManager(new String[]{"sudo", "raspi-config", "nonint", "do_wifi_country", settings.getWlanApCountryCode()});
-            if (deviceInformationService.getDeviceInformation().isAvailable()) {
-                new ShellManager(new String[]{"sudo", "mount", "-o", "remount,ro", "/boot/firmware"});
-            }
-        } catch (
-                IOException e) {
+            new ShellManager(new String[]{"sudo", "/opt/rocketshow/set-connection-mode.sh", settings.getWlanApCountryCode()});
+        } catch (IOException e) {
             logger.error("Could not update wifi country '{}'", settings.getWlanApCountryCode(), e);
         }
 
@@ -253,6 +246,20 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
         } catch (
                 IOException e) {
             logger.error("Could not update the access point status with '{}'", statusCommand, e);
+        }
+    }
+
+    private void updateConnectionMode(Settings settings) {
+        String mode = "http";
+
+        if (settings.getTlsEnable()) {
+            mode = "https";
+        }
+
+        try {
+            new ShellManager(new String[]{"sudo", "/opt/rocketshow/set-connection-mode.sh", mode});
+        } catch (IOException e) {
+            logger.error("Could not update the connection mode with '{}'", mode, e);
         }
     }
 
@@ -289,6 +296,8 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
         } catch (Exception e) {
             logger.error("Could not activate the OLA plugin", e);
         }
+
+        updateConnectionMode(settings);
     }
 
 }

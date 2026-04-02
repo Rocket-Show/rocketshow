@@ -1,6 +1,8 @@
 package com.ascargon.rocketshow.api;
 
+import com.ascargon.rocketshow.settings.Settings;
 import com.ascargon.rocketshow.settings.SettingsService;
+import com.ascargon.rocketshow.settings.SettingsUpdateSystemService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -29,17 +31,20 @@ public class AuthController {
     private final static Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     private final SettingsService settingsService;
+    private final SettingsUpdateSystemService settingsUpdateSystemService;
     private final PasswordEncoder passwordEncoder;
     private final SecurityContextRepository securityContextRepository;
     private final LoginThrottleService loginThrottleService;
 
     public AuthController(
             SettingsService settingsService,
+            SettingsUpdateSystemService settingsUpdateSystemService,
             PasswordEncoder passwordEncoder,
             SecurityContextRepository securityContextRepository,
             LoginThrottleService loginThrottleService
     ) {
         this.settingsService = settingsService;
+        this.settingsUpdateSystemService = settingsUpdateSystemService;
         this.passwordEncoder = passwordEncoder;
         this.securityContextRepository = securityContextRepository;
         this.loginThrottleService = loginThrottleService;
@@ -130,16 +135,22 @@ public class AuthController {
         }
 
         String hash = passwordEncoder.encode(request.getPassword());
-        settingsService.getSettings().setAdminPasswordHash(hash);
+        Settings settings = settingsService.getSettings();
 
-        settingsService.getSettings().setLanguage(request.getLanguage());
-        settingsService.getSettings().setDeviceName(request.getDeviceName());
+        settings.setAdminPasswordHash(hash);
+        settings.setLanguage(request.getLanguage());
+        settings.setDeviceName(request.getDeviceName());
+        settings.setWlanApEnable(request.isWifiApEnabled());
+        settings.setWlanApPassphrase(request.getWifiApPassword());
+        settings.setTlsEnable(request.isTlsEnabled());
 
         try {
             settingsService.save();
         } catch (JAXBException e) {
             logger.error("Could not save settings after setup", e);
         }
+
+        settingsUpdateSystemService.update();
 
         authenticateAdmin(httpRequest, httpResponse);
 
