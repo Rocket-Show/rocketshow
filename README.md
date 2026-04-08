@@ -25,6 +25,20 @@ Use this command to skip tests and NPM build:
 For frequent builds, you might want to comment out the frontend-maven-plugin in the POM and make use of the Maven
 parameter `-DskipTests`.
 
+### Local Angular frontend development
+
+While developing the web app, it might be convenient to start an Angular server:
+
+1. Add this entry to your hosts file (e.g. /etc/hosts on the Mac) to connect to a rocketshow.local server:
+  `127.0.0.1 app.rocketshow.local`
+2. Install npm packages (force required because some dependency conflicts): `cd src/main/webapp && npm install --force`
+3. Start the server with a local backend `npx serve` or a device backend `ng serve --host app.rocketshow.local --port 4200`
+4. Open the web application: http://localhost:4200
+
+On the Mac, Gstreamer and OLA can be installed using Homebrew:
+
+### Debugging
+
 To debug Gstreamer issues, export GST_DEBUG before starting the server:
 
 ```shell
@@ -44,13 +58,6 @@ To test audio playback with alsa:
 ```shell
 aplay -D rocketshow /opt/rocketshow/media/audio/head_smashed_far_away.wav
 ```
-
-While developing the web app, it might be convenient to start an Angular server:
-
-1. Start web frontend server: `cd src/main/webapp && npm install && npx ng serve`
-2. Open the web application: http://localhost:4200
-
-On the Mac, Gstreamer and OLA can be installed using Homebrew:
 
 ```shell
 brew install gstreamer

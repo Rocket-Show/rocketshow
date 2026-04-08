@@ -113,6 +113,8 @@ export class AppComponent implements OnInit {
         // Load some required data
         if (this.authService.currentState && this.authService.currentState.authenticated) {
           this.loadInitialData()
+        } else {
+          this.loaded = true;
         }
         this.authService.state.subscribe((state) => {
           if (state.authenticated) {

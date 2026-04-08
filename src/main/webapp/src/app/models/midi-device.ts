@@ -9,7 +9,6 @@ export class MidiDevice {
         if(!data) {
         	return;
         }
-
         this.id = data.id;
         this.name = data.name;
         this.vendor = data.vendor;

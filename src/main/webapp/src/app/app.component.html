@@ -1,5 +1,5 @@
 <!-- Login -->
-@if (!isIntro && !authService.currentState?.authenticated) {
+@if (loaded && !isIntro && !authService.currentState?.authenticated) {
 <app-login></app-login>
 }
 

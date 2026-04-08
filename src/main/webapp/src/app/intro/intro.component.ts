@@ -109,7 +109,7 @@ export class IntroComponent {
           this.authService.init().subscribe(() => {
             this.settingsService.settingsChanged.next();
 
-            const host = window.location.hostname;
+            const host = window.location.host;
             const targetUrl = this.tlsEnable
               ? `https://${host}`
               : `http://${host}`;

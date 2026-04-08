@@ -97,11 +97,11 @@ export class SettingsComponent implements OnInit {
                 serialPort: false,
               };
 
-              if (!result.midiInDevice || result.midiInDevice.id === 0) {
+              if (!result.midiInDevice) {
                 result.midiInDevice = noneDevice;
               }
 
-              if (!result.midiOutDevice || result.midiOutDevice.id === 0) {
+              if (!result.midiOutDevice) {
                 result.midiOutDevice = noneDevice;
               }
 
@@ -265,7 +265,7 @@ export class SettingsComponent implements OnInit {
                     this.settingsPersonalService.settingsChanged.next();
 
                     if (protocolChanged) {
-                      const host = window.location.hostname;
+                      const host = window.location.host;
                       const hash = '/#/settings?settingsSaved=true';
 
                       const targetUrl = result.tlsEnable

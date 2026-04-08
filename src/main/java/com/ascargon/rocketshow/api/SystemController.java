@@ -190,6 +190,9 @@ class SystemController {
             }
         }
 
+        // Preserve the admin hash
+        settings.setAdminPasswordHash(settingsService.getSettings().getAdminPasswordHash());
+
         settingsService.setSettings(settings);
         settingsService.save();
         settingsUpdateSystem();
