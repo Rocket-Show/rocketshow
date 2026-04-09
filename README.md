@@ -29,8 +29,7 @@ parameter `-DskipTests`.
 
 While developing the web app, it might be convenient to start an Angular server:
 
-1. Add this entry to your hosts file (e.g. /etc/hosts on the Mac) to connect to a rocketshow.local server:
-  `127.0.0.1 app.rocketshow.local`
+1. Add this entry to your hosts file (e.g. /etc/hosts on the Mac) to connect to a rocketshow.local server: `127.0.0.1 app.rocketshow.local`. If you connect to another device not behind mDNS rocketshow.local, you need to add the IP with rocketshow.local as well.
 2. Install npm packages (force required because some dependency conflicts): `cd src/main/webapp && npm install --force`
 3. Start the server with a local backend `npx serve` or a device backend `ng serve --host app.rocketshow.local --port 4200`
 4. Open the web application: http://localhost:4200

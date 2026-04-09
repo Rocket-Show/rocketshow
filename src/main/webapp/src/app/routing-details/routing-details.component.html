@@ -5,17 +5,19 @@
 
   <div class="card-body">
 
-    <p>
+    <!-- <p>
       <i>{{ 'routing.description' | translate }}</i>
-    </p>
+    </p> -->
 
     <!-- Type -->
     <div class="form-group row">
       <label class="col-sm-4 col-form-label">{{ 'routing.type' | translate }}</label>
       <div class="col-sm-8">
-        <select class="custom-select" [ngModel]="midiRouting?.midiDestination" (ngModelChange)="midiRouting.midiDestination = $event">
+        <select class="custom-select" [ngModel]="midiRouting?.midiDestination"
+          (ngModelChange)="midiRouting.midiDestination = $event">
           @for (midiDestination of midiDestinationList; track midiDestination) {
-            <option [ngValue]="midiDestination">{{ 'settings.midi-destination-enum.' + midiDestination | translate }}</option>
+          <option [ngValue]="midiDestination">{{ 'settings.midi-destination-enum.' + midiDestination | translate }}
+          </option>
           }
         </select>
       </div>
@@ -35,37 +37,38 @@
 
     <!-- LIGHTING mapping -->
     @if (midiRouting?.midiDestination == 'LIGHTING') {
-      <div class="form-group row">
-        <label class="col-sm-4 col-form-label">{{ 'routing.lighting-mapping' | translate }}</label>
-        <div class="col-sm-8">
-          <div class="card border-secondary">
-            <div class="card-body">
-              <div class="form-group row mb-0">
-                <label class="col-sm-6 col-form-label">{{ 'routing.lighting-mapping-type' | translate }}</label>
-                <div class="col-sm-6">
-                  <select class="custom-select">
-                    <option value="simple" selected>{{ 'routing.lighting-mapping-type-simple' | translate }}</option>
-                  </select>
-                </div>
+    <div class="form-group row">
+      <label class="col-sm-4 col-form-label">{{ 'routing.lighting-mapping' | translate }}</label>
+      <div class="col-sm-8">
+        <div class="card border-secondary">
+          <div class="card-body">
+            <div class="form-group row mb-0">
+              <label class="col-sm-6 col-form-label">{{ 'routing.lighting-mapping-type' | translate }}</label>
+              <div class="col-sm-6">
+                <select class="custom-select">
+                  <option value="simple" selected>{{ 'routing.lighting-mapping-type-simple' | translate }}</option>
+                </select>
               </div>
             </div>
           </div>
         </div>
       </div>
+    </div>
     }
 
     <!-- Remote devices -->
     @if (midiRouting?.midiDestination == 'REMOTE') {
-      <div class="form-group row">
-        <label class="col-sm-4 col-form-label">{{ 'routing.remote-devices' | translate }}</label>
-        <div class="col-sm-8">
-          <div class="card border-secondary">
-            <div class="card-body">
-              <app-remote-device-selection [remoteDeviceList]="midiRouting?.remoteDeviceList"></app-remote-device-selection>
-            </div>
+    <div class="form-group row">
+      <label class="col-sm-4 col-form-label">{{ 'routing.remote-devices' | translate }}</label>
+      <div class="col-sm-8">
+        <div class="card border-secondary">
+          <div class="card-body">
+            <app-remote-device-selection
+              [remoteDeviceList]="midiRouting?.remoteDeviceList"></app-remote-device-selection>
           </div>
         </div>
       </div>
+    </div>
     }
 
   </div>

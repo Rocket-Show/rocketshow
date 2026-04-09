@@ -20,6 +20,7 @@ export class StateService {
   public websocket: $WebSocket;
 
   public connected: boolean = false;
+  public initiallyLoaded: boolean = false;
   public getsConnected: Subject<void> = new Subject();
 
   private reconnectSubscription: Subscription;
@@ -81,6 +82,7 @@ export class StateService {
     this.websocket.onClose(() => {
       console.log('WebSocket connection closed');
       this.connected = false;
+      this.initiallyLoaded = true;
     });
 
     // try to reconnect manually and don't rely on reconnectIfNotNormalClose, because
@@ -117,6 +119,7 @@ export class StateService {
         }
 
         this.connected = true;
+        this.initiallyLoaded = true;
 
         return this.currentState;
       }));

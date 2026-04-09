@@ -38,8 +38,6 @@ export class MidiRoutingComponent implements OnInit {
     // Show the routing details dialog
     let routingDialog = this.modalService.show(RoutingDetailsComponent, {
       keyboard: true,
-      animated: true,
-      backdrop: false,
       ignoreBackdropClick: true,
       class: "",
     });

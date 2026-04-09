@@ -1,10 +1,10 @@
 <!-- Login -->
-@if (loaded && !isIntro && !authService.currentState?.authenticated) {
+@if (authService.initiallyLoaded && !isIntro && !authService.currentState?.authenticated) {
 <app-login></app-login>
 }
 
 <!-- Connectivity indicator -->
-@if ((loaded || authService.noConnection) && !stateService.connected) {
+@if (authService.initiallyLoaded && stateService.initiallyLoaded && (authService.noConnection || !stateService.connected)) {
 <app-connection></app-connection>
 }
 
@@ -12,7 +12,7 @@
 <app-lead-sheet></app-lead-sheet>
 
 <!-- Initial loading -->
-@if (!loaded && authService.currentState?.authenticated) {
+@if (!authService.initiallyLoaded || !loaded) {
 <div class="container d-flex h-100">
   <div class="row justify-content-center align-self-center mx-auto">
     <div class="col">

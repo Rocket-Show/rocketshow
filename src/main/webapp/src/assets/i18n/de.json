@@ -268,7 +268,7 @@
     "designer-live-preview": "Designer live preview",
     "designer-live-preview-enable": "Aktivieren",
     "midi-destination-enum": {
-      "OUT_DEVICE": "MIDI Ausgang",
+      "OUT_DEVICE": "MIDI Geräte Ausgang",
       "LIGHTING": "Lichtsteuerung",
       "REMOTE": "Entfernte Geräte"
     },

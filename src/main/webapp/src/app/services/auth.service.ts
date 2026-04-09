@@ -17,6 +17,7 @@ export class AuthService {
   public state: Subject<AuthState> = new Subject();
   public currentState: AuthState;
   public noConnection: boolean = false;
+  public initiallyLoaded: boolean = false;
 
   constructor(private http: HttpClient) {
     this.init().subscribe();
@@ -28,6 +29,7 @@ export class AuthService {
       tap(result => {
         this.currentState = result;
         this.state.next(this.currentState);
+        this.initiallyLoaded = true;
       }),
       catchError((error) => {
         if (error.status === 0) {
@@ -38,6 +40,7 @@ export class AuthService {
           passwordConfigured: true
         };
         this.state.next(this.currentState);
+        this.initiallyLoaded = true;
         return of(this.currentState);
       })
     );
