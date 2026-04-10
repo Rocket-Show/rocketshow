@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.util;
 
+import com.ascargon.rocketshow.RocketShowApplication;
 import com.ascargon.rocketshow.session.SessionService;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.api.NotificationService;
@@ -7,6 +8,7 @@ import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.Unmarshaller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.system.ApplicationHome;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -25,7 +27,7 @@ public class DefaultUpdateService implements UpdateService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultUpdateService.class);
 
-    private final static String CURRENT_VERSION = "currentversion2.xml";
+    private final static String VERSION_FILE = "version.xml";
     private final static String UPDATE_URL = "https://www.rocketshow.net/update/";
     private final static String UPDATE_URL_TEST_SUFFIX = "test/";
 
@@ -43,9 +45,10 @@ public class DefaultUpdateService implements UpdateService {
 
     @Override
     public VersionInfo getCurrentVersionInfo() throws Exception {
-        File file = new File(settingsService.getSettings().getBasePath() + File.separator + CURRENT_VERSION);
+        File file = new File(new ApplicationHome(RocketShowApplication.class).getDir() + File.separator + VERSION_FILE);
 
         if (!file.exists()) {
+            logger.warn("No version file available at " + file);
             return new VersionInfo(); // return empty object if file does not exist
         }
 
@@ -65,7 +68,7 @@ public class DefaultUpdateService implements UpdateService {
 
     @Override
     public VersionInfo getRemoteVersionInfo(boolean testBranch) throws Exception {
-        URL url = new URL(getRemoteBaseUrl(testBranch) + "currentversion2.xml");
+        URL url = new URL(getRemoteBaseUrl(testBranch) + VERSION_FILE);
         InputStream inputStream = url.openStream();
 
         JAXBContext jaxbContext = JAXBContext.newInstance(VersionInfo.class);

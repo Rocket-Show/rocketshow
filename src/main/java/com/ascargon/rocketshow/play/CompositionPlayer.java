@@ -21,6 +21,7 @@ import com.ascargon.rocketshow.midi.*;
 import com.ascargon.rocketshow.util.ActionExecutionService;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
+import com.ascargon.rocketshow.video.HdmiService;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
 import org.freedesktop.gstreamer.*;
 import org.freedesktop.gstreamer.elements.AppSink;
@@ -79,6 +80,7 @@ public class CompositionPlayer {
     private final MidiRouterFactory midiRouterFactory;
     private final ActionExecutionService actionExecutionService;
     private final MidiService midiService;
+    private final HdmiService hdmiService;
 
     private Composition composition;
     private PlayState playState = PlayState.STOPPED;
@@ -129,6 +131,7 @@ public class CompositionPlayer {
         this.midiRouterFactory = midiRouterFactory;
         this.actionExecutionService = playerService.getActionExecutionService();
         this.midiService = playerService.getMidiService();
+        this.hdmiService = playerService.getHdmiService();
 
         this.midiMapping.setParent(settingsService.getSettings().getMidiMapping());
     }
@@ -477,6 +480,12 @@ public class CompositionPlayer {
     }
 
     private boolean hasVideo() {
+        if (!hdmiService.isConnected()) {
+            // Even if the composition had video files, we will not play them,
+            // because no device is connected to the HDMI interface
+            return false;
+        }
+
         for (int i = 0; i < composition.getCompositionFileList().size(); i++) {
             CompositionFile compositionFile = composition.getCompositionFileList().get(i);
 
@@ -578,7 +587,7 @@ public class CompositionPlayer {
                     addMidiToPipeline((MidiCompositionFile) compositionFile, i);
                 } else if (compositionFile instanceof AudioCompositionFile && capabilitiesService.getCapabilities().isGstreamer()) {
                     addAudioToPipeline((AudioCompositionFile) compositionFile, audioMixerList, i);
-                } else if (compositionFile instanceof VideoCompositionFile && capabilitiesService.getCapabilities().isGstreamer()) {
+                } else if (compositionFile instanceof VideoCompositionFile && capabilitiesService.getCapabilities().isGstreamer() && hasVideo) {
                     addVideoToPipeline((VideoCompositionFile) compositionFile, i);
                 }
             }
@@ -727,7 +736,8 @@ public class CompositionPlayer {
                     logger.error("Could not execute actions triggered at position {}", actionTriggerComposition.getPositionMillis(), e);
                     try {
                         notificationService.notifyClients("Could not execute action: " + e.getCause());
-                    } catch (Exception ex) {}
+                    } catch (Exception ex) {
+                    }
                 }
                 remainingActionTriggerCompositionList.remove(actionTriggerComposition);
             };

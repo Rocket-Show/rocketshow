@@ -21,7 +21,7 @@ public class DefaultImageDisplayingService implements ImageDisplayingService {
 
         // Display a default black screen on Raspbian
         if (OperatingSystemInformation.SubType.RASPBERRYOS.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
-            display(new ApplicationHome(RocketShowApplication.class).getDir().toString() + File.separator + "black.jpg");
+            display(new ApplicationHome(RocketShowApplication.class).getDir() + File.separator + "black.jpg");
         }
     }
 

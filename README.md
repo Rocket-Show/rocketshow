@@ -86,6 +86,12 @@ Launch Rocket Show on the mac:
 ./start.sh
 ```
 
+### Health check and system test
+
+Use the following HTTP endpoint to check the health (available without security): `GET /api/system/health`
+
+Use the following HTTP endpoint to run some system tests (available without security, as long as the initial setup is not yet completed): `POST /api/system/test`
+
 ### Build OLA
 
 To build the OLA Client jar required by Rocket Show, follow these steps on a mac:

@@ -65,7 +65,6 @@ cd rocketshow
 
 # Download current JAR and version info
 wget https://www.rocketshow.net/update/rocketshow.jar
-wget https://www.rocketshow.net/update/currentversion2.xml
 
 # Create default config files
 cat <<'EOF' >/home/rocketshow/.asoundrc

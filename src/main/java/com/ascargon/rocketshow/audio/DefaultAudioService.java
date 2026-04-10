@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -47,53 +49,28 @@ public class DefaultAudioService implements AudioService {
 
         logger.debug("List audio devices...");
 
-        try {
-            Process process = new ProcessBuilder("cat", "/proc/asound/cards").start();
+        try (BufferedReader reader = Files.newBufferedReader(Path.of("/proc/asound/cards"))) {
+            String line;
+            int lineIndex = 0;
 
-            Thread readerThread = new Thread(() -> {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                String line;
-                boolean readLine = true;
+            while ((line = reader.readLine()) != null) {
+                logger.trace("Output from audio device list file: {}", line);
 
-                try {
-                    while ((line = reader.readLine()) != null) {
-                        logger.trace("Output from audio device list process: " + line);
+                if (lineIndex % 2 == 0 && !line.startsWith("---")) {
+                    AudioDevice audioDevice = getAudioDeviceFromString(line);
 
-                        // Only read the uneven lines. The even ones contain
-                        // unneccessary information.
-                        if (readLine) {
-                            readLine = false;
-
-                            if (!line.startsWith("---")) {
-                                AudioDevice audioDevice = getAudioDeviceFromString(line);
-
-                                if (audioDevice.getName() != null && audioDevice.getName().length() > 0 && !audioDevice.getKey().equals("ALSA")
-
-                                        // Does not work with Gstreamer. Currently disabled.
-                                        // see https://github.com/moritzvieli/rocketshow/issues/19
-                                        && !audioDevice.getKey().equals("Headphones")) {
-
-                                    audioDeviceList.add(audioDevice);
-                                }
-                            }
-                        } else {
-                            readLine = true;
-                        }
+                    if (audioDevice.getName() != null
+                            && !audioDevice.getName().isEmpty()
+                            && !"ALSA".equals(audioDevice.getKey())
+                            && !"Headphones".equals(audioDevice.getKey())) {
+                        audioDeviceList.add(audioDevice);
                     }
-                } catch (IOException e) {
-                    logger.error("Could not read audio device list output", e);
                 }
-            });
 
-            readerThread.start();
-
-            try {
-                readerThread.join();
-            } catch (InterruptedException e) {
-                logger.error("Could not wait for the list of audio devices", e);
+                lineIndex++;
             }
         } catch (IOException e) {
-            logger.error("Could not list the audio devices", e);
+            logger.error("Could not list audio devices", e);
         }
 
         logger.debug("Audio devices listed");

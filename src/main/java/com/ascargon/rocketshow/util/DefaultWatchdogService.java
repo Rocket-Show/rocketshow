@@ -75,21 +75,15 @@ public class DefaultWatchdogService implements WatchdogService {
             logger.error(healthStatus.toFailureString());
 
             try {
-                rebootService.reboot();
+                System.exit(1);
             } catch (Exception e) {
-                logger.error("Could not reboot device", e);
+                logger.error("Error shutting down the app", e);
             }
         }
 
         if (healthStatus.getSeverity() == Severity.DEGRADED) {
             logger.error("System health is degraded");
             logger.error(healthStatus.toFailureString());
-
-            try {
-                rebootService.reboot();
-            } catch (Exception e) {
-                logger.error("Could not reboot device", e);
-            }
         }
 
         // Everything fine, pet the watchdog
