@@ -16,7 +16,7 @@ public class DefaultDeviceInformationService implements DeviceInformationService
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultDeviceInformationService.class);
 
-    private static final Path CFG_PATH = Path.of("/boot/firmware/device-information.conf");
+    private static final Path CFG_PATH = Path.of("/provision/device-information.conf");
 
     private DeviceInformation deviceInformation;
 
