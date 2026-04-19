@@ -63,6 +63,8 @@ cd /opt
 mkdir -p rocketshow
 cd rocketshow
 
+mkdir sessions
+
 # Download current JAR and version info
 wget https://www.rocketshow.net/update/rocketshow.jar
 

@@ -4,6 +4,8 @@ server:
   forward-headers-strategy: framework
   servlet:
     session:
+      persistent: true
+      store-dir: ${ROCKETSHOW_SESSION_DIR:./sessions}
       timeout: 40d
       cookie:
         max-age: 30d
