@@ -1,4 +1,4 @@
-package com.ascargon.rocketshow.util;
+package com.ascargon.rocketshow.health;
 
 import org.springframework.stereotype.Service;
 

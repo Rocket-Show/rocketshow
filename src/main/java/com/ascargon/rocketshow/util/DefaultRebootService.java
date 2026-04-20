@@ -18,31 +18,42 @@ public class DefaultRebootService implements RebootService {
         this.operatingSystemInformationService = operatingSystemInformationService;
     }
 
-    @Override
-    public void reboot() throws InterruptedException, IOException {
-        for (RemoteDevice remoteDevice : settingsService.getSettings().getRemoteDeviceList()) {
-            if (remoteDevice.isSynchronize()) {
-                remoteDevice.reboot();
+    // Regular reboot or tryboot reboot into the other RAUC update slot after
+    // installing a new bundle
+    public void reboot(boolean tryboot) throws InterruptedException, IOException {
+        if (!tryboot) {
+            for (RemoteDevice remoteDevice : settingsService.getSettings().getRemoteDeviceList()) {
+                if (remoteDevice.isSynchronize()) {
+                    remoteDevice.reboot();
+                }
             }
         }
 
-        if (!OperatingSystemInformation.SubType.RASPBERRYOS.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
-            // Restart the app instead of a complete system reboot. Restarting
-            // the app should be enough, because all the additional settings
-            // (access point, etc.) do not work anyway on systems other than
-            // Raspbian.
+        ShellManager shellManager;
 
-            Thread restartThread = new Thread(() -> {
-                RocketShowApplication.restart();
+        if (tryboot) {
+            // Tryboot into the other slot
+            shellManager = new ShellManager(new String[]{
+                    "sudo",
+                    "reboot",
+                    "0 tryboot"
             });
-            restartThread.setDaemon(false);
-            restartThread.start();
-
-            return;
+        } else {
+            // Regular reboot
+            shellManager = new ShellManager(new String[]{"sudo", "reboot"});
         }
 
-        ShellManager shellManager = new ShellManager(new String[]{"sudo", "reboot"});
         shellManager.getProcess().waitFor();
+    }
+
+    @Override
+    public void reboot() throws InterruptedException, IOException {
+        reboot(false);
+    }
+
+    @Override
+    public void tryboot() throws InterruptedException, IOException {
+        reboot(true);
     }
 
 }

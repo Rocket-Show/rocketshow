@@ -3,7 +3,8 @@ package com.ascargon.rocketshow.api;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.play.PlayerService;
-import com.ascargon.rocketshow.util.UpdateService;
+import com.ascargon.rocketshow.update.UpdateService;
+import com.ascargon.rocketshow.update.UpdateState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -48,10 +49,15 @@ public class DefaultNotificationService extends TextWebSocketHandler implements 
         sessions.remove(session);
     }
 
-    private void notifyClients(PlayerService playerService, SetService setService, UpdateService.UpdateState updateState, Boolean isUpdateFinished, String error) throws IOException {
+    private void notifyClients(
+            PlayerService playerService,
+            SetService setService,
+            UpdateState updateState,
+            String error
+    ) throws IOException {
+
         State currentState = stateService.getCurrentState(playerService, setService, compositionService);
         currentState.setUpdateState(updateState);
-        currentState.setUpdateFinished(isUpdateFinished);
         currentState.setError(error);
 
         ObjectMapper mapper = new ObjectMapper();
@@ -85,38 +91,38 @@ public class DefaultNotificationService extends TextWebSocketHandler implements 
     // Notify the clients about the current state and include update
     // information, if an update is running
     @Override
-    public void notifyClients(UpdateService.UpdateState updateState) throws IOException {
-        notifyClients(null, null, updateState, null, null);
+    public void notifyClients(UpdateState updateState) throws IOException {
+        notifyClients(null, null, updateState, null);
     }
 
     @Override
     public void notifyClients(PlayerService playerService) throws IOException {
-        notifyClients(playerService, null, null, null, null);
+        notifyClients(playerService, null, null, null);
     }
 
     @Override
     public void notifyClients(SetService setService) throws IOException {
-        notifyClients(null, setService, null, null, null);
+        notifyClients(null, setService, null, null);
     }
 
     @Override
     public void notifyClients(PlayerService playerService, SetService setService) throws IOException {
-        notifyClients(playerService, setService, null, null, null);
+        notifyClients(playerService, setService, null, null);
     }
 
     @Override
     public void notifyClients(PlayerService playerService, SetService setService, boolean isUpdateFinished) throws IOException {
-        notifyClients(playerService, setService, null, isUpdateFinished, null);
+        notifyClients(playerService, setService, null, null);
     }
 
     @Override
     public void notifyClients(String error) throws IOException {
-        notifyClients(null, null, null, null, error);
+        notifyClients(null, null, null, error);
     }
 
     @Override
     public void notifyClients() throws IOException {
-        notifyClients(null, null, null, null, null);
+        notifyClients(null, null, null, null);
     }
 
 }

@@ -2,7 +2,8 @@ package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.composition.SetService;
-import com.ascargon.rocketshow.util.UpdateService;
+import com.ascargon.rocketshow.update.UpdateService;
+import com.ascargon.rocketshow.update.UpdateState;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -15,7 +16,7 @@ public interface NotificationService {
 
     // Notify the clients about the current state and include update
     // information, if an update is running
-    void notifyClients(UpdateService.UpdateState updateState) throws Exception;
+    void notifyClients(UpdateState updateState) throws Exception;
 
     void notifyClients(PlayerService playerService) throws Exception;
 

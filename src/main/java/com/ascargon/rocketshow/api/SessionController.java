@@ -29,13 +29,6 @@ public class SessionController {
         return sessionService.getSession();
     }
 
-    @PostMapping("dismiss-update-finished")
-    public ResponseEntity<Void> dismissUpdateFinished() {
-        sessionService.getSession().setUpdateFinished(false);
-        sessionService.save();
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
     @PostMapping("set-auto-select-next-composition")
     public ResponseEntity<Void> setAutoSelectNextComposition(@RequestParam("value") boolean value) {
         sessionService.getSession().setAutoSelectNextComposition(value);

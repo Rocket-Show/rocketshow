@@ -64,7 +64,7 @@ export class UpdateDialogComponent implements OnInit, OnDestroy {
           this.updateFinished = true;
           this.updatePerc = 100;
 
-          this.updateService.finishUpdate().subscribe();
+          //this.updateService.finishUpdate().subscribe();
         }
       }
     });

@@ -1,15 +1,14 @@
-package com.ascargon.rocketshow.util;
+package com.ascargon.rocketshow.update;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.util.Date;
-import java.util.List;
-
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.Date;
+import java.util.List;
 
 @XmlRootElement
 @Getter

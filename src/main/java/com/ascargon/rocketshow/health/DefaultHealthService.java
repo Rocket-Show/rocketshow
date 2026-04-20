@@ -1,14 +1,16 @@
-package com.ascargon.rocketshow.util;
+package com.ascargon.rocketshow.health;
 
 import com.ascargon.rocketshow.lighting.OlaService;
+import com.ascargon.rocketshow.update.RaucService;
+import com.ascargon.rocketshow.update.VersionInfo;
+import com.ascargon.rocketshow.update.VersionService;
+import com.ascargon.rocketshow.util.*;
 import com.ascargon.rocketshow.video.HdmiService;
 import org.apache.logging.log4j.core.LogEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.List;
 
 @Service
@@ -21,7 +23,9 @@ public class DefaultHealthService implements HealthService {
     private final TemperatureService temperatureService;
     private final OlaService olaService;
     private final ErrorLogService errorLogService;
-    private final UpdateService updateService;
+    private final VersionService versionService;
+    private final RaucService raucService;
+    private final DeviceInformationService deviceInformationService;
 
     public DefaultHealthService(
             HdmiService hdmiService,
@@ -29,14 +33,18 @@ public class DefaultHealthService implements HealthService {
             TemperatureService temperatureService,
             OlaService olaService,
             ErrorLogService errorLogService,
-            UpdateService updateService
+            VersionService versionService,
+            RaucService raucService,
+            DeviceInformationService deviceInformationService
     ) {
         this.hdmiService = hdmiService;
         this.diskSpaceService = diskSpaceService;
         this.temperatureService = temperatureService;
         this.olaService = olaService;
         this.errorLogService = errorLogService;
-        this.updateService = updateService;
+        this.versionService = versionService;
+        this.raucService = raucService;
+        this.deviceInformationService = deviceInformationService;
     }
 
     private void addReason(HealthStatus healthStatus, String reason) {
@@ -44,35 +52,39 @@ public class DefaultHealthService implements HealthService {
     }
 
     private void setDegraded(HealthStatus healthStatus) {
-        if (healthStatus.getSeverity() == Severity.OK) {
-            healthStatus.setSeverity(Severity.DEGRADED);
+        if (healthStatus.getHealthStatusSeverity() == HealthStatusSeverity.OK) {
+            healthStatus.setHealthStatusSeverity(HealthStatusSeverity.DEGRADED);
         }
     }
 
     private void setFailRestartApp(HealthStatus healthStatus) {
-        if (healthStatus.getSeverity() == Severity.OK
-                || healthStatus.getSeverity() == Severity.DEGRADED) {
+        if (healthStatus.getHealthStatusSeverity() == HealthStatusSeverity.OK
+                || healthStatus.getHealthStatusSeverity() == HealthStatusSeverity.DEGRADED) {
 
-            healthStatus.setSeverity(Severity.FAIL_RESTART_APP);
+            healthStatus.setHealthStatusSeverity(HealthStatusSeverity.FAIL_RESTART_APP);
         }
     }
 
     private void setFailRebootDevice(HealthStatus healthStatus) {
-        if (healthStatus.getSeverity() == Severity.OK
-                || healthStatus.getSeverity() == Severity.DEGRADED
-                || healthStatus.getSeverity() == Severity.FAIL_RESTART_APP) {
+        if (healthStatus.getHealthStatusSeverity() == HealthStatusSeverity.OK
+                || healthStatus.getHealthStatusSeverity() == HealthStatusSeverity.DEGRADED
+                || healthStatus.getHealthStatusSeverity() == HealthStatusSeverity.FAIL_RESTART_APP) {
 
-            healthStatus.setSeverity(Severity.FAIL_REBOOT_DEVICE);
+            healthStatus.setHealthStatusSeverity(HealthStatusSeverity.FAIL_REBOOT_DEVICE);
         }
     }
 
     @Override
     public HealthStatus getHealthStatus() {
         HealthStatus healthStatus = new HealthStatus();
+        DeviceInformation deviceInformation = deviceInformationService.getDeviceInformation();
+
+        healthStatus.setDeviceInformation(deviceInformation);
 
         try {
-            healthStatus.setSoftwareVersion(updateService.getCurrentVersionInfo().getVersion());
-            healthStatus.setSoftwareDate(updateService.getCurrentVersionInfo().getDate());
+            VersionInfo currentVersionInfo = versionService.getCurrentVersionInfo();
+            healthStatus.setSoftwareVersion(currentVersionInfo.getVersion());
+            healthStatus.setSoftwareDate(currentVersionInfo.getDate());
         } catch (Exception e) {
             logger.error("Could not read software version", e);
         }
@@ -125,7 +137,10 @@ public class DefaultHealthService implements HealthService {
             addReason(healthStatus, "Error log: " + event.getMessage().getFormattedMessage());
         }
 
-        // TODO show serial, SKU or whether no data is available
+        if (deviceInformation.isAvailable()) {
+            healthStatus.setRaucSlot(raucService.getCurrentSlot());
+        }
+
         // TODO check for updates and warn, if no internet connection
         // TODO gather system information (os version, memory, etc.)
         // TODO show GPIO input status

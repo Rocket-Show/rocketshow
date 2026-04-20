@@ -1,5 +1,8 @@
 package com.ascargon.rocketshow.util;
 
+import com.ascargon.rocketshow.health.HealthService;
+import com.ascargon.rocketshow.health.HealthStatus;
+import com.ascargon.rocketshow.health.HealthStatusSeverity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -59,7 +62,7 @@ public class DefaultWatchdogService implements WatchdogService {
     private void checkSystemHealth() {
         HealthStatus healthStatus = healthService.getHealthStatus();
 
-        if (healthStatus.getSeverity() == Severity.FAIL_REBOOT_DEVICE) {
+        if (healthStatus.getHealthStatusSeverity() == HealthStatusSeverity.FAIL_REBOOT_DEVICE) {
             logger.error("System is unhealthy -> Reboot required");
             logger.error(healthStatus.toFailureString());
 
@@ -70,7 +73,7 @@ public class DefaultWatchdogService implements WatchdogService {
             }
         }
 
-        if (healthStatus.getSeverity() == Severity.FAIL_RESTART_APP) {
+        if (healthStatus.getHealthStatusSeverity() == HealthStatusSeverity.FAIL_RESTART_APP) {
             logger.error("System is unhealthy -> App restart required");
             logger.error(healthStatus.toFailureString());
 
@@ -81,7 +84,7 @@ public class DefaultWatchdogService implements WatchdogService {
             }
         }
 
-        if (healthStatus.getSeverity() == Severity.DEGRADED) {
+        if (healthStatus.getHealthStatusSeverity() == HealthStatusSeverity.DEGRADED) {
             logger.error("System health is degraded");
             logger.error(healthStatus.toFailureString());
         }

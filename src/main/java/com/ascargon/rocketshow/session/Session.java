@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.session;
 
+import com.ascargon.rocketshow.update.UpdateState;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,7 +11,7 @@ import lombok.Setter;
 public class Session {
 
     private String currentSetName;
-    private boolean updateFinished = false;
     private boolean autoSelectNextComposition = false;
+    private UpdateState updateState;
 
 }

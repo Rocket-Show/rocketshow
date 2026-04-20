@@ -49,9 +49,4 @@ export class UpdateService {
       );
   }
 
-  finishUpdate(): Observable<null> {
-    return this.http.post("session/dismiss-update-finished", null).pipe(() => {
-      return null;
-    });
-  }
 }

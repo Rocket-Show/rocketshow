@@ -1,17 +1,22 @@
 package com.ascargon.rocketshow.api;
 
+import com.ascargon.rocketshow.composition.CompositionService;
+import com.ascargon.rocketshow.composition.SetService;
+import com.ascargon.rocketshow.health.HealthService;
+import com.ascargon.rocketshow.health.HealthStatus;
 import com.ascargon.rocketshow.lighting.OlaPlugin;
+import com.ascargon.rocketshow.lighting.designer.DesignerService;
+import com.ascargon.rocketshow.midi.MidiDeviceInService;
+import com.ascargon.rocketshow.midi.MidiDeviceOutService;
 import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.session.SessionService;
 import com.ascargon.rocketshow.settings.ApiKey;
 import com.ascargon.rocketshow.settings.Settings;
 import com.ascargon.rocketshow.settings.SettingsService;
-import com.ascargon.rocketshow.composition.CompositionService;
-import com.ascargon.rocketshow.composition.SetService;
-import com.ascargon.rocketshow.lighting.designer.DesignerService;
-import com.ascargon.rocketshow.midi.MidiDeviceInService;
-import com.ascargon.rocketshow.midi.MidiDeviceOutService;
 import com.ascargon.rocketshow.settings.SettingsUpdateSystemService;
+import com.ascargon.rocketshow.update.UpdateService;
+import com.ascargon.rocketshow.update.VersionInfo;
+import com.ascargon.rocketshow.update.VersionService;
 import com.ascargon.rocketshow.util.*;
 import jakarta.xml.bind.JAXBException;
 import org.slf4j.Logger;
@@ -59,6 +64,7 @@ class SystemController {
     private final ActionExecutionService actionExecutionService;
     private final DeviceInformationService deviceInformationService;
     private final HealthService healthService;
+    private final VersionService versionService;
 
     public SystemController(
             ControllerService controllerService,
@@ -82,7 +88,8 @@ class SystemController {
             SettingsUpdateSystemService settingsUpdateSystemService,
             ActionExecutionService actionExecutionService,
             DeviceInformationService deviceInformationService,
-            HealthService healthService
+            HealthService healthService,
+            VersionService versionService
     ) {
         this.controllerService = controllerService;
         this.stateService = stateService;
@@ -106,6 +113,7 @@ class SystemController {
         this.actionExecutionService = actionExecutionService;
         this.deviceInformationService = deviceInformationService;
         this.healthService = healthService;
+        this.versionService = versionService;
     }
 
     private void settingsUpdateSystem() {
@@ -145,12 +153,12 @@ class SystemController {
 
     @GetMapping("current-version")
     public VersionInfo version() throws Exception {
-        return updateService.getCurrentVersionInfo();
+        return versionService.getCurrentVersionInfo();
     }
 
     @GetMapping("remote-version")
     public VersionInfo remoteVersion(@RequestParam(value = "testBranch", required = false, defaultValue = "false") boolean testBranch) throws Exception {
-        return updateService.getRemoteVersionInfo(testBranch);
+        return versionService.getRemoteVersionInfo(testBranch);
     }
 
     @PostMapping("update")
@@ -162,7 +170,6 @@ class SystemController {
     @GetMapping("state")
     public com.ascargon.rocketshow.api.State getState() {
         State state = stateService.getCurrentState(playerService, setService, compositionService);
-        state.setUpdateFinished(sessionService.getSession().isUpdateFinished());
         return state;
     }
 

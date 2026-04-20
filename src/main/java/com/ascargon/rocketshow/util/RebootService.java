@@ -9,4 +9,6 @@ public interface RebootService {
 
     void reboot() throws InterruptedException, IOException;
 
+    void tryboot() throws InterruptedException, IOException;
+
 }
