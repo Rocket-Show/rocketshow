@@ -1,27 +1,31 @@
+import { UpdateState } from "./update-state";
+
 export class State {
     playState: string = "STOPPED";
     currentCompositionIndex: number = 0;
     currentCompositionName: string = "";
     currentCompositionDurationMillis: number = 0;
     positionMillis: number;
-    updateState: string;
+    updateState: UpdateState = new UpdateState();
     currentSetName: string;
-    updateFinished: boolean;
     error: string;
 
     constructor(data?: any) {
-        if(!data) {
-        	return;
+        if (!data) {
+            return;
         }
-        
+
         this.playState = data.playState;
         this.currentCompositionIndex = data.currentCompositionIndex;
         this.currentCompositionName = data.currentCompositionName;
         this.currentCompositionDurationMillis = data.currentCompositionDurationMillis;
         this.positionMillis = data.positionMillis;
-        this.updateState = data.updateState;
+
+        if (data.updateState) {
+            this.updateState = new UpdateState(data.updateState);
+        }
+
         this.currentSetName = data.currentSetName;
-        this.updateFinished = data.updateFinished;
         this.error = data.error;
     }
 }

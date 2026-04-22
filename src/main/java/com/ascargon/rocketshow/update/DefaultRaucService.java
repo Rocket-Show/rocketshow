@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -100,6 +101,13 @@ public class DefaultRaucService implements RaucService {
         if (exitCode != 0) {
             throw new Exception("RAUC exited with exit code " + exitCode);
         }
+    }
+
+    @Override
+    public void markGood() throws InterruptedException, IOException {
+        ShellManager shellManager = new ShellManager(new String[]{"rauc", "status", "mark-good"});
+        shellManager.getProcess().waitFor();
+        shellManager.close();
     }
 
 }

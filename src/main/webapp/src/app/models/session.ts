@@ -1,5 +1,4 @@
 export class Session {
-    updateFinished: boolean = false;
     autoSelectNextComposition: boolean = false;
 
     constructor(data?: any) {
@@ -7,7 +6,6 @@ export class Session {
         	return;
         }
         
-        this.updateFinished = data.updateFinished;
         this.autoSelectNextComposition = data.autoSelectNextComposition;
     }
 }

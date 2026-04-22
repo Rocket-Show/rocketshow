@@ -61,6 +61,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/system/device-information").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/system/device-information").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/system/health").permitAll()
+
+                        // Permit the state, because otherwise a new login is required after booting into a new slot (with
+                        // maybe different persisted Spring Boot serialized session).
+                        .requestMatchers(HttpMethod.GET, "/api/system/state").permitAll()
+
                         .requestMatchers(HttpMethod.POST, "/api/system/test").access(systemTestAuthorizationManager)
 
                         // Shared endpoints

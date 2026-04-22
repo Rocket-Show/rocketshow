@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+
 @Service
 public class DefaultUpdateService implements UpdateService {
 
@@ -37,54 +39,79 @@ public class DefaultUpdateService implements UpdateService {
         this.healthService = healthService;
         this.versionService = versionService;
 
-        // Check, whether we can finish an ongoing update with this application start
-        if (sessionService.getSession().getUpdateState() != null && sessionService.getSession().getUpdateState().isUpdating()) {
-            finishUpdate();
+        // Check, whether we can finish an ongoing update after reboot
+        if (sessionService.getSession().getUpdateState() != null) {
+            if (UpdateStep.REBOOTING.equals(sessionService.getSession().getUpdateState().getStep())) {
+                // We booted into the updated slot for the first time
+                try {
+                    finishUpdate();
+                } catch (Exception e) {
+                    error("Could not finish update: " + e);
+                }
+            } else if (UpdateStep.FALLING_BACK.equals(sessionService.getSession().getUpdateState().getStep())) {
+                // We booted back into the original slot after the update failed
+                error("Update failed. Reverted original state.");
+            }
         }
+    }
+
+    private void sendState(UpdateState updateState) throws Exception {
+        sessionService.getSession().setUpdateState(updateState);
+        sessionService.save();
+        notificationService.notifyClients(updateState);
     }
 
     private void startUpdate(String currentVersion) throws Exception {
         UpdateState updateState = new UpdateState();
-        updateState.setUpdating(true);
+        updateState.setStep(UpdateStep.UPDATING);
         updateState.setUpdatingFromVersion(currentVersion);
-
-        sessionService.getSession().setUpdateState(updateState);
-        sessionService.save();
-
-        notificationService.notifyClients(updateState);
+        sendState(updateState);
     }
 
-    private void error(String error) throws Exception {
+    private void error(String error) {
         logger.error(error);
 
         UpdateState updateState = new UpdateState();
-        updateState.setUpdating(false);
+        updateState.setStep(UpdateStep.FINISHED);
         updateState.setError(error);
 
-        sessionService.getSession().setUpdateState(updateState);
-        sessionService.save();
-
-        notificationService.notifyClients(updateState);
+        try {
+            sendState(updateState);
+        } catch (Exception e) {
+            logger.error("Could not log update error", e);
+        }
     }
 
-    private void notifyReboot() throws Exception {
+    private void prepareReboot() throws Exception {
         UpdateState updateState = new UpdateState();
-        updateState.setRebooting(true);
-        notificationService.notifyClients(updateState);
+        updateState.setStep(UpdateStep.REBOOTING);
+        sendState(updateState);
     }
 
-    private void finishUpdate() {
-        // An update has started before the last application start
-        // -> check, whether we are healthy and could upgrade the version
+    private void finishUpdate() throws Exception {
+        // We booted into the updated slot for the first time.
+        // Check, whether we are healthy and could upgrade the version or whether
+        // we need to fall back
 
         HealthStatus healthStatus = healthService.getHealthStatus();
 
         if (healthStatus.getHealthStatusSeverity() == HealthStatusSeverity.OK ||
                 healthStatus.getHealthStatusSeverity() == HealthStatusSeverity.DEGRADED) {
 
-        }
+            // Update successful
+            raucService.markGood();
 
-        // TODO
+            UpdateState updateState = new UpdateState();
+            updateState.setStep(UpdateStep.FINISHED);
+            sendState(updateState);
+        } else {
+            // Update failed -> reboot and fallback to the old slot
+            logger.error("Update failed. Health check failed: {}", healthStatus.toFailureString());
+            UpdateState updateState = new UpdateState();
+            updateState.setStep(UpdateStep.FALLING_BACK);
+            sendState(updateState);
+            rebootService.reboot();
+        }
     }
 
     @Override
@@ -108,18 +135,13 @@ public class DefaultUpdateService implements UpdateService {
         startUpdate(currentVersion);
 
         try {
-            raucService.installBundle(remoteVersionInfo.getRaucBundle());
+            raucService.installBundle(versionService.getRemoteBaseUrl(testBranch) + "rauc-bundles/" + remoteVersionInfo.getRaucBundle());
         } catch (Exception e) {
-            logger.error("Unable to install RAUC bundle", e);
-            try {
-                error(e.toString());
-                return;
-            } catch (Exception ex) {
-                logger.error("could not notify clients about an error", e);
-            }
+            error("Unable to install RAUC bundle");
+            return;
         }
 
-        notifyReboot();
+        prepareReboot();
 
         rebootService.tryboot();
     }

@@ -169,7 +169,12 @@ class SystemController {
 
     @GetMapping("state")
     public com.ascargon.rocketshow.api.State getState() {
-        State state = stateService.getCurrentState(playerService, setService, compositionService);
+        State state = stateService.getCurrentState(
+                playerService,
+                setService,
+                compositionService,
+                sessionService
+        );
         return state;
     }
 

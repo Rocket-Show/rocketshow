@@ -37,7 +37,8 @@ public class DefaultVersionService implements VersionService {
         return (VersionInfo) jaxbUnmarshaller.unmarshal(file);
     }
 
-    private String getRemoteBaseUrl(boolean testBranch) {
+    @Override
+    public String getRemoteBaseUrl(boolean testBranch) {
         String url = UPDATE_URL;
         if (testBranch) {
             url += UPDATE_URL_TEST_SUFFIX;

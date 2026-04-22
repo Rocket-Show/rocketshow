@@ -7,12 +7,14 @@ import { BsModalRef } from 'ngx-bootstrap/modal';
 import { State } from '../../models/state';
 import { Version } from '../../models/version';
 import { ReloadClearCacheService } from '../../services/reload-clear-cache.service';
+import { UpdateState } from '../../models/update-state';
+import { ToastGeneralErrorService } from '../../services/toast-general-error.service';
 
 @Component({
-    selector: 'app-update-dialog',
-    templateUrl: './update-dialog.component.html',
-    styleUrls: ['./update-dialog.component.scss'],
-    standalone: false
+  selector: 'app-update-dialog',
+  templateUrl: './update-dialog.component.html',
+  styleUrls: ['./update-dialog.component.scss'],
+  standalone: false
 })
 export class UpdateDialogComponent implements OnInit, OnDestroy {
   onClose: Subject<number>;
@@ -23,7 +25,6 @@ export class UpdateDialogComponent implements OnInit, OnDestroy {
   updateStep: string;
   updatePerc: number;
   updating: boolean = false;
-  waitReboot: boolean = false;
   updateFinished: boolean = false;
 
   stateServiceSubscription: Subscription;
@@ -32,40 +33,16 @@ export class UpdateDialogComponent implements OnInit, OnDestroy {
     private bsModalRef: BsModalRef,
     public updateService: UpdateService,
     private stateService: StateService,
-    private reloadClearCacheService: ReloadClearCacheService
+    private reloadClearCacheService: ReloadClearCacheService,
+    private toastGeneralErrorService: ToastGeneralErrorService
   ) { }
 
   ngOnInit() {
     this.onClose = new Subject();
 
-    this.stateServiceSubscription =  this.stateService.state.subscribe((state: State) => {
-      switch (state.updateState) {
-        case 'DOWNLOADING': {
-          this.updateStep = 'settings.update-download';
-          this.updatePerc = 10;
-          break;
-        }
-        case 'INSTALLING': {
-          this.updateStep = 'settings.update-install';
-          this.updatePerc = 70;
-          break;
-        }
-        case 'REBOOTING': {
-          this.updateStep = 'settings.update-reboot';
-          this.updatePerc = 80;
-          this.waitReboot = true;
-        }
-      }
-
-      if (this.waitReboot) {
-        if (state.updateFinished) {
-          // The update has been completed and the update is finished
-          this.updating = false;
-          this.updateFinished = true;
-          this.updatePerc = 100;
-
-          //this.updateService.finishUpdate().subscribe();
-        }
+    this.stateServiceSubscription = this.stateService.state.subscribe((state: State) => {
+      if (state.updateState) {
+        this.processUpdateState(state.updateState);
       }
     });
 
@@ -74,6 +51,55 @@ export class UpdateDialogComponent implements OnInit, OnDestroy {
     });
 
     this.retreiveRemoteVersion();
+  }
+
+  private finishUpdateSuccess() {
+    // The update has been completed and the update is finished
+    this.updating = false;
+    this.updateFinished = true;
+    this.updatePerc = 100;
+  }
+
+  private finishUpdateError(error: string) {
+    this.toastGeneralErrorService.show(new Error(error))
+    this.updating = false;
+  }
+
+  private processUpdateState(updateState: UpdateState) {
+    if (updateState.step === 'REBOOTING' || updateState.step === 'FALLING_BACK') {
+      this.updateStep = 'settings.update-reboot';
+      this.updatePerc = 99;
+
+      // Don't rely on states pushed from the backend, because it's rebooting now
+      // and we might not be able to reconnect to the websocket in time. Instead, poll for a new
+      // status.
+      if (this.stateServiceSubscription) {
+        this.stateServiceSubscription.unsubscribe();
+      }
+
+      const intervalId = setInterval(() => {
+        this.stateService.getState().subscribe((state) => {
+          if (state.updateState) {
+            // Updating finished
+            clearInterval(intervalId);
+            this.processUpdateState(state.updateState);
+          }
+        });
+      }, 5000);
+    } else if (updateState.step === 'FINISHED') {
+      if (updateState.error) {
+        this.finishUpdateError(updateState.error);
+      } else {
+        this.finishUpdateSuccess();
+      }
+    } else {
+      this.updateStep = 'settings.update-install';
+      if (updateState.progressPercentage > 98) {
+        this.updatePerc = 98;
+      } else {
+        this.updatePerc = updateState.progressPercentage
+      }
+    }
   }
 
   retreiveRemoteVersion() {
@@ -94,7 +120,7 @@ export class UpdateDialogComponent implements OnInit, OnDestroy {
           for (var i = 0; i < this.remoteVersion.changeNoteList.length; ++i) {
             let changeNote = this.remoteVersion.changeNoteList[i];
 
-            if(this.versionCompare(changeNote.version, this.currentVersion.version) <= 0) {
+            if (this.versionCompare(changeNote.version, this.currentVersion.version) <= 0) {
               this.remoteVersion.changeNoteList.splice(i--, 1);
             }
           }
@@ -103,13 +129,14 @@ export class UpdateDialogComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.stateServiceSubscription.unsubscribe();
+    if (this.stateServiceSubscription) {
+      this.stateServiceSubscription.unsubscribe();
+    }
   }
 
   public update() {
     // Perform the update
     this.updating = true;
-    this.waitReboot = false;
     this.updateFinished = false;
     this.updateStep = 'settings.update-start';
     this.updatePerc = 0;
