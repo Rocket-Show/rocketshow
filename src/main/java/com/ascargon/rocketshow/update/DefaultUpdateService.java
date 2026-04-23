@@ -1,91 +1,122 @@
 package com.ascargon.rocketshow.update;
 
-import com.ascargon.rocketshow.api.NotificationService;
 import com.ascargon.rocketshow.health.HealthService;
 import com.ascargon.rocketshow.health.HealthStatus;
 import com.ascargon.rocketshow.health.HealthStatusSeverity;
-import com.ascargon.rocketshow.session.SessionService;
-import com.ascargon.rocketshow.util.*;
+import com.ascargon.rocketshow.settings.SettingsService;
+import com.ascargon.rocketshow.util.RebootService;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
+import jakarta.xml.bind.Unmarshaller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
+import java.io.File;
 
 @Service
 public class DefaultUpdateService implements UpdateService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultUpdateService.class);
 
-    private final NotificationService notificationService;
-    private final SessionService sessionService;
     private final RebootService rebootService;
     private final RaucService raucService;
     private final HealthService healthService;
     private final VersionService versionService;
+    private final UpdateNotificationService updateNotificationService;
+    private final SettingsService settingsService;
+
+    private final String FILE_NAME = "update";
+
+    private UpdateState updateState;
 
     public DefaultUpdateService(
-            NotificationService notificationService,
-            SessionService sessionService,
             RebootService rebootService,
             RaucService raucService,
             HealthService healthService,
-            VersionService versionService
+            VersionService versionService,
+            UpdateNotificationService updateNotificationService,
+            SettingsService settingsService
     ) {
-        this.notificationService = notificationService;
-        this.sessionService = sessionService;
         this.rebootService = rebootService;
         this.raucService = raucService;
         this.healthService = healthService;
         this.versionService = versionService;
+        this.updateNotificationService = updateNotificationService;
+        this.settingsService = settingsService;
 
         // Check, whether we can finish an ongoing update after reboot
-        if (sessionService.getSession().getUpdateState() != null) {
-            if (UpdateStep.REBOOTING.equals(sessionService.getSession().getUpdateState().getStep())) {
+        updateState = loadFromFile();
+        if (updateState == null) {
+            updateState = new UpdateState();
+        } else {
+            if (UpdateStep.REBOOTING.equals(updateState.getStep())) {
                 // We booted into the updated slot for the first time
                 try {
                     finishUpdate();
                 } catch (Exception e) {
                     error("Could not finish update: " + e);
                 }
-            } else if (UpdateStep.FALLING_BACK.equals(sessionService.getSession().getUpdateState().getStep())) {
+            } else if (UpdateStep.FALLING_BACK.equals(updateState.getStep())) {
                 // We booted back into the original slot after the update failed
                 error("Update failed. Reverted original state.");
             }
         }
     }
 
-    private void sendState(UpdateState updateState) throws Exception {
-        sessionService.getSession().setUpdateState(updateState);
-        sessionService.save();
-        notificationService.notifyClients(updateState);
+    private UpdateState loadFromFile() {
+        File file = new File(settingsService.getSettings().getBasePath() + File.separator + FILE_NAME + ".xml");
+        UpdateState updateState = null;
+
+        if (file.exists()) {
+            // We have an update state -> restore it from the file
+            try {
+                JAXBContext jaxbContext = JAXBContext.newInstance(UpdateState.class);
+
+                Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+                updateState = (UpdateState) jaxbUnmarshaller.unmarshal(file);
+            } catch (JAXBException e) {
+                logger.error("Could not the update state from file", e);
+            }
+        }
+
+        return updateState;
     }
 
-    private void startUpdate(String currentVersion) throws Exception {
-        UpdateState updateState = new UpdateState();
-        updateState.setStep(UpdateStep.UPDATING);
-        updateState.setUpdatingFromVersion(currentVersion);
-        sendState(updateState);
+    public void saveToFile(UpdateState updateState) {
+        try {
+            String directory = settingsService.getSettings().getBasePath();
+
+            File file = new File(directory + File.separator + FILE_NAME + ".xml");
+            JAXBContext jaxbContext = JAXBContext.newInstance(UpdateState.class);
+            Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+
+            // output pretty printed
+            jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+
+            jaxbMarshaller.marshal(updateState, file);
+        } catch (JAXBException e) {
+            logger.error("Could not save the update state", e);
+        }
+    }
+
+    private void sendAndSave(UpdateState updateState) throws Exception {
+        saveToFile(updateState);
+        updateNotificationService.notifyClients(updateState);
     }
 
     private void error(String error) {
         logger.error(error);
 
-        UpdateState updateState = new UpdateState();
         updateState.setStep(UpdateStep.FINISHED);
         updateState.setError(error);
 
         try {
-            sendState(updateState);
+            sendAndSave(updateState);
         } catch (Exception e) {
             logger.error("Could not log update error", e);
         }
-    }
-
-    private void prepareReboot() throws Exception {
-        UpdateState updateState = new UpdateState();
-        updateState.setStep(UpdateStep.REBOOTING);
-        sendState(updateState);
     }
 
     private void finishUpdate() throws Exception {
@@ -101,15 +132,14 @@ public class DefaultUpdateService implements UpdateService {
             // Update successful
             raucService.markGood();
 
-            UpdateState updateState = new UpdateState();
             updateState.setStep(UpdateStep.FINISHED);
-            sendState(updateState);
+            sendAndSave(updateState);
         } else {
             // Update failed -> reboot and fallback to the old slot
             logger.error("Update failed. Health check failed: {}", healthStatus.toFailureString());
-            UpdateState updateState = new UpdateState();
+
             updateState.setStep(UpdateStep.FALLING_BACK);
-            sendState(updateState);
+            sendAndSave(updateState);
             rebootService.reboot();
         }
     }
@@ -132,7 +162,11 @@ public class DefaultUpdateService implements UpdateService {
             return;
         }
 
-        startUpdate(currentVersion);
+        updateState.setStep(UpdateStep.UPDATING);
+        updateState.setError(null);
+        updateState.setUpdatingFromVersion(currentVersion);
+        updateState.setProgressPercentage(0);
+        sendAndSave(updateState);
 
         try {
             raucService.installBundle(versionService.getRemoteBaseUrl(testBranch) + "rauc-bundles/" + remoteVersionInfo.getRaucBundle());
@@ -141,9 +175,15 @@ public class DefaultUpdateService implements UpdateService {
             return;
         }
 
-        prepareReboot();
+        updateState.setStep(UpdateStep.REBOOTING);
+        sendAndSave(updateState);
 
         rebootService.tryboot();
+    }
+
+    @Override
+    public UpdateState getCurrentState() {
+        return updateState;
     }
 
 }

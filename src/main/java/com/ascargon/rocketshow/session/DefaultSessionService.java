@@ -39,14 +39,6 @@ public class DefaultSessionService implements SessionService {
         }
     }
 
-    private void createDirectoryIfNotExists(String directory) throws IOException {
-        Path path = Paths.get(directory);
-
-        if (Files.notExists(path)) {
-            Files.createDirectories(path);
-        }
-    }
-
     @Override
     public void save() {
         if (setService.getCurrentSet() == null) {
@@ -57,7 +49,6 @@ public class DefaultSessionService implements SessionService {
 
         try {
             String directory = settingsService.getSettings().getBasePath();
-            createDirectoryIfNotExists(directory);
 
             File file = new File(directory + File.separator + FILE_NAME + ".xml");
             JAXBContext jaxbContext = JAXBContext.newInstance(Session.class);
@@ -69,7 +60,7 @@ public class DefaultSessionService implements SessionService {
             jaxbMarshaller.marshal(session, file);
 
             logger.info("Session saved");
-        } catch (JAXBException | IOException e) {
+        } catch (JAXBException e) {
             logger.error("Could not save the session", e);
         }
     }

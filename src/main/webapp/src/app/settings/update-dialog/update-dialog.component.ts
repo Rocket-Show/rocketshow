@@ -9,6 +9,7 @@ import { Version } from '../../models/version';
 import { ReloadClearCacheService } from '../../services/reload-clear-cache.service';
 import { UpdateState } from '../../models/update-state';
 import { ToastGeneralErrorService } from '../../services/toast-general-error.service';
+import { UpdateStateService } from '../../services/update-state.service';
 
 @Component({
   selector: 'app-update-dialog',
@@ -27,23 +28,22 @@ export class UpdateDialogComponent implements OnInit, OnDestroy {
   updating: boolean = false;
   updateFinished: boolean = false;
 
-  stateServiceSubscription: Subscription;
+  updateStateServiceSubscription: Subscription;
+  pollStateInterval: any;
 
   constructor(
     private bsModalRef: BsModalRef,
     public updateService: UpdateService,
-    private stateService: StateService,
     private reloadClearCacheService: ReloadClearCacheService,
-    private toastGeneralErrorService: ToastGeneralErrorService
+    private toastGeneralErrorService: ToastGeneralErrorService,
+    private updateStateService: UpdateStateService,
   ) { }
 
   ngOnInit() {
     this.onClose = new Subject();
 
-    this.stateServiceSubscription = this.stateService.state.subscribe((state: State) => {
-      if (state.updateState) {
-        this.processUpdateState(state.updateState);
-      }
+    this.updateStateServiceSubscription = this.updateStateService.updateState.subscribe((updateState: UpdateState) => {
+      this.processUpdateState(updateState);
     });
 
     this.updateService.getCurrentVersion().subscribe((version: Version) => {
@@ -73,17 +73,15 @@ export class UpdateDialogComponent implements OnInit, OnDestroy {
       // Don't rely on states pushed from the backend, because it's rebooting now
       // and we might not be able to reconnect to the websocket in time. Instead, poll for a new
       // status.
-      if (this.stateServiceSubscription) {
-        this.stateServiceSubscription.unsubscribe();
+      if (this.updateStateServiceSubscription) {
+        this.updateStateServiceSubscription.unsubscribe();
       }
 
-      const intervalId = setInterval(() => {
-        this.stateService.getState().subscribe((state) => {
-          if (state.updateState) {
-            // Updating finished
-            clearInterval(intervalId);
-            this.processUpdateState(state.updateState);
-          }
+      this.pollStateInterval = setInterval(() => {
+        this.updateService.getUpdateState().subscribe((updateState) => {
+          // Reboot finished
+          clearInterval(this.pollStateInterval);
+          this.processUpdateState(updateState);
         });
       }, 5000);
     } else if (updateState.step === 'FINISHED') {
@@ -129,8 +127,11 @@ export class UpdateDialogComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    if (this.stateServiceSubscription) {
-      this.stateServiceSubscription.unsubscribe();
+    if (this.updateStateServiceSubscription) {
+      this.updateStateServiceSubscription.unsubscribe();
+    }
+    if (this.pollStateInterval) {
+      clearInterval(this.pollStateInterval);
     }
   }
 

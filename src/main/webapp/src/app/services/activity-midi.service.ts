@@ -39,26 +39,26 @@ export class ActivityMidiService {
   }
 
   startMonitor() {
-    this.monitors ++;
+    this.monitors++;
 
-    if(!this.websocket) {
-    // Connect to the websocket backend
-    const wsConfig = { reconnectIfNotNormalClose: true } as WebSocketConfig;
-    this.websocket = new $WebSocket(this.wsUrl, null, wsConfig);
+    if (!this.websocket) {
+      // Connect to the websocket backend
+      const wsConfig = { reconnectIfNotNormalClose: true } as WebSocketConfig;
+      this.websocket = new $WebSocket(this.wsUrl, null, wsConfig);
 
-    this.websocket.onMessage(
-      (msg: MessageEvent) => {
-        this.subject.next(new ActivityMidi(JSON.parse(msg.data)));
-      },
-      { autoApply: false }
-    );
+      this.websocket.onMessage(
+        (msg: MessageEvent) => {
+          this.subject.next(new ActivityMidi(JSON.parse(msg.data)));
+        },
+        { autoApply: false }
+      );
     }
   }
 
   stopMonitor() {
-    this.monitors --;
+    this.monitors--;
 
-    if(this.monitors < 1 && this.websocket) {
+    if (this.monitors < 1 && this.websocket) {
       this.websocket.close();
       this.websocket = undefined;
     }

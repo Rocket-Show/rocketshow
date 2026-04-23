@@ -14,10 +14,6 @@ import java.io.IOException;
 @Service
 public interface NotificationService {
 
-    // Notify the clients about the current state and include update
-    // information, if an update is running
-    void notifyClients(UpdateState updateState) throws Exception;
-
     void notifyClients(PlayerService playerService) throws Exception;
 
     void notifyClients(SetService setService) throws Exception;

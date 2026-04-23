@@ -15,6 +15,7 @@ import com.ascargon.rocketshow.settings.Settings;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.settings.SettingsUpdateSystemService;
 import com.ascargon.rocketshow.update.UpdateService;
+import com.ascargon.rocketshow.update.UpdateState;
 import com.ascargon.rocketshow.update.VersionInfo;
 import com.ascargon.rocketshow.update.VersionService;
 import com.ascargon.rocketshow.util.*;
@@ -169,13 +170,16 @@ class SystemController {
 
     @GetMapping("state")
     public com.ascargon.rocketshow.api.State getState() {
-        State state = stateService.getCurrentState(
+        return stateService.getCurrentState(
                 playerService,
                 setService,
-                compositionService,
-                sessionService
+                compositionService
         );
-        return state;
+    }
+
+    @GetMapping("update-state")
+    public UpdateState getUpdateState() {
+        return updateService.getCurrentState();
     }
 
     @GetMapping("settings")

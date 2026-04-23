@@ -19,12 +19,12 @@ public class DefaultRaucService implements RaucService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultRaucService.class);
 
-    private final NotificationService notificationService;
+    private final UpdateNotificationService updateNotificationService;
 
     public DefaultRaucService(
-            NotificationService notificationService
+            UpdateNotificationService updateNotificationService
     ) {
-        this.notificationService = notificationService;
+        this.updateNotificationService = updateNotificationService;
     }
 
     @Override
@@ -81,7 +81,7 @@ public class DefaultRaucService implements RaucService {
 
             String line;
             while ((line = reader.readLine()) != null) {
-                logger.info("RAUC output: " + line);
+                logger.info("RAUC output: {}", line);
 
                 Matcher matcher = PROGRESS_PATTERN.matcher(line);
                 if (matcher.matches()) {
@@ -91,7 +91,7 @@ public class DefaultRaucService implements RaucService {
                     UpdateState updateState = new UpdateState();
                     updateState.setProgressPercentage(lastPercentage);
                     updateState.setProgressMessage(lastMessage);
-                    notificationService.notifyClients(updateState);
+                    updateNotificationService.notifyClients(updateState);
                 }
             }
         }

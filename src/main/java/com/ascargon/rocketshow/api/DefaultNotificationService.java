@@ -3,8 +3,6 @@ package com.ascargon.rocketshow.api;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.play.PlayerService;
-import com.ascargon.rocketshow.session.SessionService;
-import com.ascargon.rocketshow.update.UpdateService;
 import com.ascargon.rocketshow.update.UpdateState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,18 +30,15 @@ public class DefaultNotificationService extends TextWebSocketHandler implements 
 
     private final StateService stateService;
     private final CompositionService compositionService;
-    private final SessionService sessionService;
 
     private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
 
     public DefaultNotificationService(
             StateService stateService,
-            CompositionService compositionService,
-            SessionService sessionService
+            CompositionService compositionService
     ) {
         this.stateService = stateService;
         this.compositionService = compositionService;
-        this.sessionService = sessionService;
     }
 
     @Override
@@ -59,20 +54,15 @@ public class DefaultNotificationService extends TextWebSocketHandler implements 
     private void notifyClients(
             PlayerService playerService,
             SetService setService,
-            UpdateState updateState,
             String error
-    ) throws IOException {
+    ) {
 
         State currentState = stateService.getCurrentState(
                 playerService,
                 setService,
-                compositionService,
-                sessionService
+                compositionService
         );
-        if (updateState != null) {
-            // Overwrite the updatestate from the session
-            currentState.setUpdateState(updateState);
-        }
+
         currentState.setError(error);
 
         ObjectMapper mapper = new ObjectMapper();
@@ -103,41 +93,34 @@ public class DefaultNotificationService extends TextWebSocketHandler implements 
         }
     }
 
-    // Notify the clients about the current state and include update
-    // information, if an update is running
-    @Override
-    public void notifyClients(UpdateState updateState) throws IOException {
-        notifyClients(null, null, updateState, null);
-    }
-
     @Override
     public void notifyClients(PlayerService playerService) throws IOException {
-        notifyClients(playerService, null, null, null);
+        notifyClients(playerService, null, null);
     }
 
     @Override
     public void notifyClients(SetService setService) throws IOException {
-        notifyClients(null, setService, null, null);
+        notifyClients(null, setService, null);
     }
 
     @Override
     public void notifyClients(PlayerService playerService, SetService setService) throws IOException {
-        notifyClients(playerService, setService, null, null);
+        notifyClients(playerService, setService, null);
     }
 
     @Override
     public void notifyClients(PlayerService playerService, SetService setService, boolean isUpdateFinished) throws IOException {
-        notifyClients(playerService, setService, null, null);
+        notifyClients(playerService, setService, null);
     }
 
     @Override
     public void notifyClients(String error) throws IOException {
-        notifyClients(null, null, null, error);
+        notifyClients(null, null, error);
     }
 
     @Override
     public void notifyClients() throws IOException {
-        notifyClients(null, null, null, null);
+        notifyClients(null, null, null);
     }
 
 }

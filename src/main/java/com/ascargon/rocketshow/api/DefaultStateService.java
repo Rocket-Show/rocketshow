@@ -21,8 +21,7 @@ public class DefaultStateService implements StateService {
     public State getCurrentState(
             PlayerService playerService,
             SetService setService,
-            CompositionService compositionService,
-            SessionService sessionService
+            CompositionService compositionService
     ) {
         State currentState = new State();
 
@@ -45,10 +44,6 @@ public class DefaultStateService implements StateService {
             } else {
                 currentState.setCurrentSetName(setService.getCurrentSet().getName());
             }
-        }
-
-        if (sessionService != null && sessionService.getSession() != null) {
-            currentState.setUpdateState(sessionService.getSession().getUpdateState());
         }
 
         return currentState;

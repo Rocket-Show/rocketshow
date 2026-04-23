@@ -12,8 +12,7 @@ public interface StateService {
     State getCurrentState(
             PlayerService playerService,
             SetService setService,
-            CompositionService compositionService,
-            SessionService sessionService
+            CompositionService compositionService
     );
 
 }
