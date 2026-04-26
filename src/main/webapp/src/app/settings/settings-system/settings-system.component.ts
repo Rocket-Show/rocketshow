@@ -12,7 +12,7 @@ import { Version } from "../../models/version";
 import { catchError, finalize, map } from "rxjs/operators";
 import { OperatingSystemInformation } from "../../models/operating-system-information";
 import { OperatingSystemInformationService } from "../../services/operating-system-information.service";
-import { Subscription } from "rxjs";
+import { EMPTY, forkJoin, Subscription } from "rxjs";
 import { BackupRestoreDialogComponent } from "../backup-restore-dialog/backup-restore-dialog.component";
 import { saveAs } from "file-saver/FileSaver";
 import { WaitDialogService } from "../../services/wait-dialog.service";
@@ -80,6 +80,8 @@ export class SettingsSystemComponent implements OnInit, OnDestroy {
     this.updateService.getCurrentVersion().subscribe((version: Version) => {
       this.currentVersion = version;
     });
+
+    this.openUpdateDialogIfNewVersionAvailable();
   }
 
   ngOnDestroy() {
@@ -117,10 +119,27 @@ export class SettingsSystemComponent implements OnInit, OnDestroy {
   }
 
   checkVersion() {
-    let updateDialog = this.modalService.show(UpdateDialogComponent, {
+    this.openUpdateDialog();
+  }
+
+  private openUpdateDialog() {
+    this.modalService.show(UpdateDialogComponent, {
       keyboard: false,
       ignoreBackdropClick: true,
       class: "",
+    });
+  }
+
+  private openUpdateDialogIfNewVersionAvailable() {
+    forkJoin({
+      currentVersion: this.updateService.getCurrentVersion(),
+      remoteVersion: this.updateService.getRemoteVersion(),
+    }).pipe(
+      catchError(() => EMPTY)
+    ).subscribe(({ currentVersion, remoteVersion }) => {
+      if (this.updateService.isVersionNewer(remoteVersion, currentVersion)) {
+        this.openUpdateDialog();
+      }
     });
   }
 
