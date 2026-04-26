@@ -1,3 +1,21 @@
+@if (showAvailableUpdateMessage) {
+<div class="alert alert-warning alert-dismissible fade show" role="alert">
+  <button type="button" class="close" aria-label="Close" (click)="dismissAvailableUpdateMessage(); false">
+    <span aria-hidden="true">&times;</span>
+  </button>
+  <div class="d-sm-flex justify-content-between align-items-center pr-4">
+    <div>
+      {{ "settings.new-version" | translate }}
+      <strong>{{ availableUpdateVersion?.version }}</strong>
+    </div>
+    <button type="button" class="btn btn-primary btn-sm mt-2 mt-sm-0 ml-sm-3" (click)="checkVersion(); false">
+      <i class="fa fa-search" aria-hidden="true"></i>
+      {{ "settings.check-update" | translate }}
+    </button>
+  </div>
+</div>
+}
+
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{
     "settings.language" | translate

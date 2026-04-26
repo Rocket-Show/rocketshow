@@ -9,7 +9,7 @@ import { SettingsService } from "../../services/settings.service";
 import { CompositionService } from "../../services/composition.service";
 import { Composition } from "../../models/composition";
 import { Version } from "../../models/version";
-import { catchError, finalize, map } from "rxjs/operators";
+import { catchError, finalize, map, switchMap } from "rxjs/operators";
 import { OperatingSystemInformation } from "../../models/operating-system-information";
 import { OperatingSystemInformationService } from "../../services/operating-system-information.service";
 import { EMPTY, forkJoin, Subscription } from "rxjs";
@@ -32,6 +32,8 @@ export class SettingsSystemComponent implements OnInit, OnDestroy {
   settings: Settings;
   compositions: Composition[];
   currentVersion: Version;
+  availableUpdateVersion: Version;
+  showAvailableUpdateMessage: boolean = false;
   operatingSystemInformation: OperatingSystemInformation;
 
   constructor(
@@ -81,7 +83,7 @@ export class SettingsSystemComponent implements OnInit, OnDestroy {
       this.currentVersion = version;
     });
 
-    this.openUpdateDialogIfNewVersionAvailable();
+    this.checkForAvailableUpdate();
   }
 
   ngOnDestroy() {
@@ -122,6 +124,10 @@ export class SettingsSystemComponent implements OnInit, OnDestroy {
     this.openUpdateDialog();
   }
 
+  dismissAvailableUpdateMessage() {
+    this.showAvailableUpdateMessage = false;
+  }
+
   private openUpdateDialog() {
     this.modalService.show(UpdateDialogComponent, {
       keyboard: false,
@@ -130,15 +136,17 @@ export class SettingsSystemComponent implements OnInit, OnDestroy {
     });
   }
 
-  private openUpdateDialogIfNewVersionAvailable() {
-    forkJoin({
-      currentVersion: this.updateService.getCurrentVersion(),
-      remoteVersion: this.updateService.getRemoteVersion(),
-    }).pipe(
+  private checkForAvailableUpdate() {
+    this.settingsService.getSettings().pipe(
+      switchMap(() => forkJoin({
+        currentVersion: this.updateService.getCurrentVersion(),
+        remoteVersion: this.updateService.getRemoteVersion(),
+      })),
       catchError(() => EMPTY)
     ).subscribe(({ currentVersion, remoteVersion }) => {
       if (this.updateService.isVersionNewer(remoteVersion, currentVersion)) {
-        this.openUpdateDialog();
+        this.availableUpdateVersion = remoteVersion;
+        this.showAvailableUpdateMessage = true;
       }
     });
   }
