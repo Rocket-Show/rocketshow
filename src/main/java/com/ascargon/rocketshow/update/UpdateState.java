@@ -15,5 +15,6 @@ public class UpdateState {
     private double progressPercentage;
     private String progressMessage;
     private String error;
+    private String originalRaucSlot;
 
 }

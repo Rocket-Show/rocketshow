@@ -20,3 +20,4 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
+      location: ${ROCKETSHOW_UPLOAD_TMP_DIR:./upload-tmp}

@@ -64,6 +64,7 @@ mkdir -p rocketshow
 cd rocketshow
 
 mkdir sessions
+mkdir upload-tmp
 
 # Download current JAR and version info
 wget https://www.rocketshow.net/update/rocketshow.jar

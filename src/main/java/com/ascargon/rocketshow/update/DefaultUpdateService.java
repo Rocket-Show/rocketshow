@@ -52,11 +52,17 @@ public class DefaultUpdateService implements UpdateService {
             updateState = new UpdateState();
         } else {
             if (UpdateStep.REBOOTING.equals(updateState.getStep())) {
-                // We booted into the updated slot for the first time
-                try {
-                    finishUpdate();
-                } catch (Exception e) {
-                    error("Could not finish update: " + e);
+                if (raucService.getCurrentSlot().equals(updateState.getOriginalRaucSlot())) {
+                    // We booted back into the original slot -> watchdog failed and falled back
+                    // to the original slot
+                    error("Fell back to original slot due to Watchdog failure");
+                } else {
+                    // We booted into the updated slot for the first time
+                    try {
+                        finishUpdate();
+                    } catch (Exception e) {
+                        error("Could not finish update: " + e);
+                    }
                 }
             } else if (UpdateStep.FALLING_BACK.equals(updateState.getStep())) {
                 // We booted back into the original slot after the update failed
