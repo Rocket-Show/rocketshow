@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { $WebSocket, WebSocketConfig } from 'angular2-websocket/angular2-websocket';
+import { AppWebSocket, WebSocketConfig } from './web-socket';
 import { Subject } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
@@ -17,7 +17,7 @@ export class ActivityAudioService {
   private wsUrl: string;
 
   // The websocket connection
-  websocket: $WebSocket;
+  websocket: AppWebSocket;
 
   monitors: number = 0;
 
@@ -45,7 +45,7 @@ export class ActivityAudioService {
     if (!this.websocket) {
       // Connect to the websocket backend
       const wsConfig = { reconnectIfNotNormalClose: true } as WebSocketConfig;
-      this.websocket = new $WebSocket(this.wsUrl, null, wsConfig);
+      this.websocket = new AppWebSocket(this.wsUrl, undefined, wsConfig);
 
       this.websocket.onMessage(
         (msg: MessageEvent) => {

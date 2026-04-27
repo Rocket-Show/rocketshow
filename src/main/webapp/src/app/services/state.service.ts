@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { $WebSocket, WebSocketConfig } from 'angular2-websocket/angular2-websocket';
+import { AppWebSocket, WebSocketConfig } from './web-socket';
 import { filter, map, pairwise, startWith } from "rxjs/operators";
 import { EMPTY, Observable, Subject, Subscription, timer } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -17,7 +17,7 @@ export class StateService {
   private wsUrl: string;
 
   // The websocket connection
-  public websocket: $WebSocket;
+  public websocket: AppWebSocket;
 
   public connected: boolean = false;
   public initiallyLoaded: boolean = false;
@@ -63,7 +63,7 @@ export class StateService {
 
     // Connect to the websocket backend
     const wsConfig = { reconnectIfNotNormalClose: false } as WebSocketConfig;
-    this.websocket = new $WebSocket(this.wsUrl, null, wsConfig);
+    this.websocket = new AppWebSocket(this.wsUrl, undefined, wsConfig);
 
     this.websocket.onMessage(
       (msg: MessageEvent) => {

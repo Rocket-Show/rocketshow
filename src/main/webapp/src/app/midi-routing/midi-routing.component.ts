@@ -16,12 +16,6 @@ export class MidiRoutingComponent implements OnInit {
 
   ngOnInit() {}
 
-  // Prevent the last item in the file-list to be draggable.
-  // Taken from http://jsbin.com/tuyafe/1/edit?html,js,output
-  sortMove(evt) {
-    return evt.related.className.indexOf("no-sortjs") === -1;
-  }
-
   // Edit the routing details
   editRouting(midiRoutingIndex: number, addNew: boolean = false) {
     // Create a backup of the current list

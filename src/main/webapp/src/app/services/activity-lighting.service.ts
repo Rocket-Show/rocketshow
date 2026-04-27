@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 import { ActivityLighting } from '../models/activity-lighting';
-import { $WebSocket, WebSocketConfig } from 'angular2-websocket';
+import { AppWebSocket, WebSocketConfig } from './web-socket';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
@@ -16,7 +16,7 @@ export class ActivityLightingService {
   private wsUrl: string;
 
   // The websocket connection
-  websocket: $WebSocket;
+  websocket: AppWebSocket;
 
   monitors: number = 0;
 
@@ -44,7 +44,7 @@ export class ActivityLightingService {
     if (!this.websocket) {
       // Connect to the websocket backend
       const wsConfig = { reconnectIfNotNormalClose: true } as WebSocketConfig;
-      this.websocket = new $WebSocket(this.wsUrl, null, wsConfig);
+      this.websocket = new AppWebSocket(this.wsUrl, undefined, wsConfig);
 
       this.websocket.onMessage(
         (msg: MessageEvent) => {

@@ -7,7 +7,7 @@ import { TranslateModule, TranslateLoader } from "@ngx-translate/core";
 import { MultiTranslateHttpLoader } from "ngx-translate-multi-http-loader";
 
 import { ArraySortPipe } from "./array-sort-pipe";
-import { SortablejsModule } from "ngx-sortablejs-plus";
+import { SortablejsDirective } from "./sortablejs/sortablejs.directive";
 import { AlertModule } from "ngx-bootstrap/alert";
 import { BsDropdownModule } from "ngx-bootstrap/dropdown";
 import { AccordionModule } from "ngx-bootstrap/accordion";
@@ -175,6 +175,7 @@ const appRoutes: Routes = [
         ActionMidiComponent,
         ChangePasswordDialogComponent,
         NewApiKeyDialogComponent,
+        SortablejsDirective,
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
         RouterModule.forRoot(appRoutes, { enableTracing: false, useHash: true }),
@@ -186,10 +187,6 @@ const appRoutes: Routes = [
             },
         }),
         FormsModule,
-        SortablejsModule.forRoot({
-            animation: 300,
-            handle: ".list-sort-handle",
-        }),
         AlertModule.forRoot(),
         ModalModule.forRoot(),
         DropzoneModule,

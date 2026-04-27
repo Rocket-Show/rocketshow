@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Subject, Subscription, timer } from 'rxjs';
 import { UpdateState } from '../models/update-state';
-import { $WebSocket, WebSocketConfig } from 'angular2-websocket';
+import { AppWebSocket, WebSocketConfig } from './web-socket';
 import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 
@@ -16,7 +16,7 @@ export class UpdateStateService {
   private wsUrl: string;
 
   // The websocket connection
-  websocket: $WebSocket;
+  websocket: AppWebSocket;
 
   public connected: boolean = false;
   private reconnectSubscription: Subscription;
@@ -40,7 +40,7 @@ export class UpdateStateService {
 
     // Connect to the websocket backend
     const wsConfig = { reconnectIfNotNormalClose: false } as WebSocketConfig;
-    this.websocket = new $WebSocket(this.wsUrl, null, wsConfig);
+    this.websocket = new AppWebSocket(this.wsUrl, undefined, wsConfig);
 
     this.websocket.onMessage(
       (msg: MessageEvent) => {
