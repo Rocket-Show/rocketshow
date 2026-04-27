@@ -24,7 +24,7 @@ export class ActionTriggerComponent {
   delete = new EventEmitter<number>();
 
   @Output()
-  change = new EventEmitter<{ index: number; newTrigger: ActionTriggerMidi }>();
+  triggerChange = new EventEmitter<{ index: number; newTrigger: ActionTrigger }>();
 
   getTriggerType(): string {
     if (this.trigger instanceof ActionTriggerMidi) {
@@ -38,6 +38,6 @@ export class ActionTriggerComponent {
   }
 
   onTriggerChange(event: any) {
-    this.change.emit(event);
+    this.triggerChange.emit(event);
   }
 }

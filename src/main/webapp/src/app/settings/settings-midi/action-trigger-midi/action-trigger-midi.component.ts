@@ -18,7 +18,7 @@ export class ActionTriggerMidiComponent {
   index: number;
 
   @Output()
-  change = new EventEmitter<{ index: number; newTrigger: ActionTriggerMidi }>();
+  triggerChange = new EventEmitter<{ index: number; newTrigger: ActionTriggerMidi }>();
 
   channelList: number[] = [];
 
@@ -52,6 +52,6 @@ export class ActionTriggerMidiComponent {
       this.trigger = new ActionTriggerMidiProgramChange(oldTrigger);
     }
 
-    this.change.emit({ index: this.index, newTrigger: this.trigger });
+    this.triggerChange.emit({ index: this.index, newTrigger: this.trigger });
   }
 }
