@@ -3,7 +3,8 @@
     [externalCompositionsAvailable]="true"
     [restUrl]="appHttpInterceptor.getRestUrl()"
     [enableMediaLibrary]="true"
-    [livePreview]="settingsService.settings.designerLivePreview"
+    [livePreview]="settingsService.settings?.designerLivePreview || false"
     [localProfiles]="true"
+    [uniqueProjectNames]="true"
 >
 </lib-designer>

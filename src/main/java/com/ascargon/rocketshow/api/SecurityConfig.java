@@ -52,6 +52,9 @@ public class SecurityConfig {
                 .addFilterBefore(apiKeyAuthFilter, UsernamePasswordAuthenticationFilter.class)
 
                 .authorizeHttpRequests(auth -> auth
+                        // Disable security completely for testing purposes
+//                        .requestMatchers("/**").permitAll()
+
                         // Public endpoints
                         .requestMatchers("/", "/index.html", "/assets/**", "/*.js", "/*.css", "/*.ico").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/auth/me").permitAll()

@@ -82,6 +82,9 @@ EOF
 # Download a black image to be displayed as default
 wget https://www.rocketshow.net/install/black.jpg
 
+# Download the designer template
+wget https://www.rocketshow.net/install/designer_template.json
+
 # Download the defaults including some sample files
 wget https://rocketshow.net/install/defaults.tar.gz
 tar xvzf ./defaults.tar.gz

@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.api;
 
+import com.ascargon.rocketshow.RocketShowApplication;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.lighting.designer.FixtureService;
@@ -7,6 +8,7 @@ import com.ascargon.rocketshow.lighting.designer.Project;
 import com.ascargon.rocketshow.lighting.designer.SearchFixtureTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.system.ApplicationHome;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -64,9 +66,8 @@ public class DesignerController {
 
         logger.debug("Preview designer...");
 
-        designerService.stopPreview();
-
         // Stop currently playing stuff
+        designerService.stopPreview();
         designerService.load(null, project, null);
 
         designerService.setPreviewPreset(project.isPreviewPreset());
@@ -87,9 +88,18 @@ public class DesignerController {
     }
 
     @GetMapping("project")
-    public String getProject(@RequestParam("name") String name) throws IOException {
-        // Get the string, because the parsed project might be missing some attributes
+    public String getProject(
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "id", required = false) String id
+    ) throws IOException {
+        // Return the string, because the parsed project might be missing some attributes
         // not needed in the backend
+
+        // Return the template
+        if ("1".equals(id)) {
+            return new String(Files.readAllBytes(Paths.get(new ApplicationHome(RocketShowApplication.class).getDir() + File.separator + "designer_template.json")));
+        }
+
         return new String(Files.readAllBytes(Paths.get(settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getDesignerPath() + File.separator + name + ".json")));
     }
 

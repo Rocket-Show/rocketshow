@@ -1,0 +1,518 @@
+{
+  "stageWidthCm": 600,
+  "stageHeightCm": 350,
+  "stageDepthCm": 600,
+  "stageFloorHeightCm": 30,
+  "stageCeilingHeightCm": 5,
+  "stagePillarWidthCm": 20,
+  "masterDimmerValue": 1,
+  "selectedSceneUuids": [
+    "9e40f72c-be2c-4f6e-ba5f-a293302f26d3"
+  ],
+  "previewPreset": true,
+  "compositions": [],
+  "fixtureProfiles": [
+    {
+      "createdFromFile": false,
+      "categories": [
+        "Moving Head",
+        "Color Changer"
+      ],
+      "availableChannels": {
+        "Pan": {
+          "fineChannelAliases": [
+            "Pan fine"
+          ],
+          "capabilities": [],
+          "defaultValue": "50%",
+          "capability": {
+            "dmxRange": [],
+            "type": "Pan",
+            "angleStart": "0deg",
+            "angleEnd": "630deg"
+          }
+        },
+        "Tilt": {
+          "fineChannelAliases": [
+            "Tilt fine"
+          ],
+          "capabilities": [],
+          "defaultValue": "50%",
+          "capability": {
+            "dmxRange": [],
+            "type": "Tilt",
+            "angleStart": "0deg",
+            "angleEnd": "220deg"
+          }
+        },
+        "Pan/Tilt Speed": {
+          "fineChannelAliases": [],
+          "capabilities": [],
+          "capability": {
+            "dmxRange": [],
+            "type": "PanTiltSpeed"
+          }
+        },
+        "Dimmer": {
+          "fineChannelAliases": [],
+          "capabilities": [],
+          "capability": {
+            "dmxRange": [],
+            "type": "Intensity"
+          }
+        },
+        "Red": {
+          "fineChannelAliases": [],
+          "capabilities": [],
+          "capability": {
+            "dmxRange": [],
+            "type": "ColorIntensity",
+            "color": "Red"
+          }
+        },
+        "Green": {
+          "fineChannelAliases": [],
+          "capabilities": [],
+          "capability": {
+            "dmxRange": [],
+            "type": "ColorIntensity",
+            "color": "Green"
+          }
+        },
+        "Blue": {
+          "fineChannelAliases": [],
+          "capabilities": [],
+          "capability": {
+            "dmxRange": [],
+            "type": "ColorIntensity",
+            "color": "Blue"
+          }
+        },
+        "White": {
+          "fineChannelAliases": [],
+          "capabilities": [],
+          "capability": {
+            "dmxRange": [],
+            "type": "ColorIntensity",
+            "color": "White"
+          }
+        },
+        "Color Temperature": {
+          "fineChannelAliases": [],
+          "capabilities": [
+            {
+              "dmxRange": [
+                0,
+                35
+              ],
+              "type": "ShutterStrobe"
+            },
+            {
+              "dmxRange": [
+                36,
+                55
+              ],
+              "type": "ColorTemperature"
+            },
+            {
+              "dmxRange": [
+                56,
+                75
+              ],
+              "type": "ColorTemperature"
+            },
+            {
+              "dmxRange": [
+                76,
+                95
+              ],
+              "type": "ColorTemperature"
+            },
+            {
+              "dmxRange": [
+                96,
+                115
+              ],
+              "type": "ColorTemperature"
+            },
+            {
+              "dmxRange": [
+                116,
+                135
+              ],
+              "type": "ColorTemperature"
+            },
+            {
+              "dmxRange": [
+                136,
+                175
+              ],
+              "type": "ColorTemperature"
+            },
+            {
+              "dmxRange": [
+                176,
+                195
+              ],
+              "type": "ColorTemperature"
+            },
+            {
+              "dmxRange": [
+                196,
+                215
+              ],
+              "type": "ColorTemperature"
+            },
+            {
+              "dmxRange": [
+                216,
+                235
+              ],
+              "type": "ColorTemperature"
+            },
+            {
+              "dmxRange": [
+                236,
+                255
+              ],
+              "type": "ColorTemperature"
+            }
+          ]
+        },
+        "Constant Color": {
+          "fineChannelAliases": [],
+          "capabilities": [
+            {
+              "dmxRange": [
+                0,
+                14
+              ],
+              "type": "ShutterStrobe"
+            },
+            {
+              "dmxRange": [
+                15,
+                255
+              ],
+              "type": "ColorPreset",
+              "comment": "One of 28 preprogrammed colors"
+            }
+          ]
+        },
+        "Strobe": {
+          "fineChannelAliases": [],
+          "capabilities": [
+            {
+              "dmxRange": [
+                0,
+                19
+              ],
+              "type": "NoFunction"
+            },
+            {
+              "dmxRange": [
+                20,
+                255
+              ],
+              "type": "ShutterStrobe"
+            }
+          ]
+        },
+        "Special Functions": {
+          "fineChannelAliases": [],
+          "capabilities": [
+            {
+              "dmxRange": [
+                0,
+                99
+              ],
+              "type": "NoFunction"
+            },
+            {
+              "dmxRange": [
+                100,
+                199
+              ],
+              "type": "Maintenance",
+              "comment": "Sound control"
+            },
+            {
+              "dmxRange": [
+                200,
+                255
+              ],
+              "type": "Maintenance",
+              "comment": "Reset"
+            }
+          ]
+        }
+      },
+      "templateChannels": {},
+      "wheels": {},
+      "modes": [
+        {
+          "channels": [
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Pan"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Tilt"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Pan/Tilt Speed"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Dimmer"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Red"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Green"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Blue"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "White"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Strobe"
+            }
+          ],
+          "name": "9-Channel",
+          "shortName": "9ch"
+        },
+        {
+          "channels": [
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Pan"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Pan fine"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Tilt"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Tilt fine"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Pan/Tilt Speed"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Dimmer"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Red"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Green"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Blue"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "White"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Color Temperature"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Constant Color"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Strobe"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Special Functions"
+            }
+          ],
+          "name": "14-Channel",
+          "shortName": "14ch"
+        }
+      ],
+      "uuid": "stairville/mh-100",
+      "name": "MH-100",
+      "manufacturerName": "Stairville",
+      "manufacturerShortName": "stairville"
+    }
+  ],
+  "fixtures": [
+    {
+      "dmxFirstChannel": 0,
+      "positioning": "topFront",
+      "positionX": -150,
+      "positionY": 380,
+      "positionZ": 230,
+      "rotationX": 0,
+      "rotationY": 0,
+      "rotationZ": 0,
+      "uuid": "6c262be4-1022-4bd1-9f46-80d0633be0ae",
+      "profileUuid": "stairville/mh-100",
+      "name": "MH-100",
+      "modeShortName": "9ch"
+    },
+    {
+      "dmxFirstChannel": 9,
+      "positioning": "topFront",
+      "positionX": 0,
+      "positionY": 380,
+      "positionZ": 230,
+      "rotationX": 0,
+      "rotationY": 0,
+      "rotationZ": 0,
+      "uuid": "b9d4ce25-29a0-4f8f-a26e-783195db0d76",
+      "profileUuid": "stairville/mh-100",
+      "name": "MH-100",
+      "modeShortName": "9ch"
+    },
+    {
+      "dmxFirstChannel": 18,
+      "positioning": "topFront",
+      "positionX": 150,
+      "positionY": 380,
+      "positionZ": 230,
+      "rotationX": 0,
+      "rotationY": 0,
+      "rotationZ": 0,
+      "uuid": "b5759549-8c63-4076-bd45-45559765672e",
+      "profileUuid": "stairville/mh-100",
+      "name": "MH-100",
+      "modeShortName": "9ch"
+    }
+  ],
+  "presetFixtures": [
+    {
+      "fixtureUuid": "6c262be4-1022-4bd1-9f46-80d0633be0ae"
+    },
+    {
+      "fixtureUuid": "b9d4ce25-29a0-4f8f-a26e-783195db0d76"
+    },
+    {
+      "fixtureUuid": "b5759549-8c63-4076-bd45-45559765672e"
+    }
+  ],
+  "scenes": [
+    {
+      "color": "#945fda",
+      "presetUuids": [
+        "71b6c41a-91a6-4781-bf83-ba8d9ceac985"
+      ],
+      "fadeInMillis": 0,
+      "fadeOutMillis": 0,
+      "uuid": "9e40f72c-be2c-4f6e-ba5f-a293302f26d3",
+      "name": "Scene 1"
+    }
+  ],
+  "presets": [
+    {
+      "fixtures": [
+        {
+          "fixtureUuid": "b9d4ce25-29a0-4f8f-a26e-783195db0d76"
+        },
+        {
+          "fixtureUuid": "b5759549-8c63-4076-bd45-45559765672e"
+        },
+        {
+          "fixtureUuid": "6c262be4-1022-4bd1-9f46-80d0633be0ae"
+        }
+      ],
+      "fixtureChannelValues": [],
+      "fixtureCapabilityValues": [
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 1,
+          "color": "Red"
+        },
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 0.4196078431372549,
+          "color": "Green"
+        },
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 0.9215686274509803,
+          "color": "Blue"
+        },
+        {
+          "type": "Intensity",
+          "valuePercentage": 1
+        }
+      ],
+      "effects": [
+        {
+          "visible": true,
+          "type": "curve",
+          "uuid": "04898044-84e3-4d02-8da7-398e291ea04b",
+          "curveType": "sine",
+          "capabilities": [
+            {
+              "dmxRange": [],
+              "type": "Tilt"
+            }
+          ],
+          "channels": [],
+          "lengthMillis": 2924,
+          "phaseMillis": 0,
+          "amplitude": 0.95,
+          "position": 0.5,
+          "phasingMillis": 287
+        }
+      ],
+      "fadeInMillis": 0,
+      "fadeOutMillis": 0,
+      "uuid": "71b6c41a-91a6-4781-bf83-ba8d9ceac985",
+      "name": "Preset 1"
+    }
+  ],
+  "version": 2,
+  "shareToken": "53171cec-7c65-4d86-929b-8b8c1e3f5957",
+  "selectedPresetUuid": "71b6c41a-91a6-4781-bf83-ba8d9ceac985"
+}
