@@ -14,10 +14,10 @@ export class InfoDialogService {
   ) { }
 
   // Show an info dialog with an observable which resolves as soon as the user clicked ok
-  show(message: string): Observable<void> {
+  show(message: string, interpolateParams?: Object): Observable<void> {
     let fileDialog
 
-    return this.translateService.get(message).pipe(map(result => {
+    return this.translateService.get(message, interpolateParams).pipe(map(result => {
       fileDialog = this.modalService.show(InfoDialogComponent, { keyboard: true, ignoreBackdropClick: true });
       (<InfoDialogComponent>fileDialog.content).message = result;
     }),flatMap(() => {

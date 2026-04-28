@@ -173,6 +173,8 @@
     "usb-interface": "USB interface",
     "reset-after-boot": "Reset after boot",
     "download-logs": "Download logs",
+    "enable-maintenance-mode": "Enable Maintenance Mode",
+    "maintenance-mode-enabled": "SSH is now enabled with user \"rocketshow\" and the one-time password \"{{password}}\" for one hour or until reboot.",
     "remote-device-add": "Add remote device",
     "remote-device-name": "Name",
     "remote-device-name-placeholder": "My remote device",

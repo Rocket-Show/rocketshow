@@ -173,6 +173,8 @@
     "usb-interface": "USB Schnittstelle",
     "reset-after-boot": "Nach dem Aufstarten neu initialisieren",
     "download-logs": "Logs herunterladen",
+    "enable-maintenance-mode": "Wartungsmodus einschalten",
+    "maintenance-mode-enabled": "SSH ist jetzt mit dem Benutzer \"rocketshow\" und dem Einmalpasswort \"{{password}}\" für eine Stunde oder bis zum Neustart aktiviert.",
     "remote-device-add": "Entferntes Gerät hinzufügen",
     "remote-device-name": "Name",
     "remote-device-name-placeholder": "Mein entferntes Gerät",

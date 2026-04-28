@@ -10,7 +10,7 @@ import { saveAs } from "file-saver/FileSaver";
 import { HttpClient } from "@angular/common/http";
 import { OperatingSystemInformation } from "../../models/operating-system-information";
 import { OperatingSystemInformationService } from "../../services/operating-system-information.service";
-import { map } from "rxjs/operators";
+import { finalize, map } from "rxjs/operators";
 import { Subscription } from "rxjs";
 import { SessionService } from "../../services/session.service";
 import { ReloadClearCacheService } from "../../services/reload-clear-cache.service";
@@ -27,6 +27,7 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
 
   settings: Settings;
   private isResettingToFactory: boolean = false;
+  enableMaintenanceModeLoading: boolean = false;
   operatingSystemInformation: OperatingSystemInformation;
 
   loggingLevelList: string[] = [];
@@ -121,6 +122,27 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
       .get("system/download-logs", { responseType: "blob" })
       .subscribe((blob) => {
         this.downloadFile(blob);
+      });
+  }
+
+  enableMaintenanceMode() {
+    if (this.enableMaintenanceModeLoading) {
+      return;
+    }
+
+    this.enableMaintenanceModeLoading = true;
+
+    this.http
+      .post("system/enable-ssh", undefined, { responseType: "text" })
+      .pipe(
+        finalize(() => {
+          this.enableMaintenanceModeLoading = false;
+        })
+      )
+      .subscribe((password) => {
+        this.infoDialogService
+          .show("settings.maintenance-mode-enabled", { password: password })
+          .subscribe();
       });
   }
 }
