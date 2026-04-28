@@ -21,6 +21,7 @@ public class HealthStatus {
     private int recentErrorRate;
     private String softwareVersion;
     private Date softwareDate;
+    private Date eepromVersionDate;
     private String raucSlot;
 
     private List<String> reasons = new ArrayList<>();

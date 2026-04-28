@@ -11,12 +11,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 
 @Service
 public class DefaultHealthService implements HealthService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultHealthService.class);
+    private static final LocalDate EEPROM_MIN_VERSION_DATE = LocalDate.of(2025, 3, 10);
 
     private final HdmiService hdmiService;
     private final DiskSpaceService diskSpaceService;
@@ -26,6 +30,7 @@ public class DefaultHealthService implements HealthService {
     private final VersionService versionService;
     private final RaucService raucService;
     private final DeviceInformationService deviceInformationService;
+    private final EepromService eepromService;
 
     public DefaultHealthService(
             HdmiService hdmiService,
@@ -35,7 +40,8 @@ public class DefaultHealthService implements HealthService {
             ErrorLogService errorLogService,
             VersionService versionService,
             RaucService raucService,
-            DeviceInformationService deviceInformationService
+            DeviceInformationService deviceInformationService,
+            EepromService eepromService
     ) {
         this.hdmiService = hdmiService;
         this.diskSpaceService = diskSpaceService;
@@ -45,6 +51,7 @@ public class DefaultHealthService implements HealthService {
         this.versionService = versionService;
         this.raucService = raucService;
         this.deviceInformationService = deviceInformationService;
+        this.eepromService = eepromService;
     }
 
     private void addReason(HealthStatus healthStatus, String reason) {
@@ -74,6 +81,10 @@ public class DefaultHealthService implements HealthService {
         }
     }
 
+    private Date toDate(LocalDate localDate) {
+        return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+    }
+
     @Override
     public HealthStatus getHealthStatus() {
         HealthStatus healthStatus = new HealthStatus();
@@ -87,6 +98,21 @@ public class DefaultHealthService implements HealthService {
             healthStatus.setSoftwareDate(currentVersionInfo.getDate());
         } catch (Exception e) {
             logger.error("Could not read software version", e);
+        }
+
+        try {
+            LocalDate eepromVersionDate = eepromService.getVersionDate();
+            healthStatus.setEepromVersionDate(toDate(eepromVersionDate));
+
+            if (eepromVersionDate.isBefore(EEPROM_MIN_VERSION_DATE)) {
+                setDegraded(healthStatus);
+                addReason(healthStatus, "EEPROM version date " + eepromVersionDate
+                        + " is older than " + EEPROM_MIN_VERSION_DATE);
+            }
+        } catch (Exception e) {
+            setDegraded(healthStatus);
+            addReason(healthStatus, "Could not check EEPROM version");
+            logger.error("Could not check EEPROM version", e);
         }
 
         if (!hdmiService.isConnected()) {
