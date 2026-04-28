@@ -66,6 +66,7 @@ class SystemController {
     private final DeviceInformationService deviceInformationService;
     private final HealthService healthService;
     private final VersionService versionService;
+    private final SshService sshService;
 
     public SystemController(
             ControllerService controllerService,
@@ -90,7 +91,8 @@ class SystemController {
             ActionExecutionService actionExecutionService,
             DeviceInformationService deviceInformationService,
             HealthService healthService,
-            VersionService versionService
+            VersionService versionService,
+            SshService sshService
     ) {
         this.controllerService = controllerService;
         this.stateService = stateService;
@@ -115,6 +117,7 @@ class SystemController {
         this.deviceInformationService = deviceInformationService;
         this.healthService = healthService;
         this.versionService = versionService;
+        this.sshService = sshService;
     }
 
     private void settingsUpdateSystem() {
@@ -136,6 +139,11 @@ class SystemController {
     public ResponseEntity<Void> shutdown() throws Exception {
         shutdownService.shutdown();
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("enable-ssh")
+    public ResponseEntity<String> enableSsh() throws Exception {
+        return ResponseEntity.ok(sshService.enableSsh());
     }
 
     @PostMapping("reload-settings")
