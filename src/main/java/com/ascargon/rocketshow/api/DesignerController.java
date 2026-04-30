@@ -58,6 +58,9 @@ public class DesignerController {
             @RequestParam("positionMillis") long positionMillis,
             @RequestParam(value = "compositionName", required = false, defaultValue = "") String compositionName
     ) {
+        // If called with compositionName, we assume, the timeline is playing
+        // and respect scene regions. If no compositionName is provided,
+        // we just preview selected presets/scenes.
 
         if (!settingsService.getSettings().getDesignerLivePreview()) {
             logger.debug("Live preview disabled");
