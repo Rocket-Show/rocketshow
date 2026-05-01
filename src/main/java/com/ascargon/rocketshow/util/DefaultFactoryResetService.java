@@ -33,7 +33,7 @@ public class DefaultFactoryResetService implements FactoryResetService {
 
         logger.info("Factory reset...");
 
-        ShellManager shellManager = new ShellManager(new String[]{"sudo", " ", new ApplicationHome(RocketShowApplication.class).getDir() + File.separator + "reset.sh"});
+        ShellManager shellManager = new ShellManager(new String[]{"sudo", new ApplicationHome(RocketShowApplication.class).getDir() + File.separator + "reset.sh"});
         shellManager.getProcess().waitFor();
 
         logger.info("Factory reset finished");
