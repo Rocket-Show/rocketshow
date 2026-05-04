@@ -343,16 +343,6 @@ public class DefaultSettingsService implements SettingsService {
 
     @Override
     public void save() throws JAXBException {
-        File directoryFile = new File(directory);
-        if (!directoryFile.exists()) {
-            // Reset the defaults, to create the directory and populate some example data
-            try {
-                factoryResetService.reset();
-            } catch (Exception e) {
-                logger.error("Could not initialize the defaults", e);
-            }
-        }
-
         File file = new File(directory, FILE_NAME + ".xml");
 
         JAXBContext jaxbContext = JAXBContext.newInstance(Settings.class);

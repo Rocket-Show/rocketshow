@@ -4,6 +4,7 @@ import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.ActionExecutionService;
 import com.ascargon.rocketshow.util.DeviceInformationService;
 import com.ascargon.rocketshow.util.FactoryResetService;
+import com.ascargon.rocketshow.util.RebootService;
 import com.pi4j.context.Context;
 import com.pi4j.io.gpio.digital.DigitalInput;
 import com.pi4j.io.gpio.digital.DigitalInputConfigBuilder;
@@ -30,6 +31,7 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
 
     private final DeviceInformationService deviceInformationService;
     private final FactoryResetService factoryResetService;
+    private final RebootService rebootService;
 
     private Context pi4j = null;
     private List<DigitalInput> digitalInputList = new ArrayList<>();
@@ -44,10 +46,12 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
             ActionExecutionService actionExecutionService,
             Pi4jService pi4jService,
             DeviceInformationService deviceInformationService,
-            FactoryResetService factoryResetService
+            FactoryResetService factoryResetService,
+            RebootService rebootService
     ) {
         this.deviceInformationService = deviceInformationService;
         this.factoryResetService = factoryResetService;
+        this.rebootService = rebootService;
 
         if (!settingsService.getSettings().getEnableRaspberryGpio()) {
             return;
@@ -74,16 +78,6 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
 
             digitalInput.addListener(event -> {
                 if (event.state() == DigitalState.LOW) {
-                    logger.debug("Reset button pressed");
-                    System.out.println("Reset button pressed");
-                    try {
-                        factoryResetService.reset();
-                    } catch (Exception e) {
-                        logger.error("Could not factory reset from button press", e);
-                    }
-                }
-
-                if (event.state() == DigitalState.LOW) {
                     // Button pressed
                     if (resetScheduled.compareAndSet(false, true)) {
                         resetTriggered.set(false);
@@ -92,15 +86,15 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
                             // Only reset if button is still pressed after 3 seconds
                             if (digitalInput.state() == DigitalState.LOW && !resetTriggered.get()) {
                                 resetTriggered.set(true);
-                                logger.debug("Reset button held for 5+ seconds");
-                                System.out.println("Reset button held for 5+ seconds");
+                                logger.debug("Reset button held for 3+ seconds");
                                 try {
                                     factoryResetService.reset();
+                                    rebootService.reboot();
                                 } catch (Exception e) {
                                     logger.error("Could not factory reset from button press", e);
                                 }
                             }
-                        }, 5, TimeUnit.SECONDS);
+                        }, 3, TimeUnit.SECONDS);
 
                         resetFuture.set(future);
                     }

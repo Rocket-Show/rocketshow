@@ -68,7 +68,6 @@ public class SecurityConfig {
                         // Permit update state, because otherwise a new login is required after booting into a new slot (with
                         // maybe different persisted Spring Boot serialized session).
                         .requestMatchers(HttpMethod.GET, "/api/system/update-state").permitAll()
-                        .requestMatchers("/api/update/state").permitAll()
 
                         .requestMatchers(HttpMethod.POST, "/api/system/test").access(systemTestAuthorizationManager)
 

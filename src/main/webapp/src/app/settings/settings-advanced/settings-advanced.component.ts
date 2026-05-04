@@ -34,7 +34,6 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
 
   constructor(
     private settingsService: SettingsService,
-    private sessionService: SessionService,
     private warningDialogService: WarningDialogService,
     private waitDialogService: WaitDialogService,
     private http: HttpClient,
