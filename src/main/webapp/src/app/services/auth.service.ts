@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of, Subject } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { Observable, of, Subject, timer } from 'rxjs';
+import { catchError, filter, map, switchMap, take, tap } from 'rxjs/operators';
 
 export interface AuthState {
   authenticated: boolean;
@@ -27,23 +27,47 @@ export class AuthService {
     this.noConnection = false;
     return this.http.get<AuthState>('auth/me', { withCredentials: true }).pipe(
       tap(result => {
-        this.currentState = result;
-        this.state.next(this.currentState);
-        this.initiallyLoaded = true;
+        this.setCurrentState(result);
       }),
       catchError((error) => {
         if (error.status === 0) {
           this.noConnection = true;
         }
-        this.currentState = {
+        return of(this.setCurrentState({
           authenticated: false,
           passwordConfigured: true
-        };
-        this.state.next(this.currentState);
-        this.initiallyLoaded = true;
-        return of(this.currentState);
+        }, false));
       })
     );
+  }
+
+  pollForStateAfterConnectionLoss(pollIntervalMs: number = 1000): Observable<AuthState> {
+    let connectionLost = false;
+
+    return timer(0, pollIntervalMs).pipe(
+      switchMap(() => this.http.get<AuthState>('auth/me', { withCredentials: true }).pipe(
+        catchError((error) => {
+          connectionLost = true;
+          if (error.status === 0) {
+            this.noConnection = true;
+          }
+          return of(undefined);
+        })
+      )),
+      filter((result) => connectionLost && result !== undefined),
+      take(1),
+      map((result) => this.setCurrentState(result as AuthState))
+    );
+  }
+
+  private setCurrentState(state: AuthState, connectionAvailable: boolean = true): AuthState {
+    this.currentState = state;
+    this.state.next(this.currentState);
+    this.initiallyLoaded = true;
+    if (connectionAvailable) {
+      this.noConnection = false;
+    }
+    return this.currentState;
   }
 
   setup(
