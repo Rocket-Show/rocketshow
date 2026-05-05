@@ -9,7 +9,6 @@ import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.midi.MidiDeviceInService;
 import com.ascargon.rocketshow.midi.MidiDeviceOutService;
 import com.ascargon.rocketshow.play.PlayerService;
-import com.ascargon.rocketshow.session.SessionService;
 import com.ascargon.rocketshow.settings.ApiKey;
 import com.ascargon.rocketshow.settings.Settings;
 import com.ascargon.rocketshow.settings.SettingsService;
@@ -57,7 +56,6 @@ class SystemController {
     private final LogDownloadService logDownloadService;
     private final DiskSpaceService diskSpaceService;
     private final OperatingSystemInformationService operatingSystemInformationService;
-    private final SessionService sessionService;
     private final CompositionService compositionService;
     private final DesignerService designerService;
     private final BackupService backupService;
@@ -83,7 +81,6 @@ class SystemController {
             LogDownloadService logDownloadService,
             DiskSpaceService diskSpaceService,
             OperatingSystemInformationService operatingSystemInformationService,
-            SessionService sessionService,
             CompositionService compositionService,
             DesignerService designerService,
             BackupService backupService,
@@ -108,7 +105,6 @@ class SystemController {
         this.logDownloadService = logDownloadService;
         this.diskSpaceService = diskSpaceService;
         this.operatingSystemInformationService = operatingSystemInformationService;
-        this.sessionService = sessionService;
         this.compositionService = compositionService;
         this.designerService = designerService;
         this.backupService = backupService;

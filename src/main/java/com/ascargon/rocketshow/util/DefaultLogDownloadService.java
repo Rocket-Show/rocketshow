@@ -29,16 +29,16 @@ public class DefaultLogDownloadService implements LogDownloadService {
     @Override
     public File getLogsFile() throws Exception {
         // zip the log directory
-        FileOutputStream fileOutputStream = new FileOutputStream(LOGS_FILE_NAME);
-        ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream);
+        File logsFile = new File(settingsService.getSettings().getBasePath() + LOGS_FILE_NAME);
         File fileToZip = new File(settingsService.getSettings().getBasePath() + "log");
 
-        zipService.zipFile(fileToZip, fileToZip.getName(), zipOutputStream, null);
-        zipOutputStream.close();
-        fileOutputStream.close();
+        try (FileOutputStream fileOutputStream = new FileOutputStream(logsFile);
+             ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream)) {
+            zipService.zipFile(fileToZip, fileToZip.getName(), zipOutputStream, null);
+        }
 
         // Return the prepared zip
-        return new File(settingsService.getSettings().getBasePath() + LOGS_FILE_NAME);
+        return logsFile;
     }
 
 }

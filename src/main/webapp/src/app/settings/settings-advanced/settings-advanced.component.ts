@@ -24,6 +24,7 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
 
   settings: Settings;
   enableMaintenanceModeLoading: boolean = false;
+  downloadLogsLoading: boolean = false;
   operatingSystemInformation: OperatingSystemInformation;
 
   loggingLevelList: string[] = [];
@@ -108,8 +109,19 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
   }
 
   downloadLogs() {
+    if (this.downloadLogsLoading) {
+      return;
+    }
+
+    this.downloadLogsLoading = true;
+
     this.http
       .get("system/download-logs", { responseType: "blob" })
+      .pipe(
+        finalize(() => {
+          this.downloadLogsLoading = false;
+        })
+      )
       .subscribe((blob) => {
         this.downloadFile(blob);
       });

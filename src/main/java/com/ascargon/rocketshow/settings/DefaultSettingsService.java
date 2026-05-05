@@ -30,7 +30,6 @@ public class DefaultSettingsService implements SettingsService {
 
     private final OperatingSystemInformationService operatingSystemInformationService;
     private final MidiService midiService;
-    private final FactoryResetService factoryResetService;
     private final DeviceInformationService deviceInformationService;
 
     private Settings settings;
@@ -38,12 +37,10 @@ public class DefaultSettingsService implements SettingsService {
     public DefaultSettingsService(
             OperatingSystemInformationService operatingSystemInformationService,
             MidiService midiService,
-            FactoryResetService factoryResetService,
             DeviceInformationService deviceInformationService
     ) {
         this.operatingSystemInformationService = operatingSystemInformationService;
         this.midiService = midiService;
-        this.factoryResetService = factoryResetService;
         this.deviceInformationService = deviceInformationService;
 
         directory = new ApplicationHome(RocketShowApplication.class).getDir().toString();

@@ -23,8 +23,16 @@
 <div class="form-group row">
   <div class="col-lg-3"></div>
   <div class="col-lg-9">
-    <a href="#" class="btn btn-primary btn-sm" (click)="downloadLogs(); false;">
-      <i class="fa fa-download"></i> {{ 'settings.download-logs' | translate }}</a>
+    <button type="button" class="btn btn-primary btn-sm" [disabled]="downloadLogsLoading"
+      (click)="downloadLogs(); false;">
+      @if (downloadLogsLoading) {
+      <i class="fa fa-spinner fa-pulse fa-fw"></i>
+      }
+      @if (!downloadLogsLoading) {
+      <i class="fa fa-download"></i>
+      }
+      {{ 'settings.download-logs' | translate }}
+    </button>
   </div>
 </div>
 
