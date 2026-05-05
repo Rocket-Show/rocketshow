@@ -10,7 +10,31 @@
     "9e40f72c-be2c-4f6e-ba5f-a293302f26d3"
   ],
   "previewPreset": true,
-  "compositions": [],
+  "compositions": [
+    {
+      "syncType": "audio",
+      "audioFileInLibrary": true,
+      "beatsPerMinute": 94,
+      "timeSignatureUpper": 4,
+      "timeSignatureLower": 4,
+      "snapToGrid": true,
+      "tempoGuessed": true,
+      "gridType": "musical",
+      "gridOffsetMillis": 290.2544326244592,
+      "gridResolution": 1,
+      "durationMillis": 0,
+      "scenePlaybackRegions": [
+        {
+          "sceneUuid": "9e40f72c-be2c-4f6e-ba5f-a293302f26d3",
+          "startMillis": 48801,
+          "endMillis": 78801
+        }
+      ],
+      "uuid": "c145e55b-23ec-48ce-85d0-2eb2563fcffd",
+      "name": "Example Composition",
+      "audioFileName": "head_smashed_far_away.wav"
+    }
+  ],
   "fixtureProfiles": [
     {
       "createdFromFile": false,
@@ -514,5 +538,6 @@
   ],
   "version": 2,
   "shareToken": "53171cec-7c65-4d86-929b-8b8c1e3f5957",
-  "selectedPresetUuid": "71b6c41a-91a6-4781-bf83-ba8d9ceac985"
+  "selectedPresetUuid": "71b6c41a-91a6-4781-bf83-ba8d9ceac985",
+  "selectedCompositionUuid": "c145e55b-23ec-48ce-85d0-2eb2563fcffd"
 }
