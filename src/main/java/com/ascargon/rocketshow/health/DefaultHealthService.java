@@ -115,9 +115,9 @@ public class DefaultHealthService implements HealthService {
             logger.error("Could not check EEPROM version", e);
         }
 
-        if (!hdmiService.isConnected()) {
-            addReason(healthStatus, "HDMI is not connected");
-        }
+//        if (!hdmiService.isConnected()) {
+//            addReason(healthStatus, "HDMI is not connected");
+//        }
 
         try {
             double used = diskSpaceService.get().getUsedMB();

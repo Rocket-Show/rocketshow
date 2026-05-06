@@ -1,10 +1,13 @@
 package com.ascargon.rocketshow.util;
 
+import com.ascargon.rocketshow.RocketShowApplication;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.system.ApplicationHome;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.security.SecureRandom;
@@ -29,7 +32,7 @@ public class DefaultSshService implements SshService {
     public synchronized String enableSsh() throws IOException, InterruptedException {
         String password = generatePassword();
 
-        runScript("sudo", "/opt/rocketshow/enable-ssh.sh", password);
+        runScript("sudo", new ApplicationHome(RocketShowApplication.class).getDir() + File.separator + "enable-ssh.sh", password);
         scheduleDisableSsh();
 
         return password;
@@ -55,7 +58,7 @@ public class DefaultSshService implements SshService {
 
     private void disableSsh() {
         try {
-            runScript("sudo", "/opt/rocketshow/disable-ssh.sh");
+            runScript("sudo", new ApplicationHome(RocketShowApplication.class).getDir() + File.separator + "disable-ssh.sh");
         } catch (Exception e) {
             logger.error("Could not disable SSH", e);
         } finally {

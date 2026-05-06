@@ -177,6 +177,7 @@
             <div class="col-md-9">
               <select class="custom-select" [ngModel]="settings?.wlanApCountryCode"
                 (ngModelChange)="settings.wlanApCountryCode = $event">
+                <option [ngValue]="selectUndefinedOptionValue">- None -</option>
                 <option value="DZ">Algeria</option>
                 <option value="AR">Argentina</option>
                 <option value="AU">Australia</option>

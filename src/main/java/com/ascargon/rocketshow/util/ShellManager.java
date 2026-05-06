@@ -16,6 +16,7 @@ public class ShellManager {
     private final PrintStream outStream;
 
     public ShellManager(String[] command) throws IOException {
+        validateCommand(command);
         logger.debug("Execute shell command: {}", String.join(" ", command));
 
         process = new ProcessBuilder(command).redirectErrorStream(true).start();
@@ -24,6 +25,18 @@ public class ShellManager {
         if (logger.isDebugEnabled()) {
             // log the output from the call
             logInputStreamAsync(process.getInputStream(), command);
+        }
+    }
+
+    private static void validateCommand(String[] command) throws IOException {
+        if (command == null || command.length == 0) {
+            throw new IOException("Shell command must not be empty");
+        }
+
+        for (int i = 0; i < command.length; i++) {
+            if (command[i] == null) {
+                throw new IOException("Shell command contains null value at index " + i);
+            }
         }
     }
 

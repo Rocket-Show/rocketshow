@@ -1,9 +1,12 @@
 package com.ascargon.rocketshow.util;
 
+import com.ascargon.rocketshow.RocketShowApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.system.ApplicationHome;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -102,8 +105,7 @@ public class DefaultDeviceInformationService implements DeviceInformationService
 
         ProcessBuilder pb = new ProcessBuilder(
                 "sudo",
-                "/usr/local/bin/store-device-info",
-                CFG_PATH.toString()
+                new ApplicationHome(RocketShowApplication.class).getDir() + File.separator + "store-device-info.sh"
         );
 
         Process p = pb.start();

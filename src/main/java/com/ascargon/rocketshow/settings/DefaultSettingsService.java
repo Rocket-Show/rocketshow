@@ -228,10 +228,6 @@ public class DefaultSettingsService implements SettingsService {
             settings.setWlanApChannel(7);
         }
 
-        if (settings.getWlanApCountryCode() == null) {
-            settings.setWlanApCountryCode("US");
-        }
-
         if (settings.getInstrumentList().isEmpty()) {
             Instrument instrument;
 
@@ -270,7 +266,10 @@ public class DefaultSettingsService implements SettingsService {
 
         if (settings.getWlanApCountryCode() == null) {
             if (deviceInformationService.getDeviceInformation().isAvailable()) {
-                settings.setWlanApCountryCode(deviceInformationService.getDeviceInformation().getCountry());
+                String countryCode = deviceInformationService.getDeviceInformation().getCountry();
+                if (countryCode != null && !countryCode.isBlank()) {
+                    settings.setWlanApCountryCode(countryCode);
+                }
             }
         }
     }
@@ -279,7 +278,7 @@ public class DefaultSettingsService implements SettingsService {
     public AudioBus getAudioBusByName(String outputBus) {
         if (outputBus == null) {
             if (!settings.getAudioBusList().isEmpty()) {
-                return settings.getAudioBusList().get(0);
+                return settings.getAudioBusList().getFirst();
             } else {
                 return null;
             }
@@ -294,7 +293,7 @@ public class DefaultSettingsService implements SettingsService {
 
         // Return a default bus, if none is found
         if (!settings.getAudioBusList().isEmpty()) {
-            return settings.getAudioBusList().get(0);
+            return settings.getAudioBusList().getFirst();
         }
 
         return null;

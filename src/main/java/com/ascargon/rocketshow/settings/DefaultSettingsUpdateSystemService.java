@@ -1,9 +1,9 @@
 package com.ascargon.rocketshow.settings;
 
+import com.ascargon.rocketshow.RocketShowApplication;
 import com.ascargon.rocketshow.audio.AudioDevice;
 import com.ascargon.rocketshow.audio.AudioService;
 import com.ascargon.rocketshow.lighting.LightingService;
-import com.ascargon.rocketshow.util.DeviceInformationService;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import com.ascargon.rocketshow.util.ShellManager;
@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.system.ApplicationHome;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -30,19 +31,16 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
     private final OperatingSystemInformationService operatingSystemInformationService;
     private final AudioService audioService;
     private final LightingService lightingService;
-    private final DeviceInformationService deviceInformationService;
 
     public DefaultSettingsUpdateSystemService(
             SettingsService settingsService, AudioService audioService,
             OperatingSystemInformationService operatingSystemInformationService,
-            LightingService lightingService,
-            DeviceInformationService deviceInformationService
+            LightingService lightingService
     ) {
         this.settingsService = settingsService;
         this.audioService = audioService;
         this.operatingSystemInformationService = operatingSystemInformationService;
         this.lightingService = lightingService;
-        this.deviceInformationService = deviceInformationService;
     }
 
     private void setSystemAudioOutput(int id) throws Exception {
@@ -184,6 +182,7 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
     private void updateWlanAp(Settings settings) {
         String apConfig = "";
         String statusCommand;
+        String countryCode = getWlanApCountryCode(settings);
 
         // Update the access point configuration
         apConfig += "interface=wlan0\n";
@@ -192,7 +191,9 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
         apConfig += "utf8_ssid=1\n";
         apConfig += "hw_mode=" + settings.getWlanApHwMode() + "\n";
         apConfig += "channel=" + settings.getWlanApChannel() + "\n";
-        apConfig += "country_code=" + settings.getWlanApCountryCode() + "\n";
+        if (countryCode != null) {
+            apConfig += "country_code=" + countryCode + "\n";
+        }
         apConfig += "wmm_enabled=0\n";
         apConfig += "macaddr_acl=0\n";
         apConfig += "auth_algs=1\n";
@@ -224,11 +225,13 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
             logger.error("Could not write /etc/hostapd/hostapd.conf", e);
         }
 
-        // Set the country in the raspberry settings (and temporarily remount /boot/firmware as rw to do so
-        try {
-            new ShellManager(new String[]{"sudo", "/opt/rocketshow/set-connection-mode.sh", settings.getWlanApCountryCode()});
-        } catch (IOException e) {
-            logger.error("Could not update wifi country '{}'", settings.getWlanApCountryCode(), e);
+        // Set the country in the raspberry settings (and temporarily remount /boot/firmware as rw to do so)
+        if (countryCode != null) {
+            try {
+                new ShellManager(new String[]{"sudo", new ApplicationHome(RocketShowApplication.class).getDir() + File.separator + "set-wifi-ap-country.sh", countryCode});
+            } catch (IOException e) {
+                logger.error("Could not update wifi country '{}'", countryCode, e);
+            }
         }
 
         // Activate/deactivate the access point completely
@@ -249,6 +252,14 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
         }
     }
 
+    private String getWlanApCountryCode(Settings settings) {
+        if (settings.getWlanApCountryCode() != null && !settings.getWlanApCountryCode().isBlank()) {
+            return settings.getWlanApCountryCode();
+        }
+
+        return null;
+    }
+
     private void updateConnectionMode(Settings settings) {
         String mode = "http";
 
@@ -257,7 +268,7 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
         }
 
         try {
-            new ShellManager(new String[]{"sudo", "/opt/rocketshow/set-connection-mode.sh", mode});
+            new ShellManager(new String[]{"sudo", new ApplicationHome(RocketShowApplication.class).getDir() + File.separator + "set-connection-mode.sh", mode});
         } catch (IOException e) {
             logger.error("Could not update the connection mode with '{}'", mode, e);
         }

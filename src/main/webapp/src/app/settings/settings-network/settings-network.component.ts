@@ -16,6 +16,8 @@ export class SettingsNetworkComponent implements OnInit, OnDestroy {
 
   private settingsChangedSubscription: Subscription;
 
+  selectUndefinedOptionValue: any = undefined;
+
   settings: Settings;
 
   constructor(
