@@ -141,17 +141,6 @@ export class SettingsComponent implements OnInit {
   }
 
   canDeactivate(): Observable<boolean> {
-    // const subject = new Subject<boolean>();
-
-    // setTimeout(() => {
-    //   subject.next(false); // Emit false after 3 seconds (prevent navigation)
-    //   subject.complete(); // Complete the subject
-    // }, 3000);
-
-    // return subject.asObservable(); // Return as Observable so Angular waits
-
-    // return of(true);
-    // Does not work. In case false is returned, the component gets reloaded and the changes are lost anyway.
     return this.settingsService.getSettings().pipe(
       mergeMap((result) => {
         return this.pendingChangesDialogService.check(

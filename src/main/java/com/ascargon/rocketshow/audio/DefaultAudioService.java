@@ -62,7 +62,10 @@ public class DefaultAudioService implements AudioService {
                     if (audioDevice.getName() != null
                             && !audioDevice.getName().isEmpty()
                             && !"ALSA".equals(audioDevice.getKey())
-                            && !"Headphones".equals(audioDevice.getKey())) {
+                            && !"Headphones".equals(audioDevice.getKey())
+                            && !"vc4hdmi0".equals(audioDevice.getKey())
+                            && !"vc4hdmi1".equals(audioDevice.getKey())
+                    ) {
                         audioDeviceList.add(audioDevice);
                     }
                 }
