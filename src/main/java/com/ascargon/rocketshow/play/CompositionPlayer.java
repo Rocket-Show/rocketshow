@@ -849,6 +849,8 @@ public class CompositionPlayer {
 
     public void stop() throws Exception {
         startPosition = 0;
+        seekAfterPlay = false;
+        firstPlayDone = false;
 
         if (composition == null || playState == PlayState.STOPPED) {
             return;
@@ -892,7 +894,7 @@ public class CompositionPlayer {
     }
 
     public void seek(long positionMillis) throws Exception {
-        if (!firstPlayDone) {
+        if (pipeline == null || !firstPlayDone) {
             seekAfterPlay = true;
         }
         startPosition = positionMillis;
