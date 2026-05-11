@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PreDestroy;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -429,12 +430,10 @@ public class DefaultPlayerService implements PlayerService {
     public void setNextComposition() throws Exception {
         if (setService.getCurrentSet() == null) {
             if (compositionService.getNextComposition(currentCompositionPlayer.getComposition()) != null) {
-                stop(true);
                 setComposition(compositionService.getNextComposition(currentCompositionPlayer.getComposition()));
             }
         } else {
             if (setService.getNextSetComposition() != null) {
-                stop(true);
                 setService.setCurrentCompositionIndex(setService.getCurrentCompositionIndex() + 1);
                 setCompositionName(setService.getCurrentCompositionName());
             }
@@ -465,15 +464,19 @@ public class DefaultPlayerService implements PlayerService {
     @Override
     public void compositionPlayerFinishedPlaying(CompositionPlayer compositionPlayer) throws Exception {
         if (compositionPlayer.isSample()) {
+            // Do nothing, if we played the composition as sample (multiple parallel possible)
+
             sampleCompositionPlayerList.remove(compositionPlayer);
             return;
         }
 
-        if (setService.getCurrentSet() != null
+        if (sessionService.getSession().isAutoSelectNextComposition()
+                && setService.getCurrentSet() != null
                 && setService.getCurrentSet().getSetCompositionList() != null
                 && setService.getCurrentSet().getSetCompositionList().size() > setService.getCurrentCompositionIndex()
                 && setService.getCurrentSet().getSetCompositionList().get(setService.getCurrentCompositionIndex()).isAutoStartNextComposition()
                 && setService.getNextSetComposition() != null) {
+
             // Stop the current composition, don't play the default composition but start
             // playing the next composition
             logger.info("Automatically start the next composition");
@@ -483,6 +486,8 @@ public class DefaultPlayerService implements PlayerService {
         } else if (sessionService.getSession().isAutoSelectNextComposition()) {
             // Stop the current composition, play the default composition and select the
             // next composition automatically (if there is one)
+
+            stop(true);
             setNextComposition();
         } else {
             stop(true);
