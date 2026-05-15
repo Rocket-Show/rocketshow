@@ -214,7 +214,7 @@
     "update-start": "Starting update...",
     "update-install": "Installing...",
     "update-reboot": "Rebooting...",
-    "update-finished": "he update has finished successfully.",
+    "update-finished": "The update has finished successfully.",
     "reboot-device": "Reboot",
     "shutdown-device": "Shutdown",
     "default-composition": "Default composition",
