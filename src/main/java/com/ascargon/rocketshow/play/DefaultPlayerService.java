@@ -15,6 +15,7 @@ import com.ascargon.rocketshow.midi.MidiRouterFactory;
 import com.ascargon.rocketshow.midi.MidiService;
 import com.ascargon.rocketshow.session.SessionService;
 import com.ascargon.rocketshow.settings.CapabilitiesService;
+import com.ascargon.rocketshow.settings.DefaultCompositionChangedEvent;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.ActionExecutionService;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
@@ -22,6 +23,7 @@ import com.ascargon.rocketshow.video.HdmiService;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PreDestroy;
@@ -383,6 +385,25 @@ public class DefaultPlayerService implements PlayerService {
 
         defaultCompositionPlayer.setComposition(compositionService.getComposition(settingsService.getSettings().getDefaultComposition()));
         defaultCompositionPlayer.play();
+    }
+
+    @EventListener
+    public synchronized void defaultCompositionChanged(DefaultCompositionChangedEvent event) {
+        try {
+            refreshDefaultComposition();
+        } catch (Exception e) {
+            logger.error("Could not refresh default composition", e);
+        }
+    }
+
+    private synchronized void refreshDefaultComposition() throws Exception {
+        stopDefaultComposition();
+
+        if (currentCompositionPlayer.getPlayState() != CompositionPlayer.PlayState.STOPPED) {
+            return;
+        }
+
+        playDefaultComposition();
     }
 
     private synchronized void stopDefaultComposition() throws Exception {

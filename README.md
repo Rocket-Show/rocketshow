@@ -92,6 +92,18 @@ Use the following HTTP endpoint to check the health (available without security)
 
 Use the following HTTP endpoint to run some system tests (available without security, as long as the initial setup is not yet completed): `POST /api/system/test`
 
+### Build Gstreamer
+
+```shell
+git clone https://gitlab.freedesktop.org/gstreamer/gstreamer.git
+cd gstreamer
+rm -rf builddir
+meson setup builddir --buildtype=debugoptimized -Dintrospection=disabled
+meson compile -C builddir
+meson devenv -C builddir
+gst-inspect-1.0 --version
+```
+
 ### Build OLA
 
 To build the OLA Client jar required by Rocket Show, follow these steps on a mac:

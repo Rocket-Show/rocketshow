@@ -13,10 +13,12 @@ import jakarta.xml.bind.Unmarshaller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.system.ApplicationHome;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.MidiUnavailableException;
 import java.io.File;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -31,17 +33,21 @@ public class DefaultSettingsService implements SettingsService {
     private final OperatingSystemInformationService operatingSystemInformationService;
     private final MidiService midiService;
     private final DeviceInformationService deviceInformationService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     private Settings settings;
+    private String lastSavedDefaultComposition;
 
     public DefaultSettingsService(
             OperatingSystemInformationService operatingSystemInformationService,
             MidiService midiService,
-            DeviceInformationService deviceInformationService
+            DeviceInformationService deviceInformationService,
+            ApplicationEventPublisher applicationEventPublisher
     ) {
         this.operatingSystemInformationService = operatingSystemInformationService;
         this.midiService = midiService;
         this.deviceInformationService = deviceInformationService;
+        this.applicationEventPublisher = applicationEventPublisher;
 
         directory = new ApplicationHome(RocketShowApplication.class).getDir().toString();
         if (isReadOnlyFileSystem()) {
@@ -59,6 +65,7 @@ public class DefaultSettingsService implements SettingsService {
 
         // Save the settings to store migrations, default values, etc.
         try {
+            lastSavedDefaultComposition = getNormalizedDefaultComposition();
             save();
         } catch (JAXBException e) {
             logger.error("Could not save settings", e);
@@ -348,6 +355,8 @@ public class DefaultSettingsService implements SettingsService {
         jaxbMarshaller.marshal(settings, file);
 
         logger.info("Settings saved");
+
+        publishDefaultCompositionChangedEventIfNeeded();
     }
 
     @Override
@@ -371,7 +380,36 @@ public class DefaultSettingsService implements SettingsService {
             throw new Exception("The settings have been saved with a newer version of Rocket Show and cannot be used with the current one.");
         }
 
+        lastSavedDefaultComposition = getNormalizedDefaultComposition();
+
         logger.info("Settings loaded");
+    }
+
+    private String normalizeDefaultComposition(String defaultComposition) {
+        if (defaultComposition == null || defaultComposition.isBlank()) {
+            return null;
+        }
+
+        return defaultComposition;
+    }
+
+    private String getNormalizedDefaultComposition() {
+        if (settings == null) {
+            return null;
+        }
+
+        return normalizeDefaultComposition(settings.getDefaultComposition());
+    }
+
+    private void publishDefaultCompositionChangedEventIfNeeded() {
+        String defaultComposition = getNormalizedDefaultComposition();
+
+        if (Objects.equals(lastSavedDefaultComposition, defaultComposition)) {
+            return;
+        }
+
+        lastSavedDefaultComposition = defaultComposition;
+        applicationEventPublisher.publishEvent(new DefaultCompositionChangedEvent(defaultComposition));
     }
 
     private void migrateToVersion2() {
