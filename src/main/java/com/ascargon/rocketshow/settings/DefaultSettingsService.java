@@ -139,10 +139,18 @@ public class DefaultSettingsService implements SettingsService {
 
         if (settings.getMidiOutDevice() == null) {
             try {
-                settings.setMidiInDevice(getFirstMidiNonSerialDevice(MidiDirection.OUT));
+                settings.setMidiOutDevice(getFirstMidiNonSerialDevice(MidiDirection.OUT));
             } catch (MidiUnavailableException e) {
                 logger.error("Could not get any MIDI OUT devices", e);
             }
+        }
+
+        if (settings.getMidiTimecodeEnabled() == null) {
+            settings.setMidiTimecodeEnabled(false);
+        }
+
+        if (settings.getMidiTimecodeFrameRate() == null) {
+            settings.setMidiTimecodeFrameRate(MidiTimecodeFrameRate.FPS_30);
         }
 
         // Add the default audio bus

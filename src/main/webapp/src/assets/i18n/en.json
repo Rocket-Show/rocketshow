@@ -188,6 +188,15 @@
     "video-resolution-height": "Height (px)",
     "midi-device-in": "MIDI input",
     "midi-device-out": "MIDI output",
+    "midi-timecode": "MIDI timecode",
+    "midi-timecode-enable": "Send MIDI timecode",
+    "midi-timecode-frame-rate": "Frame rate",
+    "midi-timecode-frame-rate-enum": {
+      "FPS_24": "24 fps",
+      "FPS_25": "25 fps",
+      "FPS_29_97_DROP": "29.97 fps drop-frame",
+      "FPS_30": "30 fps"
+    },
     "midi-control": "Control",
     "midi-control-type": "Type",
     "midi-control-add": "Add control",

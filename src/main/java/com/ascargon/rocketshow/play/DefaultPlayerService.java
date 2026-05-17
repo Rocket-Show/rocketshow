@@ -13,6 +13,7 @@ import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.midi.ActivityNotificationMidiService;
 import com.ascargon.rocketshow.midi.MidiRouterFactory;
 import com.ascargon.rocketshow.midi.MidiService;
+import com.ascargon.rocketshow.midi.MidiTimecodeService;
 import com.ascargon.rocketshow.session.SessionService;
 import com.ascargon.rocketshow.settings.CapabilitiesService;
 import com.ascargon.rocketshow.settings.DefaultCompositionChangedEvent;
@@ -70,6 +71,8 @@ public class DefaultPlayerService implements PlayerService {
     @Getter
     private final MidiService midiService;
     @Getter
+    private final MidiTimecodeService midiTimecodeService;
+    @Getter
     private final CapabilitiesService capabilitiesService;
     @Getter
     private final HdmiService hdmiService;
@@ -98,6 +101,7 @@ public class DefaultPlayerService implements PlayerService {
             DesignerService designerService,
             OperatingSystemInformationService operatingSystemInformationService,
             MidiService midiService,
+            MidiTimecodeService midiTimecodeService,
             MidiRouterFactory midiRouterFactory,
             ActionExecutionService actionExecutionService,
             CapabilitiesService capabilitiesService,
@@ -120,6 +124,7 @@ public class DefaultPlayerService implements PlayerService {
         this.operatingSystemInformationService = operatingSystemInformationService;
         this.midiRouterFactory = midiRouterFactory;
         this.midiService = midiService;
+        this.midiTimecodeService = midiTimecodeService;
         this.actionExecutionService = actionExecutionService;
         this.capabilitiesService = capabilitiesService;
         this.hdmiService = hdmiService;

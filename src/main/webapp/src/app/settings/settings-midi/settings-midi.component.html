@@ -65,6 +65,47 @@
 
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{
+    "settings.midi-timecode" | translate
+  }}</label>
+  <div class="col-lg-9">
+    <div class="form-check">
+      <input
+        type="checkbox"
+        [ngModel]="settings?.midiTimecodeEnabled"
+        (ngModelChange)="settings.midiTimecodeEnabled = $event"
+        class="form-check-input"
+        id="midi-timecode-enable"
+        />
+      <label class="form-check-label" for="midi-timecode-enable">
+        {{ "settings.midi-timecode-enable" | translate }}
+      </label>
+    </div>
+  </div>
+</div>
+
+@if (settings?.midiTimecodeEnabled) {
+  <div class="form-group row">
+    <label class="col-lg-3 col-form-label">{{
+      "settings.midi-timecode-frame-rate" | translate
+    }}</label>
+    <div class="col-lg-9">
+      <select
+        class="custom-select"
+        [ngModel]="settings?.midiTimecodeFrameRate"
+        (ngModelChange)="settings.midiTimecodeFrameRate = $event"
+        >
+        @for (frameRate of midiTimecodeFrameRates; track frameRate) {
+          <option [ngValue]="frameRate">
+            {{ "settings.midi-timecode-frame-rate-enum." + frameRate | translate }}
+          </option>
+        }
+      </select>
+    </div>
+  </div>
+}
+
+<div class="form-group row">
+  <label class="col-lg-3 col-form-label">{{
     "settings.global-play-offset" | translate
   }}</label>
   <div class="col-lg-9">

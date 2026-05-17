@@ -80,6 +80,7 @@ public class CompositionPlayer {
     private final MidiRouterFactory midiRouterFactory;
     private final ActionExecutionService actionExecutionService;
     private final MidiService midiService;
+    private final MidiTimecodeService midiTimecodeService;
     private final HdmiService hdmiService;
 
     private Composition composition;
@@ -131,6 +132,7 @@ public class CompositionPlayer {
         this.midiRouterFactory = midiRouterFactory;
         this.actionExecutionService = playerService.getActionExecutionService();
         this.midiService = playerService.getMidiService();
+        this.midiTimecodeService = playerService.getMidiTimecodeService();
         this.hdmiService = playerService.getHdmiService();
 
         this.midiMapping.setParent(settingsService.getSettings().getMidiMapping());
@@ -813,6 +815,7 @@ public class CompositionPlayer {
         scheduleActionTriggerTimers();
 
         designerService.play();
+        startMidiTimecode();
 
         if (pipeline == null) {
             // No pipeline to trigger playing state -> just issue it right now
@@ -841,6 +844,7 @@ public class CompositionPlayer {
 
         stopAutoStopTimer();
         stopActionTriggerTimer();
+        midiTimecodeService.stop(this);
 
         if (!isDefaultComposition && !isSample) {
             notificationService.notifyClients(playerService, setService);
@@ -877,6 +881,7 @@ public class CompositionPlayer {
 
         stopAutoStopTimer();
         stopActionTriggerTimer();
+        midiTimecodeService.stop(this);
 
         if (!isSample && !isDefaultComposition) {
             notificationService.notifyClients(playerService, setService);
@@ -909,10 +914,21 @@ public class CompositionPlayer {
 
         calculateRemainingActionTriggerList();
         scheduleActionTriggerTimers();
+        if (playState == PlayState.PLAYING) {
+            startMidiTimecode();
+        }
 
         if (!isSample) {
             notificationService.notifyClients(playerService, setService);
         }
+    }
+
+    private void startMidiTimecode() {
+        if (isDefaultComposition || isSample) {
+            return;
+        }
+
+        midiTimecodeService.start(this, this::getPositionMillis);
     }
 
     public long getPositionMillis() {

@@ -43,6 +43,8 @@ public class Settings {
     private String leadSheetPath;
     private MidiDevice midiInDevice;
     private MidiDevice midiOutDevice;
+    private Boolean midiTimecodeEnabled;
+    private MidiTimecodeFrameRate midiTimecodeFrameRate;
     private List<RemoteDevice> remoteDeviceList = new ArrayList<>();
 
     /**

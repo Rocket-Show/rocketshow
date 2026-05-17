@@ -7,7 +7,9 @@ import org.springframework.stereotype.Service;
 import purejavacomm.SerialPort;
 
 import jakarta.annotation.PreDestroy;
+import javax.sound.midi.MidiMessage;
 import javax.sound.midi.MidiUnavailableException;
+import java.io.OutputStream;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -37,12 +39,12 @@ public class DefaultMidiDeviceOutService implements MidiDeviceOutService {
         try {
             midiDevice = midiService.getHardwareMidiDevice(settingsMidiDevice, MidiDirection.OUT);
 
-            if (this.midiDevice == null) {
+            if (midiDevice == null) {
                 logger.trace("MIDI OUT device not found. Try again in 10 seconds.");
             } else {
                 midiDevice.open();
-                logger.info("Successfully connected to MIDI OUT device " + this.midiDevice.getDeviceInfo().getName());
                 this.midiDevice = midiDevice;
+                logger.info("Successfully connected to MIDI OUT device " + this.midiDevice.getDeviceInfo().getName());
                 return true;
             }
         } catch (MidiUnavailableException midiUnavailableException) {
@@ -134,6 +136,35 @@ public class DefaultMidiDeviceOutService implements MidiDeviceOutService {
     @Override
     public SerialPort getMidiSerialDevice() {
         return midiSerialDevice;
+    }
+
+    @Override
+    public boolean isConnected() {
+        return midiDevice != null || midiSerialDevice != null;
+    }
+
+    @Override
+    public void sendMessage(MidiMessage message) {
+        if (!isConnected()) {
+            return;
+        }
+
+        if (midiDevice != null) {
+            try {
+                midiDevice.getReceiver().send(message, -1);
+            } catch (Exception e) {
+                logger.error("Could not send MIDI signal to out device receiver " + midiDevice.getDeviceInfo().getName(), e);
+            }
+        } else if (midiSerialDevice != null) {
+            try {
+                byte[] data = message.getMessage();
+                OutputStream output = midiSerialDevice.getOutputStream();
+                output.write(data);
+                output.flush();
+            } catch (Exception e) {
+                logger.error("Could not send MIDI signal to serial out device receiver", e);
+            }
+        }
     }
 
 }

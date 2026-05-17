@@ -1,15 +1,11 @@
 package com.ascargon.rocketshow.midi;
 
 import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.Receiver;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
-import purejavacomm.SerialPort;
-
-import java.io.OutputStream;
 
 /**
  * Receive MIDI messages and send them to the out device.
@@ -39,28 +35,7 @@ class Midi2DeviceOutReceiver implements Receiver {
             logger.error("Could not process MIDI event to device out", e);
         }
 
-        if (midiDeviceOutService.getMidiDevice() != null) {
-            // Real MIDI device
-            MidiDevice midiDevice = midiDeviceOutService.getMidiDevice();
-
-            try {
-                midiDevice.getReceiver().send(message, -1);
-            } catch (Exception e) {
-                logger.error("Could not send MIDI signal to out device receiver " + midiDevice.getDeviceInfo().getName(), e);
-            }
-        } else if (midiDeviceOutService.getMidiSerialDevice() != null) {
-            // MIDI serial device
-            SerialPort midiSerialDevice = midiDeviceOutService.getMidiSerialDevice();
-
-            try {
-                byte[] data = message.getMessage();
-                OutputStream output = midiSerialDevice.getOutputStream();
-                output.write(data);
-                output.flush(); // optional, but ensures immediate transmission
-            } catch (Exception e) {
-                logger.error("Could not send MIDI signal to serial out device receiver", e);
-            }
-        }
+        midiDeviceOutService.sendMessage(message);
     }
 
     @Override

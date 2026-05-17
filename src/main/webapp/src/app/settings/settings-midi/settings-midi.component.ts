@@ -27,6 +27,7 @@ export class SettingsMidiComponent implements OnInit, OnDestroy {
 
   midiInDevices: MidiDevice[];
   midiOutDevices: MidiDevice[];
+  midiTimecodeFrameRates = ["FPS_24", "FPS_25", "FPS_29_97_DROP", "FPS_30"];
 
   compositions: Composition[];
 
@@ -52,6 +53,9 @@ export class SettingsMidiComponent implements OnInit, OnDestroy {
       .pipe(
         map((result) => {
           this.settings = result;
+          if (!this.settings.midiTimecodeFrameRate) {
+            this.settings.midiTimecodeFrameRate = "FPS_30";
+          }
 
           const noneDevice: MidiDevice = {
             id: -1,
