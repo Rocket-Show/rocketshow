@@ -39,6 +39,7 @@
                         <overrideParent>false</overrideParent>
                     </midiMapping>
                     <remoteDeviceList/>
+                    <universeName>DMX</universeName>
                 </midiRouting>
             </midiRoutingList>
         </midiFile>

@@ -3,6 +3,7 @@ package com.ascargon.rocketshow.settings;
 import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.audio.AudioDevice;
+import com.ascargon.rocketshow.lighting.LightingUniverseMapping;
 import com.ascargon.rocketshow.lighting.OlaPlugin;
 import com.ascargon.rocketshow.midi.*;
 import com.ascargon.rocketshow.raspberry.ActionTriggerRaspberryGpio;
@@ -72,6 +73,9 @@ public class Settings {
 
     // The active OLA plugin
     private List<OlaPlugin> lightingOlaPluginList = new ArrayList<>();
+
+    // Logical lighting universes mapped to OLA universes and output ports
+    private List<LightingUniverseMapping> lightingUniverseMappingList = new ArrayList<>();
 
     // Global play offset on file types
     private Integer offsetMillisMidi;
@@ -210,5 +214,16 @@ public class Settings {
         return apiKeyList;
     }
 
+    @XmlElement(name = "lightingOlaPlugin")
+    @XmlElementWrapper(name = "lightingOlaPluginList")
+    public List<OlaPlugin> getLightingOlaPluginList() {
+        return lightingOlaPluginList;
+    }
+
+    @XmlElement(name = "lightingUniverseMapping")
+    @XmlElementWrapper(name = "lightingUniverseMappingList")
+    public List<LightingUniverseMapping> getLightingUniverseMappingList() {
+        return lightingUniverseMappingList;
+    }
 
 }

@@ -9,7 +9,9 @@ import { Settings } from "./../models/settings";
 import { Injectable } from "@angular/core";
 import { Language } from "../models/language";
 import { OlaPlugin } from "../models/ola-plugin";
+import { OlaPort } from "../models/ola-port";
 import { RaspberryPiPin } from "../models/raspberry-pi-pin";
+import { LightingUniverseMapping } from "../models/lighting-universe-mapping";
 
 @Injectable()
 export class SettingsService {
@@ -118,6 +120,13 @@ export class SettingsService {
     );
   }
 
+  updateLightingUniverses(lightingUniverseMappingList: LightingUniverseMapping[]): Observable<Object> {
+    return this.http.post(
+      "system/settings-lighting-universes",
+      JSON.stringify(lightingUniverseMappingList)
+    );
+  }
+
   private apiGetMidiDevices(url: string) {
     return this.http.get("midi/" + url).pipe(
       map((response: Array<Object>) => {
@@ -164,6 +173,20 @@ export class SettingsService {
         }
 
         return olaPluginList;
+      })
+    );
+  }
+
+  getOlaOutputPortList(): Observable<OlaPort[]> {
+    return this.http.get("lighting/ola-output-ports").pipe(
+      map((response: Array<Object>) => {
+        let olaPortList: OlaPort[] = [];
+
+        for (let olaPort of response) {
+          olaPortList.push(new OlaPort(olaPort));
+        }
+
+        return olaPortList;
       })
     );
   }

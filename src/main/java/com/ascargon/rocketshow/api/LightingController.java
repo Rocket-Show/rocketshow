@@ -2,6 +2,7 @@ package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.OlaPlugin;
+import com.ascargon.rocketshow.lighting.OlaPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +36,11 @@ public class LightingController {
     @GetMapping("ola-plugins")
     public List<OlaPlugin> getOlaPlugins() {
         return lightingService.getOlaPlugins();
+    }
+
+    @GetMapping("ola-output-ports")
+    public List<OlaPort> getOlaOutputPorts() {
+        return lightingService.getOlaOutputPorts();
     }
 
 }

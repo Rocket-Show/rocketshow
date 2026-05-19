@@ -4,6 +4,8 @@ import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.health.HealthService;
 import com.ascargon.rocketshow.health.HealthStatus;
+import com.ascargon.rocketshow.lighting.LightingService;
+import com.ascargon.rocketshow.lighting.LightingUniverseMapping;
 import com.ascargon.rocketshow.lighting.OlaPlugin;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.midi.MidiDeviceInService;
@@ -65,6 +67,7 @@ class SystemController {
     private final HealthService healthService;
     private final VersionService versionService;
     private final SshService sshService;
+    private final LightingService lightingService;
 
     public SystemController(
             ControllerService controllerService,
@@ -89,7 +92,8 @@ class SystemController {
             DeviceInformationService deviceInformationService,
             HealthService healthService,
             VersionService versionService,
-            SshService sshService
+            SshService sshService,
+            LightingService lightingService
     ) {
         this.controllerService = controllerService;
         this.stateService = stateService;
@@ -114,6 +118,7 @@ class SystemController {
         this.healthService = healthService;
         this.versionService = versionService;
         this.sshService = sshService;
+        this.lightingService = lightingService;
     }
 
     private void settingsUpdateSystem() {
@@ -231,6 +236,14 @@ class SystemController {
         settingsService.getSettings().setLightingOlaPluginList(olaPluginList);
         settingsService.save();
         settingsUpdateSystem();
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("settings-lighting-universes")
+    public ResponseEntity<Void> updateLightingUniverses(@RequestBody List<LightingUniverseMapping> lightingUniverseMappingList) throws JAXBException {
+        lightingService.updateUniverses(lightingUniverseMappingList);
+        settingsService.getSettings().setLightingUniverseMappingList(lightingUniverseMappingList);
+        settingsService.save();
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

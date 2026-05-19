@@ -16,13 +16,13 @@
               "action.lighting.universe-name" | translate
             }}</label>
             <div class="col-md-9">
-              <!-- Currently only one universe is allowed anyway -->
-              <input
-                disabled
-                [(ngModel)]="lightingActionUniverse.universeName"
-                [typeahead]="universeNameList"
-                class="form-control"
-                />
+              <select class="custom-select" [(ngModel)]="lightingActionUniverse.universeName">
+                @for (universeName of universeNameList; track universeName) {
+                  <option [value]="universeName">
+                    {{ universeName }}
+                  </option>
+                }
+              </select>
             </div>
           </div>
           <div class="form-group row">

@@ -23,7 +23,13 @@ public interface LightingService {
 
     List<OlaPlugin> getOlaPlugins();
 
+    List<OlaPort> getOlaOutputPorts();
+
     void enablePlugins(List<OlaPlugin> olaPluginList);
+
+    void initializeUniverses();
+
+    void updateUniverses(List<LightingUniverseMapping> lightingUniverseMappings);
 
     void executeAction(ActionLighting actionLighting);
 }

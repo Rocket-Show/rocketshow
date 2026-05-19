@@ -261,6 +261,10 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
     }
 
     private void updateConnectionMode(Settings settings) {
+        if (!OperatingSystemInformation.SubType.RASPBERRYOS.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
+            return;
+        }
+
         String mode = "http";
 
         if (settings.getTlsEnable()) {
@@ -304,6 +308,7 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
 
         try {
             lightingService.enablePlugins(settings.getLightingOlaPluginList());
+            lightingService.initializeUniverses();
         } catch (Exception e) {
             logger.error("Could not activate the OLA plugin", e);
         }

@@ -16,6 +16,7 @@ export class RoutingDetailsComponent implements OnInit {
   midiRouting: MidiRouting;
   onClose: Subject<number>;
   remoteDevices: RemoteDevice[];
+  universeNameList: string[] = [];
 
   midiDestinationList: string[] = [];
 
@@ -31,9 +32,30 @@ export class RoutingDetailsComponent implements OnInit {
   ngOnInit() {
     this.onClose = new Subject();
 
-    this.settingsService.getSettings().subscribe((result) => {
+    this.settingsService.getSettings(true).subscribe((result) => {
       this.remoteDevices = result.remoteDeviceList;
+      this.universeNameList = result.lightingUniverseMappingList
+        .map((lightingUniverseMapping) => lightingUniverseMapping.name)
+        .filter((name) => !!name);
+
+      if (this.midiRouting?.midiDestination === "LIGHTING") {
+        this.setDefaultUniverseName();
+      }
     });
+  }
+
+  updateMidiDestination(midiDestination: string) {
+    this.midiRouting.midiDestination = midiDestination;
+
+    if (midiDestination === "LIGHTING") {
+      this.setDefaultUniverseName();
+    }
+  }
+
+  private setDefaultUniverseName() {
+    if (!this.midiRouting.universeName && this.universeNameList.length > 0) {
+      this.midiRouting.universeName = this.universeNameList[0];
+    }
   }
 
   public ok(): void {

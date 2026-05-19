@@ -56,6 +56,10 @@ class Midi2LightingReceiver implements Receiver {
         this.midi2LightingMapping = midi2LightingMapping;
     }
 
+    public void setUniverseName(String universeName) {
+        lightingUniverse.setName(universeName);
+    }
+
     public MidiMapping getMidiMapping() {
         return midiMapping;
     }

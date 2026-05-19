@@ -1,7 +1,8 @@
-import { Component, Input } from "@angular/core";
+import { Component, Input, OnInit } from "@angular/core";
 import { ActionLighting } from "../../models/action-lighting";
 import { LightingActionUniverse } from "../../models/lighting-action-universe";
 import { LightingActionChannelValue } from "../../models/lighting-action-channel-value";
+import { SettingsService } from "../../services/settings.service";
 
 @Component({
     selector: "app-action-lighting",
@@ -9,7 +10,7 @@ import { LightingActionChannelValue } from "../../models/lighting-action-channel
     styleUrl: "./action-lighting.component.scss",
     standalone: false
 })
-export class ActionLightingComponent {
+export class ActionLightingComponent implements OnInit {
   @Input()
   action: ActionLighting;
 
@@ -17,7 +18,7 @@ export class ActionLightingComponent {
   channelList: number[] = [];
   valueList: number[] = [];
 
-  constructor() {
+  constructor(private settingsService: SettingsService) {
     for (let i = 0; i <= 511; i++) {
       this.channelList.push(i);
     }
@@ -25,7 +26,28 @@ export class ActionLightingComponent {
       this.valueList.push(i);
     }
 
-    // TODO build the universeNameList for the typeahead
+  }
+
+  ngOnInit() {
+    this.loadUniverseNameList();
+  }
+
+  private loadUniverseNameList() {
+    this.settingsService.getSettings(true).subscribe((settings) => {
+      this.universeNameList = settings.lightingUniverseMappingList
+        .map((lightingUniverseMapping) => lightingUniverseMapping.name)
+        .filter((name) => !!name);
+
+      if (this.universeNameList.length === 0) {
+        return;
+      }
+
+      for (let lightingActionUniverse of this.action.lightingActionUniverseList) {
+        if (!lightingActionUniverse.universeName) {
+          lightingActionUniverse.universeName = this.universeNameList[0];
+        }
+      }
+    });
   }
 
   // Prevent the last item in the file-list to be draggable.
@@ -35,7 +57,11 @@ export class ActionLightingComponent {
   }
 
   addUniverse() {
-    this.action.lightingActionUniverseList.push(new LightingActionUniverse());
+    const lightingActionUniverse = new LightingActionUniverse();
+    if (this.universeNameList.length > 0) {
+      lightingActionUniverse.universeName = this.universeNameList[0];
+    }
+    this.action.lightingActionUniverseList.push(lightingActionUniverse);
   }
 
   deleteUniverse(universeIndex: number) {

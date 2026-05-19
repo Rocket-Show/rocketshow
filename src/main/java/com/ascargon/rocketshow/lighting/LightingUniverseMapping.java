@@ -1,0 +1,19 @@
+package com.ascargon.rocketshow.lighting;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.UUID;
+
+@XmlRootElement
+@Getter
+@Setter
+public class LightingUniverseMapping {
+
+    private String uuid = String.valueOf(UUID.randomUUID());
+    private String name;
+    private Integer olaUniverseId;
+    private String olaOutputPortId;
+
+}
