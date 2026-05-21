@@ -192,12 +192,12 @@
                     }}</label>
                     <select
                       class="custom-select form-control"
-                      [ngModel]="file?.outputBus"
-                      (ngModelChange)="file.outputBus = $event"
+                      [ngModel]="file?.outputBusUuid"
+                      (ngModelChange)="file.outputBusUuid = $event"
                       >
                       @for (audioBus of settings.audioBusList; track audioBus) {
                         <option
-                          [ngValue]="audioBus.name"
+                          [ngValue]="audioBus.uuid"
                           >
                           {{ audioBus.name }}
                         </option>

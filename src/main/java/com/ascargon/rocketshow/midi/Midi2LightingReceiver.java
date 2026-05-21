@@ -23,13 +23,13 @@ class Midi2LightingReceiver implements Receiver {
     private final Midi2LightingConvertService midi2LightingConvertService;
     private final LightingService lightingService;
 
-    private final LightingUniverse lightingUniverse;
+    private final LightingUniverseState lightingUniverse;
 
     public Midi2LightingReceiver(Midi2LightingConvertService midi2LightingConvertService, LightingService lightingService) {
         this.midi2LightingConvertService = midi2LightingConvertService;
         this.lightingService = lightingService;
 
-        lightingUniverse = new LightingUniverse();
+        lightingUniverse = new LightingUniverseState();
 
         lightingService.addLightingUniverse(lightingUniverse);
     }
@@ -56,8 +56,8 @@ class Midi2LightingReceiver implements Receiver {
         this.midi2LightingMapping = midi2LightingMapping;
     }
 
-    public void setUniverseName(String universeName) {
-        lightingUniverse.setName(universeName);
+    public void setUniverseUuid(String universeUuid) {
+        lightingUniverse.setMappingUuid(universeUuid);
     }
 
     public MidiMapping getMidiMapping() {

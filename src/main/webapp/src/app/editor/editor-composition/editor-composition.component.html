@@ -139,9 +139,9 @@
                         <a href="#" (click)="editCompositionFileDetails(i); (false)">
                           <p class="mb-0">
                             {{ file.name
-                            }}@if (file.type == 'AUDIO' && file.outputBus) {
+                            }}@if (file.type == 'AUDIO' && file.outputBusUuid) {
                             <span>
-                            - {{ file.outputBus }}</span>
+                            - {{ audioBusNameFromUuid(file.outputBusUuid) }}</span>
                           }
                         </p>
                       </a>

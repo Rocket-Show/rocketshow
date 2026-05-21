@@ -71,10 +71,10 @@
         <i class="fa fa-spinner fa-pulse fa-fw"></i>
         }
         @if (settings) {
-        <div class="list-group list-group-flush" [sortablejs]="settings?.lightingUniverseMappingList"
+        <div class="list-group list-group-flush" [sortablejs]="settings?.lightingUniverseList"
           [sortablejsOptions]="lightingUniverseSortableOptions"
           [class.settings-lighting-saving]="savingLightingUniverses">
-          @for (lightingUniverseMapping of settings?.lightingUniverseMappingList; track lightingUniverseMapping; let i =
+          @for (lightingUniverse of settings?.lightingUniverseList; track lightingUniverse; let i =
           $index) {
           <div class="list-group-item">
             <div class="row">
@@ -85,21 +85,21 @@
                 <div class="form-row mb-0">
                   <div class="col-md-4 mb-2 mb-md-0">
                     <label class="small mb-1">{{ "settings.lighting-universe-name" | translate }}</label>
-                    <input type="text" class="form-control" [(ngModel)]="lightingUniverseMapping.name"
-                      (change)="updateLightingUniverseMappingList()" />
+                    <input type="text" class="form-control" [(ngModel)]="lightingUniverse.name"
+                      (change)="updateLightingUniverseList()" />
                   </div>
                   <div class="col-md-3 mb-2 mb-md-0">
                     <label class="small mb-1">{{ "settings.lighting-ola-universe-id" | translate }}</label>
                     <input type="number" min="0" class="form-control"
-                      [(ngModel)]="lightingUniverseMapping.olaUniverseId"
-                      (change)="updateLightingUniverseMappingList()" />
+                      [(ngModel)]="lightingUniverse.olaUniverseId"
+                      (change)="updateLightingUniverseList()" />
                   </div>
                   <div class="col-md-5 mb-2 mb-md-0">
                     <label class="small mb-1">{{ "settings.lighting-ola-output-port" | translate }}</label>
-                    <select class="custom-select" [ngModel]="lightingUniverseMapping.olaOutputPortId"
-                      (ngModelChange)="updateLightingUniverseMappingPort(lightingUniverseMapping, $event)">
+                    <select class="custom-select" [ngModel]="lightingUniverse.olaOutputPortId"
+                      (ngModelChange)="updateLightingUniversePort(lightingUniverse, $event)">
                       <option value="">{{ "settings.lighting-ola-output-port-none" | translate }}</option>
-                      @for (olaOutputPort of getOlaOutputPortsForMapping(lightingUniverseMapping); track olaOutputPort.id)
+                      @for (olaOutputPort of getOlaOutputPortsForMapping(lightingUniverse); track olaOutputPort.id)
                       {
                       <option [value]="olaOutputPort.id">
                         {{ olaOutputPort.displayName }}
@@ -111,7 +111,7 @@
               </div>
               <div class="col-auto my-auto">
                 <a class="text-danger" [class.disabled]="savingLightingUniverses" href="#"
-                  role="button" (click)="!savingLightingUniverses && removeLightingUniverseMapping(i); (false)">
+                  role="button" (click)="!savingLightingUniverses && removeLightingUniverse(i); (false)">
                   <i class="fa fa-trash-o" aria-hidden="true"></i>
                 </a>
               </div>
@@ -119,7 +119,7 @@
           </div>
           }
           <a href="#"
-            (click)="!savingLightingUniverses && addLightingUniverseMapping(); (false)"
+            (click)="!savingLightingUniverses && addLightingUniverse(); (false)"
             class="no-sortjs list-group-item text-center"
             [class.disabled]="savingLightingUniverses">
             <i class="fa fa-plus" aria-hidden="true"></i>

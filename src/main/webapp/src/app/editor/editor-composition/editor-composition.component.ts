@@ -464,6 +464,20 @@ export class EditorCompositionComponent implements OnInit {
     return undefined;
   }
 
+  audioBusNameFromUuid(uuid: string): string {
+    if (!this.settings) {
+      return undefined;
+    }
+
+    for (let audioBus of this.settings.audioBusList) {
+      if (audioBus.uuid == uuid) {
+        return audioBus.name;
+      }
+    }
+
+    return undefined;
+  }
+
   hasAudioFile(): boolean {
     if (!this.currentComposition) {
       return false;

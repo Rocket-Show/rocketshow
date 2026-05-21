@@ -45,10 +45,10 @@
             <div class="form-group row">
               <label class="col-sm-6 col-form-label">{{ 'routing.lighting-universe' | translate }}</label>
               <div class="col-sm-6">
-                <select class="custom-select" [(ngModel)]="midiRouting.universeName">
-                  @for (universeName of universeNameList; track universeName) {
-                  <option [value]="universeName">
-                    {{ universeName }}
+                <select class="custom-select" [(ngModel)]="midiRouting.universeUuid">
+                  @for (lightingUniverse of lightingUniverseList; track lightingUniverse.uuid) {
+                  <option [value]="lightingUniverse.uuid">
+                    {{ lightingUniverse.name }}
                   </option>
                   }
                 </select>

@@ -5,7 +5,7 @@ import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.health.HealthService;
 import com.ascargon.rocketshow.health.HealthStatus;
 import com.ascargon.rocketshow.lighting.LightingService;
-import com.ascargon.rocketshow.lighting.LightingUniverseMapping;
+import com.ascargon.rocketshow.lighting.LightingUniverse;
 import com.ascargon.rocketshow.lighting.OlaPlugin;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.midi.MidiDeviceInService;
@@ -240,9 +240,9 @@ class SystemController {
     }
 
     @PostMapping("settings-lighting-universes")
-    public ResponseEntity<Void> updateLightingUniverses(@RequestBody List<LightingUniverseMapping> lightingUniverseMappingList) throws JAXBException {
-        lightingService.updateUniverses(lightingUniverseMappingList);
-        settingsService.getSettings().setLightingUniverseMappingList(lightingUniverseMappingList);
+    public ResponseEntity<Void> updateLightingUniverses(@RequestBody List<LightingUniverse> lightingUniverseList) throws JAXBException {
+        lightingService.updateUniverses(lightingUniverseList);
+        settingsService.getSettings().setLightingUniverseList(lightingUniverseList);
         settingsService.save();
         return new ResponseEntity<>(HttpStatus.OK);
     }

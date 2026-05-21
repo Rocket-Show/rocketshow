@@ -43,7 +43,7 @@ public class DefaultLightingService implements LightingService {
     private final String OLA_URL = "http://localhost:9090/";
 
     // Cache the channel values and send them each time
-    private final List<LightingUniverse> lightingUniverseList = new CopyOnWriteArrayList<>();
+    private final List<LightingUniverseState> lightingUniverseList = new CopyOnWriteArrayList<>();
 
     private OlaClient olaClient;
 
@@ -95,7 +95,7 @@ public class DefaultLightingService implements LightingService {
         }
 
         // Initialize the universes
-        for (LightingUniverse lightingUniverse : lightingUniverseList) {
+        for (LightingUniverseState lightingUniverse : lightingUniverseList) {
             HashMap<Integer, Integer> universe = lightingUniverse.getUniverse();
 
             for (int i = 0; i < 512; i++) {
@@ -110,18 +110,18 @@ public class DefaultLightingService implements LightingService {
         logger.trace("Send the lighting universe");
 
         // Copy the list to protect against changes while mixing
-        List<LightingUniverse> lightingUniverseListCopy = new CopyOnWriteArrayList<>(lightingUniverseList);
-        List<LightingUniverseMapping> lightingUniverseMappings = getLightingUniverseMappings();
+        List<LightingUniverseState> lightingUniverseListCopy = new CopyOnWriteArrayList<>(lightingUniverseList);
+        List<LightingUniverse> lightingUniverses = getLightingUniverses();
 
-        for (LightingUniverseMapping lightingUniverseMapping : lightingUniverseMappings) {
-            if (lightingUniverseMapping.getOlaUniverseId() == null) {
+        for (LightingUniverse lightingUniverse : lightingUniverses) {
+            if (lightingUniverse.getOlaUniverseId() == null) {
                 continue;
             }
 
-            short[] mixedUniverse = mixLightingUniverses(lightingUniverseListCopy, lightingUniverseMapping, lightingUniverseMappings.size() == 1);
+            short[] mixedUniverse = mixLightingUniverses(lightingUniverseListCopy, lightingUniverse, lightingUniverses.size() == 1);
 
             if (olaReady) {
-                olaClient.sendDmx(lightingUniverseMapping.getOlaUniverseId(), mixedUniverse);
+                olaClient.sendDmx(lightingUniverse.getOlaUniverseId(), mixedUniverse);
             }
         }
 
@@ -130,57 +130,61 @@ public class DefaultLightingService implements LightingService {
         }
     }
 
-    private List<LightingUniverseMapping> getLightingUniverseMappings() {
-        return settingsService.getSettings().getLightingUniverseMappingList();
+    private List<LightingUniverse> getLightingUniverses() {
+        return settingsService.getSettings().getLightingUniverseList();
     }
 
-    private LightingUniverseMapping getDefaultLightingUniverseMapping() {
-        List<LightingUniverseMapping> lightingUniverseMappings = getLightingUniverseMappings();
-        if (lightingUniverseMappings.isEmpty()) {
+    private LightingUniverse getDefaultLightingUniverse() {
+        List<LightingUniverse> lightingUniverses = getLightingUniverses();
+        if (lightingUniverses.isEmpty()) {
             return null;
         }
 
-        return lightingUniverseMappings.getFirst();
+        return lightingUniverses.getFirst();
     }
 
-    private boolean isDefaultLightingUniverseMapping(LightingUniverseMapping lightingUniverseMapping) {
-        LightingUniverseMapping defaultLightingUniverseMapping = getDefaultLightingUniverseMapping();
-        return defaultLightingUniverseMapping != null
-                && (lightingUniverseMapping == defaultLightingUniverseMapping
-                || Objects.equals(lightingUniverseMapping.getUuid(), defaultLightingUniverseMapping.getUuid()));
+    private boolean isDefaultLightingUniverse(LightingUniverse lightingUniverse) {
+        LightingUniverse defaultLightingUniverse = getDefaultLightingUniverse();
+        return defaultLightingUniverse != null
+                && (lightingUniverse == defaultLightingUniverse
+                || Objects.equals(lightingUniverse.getUuid(), defaultLightingUniverse.getUuid()));
     }
 
-    private boolean lightingUniverseMatchesMapping(LightingUniverse lightingUniverse, LightingUniverseMapping lightingUniverseMapping, boolean onlyOneMapping) {
+    private boolean lightingUniverseMatchesMapping(LightingUniverseState lightingUniverseState, LightingUniverse lightingUniverse, boolean onlyOneMapping) {
+        if (lightingUniverseState.getMappingUuid() != null && !lightingUniverseState.getMappingUuid().isBlank()) {
+            return Objects.equals(lightingUniverseState.getMappingUuid(), lightingUniverse.getUuid());
+        }
+
         if (onlyOneMapping) {
             return true;
         }
 
-        if (lightingUniverse.getName() == null || lightingUniverse.getName().isBlank()) {
-            return isDefaultLightingUniverseMapping(lightingUniverseMapping);
+        if (lightingUniverseState.getName() == null || lightingUniverseState.getName().isBlank()) {
+            return isDefaultLightingUniverse(lightingUniverse);
         }
 
-        return lightingUniverse.getName().equals(lightingUniverseMapping.getName());
+        return lightingUniverseState.getName().equals(lightingUniverse.getName());
     }
 
-    private short[] mixLightingUniverses(List<LightingUniverse> sourceLightingUniverses, LightingUniverseMapping lightingUniverseMapping, boolean onlyOneMapping) {
-        List<LightingUniverse> matchingLightingUniverses = new ArrayList<>();
+    private short[] mixLightingUniverses(List<LightingUniverseState> sourceLightingUniverses, LightingUniverse lightingUniverse, boolean onlyOneMapping) {
+        List<LightingUniverseState> matchingLightingUniverses = new ArrayList<>();
 
-        for (LightingUniverse lightingUniverse : sourceLightingUniverses) {
-            if (lightingUniverseMatchesMapping(lightingUniverse, lightingUniverseMapping, onlyOneMapping)) {
-                matchingLightingUniverses.add(lightingUniverse);
+        for (LightingUniverseState lightingUniverseState : sourceLightingUniverses) {
+            if (lightingUniverseMatchesMapping(lightingUniverseState, lightingUniverse, onlyOneMapping)) {
+                matchingLightingUniverses.add(lightingUniverseState);
             }
         }
 
         return mixLightingUniverses(matchingLightingUniverses);
     }
 
-    private short[] mixLightingUniverses(List<LightingUniverse> sourceLightingUniverses) {
+    private short[] mixLightingUniverses(List<LightingUniverseState> sourceLightingUniverses) {
         short[] mixedUniverse = new short[512];
 
         for (int i = 0; i < 512; i++) {
             int highestValue = 0;
 
-            for (LightingUniverse lightingUniverse : sourceLightingUniverses) {
+            for (LightingUniverseState lightingUniverse : sourceLightingUniverses) {
                 HashMap<Integer, Integer> universe = lightingUniverse.getUniverse();
 
                 if (universe != null && universe.get(i) != null && universe.get(i) > highestValue) {
@@ -199,7 +203,7 @@ public class DefaultLightingService implements LightingService {
         for (int i = 0; i < 512; i++) {
             mixedActivityUniverse.put(i, (int) mixedUniverse[i]);
         }
-        LightingUniverse activityUniverse = new LightingUniverse();
+        LightingUniverseState activityUniverse = new LightingUniverseState();
         activityUniverse.setUniverse(mixedActivityUniverse);
         activityNotificationLightingService.notifyClients(activityUniverse);
     }
@@ -259,8 +263,8 @@ public class DefaultLightingService implements LightingService {
         }
     }
 
-    private void createOlaUniverse(LightingUniverseMapping lightingUniverseMapping) throws IOException {
-        logger.debug("Adding new universe '{}' with port '{}'...", lightingUniverseMapping.getOlaUniverseId(), lightingUniverseMapping.getOlaOutputPortId());
+    private void createOlaUniverse(LightingUniverse lightingUniverse) throws IOException {
+        logger.debug("Adding new universe '{}' with port '{}'...", lightingUniverse.getOlaUniverseId(), lightingUniverse.getOlaOutputPortId());
 
         HttpClient httpClient;
 
@@ -271,10 +275,10 @@ public class DefaultLightingService implements LightingService {
 
         List<NameValuePair> data = new ArrayList<>(3);
 
-        data.add(new BasicNameValuePair("id", String.valueOf(lightingUniverseMapping.getOlaUniverseId())));
-        data.add(new BasicNameValuePair("name", lightingUniverseMapping.getName()));
-        if (lightingUniverseMapping.getOlaOutputPortId() != null && !lightingUniverseMapping.getOlaOutputPortId().isBlank()) {
-            data.add(new BasicNameValuePair("add_ports", lightingUniverseMapping.getOlaOutputPortId()));
+        data.add(new BasicNameValuePair("id", String.valueOf(lightingUniverse.getOlaUniverseId())));
+        data.add(new BasicNameValuePair("name", lightingUniverse.getName()));
+        if (lightingUniverse.getOlaOutputPortId() != null && !lightingUniverse.getOlaOutputPortId().isBlank()) {
+            data.add(new BasicNameValuePair("add_ports", lightingUniverse.getOlaOutputPortId()));
         }
 
         httpPost.setEntity(new UrlEncodedFormEntity(data, "UTF-8"));
@@ -292,12 +296,12 @@ public class DefaultLightingService implements LightingService {
         }
     }
 
-    private void addOlaUniversePort(LightingUniverseMapping lightingUniverseMapping) throws IOException {
+    private void addOlaUniversePort(LightingUniverse lightingUniverse) throws IOException {
         modifyOlaUniversePorts(
-                lightingUniverseMapping.getOlaUniverseId(),
-                getOlaUniverseName(lightingUniverseMapping),
+                lightingUniverse.getOlaUniverseId(),
+                getOlaUniverseName(lightingUniverse),
                 "add_ports",
-                lightingUniverseMapping.getOlaOutputPortId(),
+                lightingUniverse.getOlaOutputPortId(),
                 "Adding"
         );
     }
@@ -337,12 +341,12 @@ public class DefaultLightingService implements LightingService {
         }
     }
 
-    private String getOlaUniverseName(LightingUniverseMapping lightingUniverseMapping) {
-        if (lightingUniverseMapping.getName() != null && !lightingUniverseMapping.getName().isBlank()) {
-            return lightingUniverseMapping.getName();
+    private String getOlaUniverseName(LightingUniverse lightingUniverse) {
+        if (lightingUniverse.getName() != null && !lightingUniverse.getName().isBlank()) {
+            return lightingUniverse.getName();
         }
 
-        return "Universe " + lightingUniverseMapping.getOlaUniverseId();
+        return "Universe " + lightingUniverse.getOlaUniverseId();
     }
 
     private boolean olaUniverseExists(int universeId) {
@@ -363,11 +367,11 @@ public class DefaultLightingService implements LightingService {
 
     @Override
     public void initializeUniverses() {
-        updateUniverses(getLightingUniverseMappings());
+        updateUniverses(getLightingUniverses());
     }
 
     @Override
-    public void updateUniverses(List<LightingUniverseMapping> lightingUniverseMappings) {
+    public void updateUniverses(List<LightingUniverse> lightingUniverses) {
         if (olaClient == null) {
             // OLA client is not connected
             return;
@@ -375,22 +379,22 @@ public class DefaultLightingService implements LightingService {
 
         logger.debug("Initializing lighting universes on OLA...");
 
-        removeAllOlaPorts(lightingUniverseMappings);
+        removeAllOlaPorts(lightingUniverses);
         olaReady = false;
 
-        for (LightingUniverseMapping lightingUniverseMapping : lightingUniverseMappings) {
-            if (lightingUniverseMapping.getOlaUniverseId() == null) {
-                logger.warn("Skipping lighting universe '{}' because no OLA universe id is configured", lightingUniverseMapping.getName());
+        for (LightingUniverse lightingUniverse : lightingUniverses) {
+            if (lightingUniverse.getOlaUniverseId() == null) {
+                logger.warn("Skipping lighting universe '{}' because no OLA universe id is configured", lightingUniverse.getName());
                 continue;
             }
 
-            if (lightingUniverseMapping.getOlaOutputPortId() == null || lightingUniverseMapping.getOlaOutputPortId().isBlank()) {
-                logger.trace("No OLA output port configured for universe '{}'", lightingUniverseMapping.getName());
+            if (lightingUniverse.getOlaOutputPortId() == null || lightingUniverse.getOlaOutputPortId().isBlank()) {
+                logger.trace("No OLA output port configured for universe '{}'", lightingUniverse.getName());
                 continue;
             }
 
             try {
-                createOrUpdateOlaUniverse(lightingUniverseMapping);
+                createOrUpdateOlaUniverse(lightingUniverse);
                 olaReady = true;
             } catch (Exception e) {
                 logger.error("Could not create or update universe on OLA", e);
@@ -400,18 +404,18 @@ public class DefaultLightingService implements LightingService {
         logger.debug("Lighting universes on OLA initialized");
     }
 
-    private void createOrUpdateOlaUniverse(LightingUniverseMapping lightingUniverseMapping) throws IOException {
-        if (olaUniverseExists(lightingUniverseMapping.getOlaUniverseId())) {
-            olaClient.setUniverseName(lightingUniverseMapping.getOlaUniverseId(), lightingUniverseMapping.getName());
-            addOlaUniversePort(lightingUniverseMapping);
+    private void createOrUpdateOlaUniverse(LightingUniverse lightingUniverse) throws IOException {
+        if (olaUniverseExists(lightingUniverse.getOlaUniverseId())) {
+            olaClient.setUniverseName(lightingUniverse.getOlaUniverseId(), lightingUniverse.getName());
+            addOlaUniversePort(lightingUniverse);
             return;
         }
 
-        createOlaUniverse(lightingUniverseMapping);
-        olaClient.setUniverseName(lightingUniverseMapping.getOlaUniverseId(), lightingUniverseMapping.getName());
+        createOlaUniverse(lightingUniverse);
+        olaClient.setUniverseName(lightingUniverse.getOlaUniverseId(), lightingUniverse.getName());
     }
 
-    private void removeAllOlaPorts(List<LightingUniverseMapping> newLightingUniverseMappings) {
+    private void removeAllOlaPorts(List<LightingUniverse> newLightingUniverses) {
         Ola.DeviceInfoReply deviceInfoReply = olaClient.getDeviceInfo();
         Map<Integer, Set<String>> portIdsByUniverse = new HashMap<>();
 
@@ -431,8 +435,8 @@ public class DefaultLightingService implements LightingService {
             }
         }
 
-        addConfiguredOlaPortIds(portIdsByUniverse, getLightingUniverseMappings());
-        addConfiguredOlaPortIds(portIdsByUniverse, newLightingUniverseMappings);
+        addConfiguredOlaPortIds(portIdsByUniverse, getLightingUniverses());
+        addConfiguredOlaPortIds(portIdsByUniverse, newLightingUniverses);
 
         for (Map.Entry<Integer, Set<String>> portIdsByUniverseEntry : portIdsByUniverse.entrySet()) {
             try {
@@ -457,15 +461,15 @@ public class DefaultLightingService implements LightingService {
         addOlaPortId(portIdsByUniverse, portInfo.getUniverse(), deviceAlias + "-" + direction + "-" + portInfo.getPortId());
     }
 
-    private void addConfiguredOlaPortIds(Map<Integer, Set<String>> portIdsByUniverse, List<LightingUniverseMapping> lightingUniverseMappings) {
-        for (LightingUniverseMapping lightingUniverseMapping : lightingUniverseMappings) {
-            if (lightingUniverseMapping.getOlaUniverseId() == null
-                    || lightingUniverseMapping.getOlaOutputPortId() == null
-                    || lightingUniverseMapping.getOlaOutputPortId().isBlank()) {
+    private void addConfiguredOlaPortIds(Map<Integer, Set<String>> portIdsByUniverse, List<LightingUniverse> lightingUniverses) {
+        for (LightingUniverse lightingUniverse : lightingUniverses) {
+            if (lightingUniverse.getOlaUniverseId() == null
+                    || lightingUniverse.getOlaOutputPortId() == null
+                    || lightingUniverse.getOlaOutputPortId().isBlank()) {
                 continue;
             }
 
-            addOlaPortId(portIdsByUniverse, lightingUniverseMapping.getOlaUniverseId(), lightingUniverseMapping.getOlaOutputPortId());
+            addOlaPortId(portIdsByUniverse, lightingUniverse.getOlaUniverseId(), lightingUniverse.getOlaOutputPortId());
         }
     }
 
@@ -491,12 +495,12 @@ public class DefaultLightingService implements LightingService {
     }
 
     @Override
-    public void addLightingUniverse(LightingUniverse lightingUniverse) {
+    public void addLightingUniverse(LightingUniverseState lightingUniverse) {
         lightingUniverseList.add(lightingUniverse);
     }
 
     @Override
-    public void removeLightingUniverse(LightingUniverse lightingUniverse) {
+    public void removeLightingUniverse(LightingUniverseState lightingUniverse) {
         lightingUniverseList.remove(lightingUniverse);
     }
 
@@ -578,15 +582,15 @@ public class DefaultLightingService implements LightingService {
     }
 
     private void addConfiguredOlaOutputPorts(List<OlaPort> olaOutputPorts) {
-        for (LightingUniverseMapping lightingUniverseMapping : getLightingUniverseMappings()) {
-            if (lightingUniverseMapping.getOlaOutputPortId() == null
-                    || lightingUniverseMapping.getOlaOutputPortId().isBlank()
-                    || containsOlaOutputPort(olaOutputPorts, lightingUniverseMapping.getOlaOutputPortId())
-                    || lightingUniverseMapping.getOlaUniverseId() == null) {
+        for (LightingUniverse lightingUniverse : getLightingUniverses()) {
+            if (lightingUniverse.getOlaOutputPortId() == null
+                    || lightingUniverse.getOlaOutputPortId().isBlank()
+                    || containsOlaOutputPort(olaOutputPorts, lightingUniverse.getOlaOutputPortId())
+                    || lightingUniverse.getOlaUniverseId() == null) {
                 continue;
             }
 
-            UniverseInfoReply universeInfoReply = olaClient.getUniverseInfo(lightingUniverseMapping.getOlaUniverseId());
+            UniverseInfoReply universeInfoReply = olaClient.getUniverseInfo(lightingUniverse.getOlaUniverseId());
             String description = getOutputPortDescription(universeInfoReply);
 
             if (description == null || description.isBlank()) {
@@ -594,7 +598,7 @@ public class DefaultLightingService implements LightingService {
             }
 
             OlaPort olaPort = new OlaPort();
-            olaPort.setId(lightingUniverseMapping.getOlaOutputPortId());
+            olaPort.setId(lightingUniverse.getOlaOutputPortId());
             olaPort.setDevice(description);
             olaPort.setOutput(true);
             olaOutputPorts.add(olaPort);
@@ -635,31 +639,31 @@ public class DefaultLightingService implements LightingService {
         }
     }
 
-    private LightingUniverse getLightingUniverseForAction(String universeName) {
-        if (!hasLightingUniverseMapping(universeName)) {
-            logger.warn("Skipping lighting action for unknown universe '{}'", universeName);
+    private LightingUniverseState getLightingUniverseForAction(String universeUuid) {
+        if (!hasLightingUniverse(universeUuid)) {
+            logger.warn("Skipping lighting action for unknown universe '{}'", universeUuid);
             return null;
         }
 
-        for (LightingUniverse lightingUniverse : lightingUniverseList) {
-            if (Objects.equals(lightingUniverse.getName(), universeName)) {
+        for (LightingUniverseState lightingUniverse : lightingUniverseList) {
+            if (Objects.equals(lightingUniverse.getMappingUuid(), universeUuid)) {
                 return lightingUniverse;
             }
         }
 
-        LightingUniverse lightingUniverse = new LightingUniverse();
-        lightingUniverse.setName(universeName);
+        LightingUniverseState lightingUniverse = new LightingUniverseState();
+        lightingUniverse.setMappingUuid(universeUuid);
         lightingUniverseList.add(lightingUniverse);
         return lightingUniverse;
     }
 
-    private boolean hasLightingUniverseMapping(String universeName) {
-        if (universeName == null || universeName.isBlank()) {
+    private boolean hasLightingUniverse(String universeUuid) {
+        if (universeUuid == null || universeUuid.isBlank()) {
             return false;
         }
 
-        for (LightingUniverseMapping lightingUniverseMapping : getLightingUniverseMappings()) {
-            if (Objects.equals(lightingUniverseMapping.getName(), universeName)) {
+        for (LightingUniverse lightingUniverse : getLightingUniverses()) {
+            if (Objects.equals(lightingUniverse.getUuid(), universeUuid)) {
                 return true;
             }
         }
@@ -670,7 +674,7 @@ public class DefaultLightingService implements LightingService {
     @Override
     public void executeAction(ActionLighting actionLighting) {
         for (LightingActionUniverse lightingActionUniverse : actionLighting.getLightingActionUniverseList()) {
-            LightingUniverse lightingUniverse = getLightingUniverseForAction(lightingActionUniverse.getUniverseName());
+            LightingUniverseState lightingUniverse = getLightingUniverseForAction(lightingActionUniverse.getUniverseUuid());
             if (lightingUniverse == null) {
                 continue;
             }

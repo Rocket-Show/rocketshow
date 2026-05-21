@@ -4,6 +4,6 @@ import javax.sound.midi.ShortMessage;
 
 public interface Midi2LightingConvertService {
 
-    void processMidiEvent(ShortMessage shortMessage, Midi2LightingMapping midi2LightingMapping, LightingUniverse lightingUniverse);
+    void processMidiEvent(ShortMessage shortMessage, Midi2LightingMapping midi2LightingMapping, LightingUniverseState lightingUniverse);
 
 }

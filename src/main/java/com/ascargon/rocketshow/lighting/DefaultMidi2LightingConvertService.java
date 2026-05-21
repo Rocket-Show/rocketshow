@@ -19,7 +19,7 @@ public class DefaultMidi2LightingConvertService implements Midi2LightingConvertS
         lightingService.send();
     }
 
-    private void mapSimple(ShortMessage shortMessage, LightingUniverse lightingUniverse) {
+    private void mapSimple(ShortMessage shortMessage, LightingUniverseState lightingUniverse) {
         if (shortMessage.getCommand() == ShortMessage.NOTE_ON) {
             int valueTo = shortMessage.getData2() * 2;
 
@@ -44,7 +44,7 @@ public class DefaultMidi2LightingConvertService implements Midi2LightingConvertS
     }
 
     @Override
-    public void processMidiEvent(ShortMessage shortMessage, Midi2LightingMapping midi2LightingMapping, LightingUniverse lightingUniverse) {
+    public void processMidiEvent(ShortMessage shortMessage, Midi2LightingMapping midi2LightingMapping, LightingUniverseState lightingUniverse) {
         // Map the MIDI event and send the appropriate lighting signal
 
         // Only react to NOTE_ON/NOTE_OFF events

@@ -40,7 +40,7 @@ public class DefaultActivityNotificationLightingService extends TextWebSocketHan
         sessions.remove(session);
     }
 
-    private synchronized void sendWebsocketMessage(LightingUniverse lightingUniverse) throws IOException {
+    private synchronized void sendWebsocketMessage(LightingUniverseState lightingUniverse) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         String returnValue = mapper.writeValueAsString(lightingUniverse);
 
@@ -54,7 +54,7 @@ public class DefaultActivityNotificationLightingService extends TextWebSocketHan
     }
 
     @Override
-    public void notifyClients(LightingUniverse lightingUniverse) {
+    public void notifyClients(LightingUniverseState lightingUniverse) {
         // Mix all pending events into one instead of dropping information
 
         if (sendActivityTimer != null) {

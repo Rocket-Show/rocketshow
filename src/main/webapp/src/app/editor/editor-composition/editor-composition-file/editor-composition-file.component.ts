@@ -74,10 +74,10 @@ export class EditorCompositionFileComponent implements OnInit {
 
   private audioBusListContainsBus(
     audioBusList: AudioBus[],
-    name: string
+    uuid: string
   ): boolean {
     for (let audioBus of audioBusList) {
-      if (audioBus.name == name) {
+      if (audioBus.uuid == uuid) {
         return true;
       }
     }
@@ -96,19 +96,17 @@ export class EditorCompositionFileComponent implements OnInit {
           if (this.file && this.file instanceof CompositionAudioFile) {
             let compositionAudioFile = <CompositionAudioFile>this.file;
 
-            if (
-              compositionAudioFile.outputBus &&
-              this.settings &&
-              this.settings.audioBusList
-            ) {
-              if (
+            if (this.settings?.audioBusList?.length) {
+              let outputBusMissing =
+                !compositionAudioFile.outputBusUuid ||
                 !this.audioBusListContainsBus(
                   this.settings.audioBusList,
-                  compositionAudioFile.outputBus
-                )
-              ) {
-                compositionAudioFile.outputBus =
-                  this.settings.audioBusList[0].name;
+                  compositionAudioFile.outputBusUuid
+              );
+
+              if (outputBusMissing) {
+                compositionAudioFile.outputBusUuid =
+                  this.settings.audioBusList[0].uuid;
               }
             }
           }
@@ -154,8 +152,8 @@ export class EditorCompositionFileComponent implements OnInit {
   }
 
   private setDefaultOutputBus(compositionAudioFile: CompositionAudioFile) {
-    if (this.settings && this.settings.audioBusList) {
-      compositionAudioFile.outputBus = this.settings.audioBusList[0].name;
+    if (this.settings?.audioBusList?.length) {
+      compositionAudioFile.outputBusUuid = this.settings.audioBusList[0].uuid;
     }
   }
 
@@ -215,7 +213,9 @@ export class EditorCompositionFileComponent implements OnInit {
 
     this.file = existingFile;
 
-    this.setDefaultOutputBus(<CompositionAudioFile>this.file);
+    if (this.file instanceof CompositionAudioFile) {
+      this.setDefaultOutputBus(<CompositionAudioFile>this.file);
+    }
 
     if (this.file instanceof CompositionMidiFile && midiRoutingList) {
       (<CompositionMidiFile>this.file).midiRoutingList = midiRoutingList;

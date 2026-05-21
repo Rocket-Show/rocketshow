@@ -14,9 +14,9 @@ public interface SettingsService {
 
     void setSettings(Settings settings);
 
-    AudioBus getAudioBusByName(String outputBus);
+    AudioBus getAudioBusByUuid(String outputBusUuid);
 
-    String getAlsaDeviceFromOutputBus(String outputBus);
+    String getAlsaDeviceFromOutputBusUuid(String outputBusUuid);
 
     RemoteDevice getRemoteDeviceByName(String name);
 

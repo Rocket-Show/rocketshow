@@ -3,7 +3,7 @@ import { MidiMapping } from './midi-mapping';
 export class MidiRouting {
     midiDestination: string;
     midiMapping: MidiMapping = new MidiMapping();
-    universeName: string = "";
+    universeUuid: string = "";
     remoteDeviceList: string[] = [];
 
     constructor(data?: any) {
@@ -13,7 +13,7 @@ export class MidiRouting {
 
         this.midiDestination = data.midiDestination;
         this.midiMapping = new MidiMapping(data.midiMapping);
-        this.universeName = data.universeName || "";
+        this.universeUuid = data.universeUuid || "";
 
         if(data.remoteDeviceList) {
             for(let remoteDevice of data.remoteDeviceList) {

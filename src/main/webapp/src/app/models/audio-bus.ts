@@ -1,6 +1,7 @@
 import { AudioDevice } from "./audio-device";
 
 export class AudioBus {
+  uuid: string;
   audioDevice: AudioDevice;
   name: string = "";
   channels: number = 2;
@@ -10,6 +11,8 @@ export class AudioBus {
       return;
     }
 
+    this.uuid = data.uuid;
+
     if (data.audioDevice) {
       this.audioDevice = new AudioDevice(data.audioDevice);
     }
@@ -17,4 +20,5 @@ export class AudioBus {
     this.name = data.name;
     this.channels = data.channels;
   }
+
 }

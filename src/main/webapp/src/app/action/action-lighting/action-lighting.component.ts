@@ -3,6 +3,7 @@ import { ActionLighting } from "../../models/action-lighting";
 import { LightingActionUniverse } from "../../models/lighting-action-universe";
 import { LightingActionChannelValue } from "../../models/lighting-action-channel-value";
 import { SettingsService } from "../../services/settings.service";
+import { LightingUniverse } from "../../models/lighting-universe";
 
 @Component({
     selector: "app-action-lighting",
@@ -14,7 +15,7 @@ export class ActionLightingComponent implements OnInit {
   @Input()
   action: ActionLighting;
 
-  universeNameList: string[] = [];
+  lightingUniverseList: LightingUniverse[] = [];
   channelList: number[] = [];
   valueList: number[] = [];
 
@@ -34,17 +35,15 @@ export class ActionLightingComponent implements OnInit {
 
   private loadUniverseNameList() {
     this.settingsService.getSettings(true).subscribe((settings) => {
-      this.universeNameList = settings.lightingUniverseMappingList
-        .map((lightingUniverseMapping) => lightingUniverseMapping.name)
-        .filter((name) => !!name);
+      this.lightingUniverseList = settings.lightingUniverseList;
 
-      if (this.universeNameList.length === 0) {
+      if (this.lightingUniverseList.length === 0) {
         return;
       }
 
       for (let lightingActionUniverse of this.action.lightingActionUniverseList) {
-        if (!lightingActionUniverse.universeName) {
-          lightingActionUniverse.universeName = this.universeNameList[0];
+        if (!lightingActionUniverse.universeUuid) {
+          lightingActionUniverse.universeUuid = this.lightingUniverseList[0].uuid;
         }
       }
     });
@@ -58,8 +57,8 @@ export class ActionLightingComponent implements OnInit {
 
   addUniverse() {
     const lightingActionUniverse = new LightingActionUniverse();
-    if (this.universeNameList.length > 0) {
-      lightingActionUniverse.universeName = this.universeNameList[0];
+    if (this.lightingUniverseList.length > 0) {
+      lightingActionUniverse.universeUuid = this.lightingUniverseList[0].uuid;
     }
     this.action.lightingActionUniverseList.push(lightingActionUniverse);
   }

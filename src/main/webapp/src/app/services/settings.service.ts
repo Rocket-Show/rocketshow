@@ -11,7 +11,8 @@ import { Language } from "../models/language";
 import { OlaPlugin } from "../models/ola-plugin";
 import { OlaPort } from "../models/ola-port";
 import { RaspberryPiPin } from "../models/raspberry-pi-pin";
-import { LightingUniverseMapping } from "../models/lighting-universe-mapping";
+import { LightingUniverse } from "../models/lighting-universe";
+import { UuidService } from "./uuid.service";
 
 @Injectable()
 export class SettingsService {
@@ -28,7 +29,8 @@ export class SettingsService {
 
   constructor(
     private http: HttpClient,
-    private translateService: TranslateService
+    private translateService: TranslateService,
+    private uuidService: UuidService
   ) {
     let language: Language;
 
@@ -120,10 +122,10 @@ export class SettingsService {
     );
   }
 
-  updateLightingUniverses(lightingUniverseMappingList: LightingUniverseMapping[]): Observable<Object> {
+  updateLightingUniverses(lightingUniverseList: LightingUniverse[]): Observable<Object> {
     return this.http.post(
       "system/settings-lighting-universes",
-      JSON.stringify(lightingUniverseMappingList)
+      JSON.stringify(lightingUniverseList)
     );
   }
 
@@ -205,6 +207,7 @@ export class SettingsService {
       .pipe(
         map((result) => {
           let audioBus: AudioBus = new AudioBus();
+          audioBus.uuid = this.uuidService.getUuid();
           audioBus.name = result + " " + (settings.audioBusList.length + 1);
           settings.audioBusList.push(audioBus);
         })

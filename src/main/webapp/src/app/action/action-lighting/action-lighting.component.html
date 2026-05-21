@@ -16,10 +16,10 @@
               "action.lighting.universe-name" | translate
             }}</label>
             <div class="col-md-9">
-              <select class="custom-select" [(ngModel)]="lightingActionUniverse.universeName">
-                @for (universeName of universeNameList; track universeName) {
-                  <option [value]="universeName">
-                    {{ universeName }}
+              <select class="custom-select" [(ngModel)]="lightingActionUniverse.universeUuid">
+                @for (lightingUniverse of lightingUniverseList; track lightingUniverse.uuid) {
+                  <option [value]="lightingUniverse.uuid">
+                    {{ lightingUniverse.name }}
                   </option>
                 }
               </select>

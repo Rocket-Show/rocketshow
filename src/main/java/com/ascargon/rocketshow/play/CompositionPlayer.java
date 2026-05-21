@@ -314,7 +314,7 @@ public class CompositionPlayer {
     private void addAudioToPipeline(AudioCompositionFile audioCompositionFile, Map<AudioDevice, Element> audioMixerList, int index) throws Exception {
         logger.debug("Add audio file to pipeline...");
 
-        AudioBus audioBus = settingsService.getAudioBusByName(audioCompositionFile.getOutputBus());
+        AudioBus audioBus = settingsService.getAudioBusByUuid(audioCompositionFile.getOutputBusUuid());
         AudioDevice audioDevice = audioBus.getAudioDevice();
 
         if (audioDevice == null && !OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
@@ -412,7 +412,7 @@ public class CompositionPlayer {
 
         for (CompositionFile compositionFile : composition.getCompositionFileList()) {
             if (compositionFile instanceof AudioCompositionFile audioCompositionFile) {
-                AudioBus audioBus = settingsService.getAudioBusByName(audioCompositionFile.getOutputBus());
+                AudioBus audioBus = settingsService.getAudioBusByUuid(audioCompositionFile.getOutputBusUuid());
                 if (audioBus != null && audioBus.getAudioDevice() != null) {
                     audioDeviceSet.add(audioBus.getAudioDevice());
                 }

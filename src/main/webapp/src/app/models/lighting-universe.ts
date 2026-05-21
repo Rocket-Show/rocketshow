@@ -1,4 +1,4 @@
-export class LightingUniverseMapping {
+export class LightingUniverse {
   uuid: string;
   name: string = "";
   olaUniverseId: number = 1;

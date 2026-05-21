@@ -6,19 +6,19 @@
             <active>true</active>
             <durationMillis>242000</durationMillis>
             <loop>false</loop>
-            <name>head_smashed_far_away_click.wav</name>
+            <name>head_smashed_far_away.wav</name>
             <offsetMillis>0</offsetMillis>
             <type>AUDIO</type>
-            <outputBus>My audio bus 1</outputBus>
+            <outputBusUuid>2d9b6f4a-8c1e-47a3-b5d8-7f29c4e87562</outputBusUuid>
         </audioFile>
         <audioFile>
             <active>true</active>
             <durationMillis>242000</durationMillis>
             <loop>false</loop>
-            <name>head_smashed_far_away.wav</name>
+            <name>head_smashed_far_away_click.wav</name>
             <offsetMillis>0</offsetMillis>
             <type>AUDIO</type>
-            <outputBus>My audio bus 1</outputBus>
+            <outputBusUuid>7b3f9a2d-4c81-4e6f-9d73-a8f14c2e9101</outputBusUuid>
         </audioFile>
         <midiFile>
             <active>true</active>
@@ -39,7 +39,7 @@
                         <overrideParent>false</overrideParent>
                     </midiMapping>
                     <remoteDeviceList/>
-                    <universeName>DMX</universeName>
+                    <universeUuid>f869189e-4068-4800-a61f-66a1499946fd</universeUuid>
                 </midiRouting>
             </midiRoutingList>
         </midiFile>

@@ -156,6 +156,7 @@ public class DefaultSettingsService implements SettingsService {
         // Add the default audio bus
         if (settings.getAudioBusList().isEmpty()) {
             AudioBus audioBus = new AudioBus();
+            audioBus.setUuid(UUID.randomUUID().toString());
             audioBus.setName("My audio bus 1");
             audioBus.setChannels(2);
             settings.getAudioBusList().add(audioBus);
@@ -290,8 +291,8 @@ public class DefaultSettingsService implements SettingsService {
     }
 
     @Override
-    public AudioBus getAudioBusByName(String outputBus) {
-        if (outputBus == null) {
+    public AudioBus getAudioBusByUuid(String outputBusUuid) {
+        if (outputBusUuid == null) {
             if (!settings.getAudioBusList().isEmpty()) {
                 return settings.getAudioBusList().getFirst();
             } else {
@@ -299,9 +300,8 @@ public class DefaultSettingsService implements SettingsService {
             }
         }
 
-        // Get an alsa device name from a bus name
         for (AudioBus audioBus : settings.getAudioBusList()) {
-            if (outputBus.equals(audioBus.getName())) {
+            if (outputBusUuid.equals(audioBus.getUuid())) {
                 return audioBus;
             }
         }
@@ -330,14 +330,13 @@ public class DefaultSettingsService implements SettingsService {
     }
 
     @Override
-    public String getAlsaDeviceFromOutputBus(String outputBus) {
-        // Get an alsa device name from a bus name
+    public String getAlsaDeviceFromOutputBusUuid(String outputBusUuid) {
         for (int i = 0; i < settings.getAudioBusList().size(); i++) {
             AudioBus audioBus = settings.getAudioBusList().get(i);
 
             logger.debug("Got bus '" + audioBus.getName() + "'");
 
-            if (outputBus != null && outputBus.equals(audioBus.getName())) {
+            if (outputBusUuid != null && outputBusUuid.equals(audioBus.getUuid())) {
                 logger.debug("Found device '" + getBusNameFromId(i) + "'");
 
                 return getBusNameFromId(i);

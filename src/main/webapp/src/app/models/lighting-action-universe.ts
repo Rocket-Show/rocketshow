@@ -1,7 +1,7 @@
 import { LightingActionChannelValue } from "./lighting-action-channel-value";
 
 export class LightingActionUniverse {
-  universeName: string;
+  universeUuid: string;
   channelValueList: LightingActionChannelValue[] = [];
 
   constructor(data?: any) {
@@ -9,7 +9,7 @@ export class LightingActionUniverse {
       return;
     }
 
-    this.universeName = data.universeName;
+    this.universeUuid = data.universeUuid;
 
     if (data.channelValueList) {
       for (let channelValue of data.channelValueList) {

@@ -10,7 +10,7 @@ import { ActionTriggerMidi } from "./action-trigger-midi";
 import { ActionTriggerMidiNoteOn } from "./action-trigger-midi-note-on";
 import { ActionTriggerMidiProgramChange } from "./action-trigger-midi-program-change";
 import { ApiKey } from "./api-key";
-import { LightingUniverseMapping } from "./lighting-universe-mapping";
+import { LightingUniverse } from "./lighting-universe";
 
 export class Settings {
   version: number;
@@ -27,7 +27,7 @@ export class Settings {
   raspberryGpioOutputPinBcmList: number[];
   lightingSendDelayMillis: number;
   lightingOlaPluginList: OlaPlugin[] = [];
-  lightingUniverseMappingList: LightingUniverseMapping[] = [];
+  lightingUniverseList: LightingUniverse[] = [];
   defaultComposition: string;
   offsetMillisMidi: number;
   offsetMillisAudio: number;
@@ -142,12 +142,12 @@ export class Settings {
       }
     }
 
-    if (data.lightingUniverseMappingList) {
-      this.lightingUniverseMappingList = [];
+    if (data.lightingUniverseList) {
+      this.lightingUniverseList = [];
 
-      for (let lightingUniverseMapping of data.lightingUniverseMappingList) {
-        this.lightingUniverseMappingList.push(
-          new LightingUniverseMapping(lightingUniverseMapping)
+      for (let lightingUniverse of data.lightingUniverseList) {
+        this.lightingUniverseList.push(
+          new LightingUniverse(lightingUniverse)
         );
       }
     }

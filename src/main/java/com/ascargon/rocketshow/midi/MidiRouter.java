@@ -50,7 +50,7 @@ public class MidiRouter {
             Midi2LightingReceiver midi2LightingReceiver = new Midi2LightingReceiver(midi2LightingConvertService, lightingService);
             midi2LightingReceiver.setMidiMapping(midiRouting.getMidiMapping());
             midi2LightingReceiver.setMidi2LightingMapping(midiRouting.getMidi2LightingMapping());
-            midi2LightingReceiver.setUniverseName(midiRouting.getUniverseName());
+            midi2LightingReceiver.setUniverseUuid(midiRouting.getUniverseUuid());
 
             return midi2LightingReceiver;
         } else if (midiRouting.getMidiDestination() == MidiDestination.REMOTE) {

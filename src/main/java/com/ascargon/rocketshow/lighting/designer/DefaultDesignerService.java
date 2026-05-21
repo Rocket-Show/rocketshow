@@ -3,7 +3,7 @@ package com.ascargon.rocketshow.lighting.designer;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.play.CompositionPlayer;
 import com.ascargon.rocketshow.lighting.LightingService;
-import com.ascargon.rocketshow.lighting.LightingUniverse;
+import com.ascargon.rocketshow.lighting.LightingUniverseState;
 import com.ascargon.rocketshow.util.FileFilterService;
 import org.freedesktop.gstreamer.Pipeline;
 import org.slf4j.Logger;
@@ -53,7 +53,7 @@ public class DefaultDesignerService implements DesignerService {
     private String selectedPresetUuid;
     private List<String> selectedSceneUuids = new ArrayList<>();
 
-    private List<LightingUniverse> lightingUniverses = new ArrayList<>();
+    private List<LightingUniverseState> lightingUniverses = new ArrayList<>();
 
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
     private ScheduledFuture<?> universeSenderHandle;
@@ -965,7 +965,7 @@ public class DefaultDesignerService implements DesignerService {
         logger.trace("Set universe values...");
 
         // Reset all DMX universes
-        for (LightingUniverse universe : lightingUniverses) {
+        for (LightingUniverseState universe : lightingUniverses) {
             universe.reset();
         }
 
@@ -1494,10 +1494,10 @@ public class DefaultDesignerService implements DesignerService {
         updateCachedFixtures();
 
         // TODO Init all universes
-        LightingUniverse newUniverse = new LightingUniverse();
+        LightingUniverseState newUniverse = new LightingUniverseState();
         lightingUniverses.add(newUniverse);
 
-        for (LightingUniverse lightingUniverse : lightingUniverses) {
+        for (LightingUniverseState lightingUniverse : lightingUniverses) {
             lightingService.addLightingUniverse(lightingUniverse);
         }
 
@@ -1530,7 +1530,7 @@ public class DefaultDesignerService implements DesignerService {
 
         stopTimer();
 
-        for (LightingUniverse lightingUniverse : lightingUniverses) {
+        for (LightingUniverseState lightingUniverse : lightingUniverses) {
             lightingService.removeLightingUniverse(lightingUniverse);
         }
 
@@ -1557,7 +1557,7 @@ public class DefaultDesignerService implements DesignerService {
 
         stopTimer();
 
-        for (LightingUniverse lightingUniverse : lightingUniverses) {
+        for (LightingUniverseState lightingUniverse : lightingUniverses) {
             lightingService.removeLightingUniverse(lightingUniverse);
         }
 

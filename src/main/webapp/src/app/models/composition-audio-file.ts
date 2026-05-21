@@ -1,7 +1,7 @@
 import { CompositionFile } from "./composition-file";
 
 export class CompositionAudioFile extends CompositionFile {
-  outputBus: string;
+  outputBusUuid: string;
   volume: number;
 
   constructor(data?: any) {
@@ -11,8 +11,8 @@ export class CompositionAudioFile extends CompositionFile {
       return;
     }
 
-    if (data.outputBus) {
-      this.outputBus = data.outputBus;
+    if (data.outputBusUuid) {
+      this.outputBusUuid = data.outputBusUuid;
     }
 
     if (data.volume) {

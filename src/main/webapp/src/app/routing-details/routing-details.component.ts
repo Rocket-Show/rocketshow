@@ -4,6 +4,7 @@ import { BsModalRef } from 'ngx-bootstrap/modal';
 import { Subject } from 'rxjs';
 import { RemoteDevice } from '../models/remote-device';
 import { SettingsService } from '../services/settings.service';
+import { LightingUniverse } from '../models/lighting-universe';
 
 @Component({
     selector: 'app-routing-details',
@@ -16,7 +17,7 @@ export class RoutingDetailsComponent implements OnInit {
   midiRouting: MidiRouting;
   onClose: Subject<number>;
   remoteDevices: RemoteDevice[];
-  universeNameList: string[] = [];
+  lightingUniverseList: LightingUniverse[] = [];
 
   midiDestinationList: string[] = [];
 
@@ -34,12 +35,10 @@ export class RoutingDetailsComponent implements OnInit {
 
     this.settingsService.getSettings(true).subscribe((result) => {
       this.remoteDevices = result.remoteDeviceList;
-      this.universeNameList = result.lightingUniverseMappingList
-        .map((lightingUniverseMapping) => lightingUniverseMapping.name)
-        .filter((name) => !!name);
+      this.lightingUniverseList = result.lightingUniverseList;
 
       if (this.midiRouting?.midiDestination === "LIGHTING") {
-        this.setDefaultUniverseName();
+        this.setDefaultUniverseUuid();
       }
     });
   }
@@ -48,13 +47,13 @@ export class RoutingDetailsComponent implements OnInit {
     this.midiRouting.midiDestination = midiDestination;
 
     if (midiDestination === "LIGHTING") {
-      this.setDefaultUniverseName();
+      this.setDefaultUniverseUuid();
     }
   }
 
-  private setDefaultUniverseName() {
-    if (!this.midiRouting.universeName && this.universeNameList.length > 0) {
-      this.midiRouting.universeName = this.universeNameList[0];
+  private setDefaultUniverseUuid() {
+    if (!this.midiRouting.universeUuid && this.lightingUniverseList.length > 0) {
+      this.midiRouting.universeUuid = this.lightingUniverseList[0].uuid;
     }
   }
 

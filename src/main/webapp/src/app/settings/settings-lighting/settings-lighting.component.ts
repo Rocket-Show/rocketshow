@@ -8,7 +8,7 @@ import { AuthService } from "../../services/auth.service";
 import { DeviceInformationService } from "../../services/device-information.service";
 import { DeviceInformation } from "../../models/device-information";
 import { OlaPort } from "../../models/ola-port";
-import { LightingUniverseMapping } from "../../models/lighting-universe-mapping";
+import { LightingUniverse } from "../../models/lighting-universe";
 
 @Component({
   selector: "app-settings-lighting",
@@ -27,7 +27,7 @@ export class SettingsLightingComponent implements OnInit {
   savingOlaPlugins: boolean = false;
   savingLightingUniverses: boolean = false;
   lightingUniverseSortableOptions = {
-    onUpdate: () => this.updateLightingUniverseMappingList(),
+    onUpdate: () => this.updateLightingUniverseList(),
   };
 
   constructor(
@@ -117,10 +117,10 @@ export class SettingsLightingComponent implements OnInit {
       });
   }
 
-  updateLightingUniverseMappingList() {
+  updateLightingUniverseList() {
     this.savingLightingUniverses = true;
     this.settingsService
-      .updateLightingUniverses(this.settings.lightingUniverseMappingList)
+      .updateLightingUniverses(this.settings.lightingUniverseList)
       .pipe(
         switchMap(() =>
           forkJoin({
@@ -157,41 +157,41 @@ export class SettingsLightingComponent implements OnInit {
     this.refreshAvailableOlaPlugins();
   }
 
-  addLightingUniverseMapping() {
-    let lightingUniverseMapping = new LightingUniverseMapping();
-    lightingUniverseMapping.name =
-      "Universe " + (this.settings.lightingUniverseMappingList.length + 1);
-    lightingUniverseMapping.olaUniverseId =
+  addLightingUniverse() {
+    let lightingUniverse = new LightingUniverse();
+    lightingUniverse.name =
+      "Universe " + (this.settings.lightingUniverseList.length + 1);
+    lightingUniverse.olaUniverseId =
       this.getNextOlaUniverseId();
 
-    this.settings.lightingUniverseMappingList.push(lightingUniverseMapping);
-    this.updateLightingUniverseMappingList();
+    this.settings.lightingUniverseList.push(lightingUniverse);
+    this.updateLightingUniverseList();
   }
 
-  removeLightingUniverseMapping(index: number) {
-    this.settings.lightingUniverseMappingList.splice(index, 1);
-    this.updateLightingUniverseMappingList();
+  removeLightingUniverse(index: number) {
+    this.settings.lightingUniverseList.splice(index, 1);
+    this.updateLightingUniverseList();
   }
 
-  updateLightingUniverseMappingPort(lightingUniverseMapping: LightingUniverseMapping, olaOutputPortId: string) {
-    lightingUniverseMapping.olaOutputPortId = olaOutputPortId || "";
-    this.updateLightingUniverseMappingList();
+  updateLightingUniversePort(lightingUniverse: LightingUniverse, olaOutputPortId: string) {
+    lightingUniverse.olaOutputPortId = olaOutputPortId || "";
+    this.updateLightingUniverseList();
   }
 
   private getNextOlaUniverseId(): number {
     let highestUniverseId = 0;
 
-    for (let lightingUniverseMapping of this.settings.lightingUniverseMappingList) {
-      if (lightingUniverseMapping.olaUniverseId > highestUniverseId) {
-        highestUniverseId = lightingUniverseMapping.olaUniverseId;
+    for (let lightingUniverse of this.settings.lightingUniverseList) {
+      if (lightingUniverse.olaUniverseId > highestUniverseId) {
+        highestUniverseId = lightingUniverse.olaUniverseId;
       }
     }
 
     return highestUniverseId + 1;
   }
 
-  getOlaOutputPortsForMapping(lightingUniverseMapping: LightingUniverseMapping): OlaPort[] {
-    const selectedOlaOutputPortId = lightingUniverseMapping.olaOutputPortId || "";
+  getOlaOutputPortsForMapping(lightingUniverse: LightingUniverse): OlaPort[] {
+    const selectedOlaOutputPortId = lightingUniverse.olaOutputPortId || "";
     let olaOutputPorts = this.olaOutputPortList.filter((olaOutputPort) => {
       if (!olaOutputPort.id) {
         return false;
@@ -199,7 +199,7 @@ export class SettingsLightingComponent implements OnInit {
 
       return (
         olaOutputPort.id === selectedOlaOutputPortId ||
-        !this.isOlaOutputPortSelectedByOtherMapping(olaOutputPort.id, lightingUniverseMapping)
+        !this.isOlaOutputPortSelectedByOtherMapping(olaOutputPort.id, lightingUniverse)
       );
     });
 
@@ -220,16 +220,16 @@ export class SettingsLightingComponent implements OnInit {
 
   private isOlaOutputPortSelectedByOtherMapping(
     olaOutputPortId: string,
-    currentLightingUniverseMapping: LightingUniverseMapping
+    currentLightingUniverse: LightingUniverse
   ): boolean {
     if (!olaOutputPortId) {
       return false;
     }
 
-    return this.settings.lightingUniverseMappingList.some(
-      (lightingUniverseMapping) =>
-        lightingUniverseMapping !== currentLightingUniverseMapping &&
-        (lightingUniverseMapping.olaOutputPortId || "") === olaOutputPortId
+    return this.settings.lightingUniverseList.some(
+      (lightingUniverse) =>
+        lightingUniverse !== currentLightingUniverse &&
+        (lightingUniverse.olaOutputPortId || "") === olaOutputPortId
     );
   }
 

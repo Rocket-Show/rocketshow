@@ -10,7 +10,7 @@ import java.util.List;
 @Setter
 public class LightingActionUniverse {
 
-    private String universeName;
+    private String universeUuid;
     private List<LightingActionChannelValue> channelValueList = new ArrayList<>();
 
 }

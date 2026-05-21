@@ -25,7 +25,7 @@ public class MidiRouting {
 
     private MidiMapping midiMapping = new MidiMapping();
     private Midi2LightingMapping midi2LightingMapping = new Midi2LightingMapping();
-    private String universeName;
+    private String universeUuid;
 
     // A list of remote device ids in case of destination type = REMOTE
     private List<String> remoteDeviceNameList = new ArrayList<>();

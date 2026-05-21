@@ -13,9 +13,9 @@ public interface LightingService {
 
     void sendExternalSync(boolean enableMonitor);
 
-    void addLightingUniverse(LightingUniverse lightingUniverse);
+    void addLightingUniverse(LightingUniverseState lightingUniverse);
 
-    void removeLightingUniverse(LightingUniverse lightingUniverse);
+    void removeLightingUniverse(LightingUniverseState lightingUniverse);
 
     void setExternalSync(boolean externalSync);
 
@@ -29,7 +29,7 @@ public interface LightingService {
 
     void initializeUniverses();
 
-    void updateUniverses(List<LightingUniverseMapping> lightingUniverseMappings);
+    void updateUniverses(List<LightingUniverse> lightingUniverses);
 
     void executeAction(ActionLighting actionLighting);
 }
