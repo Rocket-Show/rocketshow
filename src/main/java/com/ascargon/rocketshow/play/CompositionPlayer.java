@@ -161,7 +161,9 @@ public class CompositionPlayer {
         if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
             return ElementFactory.make("osxvideosink", "osxvideosink");
         }
-        return ElementFactory.make("kmssink", "kmssink");
+        Element kmssink = ElementFactory.make("kmssink", "kmssink");
+        kmssink.set("driver-name", "vc4");
+        return kmssink;
     }
 
     private int getAudioBusStartChannel(AudioBus audioBus) {
