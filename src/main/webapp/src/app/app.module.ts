@@ -76,6 +76,7 @@ import { ActionListComponent } from "./action-list/action-list.component";
 import { ActionComponent } from "./action/action.component";
 import { EditorCompositionActionComponent } from "./editor/editor-composition/editor-composition-action/editor-composition-action.component";
 import { ActionTriggerCompositionComponent } from "./editor/editor-composition/action-trigger-composition/action-trigger-composition.component";
+import { EditorMediaComponent } from "./editor/editor-media/editor-media.component";
 import { SettingsExternalControlComponent } from "./settings/settings-external-control/settings-external-control.component";
 import { ActionTriggerRaspberryGpioComponent } from "./settings/settings-external-control/action-trigger-raspberry-gpio/action-trigger-raspberry-gpio.component";
 import { ActionNullComponent } from "./action/action-null/action-null.component";
@@ -152,6 +153,7 @@ const appRoutes: Routes = [
         SettingsSecurityComponent,
         LeadSheetComponent,
         EditorCompositionLeadSheetComponent,
+        EditorMediaComponent,
         SettingsBandComponent,
         SettingsPersonalComponent,
         DesignerComponent,
