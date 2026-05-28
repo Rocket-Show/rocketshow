@@ -28,6 +28,7 @@ import org.freedesktop.gstreamer.elements.AppSink;
 import org.freedesktop.gstreamer.elements.BaseSink;
 import org.freedesktop.gstreamer.elements.PlayBin;
 import org.freedesktop.gstreamer.elements.URIDecodeBin;
+import org.freedesktop.gstreamer.event.SeekFlags;
 import org.freedesktop.gstreamer.lowlevel.GType;
 import org.freedesktop.gstreamer.lowlevel.GValueAPI;
 import org.freedesktop.gstreamer.message.Message;
@@ -85,8 +86,8 @@ public class CompositionPlayer {
 
     private Composition composition;
     private PlayState playState = PlayState.STOPPED;
-    private boolean seekAfterPlay = false; // Seek, as soon as the pipeline is playing
     private boolean firstPlayDone = false; // Has the pipeline played at least once?
+    private boolean seekDisabled = false; // True when a hardware H.265 decoder is in use
     private long startPosition = 0; // The position, the composition started the last play
     private long lastPlayTimeMillis; // The system time, when playing started
     private ScheduledFuture<?> autoStopHandle;
@@ -230,6 +231,8 @@ public class CompositionPlayer {
         videoSource.set("uri", "file://" + settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getVideoPath() + File.separator + videoCompositionFile.getName());
 
         Element videoQueue = ElementFactory.make("queue", "videoqueue");
+        Element videoConvert = ElementFactory.make("videoconvert", "videoconvert");
+
         videoSource.connect((Element.PAD_ADDED) (Element element, Pad pad) -> {
             Caps caps = pad.getCurrentCaps();
 
@@ -245,13 +248,15 @@ public class CompositionPlayer {
         });
         pipeline.add(videoSource);
         pipeline.add(videoQueue);
+        pipeline.add(videoConvert);
 
         Element kmssink = getGstVideoSink();
         kmssink.set("sync", true);
         pipeline.add(kmssink);
 
         videoSource.link(videoQueue);
-        videoQueue.link(kmssink);
+        videoQueue.link(videoConvert);
+        videoConvert.link(kmssink);
     }
 
     private void addMidiToPipeline(MidiCompositionFile midiCompositionFile, int index) {
@@ -526,17 +531,6 @@ public class CompositionPlayer {
                 if (newState == State.PLAYING) {
                     firstPlayDone = true;
 
-                    // We changed to playing, maybe we need to seek to the startPosition (not possible before first play)
-                    if (seekAfterPlay) {
-                        seekAfterPlay = false;
-
-                        try {
-                            seek(startPosition);
-                        } catch (Exception e) {
-                            logger.error("Could not set start position when changed to playing", e);
-                        }
-                    }
-
                     playState = PlayState.PLAYING;
 
                     if (!isDefaultComposition && !isSample) {
@@ -551,7 +545,11 @@ public class CompositionPlayer {
         });
         bus.connect((Bus.EOS) source -> {
             if (composition.isLoop()) {
-                pipeline.seek(0, TimeUnit.MILLISECONDS);
+                try {
+                    seek(0);
+                } catch (Exception e) {
+                    logger.error("Could not seek to start of composition to loop it");
+                }
             } else {
                 try {
                     playerService.compositionPlayerFinishedPlaying(this);
@@ -628,9 +626,27 @@ public class CompositionPlayer {
     }
 
     // Load all files and construct the complete GST pipeline
+    private boolean findHardwareH265Decoder(Bin bin) {
+        for (Element element : bin.getElements()) {
+            ElementFactory factory = element.getFactory();
+            if (factory != null) {
+                String name = factory.getName();
+                if ((name.contains("h265") || name.contains("hevc")) && !name.startsWith("avdec")) {
+                    return true;
+                }
+            }
+            if (element instanceof Bin && findHardwareH265Decoder((Bin) element)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Load all files and construct the complete GST pipeline
     public void loadFiles() throws Exception {
         boolean hasActiveFile = false;
         firstPlayDone = false;
+        seekDisabled = false;
 
         if (playState != PlayState.STOPPED) {
             return;
@@ -806,7 +822,24 @@ public class CompositionPlayer {
         logger.info("Playing composition '" + composition.getName() + "'...");
 
         if (pipeline != null) {
-            pipeline.play();
+            if (!firstPlayDone) {
+                pipeline.setState(State.PAUSED);
+                pipeline.getState(5, TimeUnit.SECONDS);
+
+                seekDisabled = findHardwareH265Decoder(pipeline);
+                if (seekDisabled) {
+                    logger.warn("Hardware H.265 decoder detected in pipeline — seeking will be disabled for this composition");
+                }
+
+                if (startPosition > 0) {
+                    pipeline.seekSimple(Format.TIME,
+                            EnumSet.of(SeekFlags.FLUSH, SeekFlags.KEY_UNIT),
+                            startPosition * 1_000_000L);
+                    pipeline.getState(5, TimeUnit.SECONDS);
+                }
+            }
+            pipeline.setState(State.PLAYING);
+            pipeline.getState(5, TimeUnit.SECONDS);
         }
 
         lastPlayTimeMillis = System.currentTimeMillis();
@@ -855,8 +888,8 @@ public class CompositionPlayer {
 
     public void stop() throws Exception {
         startPosition = 0;
-        seekAfterPlay = false;
         firstPlayDone = false;
+        seekDisabled = false;
 
         if (composition == null || playState == PlayState.STOPPED) {
             return;
@@ -901,15 +934,37 @@ public class CompositionPlayer {
     }
 
     public void seek(long positionMillis) throws Exception {
-        if (pipeline == null || !firstPlayDone) {
-            seekAfterPlay = true;
+        if (seekDisabled) {
+            // Seeking is disabled for hardware H.265 decode on RPi. Two approaches were tried
+            // and both fail:
+            //   1. Early seek (before preroll): the hardware decoder ignores the seek event
+            //      during pipeline initialisation and always prerolls at position 0.
+            //   2. Post-preroll FLUSH seek: the decoder's sole DPB slot (MaxDpbPic = 1 for
+            //      4K H.265 level 4.x) is held by the KMS scanout buffer. alloc_frame()
+            //      cannot get a free slot and fails with "Not enough memory to decode H265
+            //      stream". Unlike software decoders, the hardware path has no additional
+            //      DPB slots to absorb the seek.
+            logger.warn("Seek to {}ms ignored: hardware H.265 decoder does not support seeking", positionMillis);
+            if (!isSample) {
+                notificationService.notifyClients(playerService, setService);
+            }
+            return;
         }
+
         startPosition = positionMillis;
 
         logger.debug("Seek to position " + positionMillis);
 
         if (pipeline != null) {
-            pipeline.seek(positionMillis, TimeUnit.MILLISECONDS);
+            long positionNanos = positionMillis * 1_000_000L;
+
+            // Software decoders have sufficient decode buffers to handle a direct FLUSH seek
+            // on the live pipeline without any state teardown. The pipeline automatically
+            // returns to its previous state (PLAYING or PAUSED) after the seek.
+            pipeline.seekSimple(Format.TIME,
+                    EnumSet.of(SeekFlags.FLUSH, SeekFlags.KEY_UNIT),
+                    positionNanos);
+            pipeline.getState(5, TimeUnit.SECONDS);
         }
 
         this.lastPlayTimeMillis = System.currentTimeMillis();
