@@ -3,79 +3,62 @@
   {{ "settings.restart-required" | translate }}
 </div>
 
-@if (settings && !deviceInformation?.available) {
-  <div class="form-group row">
-    <label class="col-lg-3 col-form-label">{{
-      "settings.midi-device-in" | translate
+<div class="form-group row">
+  <label class="col-lg-3 col-form-label">{{
+    "settings.midi-device-in" | translate
     }}</label>
-    <div class="col-lg-9 d-flex">
-      @if (midiInDevices?.length == 0) {
-        <div class="my-auto">
-          - {{ "settings.no-midi-devices" | translate }} -
-        </div>
-      }
-      @if (midiInDevices?.length > 0) {
-        <select
-          class="custom-select"
-          [compareWith]="midiDeviceEqual"
-          [(ngModel)]="settings.midiInDevice"
-          >
-          @for (midiDevice of midiInDevices; track midiDevice) {
-            <option [ngValue]="midiDevice">
-              {{ midiDevice.name }}@if (midiDevice.serialPort) {
-              <span> ({{ 'settings.midi-serial' | translate }})</span>
-            }
-          </option>
+  <div class="col-lg-9 d-flex">
+    @if (midiInDevices?.length == 0) {
+    <div class="my-auto">
+      - {{ "settings.no-midi-devices" | translate }} -
+    </div>
+    }
+    @if (midiInDevices?.length > 0) {
+    <select class="custom-select" [compareWith]="midiDeviceEqual" [(ngModel)]="settings.midiInDevice">
+      @for (midiDevice of midiInDevices; track midiDevice) {
+      <option [ngValue]="midiDevice">
+        {{ midiDevice.name }}@if (midiDevice.serialPort) {
+        <span> ({{ 'settings.midi-serial' | translate }})</span>
         }
-      </select>
+      </option>
+      }
+    </select>
     }
   </div>
 </div>
-}
 
-@if (settings && !deviceInformation?.available) {
-  <div class="form-group row">
-    <label class="col-lg-3 col-form-label">{{
-      "settings.midi-device-out" | translate
+<div class="form-group row">
+  <label class="col-lg-3 col-form-label">{{
+    "settings.midi-device-out" | translate
     }}</label>
-    <div class="col-lg-9 d-flex">
-      @if (midiOutDevices?.length == 0) {
-        <div class="my-auto">
-          - {{ "settings.no-midi-devices" | translate }} -
-        </div>
-      }
-      @if (midiOutDevices?.length > 0) {
-        <select
-          class="custom-select"
-          [compareWith]="midiDeviceEqual"
-          [(ngModel)]="settings.midiOutDevice"
-          >
-          @for (midiDevice of midiOutDevices; track midiDevice) {
-            <option [ngValue]="midiDevice">
-              {{ midiDevice.name }}@if (midiDevice.serialPort) {
-              <span> ({{ 'settings.midi-serial' | translate }})</span>
-            }
-          </option>
+  <div class="col-lg-9 d-flex">
+    @if (midiOutDevices?.length == 0) {
+    <div class="my-auto">
+      - {{ "settings.no-midi-devices" | translate }} -
+    </div>
+    }
+    @if (midiOutDevices?.length > 0) {
+    <select class="custom-select" [compareWith]="midiDeviceEqual" [(ngModel)]="settings.midiOutDevice">
+      @for (midiDevice of midiOutDevices; track midiDevice) {
+      <option [ngValue]="midiDevice">
+        {{ midiDevice.name }}@if (midiDevice.serialPort) {
+        <span> ({{ 'settings.midi-serial' | translate }})</span>
         }
-      </select>
+      </option>
+      }
+    </select>
     }
   </div>
 </div>
-}
 
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{
     "settings.midi-timecode" | translate
-  }}</label>
+    }}</label>
   <div class="col-lg-9">
     <div class="form-check">
-      <input
-        type="checkbox"
-        [ngModel]="settings?.midiTimecodeEnabled"
-        (ngModelChange)="settings.midiTimecodeEnabled = $event"
-        class="form-check-input"
-        id="midi-timecode-enable"
-        />
+      <input type="checkbox" [ngModel]="settings?.midiTimecodeEnabled"
+        (ngModelChange)="settings.midiTimecodeEnabled = $event" class="form-check-input" id="midi-timecode-enable" />
       <label class="form-check-label" for="midi-timecode-enable">
         {{ "settings.midi-timecode-enable" | translate }}
       </label>
@@ -84,72 +67,59 @@
 </div>
 
 @if (settings?.midiTimecodeEnabled) {
-  <div class="form-group row">
-    <label class="col-lg-3 col-form-label">{{
-      "settings.midi-timecode-frame-rate" | translate
+<div class="form-group row">
+  <label class="col-lg-3 col-form-label">{{
+    "settings.midi-timecode-frame-rate" | translate
     }}</label>
-    <div class="col-lg-9">
-      <select
-        class="custom-select"
-        [ngModel]="settings?.midiTimecodeFrameRate"
-        (ngModelChange)="settings.midiTimecodeFrameRate = $event"
-        >
-        @for (frameRate of midiTimecodeFrameRates; track frameRate) {
-          <option [ngValue]="frameRate">
-            {{ "settings.midi-timecode-frame-rate-enum." + frameRate | translate }}
-          </option>
-        }
-      </select>
-    </div>
+  <div class="col-lg-9">
+    <select class="custom-select" [ngModel]="settings?.midiTimecodeFrameRate"
+      (ngModelChange)="settings.midiTimecodeFrameRate = $event">
+      @for (frameRate of midiTimecodeFrameRates; track frameRate) {
+      <option [ngValue]="frameRate">
+        {{ "settings.midi-timecode-frame-rate-enum." + frameRate | translate }}
+      </option>
+      }
+    </select>
   </div>
+</div>
 }
 
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{
     "settings.global-play-offset" | translate
-  }}</label>
+    }}</label>
   <div class="col-lg-9">
-    <input
-      type="text"
-      class="form-control"
-      [ngModel]="settings?.offsetMillisMidi"
-      (ngModelChange)="settings.offsetMillisMidi = $event"
-      />
+    <input type="text" class="form-control" [ngModel]="settings?.offsetMillisMidi"
+      (ngModelChange)="settings.offsetMillisMidi = $event" />
   </div>
 </div>
 
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{
     "settings.device-in-midi-routing" | translate
-  }}</label>
+    }}</label>
   <div class="col-lg-9">
-    <app-midi-routing
-      [midiRoutingList]="settings?.deviceInMidiRoutingList"
-    ></app-midi-routing>
+    <app-midi-routing [midiRoutingList]="settings?.deviceInMidiRoutingList"></app-midi-routing>
   </div>
 </div>
 
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{
     "settings.remote-midi-routing" | translate
-  }}</label>
+    }}</label>
   <div class="col-lg-9">
-    <app-midi-routing
-      [midiRoutingList]="settings?.remoteMidiRoutingList"
-    ></app-midi-routing>
+    <app-midi-routing [midiRoutingList]="settings?.remoteMidiRoutingList"></app-midi-routing>
   </div>
 </div>
 
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{
     "settings.global-midi-mapping" | translate
-  }}</label>
+    }}</label>
   <div class="col-lg-9">
     <div class="card border-secondary">
       <div class="card-body">
-        <app-midi-mapping
-          [midiMapping]="settings?.midiMapping"
-        ></app-midi-mapping>
+        <app-midi-mapping [midiMapping]="settings?.midiMapping"></app-midi-mapping>
       </div>
     </div>
   </div>
@@ -158,32 +128,18 @@
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{
     "settings.midi-control" | translate
-  }}</label>
+    }}</label>
   <div class="col-lg-9">
-    <div
-      class="list-group"
-      [sortablejs]="settings?.actionTriggerMidiList"
-      [sortablejsOptions]="{ onMove: sortMove }"
-      >
+    <div class="list-group" [sortablejs]="settings?.actionTriggerMidiList" [sortablejsOptions]="{ onMove: sortMove }">
       @for (
-        actionTriggerMidi of settings?.actionTriggerMidiList; track
-        actionTriggerMidi; let i = $index) {
-        <div
-          class="list-group-item"
-          >
-          <app-action-trigger
-            [index]="i"
-            (delete)="deleteActionTrigger($event)"
-            [trigger]="actionTriggerMidi"
-            (triggerChange)="onTriggerChange($event)"
-          ></app-action-trigger>
-        </div>
+      actionTriggerMidi of settings?.actionTriggerMidiList; track
+      actionTriggerMidi; let i = $index) {
+      <div class="list-group-item">
+        <app-action-trigger [index]="i" (delete)="deleteActionTrigger($event)" [trigger]="actionTriggerMidi"
+          (triggerChange)="onTriggerChange($event)"></app-action-trigger>
+      </div>
       }
-      <a
-        href="#"
-        (click)="addActionTrigger(); (false)"
-        class="no-sortjs list-group-item text-center"
-        >
+      <a href="#" (click)="addActionTrigger(); (false)" class="no-sortjs list-group-item text-center">
         <i class="fa fa-plus" aria-hidden="true"></i>
         {{ "settings.midi-control-add" | translate }}
       </a>
