@@ -220,6 +220,34 @@ export class EditorCompositionComponent implements OnInit {
       return;
     }
 
+    const isNameChange =
+      !this.initialComposition ||
+      !this.initialComposition.name ||
+      this.initialComposition.name !== composition.name;
+
+    const nameConflict =
+      isNameChange &&
+      this.compositions &&
+      this.compositions.some((c) => c.name === composition.name);
+
+    if (nameConflict) {
+      this.warningDialogService
+        .show("editor.warning-overwrite-composition")
+        .pipe(
+          map((result) => {
+            if (result) {
+              this.performSave(composition);
+            }
+          })
+        )
+        .subscribe();
+      return;
+    }
+
+    this.performSave(composition);
+  }
+
+  private performSave(composition: Composition) {
     // Delete the old composition, if the name changed
     if (
       this.initialComposition &&

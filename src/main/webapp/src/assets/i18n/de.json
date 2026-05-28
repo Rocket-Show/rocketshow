@@ -100,6 +100,7 @@
     "error-multiple-video-images": "Mehr als ein Video ist nicht erlaubt in der selben Komposition.",
     "warning-composition-changes": "Diese Komposition enthält noch nicht gespeicherte Änderungen. Möchtest du wirklich fortfahren?",
     "warning-set-changes": "Dieses Set enthält noch nicht gespeicherte Änderungen. Möchtest du wirklich fortfahren?",
+    "warning-overwrite-composition": "Eine Komposition mit diesem Namen existiert bereits. Möchtest du sie wirklich überschreiben?",
     "warning-delete-composition": "Möchtest du diese Komposition wirklich löschen?",
     "warning-delete-set": "Möchtest du dieses Set wirklich löschen?",
     "warning-delete-file": "Möchtest du diese Datei wirklich löschen?",

@@ -100,6 +100,7 @@
     "error-multiple-video-images": "More than one video is not allowed in the same composition.",
     "warning-composition-changes": "This composition contains unsaved changes. Do you really want to proceed?",
     "warning-set-changes": "This set contains unsaved changes. Do you really want to proceed?",
+    "warning-overwrite-composition": "A composition with this name already exists. Do you really want to overwrite it?",
     "warning-delete-composition": "Do you really want to delete this composition?",
     "warning-delete-set": "Do you really want to delete this set?",
     "warning-delete-file": "Do you really want to delete this file?",
