@@ -545,10 +545,31 @@ public class CompositionPlayer {
         });
         bus.connect((Bus.EOS) source -> {
             if (composition.isLoop()) {
-                try {
-                    seek(0);
-                } catch (Exception e) {
-                    logger.error("Could not seek to start of composition to loop it");
+                if (seekDisabled) {
+                    // H.265 hardware decoder cannot seek — destroy and recreate the pipeline.
+                    // Must run off the bus-callback thread to avoid deadlocking pipeline disposal.
+                    scheduler.execute(() -> {
+                        try {
+                            stopPipeline();
+                            firstPlayDone = false;
+                            createGstreamerPipeline();
+                            pipeline.setState(State.PAUSED);
+                            pipeline.getState(5, TimeUnit.SECONDS);
+                            seekDisabled = findHardwareH265Decoder(pipeline);
+                            pipeline.setState(State.PLAYING);
+                            pipeline.getState(5, TimeUnit.SECONDS);
+                            lastPlayTimeMillis = System.currentTimeMillis();
+                            calculateRemainingActionTriggerList();
+                        } catch (Exception e) {
+                            logger.error("Could not restart H.265 pipeline for looping", e);
+                        }
+                    });
+                } else {
+                    try {
+                        seek(0);
+                    } catch (Exception e) {
+                        logger.error("Could not seek to start of composition to loop it", e);
+                    }
                 }
             } else {
                 try {
