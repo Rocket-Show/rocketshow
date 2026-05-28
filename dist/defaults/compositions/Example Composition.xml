@@ -47,7 +47,7 @@
             <active>true</active>
             <durationMillis>31000</durationMillis>
             <loop>false</loop>
-            <name>clouds.mp4</name>
+            <name>RocketShow.mp4</name>
             <offsetMillis>0</offsetMillis>
             <type>VIDEO</type>
         </videoFile>

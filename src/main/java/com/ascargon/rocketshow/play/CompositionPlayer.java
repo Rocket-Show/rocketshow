@@ -29,6 +29,7 @@ import org.freedesktop.gstreamer.elements.BaseSink;
 import org.freedesktop.gstreamer.elements.PlayBin;
 import org.freedesktop.gstreamer.elements.URIDecodeBin;
 import org.freedesktop.gstreamer.event.SeekFlags;
+import org.freedesktop.gstreamer.event.SeekType;
 import org.freedesktop.gstreamer.lowlevel.GType;
 import org.freedesktop.gstreamer.lowlevel.GValueAPI;
 import org.freedesktop.gstreamer.message.Message;
@@ -88,6 +89,8 @@ public class CompositionPlayer {
     private PlayState playState = PlayState.STOPPED;
     private boolean firstPlayDone = false; // Has the pipeline played at least once?
     private boolean seekDisabled = false; // True when a hardware H.265 decoder is in use
+    private final List<Element> loopingSourceList = new ArrayList<>();
+    private Element loopVideoElement = null;
     private long startPosition = 0; // The position, the composition started the last play
     private long lastPlayTimeMillis; // The system time, when playing started
     private ScheduledFuture<?> autoStopHandle;
@@ -210,6 +213,11 @@ public class CompositionPlayer {
         PlayBin playBin = (PlayBin) ElementFactory.make("playbin", "playbin" + index);
         playBin.set("uri", "file://" + settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getVideoPath() + File.separator + videoCompositionFile.getName());
         pipeline.add(playBin);
+
+        if (videoCompositionFile.isLoop()) {
+            loopingSourceList.add(playBin);
+            loopVideoElement = playBin;
+        }
     }
 
     private void addVideoToPipeline(VideoCompositionFile videoCompositionFile, int index) {
@@ -229,6 +237,11 @@ public class CompositionPlayer {
 
         URIDecodeBin videoSource = (URIDecodeBin) ElementFactory.make("uridecodebin", "videouridecodebin");
         videoSource.set("uri", "file://" + settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getVideoPath() + File.separator + videoCompositionFile.getName());
+
+        if (videoCompositionFile.isLoop()) {
+            loopingSourceList.add(videoSource);
+            loopVideoElement = videoSource;
+        }
 
         Element videoQueue = ElementFactory.make("queue", "videoqueue");
         Element videoConvert = ElementFactory.make("videoconvert", "videoconvert");
@@ -271,6 +284,10 @@ public class CompositionPlayer {
         Element midiFileSource = ElementFactory.make("filesrc", "midifilesrc" + index);
         midiFileSource.set("location", settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getMidiPath() + "/" + midiCompositionFile.getName());
         pipeline.add(midiFileSource);
+
+        if (midiCompositionFile.isLoop()) {
+            loopingSourceList.add(midiFileSource);
+        }
 
         Element midiParse = ElementFactory.make("midiparse", "midiparse" + index);
         pipeline.add(midiParse);
@@ -332,6 +349,10 @@ public class CompositionPlayer {
         URIDecodeBin audioSource = (URIDecodeBin) ElementFactory.make("uridecodebin", "audiouridecodebin" + index);
         audioSource.set("uri", "file://" + settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getAudioPath() + File.separator + audioCompositionFile.getName());
         pipeline.add(audioSource);
+
+        if (audioCompositionFile.isLoop()) {
+            loopingSourceList.add(audioSource);
+        }
 
         Element audioConvert = ElementFactory.make("audioconvert", "audioconvert" + index);
         audioSource.connect((Element.PAD_ADDED) (Element element, Pad pad) -> {
@@ -580,6 +601,18 @@ public class CompositionPlayer {
             }
         });
         bus.connect((Bus bus1, Message message) -> {
+            if (message.getType().equals(MessageType.SEGMENT_DONE) && !loopingSourceList.isEmpty()) {
+                String sourceName = message.getSource().getName();
+                for (Element loopingSource : loopingSourceList) {
+                    if (loopingSource.getName().equals(sourceName)) {
+                        loopingSource.seek(1.0, Format.TIME,
+                                EnumSet.of(SeekFlags.SEGMENT, SeekFlags.KEY_UNIT),
+                                SeekType.SET, 0L,
+                                SeekType.SET, ClockTime.NONE);
+                        break;
+                    }
+                }
+            }
             if (message.getType().equals(MessageType.ELEMENT)) {
                 Structure structure = message.getStructure();
 
@@ -639,6 +672,8 @@ public class CompositionPlayer {
             pipeline = null;
         }
         volumeList = new ArrayList<>();
+        loopingSourceList.clear();
+        loopVideoElement = null;
     }
 
     private void calculateRemainingActionTriggerList() {
@@ -850,6 +885,11 @@ public class CompositionPlayer {
                 seekDisabled = findHardwareH265Decoder(pipeline);
                 if (seekDisabled) {
                     logger.warn("Hardware H.265 decoder detected in pipeline — seeking will be disabled for this composition");
+                    if (loopVideoElement != null) {
+                        logger.warn("Video loop disabled: hardware H.265 decoder does not support seeking");
+                        loopingSourceList.remove(loopVideoElement);
+                        loopVideoElement = null;
+                    }
                 }
 
                 if (startPosition > 0) {
@@ -857,6 +897,13 @@ public class CompositionPlayer {
                             EnumSet.of(SeekFlags.FLUSH, SeekFlags.KEY_UNIT),
                             startPosition * 1_000_000L);
                     pipeline.getState(5, TimeUnit.SECONDS);
+                }
+
+                for (Element loopingSource : loopingSourceList) {
+                    loopingSource.seek(1.0, Format.TIME,
+                            EnumSet.of(SeekFlags.FLUSH, SeekFlags.KEY_UNIT, SeekFlags.SEGMENT),
+                            SeekType.SET, 0L,
+                            SeekType.SET, ClockTime.NONE);
                 }
             }
             pipeline.setState(State.PLAYING);
@@ -986,6 +1033,13 @@ public class CompositionPlayer {
                     EnumSet.of(SeekFlags.FLUSH, SeekFlags.KEY_UNIT),
                     positionNanos);
             pipeline.getState(5, TimeUnit.SECONDS);
+
+            for (Element loopingSource : loopingSourceList) {
+                loopingSource.seek(1.0, Format.TIME,
+                        EnumSet.of(SeekFlags.FLUSH, SeekFlags.KEY_UNIT, SeekFlags.SEGMENT),
+                        SeekType.SET, 0L,
+                        SeekType.SET, ClockTime.NONE);
+            }
         }
 
         this.lastPlayTimeMillis = System.currentTimeMillis();

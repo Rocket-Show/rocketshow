@@ -112,15 +112,6 @@ make -j$(nproc)
 
 ## Deployment
 
-### Seed directory
-
-The defaults directory `/dist/defaults` can be packed on a mac with this commands:
-
-```shell
-cd dist
-COPYFILE_DISABLE=true tar -c --exclude='.DS_Store' -zf defaults.tar.gz defaults
-```
-
 ### Raspberry Pi Image building
 
 Building is recommended on a Raspberry Pi device with enough storage. Steps to follow:
