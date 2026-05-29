@@ -344,7 +344,7 @@
       "new-pw-repeat": "Neues Passwort (Wiederholung)",
       "error": "Ein Fehler ist aufgetreten. Bitte überprüfe das aktuelle Passwort."
     },
-    "secure-connection": "Sichere Verbindung",
+    "secure-connection": "Sichere Verbindung (HTTPS)",
     "secure-connection-enable": "Aktiviert"
   },
   "action": {
