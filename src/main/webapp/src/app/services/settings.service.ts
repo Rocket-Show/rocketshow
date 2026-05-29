@@ -1,4 +1,5 @@
 import { HttpClient } from "@angular/common/http";
+import { LanInfo } from "./../models/lan-info";
 import { AudioBus } from "./../models/audio-bus";
 import { TranslateService } from "@ngx-translate/core";
 import { AudioDevice } from "./../models/audio-device";
@@ -191,6 +192,10 @@ export class SettingsService {
         return olaPortList;
       })
     );
+  }
+
+  getLanInfo(): Observable<LanInfo> {
+    return this.http.get<LanInfo>("system/lan-info");
   }
 
   getMaxAudioChannels(): Observable<number> {

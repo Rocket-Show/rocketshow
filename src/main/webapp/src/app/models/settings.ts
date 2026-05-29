@@ -44,6 +44,12 @@ export class Settings {
   videoWidth: number;
   videoHeight: number;
   customVideoResolution: boolean;
+  lanStaticIpEnable: boolean;
+  lanIpAddress: string;
+  lanSubnetMask: string;
+  lanGateway: string;
+  lanDns1: string;
+  lanDns2: string;
   wlanApEnable: boolean;
   wlanApSsid: string;
   wlanApPassphrase: string;
@@ -176,6 +182,12 @@ export class Settings {
     this.videoWidth = data.videoWidth;
     this.videoHeight = data.videoHeight;
     this.customVideoResolution = data.customVideoResolution;
+    this.lanStaticIpEnable = data.lanStaticIpEnable;
+    this.lanIpAddress = data.lanIpAddress;
+    this.lanSubnetMask = data.lanSubnetMask;
+    this.lanGateway = data.lanGateway;
+    this.lanDns1 = data.lanDns1;
+    this.lanDns2 = data.lanDns2;
     this.wlanApEnable = data.wlanApEnable;
     this.wlanApSsid = data.wlanApSsid;
     this.wlanApPassphrase = data.wlanApPassphrase;

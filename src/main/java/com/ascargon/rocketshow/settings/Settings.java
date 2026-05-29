@@ -111,6 +111,12 @@ public class Settings {
     private Integer videoWidth;
     private Integer videoHeight;
     private Boolean customVideoResolution;
+    private Boolean lanStaticIpEnable;
+    private String lanIpAddress;
+    private String lanSubnetMask;
+    private String lanGateway;
+    private String lanDns1;
+    private String lanDns2;
     private Boolean wlanApEnable;
     private String wlanApSsid = "Rocket Show";
     private String wlanApPassphrase = "";

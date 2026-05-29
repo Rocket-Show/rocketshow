@@ -36,4 +36,11 @@ public class SessionController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @PostMapping("set-play-view-mode")
+    public ResponseEntity<Void> setPlayViewMode(@RequestParam("value") String value) {
+        sessionService.getSession().setPlayViewMode(value);
+        sessionService.save();
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
 }

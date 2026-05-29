@@ -252,6 +252,31 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
         }
     }
 
+    private void updateLanIp(Settings settings) {
+        String scriptPath = new ApplicationHome(RocketShowApplication.class).getDir() + File.separator + "set-lan-ip.sh";
+        boolean isStatic = Boolean.TRUE.equals(settings.getLanStaticIpEnable());
+
+        String[] command;
+        if (isStatic) {
+            command = new String[]{
+                    "sudo", scriptPath, "static",
+                    settings.getLanIpAddress() != null ? settings.getLanIpAddress() : "",
+                    settings.getLanSubnetMask() != null ? settings.getLanSubnetMask() : "255.255.255.0",
+                    settings.getLanGateway() != null ? settings.getLanGateway() : "",
+                    settings.getLanDns1() != null ? settings.getLanDns1() : "",
+                    settings.getLanDns2() != null ? settings.getLanDns2() : ""
+            };
+        } else {
+            command = new String[]{"sudo", scriptPath, "dhcp"};
+        }
+
+        try {
+            new ShellManager(command);
+        } catch (IOException e) {
+            logger.error("Could not update LAN IP settings", e);
+        }
+    }
+
     private String getWlanApCountryCode(Settings settings) {
         if (settings.getWlanApCountryCode() != null && !settings.getWlanApCountryCode().isBlank()) {
             return settings.getWlanApCountryCode();
@@ -303,6 +328,12 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
                 updateWlanAp(settings);
             } catch (Exception e) {
                 logger.error("Could not update the wireless access point settings", e);
+            }
+
+            try {
+                updateLanIp(settings);
+            } catch (Exception e) {
+                logger.error("Could not update the LAN IP settings", e);
             }
         }
 

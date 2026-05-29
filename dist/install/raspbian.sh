@@ -190,6 +190,72 @@ fi
 EOF
 sudo chmod +x /opt/rocketshow/iptables.sh
 
+# LAN static IP configuration script (uses NetworkManager/nmcli, available on Trixie)
+cat <<'EOF' >/opt/rocketshow/set-lan-ip.sh
+#!/bin/bash
+# Configure eth0 IP assignment via NetworkManager.
+# Usage: set-lan-ip.sh dhcp
+#        set-lan-ip.sh static <ip> <subnet_mask> <gateway> [dns1] [dns2]
+
+MODE="$1"
+IP_ADDRESS="$2"
+SUBNET_MASK="${3:-255.255.255.0}"
+GATEWAY="$4"
+DNS1="$5"
+DNS2="$6"
+
+IFACE="eth0"
+
+mask_to_prefix() {
+    local mask=$1 prefix=0 n
+    local IFS=.
+    read -ra octets <<< "$mask"
+    for octet in "${octets[@]}"; do
+        n=$octet
+        while [ "$n" -gt 0 ]; do
+            prefix=$(( prefix + (n & 1) ))
+            n=$(( n >> 1 ))
+        done
+    done
+    echo $prefix
+}
+
+# Prefer the currently active connection; fall back to any configured connection.
+# Use sed instead of cut so connection names containing ':' are handled correctly.
+CON=$(nmcli -t -f NAME,DEVICE con show --active | grep ":${IFACE}$" | sed 's/:[^:]*$//' | head -1)
+if [ -z "$CON" ]; then
+    CON=$(nmcli -t -f NAME,DEVICE con show | grep ":${IFACE}$" | sed 's/:[^:]*$//' | head -1)
+fi
+
+if [ -z "$CON" ]; then
+    CON="rocketshow-eth0"
+    nmcli con add type ethernet ifname "$IFACE" con-name "$CON" connection.autoconnect yes
+fi
+
+if [ "$MODE" = "static" ]; then
+    PREFIX=$(mask_to_prefix "$SUBNET_MASK")
+    nmcli con mod "$CON" \
+        ipv4.method manual \
+        ipv4.addresses "${IP_ADDRESS}/${PREFIX}" \
+        ipv4.gateway "$GATEWAY"
+
+    DNS_SERVERS=""
+    [ -n "$DNS1" ] && DNS_SERVERS="$DNS1"
+    [ -n "$DNS1" ] && [ -n "$DNS2" ] && DNS_SERVERS="$DNS1 $DNS2"
+    nmcli con mod "$CON" ipv4.dns "$DNS_SERVERS"
+else
+    nmcli con mod "$CON" \
+        ipv4.method auto \
+        ipv4.addresses "" \
+        ipv4.gateway "" \
+        ipv4.dns ""
+fi
+
+# Reactivate the connection so changes take effect immediately without a reboot.
+nmcli con up "$CON"
+EOF
+sudo chmod +x /opt/rocketshow/set-lan-ip.sh
+
 cat <<'EOF' >/etc/systemd/system/rocketshow-iptables.service
 [Unit]
 Description=RocketShow iptables
