@@ -11,5 +11,6 @@ public class Session {
 
     private String currentSetName;
     private boolean autoSelectNextComposition = false;
+    private String playViewMode = "setlist";
 
 }

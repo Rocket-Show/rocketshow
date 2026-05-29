@@ -51,6 +51,8 @@ export class PlayComponent implements OnInit, OnDestroy {
 
   loadingSet: boolean = false;
 
+  viewMode: 'setlist' | 'grid' = 'setlist';
+
   activityMidiSubscription: Subscription;
   activityAudioSubscription: Subscription;
   activityLightingSubscription: Subscription;
@@ -150,6 +152,7 @@ export class PlayComponent implements OnInit, OnDestroy {
     // Load the current session
     this.sessionService.getSession().subscribe((session) => {
       this.session = session;
+      this.viewMode = session.playViewMode || 'setlist';
     });
 
     this.loadAllSets();
@@ -349,7 +352,7 @@ export class PlayComponent implements OnInit, OnDestroy {
     return padded;
   }
 
-  private msToTime(millis: number, includeMillis: boolean = true): string {
+  msToTime(millis: number, includeMillis: boolean = true): string {
     let ms: number = Math.round(millis % 1000);
     let seconds: number = Math.floor(((millis % 360000) % 60000) / 1000);
     let minutes: number = Math.floor((millis % 3600000) / 60000);
@@ -501,6 +504,71 @@ export class PlayComponent implements OnInit, OnDestroy {
 
   previousComposition() {
     this.transportService.previousComposition().subscribe();
+  }
+
+  toggleViewMode() {
+    this.viewMode = this.viewMode === 'setlist' ? 'grid' : 'setlist';
+    this.sessionService.setPlayViewMode(this.viewMode).subscribe();
+  }
+
+  triggerCue(composition: Composition, index: number) {
+    const isThis = this.currentState?.currentCompositionName === composition.name;
+
+    if (isThis) {
+      switch (this.currentState?.playState) {
+        case 'PLAYING':
+        case 'LOADING':
+        case 'LOADED':
+          this.stop();
+          break;
+        case 'PAUSED':
+        case 'STOPPED':
+          this.play();
+          break;
+      }
+      return;
+    }
+
+    this.currentState.playState = 'LOADING';
+    this.manualCompositionSelection = true;
+
+    const select$ = (this.currentSet && !this.currentSet.name)
+      ? this.transportService.setCompositionName(composition.name)
+      : this.transportService.setCompositionIndex(index);
+
+    select$.pipe(
+      catchError((err) => this.toastGeneralErrorService.show(err))
+    ).subscribe(() => {
+      this.transportService.play().pipe(
+        catchError((err) => {
+          this.stop();
+          return this.toastGeneralErrorService.show(err);
+        })
+      ).subscribe();
+    });
+  }
+
+  getCueProgress(composition: Composition): string {
+    if (this.currentState?.currentCompositionName !== composition.name) {
+      return '0%';
+    }
+    const duration = this.currentState?.currentCompositionDurationMillis;
+    if (!duration || duration <= 0) {
+      return '0%';
+    }
+    return Math.min(100, (this.positionMillis / duration) * 100) + '%';
+  }
+
+  getCueTimeDisplay(composition: Composition): string {
+    const isActive = this.currentState?.currentCompositionName === composition.name;
+    if (isActive && (this.currentState?.playState === 'PLAYING' || this.currentState?.playState === 'PAUSED')) {
+      const remaining = (this.currentState.currentCompositionDurationMillis || 0) - this.positionMillis;
+      return '-' + this.msToTime(Math.max(0, remaining), false);
+    }
+    if (composition.durationMillis > 0) {
+      return this.msToTime(composition.durationMillis, false);
+    }
+    return '';
   }
 
   setComposition(index: number, composition: Composition) {
