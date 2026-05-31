@@ -89,6 +89,14 @@ public class DefaultDeviceInformationService implements DeviceInformationService
 
     @Override
     public synchronized void storeDeviceInformation(DeviceInformation toStore) throws Exception {
+        DeviceInformation currentDeviceInformation = getDeviceInformation();
+        if (currentDeviceInformation.isAvailable()
+                && currentDeviceInformation.getSerial() != null
+                && !currentDeviceInformation.getSerial().isEmpty()
+        ) {
+            throw new IllegalStateException("Device information is already provisioned");
+        }
+
         logger.info("Provision device information...");
 
         if (toStore.getSerial() == null || toStore.getSerial().isEmpty()) {
