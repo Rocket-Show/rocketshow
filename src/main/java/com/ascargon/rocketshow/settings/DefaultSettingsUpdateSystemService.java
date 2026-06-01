@@ -4,6 +4,7 @@ import com.ascargon.rocketshow.RocketShowApplication;
 import com.ascargon.rocketshow.audio.AudioDevice;
 import com.ascargon.rocketshow.audio.AudioService;
 import com.ascargon.rocketshow.lighting.LightingService;
+import com.ascargon.rocketshow.util.LanService;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import com.ascargon.rocketshow.util.ShellManager;
@@ -31,16 +32,19 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
     private final OperatingSystemInformationService operatingSystemInformationService;
     private final AudioService audioService;
     private final LightingService lightingService;
+    private final LanService lanService;
 
     public DefaultSettingsUpdateSystemService(
             SettingsService settingsService, AudioService audioService,
             OperatingSystemInformationService operatingSystemInformationService,
-            LightingService lightingService
+            LightingService lightingService,
+            LanService lanService
     ) {
         this.settingsService = settingsService;
         this.audioService = audioService;
         this.operatingSystemInformationService = operatingSystemInformationService;
         this.lightingService = lightingService;
+        this.lanService = lanService;
     }
 
     private void setSystemAudioOutput(int id) throws Exception {
@@ -277,6 +281,32 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
         }
     }
 
+    private void updateOlaArtNetConf(String ipAddress) {
+        if (ipAddress == null || ipAddress.isBlank()) {
+            logger.warn("Skipping OLA ArtNet conf update: no IP address available");
+            return;
+        }
+
+        try {
+            new ShellManager(new String[]{
+                    "sudo", "sed", "-i",
+                    "s/^ip = .*/ip = " + ipAddress + "/",
+                    "/etc/ola/ola-artnet.conf"
+            });
+            logger.debug("Updated OLA ArtNet conf with IP '{}'", ipAddress);
+        } catch (IOException e) {
+            logger.error("Could not update OLA ArtNet conf with IP '{}'", ipAddress, e);
+        }
+    }
+
+    private void reloadOla() {
+        try {
+            new ShellManager(new String[]{"sudo", "systemctl", "restart", "olad"});
+        } catch (IOException e) {
+            logger.error("Could not restart olad", e);
+        }
+    }
+
     private String getWlanApCountryCode(Settings settings) {
         if (settings.getWlanApCountryCode() != null && !settings.getWlanApCountryCode().isBlank()) {
             return settings.getWlanApCountryCode();
@@ -334,6 +364,18 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
                 updateLanIp(settings);
             } catch (Exception e) {
                 logger.error("Could not update the LAN IP settings", e);
+            }
+
+            try {
+                updateOlaArtNetConf(lanService.getLanInfo().getIpAddress());
+            } catch (Exception e) {
+                logger.error("Could not update the OLA ArtNet conf", e);
+            }
+
+            try {
+                reloadOla();
+            } catch (Exception e) {
+                logger.error("Could not reload OLA", e);
             }
         }
 
