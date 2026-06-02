@@ -323,7 +323,8 @@
             }
           ],
           "name": "9-Channel",
-          "shortName": "9ch"
+          "shortName": "9ch",
+          "channelCount": 9
         },
         {
           "channels": [
@@ -399,7 +400,8 @@
             }
           ],
           "name": "14-Channel",
-          "shortName": "14ch"
+          "shortName": "14ch",
+          "channelCount": 14
         }
       ],
       "uuid": "stairville/mh-100",
@@ -418,10 +420,11 @@
       "rotationX": 0,
       "rotationY": 0,
       "rotationZ": 0,
-      "uuid": "6c262be4-1022-4bd1-9f46-80d0633be0ae",
+      "uuid": "b68d0f3d-aa79-40e5-a5f4-deabc42aad30",
       "profileUuid": "stairville/mh-100",
       "name": "MH-100",
-      "modeShortName": "9ch"
+      "modeShortName": "9ch",
+      "dmxUniverseUuid": "f869189e-4068-4800-a61f-66a1499946fd"
     },
     {
       "dmxFirstChannel": 9,
@@ -432,10 +435,11 @@
       "rotationX": 0,
       "rotationY": 0,
       "rotationZ": 0,
-      "uuid": "b9d4ce25-29a0-4f8f-a26e-783195db0d76",
+      "uuid": "6ab68501-f63a-400f-9641-d1df90210357",
       "profileUuid": "stairville/mh-100",
       "name": "MH-100",
-      "modeShortName": "9ch"
+      "modeShortName": "9ch",
+      "dmxUniverseUuid": "f869189e-4068-4800-a61f-66a1499946fd"
     },
     {
       "dmxFirstChannel": 18,
@@ -446,21 +450,22 @@
       "rotationX": 0,
       "rotationY": 0,
       "rotationZ": 0,
-      "uuid": "b5759549-8c63-4076-bd45-45559765672e",
+      "uuid": "0530fb32-77a7-47d0-a8d3-e7eed7f61161",
       "profileUuid": "stairville/mh-100",
       "name": "MH-100",
-      "modeShortName": "9ch"
+      "modeShortName": "9ch",
+      "dmxUniverseUuid": "f869189e-4068-4800-a61f-66a1499946fd"
     }
   ],
   "presetFixtures": [
     {
-      "fixtureUuid": "6c262be4-1022-4bd1-9f46-80d0633be0ae"
+      "fixtureUuid": "b68d0f3d-aa79-40e5-a5f4-deabc42aad30"
     },
     {
-      "fixtureUuid": "b9d4ce25-29a0-4f8f-a26e-783195db0d76"
+      "fixtureUuid": "6ab68501-f63a-400f-9641-d1df90210357"
     },
     {
-      "fixtureUuid": "b5759549-8c63-4076-bd45-45559765672e"
+      "fixtureUuid": "0530fb32-77a7-47d0-a8d3-e7eed7f61161"
     }
   ],
   "scenes": [
@@ -479,13 +484,13 @@
     {
       "fixtures": [
         {
-          "fixtureUuid": "b9d4ce25-29a0-4f8f-a26e-783195db0d76"
+          "fixtureUuid": "b68d0f3d-aa79-40e5-a5f4-deabc42aad30"
         },
         {
-          "fixtureUuid": "b5759549-8c63-4076-bd45-45559765672e"
+          "fixtureUuid": "6ab68501-f63a-400f-9641-d1df90210357"
         },
         {
-          "fixtureUuid": "6c262be4-1022-4bd1-9f46-80d0633be0ae"
+          "fixtureUuid": "0530fb32-77a7-47d0-a8d3-e7eed7f61161"
         }
       ],
       "fixtureChannelValues": [],
@@ -537,6 +542,7 @@
     }
   ],
   "version": 2,
+  "name": "New Project",
   "shareToken": "53171cec-7c65-4d86-929b-8b8c1e3f5957",
   "selectedPresetUuid": "71b6c41a-91a6-4781-bf83-ba8d9ceac985",
   "selectedCompositionUuid": "c145e55b-23ec-48ce-85d0-2eb2563fcffd"

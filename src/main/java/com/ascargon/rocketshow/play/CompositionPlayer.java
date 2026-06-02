@@ -88,7 +88,7 @@ public class CompositionPlayer {
     private Composition composition;
     private PlayState playState = PlayState.STOPPED;
     private boolean firstPlayDone = false; // Has the pipeline played at least once?
-    private boolean seekDisabled = false; // True when a hardware H.265 decoder is in use
+    private boolean hasH265Stream = false; // True when a hardware H.265 decoder is in use
     private final List<Element> loopingSourceList = new ArrayList<>();
     private Element loopVideoElement = null;
     private long startPosition = 0; // The position, the composition started the last play
@@ -566,7 +566,7 @@ public class CompositionPlayer {
         });
         bus.connect((Bus.EOS) source -> {
             if (composition.isLoop()) {
-                if (seekDisabled) {
+                if (hasH265Stream) {
                     // H.265 hardware decoder cannot seek — destroy and recreate the pipeline.
                     // Must run off the bus-callback thread to avoid deadlocking pipeline disposal.
                     scheduler.execute(() -> {
@@ -576,7 +576,7 @@ public class CompositionPlayer {
                             createGstreamerPipeline();
                             pipeline.setState(State.PAUSED);
                             pipeline.getState(5, TimeUnit.SECONDS);
-                            seekDisabled = findHardwareH265Decoder(pipeline);
+                            hasH265Stream = findHardwareH265Decoder(pipeline);
                             pipeline.setState(State.PLAYING);
                             pipeline.getState(5, TimeUnit.SECONDS);
                             lastPlayTimeMillis = System.currentTimeMillis();
@@ -702,7 +702,7 @@ public class CompositionPlayer {
     public void loadFiles() throws Exception {
         boolean hasActiveFile = false;
         firstPlayDone = false;
-        seekDisabled = false;
+        hasH265Stream = false;
 
         if (playState != PlayState.STOPPED) {
             return;
@@ -882,8 +882,8 @@ public class CompositionPlayer {
                 pipeline.setState(State.PAUSED);
                 pipeline.getState(5, TimeUnit.SECONDS);
 
-                seekDisabled = findHardwareH265Decoder(pipeline);
-                if (seekDisabled) {
+                hasH265Stream = findHardwareH265Decoder(pipeline);
+                if (hasH265Stream) {
                     logger.warn("Hardware H.265 decoder detected in pipeline — seeking will be disabled for this composition");
                     if (loopVideoElement != null) {
                         logger.warn("Video loop disabled: hardware H.265 decoder does not support seeking");
@@ -892,7 +892,7 @@ public class CompositionPlayer {
                     }
                 }
 
-                if (startPosition > 0) {
+                if (startPosition > 0 && !hasH265Stream) {
                     pipeline.seekSimple(Format.TIME,
                             EnumSet.of(SeekFlags.FLUSH, SeekFlags.KEY_UNIT),
                             startPosition * 1_000_000L);
@@ -934,6 +934,11 @@ public class CompositionPlayer {
 
         logger.info("Pausing composition '" + composition.getName() + "'");
 
+        if (hasH265Stream) {
+            logger.warn("Pause ignored: hardware H.265 decoder does not support pausing/resuming");
+            return;
+        }
+
         // Pause the composition
         if (pipeline != null) {
             pipeline.pause();
@@ -957,7 +962,7 @@ public class CompositionPlayer {
     public void stop() throws Exception {
         startPosition = 0;
         firstPlayDone = false;
-        seekDisabled = false;
+        hasH265Stream = false;
 
         if (composition == null || playState == PlayState.STOPPED) {
             return;
@@ -1002,7 +1007,7 @@ public class CompositionPlayer {
     }
 
     public void seek(long positionMillis) throws Exception {
-        if (seekDisabled) {
+        if (hasH265Stream) {
             // Seeking is disabled for hardware H.265 decode on RPi. Two approaches were tried
             // and both fail:
             //   1. Early seek (before preroll): the hardware decoder ignores the seek event
