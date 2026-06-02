@@ -1071,7 +1071,8 @@ public class DefaultDesignerService implements DesignerService {
 
         logger.debug("Designer universe send timer triggering each {} milliseconds", 1000 / settingsService.getSettings().getDesignerFrequencyHertz());
 
-        universeSenderHandle = scheduler.scheduleAtFixedRate(universeSender, 0, 1000 / settingsService.getSettings().getDesignerFrequencyHertz(), MILLISECONDS);
+        long periodMillis = 1000 / settingsService.getSettings().getDesignerFrequencyHertz();
+        universeSenderHandle = scheduler.scheduleAtFixedRate(universeSender, periodMillis, periodMillis, MILLISECONDS);
     }
 
     private void stopTimer() {
