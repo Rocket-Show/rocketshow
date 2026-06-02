@@ -27,6 +27,8 @@ public interface LightingService {
 
     void enablePlugins(List<OlaPlugin> olaPluginList);
 
+    void reloadOlaPlugins();
+
     void initializeUniverses();
 
     void updateUniverses(List<LightingUniverse> lightingUniverses);

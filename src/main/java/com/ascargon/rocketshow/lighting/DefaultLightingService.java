@@ -631,6 +631,16 @@ public class DefaultLightingService implements LightingService {
     }
 
     @Override
+    public void reloadOlaPlugins() {
+        if (olaClient == null) {
+            return;
+        }
+
+        olaClient.reloadPlugins();
+        logger.debug("OLA plugins reloaded");
+    }
+
+    @Override
     public void enablePlugins(List<OlaPlugin> olaPluginList) {
         // Disable all plugins, except the one to be enabled
         for (OlaPlugin olaPlugin : getOlaPlugins()) {

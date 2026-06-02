@@ -299,14 +299,6 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
         }
     }
 
-    private void reloadOla() {
-        try {
-            new ShellManager(new String[]{"sudo", "systemctl", "restart", "olad"});
-        } catch (IOException e) {
-            logger.error("Could not restart olad", e);
-        }
-    }
-
     private String getWlanApCountryCode(Settings settings) {
         if (settings.getWlanApCountryCode() != null && !settings.getWlanApCountryCode().isBlank()) {
             return settings.getWlanApCountryCode();
@@ -373,9 +365,9 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
             }
 
             try {
-                reloadOla();
+                lightingService.reloadOlaPlugins();
             } catch (Exception e) {
-                logger.error("Could not reload OLA", e);
+                logger.error("Could not reload OLA plugins", e);
             }
         }
 

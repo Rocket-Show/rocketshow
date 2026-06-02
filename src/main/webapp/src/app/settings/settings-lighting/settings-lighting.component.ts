@@ -50,21 +50,22 @@ export class SettingsLightingComponent implements OnInit {
     this.settingsService
       .getSettings()
       .pipe(
-        map((result) => {
-          this.settings = result;
-
+        switchMap((settings) =>
           forkJoin({
             olaPlugins: this.settingsService.getOlaPluginList(),
             olaOutputPorts: this.settingsService.getOlaOutputPortList(),
-          }).subscribe((response) => {
-            this.allOlaPluginList = response.olaPlugins;
-            this.olaOutputPortList = response.olaOutputPorts;
-            this.refreshAvailableOlaPlugins();
-            this.loading = false;
-          });
+          }).pipe(map((response) => ({ settings, ...response })))
+        ),
+        finalize(() => {
+          this.loading = false;
         })
       )
-      .subscribe();
+      .subscribe((response) => {
+        this.settings = response.settings;
+        this.allOlaPluginList = response.olaPlugins;
+        this.olaOutputPortList = response.olaOutputPorts;
+        this.refreshAvailableOlaPlugins();
+      });
   }
 
   private refreshAvailableOlaPlugins() {
