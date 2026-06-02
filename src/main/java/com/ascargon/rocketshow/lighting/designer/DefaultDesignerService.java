@@ -3,6 +3,7 @@ package com.ascargon.rocketshow.lighting.designer;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.play.CompositionPlayer;
 import com.ascargon.rocketshow.lighting.LightingService;
+import com.ascargon.rocketshow.lighting.LightingUniverse;
 import com.ascargon.rocketshow.lighting.LightingUniverseState;
 import com.ascargon.rocketshow.util.FileFilterService;
 import org.freedesktop.gstreamer.Pipeline;
@@ -383,8 +384,9 @@ public class DefaultDesignerService implements DesignerService {
                     DmxChannelAndPixelKey firstDmxChannelAndFixtureUuid = new DmxChannelAndPixelKey();
                     firstDmxChannelAndFixtureUuid.setDmxChannel(fixture.getDmxFirstChannel());
                     firstDmxChannelAndFixtureUuid.setPixelKey(projectFixture.getPixelKey());
+                    firstDmxChannelAndFixtureUuid.setDmxUniverseUuid(fixture.getDmxUniverseUuid());
 
-                    boolean exists = countedFirstDmxChannelPixelKey.stream().anyMatch(item -> item.getDmxChannel() == firstDmxChannelAndFixtureUuid.getDmxChannel() && ((item.getPixelKey() == null && firstDmxChannelAndFixtureUuid.getPixelKey() == null) || Objects.equals(item.getPixelKey(), firstDmxChannelAndFixtureUuid.getPixelKey())));
+                    boolean exists = countedFirstDmxChannelPixelKey.stream().anyMatch(item -> item.getDmxChannel() == firstDmxChannelAndFixtureUuid.getDmxChannel() && ((item.getPixelKey() == null && firstDmxChannelAndFixtureUuid.getPixelKey() == null) || Objects.equals(item.getPixelKey(), firstDmxChannelAndFixtureUuid.getPixelKey())) && Objects.equals(item.getDmxUniverseUuid(), firstDmxChannelAndFixtureUuid.getDmxUniverseUuid()));
 
                     // don't count fixtures on the same channel as already counted ones
                     if (!exists) {
@@ -971,11 +973,12 @@ public class DefaultDesignerService implements DesignerService {
 
         // loop over each fixture with its values for each channel
         for (Map.Entry<CachedFixture, List<FixtureChannelValue>> entry : fixtures.entrySet()) {
-            // TODO Get the correct universe for this fixture
-            HashMap<Integer, Integer> universe = null;
-            if (!lightingUniverses.isEmpty()) {
-                universe = lightingUniverses.get(0).getUniverse();
-            }
+            String fixtureUniverseUuid = entry.getKey().getFixture().getDmxUniverseUuid();
+            HashMap<Integer, Integer> universe = lightingUniverses.stream()
+                    .filter(u -> Objects.equals(u.getMappingUuid(), fixtureUniverseUuid))
+                    .map(LightingUniverseState::getUniverse)
+                    .findFirst()
+                    .orElse(null);
 
             if (universe == null) {
                 continue;
@@ -1493,12 +1496,11 @@ public class DefaultDesignerService implements DesignerService {
         // Create the caches
         updateCachedFixtures();
 
-        // TODO Init all universes
-        LightingUniverseState newUniverse = new LightingUniverseState();
-        lightingUniverses.add(newUniverse);
-
-        for (LightingUniverseState lightingUniverse : lightingUniverses) {
-            lightingService.addLightingUniverse(lightingUniverse);
+        for (LightingUniverse lightingUniverse : settingsService.getSettings().getLightingUniverseList()) {
+            LightingUniverseState newUniverse = new LightingUniverseState();
+            newUniverse.setMappingUuid(lightingUniverse.getUuid());
+            lightingUniverses.add(newUniverse);
+            lightingService.addLightingUniverse(newUniverse);
         }
 
         lightingService.setExternalSync(true);

@@ -9,5 +9,6 @@ public class DmxChannelAndPixelKey {
 
     private int dmxChannel;
     private String pixelKey;
+    private String dmxUniverseUuid;
 
 }
