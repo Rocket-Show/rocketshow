@@ -36,13 +36,13 @@ export class SettingsService {
     let language: Language;
 
     language = new Language();
-    language.key = "en";
-    language.name = "English";
+    language.key = "de";
+    language.name = "Deutsch";
     this.languages.push(language);
 
     language = new Language();
-    language.key = "de";
-    language.name = "Deutsch";
+    language.key = "en";
+    language.name = "English";
     this.languages.push(language);
 
     language = new Language();
