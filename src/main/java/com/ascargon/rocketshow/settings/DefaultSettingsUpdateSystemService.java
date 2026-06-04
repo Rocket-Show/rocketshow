@@ -249,7 +249,9 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
             new ShellManager(new String[]{"sudo", "systemctl", statusCommand, "hostapd"});
 
             // Restart, even if already started, to cater for updated configs
-            new ShellManager(new String[]{"sudo", "systemctl", "restart", "hostapd"});
+            if (settings.getWlanApEnable()) {
+                new ShellManager(new String[]{"sudo", "systemctl", "restart", "hostapd"});
+            }
         } catch (
                 IOException e) {
             logger.error("Could not update the access point status with '{}'", statusCommand, e);
