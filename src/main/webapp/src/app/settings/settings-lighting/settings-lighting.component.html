@@ -172,7 +172,10 @@
   <label class="col-lg-3 col-form-label">{{
     "settings.lighting-console" | translate
     }}</label>
-  <div class="col-lg-9 d-flex">
+  <div class="col-lg-9 d-flex flex-column">
+    @if (deviceInformation?.available) {
+    <p class="mb-2 text-warning">{{ "settings.lighting-console-maintenance-warning" | translate }}</p>
+    }
     <a class="my-auto" href="/" onclick="javascript:event.target.port=9090" target="_blank">
       <i class="fa fa-external-link"></i>
       {{ "settings.lighting-console-open" | translate }}</a>

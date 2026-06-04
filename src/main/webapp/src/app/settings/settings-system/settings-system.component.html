@@ -1,4 +1,4 @@
-@if (showAvailableUpdateMessage) {
+@if (deviceInformation?.available && showAvailableUpdateMessage) {
 <div class="alert alert-warning alert-dismissible fade show" role="alert">
   <button type="button" class="close" aria-label="Close" (click)="dismissAvailableUpdateMessage(); false">
     <span aria-hidden="true">&times;</span>
@@ -93,6 +93,7 @@
 </div>
 }
 
+@if (deviceInformation?.available) {
 <div class="form-group row">
   <div class="col-lg-3 col-form-label">
     {{ "settings.update-test-branch" | translate }}
@@ -122,6 +123,7 @@
       {{ "settings.check-version" | translate }}</a>
   </div>
 </div>
+}
 
 <div class="form-group row">
   <div class="col-lg-3"></div>

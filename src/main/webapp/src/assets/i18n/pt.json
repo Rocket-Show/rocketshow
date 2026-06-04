@@ -277,6 +277,7 @@
     "alsa-period-time": "Tempo de período ALSA",
     "lighting-console": "Consola de iluminação",
     "lighting-console-open": "Abrir consola de iluminação",
+    "lighting-console-maintenance-warning": "O modo de manutenção deve ser ativado primeiro para acessar a consola de iluminação.",
     "lighting-designer-frequency-hertz": "Taxa de atualização em Hertz",
     "instruments": "Instrumentos",
     "instrument": "Instrumento",

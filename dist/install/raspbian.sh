@@ -137,6 +137,64 @@ rsn_pairwise=CCMP
 EOF
 chmod 777 /etc/hostapd/hostapd.conf
 
+cat <<'EOF' >/opt/rocketshow/set-wifi-ap-country.sh
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+TARGET_COUNTRY="${1:-}"
+
+if [[ -z "$TARGET_COUNTRY" ]]; then
+  echo "Usage: $0 <COUNTRY_CODE>" >&2
+  exit 1
+fi
+
+get_persisted_country() {
+  grep -o 'cfg80211.ieee80211_regdom=[A-Z][A-Z]' /boot/firmware/cmdline.txt 2>/dev/null \
+    | head -n1 \
+    | cut -d= -f2 \
+    || true
+}
+
+PERSISTED_COUNTRY="$(get_persisted_country)"
+
+echo "Persisted country: ${PERSISTED_COUNTRY:-<not set>}"
+echo "Target country:    $TARGET_COUNTRY"
+
+if [[ "$PERSISTED_COUNTRY" == "$TARGET_COUNTRY" ]]; then
+  echo "WiFi AP country already persisted. Nothing to do."
+  exit 0
+fi
+
+BOOT_REMOUNTED_RW=0
+
+cleanup() {
+  sync || true
+
+  if [[ "$BOOT_REMOUNTED_RW" -eq 1 && -d /boot/firmware && -f /provision/device-information.conf ]]; then
+    sudo mount -o remount,ro /boot/firmware || true
+  fi
+}
+trap cleanup EXIT
+
+if [[ -d /boot/firmware && -f /provision/device-information.conf ]]; then
+  sudo mount -o remount,rw /boot/firmware
+  BOOT_REMOUNTED_RW=1
+fi
+
+sudo raspi-config nonint do_wifi_country "$TARGET_COUNTRY"
+
+UPDATED_COUNTRY="$(get_persisted_country)"
+
+if [[ "$UPDATED_COUNTRY" != "$TARGET_COUNTRY" ]]; then
+  echo "Failed to persist WiFi country. Expected '$TARGET_COUNTRY', got '${UPDATED_COUNTRY:-<not set>}'." >&2
+  exit 1
+fi
+
+echo "WiFi AP country persisted successfully."
+EOF
+chmod +x /opt/rocketshow/set-wifi-ap-country.sh
+
 # Enable forwarding in kernel
 echo "net.ipv4.ip_forward=1" > /etc/sysctl.d/99-ipforward.conf
 

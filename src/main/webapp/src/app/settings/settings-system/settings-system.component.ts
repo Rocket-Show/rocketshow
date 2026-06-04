@@ -12,6 +12,8 @@ import { Version } from "../../models/version";
 import { catchError, finalize, map, switchMap } from "rxjs/operators";
 import { OperatingSystemInformation } from "../../models/operating-system-information";
 import { OperatingSystemInformationService } from "../../services/operating-system-information.service";
+import { DeviceInformation } from "../../models/device-information";
+import { DeviceInformationService } from "../../services/device-information.service";
 import { EMPTY, forkJoin, Subscription } from "rxjs";
 import { BackupRestoreDialogComponent } from "../backup-restore-dialog/backup-restore-dialog.component";
 import { saveAs } from "file-saver/FileSaver";
@@ -35,6 +37,7 @@ export class SettingsSystemComponent implements OnInit, OnDestroy {
   availableUpdateVersion: Version;
   showAvailableUpdateMessage: boolean = false;
   operatingSystemInformation: OperatingSystemInformation;
+  deviceInformation: DeviceInformation;
 
   constructor(
     public settingsService: SettingsService,
@@ -44,6 +47,7 @@ export class SettingsSystemComponent implements OnInit, OnDestroy {
     private updateService: UpdateService,
     private modalService: BsModalService,
     private operatingSystemInformationService: OperatingSystemInformationService,
+    private deviceInformationService: DeviceInformationService,
     private waitDialogService: WaitDialogService,
     private toastGeneralErrorService: ToastGeneralErrorService,
   ) {
@@ -52,6 +56,13 @@ export class SettingsSystemComponent implements OnInit, OnDestroy {
       .subscribe((operatingSystemInformation) => {
         this.operatingSystemInformation = operatingSystemInformation;
       });
+
+    this.deviceInformationService.getDeviceInformation().subscribe((deviceInformation) => {
+      this.deviceInformation = deviceInformation;
+      if (deviceInformation?.available) {
+        this.checkForAvailableUpdate();
+      }
+    });
   }
 
   private loadSettings() {
@@ -82,8 +93,6 @@ export class SettingsSystemComponent implements OnInit, OnDestroy {
     this.updateService.getCurrentVersion().subscribe((version: Version) => {
       this.currentVersion = version;
     });
-
-    this.checkForAvailableUpdate();
   }
 
   ngOnDestroy() {

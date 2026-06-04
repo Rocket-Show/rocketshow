@@ -33,6 +33,7 @@ public class DefaultSshService implements SshService {
         String password = generatePassword();
 
         runScript("sudo", new ApplicationHome(RocketShowApplication.class).getDir() + File.separator + "enable-ssh.sh", password);
+        runScript("sudo", "nft", "add", "element", "inet", "filter", "ola_open", "{", "9090", "}");
         scheduleDisableSsh();
 
         return password;

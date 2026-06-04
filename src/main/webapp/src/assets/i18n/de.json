@@ -277,6 +277,7 @@
     "alsa-period-time": "ALSA Periodenzeit",
     "lighting-console": "Lichtsteuerungs-Konsole",
     "lighting-console-open": "Lichtsteuerungs-Konsole öffnen",
+    "lighting-console-maintenance-warning": "Der Wartungsmodus muss zuerst aktiviert werden, um auf die Lichtsteuerungs-Konsole zugreifen zu können.",
     "lighting-designer-frequency-hertz": "Senderate in Hertz",
     "instruments": "Instrumente",
     "instrument": "Instrument",

@@ -277,6 +277,7 @@
     "alsa-period-time": "ALSA周期时间",
     "lighting-console": "灯光控制台",
     "lighting-console-open": "打开灯光控制台",
+    "lighting-console-maintenance-warning": "必须先启用维护模式才能访问灯光控制台。",
     "lighting-designer-frequency-hertz": "刷新率（赫兹）",
     "instruments": "乐器",
     "instrument": "乐器",

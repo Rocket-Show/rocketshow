@@ -8,6 +8,8 @@ import { saveAs } from "file-saver/FileSaver";
 import { HttpClient } from "@angular/common/http";
 import { OperatingSystemInformation } from "../../models/operating-system-information";
 import { OperatingSystemInformationService } from "../../services/operating-system-information.service";
+import { DeviceInformation } from "../../models/device-information";
+import { DeviceInformationService } from "../../services/device-information.service";
 import { finalize, map } from "rxjs/operators";
 import { Subscription } from "rxjs";
 import { AuthService } from "../../services/auth.service";
@@ -26,6 +28,7 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
   enableMaintenanceModeLoading: boolean = false;
   downloadLogsLoading: boolean = false;
   operatingSystemInformation: OperatingSystemInformation;
+  deviceInformation: DeviceInformation;
 
   loggingLevelList: string[] = [];
 
@@ -36,6 +39,7 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private infoDialogService: InfoDialogService,
     private operatingSystemInformationService: OperatingSystemInformationService,
+    private deviceInformationService: DeviceInformationService,
     private authService: AuthService
   ) {
     this.loggingLevelList.push("INFO");
@@ -47,6 +51,10 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
       .subscribe((operatingSystemInformation) => {
         this.operatingSystemInformation = operatingSystemInformation;
       });
+
+    this.deviceInformationService.getDeviceInformation().subscribe((deviceInformation) => {
+      this.deviceInformation = deviceInformation;
+    });
   }
 
   private loadSettings() {
