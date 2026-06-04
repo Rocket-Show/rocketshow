@@ -45,6 +45,31 @@ export class SettingsService {
     language.name = "Deutsch";
     this.languages.push(language);
 
+    language = new Language();
+    language.key = "es";
+    language.name = "Español";
+    this.languages.push(language);
+
+    language = new Language();
+    language.key = "fr";
+    language.name = "Français";
+    this.languages.push(language);
+
+    language = new Language();
+    language.key = "it";
+    language.name = "Italiano";
+    this.languages.push(language);
+
+    language = new Language();
+    language.key = "pt";
+    language.name = "Português";
+    this.languages.push(language);
+
+    language = new Language();
+    language.key = "zh";
+    language.name = "中文";
+    this.languages.push(language);
+
     this.raspberryPiPinIdList.push(new RaspberryPiPin(4));
     this.raspberryPiPinIdList.push(new RaspberryPiPin(5));
     this.raspberryPiPinIdList.push(new RaspberryPiPin(6));
