@@ -248,9 +248,11 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
         try {
             new ShellManager(new String[]{"sudo", "systemctl", statusCommand, "hostapd"});
 
-            // Restart, even if already started, to cater for updated configs
             if (settings.getWlanApEnable()) {
+                // Restart, even if already started, to cater for updated configs
                 new ShellManager(new String[]{"sudo", "systemctl", "restart", "hostapd"});
+            } else {
+                new ShellManager(new String[]{"sudo", "systemctl", "stop", "hostapd"});
             }
         } catch (
                 IOException e) {
