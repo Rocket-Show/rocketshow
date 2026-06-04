@@ -28,6 +28,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
@@ -62,6 +65,10 @@ public class DefaultLightingService implements LightingService {
     // is OLA initialized and at least one universe prepared?
     private boolean olaReady = false;
 
+    private ScheduledExecutorService olaRetryExecutor;
+    private static final int OLA_MAX_RETRIES = 10;
+    private static final long OLA_RETRY_DELAY_MS = 3000;
+
     public DefaultLightingService(CapabilitiesService capabilitiesService, ActivityNotificationLightingService activityNotificationLightingService, SettingsService settingsService, OperatingSystemInformationService operatingSystemInformationService) {
         this.capabilitiesService = capabilitiesService;
         this.activityNotificationLightingService = activityNotificationLightingService;
@@ -72,21 +79,29 @@ public class DefaultLightingService implements LightingService {
         httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
 
         if (OperatingSystemInformation.SubType.RASPBERRYOS.equals(this.operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
-            try {
+            olaRetryExecutor = Executors.newSingleThreadScheduledExecutor();
+            tryInitializeOla(1);
+        }
+    }
+
+    private void tryInitializeOla(int attempt) {
+        try {
+            if (olaClient == null) {
                 olaClient = new OlaClient();
                 capabilitiesService.getCapabilities().setOla(true);
-            } catch (Exception e) {
-                logger.error("Could not initialize OLA client", e);
+                reset();
             }
+            initializeUniverses();
+        } catch (Exception e) {
+            logger.error("Could not initialize OLA client (attempt {}/{})", attempt, OLA_MAX_RETRIES, e);
         }
 
-        if (!capabilitiesService.getCapabilities().isOla()) {
-            return;
+        if (!olaReady && attempt < OLA_MAX_RETRIES) {
+            logger.warn("OLA not ready, retrying in {}ms (attempt {}/{})", OLA_RETRY_DELAY_MS, attempt, OLA_MAX_RETRIES);
+            olaRetryExecutor.schedule(() -> tryInitializeOla(attempt + 1), OLA_RETRY_DELAY_MS, TimeUnit.MILLISECONDS);
+        } else if (olaReady) {
+            olaRetryExecutor.shutdown();
         }
-
-        reset();
-
-        initializeUniverses();
     }
 
     public void reset() {
@@ -512,6 +527,10 @@ public class DefaultLightingService implements LightingService {
     @Override
     @PreDestroy
     public void close() {
+        if (olaRetryExecutor != null && !olaRetryExecutor.isShutdown()) {
+            olaRetryExecutor.shutdownNow();
+        }
+
         if (sendUniverseTimer != null) {
             sendUniverseTimer.cancel();
             sendUniverseTimer = null;
