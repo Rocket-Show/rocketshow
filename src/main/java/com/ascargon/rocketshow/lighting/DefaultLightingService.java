@@ -91,6 +91,7 @@ public class DefaultLightingService implements LightingService {
                 capabilitiesService.getCapabilities().setOla(true);
                 reset();
             }
+            reconcileOlaPortIds();
             initializeUniverses();
         } catch (Exception e) {
             logger.error("Could not initialize OLA client (attempt {}/{})", attempt, OLA_MAX_RETRIES, e);
@@ -101,6 +102,75 @@ public class DefaultLightingService implements LightingService {
             olaRetryExecutor.schedule(() -> tryInitializeOla(attempt + 1), OLA_RETRY_DELAY_MS, TimeUnit.MILLISECONDS);
         } else if (olaReady) {
             olaRetryExecutor.shutdown();
+        }
+    }
+
+    private List<OlaPort> fetchLiveOlaOutputPorts() throws Exception {
+        HttpGet httpGet = new HttpGet(OLA_URL + "json/get_ports");
+        HttpResponse response = httpClient.execute(httpGet);
+        ObjectMapper mapper = new ObjectMapper();
+        OlaPort[] portArray = mapper.readValue(response.getEntity().getContent(), OlaPort[].class);
+        List<OlaPort> result = new ArrayList<>();
+        for (OlaPort port : portArray) {
+            if (port.isOutput() && port.getId() != null && !port.getId().isBlank()) {
+                result.add(port);
+            }
+        }
+        return result;
+    }
+
+    private void reconcileOlaPortIds() {
+        List<LightingUniverse> lightingUniverses = getLightingUniverses();
+        if (lightingUniverses.isEmpty()) {
+            return;
+        }
+
+        List<OlaPort> livePorts;
+        try {
+            livePorts = fetchLiveOlaOutputPorts();
+        } catch (Exception e) {
+            logger.warn("Could not fetch OLA ports for port ID reconciliation", e);
+            return;
+        }
+
+        boolean updated = false;
+        for (LightingUniverse universe : lightingUniverses) {
+            if (universe.getOlaOutputPortDevice() != null && !universe.getOlaOutputPortDevice().isBlank()) {
+                // Match by device name → update port ID if it changed
+                for (OlaPort port : livePorts) {
+                    if (universe.getOlaOutputPortDevice().equals(port.getDevice())) {
+                        if (!port.getId().equals(universe.getOlaOutputPortId())) {
+                            logger.info("Updating port ID for universe '{}' from '{}' to '{}' (device: '{}')",
+                                    universe.getName(), universe.getOlaOutputPortId(), port.getId(), port.getDevice());
+                            universe.setOlaOutputPortId(port.getId());
+                            updated = true;
+                        }
+                        break;
+                    }
+                }
+            } else if (universe.getOlaOutputPortId() != null && !universe.getOlaOutputPortId().isBlank()) {
+                // Backfill: store device name for existing universes that don't have it yet
+                for (OlaPort port : livePorts) {
+                    if (universe.getOlaOutputPortId().equals(port.getId())) {
+                        if (port.getDevice() != null && !port.getDevice().isBlank()) {
+                            logger.info("Storing device '{}' for universe '{}' (port ID: '{}')",
+                                    port.getDevice(), universe.getName(), port.getId());
+                            universe.setOlaOutputPortDevice(port.getDevice());
+                            updated = true;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (updated) {
+            try {
+                settingsService.save();
+                logger.debug("Settings saved after OLA port ID reconciliation");
+            } catch (Exception e) {
+                logger.error("Could not save settings after OLA port ID reconciliation", e);
+            }
         }
     }
 
@@ -578,20 +648,7 @@ public class DefaultLightingService implements LightingService {
         }
 
         try {
-            // Query the OLA JSON API for all ports. The JSON endpoint exposes the string port id
-            // format that OLA's new_universe endpoint expects in add_ports.
-            HttpGet httpGet = new HttpGet(OLA_URL + "json/get_ports");
-            HttpResponse response = httpClient.execute(httpGet);
-
-            ObjectMapper mapper = new ObjectMapper();
-            OlaPort[] olaPortList = mapper.readValue(response.getEntity().getContent(), OlaPort[].class);
-
-            for (OlaPort olaPort : olaPortList) {
-                if (olaPort.isOutput() && olaPort.getId() != null && !olaPort.getId().isBlank()) {
-                    olaOutputPorts.add(olaPort);
-                }
-            }
-
+            olaOutputPorts = fetchLiveOlaOutputPorts();
             addConfiguredOlaOutputPorts(olaOutputPorts);
         } catch (Exception e) {
             logger.error("Could not get OLA output ports", e);
