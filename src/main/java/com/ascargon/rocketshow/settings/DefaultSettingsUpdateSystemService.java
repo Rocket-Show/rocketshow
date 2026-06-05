@@ -292,7 +292,7 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
         }
 
         String confPath = settingsService.isReadOnlyFileSystem()
-                ? "/data/rocketshow/ola/ola-artnet.conf"
+                ? "/data/ola/ola-artnet.conf"
                 : "/etc/ola/ola-artnet.conf";
 
         try {
