@@ -287,7 +287,7 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
 
     private void updateOlaArtNetConf(String ipAddress) {
         if (ipAddress == null || ipAddress.isBlank()) {
-            logger.warn("Skipping OLA ArtNet conf update: no IP address available");
+            logger.debug("Skipping OLA ArtNet conf update: no IP address available");
             return;
         }
 
@@ -296,13 +296,14 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
                 : "/etc/ola/ola-artnet.conf";
 
         try {
-            new ShellManager(new String[]{
+            ShellManager shellManager = new ShellManager(new String[]{
                     "sudo", "sed", "-i",
-                    "s/^ip = .*/ip = " + ipAddress + "/",
+                    "s/^ip[[:space:]]*=[[:space:]]*.*/ip = " + ipAddress + "/",
                     confPath
             });
+            shellManager.getProcess().waitFor();
             logger.debug("Updated OLA ArtNet conf '{}' with IP '{}'", confPath, ipAddress);
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error("Could not update OLA ArtNet conf '{}' with IP '{}'", confPath, ipAddress, e);
         }
     }
