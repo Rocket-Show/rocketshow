@@ -191,7 +191,7 @@ public class DefaultLightingService implements LightingService {
         sendUniverse(false);
     }
 
-    private void sendUniverse(boolean enableMonitor) {
+    private synchronized void sendUniverse(boolean enableMonitor) {
         logger.trace("Send the lighting universe");
 
         // Copy the list to protect against changes while mixing
@@ -456,7 +456,7 @@ public class DefaultLightingService implements LightingService {
     }
 
     @Override
-    public void updateUniverses(List<LightingUniverse> lightingUniverses) {
+    public synchronized void updateUniverses(List<LightingUniverse> lightingUniverses) {
         if (olaClient == null) {
             // OLA client is not connected
             return;
@@ -617,7 +617,7 @@ public class DefaultLightingService implements LightingService {
     }
 
     @Override
-    public List<OlaPlugin> getOlaPlugins() {
+    public synchronized List<OlaPlugin> getOlaPlugins() {
         List<OlaPlugin> olaPluginList = new ArrayList<>();
 
         if (olaClient != null) {
@@ -640,7 +640,7 @@ public class DefaultLightingService implements LightingService {
     }
 
     @Override
-    public List<OlaPort> getOlaOutputPorts() {
+    public synchronized List<OlaPort> getOlaOutputPorts() {
         List<OlaPort> olaOutputPorts = new ArrayList<>();
 
         if (olaClient == null) {
@@ -707,7 +707,7 @@ public class DefaultLightingService implements LightingService {
     }
 
     @Override
-    public void reloadOlaPlugins() {
+    public synchronized void reloadOlaPlugins() {
         if (olaClient == null) {
             return;
         }
@@ -717,7 +717,7 @@ public class DefaultLightingService implements LightingService {
     }
 
     @Override
-    public void enablePlugins(List<OlaPlugin> olaPluginList) {
+    public synchronized void enablePlugins(List<OlaPlugin> olaPluginList) {
         // Disable all plugins, except the one to be enabled
         for (OlaPlugin olaPlugin : getOlaPlugins()) {
             boolean enabled = olaPluginList.stream().anyMatch(plugin -> plugin.getName().equals(olaPlugin.getName()));
