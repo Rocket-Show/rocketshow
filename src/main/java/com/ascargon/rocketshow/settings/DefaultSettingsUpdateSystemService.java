@@ -291,15 +291,19 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
             return;
         }
 
+        String confPath = settingsService.isReadOnlyFileSystem()
+                ? "/data/rocketshow/ola/ola-artnet.conf"
+                : "/etc/ola/ola-artnet.conf";
+
         try {
             new ShellManager(new String[]{
                     "sudo", "sed", "-i",
                     "s/^ip = .*/ip = " + ipAddress + "/",
-                    "/etc/ola/ola-artnet.conf"
+                    confPath
             });
-            logger.debug("Updated OLA ArtNet conf with IP '{}'", ipAddress);
+            logger.debug("Updated OLA ArtNet conf '{}' with IP '{}'", confPath, ipAddress);
         } catch (IOException e) {
-            logger.error("Could not update OLA ArtNet conf with IP '{}'", ipAddress, e);
+            logger.error("Could not update OLA ArtNet conf '{}' with IP '{}'", confPath, ipAddress, e);
         }
     }
 
