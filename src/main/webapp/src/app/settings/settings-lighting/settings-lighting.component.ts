@@ -176,6 +176,8 @@ export class SettingsLightingComponent implements OnInit {
 
   updateLightingUniversePort(lightingUniverse: LightingUniverse, olaOutputPortId: string) {
     lightingUniverse.olaOutputPortId = olaOutputPortId || "";
+    const selectedPort = this.olaOutputPortList.find((p) => p.id === olaOutputPortId);
+    lightingUniverse.olaOutputPortDevice = selectedPort?.device || "";
     this.updateLightingUniverseList();
   }
 
