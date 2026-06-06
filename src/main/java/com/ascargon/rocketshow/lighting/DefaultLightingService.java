@@ -122,8 +122,15 @@ public class DefaultLightingService implements LightingService {
     private void reconcileOlaPortIds() {
         List<LightingUniverse> lightingUniverses = getLightingUniverses();
         if (lightingUniverses.isEmpty()) {
+            logger.debug("OLA port reconciliation: no configured universes, skipping");
             return;
         }
+
+        // OLA's json/get_ports only lists ports that are not currently bound to a universe.
+        // Remove all port assignments first so every port becomes visible for matching.
+        // initializeUniverses() will re-bind them afterwards with the corrected port IDs.
+        logger.debug("OLA port reconciliation: removing all OLA port assignments before querying live ports");
+        removeAllOlaPorts(lightingUniverses);
 
         List<OlaPort> livePorts;
         try {
@@ -133,34 +140,68 @@ public class DefaultLightingService implements LightingService {
             return;
         }
 
+        if (livePorts.isEmpty()) {
+            logger.warn("OLA port reconciliation: no live output ports returned by OLA");
+        } else {
+            logger.debug("OLA port reconciliation: {} live output port(s) available:", livePorts.size());
+            for (OlaPort port : livePorts) {
+                logger.debug("  id='{}' device='{}'", port.getId(), port.getDevice());
+            }
+        }
+
         boolean updated = false;
         for (LightingUniverse universe : lightingUniverses) {
             if (universe.getOlaOutputPortDevice() != null && !universe.getOlaOutputPortDevice().isBlank()) {
                 // Match by device name → update port ID if it changed
+                boolean found = false;
                 for (OlaPort port : livePorts) {
                     if (universe.getOlaOutputPortDevice().equals(port.getDevice())) {
+                        found = true;
                         if (!port.getId().equals(universe.getOlaOutputPortId())) {
                             logger.info("Updating port ID for universe '{}' from '{}' to '{}' (device: '{}')",
                                     universe.getName(), universe.getOlaOutputPortId(), port.getId(), port.getDevice());
                             universe.setOlaOutputPortId(port.getId());
                             updated = true;
+                        } else {
+                            logger.debug("Universe '{}': port ID '{}' still matches device '{}', no update needed",
+                                    universe.getName(), universe.getOlaOutputPortId(), universe.getOlaOutputPortDevice());
                         }
                         break;
                     }
                 }
+                if (!found) {
+                    logger.warn("OLA port reconciliation: no live port found for universe '{}' with device '{}' (current port ID: '{}'). Available devices: {}",
+                            universe.getName(),
+                            universe.getOlaOutputPortDevice(),
+                            universe.getOlaOutputPortId(),
+                            livePorts.stream().map(OlaPort::getDevice).toList());
+                }
             } else if (universe.getOlaOutputPortId() != null && !universe.getOlaOutputPortId().isBlank()) {
                 // Backfill: store device name for existing universes that don't have it yet
+                boolean found = false;
                 for (OlaPort port : livePorts) {
                     if (universe.getOlaOutputPortId().equals(port.getId())) {
+                        found = true;
                         if (port.getDevice() != null && !port.getDevice().isBlank()) {
                             logger.info("Storing device '{}' for universe '{}' (port ID: '{}')",
                                     port.getDevice(), universe.getName(), port.getId());
                             universe.setOlaOutputPortDevice(port.getDevice());
                             updated = true;
+                        } else {
+                            logger.debug("Universe '{}': live port '{}' has no device name, skipping backfill",
+                                    universe.getName(), port.getId());
                         }
                         break;
                     }
                 }
+                if (!found) {
+                    logger.warn("OLA port reconciliation: no live port found for universe '{}' with port ID '{}' (no device stored yet). Available port IDs: {}",
+                            universe.getName(),
+                            universe.getOlaOutputPortId(),
+                            livePorts.stream().map(OlaPort::getId).toList());
+                }
+            } else {
+                logger.debug("Universe '{}': no port ID or device configured, skipping", universe.getName());
             }
         }
 
@@ -171,6 +212,8 @@ public class DefaultLightingService implements LightingService {
             } catch (Exception e) {
                 logger.error("Could not save settings after OLA port ID reconciliation", e);
             }
+        } else {
+            logger.debug("OLA port reconciliation: no changes needed");
         }
     }
 
