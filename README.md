@@ -92,6 +92,24 @@ Use the following HTTP endpoint to check the health (available without security)
 
 Use the following HTTP endpoint to run some system tests (available without security, as long as the initial setup is not yet completed): `POST /api/system/test`
 
+### Build OLA
+
+To build the OLA Client jar required by Rocket Show, follow these steps on a mac:
+
+```
+# install protobuf 21 (newer versions of protobuf don't work by OCT 2024, because of too old cpp versions used in dependencies, see https://github.com/protocolbuffers/protobuf/issues/12393)
+brew install protobuf@21 autoconf automake libtool cppunit
+
+echo 'export PATH="/opt/homebrew/opt/protobuf@21/bin:$PATH"' >> ~/.zshrc
+export LDFLAGS="-L/opt/homebrew/opt/protobuf@21/lib"                
+export CPPFLAGS="-I/opt/homebrew/opt/protobuf@21/include"
+export PKG_CONFIG_PATH="/opt/homebrew/opt/protobuf@21/lib/pkgconfig"
+
+autoreconf -i
+./configure --enable-java-libs
+make -j$(nproc)
+```
+
 ## Deployment
 
 ### Raspberry Pi Image building
