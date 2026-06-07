@@ -10,6 +10,8 @@ import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.system.ApplicationHome;
@@ -62,6 +64,9 @@ public class DefaultSettingsService implements SettingsService {
 
         // Apply default settings (if not loaded)
         initDefaultSettings();
+
+        // Apply the log level early so subsequent bean initialization is logged correctly
+        applyLoggingLevel();
 
         // Save the settings to store migrations, default values, etc.
         try {
@@ -527,6 +532,22 @@ public class DefaultSettingsService implements SettingsService {
         // make sure, settings not available in the interface (e.g. the designer path)
         // are not lost
         this.initDefaultSettings();
+    }
+
+    private void applyLoggingLevel() {
+        if (settings == null || settings.getLoggingLevel() == null) {
+            return;
+        }
+
+        Level level = switch (settings.getLoggingLevel()) {
+            case DEBUG -> Level.DEBUG;
+            case TRACE -> Level.TRACE;
+            case WARN -> Level.WARN;
+            case ERROR -> Level.ERROR;
+            default -> Level.INFO;
+        };
+
+        Configurator.setLevel("com.ascargon.rocketshow", level);
     }
 
 }
