@@ -416,6 +416,9 @@
       "pin": "Pin",
       "status": "Status",
       "high": "High"
-    }
+    },
+    "build-date": "Build date",
+    "build-timestamp": "Build timestamp",
+    "build-number": "Build number"
   }
 }
