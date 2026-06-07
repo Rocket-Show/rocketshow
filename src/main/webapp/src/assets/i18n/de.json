@@ -226,6 +226,7 @@
     "retreive-remote-version": "Neueste Version suchen....",
     "retreive-remote-version-internet": "Bitte stelle sicher, dass das Gerät eine Internetverbindung hat.",
     "retreive-remote-version-retry": "Wiederholen",
+    "retreive-remote-version-no-internet": "Keine Internetverbindung. Bitte stelle sicher, dass das Gerät eine Internetverbindung hat.",
     "retreive-remote-version-error": "Beim Suchen der neuesten Version ist ein Fehler aufgetreten. Bitte stelle sicher, dass das Gerät eine Internetverbindung hat.",
     "do-update": "Aktualisierung starten",
     "new-version": "Eine neue Version ist verfügbar:",

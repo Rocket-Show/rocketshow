@@ -32,6 +32,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileInputStream;
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -173,8 +176,13 @@ class SystemController {
     }
 
     @GetMapping("remote-version")
-    public VersionInfo remoteVersion(@RequestParam(value = "testBranch", required = false, defaultValue = "false") boolean testBranch) throws Exception {
-        return versionService.getRemoteVersionInfo(testBranch);
+    public ResponseEntity<VersionInfo> remoteVersion(@RequestParam(value = "testBranch", required = false, defaultValue = "false") boolean testBranch) throws Exception {
+        try {
+            return ResponseEntity.ok(versionService.getRemoteVersionInfo(testBranch));
+        } catch (UnknownHostException | ConnectException | SocketTimeoutException e) {
+            logger.warn("No internet connection while checking for remote version: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+        }
     }
 
     @PostMapping("update")

@@ -17,18 +17,29 @@
       @if (!updateFinished) {
       <div class="form-group row">
         <label class="col-lg-4 col-form-label">{{ 'settings.remote-version' | translate }}</label>
-        @if (remoteVersion && !errorRetreiveRemoteVersion) {
+        @if (remoteVersion && !errorRetreiveRemoteVersion && !noInternetError) {
         <div class="col-lg-8 my-auto">
           {{ remoteVersion?.version }}
         </div>
         }
-        @if (!remoteVersion && !errorRetreiveRemoteVersion) {
+        @if (!remoteVersion && !errorRetreiveRemoteVersion && !noInternetError) {
         <div class="col-lg-8 my-auto">
           <i class="fa fa-spinner fa-pulse fa-fw"></i> {{ 'settings.retreive-remote-version' | translate }}
           <br />
           <i>
             <small>{{ 'settings.retreive-remote-version-internet' | translate }}</small>
           </i>
+          <br />
+          <button type="button" class="btn btn-primary btn-sm mt-2" (click)="retreiveRemoteVersion(); false">
+            <i class="fa fa-refresh fa-fw" aria-hidden="true"></i>{{ 'settings.retreive-remote-version-retry' |
+            translate }}
+          </button>
+        </div>
+        }
+        @if (noInternetError) {
+        <div class="col-lg-8 my-auto">
+          <span class="text-danger">
+            <i class="fa fa-exclamation-circle" aria-hidden="true"></i> {{ 'settings.retreive-remote-version-no-internet' | translate }}</span>
           <br />
           <button type="button" class="btn btn-primary btn-sm mt-2" (click)="retreiveRemoteVersion(); false">
             <i class="fa fa-refresh fa-fw" aria-hidden="true"></i>{{ 'settings.retreive-remote-version-retry' |
@@ -70,7 +81,7 @@
       </div>
       }
 
-      @if (!remoteVersionNewer && remoteVersion && !errorRetreiveRemoteVersion) {
+      @if (!remoteVersionNewer && remoteVersion && !errorRetreiveRemoteVersion && !noInternetError) {
       <div class="form-group row">
         <label class="col-lg-4 col-form-label"></label>
         <div class="col-lg-8">
@@ -95,7 +106,7 @@
           }
           @if (!updateFinished) {
           <p class="text-center mt-2 mb-0">
-            <i class="fa fa-spinner fa-pulse fa-fw"></i> {{ updateStep | translate }}
+            <i class="fa fa-spinner fa-pulse fa-fw"></i> {{ updateStep | translate }}
           </p>
           }
           @if (updateFinished) {
