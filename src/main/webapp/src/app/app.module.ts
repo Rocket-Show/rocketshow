@@ -1,100 +1,138 @@
-import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { RouterModule, Routes } from '@angular/router';
-import { HttpClientModule, HttpClient, HTTP_INTERCEPTORS } from '@angular/common/http';
-import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
+import { BrowserModule } from "@angular/platform-browser";
+import { NgModule } from "@angular/core";
+import { FormsModule } from "@angular/forms";
+import { RouterModule, Routes } from "@angular/router";
+import { HttpClient, HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from "@angular/common/http";
+import { TranslateModule, TranslateLoader } from "@ngx-translate/core";
 import { MultiTranslateHttpLoader } from "ngx-translate-multi-http-loader";
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
-import { ArraySortPipe } from './array-sort-pipe';
-import { SortablejsModule } from 'ngx-sortablejs-plus';
-import { AlertModule } from 'ngx-bootstrap/alert';
-import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
-import { AccordionModule } from 'ngx-bootstrap/accordion';
-import { PopoverModule } from 'ngx-bootstrap/popover';
-import { TypeaheadModule } from 'ngx-bootstrap/typeahead';
-import { ModalModule } from 'ngx-bootstrap/modal';
-import { DropzoneModule } from 'ngx-dropzone-wrapper';
-import { ToastrModule } from 'ngx-toastr';
-import { NgxBootstrapSliderModule } from 'ngx-bootstrap-slider';
-import { DesignerModule } from '@rocketshow/designer';
+import { ArraySortPipe } from "./array-sort-pipe";
+import { SortablejsDirective } from "./sortablejs/sortablejs.directive";
+import { AlertModule } from "ngx-bootstrap/alert";
+import { BsDropdownModule } from "ngx-bootstrap/dropdown";
+import { AccordionModule } from "ngx-bootstrap/accordion";
+import { PopoverModule } from "ngx-bootstrap/popover";
+import { TypeaheadModule } from "ngx-bootstrap/typeahead";
+import { ModalModule } from "ngx-bootstrap/modal";
+import { DropzoneModule } from "ngx-dropzone-wrapper";
+import { ToastrModule } from "ngx-toastr";
+import { NgxBootstrapSliderModule } from "ngx-bootstrap-slider";
+import { DesignerModule } from "@rocketshow/designer";
 
-import { PendingChangesGuard } from './pending-changes.guard';
+import { PendingChangesGuard } from "./pending-changes.guard";
 
-import { AppHttpInterceptor } from './app-http-interceptor/app-http-interceptor';
-import { StateService } from './services/state.service';
-import { TransportService } from './services/transport.service';
-import { CompositionService } from './services/composition.service';
-import { FileService } from './services/file.service';
-import { SettingsService } from './services/settings.service';
-import { SessionService } from './services/session.service';
-import { WarningDialogService } from './services/warning-dialog.service';
-import { WarningDialogComponent } from './warning-dialog/warning-dialog.component';
-import { PendingChangesDialogService } from './services/pending-changes-dialog.service';
-import { UpdateService } from './services/update.service';
-import { InfoDialogService } from './services/info-dialog.service';
-import { ToastGeneralErrorService } from './services/toast-general-error.service';
-import { WaitDialogService } from './services/wait-dialog.service';
+import { AppHttpInterceptor } from "./app-http-interceptor/app-http-interceptor";
+import { StateService } from "./services/state.service";
+import { TransportService } from "./services/transport.service";
+import { CompositionService } from "./services/composition.service";
+import { FileService } from "./services/file.service";
+import { SettingsService } from "./services/settings.service";
+import { SessionService } from "./services/session.service";
+import { WarningDialogService } from "./services/warning-dialog.service";
+import { WarningDialogComponent } from "./warning-dialog/warning-dialog.component";
+import { PendingChangesDialogService } from "./services/pending-changes-dialog.service";
+import { UpdateService } from "./services/update.service";
+import { InfoDialogService } from "./services/info-dialog.service";
+import { ToastGeneralErrorService } from "./services/toast-general-error.service";
+import { WaitDialogService } from "./services/wait-dialog.service";
 
-import { AppComponent } from './app.component';
-import { IntroComponent } from './intro/intro.component';
-import { ConnectionComponent } from './connection/connection.component';
-import { PlayComponent } from './play/play.component';
-import { SettingsComponent } from './settings/settings.component';
-import { SettingsSystemComponent } from './settings/settings-system/settings-system.component';
-import { SettingsAdvancedComponent } from './settings/settings-advanced/settings-advanced.component';
-import { SettingsMidiComponent } from './settings/settings-midi/settings-midi.component';
-import { SettingsNetworkComponent } from './settings/settings-network/settings-network.component';
-import { SettingsAudioComponent } from './settings/settings-audio/settings-audio.component';
-import { SettingsVideoComponent } from './settings/settings-video/settings-video.component';
-import { SettingsLightingComponent } from './settings/settings-lighting/settings-lighting.component';
-import { EditorComponent } from './editor/editor.component';
-import { EditorCompositionComponent } from './editor/editor-composition/editor-composition.component';
-import { EditorSetComponent } from './editor/editor-set/editor-set.component';
-import { EditorCompositionFileComponent } from './editor/editor-composition/editor-composition-file/editor-composition-file.component';
-import { RoutingDetailsComponent } from './routing-details/routing-details.component';
-import { UpdateDialogComponent } from './settings/update-dialog/update-dialog.component';
-import { WaitDialogComponent } from './wait-dialog/wait-dialog.component';
-import { InfoDialogComponent } from './info-dialog/info-dialog.component';
-import { RemoteDeviceSelectionComponent } from './remote-device-selection/remote-device-selection.component';
-import { MidiRoutingComponent } from './midi-routing/midi-routing.component';
-import { MidiMappingComponent } from './midi-mapping/midi-mapping.component';
-import { SettingsInfoComponent } from './settings/settings-info/settings-info.component';
-import { LeadSheetComponent } from './lead-sheet/lead-sheet.component';
-import { EditorCompositionLeadSheetComponent } from './editor/editor-composition/editor-composition-lead-sheet/editor-composition-lead-sheet.component';
-import { SettingsBandComponent } from './settings/settings-band/settings-band.component';
-import { SettingsPersonalComponent } from './settings/settings-personal/settings-personal.component';
-import { DesignerComponent } from './designer/designer.component';
-import { BackupRestoreDialogComponent } from './settings/backup-restore-dialog/backup-restore-dialog.component';
-import { DropzoneComponent } from './dropzone/dropzone.component';
+import { AppComponent } from "./app.component";
+import { IntroComponent } from "./intro/intro.component";
+import { ConnectionComponent } from "./connection/connection.component";
+import { PlayComponent } from "./play/play.component";
+import { SettingsComponent } from "./settings/settings.component";
+import { SettingsSystemComponent } from "./settings/settings-system/settings-system.component";
+import { SettingsAdvancedComponent } from "./settings/settings-advanced/settings-advanced.component";
+import { SettingsMidiComponent } from "./settings/settings-midi/settings-midi.component";
+import { SettingsNetworkComponent } from "./settings/settings-network/settings-network.component";
+import { SettingsAudioComponent } from "./settings/settings-audio/settings-audio.component";
+import { SettingsVideoComponent } from "./settings/settings-video/settings-video.component";
+import { SettingsLightingComponent } from "./settings/settings-lighting/settings-lighting.component";
+import { EditorComponent } from "./editor/editor.component";
+import { EditorCompositionComponent } from "./editor/editor-composition/editor-composition.component";
+import { EditorSetComponent } from "./editor/editor-set/editor-set.component";
+import { EditorCompositionFileComponent } from "./editor/editor-composition/editor-composition-file/editor-composition-file.component";
+import { RoutingDetailsComponent } from "./routing-details/routing-details.component";
+import { UpdateDialogComponent } from "./settings/update-dialog/update-dialog.component";
+import { WaitDialogComponent } from "./wait-dialog/wait-dialog.component";
+import { InfoDialogComponent } from "./info-dialog/info-dialog.component";
+import { RemoteDeviceSelectionComponent } from "./remote-device-selection/remote-device-selection.component";
+import { MidiRoutingComponent } from "./midi-routing/midi-routing.component";
+import { MidiMappingComponent } from "./midi-mapping/midi-mapping.component";
+import { SettingsInfoComponent } from "./settings/settings-info/settings-info.component";
+import { LeadSheetComponent } from "./lead-sheet/lead-sheet.component";
+import { EditorCompositionLeadSheetComponent } from "./editor/editor-composition/editor-composition-lead-sheet/editor-composition-lead-sheet.component";
+import { SettingsBandComponent } from "./settings/settings-band/settings-band.component";
+import { SettingsPersonalComponent } from "./settings/settings-personal/settings-personal.component";
+import { DesignerComponent } from "./designer/designer.component";
+import { BackupRestoreDialogComponent } from "./settings/backup-restore-dialog/backup-restore-dialog.component";
+import { FileDropzoneComponent } from "./dropzone/file-dropzone.component";
+import { VolumeSliderComponent } from "./volume-slider/volume-slider.component";
+import { ActionTriggerMidiComponent } from "./settings/settings-midi/action-trigger-midi/action-trigger-midi.component";
+import { ActionTriggerMidiProgramChangeComponent } from "./settings/settings-midi/action-trigger-midi/action-trigger-midi-program-change/action-trigger-midi-program-change.component";
+import { ActionTriggerMidiNoteOnComponent } from "./settings/settings-midi/action-trigger-midi/action-trigger-midi-note-on/action-trigger-midi-note-on.component";
+import { ActionTriggerComponent } from "./action-trigger/action-trigger.component";
+import { ActionListComponent } from "./action-list/action-list.component";
+import { ActionComponent } from "./action/action.component";
+import { EditorCompositionActionComponent } from "./editor/editor-composition/editor-composition-action/editor-composition-action.component";
+import { ActionTriggerCompositionComponent } from "./editor/editor-composition/action-trigger-composition/action-trigger-composition.component";
+import { EditorMediaComponent } from "./editor/editor-media/editor-media.component";
+import { SettingsExternalControlComponent } from "./settings/settings-external-control/settings-external-control.component";
+import { ActionTriggerRaspberryGpioComponent } from "./settings/settings-external-control/action-trigger-raspberry-gpio/action-trigger-raspberry-gpio.component";
+import { ActionNullComponent } from "./action/action-null/action-null.component";
+import { ActionSystemComponent } from "./action/action-system/action-system.component";
+import { ActionTransportComponent } from "./action/action-transport/action-transport.component";
+import { ActionRaspberryGpioComponent } from "./action/action-raspberry-gpio/action-raspberry-gpio.component";
+import { ActionHttpComponent } from "./action/action-http/action-http.component";
+import { ActionLightingComponent } from "./action/action-lighting/action-lighting.component";
+import { ActionMidiComponent } from "./action/action-midi/action-midi.component";
+import { LoginComponent } from "./login/login.component";
+import { ParticleBackgroundComponent } from "./particle-background/particle-background.component";
+import { SettingsSecurityComponent } from "./settings/settings-security/settings-security.component";
+import { ChangePasswordDialogComponent } from './settings/change-password-dialog/change-password-dialog.component';
+import { NewApiKeyDialogComponent } from "./settings/new-api-key-dialog/new-api-key-dialog.component";
+import { DeviceInformationService } from "./services/device-information.service";
 
 const appRoutes: Routes = [
-  { path: 'intro', component: IntroComponent },
-  { path: 'play', component: PlayComponent },
-  { path: 'editor', component: EditorComponent, canDeactivate: [PendingChangesGuard] },
-  { path: 'designer', component: DesignerComponent, canDeactivate: [PendingChangesGuard] },
-  { path: 'settings', component: SettingsComponent, canDeactivate: [PendingChangesGuard] },
+  { path: "intro", component: IntroComponent },
+  { path: "play", component: PlayComponent },
   {
-    path: '',
-    redirectTo: '/play',
-    pathMatch: 'full'
+    path: "editor",
+    component: EditorComponent,
+    canDeactivate: [PendingChangesGuard],
   },
-  { path: '**', component: PlayComponent }
+  {
+    path: "designer",
+    component: DesignerComponent,
+    canDeactivate: [PendingChangesGuard],
+  },
+  {
+    path: "settings",
+    component: SettingsComponent,
+    canDeactivate: [PendingChangesGuard],
+  },
+  {
+    path: "",
+    redirectTo: "/play",
+    pathMatch: "full",
+  },
+  { path: "**", component: PlayComponent },
 ];
 
-@NgModule({
-    declarations: [
+@NgModule({ declarations: [
         ArraySortPipe,
         AppComponent,
         IntroComponent,
+        ParticleBackgroundComponent,
         PlayComponent,
         SettingsComponent,
         EditorComponent,
         EditorCompositionComponent,
         EditorSetComponent,
         ConnectionComponent,
+        LoginComponent,
         EditorCompositionFileComponent,
+        EditorCompositionActionComponent,
         RoutingDetailsComponent,
         SettingsSystemComponent,
         WarningDialogComponent,
@@ -112,49 +150,62 @@ const appRoutes: Routes = [
         MidiRoutingComponent,
         MidiMappingComponent,
         SettingsInfoComponent,
+        SettingsSecurityComponent,
         LeadSheetComponent,
         EditorCompositionLeadSheetComponent,
+        EditorMediaComponent,
         SettingsBandComponent,
         SettingsPersonalComponent,
         DesignerComponent,
-        DropzoneComponent
+        FileDropzoneComponent,
+        VolumeSliderComponent,
+        ActionComponent,
+        ActionListComponent,
+        ActionTriggerComponent,
+        ActionTriggerMidiComponent,
+        ActionTriggerMidiNoteOnComponent,
+        ActionTriggerMidiProgramChangeComponent,
+        ActionTriggerCompositionComponent,
+        SettingsExternalControlComponent,
+        ActionTriggerRaspberryGpioComponent,
+        ActionNullComponent,
+        ActionSystemComponent,
+        ActionTransportComponent,
+        ActionRaspberryGpioComponent,
+        ActionHttpComponent,
+        ActionLightingComponent,
+        ActionMidiComponent,
+        ChangePasswordDialogComponent,
+        NewApiKeyDialogComponent,
+        SortablejsDirective,
     ],
-    imports: [
-        BrowserModule,
-        HttpClientModule,
+    bootstrap: [AppComponent], imports: [BrowserModule,
         RouterModule.forRoot(appRoutes, { enableTracing: false, useHash: true }),
-        BrowserAnimationsModule,
         TranslateModule.forRoot({
             loader: {
                 provide: TranslateLoader,
                 useFactory: HttpLoaderFactory,
-                deps: [HttpClient]
-            }
+                deps: [HttpClient],
+            },
         }),
         FormsModule,
-        SortablejsModule.forRoot({
-            animation: 300,
-            handle: '.list-sort-handle'
-        }),
         AlertModule.forRoot(),
         ModalModule.forRoot(),
         DropzoneModule,
         ToastrModule.forRoot({
-            newestOnTop: true
+            newestOnTop: true,
         }),
         NgxBootstrapSliderModule,
         AccordionModule.forRoot(),
         PopoverModule.forRoot(),
         TypeaheadModule.forRoot(),
         BsDropdownModule.forRoot(),
-        DesignerModule
-    ],
-    providers: [
+        DesignerModule], providers: [
         AppHttpInterceptor,
         {
             provide: HTTP_INTERCEPTORS,
             useClass: AppHttpInterceptor,
-            multi: true
+            multi: true,
         },
         PendingChangesGuard,
         StateService,
@@ -168,11 +219,11 @@ const appRoutes: Routes = [
         UpdateService,
         WaitDialogService,
         InfoDialogService,
-        ToastGeneralErrorService
-    ],
-    bootstrap: [AppComponent]
-})
-export class AppModule { }
+        ToastGeneralErrorService,
+        DeviceInformationService,
+        provideHttpClient(withInterceptorsFromDi()),
+    ] })
+export class AppModule {}
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new MultiTranslateHttpLoader(http, [

@@ -19,11 +19,13 @@ import { ActivityAudioBus } from "../models/activity-audio-bus";
 import { ActivityAudioChannel } from "../models/activity-audio-channel";
 import { ActivityLightingService } from "../services/activity-lighting.service";
 import { ActivityLighting } from "../models/activity-lighting";
+import { AuthService } from "../services/auth.service";
 
 @Component({
   selector: "app-play",
   templateUrl: "./play.component.html",
   styleUrls: ["./play.component.scss"],
+  standalone: false
 })
 export class PlayComponent implements OnInit, OnDestroy {
   stateServiceSubscription: Subscription;
@@ -48,6 +50,8 @@ export class PlayComponent implements OnInit, OnDestroy {
   totalPlayTime: string = "";
 
   loadingSet: boolean = false;
+
+  viewMode: 'setlist' | 'grid' = 'setlist';
 
   activityMidiSubscription: Subscription;
   activityAudioSubscription: Subscription;
@@ -74,16 +78,24 @@ export class PlayComponent implements OnInit, OnDestroy {
     public activityAudioService: ActivityAudioService,
     public activityLightingService: ActivityLightingService,
     public settingsService: SettingsService,
-    private changeDetectorRef: ChangeDetectorRef
+    private authService: AuthService,
   ) {
     this.loadSettings();
 
     this.settingsService.settingsChanged.subscribe(() => {
       this.loadSettings();
     });
+    this.authService.state.subscribe(() => {
+      this.loadSettings();
+    });
   }
 
   private loadSettings() {
+    if (!this.authService.currentState || !this.authService.currentState.authenticated) {
+      // not yet authenticated
+      return;
+    }
+
     this.settingsService
       .getSettings()
       .pipe(
@@ -140,6 +152,7 @@ export class PlayComponent implements OnInit, OnDestroy {
     // Load the current session
     this.sessionService.getSession().subscribe((session) => {
       this.session = session;
+      this.viewMode = session.playViewMode || 'setlist';
     });
 
     this.loadAllSets();
@@ -250,15 +263,15 @@ export class PlayComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.stateServiceSubscription.unsubscribe();
+    this.stateServiceSubscription?.unsubscribe();
 
-    this.activityMidiSubscription.unsubscribe();
-    this.activityAudioSubscription.unsubscribe();
-    this.activityLightingSubscription.unsubscribe();
+    this.activityMidiSubscription?.unsubscribe();
+    this.activityAudioSubscription?.unsubscribe();
+    this.activityLightingSubscription?.unsubscribe();
 
-    this.activityMidiService.stopMonitor();
-    this.activityAudioService.stopMonitor();
-    this.activityLightingService.stopMonitor();
+    this.activityMidiService?.stopMonitor();
+    this.activityAudioService?.stopMonitor();
+    this.activityLightingService?.stopMonitor();
   }
 
   private loadAllSets() {
@@ -339,7 +352,7 @@ export class PlayComponent implements OnInit, OnDestroy {
     return padded;
   }
 
-  private msToTime(millis: number, includeMillis: boolean = true): string {
+  msToTime(millis: number, includeMillis: boolean = true): string {
     let ms: number = Math.round(millis % 1000);
     let seconds: number = Math.floor(((millis % 360000) % 60000) / 1000);
     let minutes: number = Math.floor((millis % 3600000) / 60000);
@@ -358,6 +371,14 @@ export class PlayComponent implements OnInit, OnDestroy {
   }
 
   private stateChanged(newState: State) {
+    if (newState.error) {
+      this.toastGeneralErrorService.showMessage(newState.error);
+    }
+
+    if (!newState.playState) {
+      return;
+    }
+
     // as we have a new sync-point for the position millis, reset the last play time
     this.lastPlayTime = new Date();
 
@@ -366,10 +387,6 @@ export class PlayComponent implements OnInit, OnDestroy {
     }, 0);
 
     this.playTime = this.msToTime(newState.positionMillis);
-
-    if (newState.error) {
-      this.toastGeneralErrorService.showMessage(newState.error);
-    }
 
     if (
       newState.playState == "PLAYING" &&
@@ -487,6 +504,71 @@ export class PlayComponent implements OnInit, OnDestroy {
 
   previousComposition() {
     this.transportService.previousComposition().subscribe();
+  }
+
+  toggleViewMode() {
+    this.viewMode = this.viewMode === 'setlist' ? 'grid' : 'setlist';
+    this.sessionService.setPlayViewMode(this.viewMode).subscribe();
+  }
+
+  triggerCue(composition: Composition, index: number) {
+    const isThis = this.currentState?.currentCompositionName === composition.name;
+
+    if (isThis) {
+      switch (this.currentState?.playState) {
+        case 'PLAYING':
+        case 'LOADING':
+        case 'LOADED':
+          this.stop();
+          break;
+        case 'PAUSED':
+        case 'STOPPED':
+          this.play();
+          break;
+      }
+      return;
+    }
+
+    this.currentState.playState = 'LOADING';
+    this.manualCompositionSelection = true;
+
+    const select$ = (this.currentSet && !this.currentSet.name)
+      ? this.transportService.setCompositionName(composition.name)
+      : this.transportService.setCompositionIndex(index);
+
+    select$.pipe(
+      catchError((err) => this.toastGeneralErrorService.show(err))
+    ).subscribe(() => {
+      this.transportService.play().pipe(
+        catchError((err) => {
+          this.stop();
+          return this.toastGeneralErrorService.show(err);
+        })
+      ).subscribe();
+    });
+  }
+
+  getCueProgress(composition: Composition): string {
+    if (this.currentState?.currentCompositionName !== composition.name) {
+      return '0%';
+    }
+    const duration = this.currentState?.currentCompositionDurationMillis;
+    if (!duration || duration <= 0) {
+      return '0%';
+    }
+    return Math.min(100, (this.positionMillis / duration) * 100) + '%';
+  }
+
+  getCueTimeDisplay(composition: Composition): string {
+    const isActive = this.currentState?.currentCompositionName === composition.name;
+    if (isActive && (this.currentState?.playState === 'PLAYING' || this.currentState?.playState === 'PAUSED')) {
+      const remaining = (this.currentState.currentCompositionDurationMillis || 0) - this.positionMillis;
+      return '-' + this.msToTime(Math.max(0, remaining), false);
+    }
+    if (composition.durationMillis > 0) {
+      return this.msToTime(composition.durationMillis, false);
+    }
+    return '';
   }
 
   setComposition(index: number, composition: Composition) {

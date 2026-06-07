@@ -1,6 +1,11 @@
 package com.ascargon.rocketshow.audio;
 
+import com.ascargon.rocketshow.settings.Settings;
+import com.ascargon.rocketshow.settings.SettingsService;
+import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
+import org.freedesktop.gstreamer.ElementFactory;
+import org.freedesktop.gstreamer.elements.BaseSink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -8,8 +13,12 @@ import org.springframework.stereotype.Service;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -40,55 +49,31 @@ public class DefaultAudioService implements AudioService {
 
         logger.debug("List audio devices...");
 
-        try {
-            Process process = new ProcessBuilder("cat", "/proc/asound/cards").start();
+        try (BufferedReader reader = Files.newBufferedReader(Path.of("/proc/asound/cards"))) {
+            String line;
+            int lineIndex = 0;
 
-            Thread readerThread = new Thread(() -> {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                String line;
-                boolean readLine = true;
+            while ((line = reader.readLine()) != null) {
+                logger.trace("Output from audio device list file: {}", line);
 
-                try {
-                    while ((line = reader.readLine()) != null) {
-                        logger.trace("Output from audio device list process: " + line);
+                if (lineIndex % 2 == 0 && !line.startsWith("---")) {
+                    AudioDevice audioDevice = getAudioDeviceFromString(line);
 
-                        // Only read the uneven lines. The even ones contain
-                        // unneccessary information.
-                        if (readLine) {
-                            readLine = false;
-
-                            if (!line.startsWith("---")) {
-                                AudioDevice audioDevice = getAudioDeviceFromString(line);
-
-                                if (audioDevice.getName() != null && audioDevice.getName().length() > 0
-                                        && !audioDevice.getKey().equals("ALSA")
-
-                                        // Does not work with Gstreamer. Currently disabled.
-                                        // see https://github.com/moritzvieli/rocketshow/issues/19
-                                        && !audioDevice.getKey().equals("Headphones")
-                                ) {
-
-                                    audioDeviceList.add(audioDevice);
-                                }
-                            }
-                        } else {
-                            readLine = true;
-                        }
+                    if (audioDevice.getName() != null
+                            && !audioDevice.getName().isEmpty()
+                            && !"ALSA".equals(audioDevice.getKey())
+                            && !"Headphones".equals(audioDevice.getKey())
+                            && !"vc4hdmi0".equals(audioDevice.getKey())
+                            && !"vc4hdmi1".equals(audioDevice.getKey())
+                    ) {
+                        audioDeviceList.add(audioDevice);
                     }
-                } catch (IOException e) {
-                    logger.error("Could not read audio device list output", e);
                 }
-            });
 
-            readerThread.start();
-
-            try {
-                readerThread.join();
-            } catch (InterruptedException e) {
-                logger.error("Could not wait for the list of audio devices", e);
+                lineIndex++;
             }
         } catch (IOException e) {
-            logger.error("Could not list the audio devices", e);
+            logger.error("Could not list audio devices", e);
         }
 
         logger.debug("Audio devices listed");
@@ -160,6 +145,71 @@ public class DefaultAudioService implements AudioService {
 //        }
 
         return maxChannels.get();
+    }
+
+    @Override
+    public String getAudioDeviceAlsaName(AudioDevice audioDevice) {
+        // The audio device key could contain spaces and, while quite uncommon, also
+        // other special characters. we need to change it to get a name suitable for
+        // ALSA devices used in .asoundrc.
+        String formatted = audioDevice.getKey().replace(" ", "_");
+
+        // Remove all special characters using regex
+        formatted = formatted.replaceAll("[^a-zA-Z0-9_]", "");
+
+        return formatted;
+    }
+
+    @Override
+    public BaseSink getGstAudioSink(AudioDevice audioDevice, boolean provideClock) {
+        String sinkName = "alsasink";
+
+        if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+            logger.debug("Create audio sink for OS X...");
+            sinkName = "osxaudiosink";
+        }
+
+        BaseSink sink = (BaseSink) ElementFactory.make(sinkName, "audiosink_" + getAudioDeviceAlsaName(audioDevice));
+
+        if (!OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+            sink.set("device", "rs_" + getAudioDeviceAlsaName(audioDevice));
+
+            // Should be set by default but make sure it's really n'sync
+            sink.set("sync", true);
+
+            sink.set("provide-clock", provideClock);
+        }
+
+        return sink;
+    }
+
+    @Override
+    public int getChannelCountByAudioDevice(Settings settings, AudioDevice audioDevice) {
+        int count = 0;
+
+        if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
+            return 2;
+        }
+
+        for (AudioBus audioBus : settings.getAudioBusList()) {
+            if (audioBus.getAudioDevice().getId() == audioDevice.getId()) {
+                count += audioBus.getChannels();
+            }
+        }
+
+        return count;
+    }
+
+    @Override
+    public List<AudioDevice> getAudioDeviceInUseList(Settings settings) {
+        // Get all uniquely used audio devices
+        Set<AudioDevice> audioDeviceSet = new HashSet<>();
+        for (AudioBus audioBus : settings.getAudioBusList()) {
+            if (audioBus.getAudioDevice() != null) {
+                audioDeviceSet.add(audioBus.getAudioDevice());
+            }
+        }
+        return audioDeviceSet.stream().toList();
     }
 
 }

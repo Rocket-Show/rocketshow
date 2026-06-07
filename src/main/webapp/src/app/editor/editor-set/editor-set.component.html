@@ -15,140 +15,151 @@
     <div class="card border-secondary" style="height: 400px; overflow-y: scroll;">
       <div class="card-body p-0">
         <div class="list-group list-group-flush">
-          <a *ngIf="loadingSets" (click)="selectComposition(composition); false" href="#" class="list-group-item list-group-item-action flex-column align-items-start d-flex">
-            <p class="mb-0 mx-auto">
-              <i class="fa fa-spinner fa-pulse fa-fw"></i>
-            </p>
-          </a>
+          @if (loadingSets) {
+            <a (click)="selectComposition(composition); false" href="#" class="list-group-item list-group-item-action flex-column align-items-start d-flex">
+              <p class="mb-0 mx-auto">
+                <i class="fa fa-spinner fa-pulse fa-fw"></i>
+              </p>
+            </a>
+          }
 
-          <a *ngFor="let set of filteredSets" (click)="selectSet(set); false" href="#" class="list-group-item flex-column align-items-start"
-            [class.active]="initialSet?.name == set.name">
-
-            <p class="mb-0">{{ set.name }}</p>
-          </a>
+          @for (set of filteredSets; track set) {
+            <a (click)="selectSet(set); false" href="#" class="list-group-item flex-column align-items-start"
+              [class.active]="initialSet?.name == set.name">
+              <p class="mb-0">{{ set.name }}</p>
+            </a>
+          }
         </div>
       </div>
     </div>
   </div>
 
   <!-- Edit the selected/new set -->
-  <div class="col-md-8" *ngIf="currentSet && !loadingSet">
-    <div class="card border-secondary">
-      <div class="card-header">
-        <span *ngIf="currentSet?.name">{{ currentSet?.name }}</span>
-        <span *ngIf="!currentSet?.name">{{ 'editor.default-set-name' | translate }}</span>
-      </div>
-      <div class="card-body">
-
-        <div class="form-group">
-          <label for="setName">{{ 'editor.set-name' | translate }}</label>
-          <input type="text" class="form-control" [(ngModel)]="currentSet.name" maxlength="50" id="setName" placeholder="{{ 'editor.default-set-name' | translate }}">
+  @if (currentSet && !loadingSet) {
+    <div class="col-md-8">
+      <div class="card border-secondary">
+        <div class="card-header">
+          @if (currentSet?.name) {
+            <span>{{ currentSet?.name }}</span>
+          }
+          @if (!currentSet?.name) {
+            <span>{{ 'editor.default-set-name' | translate }}</span>
+          }
         </div>
-
-        <div class="row">
-          <div class="col-lg">
-            <div class="form-group">
-              <label>{{ 'editor.available-compositions' | translate }}</label>
-
-              <input type="text" class="form-control input-block mb-3" id="searchCompositions" placeholder="{{ 'editor.search-compositions' | translate }}"
-                (input)="filterCompositions($event.target.value)">
-
-              <div class="card border-secondary" style="height: 400px; overflow-y: scroll;">
-                <div class="card-body p-0">
-                  <div class="list-group list-group-flush">
-                    <a *ngIf="loadingCompositions" (click)="selectComposition(composition); false" href="#" class="list-group-item list-group-item-action flex-column align-items-start d-flex">
-                      <p class="mb-0 mx-auto">
-                        <i class="fa fa-spinner fa-pulse fa-fw"></i>
-                      </p>
-                    </a>
-
-                    <div class="list-group-item" *ngFor="let composition of filteredCompositions" [hidden]="!showAvailableComposition(composition)">
-                      <div class="row">
-                        <div class="col-10 col-auto my-auto">
-                          <p class="mb-0">{{ composition.name }}</p>
-                        </div>
-                        <div class="col-2 my-auto">
-                          <a class="btn btn-primary btn-sm float-right" href="#" role="button" (click)="addComposition(composition); false">
-                            <i class="fa fa-chevron-right" aria-hidden="true"></i>
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-            </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label for="setName">{{ 'editor.set-name' | translate }}</label>
+            <input type="text" class="form-control" [(ngModel)]="currentSet.name" maxlength="50" id="setName" placeholder="{{ 'editor.default-set-name' | translate }}">
           </div>
-
-          <div class="col-lg">
-            <div class="form-group">
-              <label>{{ 'editor.compositions-in-set' | translate }}</label>
-
-              <div class="card border-secondary" style="height: 450px; overflow-y: scroll;">
-                <div class="card-body p-0">
-                  <div class="list-group list-group-flush" [sortablejs]="currentSet?.compositionList">
-                    <div class="list-group-item" *ngFor="let composition of currentSet?.compositionList">
-                      <div class="row">
-                        <div class="col-auto list-sort-handle my-auto" style="cursor: move; cursor: -webkit-grabbing;">
-                          <i class="fa fa-bars" aria-hidden="true"></i>
-                        </div>
-                        <a href="#" class="col-auto pl-0 my-auto" (click)="toggleAutoStartNextComposition(composition); false" [class.text-white]="!composition.autoStartNextComposition">
-                          <i class="fa fa-level-down" aria-hidden="true"></i>
+          <div class="row">
+            <div class="col-lg">
+              <div class="form-group">
+                <label>{{ 'editor.available-compositions' | translate }}</label>
+                <input type="text" class="form-control input-block mb-3" id="searchCompositions" placeholder="{{ 'editor.search-compositions' | translate }}"
+                  (input)="filterCompositions($event.target.value)">
+                <div class="card border-secondary" style="height: 400px; overflow-y: scroll;">
+                  <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                      @if (loadingCompositions) {
+                        <a (click)="selectComposition(composition); false" href="#" class="list-group-item list-group-item-action flex-column align-items-start d-flex">
+                          <p class="mb-0 mx-auto">
+                            <i class="fa fa-spinner fa-pulse fa-fw"></i>
+                          </p>
                         </a>
-                        <div class="col-auto flex-grow text-break-word col-auto my-auto pl-0">
-                          <p class="mb-0">{{ composition.name }}</p>
+                      }
+                      @for (composition of filteredCompositions; track composition) {
+                        <div class="list-group-item" [hidden]="!showAvailableComposition(composition)">
+                          <div class="row">
+                            <div class="col-10 col-auto my-auto">
+                              <p class="mb-0">{{ composition.name }}</p>
+                            </div>
+                            <div class="col-2 my-auto">
+                              <a class="btn btn-primary btn-sm float-right" href="#" role="button" (click)="addComposition(composition); false">
+                                <i class="fa fa-chevron-right" aria-hidden="true"></i>
+                              </a>
+                            </div>
+                          </div>
                         </div>
-                        <div class="col-auto my-auto">
-                          <a class="btn btn-primary btn-sm float-right" href="#" role="button" (click)="removeComposition(composition); false">
-                            <i class="fa fa-minus" aria-hidden="true"></i>
-                          </a>
-                        </div>
-                      </div>
+                      }
                     </div>
                   </div>
                 </div>
               </div>
-
+            </div>
+            <div class="col-lg">
+              <div class="form-group">
+                <label>{{ 'editor.compositions-in-set' | translate }}</label>
+                <div class="card border-secondary" style="height: 450px; overflow-y: scroll;">
+                  <div class="card-body p-0">
+                    <div class="list-group list-group-flush" [sortablejs]="currentSet?.compositionList">
+                      @for (composition of currentSet?.compositionList; track composition) {
+                        <div class="list-group-item">
+                          <div class="row">
+                            <div class="col-auto list-sort-handle my-auto" style="cursor: move; cursor: -webkit-grabbing;">
+                              <i class="fa fa-bars" aria-hidden="true"></i>
+                            </div>
+                            <a href="#" class="col-auto pl-0 my-auto" (click)="toggleAutoStartNextComposition(composition); false" [class.text-white]="!composition.autoStartNextComposition">
+                              <i class="fa fa-level-down" aria-hidden="true"></i>
+                            </a>
+                            <div class="col-auto flex-grow text-break-word col-auto my-auto pl-0">
+                              <p class="mb-0">{{ composition.name }}</p>
+                            </div>
+                            <div class="col-auto my-auto">
+                              <a class="btn btn-primary btn-sm float-right" href="#" role="button" (click)="removeComposition(composition); false">
+                                <i class="fa fa-minus" aria-hidden="true"></i>
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-      </div>
-
-      <div class="card-footer d-flex" style="justify-content: space-between;">
-        <a class="mr-3 my-auto text-danger" *ngIf="!currentComposition?.isNew" href="#" role="button" (click)="delete(); false">
-          <i class="fa fa-trash-o" aria-hidden="true"></i> {{ 'misc.delete' | translate }}
-        </a>
-
-        <div class="d-flex">
-          <a class="mr-3 my-auto" href="#" role="button" (click)="unselect(); false">
-            {{ 'misc.cancel' | translate }}
-          </a>
-          <button type="button" class="btn btn-primary" href="#" role="button" (click)="save(currentSet); false" [disabled]=" savingSet || !currentSet || !currentSet.name || currentSet.name.length < 1 || currentSet.name.length > 50"
-            role="button">
-
-            <i *ngIf="savingSet" class="fa fa-spinner fa-pulse fa-fw" aria-hidden="true"></i>
-            <i *ngIf="!savingSet" class="fa fa-floppy-o fa-fw" aria-hidden="true"></i> {{ 'misc.save' | translate }}
-          </button>
+        <div class="card-footer d-flex" style="justify-content: space-between;">
+          @if (!currentComposition?.isNew) {
+            <a class="mr-3 my-auto text-danger" href="#" role="button" (click)="delete(); false">
+              <i class="fa fa-trash-o" aria-hidden="true"></i> {{ 'misc.delete' | translate }}
+            </a>
+          }
+          <div class="d-flex">
+            <a class="mr-3 my-auto" href="#" role="button" (click)="unselect(); false">
+              {{ 'misc.cancel' | translate }}
+            </a>
+            <button type="button" class="btn btn-primary" href="#" role="button" (click)="save(currentSet); false" [disabled]=" savingSet || !currentSet || !currentSet.name || currentSet.name.length < 1 || currentSet.name.length > 50"
+              role="button">
+              @if (savingSet) {
+                <i class="fa fa-spinner fa-pulse fa-fw" aria-hidden="true"></i>
+              }
+              @if (!savingSet) {
+                <i class="fa fa-floppy-o fa-fw" aria-hidden="true"></i>
+                } {{ 'misc.save' | translate }}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    }
+
+    <!-- No current set selected -->
+    @if (!currentSet && !loadingSet) {
+      <div class="col-md-8 text-center d-flex">
+        <div class="d-flex m-auto">
+          <i>{{ 'editor.select-set' | translate }}</i>
+        </div>
+      </div>
+    }
+
+    <!-- Loading a set -->
+    @if (loadingSet) {
+      <div class="col-md-8 text-center d-flex">
+        <div class="d-flex m-auto">
+          <i class="fa fa-spinner fa-pulse fa-2x fa-fw"></i>
+        </div>
+      </div>
+    }
 
   </div>
-
-  <!-- No current set selected -->
-  <div class="col-md-8 text-center d-flex" *ngIf="!currentSet && !loadingSet">
-    <div class="d-flex m-auto">
-      <i>{{ 'editor.select-set' | translate }}</i>
-    </div>
-  </div>
-
-  <!-- Loading a set -->
-  <div class="col-md-8 text-center d-flex" *ngIf="loadingSet">
-    <div class="d-flex m-auto">
-      <i class="fa fa-spinner fa-pulse fa-2x fa-fw"></i>
-    </div>
-  </div>
-
-</div>

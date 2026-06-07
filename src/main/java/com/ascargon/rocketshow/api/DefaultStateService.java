@@ -1,24 +1,27 @@
 package com.ascargon.rocketshow.api;
 
-import com.ascargon.rocketshow.PlayerService;
-import com.ascargon.rocketshow.composition.CompositionPlayer;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
+import com.ascargon.rocketshow.play.PlayerService;
 import org.springframework.stereotype.Service;
 
 @Service
 public class DefaultStateService implements StateService {
 
-    private int getCompositionIndexWithoutSet(CompositionService compositionService, String compositionName) {
+    private int getCompositionIndexWithoutSet(
+            CompositionService compositionService,
+            String compositionName
+    ) {
         return compositionService.getCompositionIndex(compositionName);
     }
 
     @Override
-    public State getCurrentState(PlayerService playerService, SetService setService, CompositionService compositionService) {
+    public State getCurrentState(
+            PlayerService playerService,
+            SetService setService,
+            CompositionService compositionService
+    ) {
         State currentState = new State();
-
-        currentState.setPlayState(CompositionPlayer.PlayState.STOPPED);
-        currentState.setCurrentCompositionIndex(0);
 
         if (playerService != null) {
             currentState.setPlayState(playerService.getPlayState());

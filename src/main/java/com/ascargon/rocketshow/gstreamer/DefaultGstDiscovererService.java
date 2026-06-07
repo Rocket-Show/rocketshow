@@ -32,16 +32,21 @@ public class DefaultGstDiscovererService implements GstDiscovererService {
 
         Pointer discovererInformation = PB_UTILS_API.gst_discoverer_discover_uri(discoverer, "file://" + path, error);
 
-        // timing out is fine most of the time, because the required info is still found
-        if (PB_UTILS_API.gst_discoverer_info_get_result(discovererInformation)
-                != PbUtilsApi.GstDiscovererResult.GST_DISCOVERER_OK
-                && PB_UTILS_API.gst_discoverer_info_get_result(discovererInformation)
-                != PbUtilsApi.GstDiscovererResult.GST_DISCOVERER_TIMEOUT
-        ) {
-            // Unfortunately, error.message is always null. Don't know why. And
-            // getting the message from domain and code also does not work.
+        PbUtilsApi.GstDiscovererResult result = PB_UTILS_API.gst_discoverer_info_get_result(discovererInformation);
 
-            throw new Exception("Could not get media information for file " + path + ". Result: " + PB_UTILS_API.gst_discoverer_info_get_result(discovererInformation).toString());
+        // OK and TIMEOUT are always fine (timeout still yields partial info)
+        if (result != PbUtilsApi.GstDiscovererResult.GST_DISCOVERER_OK
+                && result != PbUtilsApi.GstDiscovererResult.GST_DISCOVERER_TIMEOUT) {
+
+            // For ERROR results (e.g. HEVC on v4l2 hardware decoders), the container
+            // metadata is often fully parsed even though a codec plugin fails. Treat it
+            // as a warning when a valid duration was still extracted.
+            if (result == PbUtilsApi.GstDiscovererResult.GST_DISCOVERER_ERROR
+                    && PB_UTILS_API.gst_discoverer_info_get_duration(discovererInformation) > 0) {
+                logger.warn("GstDiscoverer reported an error for '{}' but media information was still recovered (result: {}). Continuing.", path, result);
+            } else {
+                throw new Exception("Could not get media information for file " + path + ". Result: " + result);
+            }
         }
 
         return discovererInformation;

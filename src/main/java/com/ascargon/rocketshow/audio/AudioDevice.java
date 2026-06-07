@@ -1,37 +1,33 @@
 package com.ascargon.rocketshow.audio;
 
-import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.Objects;
 
 @XmlRootElement
+@Getter
+@Setter
 public class AudioDevice {
 
-	private int id;
-	private String key;
-	private String name;
+    private int id;
+    private String key;
+    private String name;
 
-	public String getKey() {
-		return key;
-	}
-	
-	public void setKey(String key) {
-		this.key = key;
-	}
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AudioDevice that = (AudioDevice) o;
+        return id == that.id &&
+                Objects.equals(key, that.key) &&
+                Objects.equals(name, that.name);
+    }
 
-	public String getName() {
-		return name;
-	}
-	
-	public void setName(String name) {
-		this.name = name;
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, key, name);
+    }
 
-	public int getId() {
-		return id;
-	}
-	
-	public void setId(int id) {
-		this.id = id;
-	}
-	
 }

@@ -28,7 +28,6 @@ public class OperatingSystemInformation {
     private SubType subType = SubType.UNKNOWN;
     private ArchitectureType architectureType = ArchitectureType.UNKNOWN;
     private RaspberryVersion raspberryVersion = RaspberryVersion.UNKNOWN;
-    private Boolean isRaspberryPi = false;
 
     public Type getType() {
         return type;
@@ -62,11 +61,4 @@ public class OperatingSystemInformation {
         this.raspberryVersion = raspberryVersion;
     }
 
-    public Boolean getRaspberryPi() {
-        return isRaspberryPi;
-    }
-
-    public void setRaspberryPi(Boolean raspberryPi) {
-        isRaspberryPi = raspberryPi;
-    }
 }

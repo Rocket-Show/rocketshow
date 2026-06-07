@@ -1,14 +1,24 @@
 package com.ascargon.rocketshow.api;
 
-import com.ascargon.rocketshow.PlayerService;
-import com.ascargon.rocketshow.SessionService;
-import com.ascargon.rocketshow.Settings;
-import com.ascargon.rocketshow.SettingsService;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
+import com.ascargon.rocketshow.health.HealthService;
+import com.ascargon.rocketshow.health.HealthStatus;
+import com.ascargon.rocketshow.lighting.LightingService;
+import com.ascargon.rocketshow.lighting.LightingUniverse;
+import com.ascargon.rocketshow.lighting.OlaPlugin;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.midi.MidiDeviceInService;
 import com.ascargon.rocketshow.midi.MidiDeviceOutService;
+import com.ascargon.rocketshow.play.PlayerService;
+import com.ascargon.rocketshow.settings.ApiKey;
+import com.ascargon.rocketshow.settings.Settings;
+import com.ascargon.rocketshow.settings.SettingsService;
+import com.ascargon.rocketshow.settings.SettingsUpdateSystemService;
+import com.ascargon.rocketshow.update.UpdateService;
+import com.ascargon.rocketshow.update.UpdateState;
+import com.ascargon.rocketshow.update.VersionInfo;
+import com.ascargon.rocketshow.update.VersionService;
 import com.ascargon.rocketshow.util.*;
 import jakarta.xml.bind.JAXBException;
 import org.slf4j.Logger;
@@ -17,6 +27,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,6 +35,8 @@ import java.io.FileInputStream;
 import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController()
 @RequestMapping("${spring.data.rest.base-path}/system")
@@ -31,6 +44,8 @@ import java.net.UnknownHostException;
 class SystemController {
 
     private final static Logger logger = LoggerFactory.getLogger(SystemController.class);
+
+    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     private final ControllerService controllerService;
     private final StateService stateService;
@@ -46,12 +61,47 @@ class SystemController {
     private final LogDownloadService logDownloadService;
     private final DiskSpaceService diskSpaceService;
     private final OperatingSystemInformationService operatingSystemInformationService;
-    private final SessionService sessionService;
     private final CompositionService compositionService;
     private final DesignerService designerService;
     private final BackupService backupService;
+    private final SettingsUpdateSystemService settingsUpdateSystemService;
+    private final ActionExecutionService actionExecutionService;
+    private final DeviceInformationService deviceInformationService;
+    private final HealthService healthService;
+    private final VersionService versionService;
+    private final SshService sshService;
+    private final LightingService lightingService;
+    private final LanService lanService;
+    private final BuildInfoService buildInfoService;
 
-    public SystemController(ControllerService controllerService, StateService stateService, SetService setService, PlayerService playerService, RebootService rebootService, ShutdownService shutdownService, SettingsService settingsService, MidiDeviceInService midiDeviceInService, MidiDeviceOutService midiDeviceOutService, UpdateService updateService, FactoryResetService factoryResetService, LogDownloadService logDownloadService, DiskSpaceService diskSpaceService, OperatingSystemInformationService operatingSystemInformationService, SessionService sessionService, CompositionService compositionService, DesignerService designerService, BackupService backupService) {
+    public SystemController(
+            ControllerService controllerService,
+            StateService stateService,
+            SetService setService,
+            PlayerService playerService,
+            RebootService rebootService,
+            ShutdownService shutdownService,
+            SettingsService settingsService,
+            MidiDeviceInService midiDeviceInService,
+            MidiDeviceOutService midiDeviceOutService,
+            UpdateService updateService,
+            FactoryResetService factoryResetService,
+            LogDownloadService logDownloadService,
+            DiskSpaceService diskSpaceService,
+            OperatingSystemInformationService operatingSystemInformationService,
+            CompositionService compositionService,
+            DesignerService designerService,
+            BackupService backupService,
+            SettingsUpdateSystemService settingsUpdateSystemService,
+            ActionExecutionService actionExecutionService,
+            DeviceInformationService deviceInformationService,
+            HealthService healthService,
+            VersionService versionService,
+            SshService sshService,
+            LightingService lightingService,
+            LanService lanService,
+            BuildInfoService buildInfoService
+    ) {
         this.controllerService = controllerService;
         this.stateService = stateService;
         this.setService = setService;
@@ -66,10 +116,22 @@ class SystemController {
         this.logDownloadService = logDownloadService;
         this.diskSpaceService = diskSpaceService;
         this.operatingSystemInformationService = operatingSystemInformationService;
-        this.sessionService = sessionService;
         this.compositionService = compositionService;
         this.designerService = designerService;
         this.backupService = backupService;
+        this.settingsUpdateSystemService = settingsUpdateSystemService;
+        this.actionExecutionService = actionExecutionService;
+        this.deviceInformationService = deviceInformationService;
+        this.healthService = healthService;
+        this.versionService = versionService;
+        this.sshService = sshService;
+        this.lightingService = lightingService;
+        this.lanService = lanService;
+        this.buildInfoService = buildInfoService;
+    }
+
+    private void settingsUpdateSystem() {
+        settingsUpdateSystemService.update();
     }
 
     @ExceptionHandler(Exception.class)
@@ -89,6 +151,11 @@ class SystemController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @PostMapping("enable-ssh")
+    public ResponseEntity<String> enableSsh() throws Exception {
+        return ResponseEntity.ok(sshService.enableSsh());
+    }
+
     @PostMapping("reload-settings")
     public ResponseEntity<Void> reloadSettings() throws Exception {
         settingsService.load();
@@ -105,13 +172,13 @@ class SystemController {
 
     @GetMapping("current-version")
     public VersionInfo version() throws Exception {
-        return updateService.getCurrentVersionInfo();
+        return versionService.getCurrentVersionInfo();
     }
 
     @GetMapping("remote-version")
     public ResponseEntity<VersionInfo> remoteVersion(@RequestParam(value = "testBranch", required = false, defaultValue = "false") boolean testBranch) throws Exception {
         try {
-            return ResponseEntity.ok(updateService.getRemoteVersionInfo(testBranch));
+            return ResponseEntity.ok(versionService.getRemoteVersionInfo(testBranch));
         } catch (UnknownHostException | ConnectException | SocketTimeoutException e) {
             logger.warn("No internet connection while checking for remote version: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
@@ -126,9 +193,16 @@ class SystemController {
 
     @GetMapping("state")
     public com.ascargon.rocketshow.api.State getState() {
-        State state = stateService.getCurrentState(playerService, setService, compositionService);
-        state.setUpdateFinished(sessionService.getSession().isUpdateFinished());
-        return state;
+        return stateService.getCurrentState(
+                playerService,
+                setService,
+                compositionService
+        );
+    }
+
+    @GetMapping("update-state")
+    public UpdateState getUpdateState() {
+        return updateService.getCurrentState();
     }
 
     @GetMapping("settings")
@@ -138,8 +212,29 @@ class SystemController {
 
     @PostMapping("settings")
     public ResponseEntity<Void> saveSettings(@RequestBody Settings settings) throws JAXBException {
+        // Process API keys
+        for (ApiKey apiKey : settings.getApiKeyList()) {
+            if (apiKey.getKey() != null && !apiKey.getKey().isEmpty()) {
+                // New key: Hash it
+                apiKey.setKeyHash(encoder.encode(apiKey.getKey()));
+                apiKey.setKey(null);
+            } else {
+                // Existing key: Keep the old hash (not loaded to the frontend)
+                for (ApiKey existingApiKey : settingsService.getSettings().getApiKeyList()) {
+                    if (existingApiKey.getUuid().equals(apiKey.getUuid())) {
+                        apiKey.setKeyHash(existingApiKey.getKeyHash());
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Preserve the admin hash
+        settings.setAdminPasswordHash(settingsService.getSettings().getAdminPasswordHash());
+
         settingsService.setSettings(settings);
         settingsService.save();
+        settingsUpdateSystem();
 
         if (settings.getDesignerLivePreview()) {
             designerService.startPreview(0);
@@ -150,9 +245,26 @@ class SystemController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @PostMapping("settings-lighting-ola-plugins")
+    public ResponseEntity<Void> updateLightingOlaPlugins(@RequestBody List<OlaPlugin> olaPluginList) throws JAXBException {
+        settingsService.getSettings().setLightingOlaPluginList(olaPluginList);
+        settingsService.save();
+        settingsUpdateSystem();
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("settings-lighting-universes")
+    public ResponseEntity<Void> updateLightingUniverses(@RequestBody List<LightingUniverse> lightingUniverseList) throws JAXBException {
+        lightingService.updateUniverses(lightingUniverseList);
+        settingsService.getSettings().setLightingUniverseList(lightingUniverseList);
+        settingsService.save();
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     @PostMapping("factory-reset")
     public ResponseEntity<Void> factoryReset() throws Exception {
         factoryResetService.reset();
+        rebootService.reboot();
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -170,6 +282,11 @@ class SystemController {
     @GetMapping("operating-system-information")
     public OperatingSystemInformation getOperatingSystemInformation() {
         return operatingSystemInformationService.getOperatingSystemInformation();
+    }
+
+    @GetMapping("build-info")
+    public BuildInfo getBuildInfo() {
+        return buildInfoService.getBuildInfo();
     }
 
     @GetMapping("create-backup")
@@ -191,6 +308,43 @@ class SystemController {
         if (dzchunkindex.equals(dztotalchunkcount - 1)) {
             backupService.restoreFinish();
         }
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("execute-action")
+    public ResponseEntity<Void> executeAction(@RequestBody Action action) throws Exception {
+        // ensure, the action is only executed locally
+        action.setExecuteLocally(true);
+        action.setRemoteDeviceNames(new ArrayList<>());
+
+        actionExecutionService.execute(action);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @GetMapping("device-information")
+    public DeviceInformation getDeviceInformation() throws Exception {
+        return deviceInformationService.getDeviceInformation();
+    }
+
+    @PostMapping("device-information")
+    public ResponseEntity<Void> storeDeviceInformation(@RequestBody DeviceInformation deviceInformation) throws Exception {
+        deviceInformationService.storeDeviceInformation(deviceInformation);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @GetMapping("lan-info")
+    public LanInfo getLanInfo() {
+        return lanService.getLanInfo();
+    }
+
+    @GetMapping("health")
+    public HealthStatus getHealth() {
+        return healthService.getHealthStatus();
+    }
+
+    @PostMapping("test")
+    public ResponseEntity<Void> test() {
+        healthService.testSystem();
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

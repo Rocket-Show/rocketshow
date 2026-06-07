@@ -1,0 +1,71 @@
+<div class="form-group row">
+    <label class="col-lg-3 col-form-label">{{
+        "settings.password" | translate
+        }}</label>
+    <div class="col-lg-9">
+        <a href="#" class="btn btn-primary" (click)="changePassword(); (false)">
+            <i class="fa fa-pencil fa-fw" aria-hidden="true"></i>
+            {{ "settings.change" | translate }}</a>
+    </div>
+</div>
+
+@if (deviceInformation?.available) {
+<div class="form-group row">
+    <div class="col-lg-3 col-form-label">
+        {{ "settings.secure-connection" | translate }}
+    </div>
+    <div class="col-lg-9 d-flex py-2" style="flex-direction: column;">
+        <div class="form-check my-auto">
+            <input type="checkbox" [ngModel]="settings?.tlsEnable" (ngModelChange)="settings.tlsEnable = $event"
+                class="form-check-input" id="enableTls" />
+
+            <label class="form-check-label" for="enableTls">
+                {{ "settings.secure-connection-enable" | translate }}
+            </label>
+        </div>
+
+        @if(settings.tlsEnable) {
+        <p class="mt-3 mb-0">{{ 'misc.enable-tls-info' | translate }}</p>
+        }
+    </div>
+</div>
+}
+
+<div class="form-group row">
+    <label class="col-lg-3 col-form-label">{{
+        "settings.api-keys" | translate
+        }}</label>
+    <div class="col-lg-9">
+        <div class="list-group" [sortablejs]="settings?.apiKeyList" [sortablejsOptions]="{ onMove: sortMove }">
+            @for (apiKey of settings?.apiKeyList; track apiKey; let i = $index) {
+            <div class="list-group-item">
+                <div class="form-group row mb-0">
+                    <div class="col-11">
+                        {{ apiKey.description }}
+                    </div>
+                    <div class="col-1">
+                        <a class="text-danger" href="#" role="button" (click)="deleteApiKey(i); false">
+                            <i class="fa fa-trash-o" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            }
+
+            <a href="#" (click)="addApiKey(); false" class="no-sortjs list-group-item text-center">
+                <i class="fa fa-plus" aria-hidden="true"></i> {{ 'settings.add-api-key' | translate }}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="form-group row">
+    <label class="col-lg-3 col-form-label">{{
+        "settings.session" | translate
+        }}</label>
+    <div class="col-lg-9">
+        <a href="#" class="btn btn-primary" (click)="logout(); (false)">
+            <i class="fa fa-sign-out fa-fw" aria-hidden="true"></i>
+            {{ "settings.logout" | translate }}</a>
+    </div>
+</div>

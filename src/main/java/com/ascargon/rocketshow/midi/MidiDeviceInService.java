@@ -12,6 +12,6 @@ public interface MidiDeviceInService {
 
     void reconnectMidiDevice() throws MidiUnavailableException;
 
-    javax.sound.midi.MidiDevice getMidiInDevice();
+    javax.sound.midi.MidiDevice getMidiDevice();
 
 }

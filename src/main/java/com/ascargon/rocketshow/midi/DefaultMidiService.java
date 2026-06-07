@@ -1,20 +1,24 @@
 package com.ascargon.rocketshow.midi;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import purejavacomm.CommPort;
+import purejavacomm.CommPortIdentifier;
+import purejavacomm.SerialPort;
 
+import jakarta.annotation.PreDestroy;
 import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
-
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-import org.springframework.stereotype.Service;
+import java.util.*;
 
 @Service
 public class DefaultMidiService implements MidiService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultMidiService.class);
+
+    private final Map<String, SerialPort> openMidiSerialDevices = new HashMap<>();
 
     private boolean isDeviceAllowed(String name) {
         return !(name.equals("Real Time Sequencer") || name.equals("Gervill"));
@@ -37,56 +41,91 @@ public class DefaultMidiService implements MidiService {
         MidiDevice.Info[] midiDeviceInfos = MidiSystem.getMidiDeviceInfo();
 
         if (midiDevice != null) {
-            // Search for a device with same id and name
-            if (midiDeviceInfos.length > midiDevice.getId()) {
-                if (midiDeviceInfos[midiDevice.getId()].getName().equals(midiDevice.getName())) {
-                    MidiDevice hardwareMidiDevice = MidiSystem.getMidiDevice(midiDeviceInfos[midiDevice.getId()]);
+            return null;
+        }
 
-                    if (midiDeviceHasDirection(hardwareMidiDevice, midiDirection)) {
-                        logger.debug("Found MIDI device with same ID and name");
-                        return hardwareMidiDevice;
-                    }
-                }
-            }
-
-            // Search for a device with the same name
-            for (MidiDevice.Info midiDeviceInfo : midiDeviceInfos) {
-                if (midiDeviceInfo.getName().equals(midiDevice.getName())) {
-                    MidiDevice hardwareMidiDevice = MidiSystem.getMidiDevice(midiDeviceInfo);
-
-                    if (midiDeviceHasDirection(hardwareMidiDevice, midiDirection)) {
-                        logger.debug("Found MIDI device with same name");
-                        return hardwareMidiDevice;
-                    }
-                }
-            }
-
-            // Search for a device with the same id
-            if (midiDeviceInfos.length > midiDevice.getId()) {
+        // Search for a device with same id and name
+        if (midiDeviceInfos.length > midiDevice.getId()) {
+            if (midiDeviceInfos[midiDevice.getId()].getName().equals(midiDevice.getName())) {
                 MidiDevice hardwareMidiDevice = MidiSystem.getMidiDevice(midiDeviceInfos[midiDevice.getId()]);
 
                 if (midiDeviceHasDirection(hardwareMidiDevice, midiDirection)) {
-                    logger.debug("Found MIDI device with same ID");
+                    logger.debug("Found MIDI device with same ID and name");
                     return hardwareMidiDevice;
                 }
             }
         }
 
-        // Return the default device, if no device has been found or no settings
-        // have been specified
-        logger.trace(
-                "No settings provided or no device found for the provided settings. Return default MIDI device, if available");
-
+        // Search for a device with the same name
         for (MidiDevice.Info midiDeviceInfo : midiDeviceInfos) {
-            MidiDevice hardwareMidiDevice = MidiSystem.getMidiDevice(midiDeviceInfo);
+            if (midiDeviceInfo.getName().equals(midiDevice.getName())) {
+                MidiDevice hardwareMidiDevice = MidiSystem.getMidiDevice(midiDeviceInfo);
+
+                if (midiDeviceHasDirection(hardwareMidiDevice, midiDirection)) {
+                    logger.debug("Found MIDI device with same name");
+                    return hardwareMidiDevice;
+                }
+            }
+        }
+
+        // Search for a device with the same id
+        if (midiDeviceInfos.length > midiDevice.getId()) {
+            MidiDevice hardwareMidiDevice = MidiSystem.getMidiDevice(midiDeviceInfos[midiDevice.getId()]);
 
             if (midiDeviceHasDirection(hardwareMidiDevice, midiDirection)) {
-                logger.debug("Default MIDI device found");
+                logger.debug("Found MIDI device with same ID");
                 return hardwareMidiDevice;
             }
         }
 
         logger.trace("No MIDI device found");
+        return null;
+    }
+
+    @Override
+    public synchronized SerialPort getHardwareMidiSerialDevice(com.ascargon.rocketshow.midi.MidiDevice midiDevice,
+                                                               MidiDirection midiDirection) {
+
+        logger.trace("Search for a serial MIDI device with name '" + midiDevice.getName() + "'...");
+
+        // Return the already opened device, if available
+        SerialPort openSerialPort = openMidiSerialDevices.get(midiDevice.getName());
+        if (openSerialPort != null) {
+            return openSerialPort;
+        }
+
+        try {
+            CommPortIdentifier portId = CommPortIdentifier.getPortIdentifier(midiDevice.getName());
+
+            if (portId.isCurrentlyOwned()) {
+                logger.error("Could not open MIDI serial port, because it is already in use.");
+                return null;
+            }
+
+            logger.info("Open MIDI serial port...");
+
+            CommPort commPort = portId.open("MidiSerialApp", 2000);
+            if (commPort instanceof SerialPort serialPort) {
+                serialPort.setSerialPortParams(
+                        31250, // MIDI baud rate
+                        SerialPort.DATABITS_8,
+                        SerialPort.STOPBITS_1,
+                        SerialPort.PARITY_NONE
+                );
+
+                serialPort.notifyOnDataAvailable(true);
+                serialPort.notifyOnOutputEmpty(true);
+                serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
+
+                logger.info("MIDI serial port opened. Ready to receive and send MIDI data.");
+                openMidiSerialDevices.put(midiDevice.getName(), serialPort);
+
+                return serialPort;
+            }
+        } catch (Exception e) {
+            logger.error("Could not open MIDI serial port '" + midiDevice.getName() + "'", e);
+        }
+
         return null;
     }
 
@@ -112,7 +151,34 @@ public class DefaultMidiService implements MidiService {
             }
         }
 
+        // Add all available serial ports
+        int index = midiDeviceList.size();
+        Enumeration<CommPortIdentifier> portList = CommPortIdentifier.getPortIdentifiers();
+
+        while (portList.hasMoreElements()) {
+            CommPortIdentifier portId = portList.nextElement();
+            if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
+                com.ascargon.rocketshow.midi.MidiDevice midiDevice = new com.ascargon.rocketshow.midi.MidiDevice();
+                midiDevice.setSerialPort(true);
+                midiDevice.setId(index);
+                midiDevice.setName(portId.getName());
+                midiDevice.setDescription("Serial port");
+                midiDeviceList.add(midiDevice);
+
+                index++;
+            }
+        }
+
         return midiDeviceList;
+    }
+
+
+    @PreDestroy
+    private void close() {
+        for (Map.Entry<String, SerialPort> entry : openMidiSerialDevices.entrySet()) {
+            SerialPort port = entry.getValue();
+            port.close();
+        }
     }
 
 }

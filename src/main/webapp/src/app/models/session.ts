@@ -1,15 +1,13 @@
 export class Session {
-    firstStart: boolean = false;
-    updateFinished: boolean = false;
     autoSelectNextComposition: boolean = false;
+    playViewMode: 'setlist' | 'grid' = 'setlist';
 
     constructor(data?: any) {
         if(!data) {
         	return;
         }
-        
-        this.firstStart = data.firstStart;
-        this.updateFinished = data.updateFinished;
+
         this.autoSelectNextComposition = data.autoSelectNextComposition;
+        this.playViewMode = data.playViewMode || 'setlist';
     }
 }

@@ -37,16 +37,12 @@ export class SessionService {
     return this.observable;
   }
 
-  introFinished(): Observable<Object> {
-    return this.http.post('session/wizard-finished', undefined);
-  }
-
-  introReset(): Observable<Object> {
-    return this.http.post('session/wizard-reset', undefined);
-  }
-
   setAutoSelectNextComposition(value: boolean): Observable<Object> {
     return this.http.post('session/set-auto-select-next-composition?value=' + value, undefined);
+  }
+
+  setPlayViewMode(value: string): Observable<Object> {
+    return this.http.post('session/set-play-view-mode?value=' + value, undefined);
   }
 
 }

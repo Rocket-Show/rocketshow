@@ -1,0 +1,50 @@
+.particle-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: -100;
+}
+
+.particle {
+    position: absolute;
+    display: block;
+    border-radius: 50%;
+    background: radial-gradient(circle,
+            rgba(var(--particle-color), 0.95) 0%,
+            rgba(var(--particle-color), 0.35) 90%,
+            rgba(var(--particle-color), 0) 100%);
+    box-shadow:
+        0 0 6px rgba(var(--particle-color), 0.35),
+        0 0 14px rgba(var(--particle-color), 0.2);
+    will-change: transform, opacity;
+    animation: particleFloat ease-in-out infinite alternate;
+}
+
+@keyframes particleFloat {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    25% {
+        transform: translate3d(calc(var(--drift-x) * 0.35),
+                calc(var(--drift-y) * -0.25),
+                0) scale(1.08);
+    }
+
+    50% {
+        transform: translate3d(calc(var(--drift-x) * -0.2),
+                calc(var(--drift-y) * 0.45),
+                0) scale(0.92);
+    }
+
+    75% {
+        transform: translate3d(calc(var(--drift-x) * 0.7),
+                calc(var(--drift-y) * 0.2),
+                0) scale(1.04);
+    }
+
+    100% {
+        transform: translate3d(var(--drift-x), var(--drift-y), 0) scale(0.96);
+    }
+}

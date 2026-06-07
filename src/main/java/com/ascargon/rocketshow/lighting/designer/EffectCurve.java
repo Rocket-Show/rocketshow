@@ -1,6 +1,5 @@
 package com.ascargon.rocketshow.lighting.designer;
 
-import com.ascargon.rocketshow.composition.CompositionPlayer;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

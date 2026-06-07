@@ -1,0 +1,122 @@
+<div class="form-group row">
+  <label class="col-md-3 col-form-label">{{ "action.type" | translate }}</label>
+  <div class="col-md-9">
+    <select
+      class="custom-select"
+      [ngModel]="action.type"
+      (ngModelChange)="onActionTypeChange($event)"
+      >
+      <option value="TRANSPORT">
+        {{ "action.type-enum.TRANSPORT" | translate }}
+      </option>
+      <option value="SYSTEM">
+        {{ "action.type-enum.SYSTEM" | translate }}
+      </option>
+      <option value="MIDI">{{ "action.type-enum.MIDI" | translate }}</option>
+      <option value="LIGHTING">
+        {{ "action.type-enum.LIGHTING" | translate }}
+      </option>
+      <option value="HTTP">{{ "action.type-enum.HTTP" | translate }}</option>
+      <option value="RASPBERRY_GPIO">
+        {{ "action.type-enum.RASPBERRY_GPIO" | translate }}
+      </option>
+      <option value="NULL">{{ "action.type-enum.NULL" | translate }}</option>
+    </select>
+  </div>
+</div>
+
+<!-- The specific action -->
+@if (action.type == 'TRANSPORT') {
+  <app-action-transport
+    [action]="action"
+  ></app-action-transport>
+}
+@if (action.type == 'SYSTEM') {
+  <app-action-system
+    [action]="action"
+  ></app-action-system>
+}
+@if (action.type == 'MIDI') {
+  <app-action-midi
+    [action]="action"
+  ></app-action-midi>
+}
+@if (action.type == 'LIGHTING') {
+  <app-action-lighting
+    [action]="action"
+  ></app-action-lighting>
+}
+@if (action.type == 'HTTP') {
+  <app-action-http
+    [action]="action"
+  ></app-action-http>
+}
+@if (action.type == 'RASPBERRY_GPIO') {
+  <app-action-raspberry-gpio
+    [action]="action"
+  ></app-action-raspberry-gpio>
+}
+@if (action.type == 'NULL') {
+  <app-action-null
+    [action]="action"
+  ></app-action-null>
+}
+
+<!-- Execute locally and/or on remote devices -->
+@if (settingsService.settings?.remoteDeviceList.length > 0) {
+  <div>
+    <div class="form-group row">
+      <label class="col-md-3 col-form-label"></label>
+      <div class="col-md-9">
+        <div class="form-check">
+          <input
+            type="checkbox"
+            [(ngModel)]="action.executeLocally"
+            class="form-check-input"
+            id="{{ uuid }}"
+            />
+          <label class="form-check-label" for="{{ uuid }}">
+            {{ "action.exec-locally" | translate }}
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="form-group row mb-2">
+      <label class="col-md-3 col-form-label">{{
+        "routing.remote-devices" | translate
+      }}</label>
+      <div class="col-md-9">
+        <div class="card border-secondary mb-0">
+          <div class="card-body">
+            <app-remote-device-selection
+              [remoteDeviceList]="action.remoteDeviceList"
+            ></app-remote-device-selection>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Move/delete -->
+<div class="form-group row">
+  <div class="col-md-12 d-flex">
+    <div
+      class="flex-grow-1 list-sort-handle my-auto"
+      style="cursor: move; cursor: -webkit-grabbing"
+      >
+      <i class="fa fa-bars" aria-hidden="true"></i>
+    </div>
+    <div class="ml-auto">
+      <a
+        class="mr-3 my-auto text-danger"
+        href="#"
+        role="button"
+        (click)="delete.next(index); (false)"
+        >
+        <i class="fa fa-trash-o" aria-hidden="true"></i>
+        {{ "misc.delete" | translate }}
+      </a>
+    </div>
+  </div>
+</div>

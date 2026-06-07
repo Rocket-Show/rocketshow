@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 import { ActivityLighting } from '../models/activity-lighting';
-import { $WebSocket, WebSocketConfig } from 'angular2-websocket';
+import { AppWebSocket, WebSocketConfig } from './web-socket';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
@@ -16,43 +16,49 @@ export class ActivityLightingService {
   private wsUrl: string;
 
   // The websocket connection
-  websocket: $WebSocket;
+  websocket: AppWebSocket;
 
   monitors: number = 0;
 
   constructor(private http: HttpClient
   ) {
     // Create the backend-url
+    let protocol = 'ws://';
+
+    if (window.location.protocol === 'https:') {
+      protocol = 'wss://';
+    }
+
     if (environment.name == 'dev') {
-      this.wsUrl = 'ws://' + environment.localBackend + '/';
+      this.wsUrl = protocol + environment.localBackend + '/';
     } else {
-      this.wsUrl = 'ws://' + window.location.hostname + ':' + window.location.port + '/';
+      this.wsUrl = protocol + window.location.hostname + ':' + window.location.port + '/';
     }
 
     this.wsUrl += 'api/activity/lighting';
   }
 
   startMonitor() {
-    this.monitors ++;
+    this.monitors++;
 
-    if(!this.websocket) {
-    // Connect to the websocket backend
-    const wsConfig = { reconnectIfNotNormalClose: true } as WebSocketConfig;
-    this.websocket = new $WebSocket(this.wsUrl, null, wsConfig);
+    if (!this.websocket) {
+      // Connect to the websocket backend
+      const wsConfig = { reconnectIfNotNormalClose: true } as WebSocketConfig;
+      this.websocket = new AppWebSocket(this.wsUrl, undefined, wsConfig);
 
-    this.websocket.onMessage(
-      (msg: MessageEvent) => {
-        this.subject.next(new ActivityLighting(JSON.parse(msg.data)));
-      },
-      { autoApply: false }
-    );
+      this.websocket.onMessage(
+        (msg: MessageEvent) => {
+          this.subject.next(new ActivityLighting(JSON.parse(msg.data)));
+        },
+        { autoApply: false }
+      );
     }
   }
 
   stopMonitor() {
-    this.monitors --;
+    this.monitors--;
 
-    if(this.monitors < 1 && this.websocket) {
+    if (this.monitors < 1 && this.websocket) {
       this.websocket.close();
       this.websocket = undefined;
     }

@@ -1,0 +1,26 @@
+<div class="d-flex">
+  <div class="my-auto" style="float: left; width: 100%">
+    <mv-slider
+      min="0"
+      tooltip="hide"
+      [min]="dbMin"
+      [max]="dbMax"
+      [step]="0.01"
+      [(value)]="volumeSliderValue"
+      (change)="changeDetectorRef.detectChanges()"
+      >
+    </mv-slider>
+  </div>
+  <div
+    class="m-auto"
+    style="padding-left: 15px; padding-right: 5px; width: 30px"
+    >
+    @if (volume != 1) {
+      <span>-</span>
+    }
+  </div>
+  <div class="my-auto">
+    <input type="text" class="slider-input" [(ngModel)]="volumeInputValue" />
+  </div>
+  <div class="m-auto" style="padding-left: 5px">dB</div>
+</div>

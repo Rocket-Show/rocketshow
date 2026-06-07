@@ -1,7 +1,7 @@
 <div class="card-modal">
   <div class="card border-secondary">
     <div class="card-header">
-      {{ "editor.lead-sheets-add" | translate }}
+      {{ "editor.lead-sheet" | translate }}
     </div>
 
     <div class="card-body">
@@ -11,15 +11,19 @@
           <div class="card mb-3 border-secondary">
             <div class="card-body">
               <!-- No file selected -->
-              <div *ngIf="!leadSheet?.name">
-                {{ "editor.no-file-selected" | translate }}
-              </div>
+              @if (!leadSheet?.name) {
+                <div>
+                  {{ "editor.no-file-selected" | translate }}
+                </div>
+              }
 
               <!-- A file is selected -->
-              <div *ngIf="leadSheet?.name">
-                <i class="fa fa-fw fa-file-text-o" aria-hidden="true"></i>
-                {{ leadSheet?.name }}
-              </div>
+              @if (leadSheet?.name) {
+                <div>
+                  <i class="fa fa-fw fa-file-text-o" aria-hidden="true"></i>
+                  {{ leadSheet?.name }}
+                </div>
+              }
             </div>
           </div>
 
@@ -32,7 +36,7 @@
                 data-toggle="tab"
                 href="#upload"
                 role="tab"
-              >
+                >
                 <i class="fa fa-upload" aria-hidden="true"></i>
                 {{ "editor.upload" | translate }}
               </a>
@@ -44,7 +48,7 @@
                 data-toggle="tab"
                 href="#media-library"
                 role="tab"
-              >
+                >
                 <i class="fa fa-folder-o" aria-hidden="true"></i>
                 {{ "editor.lead-sheets-library" | translate }}
               </a>
@@ -54,12 +58,12 @@
           <div class="tab-content mb-3" id="myTabContent">
             <!-- Upload -->
             <div class="tab-pane fade show active" id="upload" role="tabpanel">
-              <app-dropzone
+              <app-file-dropzone
                 [url]="'lead-sheet/upload'"
                 [acceptedFiles]="'image/*'"
                 (error)="onUploadError($event)"
                 (success)="onUploadSuccess($event)"
-              ></app-dropzone>
+              ></app-file-dropzone>
             </div>
 
             <!-- Library -->
@@ -70,43 +74,44 @@
                 id="searchFileList"
                 placeholder="{{ 'editor.search-files' | translate }}"
                 (input)="filterExistingLeadSheets($event.target.value)"
-              />
+                />
 
               <div
                 class="card border-secondary"
                 style="height: 300px; overflow-y: scroll"
-              >
+                >
                 <div class="card-body p-0">
                   <div class="list-group list-group-flush">
-                    <a
-                      *ngFor="
-                        let existingLeadSheet of filteredExistingLeadSheets
-                          | sort : 'name'
-                      "
-                      class="list-group-item"
-                      [class.active]="leadSheet?.name == existingLeadSheet.name"
-                      href="#"
+                    @for (
+                      existingLeadSheet of filteredExistingLeadSheets
+                      | sort : 'name'
+                      ; track
+                      existingLeadSheet) {
+                      <a
+                        class="list-group-item"
+                        [class.active]="leadSheet?.name == existingLeadSheet.name"
+                        href="#"
                       (click)="
                         selectExistingLeadSheet(existingLeadSheet); (false)
                       "
-                    >
-                      <div class="row">
-                        <div class="col-auto my-auto flex-grow text-break-word">
-                          <i
-                            class="fa fa-fw fa-file-text-o"
-                            aria-hidden="true"
-                          ></i>
-                          {{ existingLeadSheet.name }}
-                        </div>
-
-                        <div
-                          class="col-auto my-auto pl-0 text-danger float-right"
-                          (click)="deleteLeadSheet(existingLeadSheet); (false)"
                         >
-                          <i class="fa fa-trash-o" aria-hidden="true"></i>
+                        <div class="row">
+                          <div class="col-auto my-auto flex-grow text-break-word">
+                            <i
+                              class="fa fa-fw fa-file-text-o"
+                              aria-hidden="true"
+                            ></i>
+                            {{ existingLeadSheet.name }}
+                          </div>
+                          <div
+                            class="col-auto my-auto pl-0 text-danger float-right"
+                            (click)="deleteLeadSheet(existingLeadSheet); (false)"
+                            >
+                            <i class="fa fa-trash-o" aria-hidden="true"></i>
+                          </div>
                         </div>
-                      </div>
-                    </a>
+                      </a>
+                    }
                   </div>
                 </div>
               </div>
@@ -133,16 +138,17 @@
                   class="custom-select form-control"
                   [ngModel]="leadSheet?.instrumentUuid"
                   (ngModelChange)="leadSheet.instrumentUuid = $event"
-                >
+                  >
                   <option [ngValue]="selectUndefinedOptionValue">
                     - {{ "settings.no-instrument" | translate }} -
                   </option>
-                  <option
-                    *ngFor="let instrument of settings.instrumentList"
-                    [ngValue]="instrument.uuid"
-                  >
-                    {{ instrument.name }}
-                  </option>
+                  @for (instrument of settings.instrumentList; track instrument) {
+                    <option
+                      [ngValue]="instrument.uuid"
+                      >
+                      {{ instrument.name }}
+                    </option>
+                  }
                 </select>
               </div>
             </div>
@@ -158,7 +164,7 @@
           href="#"
           role="button"
           (click)="cancel(); (false)"
-        >
+          >
           {{ "misc.cancel" | translate }}
         </a>
         <button type="button" class="btn btn-primary" (click)="ok(); (false)">

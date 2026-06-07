@@ -4,9 +4,10 @@ import { Settings } from '../../models/settings';
 import { map } from "rxjs/operators";
 
 @Component({
-  selector: 'app-settings-video',
-  templateUrl: './settings-video.component.html',
-  styleUrls: ['./settings-video.component.scss']
+    selector: 'app-settings-video',
+    templateUrl: './settings-video.component.html',
+    styleUrls: ['./settings-video.component.scss'],
+    standalone: false
 })
 export class SettingsVideoComponent implements OnInit {
 

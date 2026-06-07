@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { $WebSocket, WebSocketConfig } from 'angular2-websocket/angular2-websocket';
+import { AppWebSocket, WebSocketConfig } from './web-socket';
 import { Subject } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
@@ -17,17 +17,23 @@ export class ActivityAudioService {
   private wsUrl: string;
 
   // The websocket connection
-  websocket: $WebSocket;
+  websocket: AppWebSocket;
 
   monitors: number = 0;
 
   constructor(private http: HttpClient, settingsService: SettingsService
   ) {
     // Create the backend-url
+    let protocol = 'ws://';
+
+    if (window.location.protocol === 'https:') {
+      protocol = 'wss://';
+    }
+
     if (environment.name == 'dev') {
-      this.wsUrl = 'ws://' + environment.localBackend + '/';
+      this.wsUrl = protocol + environment.localBackend + '/';
     } else {
-      this.wsUrl = 'ws://' + window.location.hostname + ':' + window.location.port + '/';
+      this.wsUrl = protocol + window.location.hostname + ':' + window.location.port + '/';
     }
 
     this.wsUrl += 'api/activity/audio';
@@ -39,7 +45,7 @@ export class ActivityAudioService {
     if (!this.websocket) {
       // Connect to the websocket backend
       const wsConfig = { reconnectIfNotNormalClose: true } as WebSocketConfig;
-      this.websocket = new $WebSocket(this.wsUrl, null, wsConfig);
+      this.websocket = new AppWebSocket(this.wsUrl, undefined, wsConfig);
 
       this.websocket.onMessage(
         (msg: MessageEvent) => {

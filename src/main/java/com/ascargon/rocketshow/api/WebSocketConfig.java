@@ -1,5 +1,9 @@
 package com.ascargon.rocketshow.api;
 
+import com.ascargon.rocketshow.audio.DefaultActivityNotificationAudioService;
+import com.ascargon.rocketshow.lighting.DefaultActivityNotificationLightingService;
+import com.ascargon.rocketshow.midi.DefaultActivityNotificationMidiService;
+import com.ascargon.rocketshow.update.DefaultUpdateNotificationService;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
@@ -15,12 +19,20 @@ class WebSocketConfig implements WebSocketConfigurer {
     private final DefaultActivityNotificationMidiService defaultActivityNotificationMidiService;
     private final DefaultActivityNotificationAudioService defaultActivityNotificationAudioService;
     private final DefaultActivityNotificationLightingService defaultActivityNotificationLightingService;
+    private final DefaultUpdateNotificationService defaultUpdateNotificationService;
 
-    public WebSocketConfig(DefaultNotificationService defaultNotificationService, DefaultActivityNotificationMidiService defaultActivityNotificationMidiService, DefaultActivityNotificationAudioService defaultActivityNotificationAudioService, DefaultActivityNotificationLightingService defaultActivityNotificationLightingService) {
+    public WebSocketConfig(
+            DefaultNotificationService defaultNotificationService,
+            DefaultActivityNotificationMidiService defaultActivityNotificationMidiService,
+            DefaultActivityNotificationAudioService defaultActivityNotificationAudioService,
+            DefaultActivityNotificationLightingService defaultActivityNotificationLightingService,
+            DefaultUpdateNotificationService defaultUpdateNotificationService
+    ) {
         this.defaultNotificationService = defaultNotificationService;
         this.defaultActivityNotificationMidiService = defaultActivityNotificationMidiService;
         this.defaultActivityNotificationAudioService = defaultActivityNotificationAudioService;
         this.defaultActivityNotificationLightingService = defaultActivityNotificationLightingService;
+        this.defaultUpdateNotificationService = defaultUpdateNotificationService;
     }
 
     @Override
@@ -29,6 +41,7 @@ class WebSocketConfig implements WebSocketConfigurer {
         registry.addHandler(defaultActivityNotificationMidiService, "/api/activity/midi").setAllowedOrigins("*");
         registry.addHandler(defaultActivityNotificationAudioService, "/api/activity/audio").setAllowedOrigins("*");
         registry.addHandler(defaultActivityNotificationLightingService, "/api/activity/lighting").setAllowedOrigins("*");
+        registry.addHandler(defaultUpdateNotificationService, "/api/update/state").setAllowedOrigins("*");
     }
 
 }

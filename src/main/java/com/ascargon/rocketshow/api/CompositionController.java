@@ -1,10 +1,10 @@
 package com.ascargon.rocketshow.api;
 
-import com.ascargon.rocketshow.PlayerService;
+import com.ascargon.rocketshow.composition.TestPlayResponse;
+import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.composition.Composition;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
-import com.ascargon.rocketshow.midi.MidiCompositionFile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -76,6 +76,33 @@ public class CompositionController {
             playerService.loadSetAndComposition(setService.getCurrentSet().getName());
         }
 
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("test-play")
+    public TestPlayResponse testPlay(@RequestBody Composition composition) throws Exception {
+        TestPlayResponse testPlayResponse = new TestPlayResponse();
+        compositionService.analyzeComposition(composition);
+        playerService.playTestComposition(composition);
+        testPlayResponse.setDurationMillis(composition.getDurationMillis());
+        return testPlayResponse;
+    }
+
+    @PostMapping("test-stop")
+    public ResponseEntity<Void> testStop() throws Exception {
+        playerService.stopTestComposition();
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("test-pause")
+    public ResponseEntity<Void> testPause() throws Exception {
+        playerService.getTestCompositionPlayer().pause();
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("test-seek")
+    public ResponseEntity<Void> testSeek(@RequestParam("positionMillis") long positionMillis) throws Exception {
+        playerService.getTestCompositionPlayer().seek(positionMillis);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

@@ -1,8 +1,6 @@
 package com.ascargon.rocketshow.api;
 
-import com.ascargon.rocketshow.SettingsService;
-import com.ascargon.rocketshow.lighting.LightingService;
-import com.ascargon.rocketshow.lighting.Midi2LightingConvertService;
+import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.midi.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,17 +18,17 @@ class MidiController {
     private final ControllerService controllerService;
     private final ActivityNotificationMidiService activityNotificationMidiService;
     private final MidiService midiService;
-    private final MidiControlActionExecutionService midiControlActionExecutionService;
+    private final ActionMidiExecutionService actionMidiExecutionService;
 
-    private MidiRouter midiRouter;
+    private final MidiRouter midiRouter;
 
-    private MidiController(ControllerService controllerService, SettingsService settingsService, ActivityNotificationMidiService activityNotificationMidiService, MidiService midiService, MidiControlActionExecutionService midiControlActionExecutionService, Midi2LightingConvertService midi2LightingConvertService, LightingService lightingService, MidiDeviceOutService midiDeviceOutService) {
+    private MidiController(ControllerService controllerService, SettingsService settingsService, ActivityNotificationMidiService activityNotificationMidiService, MidiService midiService, ActionMidiExecutionService actionMidiExecutionService, MidiRouterFactory midiRouterFactory) {
         this.controllerService = controllerService;
         this.activityNotificationMidiService = activityNotificationMidiService;
         this.midiService = midiService;
-        this.midiControlActionExecutionService = midiControlActionExecutionService;
+        this.actionMidiExecutionService = actionMidiExecutionService;
 
-        midiRouter = new MidiRouter(settingsService, midi2LightingConvertService, lightingService, midiDeviceOutService, activityNotificationMidiService, settingsService.getSettings().getRemoteMidiRoutingList());
+        midiRouter = midiRouterFactory.getMidiRouter(settingsService.getSettings().getRemoteMidiRoutingList());
     }
 
     @ExceptionHandler(Exception.class)
@@ -49,28 +47,8 @@ class MidiController {
     }
 
     @PostMapping("send-message")
-    public ResponseEntity<Void> sendMessage(@RequestParam("command") int command, @RequestParam("channel") int channel,
-                                            @RequestParam("note") int note, @RequestParam("velocity") int velocity) throws InvalidMidiDataException {
-
-        ShortMessage shortMessage = new ShortMessage();
-        shortMessage.setMessage(command, channel, note, velocity);
-
-        midiRouter.sendSignal(shortMessage);
-
-        activityNotificationMidiService.notifyClients(shortMessage, MidiDirection.IN, MidiSource.REMOTE, null);
-
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @PostMapping("test-control")
-    public ResponseEntity<Void> testControl(@RequestParam("command") int command, @RequestParam("channel") int channel,
-                                            @RequestParam("note") int note, @RequestParam("velocity") int velocity) throws Exception {
-
-        ShortMessage shortMessage = new ShortMessage();
-        shortMessage.setMessage(command, channel, note, velocity);
-
-        midiControlActionExecutionService.processMidiSignal(shortMessage);
-
+    public ResponseEntity<Void> sendMessage(@RequestBody MidiSignal midiSignal) throws InvalidMidiDataException {
+        midiRouter.sendSignal(midiSignal.getShortMessage(), MidiSource.REMOTE);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

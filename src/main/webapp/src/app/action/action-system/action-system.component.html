@@ -1,0 +1,10 @@
+<div class="form-group row">
+  <label class="col-md-3 col-form-label">{{ "action.system.type" | translate }}</label>
+  <div class="col-md-9">
+    <select class="custom-select" [(ngModel)]="action.systemActionType">
+      <option value="REBOOT">
+        {{ "action.system.type-enum.REBOOT" | translate }}
+      </option>
+    </select>
+  </div>
+</div>

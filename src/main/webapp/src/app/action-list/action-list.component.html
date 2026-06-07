@@ -1,0 +1,33 @@
+<div class="form-group row">
+  <label class="col-md-3 col-form-label">{{
+    "action.list" | translate
+  }}</label>
+  <div class="col-md-9">
+    <div
+      class="list-group"
+      [sortablejs]="actionList"
+      [sortablejsOptions]="{ onMove: sortMove }"
+      >
+      @for (action of actionList; track action; let i = $index) {
+        <div
+          class="list-group-item"
+          >
+          <app-action
+            [index]="i"
+            (delete)="deleteAction($event)"
+            [action]="action"
+            (change)="onActionChange($event)"
+          ></app-action>
+        </div>
+      }
+      <a
+        href="#"
+        (click)="addAction(); (false)"
+        class="no-sortjs list-group-item text-center"
+        >
+        <i class="fa fa-plus" aria-hidden="true"></i>
+        {{ "action.add" | translate }}
+      </a>
+    </div>
+  </div>
+</div>
