@@ -819,9 +819,43 @@ public class DefaultLightingService implements LightingService {
         return String.join(", ", descriptions);
     }
 
+    private boolean olaPluginsMatchDesiredState(List<OlaPlugin> desiredPlugins) {
+        if (olaClient == null) {
+            return false;
+        }
+
+        Ola.PluginListReply pluginListReply = olaClient.getPlugins();
+        if (pluginListReply == null) {
+            return false;
+        }
+
+        for (Ola.PluginInfo pluginInfo : pluginListReply.getPluginList()) {
+            boolean shouldBeEnabled = desiredPlugins.stream()
+                    .anyMatch(p -> p.getName().equals(pluginInfo.getName()));
+
+            Ola.PluginStateReply stateReply = olaClient.getPluginState(pluginInfo.getPluginId());
+            if (stateReply == null || !stateReply.hasEnabled()) {
+                return false;
+            }
+
+            if (stateReply.getEnabled() != shouldBeEnabled) {
+                logger.debug("OLA plugin '{}' state mismatch: expected enabled={}, actual enabled={}",
+                        pluginInfo.getName(), shouldBeEnabled, stateReply.getEnabled());
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     @Override
     public synchronized void reloadOlaPlugins() {
         if (olaClient == null) {
+            return;
+        }
+
+        if (olaPluginsMatchDesiredState(settingsService.getSettings().getLightingOlaPluginList())) {
+            logger.debug("OLA plugins already match desired state, skipping reload");
             return;
         }
 
@@ -831,7 +865,12 @@ public class DefaultLightingService implements LightingService {
 
     @Override
     public synchronized void enablePlugins(List<OlaPlugin> olaPluginList) {
-        // Disable all plugins, except the one to be enabled
+        if (olaPluginsMatchDesiredState(olaPluginList)) {
+            logger.debug("OLA plugins already match desired state, skipping enable");
+            return;
+        }
+
+        // Disable all plugins, except the ones to be enabled
         for (OlaPlugin olaPlugin : getOlaPlugins()) {
             boolean enabled = olaPluginList.stream().anyMatch(plugin -> plugin.getName().equals(olaPlugin.getName()));
             olaClient.setPluginState(olaPlugin.getId(), enabled);
