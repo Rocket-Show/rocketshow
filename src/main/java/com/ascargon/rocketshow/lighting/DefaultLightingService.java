@@ -91,8 +91,16 @@ public class DefaultLightingService implements LightingService {
                 capabilitiesService.getCapabilities().setOla(true);
                 reset();
             }
-            reconcileOlaPortIds();
-            initializeUniverses();
+            if (olaUniversesMatchDesiredMapping()) {
+                logger.debug("OLA universes already match desired mapping, skipping reconciliation and rebuild");
+                olaReady = getLightingUniverses().stream().anyMatch(u ->
+                        u.getOlaUniverseId() != null &&
+                        u.getOlaOutputPortId() != null && !u.getOlaOutputPortId().isBlank()
+                );
+            } else {
+                reconcileOlaPortIds();
+                initializeUniverses();
+            }
         } catch (Exception e) {
             logger.error("Could not initialize OLA client (attempt {}/{})", attempt, OLA_MAX_RETRIES, e);
         }
@@ -103,6 +111,68 @@ public class DefaultLightingService implements LightingService {
         } else if (olaReady) {
             olaRetryExecutor.shutdown();
         }
+    }
+
+    private boolean olaUniversesMatchDesiredMapping() {
+        List<LightingUniverse> lightingUniverses = getLightingUniverses();
+
+        UniverseInfoReply universeInfoReply = olaClient.getUniverseList();
+        if (universeInfoReply == null) {
+            return false;
+        }
+
+        Map<Integer, String> olaUniverseNames = new HashMap<>();
+        for (UniverseInfo universeInfo : universeInfoReply.getUniverseList()) {
+            olaUniverseNames.put(universeInfo.getUniverse(), universeInfo.hasName() ? universeInfo.getName() : "");
+        }
+
+        // Build map of portId -> assigned universeId from device info (includes bound ports)
+        Map<String, Integer> portAssignments = new HashMap<>();
+        Ola.DeviceInfoReply deviceInfoReply = olaClient.getDeviceInfo();
+        if (deviceInfoReply != null) {
+            for (Ola.DeviceInfo deviceInfo : deviceInfoReply.getDeviceList()) {
+                if (!deviceInfo.hasDeviceAlias()) {
+                    continue;
+                }
+                for (Ola.PortInfo outputPort : deviceInfo.getOutputPortList()) {
+                    if (outputPort.hasUniverse() && outputPort.hasPortId()) {
+                        String portId = deviceInfo.getDeviceAlias() + "-O-" + outputPort.getPortId();
+                        portAssignments.put(portId, outputPort.getUniverse());
+                    }
+                }
+            }
+        }
+
+        for (LightingUniverse universe : lightingUniverses) {
+            if (universe.getOlaUniverseId() == null) {
+                continue;
+            }
+
+            int olaId = universe.getOlaUniverseId();
+            String expectedName = getOlaUniverseName(universe);
+            String actualName = olaUniverseNames.get(olaId);
+
+            if (actualName == null) {
+                logger.debug("OLA universe {} does not exist yet", olaId);
+                return false;
+            }
+
+            if (!expectedName.equals(actualName)) {
+                logger.debug("OLA universe {} name mismatch: expected '{}', actual '{}'", olaId, expectedName, actualName);
+                return false;
+            }
+
+            if (universe.getOlaOutputPortId() != null && !universe.getOlaOutputPortId().isBlank()) {
+                Integer assignedUniverse = portAssignments.get(universe.getOlaOutputPortId());
+                if (!Integer.valueOf(olaId).equals(assignedUniverse)) {
+                    logger.debug("OLA port '{}' is not assigned to universe {} (currently assigned to: {})",
+                            universe.getOlaOutputPortId(), olaId, assignedUniverse);
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     private List<OlaPort> fetchLiveOlaOutputPorts() throws Exception {
