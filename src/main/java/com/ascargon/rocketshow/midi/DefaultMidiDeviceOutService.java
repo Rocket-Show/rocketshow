@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import purejavacomm.SerialPort;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.MidiUnavailableException;
@@ -27,8 +28,10 @@ public class DefaultMidiDeviceOutService implements MidiDeviceOutService {
     public DefaultMidiDeviceOutService(SettingsService settingsService, MidiService midiService) {
         this.settingsService = settingsService;
         this.midiService = midiService;
+    }
 
-        // Try to connect to the MIDI out devices
+    @PostConstruct
+    public void init() {
         connectMidiDevices();
     }
 

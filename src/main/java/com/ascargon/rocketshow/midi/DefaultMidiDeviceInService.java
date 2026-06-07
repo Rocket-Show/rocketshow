@@ -8,6 +8,7 @@ import purejavacomm.SerialPort;
 import purejavacomm.SerialPortEvent;
 import purejavacomm.SerialPortEventListener;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiMessage;
@@ -42,8 +43,10 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
 
         // Initialize the MIDI router
         midiRouter = midiRouterFactory.getMidiRouter(settingsService.getSettings().getDeviceInMidiRoutingList());
+    }
 
-        // Try to connect to MIDI in devices
+    @PostConstruct
+    public void init() {
         connectMidiDevices();
     }
 
@@ -86,7 +89,6 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
         }
 
         MidiMessageParser parser = new MidiMessageParser();
-        ByteBuffer buffer = ByteBuffer.allocate(256);
         InputStream input = null;
 
         try {

@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import tools.jackson.databind.ObjectMapper;
 
@@ -77,7 +78,10 @@ public class DefaultLightingService implements LightingService {
 
         RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).build();
         httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
+    }
 
+    @PostConstruct
+    public void init() {
         if (OperatingSystemInformation.SubType.RASPBERRYOS.equals(this.operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
             olaRetryExecutor = Executors.newSingleThreadScheduledExecutor();
             tryInitializeOla(1);
@@ -85,6 +89,7 @@ public class DefaultLightingService implements LightingService {
     }
 
     private void tryInitializeOla(int attempt) {
+        logger.debug("Initialize OLA...");
         try {
             if (olaClient == null) {
                 olaClient = new OlaClient();
@@ -98,6 +103,7 @@ public class DefaultLightingService implements LightingService {
                         u.getOlaOutputPortId() != null && !u.getOlaOutputPortId().isBlank()
                 );
             } else {
+                logger.debug("Reconcile OLA ports/universes...");
                 reconcileOlaPortIds();
                 initializeUniverses();
             }
