@@ -346,7 +346,10 @@
       "error": "An error occured. Please check the current password."
     },
     "secure-connection": "Secure Connection (HTTPS)",
-    "secure-connection-enable": "Activated"
+    "secure-connection-enable": "Activated",
+    "build-date": "Build date",
+    "build-timestamp": "Build timestamp",
+    "build-number": "Build number"
   },
   "action": {
     "action": "Action",
@@ -416,9 +419,6 @@
       "pin": "Pin",
       "status": "Status",
       "high": "High"
-    },
-    "build-date": "Build date",
-    "build-timestamp": "Build timestamp",
-    "build-number": "Build number"
+    }
   }
 }

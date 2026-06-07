@@ -346,7 +346,10 @@
       "error": "Une erreur s'est produite. Veuillez vérifier le mot de passe actuel."
     },
     "secure-connection": "Connexion sécurisée (HTTPS)",
-    "secure-connection-enable": "Activé"
+    "secure-connection-enable": "Activé",
+    "build-date": "Date de compilation",
+    "build-timestamp": "Horodatage de compilation",
+    "build-number": "Numéro de compilation"
   },
   "action": {
     "action": "Action",
@@ -416,9 +419,6 @@
       "pin": "Broche",
       "status": "Statut",
       "high": "Haut"
-    },
-    "build-date": "Date de compilation",
-    "build-timestamp": "Horodatage de compilation",
-    "build-number": "Numéro de compilation"
+    }
   }
 }
