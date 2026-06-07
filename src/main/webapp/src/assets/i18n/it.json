@@ -346,7 +346,10 @@
       "error": "Si è verificato un errore. Controlla la password attuale."
     },
     "secure-connection": "Connessione sicura (HTTPS)",
-    "secure-connection-enable": "Attivato"
+    "secure-connection-enable": "Attivato",
+    "build-date": "Data di compilazione",
+    "build-timestamp": "Timestamp di compilazione",
+    "build-number": "Numero di compilazione"
   },
   "action": {
     "action": "Azione",

@@ -346,7 +346,10 @@
       "error": "发生错误。请检查当前密码。"
     },
     "secure-connection": "安全连接（HTTPS）",
-    "secure-connection-enable": "已激活"
+    "secure-connection-enable": "已激活",
+    "build-date": "构建日期",
+    "build-timestamp": "构建时间戳",
+    "build-number": "构建编号"
   },
   "action": {
     "action": "动作",

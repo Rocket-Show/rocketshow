@@ -346,7 +346,10 @@
       "error": "Ocorreu um erro. Por favor, verifique a palavra-passe atual."
     },
     "secure-connection": "Ligação segura (HTTPS)",
-    "secure-connection-enable": "Ativado"
+    "secure-connection-enable": "Ativado",
+    "build-date": "Data de compilação",
+    "build-timestamp": "Carimbo de data/hora de compilação",
+    "build-number": "Número de compilação"
   },
   "action": {
     "action": "Ação",
