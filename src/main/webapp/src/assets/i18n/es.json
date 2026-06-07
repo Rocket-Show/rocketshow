@@ -346,7 +346,10 @@
       "error": "Se produjo un error. Por favor, comprueba la contraseña actual."
     },
     "secure-connection": "Conexión segura (HTTPS)",
-    "secure-connection-enable": "Activado"
+    "secure-connection-enable": "Activado",
+    "build-date": "Fecha de compilación",
+    "build-timestamp": "Marca de tiempo de compilación",
+    "build-number": "Número de compilación"
   },
   "action": {
     "action": "Acción",

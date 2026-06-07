@@ -69,6 +69,7 @@ class SystemController {
     private final SshService sshService;
     private final LightingService lightingService;
     private final LanService lanService;
+    private final BuildInfoService buildInfoService;
 
     public SystemController(
             ControllerService controllerService,
@@ -95,7 +96,8 @@ class SystemController {
             VersionService versionService,
             SshService sshService,
             LightingService lightingService,
-            LanService lanService
+            LanService lanService,
+            BuildInfoService buildInfoService
     ) {
         this.controllerService = controllerService;
         this.stateService = stateService;
@@ -122,6 +124,7 @@ class SystemController {
         this.sshService = sshService;
         this.lightingService = lightingService;
         this.lanService = lanService;
+        this.buildInfoService = buildInfoService;
     }
 
     private void settingsUpdateSystem() {
@@ -271,6 +274,11 @@ class SystemController {
     @GetMapping("operating-system-information")
     public OperatingSystemInformation getOperatingSystemInformation() {
         return operatingSystemInformationService.getOperatingSystemInformation();
+    }
+
+    @GetMapping("build-info")
+    public BuildInfo getBuildInfo() {
+        return buildInfoService.getBuildInfo();
     }
 
     @GetMapping("create-backup")
