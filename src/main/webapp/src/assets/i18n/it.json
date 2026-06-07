@@ -416,6 +416,9 @@
       "pin": "Pin",
       "status": "Stato",
       "high": "Alto"
-    }
+    },
+    "build-date": "Data di compilazione",
+    "build-timestamp": "Timestamp di compilazione",
+    "build-number": "Numero di compilazione"
   }
 }

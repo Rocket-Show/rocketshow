@@ -416,6 +416,9 @@
       "pin": "Broche",
       "status": "Statut",
       "high": "Haut"
-    }
+    },
+    "build-date": "Date de compilation",
+    "build-timestamp": "Horodatage de compilation",
+    "build-number": "Numéro de compilation"
   }
 }

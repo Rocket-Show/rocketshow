@@ -416,6 +416,9 @@
       "pin": "Pino",
       "status": "Estado",
       "high": "Alto"
-    }
+    },
+    "build-date": "Data de compilação",
+    "build-timestamp": "Carimbo de data/hora de compilação",
+    "build-number": "Número de compilação"
   }
 }

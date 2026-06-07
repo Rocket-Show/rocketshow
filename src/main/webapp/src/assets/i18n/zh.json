@@ -416,6 +416,9 @@
       "pin": "引脚",
       "status": "状态",
       "high": "高"
-    }
+    },
+    "build-date": "构建日期",
+    "build-timestamp": "构建时间戳",
+    "build-number": "构建编号"
   }
 }
