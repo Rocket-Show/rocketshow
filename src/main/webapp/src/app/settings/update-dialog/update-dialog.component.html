@@ -14,15 +14,23 @@
 
       <div *ngIf="!updateFinished" class="form-group row">
         <label class="col-lg-4 col-form-label">{{ 'settings.remote-version' | translate }}</label>
-        <div class="col-lg-8 my-auto" *ngIf="remoteVersion && !errorRetreiveRemoteVersion">
+        <div class="col-lg-8 my-auto" *ngIf="remoteVersion && !errorRetreiveRemoteVersion && !noInternetError">
           {{ remoteVersion?.version }}
         </div>
-        <div class="col-lg-8 my-auto" *ngIf="!remoteVersion && !errorRetreiveRemoteVersion">
+        <div class="col-lg-8 my-auto" *ngIf="!remoteVersion && !errorRetreiveRemoteVersion && !noInternetError">
           <i class="fa fa-spinner fa-pulse fa-fw"></i> {{ 'settings.retreive-remote-version' | translate }}
           <br />
           <i>
             <small>{{ 'settings.retreive-remote-version-internet' | translate }}</small>
           </i>
+          <br />
+          <button type="button" class="btn btn-primary btn-sm mt-2" (click)="retreiveRemoteVersion(); false">
+            <i class="fa fa-refresh fa-fw" aria-hidden="true"></i>{{ 'settings.retreive-remote-version-retry' | translate }}
+          </button>
+        </div>
+        <div class="col-lg-8 my-auto" *ngIf="noInternetError">
+          <span class="text-danger">
+            <i class="fa fa-exclamation-circle" aria-hidden="true"></i> {{ 'settings.retreive-remote-version-no-internet' | translate }}</span>
           <br />
           <button type="button" class="btn btn-primary btn-sm mt-2" (click)="retreiveRemoteVersion(); false">
             <i class="fa fa-refresh fa-fw" aria-hidden="true"></i>{{ 'settings.retreive-remote-version-retry' | translate }}
@@ -53,7 +61,7 @@
         </div>
       </div>
 
-      <div class="form-group row" *ngIf="!remoteVersionNewer && remoteVersion && !errorRetreiveRemoteVersion">
+      <div class="form-group row" *ngIf="!remoteVersionNewer && remoteVersion && !errorRetreiveRemoteVersion && !noInternetError">
         <label class="col-lg-4 col-form-label"></label>
         <div class="col-lg-8">
           <span>{{ 'settings.already-up-to-date' | translate }}</span>

@@ -1,6 +1,6 @@
 import { StateService } from './../../services/state.service';
 import { UpdateService } from './../../services/update.service';
-import { Subject, Subscription } from 'rxjs';
+import { Subject, Subscription, EMPTY } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { BsModalRef } from 'ngx-bootstrap/modal';
@@ -18,6 +18,7 @@ export class UpdateDialogComponent implements OnInit, OnDestroy {
   currentVersion: Version;
   remoteVersion: Version;
   errorRetreiveRemoteVersion: boolean = false;
+  noInternetError: boolean = false;
   remoteVersionNewer: boolean = false;
   updateStep: string;
   updatePerc: number;
@@ -77,11 +78,16 @@ export class UpdateDialogComponent implements OnInit, OnDestroy {
 
   retreiveRemoteVersion() {
     this.errorRetreiveRemoteVersion = false;
+    this.noInternetError = false;
     this.remoteVersionNewer = false;
 
-    this.updateService.getRemoteVersion().pipe(catchError(() => {
-      this.errorRetreiveRemoteVersion = true;
-      return undefined;
+    this.updateService.getRemoteVersion().pipe(catchError((error) => {
+      if (error.status === 503) {
+        this.noInternetError = true;
+      } else {
+        this.errorRetreiveRemoteVersion = true;
+      }
+      return EMPTY;
     }))
       .subscribe((version: Version) => {
         this.remoteVersion = version;
