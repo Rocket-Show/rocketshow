@@ -125,9 +125,11 @@ export class AppComponent implements OnInit {
           this.loaded = true;
         }
         this.authService.state.subscribe((state) => {
-          if (e.url === "/provision") {
-            // The provisioning page is always accessible by URL, regardless of
-            // the setup or authentication state. Never redirect away from it.
+          // The provisioning page is always accessible by URL, regardless of
+          // the setup or authentication state. Never redirect away from it.
+          // Check the live router URL (not the captured navigation event), so
+          // stale subscriptions from earlier navigations don't redirect either.
+          if (this.isOnProvision()) {
             this.isProvision = true;
             if (state.authenticated) {
               this.loadInitialData();
@@ -146,6 +148,10 @@ export class AppComponent implements OnInit {
         });
       }
     });
+  }
+
+  private isOnProvision(): boolean {
+    return this.router.url.split("?")[0] === "/provision";
   }
 
   private navigateIntro() {
