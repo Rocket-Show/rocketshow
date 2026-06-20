@@ -47,14 +47,16 @@ export class ProvisionComponent implements OnInit {
   }
 
   private loadDeviceInformation() {
-    this.deviceInformationService.getDeviceInformation().subscribe((deviceInformation) => {
+    // Always fetch fresh, so a device provisioned in a previous session (and
+    // possibly cached as "not provisioned") is reflected correctly.
+    this.deviceInformationService.getDeviceInformation(true).subscribe((deviceInformation) => {
       this.deviceInformation = deviceInformation;
     });
   }
 
-  // Provisioning data is considered set once it is available and a serial has been stored.
+  // Provisioning data is considered set once a serial has been stored.
   get provisioningDataSet(): boolean {
-    return !!(this.deviceInformation?.available && this.deviceInformation?.serial);
+    return !!this.deviceInformation?.serial;
   }
 
   storeProvisioningData() {

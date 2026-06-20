@@ -103,13 +103,9 @@ export class AppComponent implements OnInit {
             break;
           }
           case "/provision": {
-            // The provisioning page is only accessible as long as the initial
-            // setup (intro) is not yet completed.
-            if (this.authService.currentState?.passwordConfigured) {
-              this.navigatePlay();
-            } else {
-              this.isProvision = true;
-            }
+            // The provisioning page is always accessible by URL (no security,
+            // no redirect), regardless of the setup or authentication state.
+            this.isProvision = true;
             break;
           }
           case "/play": {
@@ -129,19 +125,22 @@ export class AppComponent implements OnInit {
           this.loaded = true;
         }
         this.authService.state.subscribe((state) => {
+          if (e.url === "/provision") {
+            // The provisioning page is always accessible by URL, regardless of
+            // the setup or authentication state. Never redirect away from it.
+            this.isProvision = true;
+            if (state.authenticated) {
+              this.loadInitialData();
+            }
+            return;
+          }
           if (state.authenticated) {
             this.loadInitialData()
           } else if (!state.passwordConfigured) {
-            // Not logged in and no password yet configured.
-            if (e.url === "/provision") {
-              // Allow access to the provisioning page during initial setup.
-              this.isProvision = true;
-            } else {
-              // Show the intro wizard.
-              this.navigateIntro();
-            }
-          } else if (e.url === "/intro" || e.url === "/provision") {
-            // Not logged in but password is already configured -> move away
+            // Not logged in and no password yet configured -> show intro wizard
+            this.navigateIntro();
+          } else if (e.url === "/intro") {
+            // Not logged in but password is already configured -> move away from the intro
             this.navigatePlay();
           }
         });

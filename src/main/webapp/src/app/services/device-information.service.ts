@@ -14,7 +14,12 @@ export class DeviceInformationService {
 
   }
 
-  getDeviceInformation(): Observable<DeviceInformation> {
+  getDeviceInformation(forceReload: boolean = false): Observable<DeviceInformation> {
+    if (forceReload) {
+      this.deviceInformation = undefined;
+      this.observable = undefined;
+    }
+
     if (this.deviceInformation) {
       return of(this.deviceInformation);
     }
