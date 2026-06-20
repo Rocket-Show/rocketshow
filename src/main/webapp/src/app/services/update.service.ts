@@ -27,7 +27,7 @@ export class UpdateService {
     return this.http
       .get(
         "system/remote-version?testBranch=" +
-        this.settingsService.settings.updateTestBranch
+        (this.settingsService.settings?.updateTestBranch ?? false)
       )
       .pipe(
         map((response) => {
@@ -40,7 +40,7 @@ export class UpdateService {
     return this.http
       .post(
         "system/update?testBranch=" +
-        +this.settingsService.settings.updateTestBranch,
+        (this.settingsService.settings?.updateTestBranch ?? false),
         null
       )
       .pipe(

@@ -18,11 +18,12 @@ import { ToastrService } from "ngx-toastr";
   selector: "body",
   templateUrl: "./app.component.html",
   styleUrls: ["./app.component.scss"],
-  host: { "[class.body-bg-moving]": "this.isIntro" },
+  host: { "[class.body-bg-moving]": "this.isIntro || this.isProvision" },
   standalone: false
 })
 export class AppComponent implements OnInit {
   isIntro: boolean = false;
+  isProvision: boolean = false;
   isPlay: boolean = false;
   loaded: boolean = false;
   settings: Settings;
@@ -89,6 +90,7 @@ export class AppComponent implements OnInit {
         });
 
         this.isIntro = false;
+        this.isProvision = false;
         this.isPlay = false;
 
         switch (e.url) {
@@ -97,6 +99,16 @@ export class AppComponent implements OnInit {
               this.navigatePlay();
             } else {
               this.isIntro = true;
+            }
+            break;
+          }
+          case "/provision": {
+            // The provisioning page is only accessible as long as the initial
+            // setup (intro) is not yet completed.
+            if (this.authService.currentState?.passwordConfigured) {
+              this.navigatePlay();
+            } else {
+              this.isProvision = true;
             }
             break;
           }
@@ -120,10 +132,16 @@ export class AppComponent implements OnInit {
           if (state.authenticated) {
             this.loadInitialData()
           } else if (!state.passwordConfigured) {
-            // Not logged in and no password yet configured -> show intro wizard
-            this.navigateIntro();
-          } else if (e.url === "/intro") {
-            // Not logged in but password is already configured -> move away from the intro
+            // Not logged in and no password yet configured.
+            if (e.url === "/provision") {
+              // Allow access to the provisioning page during initial setup.
+              this.isProvision = true;
+            } else {
+              // Show the intro wizard.
+              this.navigateIntro();
+            }
+          } else if (e.url === "/intro" || e.url === "/provision") {
+            // Not logged in but password is already configured -> move away
             this.navigatePlay();
           }
         });

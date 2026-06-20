@@ -1,0 +1,191 @@
+<app-particle-background></app-particle-background>
+
+<div class="container provision-container py-4">
+  <div class="d-flex flex-column align-items-center mb-4">
+    <img class="pb-2" src="assets/img/icon.png" alt="icon" width="80px">
+    <h3 class="text-center mb-0">{{ 'provision.title' | translate }}</h3>
+  </div>
+
+  <!-- Language selection -->
+  <div class="card border-secondary mb-4">
+    <div class="card-body">
+      <div class="form-group row mb-0 align-items-center">
+        <label for="selectLang" class="col-lg-4 col-form-label">{{ 'provision.language' | translate }}</label>
+        <div class="col-lg-8">
+          <select id="selectLang" name="selectLang" class="custom-select" [ngModel]="language"
+            (ngModelChange)="switchLanguage($event)">
+            @for (lang of settingsService?.languages; track lang) {
+            <option [ngValue]="lang.key">{{ lang.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Provisioning data -->
+  <div class="card border-secondary mb-4">
+    <div class="card-header">{{ 'provision.provisioning-data' | translate }}</div>
+    <div class="card-body">
+      @if (provisioningDataSet) {
+      <p class="mb-3">{{ 'provision.provisioning-data-already-set' | translate }}</p>
+      <div class="form-group row mb-2">
+        <label class="col-lg-4 col-form-label">{{ 'provision.serial' | translate }}</label>
+        <div class="col-lg-8 my-auto">{{ deviceInformation?.serial }}</div>
+      </div>
+      <div class="form-group row mb-2">
+        <label class="col-lg-4 col-form-label">{{ 'provision.model' | translate }}</label>
+        <div class="col-lg-8 my-auto">{{ deviceInformation?.model }}</div>
+      </div>
+      <div class="form-group row mb-2">
+        <label class="col-lg-4 col-form-label">{{ 'provision.hardware-revision' | translate }}</label>
+        <div class="col-lg-8 my-auto">{{ deviceInformation?.hardwareRevision }}</div>
+      </div>
+      <div class="form-group row mb-2">
+        <label class="col-lg-4 col-form-label">{{ 'provision.sku' | translate }}</label>
+        <div class="col-lg-8 my-auto">{{ deviceInformation?.sku }}</div>
+      </div>
+      <div class="form-group row mb-2">
+        <label class="col-lg-4 col-form-label">{{ 'provision.country' | translate }}</label>
+        <div class="col-lg-8 my-auto">{{ deviceInformation?.country }}</div>
+      </div>
+      <div class="form-group row mb-0">
+        <label class="col-lg-4 col-form-label">{{ 'provision.file-version' | translate }}</label>
+        <div class="col-lg-8 my-auto">{{ deviceInformation?.fileVersion }}</div>
+      </div>
+      } @else {
+      <p class="mb-3">{{ 'provision.provisioning-data-description' | translate }}</p>
+
+      <form #provisionForm="ngForm" (ngSubmit)="storeProvisioningData()">
+        <div class="form-group row">
+          <label for="serial" class="col-lg-4 col-form-label">{{ 'provision.serial' | translate }}</label>
+          <div class="col-lg-8">
+            <input id="serial" name="serial" type="text" class="form-control" required
+              [(ngModel)]="provisioningData.serial">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label for="model" class="col-lg-4 col-form-label">{{ 'provision.model' | translate }}</label>
+          <div class="col-lg-8">
+            <input id="model" name="model" type="text" class="form-control" [(ngModel)]="provisioningData.model">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label for="hardwareRevision" class="col-lg-4 col-form-label">{{ 'provision.hardware-revision' | translate
+            }}</label>
+          <div class="col-lg-8">
+            <input id="hardwareRevision" name="hardwareRevision" type="text" class="form-control"
+              [(ngModel)]="provisioningData.hardwareRevision">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label for="sku" class="col-lg-4 col-form-label">{{ 'provision.sku' | translate }}</label>
+          <div class="col-lg-8">
+            <input id="sku" name="sku" type="text" class="form-control" [(ngModel)]="provisioningData.sku">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label for="country" class="col-lg-4 col-form-label">{{ 'provision.country' | translate }}</label>
+          <div class="col-lg-8">
+            <input id="country" name="country" type="text" class="form-control" [(ngModel)]="provisioningData.country">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label for="fileVersion" class="col-lg-4 col-form-label">{{ 'provision.file-version' | translate }}</label>
+          <div class="col-lg-8">
+            <input id="fileVersion" name="fileVersion" type="text" class="form-control"
+              [(ngModel)]="provisioningData.fileVersion">
+          </div>
+        </div>
+        <div class="d-flex float-right">
+          <button type="submit" class="btn btn-primary" [disabled]="provisioningSaving || !provisionForm.valid">
+            @if (provisioningSaving) {<i class="fa fa-spinner fa-pulse fa-fw"></i>}
+            {{ 'provision.store-provisioning-data' | translate }}
+          </button>
+        </div>
+      </form>
+      }
+    </div>
+  </div>
+
+  <!-- Health -->
+  <div class="card border-secondary mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>{{ 'provision.health' | translate }}</span>
+      <button type="button" class="btn btn-sm btn-secondary" (click)="refreshHealth(); false"
+        [disabled]="healthLoading">
+        <i class="fa fa-refresh" [class.fa-spin]="healthLoading" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div class="card-body">
+      @if (health) {
+      <div class="form-group row mb-3">
+        <label class="col-lg-4 col-form-label">{{ 'provision.health-severity' | translate }}</label>
+        <div class="col-lg-8 my-auto">
+          <span class="badge"
+            [class.badge-success]="health.healthStatusSeverity === 'OK'"
+            [class.badge-warning]="health.healthStatusSeverity === 'DEGRADED'"
+            [class.badge-danger]="health.healthStatusSeverity === 'FAIL_RESTART_APP' || health.healthStatusSeverity === 'FAIL_REBOOT_DEVICE'">
+            {{ health.healthStatusSeverity }}
+          </span>
+        </div>
+      </div>
+
+      @if (health.reasons?.length) {
+      <div class="form-group row mb-3">
+        <label class="col-lg-4 col-form-label">{{ 'provision.health-reasons' | translate }}</label>
+        <div class="col-lg-8 my-auto">
+          <ul class="mb-0 pl-3">
+            @for (reason of health.reasons; track reason) {
+            <li>{{ reason }}</li>
+            }
+          </ul>
+        </div>
+      </div>
+      }
+
+      <div class="form-group row mb-2">
+        <label class="col-lg-4 col-form-label">{{ 'provision.health-software-version' | translate }}</label>
+        <div class="col-lg-8 my-auto">{{ health.softwareVersion }}</div>
+      </div>
+      <div class="form-group row mb-2">
+        <label class="col-lg-4 col-form-label">{{ 'provision.health-free-disk-space' | translate }}</label>
+        <div class="col-lg-8 my-auto">{{ health.freeDiskSpacePercentage }}%</div>
+      </div>
+      <div class="form-group row mb-2">
+        <label class="col-lg-4 col-form-label">{{ 'provision.health-free-memory' | translate }}</label>
+        <div class="col-lg-8 my-auto">{{ health.freeMemory }}</div>
+      </div>
+      <div class="form-group row mb-2">
+        <label class="col-lg-4 col-form-label">{{ 'provision.health-temperature' | translate }}</label>
+        <div class="col-lg-8 my-auto">{{ health.temperature }}</div>
+      </div>
+      <div class="form-group row mb-2">
+        <label class="col-lg-4 col-form-label">{{ 'provision.health-error-rate' | translate }}</label>
+        <div class="col-lg-8 my-auto">{{ health.recentErrorRate }}</div>
+      </div>
+      <div class="form-group row mb-0">
+        <label class="col-lg-4 col-form-label">{{ 'provision.health-rauc-slot' | translate }}</label>
+        <div class="col-lg-8 my-auto">{{ health.raucSlot }}</div>
+      </div>
+      } @else if (healthLoading) {
+      <p class="mb-0"><i class="fa fa-spinner fa-pulse fa-fw"></i> {{ 'provision.health-loading' | translate }}</p>
+      } @else {
+      <p class="mb-0">{{ 'provision.health-unavailable' | translate }}</p>
+      }
+    </div>
+  </div>
+
+  <!-- Update -->
+  <div class="card border-secondary mb-4">
+    <div class="card-header">{{ 'provision.update' | translate }}</div>
+    <div class="card-body">
+      <p class="mb-3">{{ 'provision.update-description' | translate }}</p>
+      <div class="d-flex float-right">
+        <button type="button" class="btn btn-primary" (click)="openUpdateDialog(); false">
+          <i class="fa fa-download" aria-hidden="true"></i> {{ 'provision.start-update' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

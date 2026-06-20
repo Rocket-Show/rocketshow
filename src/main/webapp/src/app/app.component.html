@@ -1,5 +1,5 @@
 <!-- Login -->
-@if (authService.initiallyLoaded && !isIntro && !authService.currentState?.authenticated) {
+@if (authService.initiallyLoaded && !isIntro && !isProvision && !authService.currentState?.authenticated) {
 <app-login></app-login>
 }
 
@@ -95,6 +95,6 @@
 }
 
 <!-- Main content -->
-@if ((loaded && authService.currentState?.authenticated) || isIntro) {
+@if ((loaded && authService.currentState?.authenticated) || isIntro || isProvision) {
 <router-outlet></router-outlet>
 }
