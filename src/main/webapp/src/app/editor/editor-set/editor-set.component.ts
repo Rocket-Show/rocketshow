@@ -12,9 +12,10 @@ import { Composition } from '../../models/composition';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({
-  selector: 'app-editor-set',
-  templateUrl: './editor-set.component.html',
-  styleUrls: ['./editor-set.component.scss']
+    selector: 'app-editor-set',
+    templateUrl: './editor-set.component.html',
+    styleUrls: ['./editor-set.component.scss'],
+    standalone: false
 })
 export class EditorSetComponent implements OnInit {
 

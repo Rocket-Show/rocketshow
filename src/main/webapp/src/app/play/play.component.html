@@ -1,6 +1,7 @@
 <div class="container-fluid" style="margin-top: 15px;">
 
-  <!-- Transport -->
+  <!-- Transport (setlist mode) -->
+  @if (viewMode === 'setlist') {
   <div class="row" style="flex: 0 0 auto;">
     <div class="col">
       <div class="card border-secondary mb-3">
@@ -22,26 +23,29 @@
               </button>
 
               <!-- Play -->
-              <button type="button" [disabled]="!currentState?.currentCompositionName" (click)="play()"
-                class="btn btn-transport btn-transport-main"
-                *ngIf="currentState?.playState == 'STOPPED' || currentState?.playState == 'PAUSED'">
-
-                <i class="fa fa-play fa-fw" aria-hidden="true"></i>
-              </button>
+              @if (currentState?.playState == 'STOPPED' || currentState?.playState == 'PAUSED') {
+                <button type="button" [disabled]="!currentState?.currentCompositionName" (click)="play()"
+                  class="btn btn-transport btn-transport-main"
+                  >
+                  <i class="fa fa-play fa-fw" aria-hidden="true"></i>
+                </button>
+              }
 
               <!-- Pause -->
-              <button type="button" [disabled]="!currentState?.currentCompositionName" (click)="pause()"
-                class="btn btn-transport btn-transport-main" *ngIf="currentState?.playState == 'PLAYING'">
-
-                <i class="fa fa-pause fa-fw" aria-hidden="true"></i>
-              </button>
+              @if (currentState?.playState == 'PLAYING') {
+                <button type="button" [disabled]="!currentState?.currentCompositionName" (click)="pause()"
+                  class="btn btn-transport btn-transport-main">
+                  <i class="fa fa-pause fa-fw" aria-hidden="true"></i>
+                </button>
+              }
 
               <!-- Loading -->
-              <button type="button" class="btn btn-transport btn-transport-main"
-                *ngIf="currentState?.playState == 'LOADING' || currentState?.playState == 'LOADED' || currentState?.playState == 'STOPPING'"
-                style="cursor: default;">
-                <i class="fa fa-circle-o-notch fa-spin fa-fw" aria-hidden="true"></i>
-              </button>
+              @if (currentState?.playState == 'LOADING' || currentState?.playState == 'LOADED' || currentState?.playState == 'STOPPING') {
+                <button type="button" class="btn btn-transport btn-transport-main"
+                  style="cursor: default;">
+                  <i class="fa fa-circle-o-notch fa-spin fa-fw" aria-hidden="true"></i>
+                </button>
+              }
 
               <!-- Next composition -->
               <button type="button" [disabled]="!currentState?.currentCompositionName" (click)="nextComposition()"
@@ -73,9 +77,11 @@
             <div class="col my-auto py-0 px-2 d-flex">
               <h5 class="mx-auto mb-0" style="text-align: center;">
                 <span
-                  style="width: 100px; text-align: left; display: inline-block; margin-left: 5px;">{{ playTime }}</span>
-                <span *ngIf="currentState?.currentCompositionName" style="display: inline-block;"> -
+                style="width: 100px; text-align: left; display: inline-block; margin-left: 5px;">{{ playTime }}</span>
+                @if (currentState?.currentCompositionName) {
+                  <span style="display: inline-block;"> -
                   {{ currentState?.currentCompositionName }}</span>
+                }
               </h5>
             </div>
           </div>
@@ -84,7 +90,11 @@
 
         <div class="card-footer">
           <div class="row">
-            <div class="col"></div>
+            <div class="col d-flex align-items-center">
+              <button class="btn-view-toggle" (click)="toggleViewMode()" title="Switch to cue grid">
+                <i class="fa fa-th-large fa-fw" aria-hidden="true"></i>
+              </button>
+            </div>
 
             <div class="col col-auto pl-1 pr-1 d-flex">
               <div class="d-flex pr-2">
@@ -105,13 +115,17 @@
                 <small class="my-auto"><i class="fa fa-microphone" aria-hidden="true"></i></small>
               </div>
               <div class="d-flex">
-                <div *ngFor="let audioBus of activityAudio?.activityAudioBusList" class="d-flex pr-2 my-auto">
-                  <div *ngFor="let channel of audioBus.activityAudioChannelList" class="d-flex my-auto pr-1">
-                    <div class="my-auto activity-indicator"></div>
-                    <div class="my-auto activity-indicator activity-indicator-received" style="margin-left: -10px;"
-                      [style.opacity]="audioActivityOpacity(channel.volumeDb)"></div>
+                @for (audioBus of activityAudio?.activityAudioBusList; track audioBus) {
+                  <div class="d-flex pr-2 my-auto">
+                    @for (channel of audioBus.activityAudioChannelList; track channel) {
+                      <div class="d-flex my-auto pr-1">
+                        <div class="my-auto activity-indicator"></div>
+                        <div class="my-auto activity-indicator activity-indicator-received" style="margin-left: -10px;"
+                        [style.opacity]="audioActivityOpacity(channel.volumeDb)"></div>
+                      </div>
+                    }
                   </div>
-                </div>
+                }
               </div>
 
               <div class="d-flex pr-2">
@@ -128,88 +142,121 @@
       </div>
     </div>
   </div>
+  }
 
   <!-- Set -->
-  <div class="row" style="overflow-y: auto; margin-right: 0;">
+  <div class="row" style="overflow-y: auto; margin-right: 0; flex: 1 1 auto; min-height: 0;">
     <div class="col" style="display: flex; flex-flow: column; padding-right: 0;">
 
       <!-- For larger screens -->
       <div class="list-group d-none d-sm-flex" style="flex: 0 0 auto; border-top: 1px solid #444;">
         <div class="list-group-item flex-column align-items-start">
+          @if (viewMode === 'grid') {
+            <button class="btn-view-toggle mr-3" (click)="toggleViewMode()" title="Switch to setlist">
+              <i class="fa fa-play-circle-o fa-fw" aria-hidden="true"></i>
+            </button>
+          }
           <div class="btn-group" dropdown container="body">
             <a href="#" id="button-container" dropdownToggle aria-controls="dropdown-container">
-              <span *ngIf="currentSet && currentSet.name">{{ currentSet?.name }}</span>
-              <span *ngIf="!currentSet || !currentSet.name">{{ 'misc.default-set' | translate }}</span>
+              @if (currentSet && currentSet.name) {
+                <span>{{ currentSet?.name }}</span>
+              }
+              @if (!currentSet || !currentSet.name) {
+                <span>{{ 'misc.default-set' | translate }}</span>
+              }
               <i class="fa fa-caret-down ml-2" aria-hidden="true"></i>
             </a>
             <ul id="dropdown-container" *dropdownMenu class="dropdown-menu" role="menu"
               aria-labelledby="button-container">
               <li role="menuitem"> <a class="dropdown-item" [class.active]="!currentSet || !currentSet.name" href="#"
-                  (click)="selectSet(undefined); false;">{{
-                'misc.default-set' | translate }}</a></li>
-              <li role="menuitem" *ngFor="let set of sets"> <a class="dropdown-item"
+                (click)="selectSet(undefined); false;">{{
+              'misc.default-set' | translate }}</a></li>
+              @for (set of sets; track set) {
+                <li role="menuitem"> <a class="dropdown-item"
                   [class.active]="set.name == currentSet?.name" href="#"
-                  (click)="selectSet(set); false;">{{ set.name }}</a></li>
+                (click)="selectSet(set); false;">{{ set.name }}</a></li>
+              }
             </ul>
           </div>
           <span style="margin-top: 3px" class="float-right">{{ totalPlayTime }}</span>
         </div>
       </div>
 
+      @if (viewMode === 'setlist') {
       <div class="list-group main-list composition-list d-none d-sm-flex" style="flex: 0 1 auto; overflow: auto;">
         <!-- Display all compositions -->
-        <a *ngFor="let composition of currentSet?.compositionList; let i = index" id="composition{{ i }}" href="#"
-          (click)="setComposition(i, composition); false" class="list-group-item flex-column align-items-start"
-          [class.active]="currentState?.currentCompositionName == composition.name">
-          <div class="d-flex w-100 justify-content-between">
-            <p class="mb-1">{{ composition.name }}</p>
-            <small class="my-auto">{{ msToTime(composition.durationMillis, false) }}</small>
-          </div>
-        </a>
+        @for (composition of currentSet?.compositionList; track composition; let i = $index) {
+          <a id="composition{{ i }}" href="#"
+            (click)="setComposition(i, composition); false" class="list-group-item flex-column align-items-start"
+            [class.active]="currentState?.currentCompositionName == composition.name">
+            <div class="d-flex w-100 justify-content-between">
+              <p class="mb-1">{{ composition.name }}</p>
+              <small class="my-auto">{{ msToTime(composition.durationMillis, false) }}</small>
+            </div>
+          </a>
+        }
 
         <!-- No compositions in the current set -->
-        <a *ngIf="!loadingSet && currentSet && currentSet.name && currentSet.compositionList.length == 0"
-          id="composition0" href="#" routerLink="/editor" class="list-group-item flex-column align-items-start">
-          <div class="d-flex w-100 justify-content-between">
-            <p class="mb-1">{{ 'misc.set-without-compositions' | translate }}</p>
-          </div>
-        </a>
+        @if (!loadingSet && currentSet && currentSet.name && currentSet.compositionList.length == 0) {
+          <a
+            id="composition0" href="#" routerLink="/editor" class="list-group-item flex-column align-items-start">
+            <div class="d-flex w-100 justify-content-between">
+              <p class="mb-1">{{ 'misc.set-without-compositions' | translate }}</p>
+            </div>
+          </a>
+        }
 
         <!-- no compositions at all -->
-        <a *ngIf="!loadingSet && (currentSet && !currentSet.name) && currentSet.compositionList.length == 0"
-          id="composition0" href="#" routerLink="/editor" class="list-group-item flex-column align-items-start">
-          <div class="d-flex w-100 justify-content-between">
-            <p class="mb-1">{{ 'misc.no-compositions' | translate }}</p>
-          </div>
-        </a>
+        @if (!loadingSet && (currentSet && !currentSet.name) && currentSet.compositionList.length == 0) {
+          <a
+            id="composition0" href="#" routerLink="/editor" class="list-group-item flex-column align-items-start">
+            <div class="d-flex w-100 justify-content-between">
+              <p class="mb-1">{{ 'misc.no-compositions' | translate }}</p>
+            </div>
+          </a>
+        }
 
         <!-- Loading the set -->
-        <a *ngIf="loadingSet" id="composition0" href="#" class="list-group-item flex-column align-items-start">
-          <div class="d-flex w-100 justify-content-between">
-            <p class="mb-1 mx-auto">
-              <i class="fa fa-spinner fa-pulse fa-2x fa-fw"></i>
-            </p>
-          </div>
-        </a>
+        @if (loadingSet) {
+          <a id="composition0" href="#" class="list-group-item flex-column align-items-start">
+            <div class="d-flex w-100 justify-content-between">
+              <p class="mb-1 mx-auto">
+                <i class="fa fa-spinner fa-pulse fa-2x fa-fw"></i>
+              </p>
+            </div>
+          </a>
+        }
       </div>
+      }
 
       <!-- For smaller screens -->
       <div class="list-group d-sm-none" style="flex: 0 0 auto;">
         <div class="list-group-item flex-column align-items-start pt-2 pb-2">
+          @if (viewMode === 'grid') {
+            <button class="btn-view-toggle mr-2" (click)="toggleViewMode()" title="Switch to setlist">
+              <i class="fa fa-play-circle-o fa-fw" aria-hidden="true"></i>
+            </button>
+          }
           <div class="btn-group" dropdown container="body">
             <a href="#" id="button-container" dropdownToggle aria-controls="dropdown-container">
-              <span *ngIf="currentSet && currentSet.name">{{ currentSet?.name }}</span>
-              <span *ngIf="!currentSet || !currentSet.name">{{ 'misc.default-set' | translate }}</span>
+              @if (currentSet && currentSet.name) {
+                <span>{{ currentSet?.name }}</span>
+              }
+              @if (!currentSet || !currentSet.name) {
+                <span>{{ 'misc.default-set' | translate }}</span>
+              }
               <i class="fa fa-caret-down ml-2" aria-hidden="true"></i>
             </a>
             <ul id="dropdown-container" *dropdownMenu class="dropdown-menu" role="menu"
               aria-labelledby="button-container">
               <li role="menuitem"> <a class="dropdown-item" [class.active]="!currentSet || !currentSet.name" href="#"
-                  (click)="selectSet(undefined); false;">{{
-                'misc.default-set' | translate }}</a></li>
-              <li role="menuitem" *ngFor="let set of sets"> <a class="dropdown-item"
+                (click)="selectSet(undefined); false;">{{
+              'misc.default-set' | translate }}</a></li>
+              @for (set of sets; track set) {
+                <li role="menuitem"> <a class="dropdown-item"
                   [class.active]="set.name == currentSet?.name" href="#"
-                  (click)="selectSet(set); false;">{{ set.name }}</a></li>
+                (click)="selectSet(set); false;">{{ set.name }}</a></li>
+              }
             </ul>
           </div>
 
@@ -217,46 +264,98 @@
         </div>
       </div>
 
+      @if (viewMode === 'setlist') {
       <div class="list-group main-list composition-list d-sm-none" style="flex: 0 1 auto; overflow: auto;">
         <!-- Display all compositions -->
-        <a *ngFor="let composition of currentSet?.compositionList; let i = index" id="compositionSmall{{ i }}" href="#"
-          (click)="setComposition(i, composition); false"
-          class="list-group-item flex-column align-items-start pt-1 pb-1"
-          [class.active]="currentState?.currentCompositionName == composition.name">
-
-          <div class="d-flex w-100 justify-content-between">
-            <p class="mb-1">{{ composition.name }}</p>
-            <small class="my-auto">{{ msToTime(composition.durationMillis, false) }}</small>
-          </div>
-        </a>
+        @for (composition of currentSet?.compositionList; track composition; let i = $index) {
+          <a id="compositionSmall{{ i }}" href="#"
+            (click)="setComposition(i, composition); false"
+            class="list-group-item flex-column align-items-start pt-1 pb-1"
+            [class.active]="currentState?.currentCompositionName == composition.name">
+            <div class="d-flex w-100 justify-content-between">
+              <p class="mb-1">{{ composition.name }}</p>
+              <small class="my-auto">{{ msToTime(composition.durationMillis, false) }}</small>
+            </div>
+          </a>
+        }
 
         <!-- No compositions in the current set -->
-        <a *ngIf="!loadingSet && currentSet && currentSet.name && currentSet.compositionList.length == 0"
-          id="composition0" href="#" routerLink="/editor" class="list-group-item flex-column align-items-start">
-
-          <div class="d-flex w-100 justify-content-between">
-            <p class="mb-1">{{ 'misc.set-without-compositions' | translate }}</p>
-          </div>
-        </a>
+        @if (!loadingSet && currentSet && currentSet.name && currentSet.compositionList.length == 0) {
+          <a
+            id="composition0" href="#" routerLink="/editor" class="list-group-item flex-column align-items-start">
+            <div class="d-flex w-100 justify-content-between">
+              <p class="mb-1">{{ 'misc.set-without-compositions' | translate }}</p>
+            </div>
+          </a>
+        }
 
         <!-- no compositions at all -->
-        <a *ngIf="!loadingSet && (currentSet && !currentSet.name) && currentSet.compositionList.length == 0"
-          id="composition0" href="#" routerLink="/editor" class="list-group-item flex-column align-items-start">
-
-          <div class="d-flex w-100 justify-content-between">
-            <p class="mb-1">{{ 'misc.no-compositions' | translate }}</p>
-          </div>
-        </a>
+        @if (!loadingSet && (currentSet && !currentSet.name) && currentSet.compositionList.length == 0) {
+          <a
+            id="composition0" href="#" routerLink="/editor" class="list-group-item flex-column align-items-start">
+            <div class="d-flex w-100 justify-content-between">
+              <p class="mb-1">{{ 'misc.no-compositions' | translate }}</p>
+            </div>
+          </a>
+        }
 
         <!-- Loading the set -->
-        <a *ngIf="loadingSet" id="composition0" href="#" class="list-group-item flex-column align-items-start">
-          <div class="d-flex w-100 justify-content-between">
-            <p class="mb-1 mx-auto">
-              <i class="fa fa-spinner fa-pulse fa-fw"></i>
-            </p>
-          </div>
-        </a>
+        @if (loadingSet) {
+          <a id="composition0" href="#" class="list-group-item flex-column align-items-start">
+            <div class="d-flex w-100 justify-content-between">
+              <p class="mb-1 mx-auto">
+                <i class="fa fa-spinner fa-pulse fa-fw"></i>
+              </p>
+            </div>
+          </a>
+        }
       </div>
+      }
+
+      <!-- Cue grid view -->
+      @if (viewMode === 'grid') {
+      <div class="cue-grid-outer">
+        <div class="cue-grid">
+          @for (composition of currentSet?.compositionList; track composition; let i = $index) {
+            <button
+              class="cue-button"
+              [class.cue-playing]="currentState?.currentCompositionName === composition.name && currentState?.playState === 'PLAYING'"
+              [class.cue-loading]="currentState?.currentCompositionName === composition.name && (currentState?.playState === 'LOADING' || currentState?.playState === 'LOADED')"
+              [class.cue-paused]="currentState?.currentCompositionName === composition.name && currentState?.playState === 'PAUSED'"
+              [class.cue-stopping]="currentState?.currentCompositionName === composition.name && currentState?.playState === 'STOPPING'"
+              (click)="triggerCue(composition, i)">
+              <div class="cue-progress-fill" [style.width]="getCueProgress(composition)"></div>
+              <div class="cue-content">
+                <span class="cue-name">{{ composition.name }}</span>
+                @if (getCueTimeDisplay(composition)) {
+                  <span class="cue-duration">{{ getCueTimeDisplay(composition) }}</span>
+                }
+                @if (composition.loop) {
+                  <i class="fa fa-repeat cue-loop-icon" aria-hidden="true"></i>
+                }
+              </div>
+            </button>
+          }
+          @if (loadingSet) {
+            <div style="grid-column: 1 / -1;" class="d-flex justify-content-center p-3">
+              <i class="fa fa-spinner fa-pulse fa-2x fa-fw"></i>
+            </div>
+          }
+          @if (!loadingSet && currentSet && currentSet.compositionList.length == 0) {
+            <div style="grid-column: 1 / -1;" class="p-3 text-center">
+              <a routerLink="/editor">
+                @if (currentSet.name) {
+                  {{ 'misc.set-without-compositions' | translate }}
+                }
+                @if (!currentSet.name) {
+                  {{ 'misc.no-compositions' | translate }}
+                }
+              </a>
+            </div>
+          }
+        </div>
+      </div>
+      }
 
     </div>
   </div>

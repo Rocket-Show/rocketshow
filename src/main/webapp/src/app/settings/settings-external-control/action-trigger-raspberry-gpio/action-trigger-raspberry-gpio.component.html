@@ -1,0 +1,18 @@
+<div class="form-group row">
+  <label class="col-lg-3 col-form-label">{{
+    "settings.external-control.bcm-pin-id" | translate
+  }}</label>
+  <div class="col-lg-9">
+    <select
+      class="custom-select"
+      [ngModel]="trigger.pinId"
+      (ngModelChange)="trigger.pinId = $event"
+      >
+      @for (pin of pinList; track pin) {
+        <option [ngValue]="pin.id">
+          {{ pin.displayText }}
+        </option>
+      }
+    </select>
+  </div>
+</div>

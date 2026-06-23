@@ -9,9 +9,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @author Moritz A. Vieli
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-class OlaPort {
+public class OlaPort {
 	private String device;
 	private String id;
+	private String description;
 	private boolean isOutput;
 
 	public String getId() {
@@ -28,6 +29,14 @@ class OlaPort {
 
 	public void setDevice(String device) {
 		this.device = device;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 	@JsonProperty("is_output")

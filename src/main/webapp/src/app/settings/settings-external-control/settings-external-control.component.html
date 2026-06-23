@@ -1,0 +1,31 @@
+<div class="form-group row">
+  <div class="col-lg-12">
+    <div
+      class="list-group"
+      [sortablejs]="settings?.actionTriggerRaspberryGpioList"
+      [sortablejsOptions]="{ onMove: sortMove }"
+      >
+      @for (
+        actionTriggerRaspberryGpio of settings?.actionTriggerRaspberryGpioList; track
+        actionTriggerRaspberryGpio; let i = $index) {
+        <div
+          class="list-group-item"
+          >
+          <app-action-trigger
+            [index]="i"
+            (delete)="deleteActionTrigger($event)"
+            [trigger]="actionTriggerRaspberryGpio"
+          ></app-action-trigger>
+        </div>
+      }
+      <a
+        href="#"
+        (click)="addActionTrigger(); (false)"
+        class="no-sortjs list-group-item text-center"
+        >
+        <i class="fa fa-plus" aria-hidden="true"></i>
+        {{ "settings.midi-control-add" | translate }}
+      </a>
+    </div>
+  </div>
+</div>

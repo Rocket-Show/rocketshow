@@ -1,18 +1,13 @@
 package com.ascargon.rocketshow.util;
 
-import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.settings.SettingsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 /**
  * Manages backups.
@@ -24,7 +19,7 @@ public class DefaultBackupService implements BackupService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultBackupService.class);
 
-    private final List<String> backedUpFileList = Arrays.asList("compositions", "designer", "fixtures", "media", "session.xml", "settings.xml");
+    private final List<String> backedUpFileList = Arrays.asList("compositions", "sets", "designer", "fixtures", "media", "session.xml", "settings.xml");
 
     private final SettingsService settingsService;
     private final DiskSpaceService diskSpaceService;
@@ -34,7 +29,6 @@ public class DefaultBackupService implements BackupService {
     private final static String BACKUP_FILE_NAME = "backup.tar.gz";
 
     private final File backupFile;
-    private final String workingDirectory;
 
     public DefaultBackupService(SettingsService settingsService, DiskSpaceService diskSpaceService, ChunkedFileUploadService chunkedFileUploadService, RebootService rebootService) {
         this.settingsService = settingsService;
@@ -43,7 +37,6 @@ public class DefaultBackupService implements BackupService {
         this.rebootService = rebootService;
 
         backupFile = new File(settingsService.getSettings().getBasePath() + BACKUP_FILE_NAME);
-        workingDirectory = new File(settingsService.getSettings().getBasePath()).getName();
     }
 
     private void deleteBackupFile() throws Exception {
@@ -98,18 +91,23 @@ public class DefaultBackupService implements BackupService {
         // automatic restore only works linux-based environments
         logger.info("Start restoring backup...");
 
+        String basePath = settingsService.getSettings().getBasePath();
+
         // run async
         Runnable task = () -> {
             ShellManager shellManager;
 
             try {
                 // delete all backed up files/directories in the basepath
-                shellManager = new ShellManager(new String[]{"bash", "-c", "rm -rf " + String.join(" ", backedUpFileList)});
+                List<String> fullPaths = backedUpFileList.stream()
+                        .map(file -> basePath + File.separator + file)
+                        .toList();
+                shellManager = new ShellManager(new String[]{"bash", "-c", "rm -rf " + String.join(" ", fullPaths)});
                 shellManager.getProcess().waitFor();
                 shellManager.close();
 
                 // unpack the backup-file
-                shellManager = new ShellManager(new String[]{"tar", "-xzpf", settingsService.getSettings().getBasePath() + BACKUP_FILE_NAME});
+                shellManager = new ShellManager(new String[]{"tar", "-xzpf", settingsService.getSettings().getBasePath() + BACKUP_FILE_NAME, "-C", basePath});
                 shellManager.getProcess().waitFor();
                 shellManager.close();
 

@@ -17,6 +17,11 @@
                 <i class="fa fa-list" aria-hidden="true"></i> {{ 'editor.sets' | translate }}
               </a>
             </li>
+            <li class="nav-item">
+              <a class="nav-link" id="media-tab" data-toggle="tab" href="#media" role="tab">
+                <i class="fa fa-film" aria-hidden="true"></i> {{ 'editor.media' | translate }}
+              </a>
+            </li>
           </ul>
 
           <!-- Tab content -->
@@ -26,6 +31,9 @@
             </div>
             <div class="tab-pane" id="sets" role="tabpanel">
               <app-editor-set></app-editor-set>
+            </div>
+            <div class="tab-pane" id="media" role="tabpanel">
+              <app-editor-media></app-editor-media>
             </div>
           </div>
 

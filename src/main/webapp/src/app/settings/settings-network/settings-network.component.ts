@@ -1,21 +1,26 @@
 import { TranslateService } from '@ngx-translate/core';
 import { RemoteDevice } from './../../models/remote-device';
 import { Settings } from './../../models/settings';
+import { LanInfo } from './../../models/lan-info';
 import { SettingsService } from './../../services/settings.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { map } from "rxjs/operators";
 import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-settings-network',
-  templateUrl: './settings-network.component.html',
-  styleUrls: ['./settings-network.component.scss']
+    selector: 'app-settings-network',
+    templateUrl: './settings-network.component.html',
+    styleUrls: ['./settings-network.component.scss'],
+    standalone: false
 })
 export class SettingsNetworkComponent implements OnInit, OnDestroy {
 
   private settingsChangedSubscription: Subscription;
 
+  selectUndefinedOptionValue: any = undefined;
+
   settings: Settings;
+  currentLanInfo: LanInfo = { ipAddress: '', subnetMask: '', gateway: '', dns1: '', dns2: '' };
 
   constructor(
     private settingsService: SettingsService,
@@ -28,8 +33,26 @@ export class SettingsNetworkComponent implements OnInit, OnDestroy {
     })).subscribe();
   }
 
+  private loadCurrentLanInfo() {
+    this.settingsService.getLanInfo().pipe(map(result => {
+      this.currentLanInfo = result;
+    })).subscribe();
+  }
+
+  onLanStaticIpEnableChange(enabled: boolean) {
+    this.settings.lanStaticIpEnable = enabled;
+    if (enabled) {
+      this.settings.lanIpAddress = this.currentLanInfo.ipAddress;
+      this.settings.lanSubnetMask = this.currentLanInfo.subnetMask;
+      this.settings.lanGateway = this.currentLanInfo.gateway;
+      this.settings.lanDns1 = this.currentLanInfo.dns1;
+      this.settings.lanDns2 = this.currentLanInfo.dns2;
+    }
+  }
+
   ngOnInit() {
     this.loadSettings();
+    this.loadCurrentLanInfo();
 
     this.settingsChangedSubscription = this.settingsService.settingsChanged.subscribe(() => {
       this.loadSettings();

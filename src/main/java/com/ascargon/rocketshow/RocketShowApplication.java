@@ -1,21 +1,32 @@
 package com.ascargon.rocketshow;
 
 import com.ascargon.rocketshow.api.NotificationService;
+import com.ascargon.rocketshow.audio.AudioDeviceKeepOpenService;
 import com.ascargon.rocketshow.image.ImageDisplayingService;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.lighting.designer.FixtureService;
 import com.ascargon.rocketshow.midi.MidiDeviceInService;
 import com.ascargon.rocketshow.midi.MidiDeviceOutService;
-import com.ascargon.rocketshow.raspberry.RaspberryGpioControlActionExecutionService;
+import com.ascargon.rocketshow.play.PlayerService;
+import com.ascargon.rocketshow.settings.SettingsUpdateSystemService;
+import com.ascargon.rocketshow.util.ErrorLogAppender;
+import com.ascargon.rocketshow.util.ErrorLogService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.apache.logging.log4j.core.layout.PatternLayout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
-import java.io.IOException;
-
-@SpringBootApplication(exclude = SecurityAutoConfiguration.class)
+@SpringBootApplication()
+@EnableScheduling
 public class RocketShowApplication {
+
+    private final static Logger logger = LoggerFactory.getLogger(RocketShowApplication.class);
 
     private static String[] args;
     private static ConfigurableApplicationContext context;
@@ -23,14 +34,15 @@ public class RocketShowApplication {
     public static void main(String[] args) {
         ConfigurableApplicationContext context = SpringApplication.run(RocketShowApplication.class, args);
 
+        // Initially update the system, based on the settings
+        SettingsUpdateSystemService settingsUpdateSystemService = context.getBean(SettingsUpdateSystemService.class);
+        settingsUpdateSystemService.update();
+
         // Initialize the notification service
         context.getBean(NotificationService.class);
 
         // Load the image displayer service to initially display a black screen, if required
         context.getBean(ImageDisplayingService.class);
-
-        // Initialize the Raspberry GPIO listener
-        context.getBean(RaspberryGpioControlActionExecutionService.class);
 
         // Initialize the player to start the default composition, if required
         context.getBean(PlayerService.class);
@@ -40,6 +52,9 @@ public class RocketShowApplication {
 
         // Connect to the MIDI out device, if available
         context.getBean(MidiDeviceOutService.class);
+
+        // Initialize the player to start the default composition, if required
+        context.getBean(AudioDeviceKeepOpenService.class);
 
         // Start the designer preview, if necessary
         context.getBean(DesignerService.class);
@@ -56,6 +71,8 @@ public class RocketShowApplication {
 
         RocketShowApplication.args = args;
         RocketShowApplication.context = context;
+
+        logger.info("*** SYSTEM READY ***");
     }
 
     public static void restart() {

@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.api;
 
-import com.ascargon.rocketshow.SessionService;
+import com.ascargon.rocketshow.session.SessionService;
+import com.ascargon.rocketshow.session.Session;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,34 +25,20 @@ public class SessionController {
     }
 
     @GetMapping
-    public com.ascargon.rocketshow.Session getSession() {
+    public Session getSession() {
         return sessionService.getSession();
-    }
-
-    @PostMapping("wizard-finished")
-    public ResponseEntity<Void> setWizardFinished() {
-        sessionService.getSession().setFirstStart(false);
-        sessionService.save();
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @PostMapping("wizard-reset")
-    public ResponseEntity<Void> resetWizard() {
-        sessionService.getSession().setFirstStart(true);
-        sessionService.save();
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @PostMapping("dismiss-update-finished")
-    public ResponseEntity<Void> dismissUpdateFinished() {
-        sessionService.getSession().setUpdateFinished(false);
-        sessionService.save();
-        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("set-auto-select-next-composition")
     public ResponseEntity<Void> setAutoSelectNextComposition(@RequestParam("value") boolean value) {
         sessionService.getSession().setAutoSelectNextComposition(value);
+        sessionService.save();
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("set-play-view-mode")
+    public ResponseEntity<Void> setPlayViewMode(@RequestParam("value") String value) {
+        sessionService.getSession().setPlayViewMode(value);
         sessionService.save();
         return new ResponseEntity<>(HttpStatus.OK);
     }

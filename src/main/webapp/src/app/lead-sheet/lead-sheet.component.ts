@@ -6,9 +6,10 @@ import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { environment } from '../../environments/environment';
 
 @Component({
-  selector: 'app-lead-sheet',
-  templateUrl: './lead-sheet.component.html',
-  styleUrls: ['./lead-sheet.component.scss']
+    selector: 'app-lead-sheet',
+    templateUrl: './lead-sheet.component.html',
+    styleUrls: ['./lead-sheet.component.scss'],
+    standalone: false
 })
 export class LeadSheetComponent implements OnInit {
 

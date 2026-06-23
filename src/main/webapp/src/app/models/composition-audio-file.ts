@@ -1,19 +1,26 @@
 import { CompositionFile } from "./composition-file";
 
 export class CompositionAudioFile extends CompositionFile {
+  outputBusUuid: string;
+  volume: number;
 
-    outputBus: string;
+  constructor(data?: any) {
+    super(data);
 
-    constructor(data?: any) {
-        super(data);
-        
-        if(!data) {
-        	return;
-        }
-
-        if(data.outputBus) {
-            this.outputBus = data.outputBus;
-        }
+    if (!data) {
+      return;
     }
 
+    if (data.outputBusUuid) {
+      this.outputBusUuid = data.outputBusUuid;
+    }
+
+    if (data.volume) {
+      this.volume = data.volume;
+    }
+  }
+
+  toJSON() {
+    return { audioFile: { ...this } };
+  }
 }

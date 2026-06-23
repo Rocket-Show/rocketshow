@@ -1,22 +1,19 @@
 package com.ascargon.rocketshow.lighting.designer;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ValueDeserializer;
 
-import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
-public class FixtureModeChannelListDeserializer extends JsonDeserializer<List<FixtureModeChannel>> {
+public class FixtureModeChannelListDeserializer extends ValueDeserializer<List<FixtureModeChannel>> {
 
     @Override
-    public List<FixtureModeChannel> deserialize(JsonParser jp, DeserializationContext ctxt)
-            throws IOException, JsonProcessingException {
-
+    public List<FixtureModeChannel> deserialize(JsonParser jp, DeserializationContext ctxt) {
         List<FixtureModeChannel> result = new ArrayList<>();
-        JsonNode node = jp.getCodec().readTree(jp);
+        JsonNode node = ctxt.readTree(jp);
 
         for (JsonNode itemNode : node) {
             FixtureModeChannel fixtureModeChannel = new FixtureModeChannel();
@@ -24,7 +21,7 @@ public class FixtureModeChannelListDeserializer extends JsonDeserializer<List<Fi
             if (itemNode.isTextual()) {
                 fixtureModeChannel.setName(itemNode.asText());
             } else if (itemNode.isObject()) {
-                fixtureModeChannel = jp.getCodec().treeToValue(itemNode, FixtureModeChannel.class);
+                fixtureModeChannel = ctxt.readTreeAsValue(itemNode, FixtureModeChannel.class);
             }
 
             result.add(fixtureModeChannel);

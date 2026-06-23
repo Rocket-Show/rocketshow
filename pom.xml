@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.ascargon</groupId>
     <artifactId>rocketshow</artifactId>
-    <version>2.4.0</version>
+    <version>3.0.0</version>
     <packaging>jar</packaging>
 
     <name>Rocket Show</name>
@@ -13,16 +13,15 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.8</version>
+        <version>4.0.2</version>
         <relativePath/>
     </parent>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.version>17</java.version>
-
-        <pi4j.version>1.2</pi4j.version>
+        <java.version>21</java.version>
+        <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
     </properties>
 
     <build>
@@ -35,6 +34,18 @@
                     <includeSystemScope>true</includeSystemScope>
                     <layout>ZIP</layout>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>build-info</goal>
+                        </goals>
+                        <configuration>
+                            <additionalProperties>
+                                <buildNumber>${maven.build.timestamp}</buildNumber>
+                            </additionalProperties>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
             <!-- Compile the webapp -->
@@ -55,8 +66,8 @@
                         </goals>
                         <phase>generate-sources</phase>
                         <configuration>
-                            <nodeVersion>v18.19.1</nodeVersion>
-                            <npmVersion>10.2.4</npmVersion>
+                            <nodeVersion>v24.13.1</nodeVersion>
+                            <npmVersion>11.8.0</npmVersion>
                         </configuration>
                     </execution>
                     <execution>
@@ -112,6 +123,10 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-websocket</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
 
         <!-- XML support -->
         <dependency>
@@ -155,17 +170,12 @@
         <dependency>
             <groupId>ola</groupId>
             <artifactId>org.openlighting</artifactId>
-            <version>1.0</version>
+            <version>0.0.3</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/src/main/resources/lib/ola-java-client-0.0.2.jar</systemPath>
+            <systemPath>${project.basedir}/src/main/resources/lib/ola-java-client-0.0.3.jar</systemPath>
         </dependency>
 
         <!-- For Gstreamer -->
-        <dependency>
-            <groupId>net.java.dev.jna</groupId>
-            <artifactId>jna</artifactId>
-            <version>5.13.0</version>
-        </dependency>
         <dependency>
             <groupId>org.freedesktop.gstreamer</groupId>
             <artifactId>gst1-java-core</artifactId>
@@ -176,7 +186,17 @@
         <dependency>
             <groupId>com.pi4j</groupId>
             <artifactId>pi4j-core</artifactId>
-            <version>${pi4j.version}</version>
+            <version>3.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.pi4j</groupId>
+            <artifactId>pi4j-plugin-raspberrypi</artifactId>
+            <version>3.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.pi4j</groupId>
+            <artifactId>pi4j-plugin-gpiod</artifactId>
+            <version>3.0.3</version>
         </dependency>
 
         <!-- Support file uploads -->
@@ -186,11 +206,19 @@
             <version>1.5</version>
         </dependency>
 
+        <!-- Read/write data on serial ports (used for MIDI communication) -->
+        <!-- jSerialComm does not seem to support FT232 and MIDI baudrates -->
+        <dependency>
+            <groupId>org.bidib.com.github.purejavacomm</groupId>
+            <artifactId>purejavacomm</artifactId>
+            <version>1.0.5</version>
+        </dependency>
+
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.20</version>
+            <version>1.18.30</version>
             <scope>provided</scope>
         </dependency>
 

@@ -1,8 +1,8 @@
 package com.ascargon.rocketshow.composition;
 
-import com.ascargon.rocketshow.CapabilitiesService;
-import com.ascargon.rocketshow.PlayerService;
-import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.settings.CapabilitiesService;
+import com.ascargon.rocketshow.play.PlayerService;
+import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.gstreamer.GstDiscovererService;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
@@ -223,7 +223,7 @@ public class DefaultCompositionService implements CompositionService {
     }
 
     @Override
-    public synchronized void saveComposition(Composition composition) throws Exception {
+    public void analyzeComposition(Composition composition) throws Exception {
         // Set additional information for each file
         for (CompositionFile compositionFile : composition.getCompositionFileList()) {
             String path = settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator;
@@ -251,8 +251,7 @@ public class DefaultCompositionService implements CompositionService {
             }
         }
 
-        // Set the duration of the composition to the maximum duration of the
-        // files
+        // Set the duration of the composition to the maximum duration of the files or action trigger positions
         long maxDuration = 0;
 
         for (CompositionFile compositionFile : composition.getCompositionFileList()) {
@@ -260,7 +259,19 @@ public class DefaultCompositionService implements CompositionService {
                 maxDuration = compositionFile.getDurationMillis();
             }
         }
+
+        for (ActionTriggerComposition actionTriggerComposition : composition.getActionTriggerList()) {
+            if (actionTriggerComposition.getPositionMillis() > maxDuration) {
+                maxDuration = actionTriggerComposition.getPositionMillis();
+            }
+        }
+
         composition.setDurationMillis(maxDuration);
+    }
+
+    @Override
+    public synchronized void saveComposition(Composition composition) throws Exception {
+        analyzeComposition(composition);
 
         // Save the composition in XML
         String directory = settingsService.getSettings().getBasePath() + File.separator + COMPOSITIONS_PATH;

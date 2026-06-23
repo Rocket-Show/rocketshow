@@ -1,0 +1,46 @@
+<div class="form-group row">
+  <label class="col-md-3 col-form-label">{{
+    "settings.midi-control-type" | translate
+  }}</label>
+  <div class="col-md-9">
+    <select
+      class="custom-select"
+      [ngModel]="getTriggerMidiType()"
+      (ngModelChange)="onTriggerMidiTypeChange($event)"
+      >
+      <option value="NOTE_ON">{{ 'settings.midi-control-type-enum.NOTE_ON' | translate }}</option>
+      <option value="PROGRAM_CHANGE">{{ 'settings.midi-control-type-enum.PROGRAM_CHANGE' | translate }}</option>
+    </select>
+  </div>
+</div>
+
+<div class="form-group row">
+  <label class="col-md-3 col-form-label">{{
+    "settings.midi-control-channel-in" | translate
+  }}</label>
+  <div class="col-md-9">
+    <select
+      class="custom-select"
+      [ngModel]="trigger.channel"
+      (ngModelChange)="trigger.channel = $event"
+      >
+      @for (channel of channelList; track channel) {
+        <option [ngValue]="channel">
+          {{ channel + 1 }}
+        </option>
+      }
+    </select>
+  </div>
+</div>
+
+@if (getTriggerMidiType() == 'NOTE_ON') {
+  <app-action-trigger-midi-note-on
+    [trigger]="trigger"
+  ></app-action-trigger-midi-note-on>
+}
+
+@if (getTriggerMidiType() == 'PROGRAM_CHANGE') {
+  <app-action-trigger-midi-program-change
+    [trigger]="trigger"
+  ></app-action-trigger-midi-program-change>
+}

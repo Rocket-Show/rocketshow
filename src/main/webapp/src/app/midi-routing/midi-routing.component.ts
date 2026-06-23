@@ -1,27 +1,20 @@
-import { RoutingDetailsComponent } from './../routing-details/routing-details.component';
-import { BsModalService } from 'ngx-bootstrap/modal';
-import { MidiRouting } from './../models/midi-routing';
-import { Component, OnInit, Input } from '@angular/core';
+import { RoutingDetailsComponent } from "./../routing-details/routing-details.component";
+import { BsModalService } from "ngx-bootstrap/modal";
+import { MidiRouting } from "./../models/midi-routing";
+import { Component, OnInit, Input } from "@angular/core";
 
 @Component({
-  selector: 'app-midi-routing',
-  templateUrl: './midi-routing.component.html',
-  styleUrls: ['./midi-routing.component.scss']
+    selector: "app-midi-routing",
+    templateUrl: "./midi-routing.component.html",
+    styleUrls: ["./midi-routing.component.scss"],
+    standalone: false
 })
 export class MidiRoutingComponent implements OnInit {
   @Input() midiRoutingList: MidiRouting[];
 
-  constructor(
-    private modalService: BsModalService) { }
+  constructor(private modalService: BsModalService) {}
 
-  ngOnInit() {
-  }
-
-  // Prevent the last item in the file-list to be draggable.
-  // Taken from http://jsbin.com/tuyafe/1/edit?html,js,output
-  sortMove(evt) {
-    return evt.related.className.indexOf('no-sortjs') === -1;
-  }
+  ngOnInit() {}
 
   // Edit the routing details
   editRouting(midiRoutingIndex: number, addNew: boolean = false) {
@@ -31,25 +24,31 @@ export class MidiRoutingComponent implements OnInit {
     if (addNew) {
       // Add a new routing, if necessary
       let newRouting: MidiRouting = new MidiRouting();
-      newRouting.midiDestination = 'OUT_DEVICE';
+      newRouting.midiDestination = "OUT_DEVICE";
       listCopy.push(newRouting);
       midiRoutingIndex = listCopy.length - 1;
     }
 
     // Show the routing details dialog
-    let routingDialog = this.modalService.show(RoutingDetailsComponent, { keyboard: true, animated: true, backdrop: false, ignoreBackdropClick: true, class: "" });
-    (<RoutingDetailsComponent>routingDialog.content).midiRouting = listCopy[midiRoutingIndex];
-
-    (<RoutingDetailsComponent>routingDialog.content).onClose.subscribe(result => {
-      if (result === 1) {
-        // OK has been pressed -> save
-        this.midiRoutingList[midiRoutingIndex] = listCopy[midiRoutingIndex];
-      }
+    let routingDialog = this.modalService.show(RoutingDetailsComponent, {
+      keyboard: true,
+      ignoreBackdropClick: true,
+      class: "",
     });
+    (<RoutingDetailsComponent>routingDialog.content).midiRouting =
+      listCopy[midiRoutingIndex];
+
+    (<RoutingDetailsComponent>routingDialog.content).onClose.subscribe(
+      (result) => {
+        if (result === 1) {
+          // OK has been pressed -> save
+          this.midiRoutingList[midiRoutingIndex] = listCopy[midiRoutingIndex];
+        }
+      }
+    );
   }
 
   deleteRouting(midiRoutingIndex: number) {
     this.midiRoutingList.splice(midiRoutingIndex, 1);
   }
-
 }

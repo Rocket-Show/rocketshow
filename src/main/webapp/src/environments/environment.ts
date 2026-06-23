@@ -12,6 +12,7 @@ export const environment = {
 
   // Backend on a Raspberry Pi
   // localBackend: "rocketshow.local",
+  // localBackend: "192.168.1.64",
 
   debug: true
 };

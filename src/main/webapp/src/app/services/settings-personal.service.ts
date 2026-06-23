@@ -35,7 +35,6 @@ export class SettingsPersonalService {
   }
 
   save(settingsPersonal: SettingsPersonal): void {
-    console.log(settingsPersonal);
     localStorage.setItem(this.settingsKey, JSON.stringify(settingsPersonal));
   }
 

@@ -11,10 +11,11 @@ export class WaitDialogService {
   constructor(
     private modalService: BsModalService,
     private translateService: TranslateService
-  ) {}
+  ) {
+  }
 
   // Show a wait dialog
-  show(message: string): void {
+  show(message: string = 'misc.please-wait'): void {
     this.translateService
       .get(message)
       .pipe(

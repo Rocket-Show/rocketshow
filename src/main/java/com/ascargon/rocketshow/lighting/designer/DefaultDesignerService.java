@@ -1,15 +1,16 @@
 package com.ascargon.rocketshow.lighting.designer;
 
-import com.ascargon.rocketshow.SettingsService;
-import com.ascargon.rocketshow.composition.CompositionPlayer;
+import com.ascargon.rocketshow.settings.SettingsService;
+import com.ascargon.rocketshow.play.CompositionPlayer;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.LightingUniverse;
+import com.ascargon.rocketshow.lighting.LightingUniverseState;
 import com.ascargon.rocketshow.util.FileFilterService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.freedesktop.gstreamer.Pipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -36,6 +37,7 @@ public class DefaultDesignerService implements DesignerService {
     private final SettingsService settingsService;
     private final FileFilterService fileFilterService;
     private final LightingService lightingService;
+    private final FixturePixelGroupResolveService fixturePixelGroupResolveService;
 
     private List<Project> projects;
 
@@ -44,28 +46,33 @@ public class DefaultDesignerService implements DesignerService {
     private Pipeline pipeline;
     private CompositionPlayer compositionPlayer;
     private Composition composition;
+    private long startPositionMillis = 0;
 
     // Live preview
-    private boolean playPreview = false;
+    private boolean playPreview = false; // Is the preview playing a composition?
     private boolean previewPreset = false;
     private String selectedPresetUuid;
     private List<String> selectedSceneUuids = new ArrayList<>();
 
-    private List<LightingUniverse> lightingUniverses = new ArrayList<>();
+    private List<LightingUniverseState> lightingUniverses = new ArrayList<>();
 
-    // TODO what is a good corePoolSize?
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(20);
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
     private ScheduledFuture<?> universeSenderHandle;
-
-    private long lastPlayTimeMillis;
-    private long lastPositionMillis;
 
     private List<CachedFixture> cachedFixtures;
 
-    public DefaultDesignerService(SettingsService settingsService, FileFilterService fileFilterService, LightingService lightingService) {
+    private long lastPlayTimeMillis;
+
+    public DefaultDesignerService(
+            SettingsService settingsService,
+            FileFilterService fileFilterService,
+            LightingService lightingService,
+            FixturePixelGroupResolveService fixturePixelGroupResolveService
+    ) {
         this.settingsService = settingsService;
         this.fileFilterService = fileFilterService;
         this.lightingService = lightingService;
+        this.fixturePixelGroupResolveService = fixturePixelGroupResolveService;
 
         if (settingsService.getSettings().getDesignerLivePreview()) {
             startPreview(0);
@@ -99,14 +106,10 @@ public class DefaultDesignerService implements DesignerService {
                 if (file.isFile() && !fileFilterService.filterFile(file.getName())) {
                     logger.debug("Found project '" + file.getName() + "'");
 
-                    try {
-                        ObjectMapper mapper = new ObjectMapper();
-                        Project project = mapper.readValue(file, Project.class);
+                    ObjectMapper mapper = new ObjectMapper();
+                    Project project = mapper.readValue(file, Project.class);
 
-                        projects.add(project);
-                    } catch (IOException e) {
-                        logger.error("Could not load project '" + file.getName() + "'", e);
-                    }
+                    projects.add(project);
                 }
             }
         }
@@ -221,14 +224,6 @@ public class DefaultDesignerService implements DesignerService {
         }
 
         return null;
-    }
-
-    private long getCurrentPositionMillis() {
-        if (pipeline != null) {
-            return pipeline.queryPosition(MILLISECONDS);
-        }
-
-        return System.currentTimeMillis() - lastPlayTimeMillis + lastPositionMillis;
     }
 
     private List<PresetRegionScene> getPresetsInTime(long timeMillis) {
@@ -389,8 +384,9 @@ public class DefaultDesignerService implements DesignerService {
                     DmxChannelAndPixelKey firstDmxChannelAndFixtureUuid = new DmxChannelAndPixelKey();
                     firstDmxChannelAndFixtureUuid.setDmxChannel(fixture.getDmxFirstChannel());
                     firstDmxChannelAndFixtureUuid.setPixelKey(projectFixture.getPixelKey());
+                    firstDmxChannelAndFixtureUuid.setDmxUniverseUuid(fixture.getDmxUniverseUuid());
 
-                    boolean exists = countedFirstDmxChannelPixelKey.stream().anyMatch(item -> item.getDmxChannel() == firstDmxChannelAndFixtureUuid.getDmxChannel() && ((item.getPixelKey() == null && firstDmxChannelAndFixtureUuid.getPixelKey() == null) || Objects.equals(item.getPixelKey(), firstDmxChannelAndFixtureUuid.getPixelKey())));
+                    boolean exists = countedFirstDmxChannelPixelKey.stream().anyMatch(item -> item.getDmxChannel() == firstDmxChannelAndFixtureUuid.getDmxChannel() && ((item.getPixelKey() == null && firstDmxChannelAndFixtureUuid.getPixelKey() == null) || Objects.equals(item.getPixelKey(), firstDmxChannelAndFixtureUuid.getPixelKey())) && Objects.equals(item.getDmxUniverseUuid(), firstDmxChannelAndFixtureUuid.getDmxUniverseUuid()));
 
                     // don't count fixtures on the same channel as already counted ones
                     if (!exists) {
@@ -657,7 +653,18 @@ public class DefaultDesignerService implements DesignerService {
         for (int i = 0; i < fixtureIndex; i++) {
             CachedFixture calculatedFixture = fixtures.get(i);
 
-            if (calculatedFixture.getFixture().getDmxUniverseUuid().equals(currentFixture.getFixture().getDmxUniverseUuid()) && calculatedFixture.getFixture().getDmxFirstChannel() == currentFixture.getFixture().getDmxFirstChannel() && ((calculatedFixture.getPixelKey() == null && currentFixture.getPixelKey() == null) || Objects.equals(calculatedFixture.getPixelKey(), currentFixture.getPixelKey()))) {
+            if (Objects.equals(calculatedFixture.getFixture().getDmxUniverseUuid(),
+                    currentFixture.getFixture().getDmxUniverseUuid())
+                    && calculatedFixture.getFixture().getDmxFirstChannel()
+                    == currentFixture.getFixture().getDmxFirstChannel()
+                    && Objects.equals(
+                    calculatedFixture.getPixel() != null
+                            ? calculatedFixture.getPixel().getKey()
+                            : null,
+                    currentFixture.getPixel() != null
+                            ? currentFixture.getPixel().getKey()
+                            : null)) {
+
                 return calculatedFixture;
             }
         }
@@ -837,7 +844,7 @@ public class DefaultDesignerService implements DesignerService {
             CachedFixture alreadyCalculatedFixture = getAlreadyCalculatedFixture(cachedFixtures, i);
 
             if (logger.isTraceEnabled()) {
-                logger.trace("Calculate fixture: " + cachedFixture.getProfile().getName() + " " + cachedFixture.getPixelKey());
+                logger.trace("Calculate fixture: " + cachedFixture.getProfile().getName());
             }
 
             if (alreadyCalculatedFixture == null) {
@@ -856,7 +863,8 @@ public class DefaultDesignerService implements DesignerService {
 
                 for (PresetRegionScene preset : presets) {
                     // search for this fixture in the preset and get it's preset-specific index (for chasing effects)
-                    Integer fixtureIndex = getFixtureIndex(preset.getPreset(), cachedFixture.getFixture().getUuid(), cachedFixture.getPixelKey());
+                    String pixelKey = cachedFixture.getPixel() != null ? cachedFixture.getPixel().getKey() : null;
+                    Integer fixtureIndex = getFixtureIndex(preset.getPreset(), cachedFixture.getFixture().getUuid(), pixelKey);
 
                     if (fixtureIndex != null) {
                         // this fixture is also in the preset -> mix the required values (overwrite existing values,
@@ -878,12 +886,16 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     private void mixEffects(long timeMillis, int fixtureIndex, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double intensityPercentage) {
+        long effectTimeMillis = timeMillis;
+
+        if (preset.getRegion() != null) {
+            effectTimeMillis = timeMillis - preset.getRegion().getStartMillis();
+        }
+
         for (Effect effect : preset.getPreset().getEffects()) {
             if (effect.isVisible()) {
                 // EffectCurve
-                if (effect instanceof EffectCurve) {
-                    EffectCurve effectCurve = (EffectCurve) effect;
-
+                if (effect instanceof EffectCurve effectCurve) {
                     // capabilities
                     for (FixtureCapability capability : effectCurve.getCapabilities()) {
                         for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
@@ -892,7 +904,7 @@ public class DefaultDesignerService implements DesignerService {
                                     FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
                                     fixtureChannelValue.setChannelName(cachedChannel.getName());
                                     fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
-                                    fixtureChannelValue.setValue(cachedChannel.getMaxValue() * effectCurve.getValueAtMillis(timeMillis, fixtureIndex));
+                                    fixtureChannelValue.setValue(cachedChannel.getMaxValue() * effectCurve.getValueAtMillis(effectTimeMillis, fixtureIndex));
                                     mixChannelValue(values, fixtureChannelValue, intensityPercentage);
                                 }
                             }
@@ -908,7 +920,7 @@ public class DefaultDesignerService implements DesignerService {
                                         FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
                                         fixtureChannelValue.setChannelName(cachedChannel.getName());
                                         fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
-                                        fixtureChannelValue.setValue(cachedChannel.getMaxValue() * effectCurve.getValueAtMillis(timeMillis, fixtureIndex));
+                                        fixtureChannelValue.setValue(cachedChannel.getMaxValue() * effectCurve.getValueAtMillis(effectTimeMillis, fixtureIndex));
                                         mixChannelValue(values, fixtureChannelValue, intensityPercentage);
                                     }
                                 }
@@ -955,24 +967,25 @@ public class DefaultDesignerService implements DesignerService {
         logger.trace("Set universe values...");
 
         // Reset all DMX universes
-        for (LightingUniverse universe : lightingUniverses) {
+        for (LightingUniverseState universe : lightingUniverses) {
             universe.reset();
         }
 
         // loop over each fixture with its values for each channel
         for (Map.Entry<CachedFixture, List<FixtureChannelValue>> entry : fixtures.entrySet()) {
-            // TODO Get the correct universe for this fixture
-            HashMap<Integer, Integer> universe = null;
-            if (!lightingUniverses.isEmpty()) {
-                universe = lightingUniverses.get(0).getUniverse();
-            }
+            String fixtureUniverseUuid = entry.getKey().getFixture().getDmxUniverseUuid();
+            HashMap<Integer, Integer> universe = lightingUniverses.stream()
+                    .filter(u -> Objects.equals(u.getMappingUuid(), fixtureUniverseUuid))
+                    .map(LightingUniverseState::getUniverse)
+                    .findFirst()
+                    .orElse(null);
 
             if (universe == null) {
                 continue;
             }
 
             if (logger.isTraceEnabled()) {
-                logger.trace("Set universe values for " + entry.getValue().size() + " channels of fixture " + entry.getKey().getFixture().getName() + " " + entry.getKey().getPixelKey());
+                logger.trace("Set universe values for " + entry.getValue().size() + " channels of fixture " + entry.getKey().getFixture().getName());
             }
 
             // loop over each channel for this fixture
@@ -984,14 +997,14 @@ public class DefaultDesignerService implements DesignerService {
                 if (fixtureModeChannel.getName() == null || fixtureModeChannel.getName().isEmpty()) {
                     // reference a channel through a pixel matrix
 
-                    List<String> availablePixelKeys = getPixelKeysInOrder(entry.getKey().getProfile(), fixtureModeChannel.getRepeatFor());
+                    List<CachedFixturePixel> availablePixels = getPixelsInOrder(entry.getKey().getProfile(), fixtureModeChannel.getRepeatFor());
 
                     if (CHANNEL_ORDER_PER_PIXEL.equals(fixtureModeChannel.getChannelOrder())) {
                         // each channel for each pixel
 
-                        for (String availablePixelKey : availablePixelKeys) {
+                        for (CachedFixturePixel availablePixel : availablePixels) {
                             for (String modeTemplateChannelName : fixtureModeChannel.getTemplateChannels()) {
-                                setUniverseValueForChannel(universe, channelIndex, entry.getKey(), modeTemplateChannelName, availablePixelKey, entry.getValue());
+                                setUniverseValueForChannel(universe, channelIndex, entry.getKey(), modeTemplateChannelName, availablePixel.getKey(), entry.getValue());
                                 channelIndex++;
                             }
                         }
@@ -999,8 +1012,8 @@ public class DefaultDesignerService implements DesignerService {
                         // each pixel for each channel
 
                         for (String modeTemplateChannelName : fixtureModeChannel.getTemplateChannels()) {
-                            for (String availablePixelKey : availablePixelKeys) {
-                                setUniverseValueForChannel(universe, channelIndex, entry.getKey(), modeTemplateChannelName, availablePixelKey, entry.getValue());
+                            for (CachedFixturePixel availablePixel : availablePixels) {
+                                setUniverseValueForChannel(universe, channelIndex, entry.getKey(), modeTemplateChannelName, availablePixel.getKey(), entry.getValue());
                                 channelIndex++;
                             }
                         }
@@ -1022,45 +1035,49 @@ public class DefaultDesignerService implements DesignerService {
 
             // TODO make the dimmer value adjustable and fall back to the project settings
             setUniverseValues(calculatedFixtures);
-
-            logger.trace("DMX universe: " + lightingUniverses.get(0).getUniverse().toString());
         } catch (Exception e) {
             logger.error("Could not calculate the universe", e);
         }
     }
 
+    private long getCurrentPositionMillis() {
+        if (compositionPlayer != null) {
+            // We have a compositionPlayer -> use it to sync
+            return compositionPlayer.getPositionMillis();
+        }
+
+        // No compositionPlayer, e.g. only designer preview -> just use the current time as reference
+        return System.currentTimeMillis() - lastPlayTimeMillis + startPositionMillis;
+    }
+
     private void startTimer() {
         if (universeSenderHandle != null || settingsService.getSettings().getDesignerFrequencyHertz() == null) {
-            logger.debug("Could not start preview timer (universeSenderHandle = " + universeSenderHandle + ", designerFrequencyHertz = " + settingsService.getSettings().getDesignerFrequencyHertz() + ")");
+            logger.debug("Could not start preview timer (universeSenderHandle = {}, designerFrequencyHertz = {})", universeSenderHandle, settingsService.getSettings().getDesignerFrequencyHertz());
             return;
         }
 
         logger.debug("Start designer universe send timer...");
 
-        final Runnable universeSender = new Runnable() {
-            public void run() {
-                // TODO
-//                if (pipeline == null && getCurrentTimeMillis() > project.duration) {
-//                    // There is no Gstreamer pipeline and the designer project finished
-//                    try {
-//                        compositionPlayer.stop();
-//                    } catch (Exception e) {
-//                        logger.error("Could not automatically stop the composition from the designer project", e);
-//                    }
-//                } else {
-                // Calculate and send the current state
+        lastPlayTimeMillis = System.currentTimeMillis();
+
+        final Runnable universeSender = () -> {
+            try {
                 calculateUniverse(getCurrentPositionMillis());
-                lightingService.sendExternalSync();
-//                }
+                lightingService.sendExternalSync(settingsService.getSettings().getEnableMonitor());
+            } catch (Exception e) {
+                logger.error("Could not send universe", e);
             }
         };
 
-        logger.debug("Designer universe send timer triggering each " + 1000 / settingsService.getSettings().getDesignerFrequencyHertz() + " milliseconds");
+        logger.debug("Designer universe send timer triggering each {} milliseconds", 1000 / settingsService.getSettings().getDesignerFrequencyHertz());
 
-        universeSenderHandle = scheduler.scheduleAtFixedRate(universeSender, 0, 1000 / settingsService.getSettings().getDesignerFrequencyHertz(), MILLISECONDS);
+        long periodMillis = 1000 / settingsService.getSettings().getDesignerFrequencyHertz();
+        universeSenderHandle = scheduler.scheduleAtFixedRate(universeSender, periodMillis, periodMillis, MILLISECONDS);
     }
 
     private void stopTimer() {
+        logger.debug("Stop universe send timer...");
+
         if (universeSenderHandle == null) {
             return;
         }
@@ -1105,17 +1122,40 @@ public class DefaultDesignerService implements DesignerService {
         channels.add(cachedFixtureChannel);
     }
 
-    private int alphanumericSort(String s1, String s2) {
-        return s1.compareTo(s2);
+    private int alphanumericSort(CachedFixturePixel p1, CachedFixturePixel p2) {
+        return p1.getKey().compareTo(p2.getKey());
     }
 
-    private List<String> getAllPixelKeys(FixtureProfile profile) {
-        List<String> result = new ArrayList<>();
-        for (List<List<String>> pixelKeyX : profile.getMatrix().getPixelKeys()) {
-            for (List<String> pixelKeyY : pixelKeyX) {
-                for (String pixelKeyZ : pixelKeyY) {
-                    if (pixelKeyZ != null) {
-                        result.add(pixelKeyZ);
+    private CachedFixturePixel createPixel(String key, int x, int y, int z, FixtureProfile profile) {
+        CachedFixturePixel pixel = new CachedFixturePixel();
+
+        if (key == null) {
+            // no key available. generate a unique one based on the dimensions
+            pixel.setKey("Pixel " + (x + 1) + '-' + (y + 1) + '-' + (z + 1));
+        } else {
+            pixel.setKey(key);
+        }
+
+        pixel.setX(x);
+        pixel.setX(y);
+        pixel.setX(z);
+
+        return pixel;
+    }
+
+    private List<CachedFixturePixel> getAllPixelKeys(FixtureProfile profile) {
+        List<CachedFixturePixel> result = new ArrayList<>();
+        if (profile.getMatrix() == null || profile.getMatrix().getPixelKeys() == null) {
+            return result;
+        }
+        for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
+            var pixelKeyX = profile.getMatrix().getPixelKeys().get(x);
+            for (int y = 0; y < pixelKeyX.size(); y++) {
+                var pixelKeyY = pixelKeyX.get(y);
+                for (int z = 0; z < pixelKeyY.size(); z++) {
+                    var pixelKey = pixelKeyY.get(z);
+                    if (pixelKey != null) {
+                        result.add(createPixel(pixelKey, x, y, z, profile));
                     }
                 }
             }
@@ -1123,98 +1163,170 @@ public class DefaultDesignerService implements DesignerService {
         return result;
     }
 
-    private List<String> getAllPixelGroups(FixtureProfile profile) {
-        List<String> result = new ArrayList<>();
+    private List<CachedFixturePixel> getAllPixelsInGroups(FixtureProfile profile, List<CachedFixturePixel> allPixelKeys) {
+        List<CachedFixturePixel> result = new ArrayList<>();
+        if (profile.getMatrix() == null || profile.getMatrix().getPixelGroups() == null) {
+            return result;
+        }
         for (FixtureMatrixPixelGroup fixtureMatrixPixelGroup : profile.getMatrix().getPixelGroups()) {
-            result.add(fixtureMatrixPixelGroup.getName());
+            result.addAll(fixturePixelGroupResolveService.resolveGroupPixels(fixtureMatrixPixelGroup, allPixelKeys));
         }
         return result;
     }
 
-    private List<String> getPixelKeysInOrder(FixtureProfile profile, List<String> repeatFor) {
-        List<String> result = new ArrayList<>();
+    // get pixel keys in order for a specific channel repeatFor
+    private List<CachedFixturePixel> getPixelsInOrder(FixtureProfile profile, List<String> repeatFor) {
+        List<CachedFixturePixel> allPixelKeys = this.getAllPixelKeys(profile);
+        List<CachedFixturePixel> result = new ArrayList<>();
+
+        // could contain different things
 
         if (repeatFor.size() > 1) {
-            result = repeatFor;
+            // an array of pixel keys or groups
+            for (String entry : repeatFor) {
+                result.addAll(this.fixturePixelGroupResolveService.getPixelsForKeyOrGroup(profile.getMatrix(), allPixelKeys, entry));
+            }
         } else if (repeatFor.isEmpty()) {
             return result;
         } else if (repeatFor.get(0).equals("eachPixelABC")) {
-            if (profile.getMatrix().getPixelCount().size() == 3) {
+            // Gets computed into an alphanumerically sorted list of all pixelKeys
+            if (profile.getMatrix().getPixelKeys() != null) {
+                result.addAll(allPixelKeys);
+                result.sort(this::alphanumericSort);
+            } else if (profile.getMatrix().getPixelCount().size() == 3) {
                 for (int x = 0; x < profile.getMatrix().getPixelCount().get(0); x++) {
                     for (int y = 0; y < profile.getMatrix().getPixelCount().get(1); y++) {
                         for (int z = 0; z < profile.getMatrix().getPixelCount().get(2); z++) {
-                            result.add("Pixel " + (x + 1) + "-" + (y + 1) + "-" + (z + 1));
+                            result.add(createPixel(null, x, y, z, profile));
                         }
                     }
                 }
-            } else {
-                result.addAll(getAllPixelKeys(profile));
             }
-            result.sort(this::alphanumericSort);
         } else if (repeatFor.get(0).equals("eachPixelGroup")) {
-            result.addAll(getAllPixelGroups(profile));
+            // Gets computed into an array of all pixel group keys, ordered by appearance in the JSON file
+            result.addAll(getAllPixelsInGroups(profile, allPixelKeys));
         } else if (repeatFor.get(0).equals("eachPixelXYZ")) {
-            for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
-                for (int y = 0; y < profile.getMatrix().getPixelKeys().get(x).size(); y++) {
-                    for (int z = 0; z < profile.getMatrix().getPixelKeys().get(x).get(y).size(); z++) {
-                        String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
-                        if (pixel != null) {
-                            result.add(pixel);
+            if (profile.getMatrix().getPixelKeys() != null) {
+                for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
+                    for (int y = 0; y < profile.getMatrix().getPixelKeys().get(x).size(); y++) {
+                        for (int z = 0; z < profile.getMatrix().getPixelKeys().get(x).get(y).size(); z++) {
+                            String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
+                            if (pixel != null) {
+                                result.add(createPixel(pixel, x, y, z, profile));
+                            }
+                        }
+                    }
+                }
+            } else if (profile.getMatrix().getPixelCount().size() == 3) {
+                for (int x = 0; x < profile.getMatrix().getPixelCount().get(0); x++) {
+                    for (int y = 0; y < profile.getMatrix().getPixelCount().get(1); y++) {
+                        for (int z = 0; z < profile.getMatrix().getPixelCount().get(2); z++) {
+                            result.add(createPixel(null, x, y, z, profile));
                         }
                     }
                 }
             }
         } else if (repeatFor.get(0).equals("eachPixelXZY")) {
-            for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
-                for (int z = 0; z < profile.getMatrix().getPixelKeys().get(x).get(0).size(); z++) {
-                    for (int y = 0; y < profile.getMatrix().getPixelKeys().get(x).size(); y++) {
-                        String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
-                        if (pixel != null) {
-                            result.add(pixel);
+            if (profile.getMatrix().getPixelKeys() != null) {
+                for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
+                    for (int z = 0; z < profile.getMatrix().getPixelKeys().get(x).get(0).size(); z++) {
+                        for (int y = 0; y < profile.getMatrix().getPixelKeys().get(x).size(); y++) {
+                            String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
+                            if (pixel != null) {
+                                result.add(createPixel(pixel, x, y, z, profile));
+                            }
+                        }
+                    }
+                }
+            } else if (profile.getMatrix().getPixelCount().size() == 3) {
+                for (int x = 0; x < profile.getMatrix().getPixelCount().get(0); x++) {
+                    for (int z = 0; z < profile.getMatrix().getPixelCount().get(2); z++) {
+                        for (int y = 0; y < profile.getMatrix().getPixelCount().get(1); y++) {
+                            result.add(createPixel(null, x, y, z, profile));
                         }
                     }
                 }
             }
         } else if (repeatFor.get(0).equals("eachPixelYXZ")) {
-            for (int y = 0; y < profile.getMatrix().getPixelKeys().get(0).size(); y++) {
-                for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
-                    for (int z = 0; z < profile.getMatrix().getPixelKeys().get(x).get(y).size(); z++) {
-                        String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
-                        if (pixel != null) {
-                            result.add(pixel);
+            if (profile.getMatrix().getPixelKeys() != null) {
+                for (int y = 0; y < profile.getMatrix().getPixelKeys().get(0).size(); y++) {
+                    for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
+                        for (int z = 0; z < profile.getMatrix().getPixelKeys().get(x).get(y).size(); z++) {
+                            String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
+                            if (pixel != null) {
+                                result.add(createPixel(pixel, x, y, z, profile));
+                            }
+                        }
+                    }
+                }
+            } else if (profile.getMatrix().getPixelCount().size() == 3) {
+                for (int y = 0; y < profile.getMatrix().getPixelCount().get(1); y++) {
+                    for (int x = 0; x < profile.getMatrix().getPixelCount().get(0); x++) {
+                        for (int z = 0; z < profile.getMatrix().getPixelCount().get(2); z++) {
+                            result.add(createPixel(null, x, y, z, profile));
                         }
                     }
                 }
             }
         } else if (repeatFor.get(0).equals("eachPixelYZX")) {
-            for (int y = 0; y < profile.getMatrix().getPixelKeys().get(0).size(); y++) {
-                for (int z = 0; z < profile.getMatrix().getPixelKeys().get(0).get(y).size(); z++) {
-                    for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
-                        String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
-                        if (pixel != null) {
-                            result.add(pixel);
+            if (profile.getMatrix().getPixelKeys() != null) {
+                for (int y = 0; y < profile.getMatrix().getPixelKeys().get(0).size(); y++) {
+                    for (int z = 0; z < profile.getMatrix().getPixelKeys().get(0).get(y).size(); z++) {
+                        for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
+                            String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
+                            if (pixel != null) {
+                                result.add(createPixel(pixel, x, y, z, profile));
+                            }
+                        }
+                    }
+                }
+            } else if (profile.getMatrix().getPixelCount().size() == 3) {
+                for (int y = 0; y < profile.getMatrix().getPixelCount().get(1); y++) {
+                    for (int z = 0; z < profile.getMatrix().getPixelCount().get(2); z++) {
+                        for (int x = 0; x < profile.getMatrix().getPixelCount().get(0); x++) {
+                            result.add(createPixel(null, x, y, z, profile));
                         }
                     }
                 }
             }
         } else if (repeatFor.get(0).equals("eachPixelZXY")) {
-            for (int z = 0; z < profile.getMatrix().getPixelKeys().get(0).get(0).size(); z++) {
-                for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
-                    for (int y = 0; y < profile.getMatrix().getPixelKeys().get(x).size(); y++) {
-                        String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
-                        if (pixel != null) {
-                            result.add(pixel);
+            if (profile.getMatrix().getPixelKeys() != null) {
+                for (int z = 0; z < profile.getMatrix().getPixelKeys().get(0).get(0).size(); z++) {
+                    for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
+                        for (int y = 0; y < profile.getMatrix().getPixelKeys().get(x).size(); y++) {
+                            String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
+                            if (pixel != null) {
+                                result.add(createPixel(pixel, x, y, z, profile));
+                            }
+                        }
+                    }
+                }
+            } else if (profile.getMatrix().getPixelCount().size() == 3) {
+                for (int z = 0; z < profile.getMatrix().getPixelCount().get(2); z++) {
+                    for (int x = 0; x < profile.getMatrix().getPixelCount().get(0); x++) {
+                        for (int y = 0; y < profile.getMatrix().getPixelCount().get(1); y++) {
+                            result.add(createPixel(null, x, y, z, profile));
                         }
                     }
                 }
             }
         } else if (repeatFor.get(0).equals("eachPixelZYX")) {
-            for (int z = 0; z < profile.getMatrix().getPixelKeys().get(0).get(0).size(); z++) {
-                for (int y = 0; y < profile.getMatrix().getPixelKeys().get(0).size(); y++) {
-                    for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
-                        String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
-                        if (pixel != null) {
-                            result.add(pixel);
+            if (profile.getMatrix().getPixelKeys() != null) {
+                for (int z = 0; z < profile.getMatrix().getPixelKeys().get(0).get(0).size(); z++) {
+                    for (int y = 0; y < profile.getMatrix().getPixelKeys().get(0).size(); y++) {
+                        for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
+                            String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
+                            if (pixel != null) {
+                                result.add(createPixel(pixel, x, y, z, profile));
+                            }
+                        }
+                    }
+                }
+            } else if (profile.getMatrix().getPixelCount().size() == 3) {
+                for (int z = 0; z < profile.getMatrix().getPixelCount().get(2); z++) {
+                    for (int y = 0; y < profile.getMatrix().getPixelCount().get(1); y++) {
+                        for (int x = 0; x < profile.getMatrix().getPixelCount().get(0); x++) {
+                            result.add(createPixel(null, x, y, z, profile));
                         }
                     }
                 }
@@ -1226,6 +1338,8 @@ public class DefaultDesignerService implements DesignerService {
 
     private List<CachedFixtureChannel> getCachedChannels(FixtureProfile profile, FixtureMode mode, String pixelKey) {
         List<CachedFixtureChannel> channels = new ArrayList<>();
+        List<CachedFixturePixel> allPixelKeys = getAllPixelKeys(profile);
+        List<CachedFixturePixel> allPixelsInGroups = this.getAllPixelsInGroups(profile, allPixelKeys);
 
         if (mode == null) {
             return channels;
@@ -1248,32 +1362,33 @@ public class DefaultDesignerService implements DesignerService {
                 // check the template channels, if not found in the available channels
                 if (!channelFound) {
                     for (Map.Entry<String, FixtureChannel> entry : profile.getTemplateChannels().getTemplateChannels().entrySet()) {
-                        List<String> existingPixelKeys = getAllPixelKeys(profile);
-                        existingPixelKeys.addAll(getAllPixelGroups(profile));
+                        List<CachedFixturePixel> existingPixelKeys = new ArrayList<>();
+                        existingPixelKeys.addAll(allPixelKeys);
+                        existingPixelKeys.addAll(allPixelsInGroups);
 
-                        for (String existingPixelKey : existingPixelKeys) {
-                            String channelName = this.getChannelNameWithPixelKey(entry.getKey(), existingPixelKey);
+                        for (CachedFixturePixel existingPixelKey : existingPixelKeys) {
+                            String channelName = this.getChannelNameWithPixelKey(entry.getKey(), existingPixelKey.getKey());
 
                             if (channel.getName().equals(channelName)) {
-                                this.addCachedChannel(channels, entry.getValue(), channelName, null, profile);
+                                this.addCachedChannel(channels, entry.getValue(), channelName, existingPixelKey.getKey(), profile);
                             }
                         }
                     }
                 }
             } else {
                 // reference a channel through a pixel matrix
-                List<String> availablePixelKeys = getPixelKeysInOrder(profile, channel.getRepeatFor());
+                List<CachedFixturePixel> availablePixelKeys = getPixelsInOrder(profile, channel.getRepeatFor());
 
                 if (CHANNEL_ORDER_PER_PIXEL.equals(channel.getChannelOrder())) {
                     // each channel for each pixel
 
-                    for (String availablePixelKey : availablePixelKeys) {
-                        if (availablePixelKey.equals(pixelKey)) {
+                    for (CachedFixturePixel availablePixelKey : availablePixelKeys) {
+                        if (availablePixelKey.getKey().equals(pixelKey)) {
                             for (String modeTemplateChannelName : channel.getTemplateChannels()) {
                                 for (Map.Entry<String, FixtureChannel> entry : profile.getTemplateChannels().getTemplateChannels().entrySet()) {
                                     // don't check the fine channels. only add the coarse channel.
                                     if (modeTemplateChannelName.equals(entry.getKey())) {
-                                        this.addCachedChannel(channels, entry.getValue(), entry.getKey(), availablePixelKey, profile);
+                                        this.addCachedChannel(channels, entry.getValue(), entry.getKey(), availablePixelKey.getKey(), profile);
                                     }
                                 }
                             }
@@ -1283,12 +1398,12 @@ public class DefaultDesignerService implements DesignerService {
                     // each pixel for each channel
 
                     for (String modeTemplateChannelName : channel.getTemplateChannels()) {
-                        for (String availablePixelKey : availablePixelKeys) {
-                            if (availablePixelKey.equals(pixelKey)) {
+                        for (CachedFixturePixel availablePixelKey : availablePixelKeys) {
+                            if (availablePixelKey.getKey().equals(pixelKey)) {
                                 for (Map.Entry<String, FixtureChannel> entry : profile.getTemplateChannels().getTemplateChannels().entrySet()) {
                                     // don't check the fine channels. only add the coarse channel.
                                     if (modeTemplateChannelName.equals(entry.getKey())) {
-                                        this.addCachedChannel(channels, entry.getValue(), entry.getKey(), availablePixelKey, profile);
+                                        this.addCachedChannel(channels, entry.getValue(), entry.getKey(), availablePixelKey.getKey(), profile);
                                     }
                                 }
                             }
@@ -1301,18 +1416,25 @@ public class DefaultDesignerService implements DesignerService {
         return channels;
     }
 
-    private List<String> fixtureGetUniquePixelKeys(Fixture fixture) {
-        Set<String> pixelKeys = new HashSet<>();
+    // get all used pixels for all channels in the currently used fixture mode
+    private List<CachedFixturePixel> fixtureGetUniquePixels(Fixture fixture) {
+        List<CachedFixturePixel> pixelKeys = new ArrayList<>();
 
         FixtureProfile profile = this.getProfileByUuid(fixture.getProfileUuid());
         FixtureMode mode = this.getModeByFixture(profile, fixture);
 
         // add the unique pixel keys
         for (FixtureModeChannel channel : mode.getChannels()) {
-            pixelKeys.addAll(getPixelKeysInOrder(profile, channel.getRepeatFor()));
+            for (CachedFixturePixel pixel : getPixelsInOrder(profile, channel.getRepeatFor())) {
+                if (pixelKeys.stream()
+                        .noneMatch(p -> p.getKey().equals(pixel.getKey()))) {
+
+                    pixelKeys.add(pixel);
+                }
+            }
         }
 
-        return new ArrayList<>(pixelKeys);
+        return pixelKeys;
     }
 
     // does the fixture have a general channel without reference to specific pixel keys in the current mode?
@@ -1321,7 +1443,7 @@ public class DefaultDesignerService implements DesignerService {
         FixtureMode mode = this.getModeByFixture(profile, fixture);
 
         for (FixtureModeChannel channel : mode.getChannels()) {
-            if (this.getPixelKeysInOrder(profile, channel.getRepeatFor()).isEmpty()) {
+            if (this.getPixelsInOrder(profile, channel.getRepeatFor()).isEmpty()) {
                 return true;
             }
         }
@@ -1346,17 +1468,15 @@ public class DefaultDesignerService implements DesignerService {
                 cachedFixtures.add(cachedFixture);
             }
 
-            List<String> pixelKeys = fixtureGetUniquePixelKeys(fixture);
+            List<CachedFixturePixel> pixels = fixtureGetUniquePixels(fixture);
 
-            logger.trace("Got pixel keys: " + pixelKeys);
-
-            for (String pixelKey : pixelKeys) {
+            for (CachedFixturePixel pixel : pixels) {
                 CachedFixture cachedFixture = new CachedFixture();
                 cachedFixture.setFixture(fixture);
-                cachedFixture.setPixelKey(pixelKey);
+                cachedFixture.setPixel(pixel);
                 cachedFixture.setProfile(getProfileByUuid(fixture.getProfileUuid()));
                 cachedFixture.setMode(getModeByFixture(cachedFixture.getProfile(), fixture));
-                cachedFixture.setChannels(getCachedChannels(cachedFixture.getProfile(), cachedFixture.getMode(), pixelKey));
+                cachedFixture.setChannels(getCachedChannels(cachedFixture.getProfile(), cachedFixture.getMode(), pixel.getKey()));
                 cachedFixtures.add(cachedFixture);
             }
         }
@@ -1377,16 +1497,14 @@ public class DefaultDesignerService implements DesignerService {
         // Create the caches
         updateCachedFixtures();
 
-        // TODO Init all universes
-        LightingUniverse newUniverse = new LightingUniverse();
-        lightingUniverses.add(newUniverse);
-
-        for (LightingUniverse lightingUniverse : lightingUniverses) {
-            lightingService.addLightingUniverse(lightingUniverse);
+        for (LightingUniverse lightingUniverse : settingsService.getSettings().getLightingUniverseList()) {
+            LightingUniverseState newUniverse = new LightingUniverseState();
+            newUniverse.setMappingUuid(lightingUniverse.getUuid());
+            lightingUniverses.add(newUniverse);
+            lightingService.addLightingUniverse(newUniverse);
         }
 
         lightingService.setExternalSync(true);
-        lastPositionMillis = 0;
     }
 
     @Override
@@ -1395,7 +1513,6 @@ public class DefaultDesignerService implements DesignerService {
             return;
         }
 
-        lastPlayTimeMillis = System.currentTimeMillis();
         startTimer();
     }
 
@@ -1406,22 +1523,6 @@ public class DefaultDesignerService implements DesignerService {
         }
 
         stopTimer();
-        lastPositionMillis = getCurrentPositionMillis();
-    }
-
-    @Override
-    public void seek(long positionMillis) {
-        if (project == null) {
-            return;
-        }
-
-        if (pipeline != null) {
-            // Rely on the pipeline position
-            return;
-        }
-
-        this.lastPlayTimeMillis = System.currentTimeMillis();
-        this.lastPositionMillis = positionMillis;
     }
 
     @Override
@@ -1432,7 +1533,7 @@ public class DefaultDesignerService implements DesignerService {
 
         stopTimer();
 
-        for (LightingUniverse lightingUniverse : lightingUniverses) {
+        for (LightingUniverseState lightingUniverse : lightingUniverses) {
             lightingService.removeLightingUniverse(lightingUniverse);
         }
 
@@ -1447,9 +1548,7 @@ public class DefaultDesignerService implements DesignerService {
             return;
         }
 
-        this.lastPlayTimeMillis = System.currentTimeMillis();
-        this.lastPositionMillis = positionMillis;
-
+        this.startPositionMillis = positionMillis;
         startTimer();
     }
 
@@ -1461,7 +1560,7 @@ public class DefaultDesignerService implements DesignerService {
 
         stopTimer();
 
-        for (LightingUniverse lightingUniverse : lightingUniverses) {
+        for (LightingUniverseState lightingUniverse : lightingUniverses) {
             lightingService.removeLightingUniverse(lightingUniverse);
         }
 
@@ -1470,21 +1569,12 @@ public class DefaultDesignerService implements DesignerService {
 
     @Override
     public void setPreviewComposition(String compositionName) {
-        if (compositionName == null) {
+        if (compositionName == null || compositionName.isEmpty()) {
             this.playPreview = false;
         } else {
             composition = getCompositionByName(project, compositionName);
             playPreview = true;
         }
-    }
-
-    @Override
-    public long getPositionMillis() {
-        if (project == null) {
-            return 0;
-        }
-
-        return getCurrentPositionMillis();
     }
 
     @Override

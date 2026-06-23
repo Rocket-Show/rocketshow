@@ -1,0 +1,100 @@
+package com.ascargon.rocketshow.session;
+
+import com.ascargon.rocketshow.composition.SetService;
+import com.ascargon.rocketshow.settings.SettingsService;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
+import jakarta.xml.bind.Unmarshaller;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+@Service
+public class DefaultSessionService implements SessionService {
+
+    private final static Logger logger = LoggerFactory.getLogger(DefaultSessionService.class);
+
+    private final String FILE_NAME = "session";
+
+    private final SettingsService settingsService;
+    private final SetService setService;
+
+    private Session session;
+
+    public DefaultSessionService(SettingsService settingsService, SetService setService) {
+        this.settingsService = settingsService;
+        this.setService = setService;
+
+        try {
+            loadSession();
+        } catch (Exception e) {
+            logger.error("Could not restore session", e);
+        }
+    }
+
+    @Override
+    public void save() {
+        if (setService.getCurrentSet() == null) {
+            session.setCurrentSetName("");
+        } else {
+            session.setCurrentSetName(setService.getCurrentSet().getName());
+        }
+
+        try {
+            String directory = settingsService.getSettings().getBasePath();
+
+            File file = new File(directory + File.separator + FILE_NAME + ".xml");
+            JAXBContext jaxbContext = JAXBContext.newInstance(Session.class);
+            Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+
+            // output pretty printed
+            jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+
+            jaxbMarshaller.marshal(session, file);
+
+            logger.info("Session saved");
+        } catch (JAXBException e) {
+            logger.error("Could not save the session", e);
+        }
+    }
+
+    private void loadSession() {
+        File file = new File(settingsService.getSettings().getBasePath() + File.separator + FILE_NAME + ".xml");
+
+        if (file.exists()) {
+            // We already have a session -> restore it from the file
+            try {
+                JAXBContext jaxbContext = JAXBContext.newInstance(Session.class);
+
+                Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+                session = (Session) jaxbUnmarshaller.unmarshal(file);
+
+                logger.info("Session restored");
+            } catch (JAXBException e) {
+                logger.error("Could not load session", e);
+            }
+        } else {
+            // There is no session existant -> create a default session
+            session = new Session();
+            save();
+        }
+    }
+
+    @Override
+    public Session getSession() {
+        return session;
+    }
+
+    @Override
+    public void setSession(Session session) {
+        this.session = session;
+    }
+
+}

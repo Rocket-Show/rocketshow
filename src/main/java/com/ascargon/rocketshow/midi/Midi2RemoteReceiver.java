@@ -1,7 +1,7 @@
 package com.ascargon.rocketshow.midi;
 
-import com.ascargon.rocketshow.RemoteDevice;
-import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.api.RemoteDevice;
+import com.ascargon.rocketshow.settings.SettingsService;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -46,8 +46,7 @@ class Midi2RemoteReceiver implements Receiver {
             logger.error("Could not process MIDI event to remote", e);
         }
 
-        String apiUrl = "midi/send-message?command=" + shortMessage.getCommand() + "&channel=" + shortMessage.getChannel()
-                + "&note=" + shortMessage.getData1() + "&velocity" + shortMessage.getData2();
+        MidiSignal midiSignal = new MidiSignal(shortMessage);
 
         for (String name : remoteDeviceNameList) {
             RemoteDevice remoteDevice = settingsService.getRemoteDeviceByName(name);
@@ -56,7 +55,7 @@ class Midi2RemoteReceiver implements Receiver {
                 logger.warn("No remote device could be found in the settings with name " + name);
             } else {
                 try {
-                    remoteDevice.doPost(apiUrl);
+                    remoteDevice.sendMidiSignal(midiSignal);
                 } catch (Exception e) {
                     logger.error("Could not send MIDI message to remote device '" + remoteDevice.getHost() + "' ("
                             + name + ")", e);

@@ -1,0 +1,39 @@
+<app-particle-background></app-particle-background>
+
+<div class="container d-flex h-100">
+    <div class="row m-auto">
+        <div class="col-xl">
+            <div class="d-flex flex-column">
+
+                <img class="pb-2 mx-auto" src="assets/img/icon.png" alt="icon" width="100px">
+
+                <div id="login" class="card border-secondary text-center">
+                    <form (ngSubmit)="login()">
+                        <img class="card-img-top" src="assets/img/intro_title.jpg" alt="Card image cap">
+                        <div class="card-body">
+                            <h4 class="card-title">{{ 'login.title' | translate }}</h4>
+                            <h6 class="card-subtitle mb-2">{{ 'login.description' | translate }}</h6>
+
+                            <input type="password" name="password" [(ngModel)]="password" (ngModelChange)="change()"
+                                class="form-control" placeholder="Password" autofocus>
+
+                            <div *ngIf="pwWrong" class="alert alert-danger mt-3 mb-0">
+                                {{ 'login.error-pw-wrong' | translate }}
+                            </div>
+                            <div *ngIf="generalError" class="alert alert-danger mt-3 mb-0">
+                                {{ generalErrorMessage }}
+                            </div>
+                        </div>
+                        <div class="card-footer d-flex">
+                            <button type="submit" [disabled]="loading" ] class="btn btn-primary mx-auto" role="button">
+                                @if (loading) {<i class="fa fa-spinner fa-pulse fa-fw"></i>}@if(!loading){<i
+                                    class="fa fa-sign-in" aria-hidden="true"></i>}
+                                {{ 'login.login' | translate }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -6,9 +6,10 @@ import { Component, OnInit, Input } from '@angular/core';
 import { map } from "rxjs/operators";
 
 @Component({
-  selector: 'app-remote-device-selection',
-  templateUrl: './remote-device-selection.component.html',
-  styleUrls: ['./remote-device-selection.component.scss']
+    selector: 'app-remote-device-selection',
+    templateUrl: './remote-device-selection.component.html',
+    styleUrls: ['./remote-device-selection.component.scss'],
+    standalone: false
 })
 export class RemoteDeviceSelectionComponent implements OnInit {
   @Input() remoteDeviceList: string[];

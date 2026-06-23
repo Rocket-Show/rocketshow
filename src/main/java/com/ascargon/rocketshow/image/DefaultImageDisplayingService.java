@@ -1,11 +1,14 @@
 package com.ascargon.rocketshow.image;
 
-import com.ascargon.rocketshow.SettingsService;
+import com.ascargon.rocketshow.RocketShowApplication;
+import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import com.ascargon.rocketshow.util.ShellManager;
+import org.springframework.boot.system.ApplicationHome;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 
 @Service
@@ -18,7 +21,7 @@ public class DefaultImageDisplayingService implements ImageDisplayingService {
 
         // Display a default black screen on Raspbian
         if (OperatingSystemInformation.SubType.RASPBERRYOS.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType())) {
-            display(settingsService.getSettings().getBasePath() + "black.jpg");
+            display(new ApplicationHome(RocketShowApplication.class).getDir() + File.separator + "black.jpg");
         }
     }
 

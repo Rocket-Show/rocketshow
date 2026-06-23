@@ -1,13 +1,13 @@
 <div class="form-group row">
-  <label for="channel-offset" class="col-sm-6 col-form-label">{{ 'routing.channel-offset' | translate }}</label>
-  <div class="col-sm-6">
+  <label for="channel-offset" class="col-sm-3 col-form-label">{{ 'routing.channel-offset' | translate }}</label>
+  <div class="col-sm-9">
     <input type="text" [ngModel]="midiMapping?.channelOffset" (ngModelChange)="midiMapping.channelOffset = $event"
       class="form-control" id="channel-offset">
   </div>
 </div>
 <div class="form-group row mb-0">
-  <label for="note-offset" class="col-sm-6 col-form-label">{{ 'routing.note-offset' | translate }}</label>
-  <div class="col-sm-6">
+  <label for="note-offset" class="col-sm-3 col-form-label">{{ 'routing.note-offset' | translate }}</label>
+  <div class="col-sm-9">
     <input type="text" [ngModel]="midiMapping?.noteOffset" (ngModelChange)="midiMapping.noteOffset = $event"
       class="form-control" id="note-offset">
   </div>

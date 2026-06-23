@@ -1,0 +1,18 @@
+<div class="form-group row">
+  <label class="col-md-3 col-form-label">{{
+    "settings.midi-control-program" | translate
+  }}</label>
+  <div class="col-md-9">
+    <select
+      class="custom-select"
+      [ngModel]="trigger.program"
+      (ngModelChange)="trigger.program = $event"
+      >
+      @for (program of programList; track program) {
+        <option [ngValue]="program">
+          {{ program + 1 }}
+        </option>
+      }
+    </select>
+  </div>
+</div>

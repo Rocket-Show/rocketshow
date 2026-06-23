@@ -6,7 +6,7 @@ $enable-rounded: false;
 
 $theme-colors: (
   warning: $orange,
-  danger: $orange
+  danger: $orange,
 ) !default;
 
 /* Add bootstrap */
@@ -52,7 +52,7 @@ dropzone.dz-wrapper > .dropzone {
   min-height: 0 !important;
 }
 
-dropzone>.dropzone.dz-wrapper .dz-preview .dz-details {
+dropzone > .dropzone.dz-wrapper .dz-preview .dz-details {
   padding: 0 !important;
   padding-left: 3px !important;
   padding-top: 3px !important;

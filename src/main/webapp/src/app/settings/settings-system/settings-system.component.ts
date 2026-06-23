@@ -9,19 +9,22 @@ import { SettingsService } from "../../services/settings.service";
 import { CompositionService } from "../../services/composition.service";
 import { Composition } from "../../models/composition";
 import { Version } from "../../models/version";
-import { catchError, finalize, map } from "rxjs/operators";
+import { catchError, finalize, map, switchMap } from "rxjs/operators";
 import { OperatingSystemInformation } from "../../models/operating-system-information";
 import { OperatingSystemInformationService } from "../../services/operating-system-information.service";
-import { Subscription } from "rxjs";
+import { DeviceInformation } from "../../models/device-information";
+import { DeviceInformationService } from "../../services/device-information.service";
+import { EMPTY, forkJoin, Subscription } from "rxjs";
 import { BackupRestoreDialogComponent } from "../backup-restore-dialog/backup-restore-dialog.component";
 import { saveAs } from "file-saver/FileSaver";
 import { WaitDialogService } from "../../services/wait-dialog.service";
 import { ToastGeneralErrorService } from "../../services/toast-general-error.service";
 
 @Component({
-  selector: "app-settings-system",
-  templateUrl: "./settings-system.component.html",
-  styleUrls: ["./settings-system.component.scss"],
+    selector: "app-settings-system",
+    templateUrl: "./settings-system.component.html",
+    styleUrls: ["./settings-system.component.scss"],
+    standalone: false
 })
 export class SettingsSystemComponent implements OnInit, OnDestroy {
   private settingsChangedSubscription: Subscription;
@@ -31,7 +34,10 @@ export class SettingsSystemComponent implements OnInit, OnDestroy {
   settings: Settings;
   compositions: Composition[];
   currentVersion: Version;
+  availableUpdateVersion: Version;
+  showAvailableUpdateMessage: boolean = false;
   operatingSystemInformation: OperatingSystemInformation;
+  deviceInformation: DeviceInformation;
 
   constructor(
     public settingsService: SettingsService,
@@ -41,6 +47,7 @@ export class SettingsSystemComponent implements OnInit, OnDestroy {
     private updateService: UpdateService,
     private modalService: BsModalService,
     private operatingSystemInformationService: OperatingSystemInformationService,
+    private deviceInformationService: DeviceInformationService,
     private waitDialogService: WaitDialogService,
     private toastGeneralErrorService: ToastGeneralErrorService,
   ) {
@@ -49,6 +56,13 @@ export class SettingsSystemComponent implements OnInit, OnDestroy {
       .subscribe((operatingSystemInformation) => {
         this.operatingSystemInformation = operatingSystemInformation;
       });
+
+    this.deviceInformationService.getDeviceInformation().subscribe((deviceInformation) => {
+      this.deviceInformation = deviceInformation;
+      if (deviceInformation?.available) {
+        this.checkForAvailableUpdate();
+      }
+    });
   }
 
   private loadSettings() {
@@ -116,10 +130,33 @@ export class SettingsSystemComponent implements OnInit, OnDestroy {
   }
 
   checkVersion() {
-    let updateDialog = this.modalService.show(UpdateDialogComponent, {
+    this.openUpdateDialog();
+  }
+
+  dismissAvailableUpdateMessage() {
+    this.showAvailableUpdateMessage = false;
+  }
+
+  private openUpdateDialog() {
+    this.modalService.show(UpdateDialogComponent, {
       keyboard: false,
       ignoreBackdropClick: true,
       class: "",
+    });
+  }
+
+  private checkForAvailableUpdate() {
+    this.settingsService.getSettings().pipe(
+      switchMap(() => forkJoin({
+        currentVersion: this.updateService.getCurrentVersion(),
+        remoteVersion: this.updateService.getRemoteVersion(),
+      })),
+      catchError(() => EMPTY)
+    ).subscribe(({ currentVersion, remoteVersion }) => {
+      if (this.updateService.isVersionNewer(remoteVersion, currentVersion)) {
+        this.availableUpdateVersion = remoteVersion;
+        this.showAvailableUpdateMessage = true;
+      }
     });
   }
 

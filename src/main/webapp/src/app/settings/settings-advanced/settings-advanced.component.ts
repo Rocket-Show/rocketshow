@@ -1,45 +1,46 @@
 import { InfoDialogService } from "./../../services/info-dialog.service";
 import { WaitDialogService } from "./../../services/wait-dialog.service";
-import { StateService } from "./../../services/state.service";
 import { Component, OnInit, OnDestroy } from "@angular/core";
 import { SettingsService } from "../../services/settings.service";
 import { Settings } from "../../models/settings";
 import { WarningDialogService } from "../../services/warning-dialog.service";
-import { State } from "../../models/state";
 import { saveAs } from "file-saver/FileSaver";
 import { HttpClient } from "@angular/common/http";
 import { OperatingSystemInformation } from "../../models/operating-system-information";
 import { OperatingSystemInformationService } from "../../services/operating-system-information.service";
-import { map } from "rxjs/operators";
+import { DeviceInformation } from "../../models/device-information";
+import { DeviceInformationService } from "../../services/device-information.service";
+import { finalize, map } from "rxjs/operators";
 import { Subscription } from "rxjs";
-import { SessionService } from "../../services/session.service";
-import { ReloadClearCacheService } from "../../services/reload-clear-cache.service";
+import { AuthService } from "../../services/auth.service";
 
 @Component({
-  selector: "app-settings-advanced",
-  templateUrl: "./settings-advanced.component.html",
-  styleUrls: ["./settings-advanced.component.scss"],
+    selector: "app-settings-advanced",
+    templateUrl: "./settings-advanced.component.html",
+    styleUrls: ["./settings-advanced.component.scss"],
+    standalone: false
 })
 export class SettingsAdvancedComponent implements OnInit, OnDestroy {
   private settingsChangedSubscription: Subscription;
-  private stateChangedSubscription: Subscription;
+  private factoryResetAuthPollSubscription: Subscription;
 
   settings: Settings;
-  private isResettingToFactory: boolean = false;
+  enableMaintenanceModeLoading: boolean = false;
+  downloadLogsLoading: boolean = false;
   operatingSystemInformation: OperatingSystemInformation;
+  deviceInformation: DeviceInformation;
 
   loggingLevelList: string[] = [];
 
   constructor(
     private settingsService: SettingsService,
-    private sessionService: SessionService,
     private warningDialogService: WarningDialogService,
     private waitDialogService: WaitDialogService,
     private http: HttpClient,
-    private stateService: StateService,
     private infoDialogService: InfoDialogService,
     private operatingSystemInformationService: OperatingSystemInformationService,
-    private reloadClearCacheService: ReloadClearCacheService
+    private deviceInformationService: DeviceInformationService,
+    private authService: AuthService
   ) {
     this.loggingLevelList.push("INFO");
     this.loggingLevelList.push("DEBUG");
@@ -50,6 +51,10 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
       .subscribe((operatingSystemInformation) => {
         this.operatingSystemInformation = operatingSystemInformation;
       });
+
+    this.deviceInformationService.getDeviceInformation().subscribe((deviceInformation) => {
+      this.deviceInformation = deviceInformation;
+    });
   }
 
   private loadSettings() {
@@ -70,30 +75,11 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
       this.settingsService.settingsChanged.subscribe(() => {
         this.loadSettings();
       });
-
-    this.stateChangedSubscription = this.stateService.state.subscribe(
-      (state: State) => {
-        if (this.isResettingToFactory) {
-          // We got a new state after resetting to factory defaults
-          // -> the device has been resetted
-          this.isResettingToFactory = false;
-
-          this.infoDialogService
-            .show("settings.factory-reset-done")
-            .pipe(
-              map(() => {
-                this.reloadClearCacheService.reload();
-              })
-            )
-            .subscribe();
-        }
-      }
-    );
   }
 
   ngOnDestroy() {
     this.settingsChangedSubscription.unsubscribe();
-    this.stateChangedSubscription.unsubscribe();
+    this.factoryResetAuthPollSubscription?.unsubscribe();
   }
 
   factoryReset() {
@@ -103,18 +89,27 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
         map((result) => {
           if (result) {
             this.waitDialogService.show("settings.wait-factory-reset");
-            this.isResettingToFactory = true;
-            this.http.post("system/factory-reset", undefined).subscribe();
+            this.http.post("system/factory-reset", undefined).subscribe({
+              next: () => {
+                this.reloadWhenFactoryResetFinished();
+              },
+              error: () => {
+                this.reloadWhenFactoryResetFinished();
+              },
+            });
           }
         })
       )
       .subscribe();
   }
 
-  resetIntro() {
-    this.sessionService.introReset().subscribe(() => {
-      this.reloadClearCacheService.reload();
-    });
+  private reloadWhenFactoryResetFinished(): void {
+    this.factoryResetAuthPollSubscription?.unsubscribe();
+    this.factoryResetAuthPollSubscription = this.authService
+      .pollForStateAfterConnectionLoss()
+      .subscribe(() => {
+        window.location.replace(window.location.origin + "/");
+      });
   }
 
   private downloadFile(blob: Blob) {
@@ -122,10 +117,42 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
   }
 
   downloadLogs() {
+    if (this.downloadLogsLoading) {
+      return;
+    }
+
+    this.downloadLogsLoading = true;
+
     this.http
       .get("system/download-logs", { responseType: "blob" })
+      .pipe(
+        finalize(() => {
+          this.downloadLogsLoading = false;
+        })
+      )
       .subscribe((blob) => {
         this.downloadFile(blob);
+      });
+  }
+
+  enableMaintenanceMode() {
+    if (this.enableMaintenanceModeLoading) {
+      return;
+    }
+
+    this.enableMaintenanceModeLoading = true;
+
+    this.http
+      .post("system/enable-ssh", undefined, { responseType: "text" })
+      .pipe(
+        finalize(() => {
+          this.enableMaintenanceModeLoading = false;
+        })
+      )
+      .subscribe((password) => {
+        this.infoDialogService
+          .show("settings.maintenance-mode-enabled", { password: password })
+          .subscribe();
       });
   }
 }

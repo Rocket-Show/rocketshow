@@ -1,23 +1,26 @@
-import { AudioDevice } from './../../models/audio-device';
-import { Settings } from './../../models/settings';
-import { SettingsService } from './../../services/settings.service';
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { OperatingSystemInformationService } from '../../services/operating-system-information.service';
+import { AudioDevice } from "./../../models/audio-device";
+import { Settings } from "./../../models/settings";
+import { SettingsService } from "./../../services/settings.service";
+import { Component, OnInit, OnDestroy } from "@angular/core";
+import { OperatingSystemInformationService } from "../../services/operating-system-information.service";
 import { map } from "rxjs/operators";
-import { Subscription } from 'rxjs';
+import { Subscription } from "rxjs";
+import { DeviceInformationService } from "../../services/device-information.service";
+import { DeviceInformation } from "../../models/device-information";
 
 @Component({
-  selector: 'app-settings-audio',
-  templateUrl: './settings-audio.component.html',
-  styleUrls: ['./settings-audio.component.scss']
+  selector: "app-settings-audio",
+  templateUrl: "./settings-audio.component.html",
+  styleUrls: ["./settings-audio.component.scss"],
+  standalone: false
 })
 export class SettingsAudioComponent implements OnInit, OnDestroy {
-
   selectUndefinedOptionValue: any;
 
   private settingsChangedSubscription: Subscription;
 
   settings: Settings;
+  deviceInformation: DeviceInformation;
   audioDeviceList: AudioDevice[];
   audioOutputList: string[] = [];
   maxAudioChannels: number = 9999;
@@ -25,42 +28,59 @@ export class SettingsAudioComponent implements OnInit, OnDestroy {
 
   constructor(
     private settingsService: SettingsService,
-    private operatingSystemInformationService: OperatingSystemInformationService
+    private operatingSystemInformationService: OperatingSystemInformationService,
+    private deviceInformationService: DeviceInformationService,
   ) {
-    this.operatingSystemInformationService.getOperatingSystemInformation().subscribe(operatingSystemInformation => {
-      if(operatingSystemInformation.type == 'WINDOWS') {
-        // TODO
-      } else if(operatingSystemInformation.type == 'OS_X') {
-        this.audioOutputList.push('DEFAULT');
-      } else if(operatingSystemInformation.subType == 'RASPBERRYOS') {
-        // Currently disabled
-        //this.audioOutputList.push('HEADPHONES');
-        //this.audioOutputList.push('HDMI');
-        this.audioOutputList.push('DEVICE');
-      } else if(operatingSystemInformation.type == 'LINUX') {
-        this.audioOutputList.push('DEVICE');
-      }
+    this.operatingSystemInformationService
+      .getOperatingSystemInformation()
+      .subscribe((operatingSystemInformation) => {
+        if (operatingSystemInformation.type == "WINDOWS") {
+          // TODO
+        } else if (operatingSystemInformation.type == "OS_X") {
+          this.audioOutputList.push("DEFAULT");
+        } else if (operatingSystemInformation.subType == "RASPBERRYOS") {
+          // Currently disabled
+          //this.audioOutputList.push('HEADPHONES');
+          //this.audioOutputList.push('HDMI');
+          this.audioOutputList.push("DEVICE");
+        } else if (operatingSystemInformation.type == "LINUX") {
+          this.audioOutputList.push("DEVICE");
+        }
+      });
+
+    this.deviceInformationService.getDeviceInformation().subscribe((deviceInformation) => {
+      this.deviceInformation = deviceInformation;
     });
   }
 
   private loadSettings() {
-    this.settingsService.getSettings().pipe(map(result => {
-      this.settings = result;
+    this.settingsService
+      .getSettings()
+      .pipe(
+        map((result) => {
+          this.settings = result;
 
-      this.settingsService.getAudioDevices().subscribe((response) => {
-        this.audioDeviceList = response;
+          this.settingsService.getAudioDevices().subscribe((response) => {
+            this.audioDeviceList = response;
 
-        for(let audioDevice of this.audioDeviceList) {
-          if(this.settings.audioDevice && audioDevice.key == this.settings.audioDevice.key) {
-            this.settings.audioDevice = audioDevice;
-          }
-        }
-      });
+            for (let audioDevice of this.audioDeviceList) {
+              for (let audioBus of this.settings.audioBusList) {
+                if (
+                  audioBus.audioDevice &&
+                  audioDevice.key == audioBus.audioDevice.key
+                ) {
+                  audioBus.audioDevice = audioDevice;
+                }
+              }
+            }
+          });
 
-      this.updateCurrentAudioChannels();
-    })).subscribe();
+          this.updateCurrentAudioChannels();
+        })
+      )
+      .subscribe();
 
-    this.settingsService.getMaxAudioChannels().subscribe(channels => {
+    this.settingsService.getMaxAudioChannels().subscribe((channels) => {
       this.maxAudioChannels = channels;
     });
   }
@@ -68,15 +88,16 @@ export class SettingsAudioComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.loadSettings();
 
-    this.settingsChangedSubscription = this.settingsService.settingsChanged.subscribe(() => {
-      this.loadSettings();
-    });
+    this.settingsChangedSubscription =
+      this.settingsService.settingsChanged.subscribe(() => {
+        this.loadSettings();
+      });
   }
 
   private updateCurrentAudioChannels() {
     this.currentAudioChannels = 0;
 
-    for(let audioBus of this.settings.audioBusList) {
+    for (let audioBus of this.settings.audioBusList) {
       this.currentAudioChannels += audioBus.channels;
     }
 
@@ -100,5 +121,4 @@ export class SettingsAudioComponent implements OnInit, OnDestroy {
     this.settings.audioBusList.splice(audioBusIndex, 1);
     this.updateCurrentAudioChannels();
   }
-
 }

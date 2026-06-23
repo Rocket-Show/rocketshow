@@ -3,7 +3,9 @@
   <div class="col-lg-9">
     <select class="custom-select" [ngModel]="settingsPersonal?.instrumentUuid" (ngModelChange)="settingsPersonal.instrumentUuid = $event">
       <option [ngValue]="selectUndefinedOptionValue">- {{ 'settings.instrument-not-specified' | translate }} -</option>
-      <option *ngFor="let instrument of settings?.instrumentList" [ngValue]="instrument.uuid">{{ instrument.name }}</option>
+      @for (instrument of settings?.instrumentList; track instrument) {
+        <option [ngValue]="instrument.uuid">{{ instrument.name }}</option>
+      }
     </select>
   </div>
 </div>

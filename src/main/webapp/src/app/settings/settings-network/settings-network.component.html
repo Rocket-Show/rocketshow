@@ -1,15 +1,78 @@
 <div class="form-group row">
+  <label class="col-lg-3 col-form-label">{{ 'settings.lan-ip' | translate }}</label>
+  <div class="col-lg-9">
+    <div class="card border-secondary">
+      <div class="card-body">
+        <div class="form-group row">
+          <div class="col-sm-3">{{ 'settings.lan-ip-mode' | translate }}</div>
+          <div class="col-sm-9">
+            <div class="form-check">
+              <input type="checkbox" [ngModel]="settings?.lanStaticIpEnable" (ngModelChange)="onLanStaticIpEnableChange($event)"
+                class="form-check-input" id="lanStaticIpEnable">
+              <label class="form-check-label" for="lanStaticIpEnable">
+                {{ 'settings.lan-ip-enable' | translate }}
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-sm-3 col-form-label">{{ 'settings.lan-ip-address' | translate }}</label>
+          <div class="col-sm-9">
+            <input type="text"
+              [ngModel]="settings?.lanStaticIpEnable ? settings?.lanIpAddress : currentLanInfo.ipAddress"
+              (ngModelChange)="settings.lanIpAddress = $event"
+              class="form-control" placeholder="192.168.1.100" [disabled]="!settings?.lanStaticIpEnable">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-sm-3 col-form-label">{{ 'settings.lan-subnet-mask' | translate }}</label>
+          <div class="col-sm-9">
+            <input type="text"
+              [ngModel]="settings?.lanStaticIpEnable ? settings?.lanSubnetMask : currentLanInfo.subnetMask"
+              (ngModelChange)="settings.lanSubnetMask = $event"
+              class="form-control" placeholder="255.255.255.0" [disabled]="!settings?.lanStaticIpEnable">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-sm-3 col-form-label">{{ 'settings.lan-gateway' | translate }}</label>
+          <div class="col-sm-9">
+            <input type="text"
+              [ngModel]="settings?.lanStaticIpEnable ? settings?.lanGateway : currentLanInfo.gateway"
+              (ngModelChange)="settings.lanGateway = $event"
+              class="form-control" placeholder="192.168.1.1" [disabled]="!settings?.lanStaticIpEnable">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label class="col-sm-3 col-form-label">{{ 'settings.lan-dns1' | translate }}</label>
+          <div class="col-sm-9">
+            <input type="text"
+              [ngModel]="settings?.lanStaticIpEnable ? settings?.lanDns1 : currentLanInfo.dns1"
+              (ngModelChange)="settings.lanDns1 = $event"
+              class="form-control" placeholder="8.8.8.8" [disabled]="!settings?.lanStaticIpEnable">
+          </div>
+        </div>
+        <div class="form-group row mb-0">
+          <label class="col-sm-3 col-form-label">{{ 'settings.lan-dns2' | translate }}</label>
+          <div class="col-sm-9">
+            <input type="text"
+              [ngModel]="settings?.lanStaticIpEnable ? settings?.lanDns2 : currentLanInfo.dns2"
+              (ngModelChange)="settings.lanDns2 = $event"
+              class="form-control" placeholder="8.8.4.4" [disabled]="!settings?.lanStaticIpEnable">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="form-group row">
   <label class="col-lg-3 col-form-label">{{ 'settings.wlan-ap' | translate }}</label>
   <div class="col-lg-9">
     <div class="card border-secondary">
       <div class="card-body">
         <i>{{ 'settings.wlan-ap-description' | translate }}</i>
 
-        <div class="alert alert-warning mt-3 mb-2" role="alert">
-          <i class="fa fa-exclamation-triangle" aria-hidden="true"></i> {{ 'settings.restart-required' | translate }}
-        </div>
-
-        <div class="form-group row mb-0">
+        <div class="form-group row mt-3 mb-0">
           <div class="col-sm-3">{{ 'settings.wlan-ap-status' | translate }}</div>
           <div class="col-sm-9">
             <div class="form-check">
@@ -23,18 +86,17 @@
           </div>
         </div>
 
-        <div *ngIf="settings?.wlanApEnable" class="mt-2">
+        @if (settings?.wlanApEnable) {
+        <div class="mt-2">
           <div class="form-group row">
-            <label for="channel-offset"
-              class="col-sm-3 col-form-label">{{ 'settings.wlan-ap-ssid' | translate }}</label>
+            <label for="channel-offset" class="col-sm-3 col-form-label">{{ 'settings.wlan-ap-ssid' | translate }}</label>
             <div class="col-sm-9">
               <input type="text" [ngModel]="settings?.wlanApSsid" (ngModelChange)="settings.wlanApSsid = $event"
                 class="form-control">
             </div>
           </div>
           <div class="form-group row">
-            <label for="channel-offset" class="col-sm-3 col-form-label">{{ 'settings.wlan-ap-wpa-passphrase' | translate
-              }}</label>
+            <label for="channel-offset" class="col-sm-3 col-form-label">{{ 'settings.wlan-ap-wpa-passphrase' | translate }}</label>
             <div class="col-sm-9">
               <input type="text"
                 [class.text-danger]="settings?.wlanApPassphrase && settings?.wlanApPassphrase.length < 8"
@@ -44,12 +106,10 @@
           </div>
           <div class="form-group row">
             <div class="col-sm-3"></div>
-
             <div class="col-sm-9">
               <div class="form-check">
                 <input type="checkbox" [ngModel]="settings?.wlanApSsidHide"
                   (ngModelChange)="settings.wlanApSsidHide = $event" class="form-check-input" id="wlanApSsidHide">
-
                 <label class="form-check-label" for="wlanApSsidHide">
                   {{ 'settings.wlan-ap-ssid-hide' | translate }}
                 </label>
@@ -71,8 +131,8 @@
           <div class="form-group row">
             <label class="col-md-3 col-form-label">{{ 'settings.wlan-ap-channel' | translate }}</label>
             <div class="col-md-9">
-              <select *ngIf="this.settings.wlanApHwMode == 'b' || this.settings.wlanApHwMode == 'g'"
-                class="custom-select" [ngModel]="settings?.wlanApChannel"
+              @if (this.settings.wlanApHwMode == 'b' || this.settings.wlanApHwMode == 'g') {
+              <select class="custom-select" [ngModel]="settings?.wlanApChannel"
                 (ngModelChange)="settings.wlanApChannel = $event">
                 <option value="1">1</option>
                 <option value="2">2</option>
@@ -89,8 +149,10 @@
                 <option value="13">13</option>
                 <option value="14">14</option>
               </select>
-              <select *ngIf="this.settings.wlanApHwMode == 'a'" class="custom-select"
-                [ngModel]="settings?.wlanApChannel" (ngModelChange)="settings.wlanApChannel = $event">
+              }
+              @if (this.settings.wlanApHwMode == 'a') {
+              <select class="custom-select" [ngModel]="settings?.wlanApChannel"
+                (ngModelChange)="settings.wlanApChannel = $event">
                 <option value="7">7</option>
                 <option value="8">8</option>
                 <option value="9">9</option>
@@ -157,8 +219,10 @@
                 <option value="192">192</option>
                 <option value="196">196</option>
               </select>
-              <select *ngIf="this.settings.wlanApHwMode == 'ad'" class="custom-select"
-                [ngModel]="settings?.wlanApChannel" (ngModelChange)="settings.wlanApChannel = $event">
+              }
+              @if (this.settings.wlanApHwMode == 'ad') {
+              <select class="custom-select" [ngModel]="settings?.wlanApChannel"
+                (ngModelChange)="settings.wlanApChannel = $event">
                 <option value="1">1</option>
                 <option value="2">2</option>
                 <option value="3">3</option>
@@ -166,6 +230,7 @@
                 <option value="5">5</option>
                 <option value="6">6</option>
               </select>
+              }
             </div>
           </div>
           <div class="form-group row mb-0">
@@ -173,6 +238,7 @@
             <div class="col-md-9">
               <select class="custom-select" [ngModel]="settings?.wlanApCountryCode"
                 (ngModelChange)="settings.wlanApCountryCode = $event">
+                <option [ngValue]="selectUndefinedOptionValue">- None -</option>
                 <option value="DZ">Algeria</option>
                 <option value="AR">Argentina</option>
                 <option value="AU">Australia</option>
@@ -260,6 +326,7 @@
             </div>
           </div>
         </div>
+        }
 
       </div>
     </div>
@@ -270,8 +337,8 @@
   <label class="col-lg-3 col-form-label">{{ 'routing.remote-devices' | translate }}</label>
   <div class="col-lg-9">
     <div class="list-group" [sortablejs]="settings?.remoteDeviceList" [sortablejsOptions]="{ onMove: sortMove }">
-      <div class="list-group-item" *ngFor="let remoteDevice of settings?.remoteDeviceList; let i = index">
-
+      @for (remoteDevice of settings?.remoteDeviceList; track remoteDevice; let i = $index) {
+      <div class="list-group-item">
         <div class="form-group row" style="margin-top: 10px; margin-bottom: -30px;">
           <div class="col d-flex">
             <a class="my-auto ml-auto text-danger" href="#" role="button" (click)="deleteRemoteDevice(i); false">
@@ -293,18 +360,23 @@
               placeholder="192.168.1.22">
           </div>
         </div>
+        <div class="form-group row">
+          <label class="col-md-3 col-form-label">{{ 'settings.remote-device-api-key' | translate }}</label>
+          <div class="col-md-8">
+            <input type="text" class="form-control" [(ngModel)]="remoteDevice.apiKey" id="apiKey">
+          </div>
+        </div>
         <div class="form-group">
           <div class="form-check">
             <input type="checkbox" [ngModel]="remoteDevice.synchronize"
               (ngModelChange)="remoteDevice.synchronize = $event" class="form-check-input" id="sync_{{ i }}">
-
             <label class="form-check-label" for="sync_{{ i }}">
               {{ 'settings.remote-device-synchronize' | translate }}
             </label>
           </div>
         </div>
-
       </div>
+      }
       <a href="#" (click)="addRemoteDevice(); false" class="no-sortjs list-group-item text-center">
         <i class="fa fa-plus" aria-hidden="true"></i> {{ 'settings.remote-device-add' | translate }}
       </a>
