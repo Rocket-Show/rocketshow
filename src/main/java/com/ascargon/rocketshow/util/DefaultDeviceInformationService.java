@@ -109,6 +109,11 @@ public class DefaultDeviceInformationService implements DeviceInformationService
             throw new IllegalStateException("Serial is empty");
         }
 
+        // Default the file version if none was provided.
+        if (toStore.getFileVersion() == null || toStore.getFileVersion().isEmpty()) {
+            toStore.setFileVersion("1.0");
+        }
+
         StringBuilder sb = new StringBuilder();
         append(sb, "FILE_VERSION", toStore.getFileVersion());
         append(sb, "COUNTRY", toStore.getCountry());

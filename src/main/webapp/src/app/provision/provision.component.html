@@ -25,13 +25,9 @@
             <label class="col-lg-4 col-form-label">SKU</label>
             <div class="col-lg-8 my-auto">{{ deviceInformation?.sku }}</div>
           </div>
-          <div class="form-group row mb-2">
+          <div class="form-group row mb-0">
             <label class="col-lg-4 col-form-label">Country</label>
             <div class="col-lg-8 my-auto">{{ deviceInformation?.country }}</div>
-          </div>
-          <div class="form-group row mb-0">
-            <label class="col-lg-4 col-form-label">File version</label>
-            <div class="col-lg-8 my-auto">{{ deviceInformation?.fileVersion }}</div>
           </div>
           } @else {
           <p class="mb-3">Enter the provisioning data for this device. This can only be set once.</p>
@@ -68,13 +64,6 @@
               <div class="col-lg-8">
                 <input id="country" name="country" type="text" class="form-control"
                   [(ngModel)]="provisioningData.country">
-              </div>
-            </div>
-            <div class="form-group row">
-              <label for="fileVersion" class="col-lg-4 col-form-label">File version</label>
-              <div class="col-lg-8">
-                <input id="fileVersion" name="fileVersion" type="text" class="form-control"
-                  [(ngModel)]="provisioningData.fileVersion">
               </div>
             </div>
             <div class="d-flex float-right">
