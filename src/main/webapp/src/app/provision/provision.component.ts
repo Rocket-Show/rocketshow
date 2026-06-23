@@ -1,11 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { TranslateService } from '@ngx-translate/core';
 import { BsModalService } from 'ngx-bootstrap/modal';
 import { DeviceInformation } from '../models/device-information';
 import { HealthStatus } from '../models/health-status';
 import { DeviceInformationService } from '../services/device-information.service';
 import { HealthService } from '../services/health.service';
-import { SettingsService } from '../services/settings.service';
 import { ToastGeneralErrorService } from '../services/toast-general-error.service';
 import { UpdateDialogComponent } from '../settings/update-dialog/update-dialog.component';
 
@@ -17,8 +15,6 @@ import { UpdateDialogComponent } from '../settings/update-dialog/update-dialog.c
 })
 export class ProvisionComponent implements OnInit {
 
-  language: string = 'en';
-
   deviceInformation: DeviceInformation;
   provisioningData: DeviceInformation = new DeviceInformation();
   provisioningSaving: boolean = false;
@@ -28,8 +24,6 @@ export class ProvisionComponent implements OnInit {
   healthLoading: boolean = false;
 
   constructor(
-    public settingsService: SettingsService,
-    private translateService: TranslateService,
     private deviceInformationService: DeviceInformationService,
     private healthService: HealthService,
     private modalService: BsModalService,
@@ -39,11 +33,6 @@ export class ProvisionComponent implements OnInit {
   ngOnInit() {
     this.loadDeviceInformation();
     this.refreshHealth();
-  }
-
-  switchLanguage(language: string) {
-    this.language = language;
-    this.translateService.use(language);
   }
 
   private loadDeviceInformation() {

@@ -18,7 +18,7 @@ import { ToastrService } from "ngx-toastr";
   selector: "body",
   templateUrl: "./app.component.html",
   styleUrls: ["./app.component.scss"],
-  host: { "[class.body-bg-moving]": "this.isIntro || this.isProvision" },
+  host: { "[class.body-bg-moving]": "this.isIntro" },
   standalone: false
 })
 export class AppComponent implements OnInit {
