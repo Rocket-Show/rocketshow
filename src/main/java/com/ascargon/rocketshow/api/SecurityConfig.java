@@ -37,7 +37,7 @@ public class SecurityConfig {
     SecurityFilterChain appSecurity(
             HttpSecurity http,
             ApiKeyAuthFilter apiKeyAuthFilter,
-            AuthorizationManager<RequestAuthorizationContext> systemTestAuthorizationManager
+            AuthorizationManager<RequestAuthorizationContext> setupOrAdminAuthorizationManager
     ) throws Exception {
         http
                 .cors(Customizer.withDefaults())
@@ -69,7 +69,14 @@ public class SecurityConfig {
                         // maybe different persisted Spring Boot serialized session).
                         .requestMatchers(HttpMethod.GET, "/api/system/update-state").permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/api/system/test").access(systemTestAuthorizationManager)
+                        .requestMatchers(HttpMethod.POST, "/api/system/test").access(setupOrAdminAuthorizationManager)
+
+                        // Provisioning endpoints: accessible without login as long as the initial setup (intro) is not
+                        // yet completed, so a device can be provisioned and updated before any admin password is set.
+                        .requestMatchers(HttpMethod.POST, "/api/system/update").access(setupOrAdminAuthorizationManager)
+                        .requestMatchers(HttpMethod.GET, "/api/system/current-version").access(setupOrAdminAuthorizationManager)
+                        .requestMatchers(HttpMethod.GET, "/api/system/remote-version").access(setupOrAdminAuthorizationManager)
+                        .requestMatchers("/api/update/state").access(setupOrAdminAuthorizationManager)
 
                         // Shared endpoints
                         // .requestMatchers(HttpMethod.POST, "/api/transport/play").hasAnyRole("ADMIN", "DEVICE")
@@ -127,8 +134,10 @@ public class SecurityConfig {
         return source;
     }
 
+    // Grants access when the initial setup (intro) is not yet completed (no admin password set), or to an
+    // authenticated admin otherwise. Used for provisioning and update endpoints that must be reachable before setup.
     @Bean
-    AuthorizationManager<RequestAuthorizationContext> systemTestAuthorizationManager(SettingsService settingsService) {
+    AuthorizationManager<RequestAuthorizationContext> setupOrAdminAuthorizationManager(SettingsService settingsService) {
         return (authentication, context) -> {
             Settings settings = settingsService.getSettings();
             boolean setupFinished = settings.getAdminPasswordHash() != null && !settings.getAdminPasswordHash().isEmpty();

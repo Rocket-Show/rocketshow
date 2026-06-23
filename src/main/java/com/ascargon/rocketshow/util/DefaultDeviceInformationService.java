@@ -30,14 +30,15 @@ public class DefaultDeviceInformationService implements DeviceInformationService
         }
 
         DeviceInformation loadedDeviceInformation = new DeviceInformation();
-        deviceInformation = loadedDeviceInformation;
 
         if (!Files.exists(CFG_PATH)) {
+            // Not provisioned (yet). Don't cache, so the file is picked up once it appears
+            // (e.g. the /provision partition is mounted or the device is provisioned later).
             logger.debug("No device information available");
-            return deviceInformation;
+            return loadedDeviceInformation;
         }
 
-        deviceInformation.setAvailable(true);
+        loadedDeviceInformation.setAvailable(true);
         logger.debug("Device information is available");
 
         try {
@@ -75,9 +76,14 @@ public class DefaultDeviceInformationService implements DeviceInformationService
                 }
             }
         } catch (IOException e) {
+            // Don't cache a failed read, so it can be retried on the next call.
             logger.error("Failed to read device information from {}", CFG_PATH, e);
+            return loadedDeviceInformation;
         }
 
+        // Only cache a successful read, so a transient failure or a not-yet-ready
+        // /provision partition can never poison the cache with empty data.
+        deviceInformation = loadedDeviceInformation;
         return deviceInformation;
     }
 
@@ -101,6 +107,11 @@ public class DefaultDeviceInformationService implements DeviceInformationService
 
         if (toStore.getSerial() == null || toStore.getSerial().isEmpty()) {
             throw new IllegalStateException("Serial is empty");
+        }
+
+        // Default the file version if none was provided.
+        if (toStore.getFileVersion() == null || toStore.getFileVersion().isEmpty()) {
+            toStore.setFileVersion("1.0");
         }
 
         StringBuilder sb = new StringBuilder();

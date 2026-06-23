@@ -1,5 +1,6 @@
 export class DeviceInformation {
   available: boolean;
+  fileVersion: string;
   country: string;
   serial: string;
   model: string;
@@ -12,6 +13,7 @@ export class DeviceInformation {
     }
 
     this.available = data.available;
+    this.fileVersion = data.fileVersion;
     this.country = data.country;
     this.serial = data.serial;
     this.model = data.model;

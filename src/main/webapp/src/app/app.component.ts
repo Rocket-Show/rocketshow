@@ -23,6 +23,7 @@ import { ToastrService } from "ngx-toastr";
 })
 export class AppComponent implements OnInit {
   isIntro: boolean = false;
+  isProvision: boolean = false;
   isPlay: boolean = false;
   loaded: boolean = false;
   settings: Settings;
@@ -89,6 +90,7 @@ export class AppComponent implements OnInit {
         });
 
         this.isIntro = false;
+        this.isProvision = false;
         this.isPlay = false;
 
         switch (e.url) {
@@ -98,6 +100,12 @@ export class AppComponent implements OnInit {
             } else {
               this.isIntro = true;
             }
+            break;
+          }
+          case "/provision": {
+            // The provisioning page is always accessible by URL (no security,
+            // no redirect), regardless of the setup or authentication state.
+            this.isProvision = true;
             break;
           }
           case "/play": {
@@ -117,6 +125,17 @@ export class AppComponent implements OnInit {
           this.loaded = true;
         }
         this.authService.state.subscribe((state) => {
+          // The provisioning page is always accessible by URL, regardless of
+          // the setup or authentication state. Never redirect away from it.
+          // Check the live router URL (not the captured navigation event), so
+          // stale subscriptions from earlier navigations don't redirect either.
+          if (this.isOnProvision()) {
+            this.isProvision = true;
+            if (state.authenticated) {
+              this.loadInitialData();
+            }
+            return;
+          }
           if (state.authenticated) {
             this.loadInitialData()
           } else if (!state.passwordConfigured) {
@@ -129,6 +148,10 @@ export class AppComponent implements OnInit {
         });
       }
     });
+  }
+
+  private isOnProvision(): boolean {
+    return this.router.url.split("?")[0] === "/provision";
   }
 
   private navigateIntro() {

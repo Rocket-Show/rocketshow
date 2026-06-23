@@ -38,6 +38,7 @@ import { WaitDialogService } from "./services/wait-dialog.service";
 
 import { AppComponent } from "./app.component";
 import { IntroComponent } from "./intro/intro.component";
+import { ProvisionComponent } from "./provision/provision.component";
 import { ConnectionComponent } from "./connection/connection.component";
 import { PlayComponent } from "./play/play.component";
 import { SettingsComponent } from "./settings/settings.component";
@@ -92,9 +93,11 @@ import { SettingsSecurityComponent } from "./settings/settings-security/settings
 import { ChangePasswordDialogComponent } from './settings/change-password-dialog/change-password-dialog.component';
 import { NewApiKeyDialogComponent } from "./settings/new-api-key-dialog/new-api-key-dialog.component";
 import { DeviceInformationService } from "./services/device-information.service";
+import { HealthService } from "./services/health.service";
 
 const appRoutes: Routes = [
   { path: "intro", component: IntroComponent },
+  { path: "provision", component: ProvisionComponent },
   { path: "play", component: PlayComponent },
   {
     path: "editor",
@@ -123,6 +126,7 @@ const appRoutes: Routes = [
         ArraySortPipe,
         AppComponent,
         IntroComponent,
+        ProvisionComponent,
         ParticleBackgroundComponent,
         PlayComponent,
         SettingsComponent,
@@ -221,6 +225,7 @@ const appRoutes: Routes = [
         InfoDialogService,
         ToastGeneralErrorService,
         DeviceInformationService,
+        HealthService,
         provideHttpClient(withInterceptorsFromDi()),
     ] })
 export class AppModule {}
