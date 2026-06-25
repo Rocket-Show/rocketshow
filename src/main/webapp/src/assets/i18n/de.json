@@ -83,7 +83,7 @@
     "lead-sheet": "Leadsheet",
     "lead-sheets-library": "Bibliothek",
     "files": "Mediendateien",
-    "mute": "Stumm",
+    "deactivate": "Deaktivieren",
     "offset-millis": "Verzögerung in Millisekunden",
     "offset-placeholder": "Verzögerung in Millisekunden",
     "loop": "Wiederholen",

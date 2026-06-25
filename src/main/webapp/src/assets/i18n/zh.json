@@ -83,7 +83,7 @@
     "lead-sheet": "主奏谱",
     "lead-sheets-library": "库",
     "files": "媒体文件",
-    "mute": "静音",
+    "deactivate": "停用",
     "offset-millis": "延迟（毫秒）",
     "offset-placeholder": "延迟（毫秒）",
     "loop": "循环",

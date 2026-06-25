@@ -322,7 +322,7 @@ export class EditorCompositionComponent implements OnInit {
     this.editLeadSheet(0, true);
   }
 
-  // Toggle the active state (mute)
+  // Toggle the active state (deactivate)
   toggleActive(file: CompositionFile) {
     file.active = !file.active;
   }

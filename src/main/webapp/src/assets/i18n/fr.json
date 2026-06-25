@@ -83,7 +83,7 @@
     "lead-sheet": "Feuille de lead",
     "lead-sheets-library": "Bibliothèque",
     "files": "Fichiers multimédias",
-    "mute": "Muet",
+    "deactivate": "Désactiver",
     "offset-millis": "Délai en millisecondes",
     "offset-placeholder": "Délai en millisecondes",
     "loop": "Répéter",

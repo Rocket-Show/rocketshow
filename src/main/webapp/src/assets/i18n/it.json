@@ -83,7 +83,7 @@
     "lead-sheet": "Leadsheet",
     "lead-sheets-library": "Libreria",
     "files": "File multimediali",
-    "mute": "Silenzia",
+    "deactivate": "Disattiva",
     "offset-millis": "Ritardo in millisecondi",
     "offset-placeholder": "Ritardo in millisecondi",
     "loop": "Ripeti",
