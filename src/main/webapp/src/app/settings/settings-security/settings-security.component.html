@@ -34,7 +34,9 @@
 <div class="form-group row">
     <label class="col-lg-3 col-form-label">{{
         "settings.api-keys" | translate
-        }}</label>
+        }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+            [popover]="'settings.help.api-keys' | translate" triggers="mouseenter:mouseleave" container="body"
+            placement="right" aria-hidden="true"></i></label>
     <div class="col-lg-9">
         <div class="list-group" [sortablejs]="settings?.apiKeyList" [sortablejsOptions]="{ onMove: sortMove }">
             @for (apiKey of settings?.apiKeyList; track apiKey; let i = $index) {
