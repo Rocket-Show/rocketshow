@@ -5,54 +5,30 @@ import com.ascargon.rocketshow.composition.ActionTriggerComposition;
 import com.ascargon.rocketshow.composition.CompositionFile;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.settings.CapabilitiesService;
-import com.ascargon.rocketshow.settings.SettingsService;
-import com.ascargon.rocketshow.audio.ActivityNotificationAudioService;
-import com.ascargon.rocketshow.midi.ActivityNotificationMidiService;
 import com.ascargon.rocketshow.api.NotificationService;
-import com.ascargon.rocketshow.audio.AudioBus;
-import com.ascargon.rocketshow.audio.AudioCompositionFile;
-import com.ascargon.rocketshow.audio.AudioDevice;
-import com.ascargon.rocketshow.audio.AudioService;
-import com.ascargon.rocketshow.gstreamer.GstApi;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.lighting.designer.Project;
-import com.ascargon.rocketshow.midi.*;
+import com.ascargon.rocketshow.midi.MidiTimecodeService;
 import com.ascargon.rocketshow.util.ActionExecutionService;
-import com.ascargon.rocketshow.util.OperatingSystemInformation;
-import com.ascargon.rocketshow.util.OperatingSystemInformationService;
-import com.ascargon.rocketshow.video.HdmiService;
-import com.ascargon.rocketshow.video.VideoCompositionFile;
-import org.freedesktop.gstreamer.*;
-import org.freedesktop.gstreamer.elements.AppSink;
-import org.freedesktop.gstreamer.elements.BaseSink;
-import org.freedesktop.gstreamer.elements.PlayBin;
-import org.freedesktop.gstreamer.elements.URIDecodeBin;
-import org.freedesktop.gstreamer.event.SeekFlags;
-import org.freedesktop.gstreamer.lowlevel.GType;
-import org.freedesktop.gstreamer.lowlevel.GValueAPI;
-import org.freedesktop.gstreamer.message.Message;
-import org.freedesktop.gstreamer.message.MessageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.MidiMessage;
-import javax.sound.midi.ShortMessage;
-import java.io.File;
-import java.nio.ByteBuffer;
-import java.util.*;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.*;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
- * Manage the playing of a composition. Read all files and create the Gstreamer pipeline.
+ * Manage the playing of a composition (play/pause/resume/stop/seek/loop, action triggers and
+ * position tracking). The actual GStreamer pipeline is constructed by the
+ * {@link CompositionPipelineBuilder} and driven through the resulting {@link CompositionPipeline}.
  */
 @Service
-public class CompositionPlayer {
+public class CompositionPlayer implements CompositionPipelineBuilder.MasterEventListener {
 
     private final static Logger logger = LoggerFactory.getLogger(CompositionPlayer.class);
 
@@ -68,26 +44,18 @@ public class CompositionPlayer {
     }
 
     private final NotificationService notificationService;
-    private final ActivityNotificationMidiService activityNotificationMidiService;
     private final PlayerService playerService;
-    private final SettingsService settingsService;
     private final CapabilitiesService capabilitiesService;
-    private final ActivityNotificationAudioService activityNotificationAudioService;
     private final SetService setService;
     private final LightingService lightingService;
     private final DesignerService designerService;
-    private final OperatingSystemInformationService operatingSystemInformationService;
-    private final AudioService audioService;
-    private final MidiRouterFactory midiRouterFactory;
     private final ActionExecutionService actionExecutionService;
-    private final MidiService midiService;
     private final MidiTimecodeService midiTimecodeService;
-    private final HdmiService hdmiService;
+    private final CompositionPipelineBuilder compositionPipelineBuilder;
 
     private Composition composition;
     private PlayState playState = PlayState.STOPPED;
     private boolean firstPlayDone = false; // Has the pipeline played at least once?
-    private boolean hasH265Stream = false; // True when a hardware H.265 decoder is in use in the master pipeline
     // True once the master pipeline reached EOS but the composition is still running to let trailing
     // actions (placed after the longest source) fire. Position then advances on the wall clock.
     private boolean masterEosReached = false;
@@ -95,23 +63,14 @@ public class CompositionPlayer {
     private long lastPlayTimeMillis; // The system time, when playing started
     private ScheduledFuture<?> autoStopHandle;
 
-    private final MidiMapping midiMapping = new MidiMapping();
-
     // Is this the default composition?
     private boolean isDefaultComposition = false;
 
     // Is this composition played as a sample?
     private boolean isSample = false;
 
-    // The master gstreamer pipeline, used to sync all files which must stay aligned
-    // (the longest source plus all non-looping sources). Drives the composition timeline.
-    private Pipeline pipeline;
-    private List<Element> volumeList = new ArrayList<>();
-
-    // Slave pipelines: one per looping source that is shorter than the longest source.
-    // They run independently (looping on their own) but share the master clock so they
-    // don't drift. Empty unless the composition mixes looping and non-looping sources.
-    private final List<SlavePipeline> slavePipelineList = new ArrayList<>();
+    // The constructed GStreamer pipeline (master + slaves). Null when nothing is loaded.
+    private CompositionPipeline compositionPipeline;
 
     // Execute the action triggers at the specified positions
     private ScheduledExecutorService scheduler;
@@ -121,627 +80,55 @@ public class CompositionPlayer {
     // Ensure, each trigger is executed only once (during inconsistencies when re-scheduling periodically)
     private List<ActionTriggerComposition> remainingActionTriggerCompositionList;
 
-    // All MIDI routers
-    private final List<MidiRouter> midiRouterList = new ArrayList<>();
-
-    // A MIDI message parser for MIDI files inside this composition
-    private final MidiMessageParser midiMessageParser = new MidiMessageParser();
-
-    public CompositionPlayer(DefaultPlayerService playerService, MidiRouterFactory midiRouterFactory) {
+    public CompositionPlayer(DefaultPlayerService playerService) {
         this.playerService = playerService;
         this.notificationService = playerService.getNotificationService();
-        this.activityNotificationMidiService = playerService.getActivityNotificationMidiService();
-        this.settingsService = playerService.getSettingsService();
         this.capabilitiesService = playerService.getCapabilitiesService();
-        this.activityNotificationAudioService = playerService.getActivityNotificationAudioService();
         this.setService = playerService.getSetService();
         this.lightingService = playerService.getLightingService();
         this.designerService = playerService.getDesignerService();
-        this.operatingSystemInformationService = playerService.getOperatingSystemInformationService();
-        this.audioService = playerService.getAudioService();
-        this.midiRouterFactory = midiRouterFactory;
         this.actionExecutionService = playerService.getActionExecutionService();
-        this.midiService = playerService.getMidiService();
         this.midiTimecodeService = playerService.getMidiTimecodeService();
-        this.hdmiService = playerService.getHdmiService();
-
-        this.midiMapping.setParent(settingsService.getSettings().getMidiMapping());
+        this.compositionPipelineBuilder = playerService.getCompositionPipelineBuilder();
     }
 
-    private void processMidiBuffer(ByteBuffer byteBuffer, MidiRouter midiRouter) {
+    // --- CompositionPipelineBuilder.MasterEventListener ---
+
+    @Override
+    public void onError(String message) {
         try {
-            Optional<MidiMessage> maybeMessage = midiMessageParser.offerByteBuffer(byteBuffer);
-            maybeMessage.ifPresent(midiMessage -> {
-                try {
-                    midiRouter.sendSignal(midiMessage, MidiSource.MIDI_FILE);
-                } catch (InvalidMidiDataException e) {
-                    logger.error("Could not send MIDI signal from composition file", e);
-                }
-
-                if (settingsService.getSettings().getEnableMonitor() && midiMessage instanceof ShortMessage) {
-                    activityNotificationMidiService.notifyClients((ShortMessage) midiMessage, MidiDirection.IN, MidiSource.MIDI_FILE, null);
-                }
-            });
-        } catch (InvalidMidiDataException e) {
-            logger.error("Could not create MIDI signal from composition file", e);
+            notificationService.notifyClients(message);
+        } catch (Exception e) {
+            logger.error("Could not notify clients about an error", e);
+        }
+        try {
+            stop();
+        } catch (Exception e) {
+            logger.error("Could not stop compostion triggered by an error", e);
         }
     }
 
-    private Element getGstVideoSink() {
-        if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
-            return ElementFactory.make("osxvideosink", "osxvideosink");
-        }
-        Element kmssink = ElementFactory.make("kmssink", "kmssink");
-        kmssink.set("driver-name", "vc4");
-        return kmssink;
-    }
-
-    private int getAudioBusStartChannel(AudioBus audioBus) {
-        int startChannelIndex = 0;
-
-        if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
-            return 0;
-        }
-
-        // Get the starting channel of the current bus
-        for (AudioBus settingsAudioBus : settingsService.getSettings().getAudioBusList()) {
-            if (settingsAudioBus.getAudioDevice().getId() == audioBus.getAudioDevice().getId()) {
-                if (settingsAudioBus.getName().equals(audioBus.getName())) {
-                    break;
-                } else {
-                    startChannelIndex += settingsAudioBus.getChannels();
-                }
-            }
-        }
-
-        return startChannelIndex;
-    }
-
-    private float getChannelVolume(AudioBus audioBus, int outputChannelIndex, int inputChannelIndex, float volume) {
-        int startChannelIndex = getAudioBusStartChannel(audioBus);
-
-        if (outputChannelIndex < startChannelIndex) {
-            return 0;
-        }
-
-        if (inputChannelIndex >= audioBus.getChannels()) {
-            return 0;
-        }
-
-        if (inputChannelIndex == outputChannelIndex - startChannelIndex) {
-            return volume;
-        } else {
-            return 0;
-        }
-    }
-
-    private void addVideoToPipelineRaspberry3(VideoCompositionFile videoCompositionFile, Pipeline target, int index) {
-        PlayBin playBin = (PlayBin) ElementFactory.make("playbin", "playbin" + index);
-        playBin.set("uri", "file://" + settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getVideoPath() + File.separator + videoCompositionFile.getName());
-        target.add(playBin);
-    }
-
-    private void addVideoToPipeline(VideoCompositionFile videoCompositionFile, Pipeline target, int index) {
-        logger.debug("Add video file to pipeline");
-
-        // Does not work on OS X
-        // See http://gstreamer-devel.966125.n4.nabble.com/OpenGL-renderer-window-td4686092.html
-
-        // add video for raspberry pi 3, if necessary
-        if (OperatingSystemInformation.Type.LINUX.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
-            if (OperatingSystemInformation.SubType.RASPBERRYOS.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType()) && OperatingSystemInformation.RaspberryVersion.MODEL_3.equals(operatingSystemInformationService.getOperatingSystemInformation().getRaspberryVersion())) {
-
-                addVideoToPipelineRaspberry3(videoCompositionFile, target, index);
-                return;
-            }
-        }
-
-        URIDecodeBin videoSource = (URIDecodeBin) ElementFactory.make("uridecodebin", "videouridecodebin" + index);
-        videoSource.set("uri", "file://" + settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getVideoPath() + File.separator + videoCompositionFile.getName());
-
-        Element videoQueue = ElementFactory.make("queue", "videoqueue" + index);
-        Element videoConvert = ElementFactory.make("videoconvert", "videoconvert" + index);
-
-        videoSource.connect((Element.PAD_ADDED) (Element element, Pad pad) -> {
-            Caps caps = pad.getCurrentCaps();
-
-            String name = caps.getStructure(0).getName();
-
-            pad.set("offset", (settingsService.getSettings().getOffsetMillisVideo() + videoCompositionFile.getOffsetMillis()) * 1000000L);
-
-            if (name.startsWith("video/x-raw")) {
-                pad.link(videoQueue.getSinkPads().get(0));
-            } else if (name.startsWith("audio/x-raw")) {
-                // TODO where should the audio go to? hdmisink not available in Debian Buster anymore.
-            }
-        });
-        target.add(videoSource);
-        target.add(videoQueue);
-        target.add(videoConvert);
-
-        Element kmssink = getGstVideoSink();
-        kmssink.set("sync", true);
-        target.add(kmssink);
-
-        videoSource.link(videoQueue);
-        videoQueue.link(videoConvert);
-        videoConvert.link(kmssink);
-    }
-
-    private void addMidiToPipeline(MidiCompositionFile midiCompositionFile, Pipeline target, int index) {
-        MidiRouter midiRouter = midiRouterFactory.getMidiRouter(midiCompositionFile.getMidiRoutingList());
-
-        midiRouterList.add(midiRouter);
-
-        for (MidiRouting midiRouting : midiCompositionFile.getMidiRoutingList()) {
-            midiRouting.getMidiMapping().setParent(midiMapping);
-        }
-
-        Element midiFileSource = ElementFactory.make("filesrc", "midifilesrc" + index);
-        midiFileSource.set("location", settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getMidiPath() + "/" + midiCompositionFile.getName());
-        target.add(midiFileSource);
-
-        Element midiParse = ElementFactory.make("midiparse", "midiparse" + index);
-        target.add(midiParse);
-
-        Element queue = ElementFactory.make("queue", "midisinkqueue" + index);
-        target.add(queue);
-
-        AppSink midiSink = (AppSink) ElementFactory.make("appsink", "midisink" + index);
-        // Required to actually send the signals
-        midiSink.set("emit-signals", true);
-        target.add(midiSink);
-
-        midiParse.getSrcPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisMidi() + midiCompositionFile.getOffsetMillis()) * 1000000L);
-
-        // Sometimes preroll and sometimes new-sample events get fired. We have
-        // to process both.
-        midiSink.connect((AppSink.NEW_SAMPLE) element -> {
-            Sample sample = element.pullSample();
-            Buffer buffer = sample.getBuffer();
-            processMidiBuffer(buffer.map(false), midiRouter);
-            buffer.unmap();
-            sample.dispose();
-            return FlowReturn.OK;
-        });
-        midiSink.connect((AppSink.NEW_PREROLL) element -> {
-            Sample sample = element.pullPreroll();
-            Buffer buffer = sample.getBuffer();
-            processMidiBuffer(buffer.map(false), midiRouter);
-            buffer.unmap();
-            sample.dispose();
-            return FlowReturn.OK;
-        });
-
-        midiFileSource.link(midiParse);
-        midiParse.link(queue);
-        queue.link(midiSink);
-    }
-
-    private float getCombinedVolume(float compositionVolume, float fileVolume) {
-        float combinedVolume = compositionVolume * fileVolume;
-
-        // scale should be logarithmic. a "good-enough"-curve is just x^4.
-        // also see: https://www.dr-lex.be/info-stuff/volumecontrols.html
-//        return (float) Math.pow(combinedVolume, 4);
-        return combinedVolume;
-    }
-
-    private void addAudioToPipeline(AudioCompositionFile audioCompositionFile, Pipeline target, Map<AudioDevice, Element> audioMixerList, int index) throws Exception {
-        logger.debug("Add audio file to pipeline...");
-
-        AudioBus audioBus = settingsService.getAudioBusByUuid(audioCompositionFile.getOutputBusUuid());
-        AudioDevice audioDevice = audioBus.getAudioDevice();
-
-        if (audioDevice == null && !OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
-            // no audio device configured -> no output
-            return;
-        }
-
-        URIDecodeBin audioSource = (URIDecodeBin) ElementFactory.make("uridecodebin", "audiouridecodebin" + index);
-        audioSource.set("uri", "file://" + settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getAudioPath() + File.separator + audioCompositionFile.getName());
-        target.add(audioSource);
-
-        Element audioConvert = ElementFactory.make("audioconvert", "audioconvert" + index);
-        audioSource.connect((Element.PAD_ADDED) (Element element, Pad pad) -> {
-            Caps caps = pad.getCurrentCaps();
-
-            String name = caps.getStructure(0).getName();
-
-            if ("audio/x-raw-float".equals(name) || "audio/x-raw-int".equals(name) || "audio/x-raw".equals(name)) {
-                pad.link(audioConvert.getSinkPads().get(0));
-            }
-        });
-
-        audioConvert.getSrcPads().get(0).set("offset", (settingsService.getSettings().getOffsetMillisAudio() + audioCompositionFile.getOffsetMillis()) * 1000000L);
-        target.add(audioConvert);
-
-        Element audioResample = ElementFactory.make("audioresample", "audioresample" + index);
-        target.add(audioResample);
-
-        logger.debug("Apply mix matrix...");
-
-        // Apply the mix matrix
-        GValueAPI.GValue mixMatrix = new GValueAPI.GValue();
-        GValueAPI.GVALUE_API.g_value_init(mixMatrix, GstApi.GST_API.gst_value_array_get_type());
-
-        // Repeat for each output channel
-        for (int i = 0; i < audioService.getChannelCountByAudioDevice(settingsService.getSettings(), audioDevice); i++) {
-            GValueAPI.GValue outputChannel = new GValueAPI.GValue();
-            GValueAPI.GVALUE_API.g_value_init(outputChannel, GstApi.GST_API.gst_value_array_get_type());
-
-            // Fill the channel with the input channels
-            for (int j = 0; j < audioCompositionFile.getChannels(); j++) {
-                GValueAPI.GValue inputChannel = new GValueAPI.GValue(GType.FLOAT);
-
-                float channelVolume = getChannelVolume(audioBus, i, j, getCombinedVolume(audioCompositionFile.getVolume(), composition.getAudioVolume()));
-
-                inputChannel.setValue(channelVolume);
-                GstApi.GST_API.gst_value_array_append_value(outputChannel, inputChannel.getPointer());
-                GValueAPI.GVALUE_API.g_value_unset(inputChannel);
-            }
-
-            GstApi.GST_API.gst_value_array_append_value(mixMatrix, outputChannel.getPointer());
-            GValueAPI.GVALUE_API.g_value_unset(outputChannel);
-        }
-
-        logger.debug("Mix-matrix for " + audioCompositionFile.getName() + ": " + mixMatrix);
-
-        GstApi.GST_API.g_object_set_property(audioConvert, "mix-matrix", mixMatrix.getPointer());
-        GValueAPI.GVALUE_API.g_value_unset(mixMatrix);
-
-        // Find the mixer belonging to the current bus' devices
-        Element audioMixer = null;
-
-        if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
-            audioMixer = audioMixerList.entrySet().iterator().next().getValue();
-        } else {
-            for (Map.Entry<AudioDevice, Element> entry : audioMixerList.entrySet()) {
-                if (entry.getKey().getId() == audioDevice.getId()) {
-                    audioMixer = entry.getValue();
-                    break;
-                }
-            }
-        }
-
-        if (audioMixer == null) {
-            throw new Exception("Could not find a mixer element for the audio device " + audioDevice.getKey());
-        }
-
-        // Link the elements
-        audioConvert.link(audioResample);
-        audioResample.link(audioMixer);
-    }
-
-    // Get all audio devices used by the given files
-    private List<AudioDevice> getAudioDeviceList(List<CompositionFile> compositionFileList) {
-        Set<AudioDevice> audioDeviceSet = new HashSet<>();
-
-        // Add a dummy audio device for OSX
-        if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
-            AudioDevice audioDevice = new AudioDevice();
-            audioDevice.setId(0);
-            audioDevice.setName("dummy");
-            audioDevice.setKey("dummy");
-            audioDeviceSet.add(audioDevice);
-        }
-
-        for (CompositionFile compositionFile : compositionFileList) {
-            if (compositionFile instanceof AudioCompositionFile audioCompositionFile) {
-                AudioBus audioBus = settingsService.getAudioBusByUuid(audioCompositionFile.getOutputBusUuid());
-                if (audioBus != null && audioBus.getAudioDevice() != null) {
-                    audioDeviceSet.add(audioBus.getAudioDevice());
-                }
-            }
-        }
-        return audioDeviceSet.stream().toList();
-    }
-
-    // Build the output chain (mixer -> capsfilter -> [level] -> queue -> volume -> sink) for one
-    // audio device into the given pipeline and return the mixer to link audio sources into.
-    private Element buildAudioOutputChain(Pipeline target, AudioDevice audioDevice, boolean provideClock, boolean enableLevel, List<Element> volumeListTarget) {
-        String audioDeviceAlsaName = audioService.getAudioDeviceAlsaName(audioDevice);
-
-        Element audioMixer = ElementFactory.make("audiomixer", "audiomixer_" + audioDeviceAlsaName);
-        target.add(audioMixer);
-
-        // Add a capsfilter to enforce multi-channel out. Otherwise only 2 will be mixed
-        Element capsFilter = ElementFactory.make("capsfilter", "capsfilter_" + audioDeviceAlsaName);
-        Caps caps = GstApi.GST_API.gst_caps_from_string("audio/x-raw,rate=" + settingsService.getSettings().getAudioRate() + ",channels=" + audioService.getChannelCountByAudioDevice(settingsService.getSettings(), audioDevice));
-        capsFilter.set("caps", caps);
-        target.add(capsFilter);
-
-        audioMixer.link(capsFilter);
-
-        Element queue = ElementFactory.make("queue", "audiosinkqueue_" + audioDeviceAlsaName);
-        target.add(queue);
-
-        BaseSink sink = audioService.getGstAudioSink(audioDevice, provideClock);
-        target.add(sink);
-
-        Element level = null;
-        if (enableLevel) {
-            level = ElementFactory.make("level", "level_" + audioDeviceAlsaName);
-            // 1000 Milliseconds
-            level.set("interval", 1000 * 1000000);
-            level.set("post-messages", true);
-            target.add(level);
-        }
-
-        if (level == null) {
-            capsFilter.link(queue);
-        } else {
-            capsFilter.link(level);
-            level.link(queue);
-        }
-
-        Element volume = ElementFactory.make("volume", "volume_" + audioDeviceAlsaName);
-        target.add(volume);
-        volumeListTarget.add(volume);
-
-        queue.link(volume);
-
-        volume.link(sink);
-
-        return audioMixer;
-    }
-
-    // Prepare each used audio device for output in the master pipeline
-    private Map<AudioDevice, Element> prepareAudioDevices(List<CompositionFile> compositionFileList, boolean provideClock) {
-        Map<AudioDevice, Element> audioMixerList = new HashMap<>();
-
-        // Only use the first audio device as clock master (if audio should provide a clock at all)
-        boolean provideClockFirstAudioDevice = provideClock;
-
-        // Level monitoring is only added on the master pipeline (drives the audio monitor)
-        boolean enableLevel = !isSample && settingsService.getSettings().getEnableMonitor();
-
-        for (AudioDevice audioDevice : getAudioDeviceList(compositionFileList)) {
-            Element audioMixer = buildAudioOutputChain(pipeline, audioDevice, provideClockFirstAudioDevice, enableLevel, volumeList);
-            audioMixerList.put(audioDevice, audioMixer);
-            provideClockFirstAudioDevice = false;
-        }
-
-        return audioMixerList;
-    }
-
-    private boolean hasVideo() {
-        if (!hdmiService.isConnected()) {
-            // Even if the composition had video files, we will not play them,
-            // because no device is connected to the HDMI interface
-            return false;
-        }
-
-        for (int i = 0; i < composition.getCompositionFileList().size(); i++) {
-            CompositionFile compositionFile = composition.getCompositionFileList().get(i);
-
-            if (compositionFile.isActive() && compositionFile instanceof VideoCompositionFile && capabilitiesService.getCapabilities().isGstreamer()) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private void createGstreamerPipeline() throws Exception {
-        boolean hasVideo = hasVideo();
-        pipeline = new Pipeline();
-        Bus bus = GstApi.GST_API.gst_element_get_bus(pipeline);
-
-        bus.connect((Bus.ERROR) (GstObject source, int code, String message) -> {
-            logger.error("GST error: " + message);
+    @Override
+    public void onPlaying() {
+        firstPlayDone = true;
+        playState = PlayState.PLAYING;
+
+        if (!isDefaultComposition && !isSample) {
             try {
-                notificationService.notifyClients(message);
+                notificationService.notifyClients(playerService, setService);
             } catch (Exception e) {
-                logger.error("Could not notify clients about an error", e);
+                logger.error("Could not notify clients about a playing event", e);
             }
-            try {
-                stop();
-            } catch (Exception e) {
-                logger.error("Could not stop compostion triggered by an error", e);
-            }
-        });
-        bus.connect((Bus.WARNING) (GstObject source, int code, String message) -> logger.warn("GST: " + message));
-        bus.connect((Bus.INFO) (GstObject source, int code, String message) -> logger.warn("GST: " + message));
-        bus.connect((GstObject source, State old, State newState, State pending) -> {
-            if (source.getTypeName().equals("GstPipeline")) {
-                if (newState == State.PLAYING) {
-                    firstPlayDone = true;
-
-                    playState = PlayState.PLAYING;
-
-                    if (!isDefaultComposition && !isSample) {
-                        try {
-                            notificationService.notifyClients(playerService, setService);
-                        } catch (Exception e) {
-                            logger.error("Could not notify clients about a playing event", e);
-                        }
-                    }
-                }
-            }
-        });
-        bus.connect((Bus.EOS) source -> {
-            try {
-                onMasterEndOfStream();
-            } catch (Exception e) {
-                logger.error("Could not handle the master end of stream", e);
-            }
-        });
-        bus.connect((Bus bus1, Message message) -> {
-            if (message.getType().equals(MessageType.ELEMENT)) {
-                Structure structure = message.getStructure();
-
-                if (structure.getName().equals("level")) {
-                    try {
-                        // We got a level message
-                        activityNotificationAudioService.notifyClients(structure.getDoubles("peak"));
-                    } catch (Exception e) {
-                        logger.error("Could not process level message", e);
-                    }
-                }
-            }
-        });
-
-        GstApi.GST_API.gst_object_unref(bus);
-
-        // Decide which sources belong in the master pipeline and which loop independently in their
-        // own slave pipelines.
-        List<CompositionFile> activeFileList = new ArrayList<>();
-        for (CompositionFile compositionFile : composition.getCompositionFileList()) {
-            if (compositionFile.isActive()) {
-                activeFileList.add(compositionFile);
-            }
-        }
-
-        // The longest active source, and the latest action trigger. Actions placed after the
-        // longest source extend the timeline past all media into a wall-clock "action-trailing
-        // tail", so the master pipeline no longer has to anchor the end of the composition.
-        long longestSourceMillis = 0;
-        for (CompositionFile compositionFile : activeFileList) {
-            longestSourceMillis = Math.max(longestSourceMillis, compositionFile.getDurationMillis());
-        }
-        long latestActionMillis = 0;
-        for (ActionTriggerComposition actionTrigger : composition.getActionTriggerList()) {
-            latestActionMillis = Math.max(latestActionMillis, actionTrigger.getPositionMillis());
-        }
-        boolean hasActionTrailingTail = latestActionMillis > longestSourceMillis;
-
-        // A source loops in its own slave pipeline iff it is flagged to loop AND it is not needed in
-        // the master as the timeline anchor:
-        //  - with an action-trailing tail the wall clock anchors the end, so every looping source
-        //    (even the longest) can be a slave; if they all loop there is no master pipeline at all.
-        //  - without a tail the master's EOS defines the end, so the longest source(s) must stay in
-        //    the master and their loop flag has no effect.
-        List<CompositionFile> masterFileList = new ArrayList<>();
-        List<CompositionFile> slaveFileList = new ArrayList<>();
-        for (CompositionFile compositionFile : activeFileList) {
-            boolean isSlave = compositionFile.isLoop()
-                    && (hasActionTrailingTail || compositionFile.getDurationMillis() < longestSourceMillis);
-            if (isSlave) {
-                slaveFileList.add(compositionFile);
-            } else {
-                masterFileList.add(compositionFile);
-            }
-        }
-
-        if (masterFileList.isEmpty()) {
-            // Every source loops (in the action-trailing tail) -> there is no master pipeline; the
-            // wall clock drives the timeline and the slaves loop on their own clocks.
-            pipeline.dispose();
-            pipeline = null;
-        } else {
-            // Prepare the audio devices used by the master files and keep the mixers to link into.
-            // Use audio to provide a clock, if there's no video. Otherwise, let video provide the
-            // clock (more stable, avoids jittering issues).
-            Map<AudioDevice, Element> audioMixerList = prepareAudioDevices(masterFileList, !hasVideo);
-
-            // Add all master files to the master pipeline
-            for (CompositionFile compositionFile : masterFileList) {
-                int index = composition.getCompositionFileList().indexOf(compositionFile);
-                addCompositionFileToPipeline(compositionFile, pipeline, audioMixerList, index, hasVideo);
-            }
-        }
-
-        // Build a slave pipeline for each looping source. They are started later (clock-synced to the
-        // master if there is one, otherwise free-running on the wall-clock timeline).
-        for (CompositionFile compositionFile : slaveFileList) {
-            if (compositionFile instanceof AudioCompositionFile && getAudioDeviceList(List.of(compositionFile)).isEmpty()) {
-                // No audio device configured -> no output, skip
-                continue;
-            }
-            if (compositionFile instanceof VideoCompositionFile && !hasVideo) {
-                // No HDMI device connected -> video won't play, skip
-                continue;
-            }
-            int index = composition.getCompositionFileList().indexOf(compositionFile);
-            SlavePipeline slavePipeline = new SlavePipeline(compositionFile, index);
-            slavePipeline.build();
-            slavePipelineList.add(slavePipeline);
         }
     }
 
-    // Add a single composition file (midi/audio/video) to the given pipeline, applying the same
-    // capability/HDMI guards used for the master pipeline. For audio, the matching mixer must
-    // already be present in audioMixerList.
-    private void addCompositionFileToPipeline(CompositionFile compositionFile, Pipeline target, Map<AudioDevice, Element> audioMixerList, int index, boolean hasVideo) throws Exception {
-        if (compositionFile instanceof MidiCompositionFile) {
-            addMidiToPipeline((MidiCompositionFile) compositionFile, target, index);
-        } else if (compositionFile instanceof AudioCompositionFile && capabilitiesService.getCapabilities().isGstreamer()) {
-            addAudioToPipeline((AudioCompositionFile) compositionFile, target, audioMixerList, index);
-        } else if (compositionFile instanceof VideoCompositionFile && capabilitiesService.getCapabilities().isGstreamer() && hasVideo) {
-            addVideoToPipeline((VideoCompositionFile) compositionFile, target, index);
+    @Override
+    public void onEndOfStream() {
+        try {
+            onMasterEndOfStream();
+        } catch (Exception e) {
+            logger.error("Could not handle the master end of stream", e);
         }
-    }
-
-    // TODO also allow to set the master volume in the interface
-    private void setMasterVolume(double volume) {
-        logger.debug("Set the master volume to " + volume);
-        for (Element volumeElement : volumeList) {
-            volumeElement.set("volume", volume);
-        }
-    }
-
-    private void stopPipeline() {
-        // Avoid audio artifacts: mute the master and all slaves, then tear everything down
-        if (pipeline != null || !slavePipelineList.isEmpty()) {
-            setMasterVolume(0.0);
-            for (SlavePipeline slavePipeline : slavePipelineList) {
-                slavePipeline.mute();
-            }
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        for (SlavePipeline slavePipeline : slavePipelineList) {
-            slavePipeline.stop();
-        }
-        slavePipelineList.clear();
-
-        if (pipeline != null) {
-            pipeline.stop();
-            pipeline.dispose();
-            pipeline = null;
-        }
-        volumeList = new ArrayList<>();
-    }
-
-    // Start all slave pipelines, locked onto the (already playing) master's clock and phase-aligned
-    // to the given master position
-    private void startSlaves(long masterPositionMillis) {
-        for (SlavePipeline slavePipeline : slavePipelineList) {
-            slavePipeline.startSyncedToMaster(masterPositionMillis);
-        }
-    }
-
-    // Resume all slaves from pause (the shared clock kept them aligned while paused)
-    private void resumeSlaves() {
-        for (SlavePipeline slavePipeline : slavePipelineList) {
-            slavePipeline.resume();
-        }
-    }
-
-    // Re-phase all slaves to the master's new position (used when the master is looped or seeked)
-    private void rephaseSlaves(long masterPositionMillis) {
-        for (SlavePipeline slavePipeline : slavePipelineList) {
-            slavePipeline.rephaseTo(masterPositionMillis);
-        }
-    }
-
-    // True if a hardware H.265 decoder is in use anywhere (master or any slave). H.265 cannot
-    // seek or pause/resume on the Pi, so these operations are restricted when it is present.
-    private boolean hasAnyH265Stream() {
-        if (hasH265Stream) {
-            return true;
-        }
-        for (SlavePipeline slavePipeline : slavePipelineList) {
-            if (slavePipeline.hasH265()) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private void calculateRemainingActionTriggerList() {
@@ -749,27 +136,10 @@ public class CompositionPlayer {
         remainingActionTriggerCompositionList.addAll(composition.getActionTriggerList().stream().filter(trigger -> trigger.getPositionMillis() >= getPositionMillis()).toList());
     }
 
-    private boolean findHardwareH265Decoder(Bin bin) {
-        for (Element element : bin.getElements()) {
-            ElementFactory factory = element.getFactory();
-            if (factory != null) {
-                String name = factory.getName();
-                if ((name.contains("h265") || name.contains("hevc")) && !name.startsWith("avdec")) {
-                    return true;
-                }
-            }
-            if (element instanceof Bin && findHardwareH265Decoder((Bin) element)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     // Load all files and construct the complete GST pipeline
     public void loadFiles() throws Exception {
         boolean hasActiveFile = false;
         firstPlayDone = false;
-        hasH265Stream = false;
 
         if (playState != PlayState.STOPPED) {
             // A resume (PAUSED) returns here -> keep masterEosReached so a trailing-action tail survives
@@ -820,12 +190,13 @@ public class CompositionPlayer {
         // Destroy an old designer project, if required
         this.designerService.close();
 
-        if (hasActiveFile) {
-            createGstreamerPipeline();
-        }
-
-        // Prepare the scheduler for all contained action triggers (and some buffer for overlapping runs)
+        // Prepare the scheduler for all contained action triggers (and some buffer for overlapping
+        // runs). Created before the pipeline so it can recreate H.265 slaves off the bus thread.
         scheduler = Executors.newScheduledThreadPool(composition.getActionTriggerList().size() + 5);
+
+        if (hasActiveFile) {
+            compositionPipeline = compositionPipelineBuilder.build(composition, isSample, this, scheduler);
+        }
 
         logger.debug("Composition '" + composition.getName() + "' loaded");
 
@@ -836,11 +207,18 @@ public class CompositionPlayer {
         }
     }
 
+    private void stopPipeline() {
+        if (compositionPipeline != null) {
+            compositionPipeline.stop();
+            compositionPipeline = null;
+        }
+    }
+
     private void startAutoStopTimer() {
         // Re-entrant (also called on resume / each loop): drop any previously scheduled end first
         stopAutoStopTimer();
 
-        if (pipeline != null && !masterEosReached) {
+        if (compositionPipeline != null && compositionPipeline.hasMaster() && !masterEosReached) {
             // A live master pipeline drives the end via its EOS -> no need for the timer
             return;
         }
@@ -902,7 +280,7 @@ public class CompositionPlayer {
         }
 
         try {
-            if (pipeline != null || !slavePipelineList.isEmpty()) {
+            if (compositionPipeline != null && compositionPipeline.hasMedia()) {
                 playerService.compositionPlayerFinishedPlaying(this);
             } else {
                 stop();
@@ -914,7 +292,7 @@ public class CompositionPlayer {
 
     // Loop the whole composition back to the start (master if any + slaves + action triggers).
     private void loopToStart() {
-        if (pipeline != null && hasH265Stream) {
+        if (compositionPipeline != null && compositionPipeline.masterHasH265()) {
             // H.265 master can't seek -> recreate it. Off the bus/timer thread to avoid deadlocking
             // pipeline disposal.
             scheduler.execute(this::recreateMasterAndRestart);
@@ -937,15 +315,13 @@ public class CompositionPlayer {
             stopPipeline();
             firstPlayDone = false;
             masterEosReached = false;
-            createGstreamerPipeline();
-            if (pipeline != null) {
-                pipeline.setState(State.PAUSED);
-                pipeline.getState(5, TimeUnit.SECONDS);
-                hasH265Stream = findHardwareH265Decoder(pipeline);
-                pipeline.setState(State.PLAYING);
-                pipeline.getState(5, TimeUnit.SECONDS);
+            compositionPipeline = compositionPipelineBuilder.build(composition, isSample, this, scheduler);
+            if (compositionPipeline.hasMaster()) {
+                compositionPipeline.prerollMaster();
+                compositionPipeline.detectMasterH265();
+                compositionPipeline.playMaster();
             }
-            startSlaves(0);
+            compositionPipeline.startSlaves(0);
             lastPlayTimeMillis = System.currentTimeMillis();
             calculateRemainingActionTriggerList();
         } catch (Exception e) {
@@ -989,8 +365,8 @@ public class CompositionPlayer {
             return;
         }
 
-        if (pipeline == null) {
-            // Only schedule once
+        if (compositionPipeline == null || !compositionPipeline.hasMaster()) {
+            // No master pipeline to stay in sync with -> only schedule once
             startActionTriggerTimer();
             return;
         }
@@ -1039,48 +415,41 @@ public class CompositionPlayer {
         Project designerProject = designerService.getProjectByCompositionName(composition.getName());
         if (designerProject != null) {
             logger.info("Designer project found. Load it...");
-            designerService.load(this, designerProject, pipeline);
+            designerService.load(this, designerProject, compositionPipeline == null ? null : compositionPipeline.getMasterPipeline());
         }
 
         // All files are loaded -> play the composition (start each file)
         logger.info("Playing composition '" + composition.getName() + "'...");
 
-        if (pipeline != null) {
+        if (compositionPipeline != null && compositionPipeline.hasMaster()) {
             if (masterEosReached) {
                 // Resuming during the trailing-action tail: the master is exhausted (at EOS) and its
                 // position is past the end, so don't re-preroll or seek it. Just resume playback so
                 // the slaves/clock keep running while the wall-clock timers (re-armed below) finish.
-                pipeline.setState(State.PLAYING);
-                pipeline.getState(5, TimeUnit.SECONDS);
-                resumeSlaves();
+                compositionPipeline.playMaster();
+                compositionPipeline.resumeSlaves();
             } else {
                 // A fresh start prerolls and phase-aligns the slaves; a resume just continues them
                 boolean freshStart = !firstPlayDone;
 
                 if (freshStart) {
-                    pipeline.setState(State.PAUSED);
-                    pipeline.getState(5, TimeUnit.SECONDS);
+                    compositionPipeline.prerollMaster();
 
-                    hasH265Stream = findHardwareH265Decoder(pipeline);
-                    if (hasH265Stream) {
+                    if (compositionPipeline.detectMasterH265()) {
                         logger.warn("Hardware H.265 decoder detected in the master pipeline — seeking will be disabled for this composition");
                     }
 
-                    if (startPosition > 0 && !hasH265Stream) {
-                        pipeline.seekSimple(Format.TIME,
-                                EnumSet.of(SeekFlags.FLUSH, SeekFlags.KEY_UNIT),
-                                startPosition * 1_000_000L);
-                        pipeline.getState(5, TimeUnit.SECONDS);
+                    if (startPosition > 0 && !compositionPipeline.masterHasH265()) {
+                        compositionPipeline.seekMasterTo(startPosition);
                     }
                 }
-                pipeline.setState(State.PLAYING);
-                pipeline.getState(5, TimeUnit.SECONDS);
+                compositionPipeline.playMaster();
 
                 // The master is now playing -> bring up the slaves on its clock
                 if (freshStart) {
-                    startSlaves(startPosition);
+                    compositionPipeline.startSlaves(startPosition);
                 } else {
-                    resumeSlaves();
+                    compositionPipeline.resumeSlaves();
                 }
             }
         }
@@ -1095,10 +464,12 @@ public class CompositionPlayer {
         designerService.play();
         startMidiTimecode();
 
-        if (pipeline == null) {
+        if (compositionPipeline == null || !compositionPipeline.hasMaster()) {
             // No master pipeline (every source loops, or only actions/designer) -> start any slaves
             // on the wall-clock timeline, then issue the playing state directly.
-            startSlaves(startPosition);
+            if (compositionPipeline != null) {
+                compositionPipeline.startSlaves(startPosition);
+            }
             playState = PlayState.PLAYING;
             notificationService.notifyClients(playerService, setService);
         }
@@ -1111,17 +482,14 @@ public class CompositionPlayer {
 
         logger.info("Pausing composition '" + composition.getName() + "'");
 
-        if (hasAnyH265Stream()) {
+        if (compositionPipeline != null && compositionPipeline.hasAnyH265Stream()) {
             logger.warn("Pause ignored: hardware H.265 decoder does not support pausing/resuming");
             return;
         }
 
         // Pause the composition (master + all slaves)
-        if (pipeline != null) {
-            pipeline.pause();
-        }
-        for (SlavePipeline slavePipeline : slavePipelineList) {
-            slavePipeline.pause();
+        if (compositionPipeline != null) {
+            compositionPipeline.pause();
         }
 
         designerService.pause();
@@ -1143,7 +511,6 @@ public class CompositionPlayer {
     public void stop() throws Exception {
         startPosition = 0;
         firstPlayDone = false;
-        hasH265Stream = false;
         masterEosReached = false;
 
         if (composition == null || playState == PlayState.STOPPED) {
@@ -1157,15 +524,10 @@ public class CompositionPlayer {
         }
         logger.info("Stopping composition '{}'", composition.getName());
 
-        // Stop the composition
+        // Stop the composition (tears down the pipeline and closes its MIDI routers)
         stopPipeline();
 
         designerService.close();
-
-        // Close all MIDI routers
-        for (MidiRouter midiRouter : midiRouterList) {
-            midiRouter.close();
-        }
 
         playState = PlayState.STOPPED;
 
@@ -1190,7 +552,7 @@ public class CompositionPlayer {
     }
 
     public void seek(long positionMillis) throws Exception {
-        if (hasH265Stream) {
+        if (compositionPipeline != null && compositionPipeline.masterHasH265()) {
             // Seeking is disabled for hardware H.265 decode on RPi. Two approaches were tried
             // and both fail:
             //   1. Early seek (before preroll): the hardware decoder ignores the seek event
@@ -1215,22 +577,11 @@ public class CompositionPlayer {
 
         logger.debug("Seek to position " + positionMillis);
 
-        if (pipeline != null) {
-            long positionNanos = positionMillis * 1_000_000L;
-
-            // Software decoders have sufficient decode buffers to handle a direct FLUSH seek
-            // on the live pipeline without any state teardown. The pipeline automatically
-            // returns to its previous state (PLAYING or PAUSED) after the seek.
-            pipeline.seekSimple(Format.TIME,
-                    EnumSet.of(SeekFlags.FLUSH, SeekFlags.KEY_UNIT),
-                    positionNanos);
-            pipeline.getState(5, TimeUnit.SECONDS);
+        // Seek the master (if any) and re-phase each slave to the in-loop position matching the new
+        // position (e.g. seek to 35s with a 10s loop -> the slave jumps to 5s; H.265 slaves restart).
+        if (compositionPipeline != null) {
+            compositionPipeline.seek(positionMillis);
         }
-
-        // Re-phase each slave to the in-loop position matching the new position (e.g. seek to 35s
-        // with a 10s loop -> the slave jumps to 5s; H.265 slaves restart). Works with or without a
-        // master pipeline.
-        rephaseSlaves(positionMillis);
 
         this.lastPlayTimeMillis = System.currentTimeMillis();
 
@@ -1266,8 +617,8 @@ public class CompositionPlayer {
         // If there is a live pipeline -> use it (only if playing, querying its status is not reliably
         // otherwise). After the master reached EOS its position is frozen at the longest source, so
         // fall through to the wall clock to keep advancing through the trailing-action tail.
-        if (pipeline != null && !masterEosReached) {
-            long queriedMillis = pipeline.queryPosition(TimeUnit.MILLISECONDS);
+        if (compositionPipeline != null && compositionPipeline.hasMaster() && !masterEosReached) {
+            long queriedMillis = compositionPipeline.queryMasterPositionMillis();
             if (queriedMillis >= startPosition) {
                 // only return, if the query worked (shortly after seeking it's 0, even if we're playing)
                 return queriedMillis;
@@ -1323,170 +674,6 @@ public class CompositionPlayer {
 
     public void setSample(boolean sample) {
         isSample = sample;
-    }
-
-    /**
-     * A slave pipeline plays a single looping source that is shorter than the longest source.
-     * It runs independently (looping on its own EOS) but shares the master's clock and base time
-     * so it does not drift. The master applies its play/pause/stop/seek state to all slaves.
-     */
-    private class SlavePipeline {
-
-        private final CompositionFile compositionFile;
-        private final int index;
-        private Pipeline slavePipeline;
-        private final List<Element> volumeList = new ArrayList<>();
-        private boolean hasH265 = false;
-
-        SlavePipeline(CompositionFile compositionFile, int index) {
-            this.compositionFile = compositionFile;
-            this.index = index;
-        }
-
-        // Construct the single-source pipeline with its own output (sink). Does not start it.
-        void build() throws Exception {
-            slavePipeline = new Pipeline("slave" + index);
-
-            Bus bus = GstApi.GST_API.gst_element_get_bus(slavePipeline);
-            bus.connect((Bus.ERROR) (GstObject source, int code, String message) ->
-                    logger.error("GST slave error (" + compositionFile.getName() + "): " + message));
-            // When the slave reaches the end of its source, loop it back to the start
-            bus.connect((Bus.EOS) source -> loop());
-            GstApi.GST_API.gst_object_unref(bus);
-
-            // Audio slaves need their own output chain (mixer -> ... -> sink) to their device
-            Map<AudioDevice, Element> audioMixerList = new HashMap<>();
-            if (compositionFile instanceof AudioCompositionFile) {
-                AudioDevice audioDevice = getAudioDeviceList(List.of(compositionFile)).get(0);
-                Element mixer = buildAudioOutputChain(slavePipeline, audioDevice, false, false, volumeList);
-                audioMixerList.put(audioDevice, mixer);
-            }
-
-            // hasVideo is true here: video slaves are only built when an HDMI device is connected
-            addCompositionFileToPipeline(compositionFile, slavePipeline, audioMixerList, index, true);
-        }
-
-        // Preroll, lock onto the master clock, seek to the matching in-loop position, then play.
-        void startSyncedToMaster(long masterPositionMillis) {
-            if (slavePipeline == null) {
-                return;
-            }
-
-            slavePipeline.setState(State.PAUSED);
-            slavePipeline.getState(5, TimeUnit.SECONDS);
-
-            hasH265 = findHardwareH265Decoder(slavePipeline);
-
-            // Share the master clock so the slave never rate-drifts. We deliberately do NOT share
-            // the base time: the slave runs its own (looping) timeline at a different phase, and a
-            // shared base time would make every buffer arrive late and be dropped to "catch up".
-            Clock masterClock = pipeline == null ? null : pipeline.getClock();
-            if (masterClock != null) {
-                slavePipeline.useClock(masterClock);
-            }
-
-            // Phase-align the loop to the master's position, then let the shared clock hold it.
-            long phaseMillis = phasePositionMillis(masterPositionMillis);
-            if (phaseMillis > 0 && !hasH265) {
-                seekSlaveTo(phaseMillis);
-                slavePipeline.getState(5, TimeUnit.SECONDS);
-            }
-
-            slavePipeline.setState(State.PLAYING);
-            slavePipeline.getState(5, TimeUnit.SECONDS);
-        }
-
-        // The in-loop content position (ms) the slave should be at for the given master position,
-        // i.e. where it would be if it had looped continuously since the composition start. E.g.
-        // master at 35s with a 10s loop -> 5s. Offset shifts the loop's start on the timeline.
-        private long phasePositionMillis(long masterPositionMillis) {
-            long length = compositionFile.getDurationMillis();
-            if (length <= 0) {
-                return 0;
-            }
-            long position = masterPositionMillis - compositionFile.getOffsetMillis();
-            if (position <= 0) {
-                return 0;
-            }
-            return Math.floorMod(position, length);
-        }
-
-        private void seekSlaveTo(long positionMillis) {
-            if (slavePipeline != null) {
-                slavePipeline.seekSimple(Format.TIME, EnumSet.of(SeekFlags.FLUSH, SeekFlags.KEY_UNIT), positionMillis * 1_000_000L);
-            }
-        }
-
-        // The slave reached its own end -> loop straight back to the start (it stays phase-aligned
-        // because it has been playing at the shared clock rate).
-        void loop() {
-            if (slavePipeline == null) {
-                return;
-            }
-            if (hasH265) {
-                // H.265 can't seek on the Pi -> recreate. Must run off the bus-callback thread to
-                // avoid deadlocking pipeline disposal.
-                scheduler.execute(() -> recreate(0));
-            } else {
-                seekSlaveTo(0);
-            }
-        }
-
-        // The master was seeked/looped -> jump to the in-loop position matching its new position.
-        void rephaseTo(long masterPositionMillis) {
-            if (slavePipeline == null) {
-                return;
-            }
-            if (hasH265) {
-                // H.265 can't seek -> recreate (it can only restart from the beginning).
-                scheduler.execute(() -> recreate(masterPositionMillis));
-            } else {
-                seekSlaveTo(phasePositionMillis(masterPositionMillis));
-            }
-        }
-
-        private void recreate(long masterPositionMillis) {
-            try {
-                stop();
-                build();
-                startSyncedToMaster(masterPositionMillis);
-            } catch (Exception e) {
-                logger.error("Could not recreate slave pipeline for " + compositionFile.getName(), e);
-            }
-        }
-
-        void pause() {
-            if (slavePipeline != null) {
-                slavePipeline.pause();
-            }
-        }
-
-        // Resume from pause without re-phasing: the shared clock preserved alignment while paused.
-        void resume() {
-            if (slavePipeline != null) {
-                slavePipeline.setState(State.PLAYING);
-            }
-        }
-
-        // Mute the outputs (avoids audio artifacts before a coordinated teardown)
-        void mute() {
-            for (Element volume : volumeList) {
-                volume.set("volume", 0.0);
-            }
-        }
-
-        void stop() {
-            if (slavePipeline != null) {
-                slavePipeline.stop();
-                slavePipeline.dispose();
-                slavePipeline = null;
-            }
-            volumeList.clear();
-        }
-
-        boolean hasH265() {
-            return hasH265;
-        }
     }
 
 }
