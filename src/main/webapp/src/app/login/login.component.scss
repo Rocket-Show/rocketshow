@@ -1,10 +1,14 @@
 .container {
-    width: 540px;
+    max-width: 540px;
+    width: 100%;
+    padding-left: 15px;
+    padding-right: 15px;
 }
 
 #login {
     box-shadow: 0px 0px 30px 1px #000000;
-    width: 470px;
+    max-width: 470px;
+    width: 100%;
 }
 
 .card-img-top {
