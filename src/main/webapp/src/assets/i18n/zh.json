@@ -235,6 +235,7 @@
     "update-install": "正在安装...",
     "update-reboot": "正在重启...",
     "update-finished": "更新已成功完成。",
+    "update-error": "更新失败。",
     "reboot-device": "重启",
     "shutdown-device": "关机",
     "default-composition": "默认作品",

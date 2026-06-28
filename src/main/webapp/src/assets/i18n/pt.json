@@ -235,6 +235,7 @@
     "update-install": "A instalar...",
     "update-reboot": "A reiniciar...",
     "update-finished": "A atualização foi concluída com sucesso.",
+    "update-error": "A atualização falhou.",
     "reboot-device": "Reiniciar",
     "shutdown-device": "Desligar",
     "default-composition": "Composição predefinida",

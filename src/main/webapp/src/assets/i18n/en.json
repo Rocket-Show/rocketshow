@@ -236,6 +236,7 @@
     "update-install": "Installing...",
     "update-reboot": "Rebooting...",
     "update-finished": "The update has finished successfully.",
+    "update-error": "The update failed.",
     "reboot-device": "Reboot",
     "shutdown-device": "Shutdown",
     "default-composition": "Default composition",

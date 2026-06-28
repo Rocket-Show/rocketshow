@@ -236,6 +236,7 @@
     "update-install": "Installieren...",
     "update-reboot": "Neu starten...",
     "update-finished": "Die Aktualisierung wurde erfolgreich abgeschlossen.",
+    "update-error": "Die Aktualisierung ist fehlgeschlagen.",
     "reboot-device": "Neu starten",
     "shutdown-device": "Herunterfahren",
     "default-composition": "Standard-Komposition",
