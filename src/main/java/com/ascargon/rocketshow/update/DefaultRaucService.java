@@ -21,6 +21,13 @@ public class DefaultRaucService implements RaucService {
 
     private final UpdateNotificationService updateNotificationService;
 
+    // Installing a bundle can fail transiently (e.g. "Failed mounting bundle:
+    // Failed to load dm table" while setting up dm-verity). Retrying the same
+    // bundle usually succeeds immediately, so we attempt the installation
+    // multiple times before giving up.
+    private final static int MAX_INSTALL_ATTEMPTS = 5;
+    private final static long INSTALL_RETRY_DELAY_MILLIS = 5000;
+
     public DefaultRaucService(
             UpdateNotificationService updateNotificationService
     ) {
@@ -64,6 +71,30 @@ public class DefaultRaucService implements RaucService {
 
     @Override
     public void installBundle(String url) throws Exception {
+        Exception lastException = null;
+
+        for (int attempt = 1; attempt <= MAX_INSTALL_ATTEMPTS; attempt++) {
+            try {
+                attemptInstallBundle(url);
+                // Installation succeeded
+                return;
+            } catch (Exception e) {
+                lastException = e;
+
+                if (attempt < MAX_INSTALL_ATTEMPTS) {
+                    logger.warn("RAUC bundle installation failed (attempt {} of {}). Retrying in {} ms...",
+                            attempt, MAX_INSTALL_ATTEMPTS, INSTALL_RETRY_DELAY_MILLIS, e);
+                    Thread.sleep(INSTALL_RETRY_DELAY_MILLIS);
+                } else {
+                    logger.error("RAUC bundle installation failed after {} attempts.", MAX_INSTALL_ATTEMPTS);
+                }
+            }
+        }
+
+        throw lastException;
+    }
+
+    private void attemptInstallBundle(String url) throws Exception {
         Pattern PROGRESS_PATTERN =
                 Pattern.compile("^\\s*(\\d{1,3})%\\s+(.*?)(?:\\s+done\\.)?\\s*$");
 
@@ -76,30 +107,34 @@ public class DefaultRaucService implements RaucService {
         int lastPercentage = -1;
         String lastMessage = null;
 
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+        try {
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
 
-            String line;
-            while ((line = reader.readLine()) != null) {
-                logger.info("RAUC output: {}", line);
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    logger.info("RAUC output: {}", line);
 
-                Matcher matcher = PROGRESS_PATTERN.matcher(line);
-                if (matcher.matches()) {
-                    lastPercentage = Integer.parseInt(matcher.group(1));
-                    lastMessage = matcher.group(2).trim();
+                    Matcher matcher = PROGRESS_PATTERN.matcher(line);
+                    if (matcher.matches()) {
+                        lastPercentage = Integer.parseInt(matcher.group(1));
+                        lastMessage = matcher.group(2).trim();
 
-                    UpdateState updateState = new UpdateState();
-                    updateState.setProgressPercentage(lastPercentage);
-                    updateState.setProgressMessage(lastMessage);
-                    updateNotificationService.notifyClients(updateState);
+                        UpdateState updateState = new UpdateState();
+                        updateState.setProgressPercentage(lastPercentage);
+                        updateState.setProgressMessage(lastMessage);
+                        updateNotificationService.notifyClients(updateState);
+                    }
                 }
             }
-        }
 
-        int exitCode = process.waitFor();
+            int exitCode = process.waitFor();
 
-        if (exitCode != 0) {
-            throw new Exception("RAUC exited with exit code " + exitCode);
+            if (exitCode != 0) {
+                throw new Exception("RAUC exited with exit code " + exitCode);
+            }
+        } finally {
+            shellManager.close();
         }
     }
 
