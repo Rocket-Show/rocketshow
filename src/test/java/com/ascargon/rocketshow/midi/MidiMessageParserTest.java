@@ -105,6 +105,26 @@ class MidiMessageParserTest {
     }
 
     @Test
+    void offerByteSupportsRunningStatus() throws Exception {
+        MidiMessageParser parser = new MidiMessageParser();
+
+        // First a full NOTE_ON message including its status byte
+        parser.offerByte((byte) 0x90);
+        parser.offerByte((byte) 0x3C);
+        assertTrue(parser.offerByte((byte) 0x64).isPresent());
+
+        // Then a second NOTE_ON sent in running status (data bytes only, no status byte)
+        assertTrue(parser.offerByte((byte) 0x3E).isEmpty());
+        Optional<MidiMessage> result = parser.offerByte((byte) 0x40);
+
+        assertTrue(result.isPresent());
+        ShortMessage message = assertInstanceOf(ShortMessage.class, result.get());
+        assertEquals(ShortMessage.NOTE_ON, message.getCommand());
+        assertEquals(0x3E, message.getData1());
+        assertEquals(0x40, message.getData2());
+    }
+
+    @Test
     void offerBytesIsEmptyForIncompleteMessage() throws Exception {
         MidiMessageParser parser = new MidiMessageParser();
 
