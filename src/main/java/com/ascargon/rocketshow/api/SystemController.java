@@ -4,6 +4,7 @@ import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.health.HealthService;
 import com.ascargon.rocketshow.health.HealthStatus;
+import com.ascargon.rocketshow.health.SystemTestResult;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.LightingUniverse;
 import com.ascargon.rocketshow.lighting.OlaPlugin;
@@ -343,9 +344,8 @@ class SystemController {
     }
 
     @PostMapping("test")
-    public ResponseEntity<Void> test() {
-        healthService.testSystem();
-        return new ResponseEntity<>(HttpStatus.OK);
+    public SystemTestResult test() {
+        return healthService.testSystem();
     }
 
 }

@@ -31,6 +31,7 @@ public class DefaultHealthService implements HealthService {
     private final RaucService raucService;
     private final DeviceInformationService deviceInformationService;
     private final EepromService eepromService;
+    private final SystemTestService systemTestService;
 
     public DefaultHealthService(
             HdmiService hdmiService,
@@ -41,7 +42,8 @@ public class DefaultHealthService implements HealthService {
             VersionService versionService,
             RaucService raucService,
             DeviceInformationService deviceInformationService,
-            EepromService eepromService
+            EepromService eepromService,
+            SystemTestService systemTestService
     ) {
         this.hdmiService = hdmiService;
         this.diskSpaceService = diskSpaceService;
@@ -52,6 +54,7 @@ public class DefaultHealthService implements HealthService {
         this.raucService = raucService;
         this.deviceInformationService = deviceInformationService;
         this.eepromService = eepromService;
+        this.systemTestService = systemTestService;
     }
 
     private void addReason(HealthStatus healthStatus, String reason) {
@@ -177,10 +180,8 @@ public class DefaultHealthService implements HealthService {
     }
 
     @Override
-    public void testSystem() {
-        // TODO play the default composition and check for errors
-        // TODO periodically change GPIO output status (e.g. each 3 seconds)
-        // TODO Send MIDI messages, expect the same MIDI messages
+    public SystemTestResult testSystem() {
+        return systemTestService.runSystemTest();
     }
 
 }
