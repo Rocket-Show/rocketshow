@@ -350,7 +350,16 @@
     "secure-connection-enable": "Activated",
     "build-date": "Build date",
     "build-timestamp": "Build timestamp",
-    "build-number": "Build number"
+    "build-number": "Build number",
+    "licenses": {
+      "title": "Open Source Licenses",
+      "intro": "Rocket Show is free and open source software, licensed under the GNU General Public License v3.0. It is distributed with no warranty, to the extent permitted by law.",
+      "license": "License",
+      "source-code": "Source code",
+      "install-info": "The complete corresponding source code is available at the link above. In accordance with the license, you are free to run, study, modify and redistribute this software. You may build your own image and install a modified version on this device.",
+      "third-party": "Third-party components",
+      "third-party-intro": "Rocket Show includes the following open source components, which remain under their respective licenses:"
+    }
   },
   "action": {
     "action": "Action",
