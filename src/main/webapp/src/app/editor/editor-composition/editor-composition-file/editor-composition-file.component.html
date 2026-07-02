@@ -113,15 +113,18 @@
             </div>
 
             <div class="card-body">
-              <!-- Active (muted) -->
+              <!-- Active (deactivated) -->
               <div class="form-group">
                 <div class="form-check">
                   <input type="checkbox" [ngModel]="!file?.active" (ngModelChange)="file.active = !$event"
                     class="form-check-input" id="active" />
 
                   <label class="form-check-label" for="active">
-                    {{ "editor.mute" | translate }}
+                    {{ "editor.deactivate" | translate }}
                   </label>
+                  <i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+                    [popover]="'editor.help.file-active' | translate" triggers="mouseenter:mouseleave" container="body"
+                    placement="right" aria-hidden="true"></i>
                 </div>
               </div>
 
@@ -135,7 +138,9 @@
               <div class="form-group">
                 <label class="col-form-label">{{
                   "settings.audio-bus" | translate
-                  }}</label>
+                  }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+                    [popover]="'editor.help.file-audio-bus' | translate" triggers="mouseenter:mouseleave"
+                    container="body" placement="right" aria-hidden="true"></i></label>
                 <select class="custom-select form-control" [ngModel]="file?.outputBusUuid"
                   (ngModelChange)="file.outputBusUuid = $event">
                   @for (audioBus of settings.audioBusList; track audioBus) {
@@ -161,7 +166,9 @@
               <div class="form-group">
                 <label class="col-form-label" for="offsetMillis">{{
                   "editor.offset-millis" | translate
-                  }}</label>
+                  }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+                    [popover]="'editor.help.file-offset' | translate" triggers="mouseenter:mouseleave"
+                    container="body" placement="right" aria-hidden="true"></i></label>
 
                 <input type="text" class="form-control" [ngModel]="file?.offsetMillis"
                   (ngModelChange)="file.offsetMillis = $event" id="offsetMillis"
@@ -169,24 +176,28 @@
               </div>
 
               <!-- Loop -->
-              <!-- Currently not working in Gstreamer -->
-              <!--div class="form-group">
+              <div class="form-group">
                 <div class="form-check">
                   <input type="checkbox" [ngModel]="file?.loop" (ngModelChange)="file.loop = $event"
-                    class="form-check-input" id="loop">
+                    class="form-check-input" id="fileLoop">
 
-                  <label class="form-check-label" for="loop">
+                  <label class="form-check-label" for="fileLoop">
                     {{ 'editor.loop' | translate }}
                   </label>
+                  <i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+                    [popover]="'editor.help.file-loop' | translate" triggers="mouseenter:mouseleave" container="body"
+                    placement="right" aria-hidden="true"></i>
                 </div>
-              </div-->
+              </div>
 
               <!-- MIDI routing -->
               @if (file?.type == 'MIDI') {
               <div class="form-group">
                 <label class="col-form-label">{{
                   "editor.routing" | translate
-                  }}</label>
+                  }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+                    [popover]="'editor.help.file-midi-routing' | translate" triggers="mouseenter:mouseleave"
+                    container="body" placement="right" aria-hidden="true"></i></label>
                 <app-midi-routing [midiRoutingList]="file?.midiRoutingList"></app-midi-routing>
               </div>
               }

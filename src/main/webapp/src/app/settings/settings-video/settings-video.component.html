@@ -1,5 +1,8 @@
 <div class="form-group row">
-  <label class="col-lg-3 col-form-label">{{ 'settings.global-play-offset' | translate }}</label>
+  <label class="col-lg-3 col-form-label">{{ 'settings.global-play-offset' | translate }}<i
+      class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+      [popover]="'settings.help.global-play-offset' | translate" triggers="mouseenter:mouseleave" container="body"
+      placement="right" aria-hidden="true"></i></label>
   <div class="col-lg-9">
     <input type="text" class="form-control" [ngModel]="settings?.offsetMillisVideo"
       (ngModelChange)="settings.offsetMillisVideo = $event">

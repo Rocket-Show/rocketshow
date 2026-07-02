@@ -6,7 +6,9 @@
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{
     "settings.lighting-ola-plugins" | translate
-    }}</label>
+    }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+      [popover]="'settings.help.lighting-ola-plugins' | translate" triggers="mouseenter:mouseleave" container="body"
+      placement="right" aria-hidden="true"></i></label>
   <div class="col-lg-9">
     <div class="card border-secondary" style="max-height: 450px; overflow-y: auto">
       <div class="card-body p-0">
@@ -63,7 +65,9 @@
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{
     "settings.lighting-universes" | translate
-    }}</label>
+    }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+      [popover]="'settings.help.lighting-universes' | translate" triggers="mouseenter:mouseleave" container="body"
+      placement="right" aria-hidden="true"></i></label>
   <div class="col-lg-9">
     <div class="card border-secondary">
       <div class="card-body p-0">
@@ -89,13 +93,19 @@
                       (change)="updateLightingUniverseList()" />
                   </div>
                   <div class="col-md-3 mb-2 mb-md-0">
-                    <label class="small mb-1">{{ "settings.lighting-ola-universe-id" | translate }}</label>
+                    <label class="small mb-1">{{ "settings.lighting-ola-universe-id" | translate }}<i
+                        class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+                        [popover]="'settings.help.lighting-ola-universe-id' | translate" triggers="mouseenter:mouseleave"
+                        container="body" placement="top" aria-hidden="true"></i></label>
                     <input type="number" min="0" class="form-control"
                       [(ngModel)]="lightingUniverse.olaUniverseId"
                       (change)="updateLightingUniverseList()" />
                   </div>
                   <div class="col-md-5 mb-2 mb-md-0">
-                    <label class="small mb-1">{{ "settings.lighting-ola-output-port" | translate }}</label>
+                    <label class="small mb-1">{{ "settings.lighting-ola-output-port" | translate }}<i
+                        class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+                        [popover]="'settings.help.lighting-ola-output-port' | translate" triggers="mouseenter:mouseleave"
+                        container="body" placement="top" aria-hidden="true"></i></label>
                     <select class="custom-select" [ngModel]="lightingUniverse.olaOutputPortId"
                       (ngModelChange)="updateLightingUniversePort(lightingUniverse, $event)">
                       <option value="">{{ "settings.lighting-ola-output-port-none" | translate }}</option>
@@ -135,7 +145,9 @@
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{
     "settings.lighting-send-delay" | translate
-    }}</label>
+    }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+      [popover]="'settings.help.lighting-send-delay' | translate" triggers="mouseenter:mouseleave" container="body"
+      placement="right" aria-hidden="true"></i></label>
   <div class="col-lg-9">
     <input type="text" class="form-control" [ngModel]="settings?.lightingSendDelayMillis"
       (ngModelChange)="settings.lightingSendDelayMillis = $event" />
@@ -145,7 +157,9 @@
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{
     "settings.lighting-designer-frequency-hertz" | translate
-    }}</label>
+    }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+      [popover]="'settings.help.designer-frequency-hertz' | translate" triggers="mouseenter:mouseleave" container="body"
+      placement="right" aria-hidden="true"></i></label>
   <div class="col-lg-9">
     <input type="text" class="form-control" [ngModel]="settings?.designerFrequencyHertz"
       (ngModelChange)="settings.designerFrequencyHertz = $event" />
@@ -154,7 +168,9 @@
 
 <div class="form-group row">
   <div class="col-lg-3 col-form-label">
-    {{ "settings.designer-live-preview" | translate }}
+    {{ "settings.designer-live-preview" | translate }}<i class="fa fa-question-circle-o text-muted ml-1"
+      style="cursor: help;" [popover]="'settings.help.designer-live-preview' | translate"
+      triggers="mouseenter:mouseleave" container="body" placement="right" aria-hidden="true"></i>
   </div>
   <div class="col-lg-9 d-flex">
     <div class="form-check my-auto">

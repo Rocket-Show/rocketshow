@@ -61,6 +61,17 @@
     "designer": "Concepteur",
     "settings": "Paramètres"
   },
+  "play": {
+    "help": {
+      "auto-select-next": "Lorsque cette option est activée, la composition suivante est automatiquement sélectionnée et lue dès que la composition en cours se termine — pratique pour jouer tout un set sans intervention.",
+      "switch-to-grid": "Passe à la grille de cues, où chaque composition est un grand bouton que vous pouvez déclencher directement.",
+      "switch-to-setlist": "Passe à la vue setlist avec les commandes de lecture et une liste de compositions défilante.",
+      "activity-midi-in": "Clignote lorsque des données MIDI sont reçues.",
+      "activity-midi-out": "Clignote lorsque des données MIDI sont envoyées.",
+      "activity-audio": "Affiche le niveau de sortie audio actuel par canal.",
+      "activity-lighting": "Clignote lorsque des données d'éclairage sont envoyées."
+    }
+  },
   "editor": {
     "compositions": "Compositions",
     "available-compositions": "Compositions disponibles",
@@ -83,7 +94,7 @@
     "lead-sheet": "Feuille de lead",
     "lead-sheets-library": "Bibliothèque",
     "files": "Fichiers multimédias",
-    "mute": "Muet",
+    "deactivate": "Désactiver",
     "offset-millis": "Délai en millisecondes",
     "offset-placeholder": "Délai en millisecondes",
     "loop": "Répéter",
@@ -115,6 +126,23 @@
     "toast-composition-save-error": "La composition n'a pas pu être enregistrée. Consultez le journal pour plus de détails.",
     "toast-set-save-error": "Le set n'a pas pu être enregistré. Consultez le journal pour plus de détails.",
     "add": "Ajouter",
+    "help": {
+      "test-play": "Lit cette composition à titre d'essai pour la prévisualiser. Cela n'affecte pas le spectacle en direct sur la page \"Démarrer\".",
+      "test-stop": "Arrête la lecture d'essai.",
+      "loop": "Lorsque cette option est activée, cette composition recommence automatiquement depuis le début une fois arrivée à la fin.",
+      "audio-volume": "Volume de lecture global de tous les fichiers audio de cette composition.",
+      "add-file": "Un fichier multimédia (audio, vidéo ou MIDI) lu dans le cadre de cette composition.",
+      "add-action": "Déclenche une action — telle que MIDI, HTTP ou éclairage — à une position définie dans la composition.",
+      "add-lead-sheet": "Joint des partitions ou des grilles d'accords affichées pour un instrument choisi pendant la lecture de cette composition.",
+      "file-active": "Active ou désactive ce fichier. Un fichier désactivé reste dans la composition mais est ignoré pendant la lecture.",
+      "file-loop": "Répète ce fichier au sein de la composition jusqu'à la fin de celle-ci — pratique pour boucler une courte piste d'accompagnement, une vidéo ou un clip lumineux sous une composition plus longue.",
+      "file-audio-bus": "Le bus audio (une sortie de votre périphérique audio) par lequel ce fichier est lu.",
+      "file-offset": "Retarde le début de ce fichier du nombre de millisecondes indiqué, par rapport au début de la composition.",
+      "file-midi-routing": "Définit où ce fichier MIDI est envoyé pendant la lecture, par exemple vers la sortie MIDI, l'éclairage ou les appareils distants.",
+      "edit-details": "Ouvre les paramètres détaillés.",
+      "reorder": "Glissez pour modifier l'ordre.",
+      "notes": "Notes personnelles pour cette composition. Elles ne s'affichent qu'ici dans l'éditeur et ne sont jamais lues."
+    },
     "action": {
       "actions": "Actions",
       "action": "Action",
@@ -140,6 +168,34 @@
     "remote-devices-hint": "Vous pouvez configurer les appareils distants dans les paramètres réseau."
   },
   "settings": {
+    "help": {
+      "default-composition": "La composition qui est lue automatiquement au démarrage de l'appareil et chaque fois que la lecture est arrêtée — par exemple une ambiance lumineuse de veille ou une boucle de fond.",
+      "monitoring": "Active la mesure en temps réel de l'activité et des niveaux MIDI, audio et éclairage, comme les indicateurs d'activité sur la page \"Démarrer\". Désactivez-la pour réduire la charge de traitement.",
+      "global-play-offset": "Retarde la lecture de cette sortie du nombre de millisecondes indiqué (une valeur négative l'avance) afin de compenser la latence et de garder l'audio, le MIDI, la vidéo et l'éclairage synchronisés.",
+      "audio-sample-rate": "Fréquence d'échantillonnage utilisée par le périphérique audio. Laissez la valeur par défaut sauf si votre matériel exige une fréquence précise.",
+      "alsa-period-size": "Nombre de trames audio traitées par période. Des valeurs plus faibles réduisent la latence mais augmentent le risque de coupures audio.",
+      "alsa-buffer-size": "Nombre de périodes dans le tampon audio. Des tampons plus grands résistent mieux aux coupures mais ajoutent de la latence.",
+      "audio-buses": "Les bus audio acheminent les différents canaux audio d'une composition vers des sorties précises de votre périphérique audio, par exemple des mixages séparés pour les retours et la façade.",
+      "lighting-ola-plugins": "Les plugins OLA (Open Lighting Architecture) assurent la connexion à votre matériel d'éclairage, par exemple une interface USB-DMX ou Art-Net.",
+      "lighting-universes": "Un univers est une seule ligne DMX de 512 canaux maximum. Associez chaque univers à un port de sortie OLA pour l'envoyer à votre matériel d'éclairage.",
+      "lighting-ola-universe-id": "L'identifiant numérique de cet univers dans OLA. Il doit correspondre à l'univers configuré dans OLA.",
+      "lighting-ola-output-port": "Le port de sortie OLA (votre interface d'éclairage) vers lequel cet univers est envoyé.",
+      "lighting-send-delay": "Les changements d'éclairage qui surviennent dans cette fenêtre de temps sont regroupés en une seule mise à jour avant l'envoi, ce qui réduit le trafic réseau et DMX.",
+      "designer-frequency-hertz": "Combien de fois par seconde la sortie d'éclairage est recalculée et envoyée. Des valeurs plus élevées sont plus fluides mais demandent plus de puissance de calcul.",
+      "designer-live-preview": "Affiche un aperçu en direct de la sortie d'éclairage dans le Concepteur pendant l'édition, et non plus seulement pendant la lecture.",
+      "midi-timecode": "Envoie le timecode MIDI (MTC) pendant la lecture afin que des appareils externes, comme une DAW ou une console lumière, puissent suivre la position actuelle.",
+      "device-in-midi-routing": "Définit où est envoyé le MIDI reçu des périphériques d'entrée connectés, par exemple vers la sortie MIDI, l'éclairage ou les appareils distants.",
+      "remote-midi-routing": "Définit où est envoyé le MIDI reçu des appareils RocketShow distants.",
+      "global-midi-mapping": "Transforme globalement le MIDI entrant — par exemple en décalant les canaux ou les notes — avant son traitement.",
+      "midi-control": "Associez les messages MIDI entrants (notes ou changements de programme, par exemple) à des actions comme démarrer, arrêter ou sélectionner des compositions.",
+      "lan-ip": "Par défaut, l'appareil obtient son adresse IP automatiquement (DHCP). Activez la configuration manuelle pour attribuer une adresse IP fixe.",
+      "remote-devices": "D'autres appareils RocketShow que cet appareil peut commander et garder synchronisés pendant un spectacle.",
+      "remote-device-api-key": "Une clé d'API générée sur l'appareil distant (sous Sécurité) qui autorise cet appareil à le commander.",
+      "remote-device-synchronize": "Garde les compositions et les médias de l'appareil distant synchronisés avec cet appareil.",
+      "instruments": "Définissez les instruments utilisés dans votre groupe. Les feuilles de lead peuvent être attribuées par instrument, et chaque appareil peut choisir l'instrument qu'il affiche.",
+      "personal-instrument": "L'instrument utilisé sur cet appareil. Il détermine les feuilles de lead et les parties affichées ici.",
+      "api-keys": "Les clés d'API permettent à des systèmes externes et à d'autres appareils RocketShow d'accéder à cet appareil sans mot de passe."
+    },
     "default": "Par défaut",
     "system": "Système",
     "personal": "Personnel",

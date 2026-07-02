@@ -61,6 +61,17 @@
     "designer": "Designer",
     "settings": "Impostazioni"
   },
+  "play": {
+    "help": {
+      "auto-select-next": "Quando è attivo, la composizione successiva viene selezionata e riprodotta automaticamente non appena quella corrente termina, utile per riprodurre un intero set senza interventi.",
+      "switch-to-grid": "Passa alla griglia dei cue, dove ogni composizione è un grande pulsante che puoi attivare direttamente.",
+      "switch-to-setlist": "Passa alla vista setlist con i controlli di riproduzione e un elenco di composizioni scorrevole.",
+      "activity-midi-in": "Lampeggia quando vengono ricevuti dati MIDI.",
+      "activity-midi-out": "Lampeggia quando vengono inviati dati MIDI.",
+      "activity-audio": "Mostra il livello di uscita audio attuale per canale.",
+      "activity-lighting": "Lampeggia quando vengono inviati dati di illuminazione."
+    }
+  },
   "editor": {
     "compositions": "Composizioni",
     "available-compositions": "Composizioni disponibili",
@@ -83,7 +94,7 @@
     "lead-sheet": "Leadsheet",
     "lead-sheets-library": "Libreria",
     "files": "File multimediali",
-    "mute": "Silenzia",
+    "deactivate": "Disattiva",
     "offset-millis": "Ritardo in millisecondi",
     "offset-placeholder": "Ritardo in millisecondi",
     "loop": "Ripeti",
@@ -115,6 +126,23 @@
     "toast-composition-save-error": "La composizione non è stata salvata. Consulta il registro per ulteriori dettagli.",
     "toast-set-save-error": "Il set non è stato salvato. Consulta il registro per ulteriori dettagli.",
     "add": "Aggiungi",
+    "help": {
+      "test-play": "Riproduce questa composizione come prova per visualizzarne l'anteprima. Non influisce sullo spettacolo dal vivo nella pagina \"Avvio\".",
+      "test-stop": "Interrompe la riproduzione di prova.",
+      "loop": "Quando è attivo, questa composizione ricomincia automaticamente dall'inizio una volta raggiunta la fine.",
+      "audio-volume": "Volume di riproduzione complessivo di tutti i file audio di questa composizione.",
+      "add-file": "Un file multimediale (audio, video o MIDI) riprodotto come parte di questa composizione.",
+      "add-action": "Attiva un'azione, come MIDI, HTTP o luci, in una posizione definita all'interno della composizione.",
+      "add-lead-sheet": "Allega spartiti o griglie di accordi mostrati per uno strumento scelto durante la riproduzione di questa composizione.",
+      "file-active": "Attiva o disattiva questo file. Un file disattivato rimane nella composizione ma viene ignorato durante la riproduzione.",
+      "file-loop": "Ripete questo file all'interno della composizione fino al termine della composizione, utile per mandare in loop una breve base, un video o una clip luci sotto una composizione più lunga.",
+      "file-audio-bus": "Il bus audio (un'uscita del tuo dispositivo audio) attraverso cui viene riprodotto questo file.",
+      "file-offset": "Ritarda l'inizio di questo file del numero di millisecondi indicato, rispetto all'inizio della composizione.",
+      "file-midi-routing": "Definisce dove viene inviato questo file MIDI durante la riproduzione, ad esempio all'uscita MIDI, alle luci o ai dispositivi remoti.",
+      "edit-details": "Apre le impostazioni dettagliate.",
+      "reorder": "Trascina per cambiare l'ordine.",
+      "notes": "Note personali per questa composizione. Vengono mostrate solo qui nell'editor e non vengono mai riprodotte."
+    },
     "action": {
       "actions": "Azioni",
       "action": "Azione",
@@ -140,6 +168,34 @@
     "remote-devices-hint": "Puoi configurare i dispositivi remoti nelle impostazioni di rete."
   },
   "settings": {
+    "help": {
+      "default-composition": "La composizione che viene riprodotta automaticamente all'avvio del dispositivo e ogni volta che la riproduzione viene interrotta, ad esempio una scena luci di standby o un loop di sottofondo.",
+      "monitoring": "Attiva il monitoraggio in tempo reale dell'attività e dei livelli di MIDI, audio e luci, come gli indicatori di attività nella pagina \"Avvio\". Disattivalo per ridurre il carico di elaborazione.",
+      "global-play-offset": "Ritarda la riproduzione di questa uscita del numero di millisecondi indicato (un valore negativo la anticipa) per compensare la latenza e mantenere sincronizzati audio, MIDI, video e luci.",
+      "audio-sample-rate": "Frequenza di campionamento usata dal dispositivo audio. Lasciala sul valore predefinito a meno che l'hardware non richieda una frequenza specifica.",
+      "alsa-period-size": "Numero di frame audio elaborati per periodo. Valori più piccoli riducono la latenza ma aumentano il rischio di interruzioni dell'audio.",
+      "alsa-buffer-size": "Numero di periodi nel buffer audio. Buffer più grandi sono più robusti contro le interruzioni ma aumentano la latenza.",
+      "audio-buses": "I bus audio instradano i singoli canali audio di una composizione verso uscite specifiche del dispositivo audio, ad esempio mix separati per i monitor e per la sala.",
+      "lighting-ola-plugins": "I plugin OLA (Open Lighting Architecture) forniscono il collegamento all'hardware luci, come un'interfaccia USB-DMX o Art-Net.",
+      "lighting-universes": "Un universo è una singola linea DMX di massimo 512 canali. Associa ogni universo a una porta di uscita OLA per inviarlo all'hardware luci.",
+      "lighting-ola-universe-id": "L'ID numerico di questo universo all'interno di OLA. Deve corrispondere all'universo configurato in OLA.",
+      "lighting-ola-output-port": "La porta di uscita OLA (la tua interfaccia luci) a cui viene inviato questo universo.",
+      "lighting-send-delay": "Le modifiche alle luci che avvengono entro questo intervallo di tempo vengono raggruppate in un unico aggiornamento prima dell'invio, riducendo il traffico di rete e DMX.",
+      "designer-frequency-hertz": "Quante volte al secondo l'uscita luci viene ricalcolata e inviata. Valori più alti sono più fluidi ma richiedono più potenza di elaborazione.",
+      "designer-live-preview": "Mostra un'anteprima dal vivo dell'uscita luci nel Designer mentre modifichi, anziché solo durante la riproduzione.",
+      "midi-timecode": "Invia il MIDI Timecode (MTC) durante la riproduzione, così i dispositivi esterni, come una DAW o un mixer luci, possono seguire la posizione corrente.",
+      "device-in-midi-routing": "Definisce dove viene inviato il MIDI ricevuto dai dispositivi di ingresso collegati, ad esempio all'uscita MIDI, alle luci o ai dispositivi remoti.",
+      "remote-midi-routing": "Definisce dove viene inviato il MIDI ricevuto dai dispositivi RocketShow remoti.",
+      "global-midi-mapping": "Trasforma il MIDI in ingresso a livello globale — ad esempio spostando canali o note — prima che venga elaborato.",
+      "midi-control": "Associa i messaggi MIDI in ingresso (come note o cambi di programma) ad azioni come avviare, fermare o selezionare composizioni.",
+      "lan-ip": "Per impostazione predefinita il dispositivo ottiene l'indirizzo IP automaticamente (DHCP). Attiva la configurazione manuale per assegnare un indirizzo IP fisso.",
+      "remote-devices": "Altri dispositivi RocketShow che questo dispositivo può controllare e mantenere sincronizzati durante uno spettacolo.",
+      "remote-device-api-key": "Una chiave API generata sul dispositivo remoto (in Sicurezza) che autorizza questo dispositivo a controllarlo.",
+      "remote-device-synchronize": "Mantiene le composizioni e i media del dispositivo remoto sincronizzati con questo dispositivo.",
+      "instruments": "Definisci gli strumenti usati nella tua band. I leadsheet possono essere assegnati per strumento e ogni dispositivo può scegliere quale strumento mostrare.",
+      "personal-instrument": "Lo strumento usato su questo dispositivo. Determina quali leadsheet e parti vengono mostrati qui.",
+      "api-keys": "Le chiavi API consentono a sistemi esterni e ad altri dispositivi RocketShow di accedere a questo dispositivo senza password."
+    },
     "default": "Predefinito",
     "system": "Sistema",
     "personal": "Personale",

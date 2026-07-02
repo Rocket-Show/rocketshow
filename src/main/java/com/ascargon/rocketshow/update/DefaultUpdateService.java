@@ -175,7 +175,7 @@ public class DefaultUpdateService implements UpdateService {
         sendAndSave(updateState);
 
         try {
-            raucService.installBundle(versionService.getRemoteBaseUrl(testBranch) + "rauc-bundles/" + remoteVersionInfo.getRaucBundle());
+            raucService.installBundle(remoteVersionInfo.getRaucBundle());
         } catch (Exception e) {
             error("Unable to install RAUC bundle");
             return;

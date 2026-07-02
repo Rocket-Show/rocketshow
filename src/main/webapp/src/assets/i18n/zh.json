@@ -61,6 +61,17 @@
     "designer": "设计器",
     "settings": "设置"
   },
+  "play": {
+    "help": {
+      "auto-select-next": "启用后，当前作品播放结束后会自动选择并播放下一个作品，便于免操作地播放整个集合。",
+      "switch-to-grid": "切换到 Cue 网格视图，每个作品都是一个可直接触发的大按钮。",
+      "switch-to-setlist": "切换到 setlist 列表视图，包含播放控制和可滚动的作品列表。",
+      "activity-midi-in": "接收到 MIDI 数据时闪烁。",
+      "activity-midi-out": "发送 MIDI 数据时闪烁。",
+      "activity-audio": "显示当前各通道的音频输出电平。",
+      "activity-lighting": "发送灯光数据时闪烁。"
+    }
+  },
   "editor": {
     "compositions": "作品",
     "available-compositions": "可用作品",
@@ -83,7 +94,7 @@
     "lead-sheet": "主奏谱",
     "lead-sheets-library": "库",
     "files": "媒体文件",
-    "mute": "静音",
+    "deactivate": "停用",
     "offset-millis": "延迟（毫秒）",
     "offset-placeholder": "延迟（毫秒）",
     "loop": "循环",
@@ -115,6 +126,23 @@
     "toast-composition-save-error": "作品无法保存。请查看日志了解更多详情。",
     "toast-set-save-error": "集合无法保存。请查看日志了解更多详情。",
     "add": "添加",
+    "help": {
+      "test-play": "试播此作品以进行预览。这不会影响\"开始\"页面上的现场演出。",
+      "test-stop": "停止试播。",
+      "loop": "启用后，此作品播放到结尾时会自动从头重新开始。",
+      "audio-volume": "此作品中所有音频文件的总体播放音量。",
+      "add-file": "作为此作品一部分播放的媒体文件（音频、视频或 MIDI）。",
+      "add-action": "在作品中的指定位置触发动作，例如 MIDI、HTTP 或灯光。",
+      "add-lead-sheet": "附加在播放此作品时为所选乐器显示的乐谱或和弦谱。",
+      "file-active": "启用或停用此文件。停用的文件仍保留在作品中，但在播放时会被跳过。",
+      "file-loop": "在作品内循环播放此文件，直到作品结束——适合在较长的作品下循环播放较短的伴奏、视频或灯光片段。",
+      "file-audio-bus": "播放此文件所用的音频总线（即音频设备的一个输出）。",
+      "file-offset": "相对于作品的开始，将此文件的开始延迟指定的毫秒数。",
+      "file-midi-routing": "定义播放期间此 MIDI 文件发送到何处，例如发送到 MIDI 输出、灯光或远程设备。",
+      "edit-details": "打开详细设置。",
+      "reorder": "拖动以更改顺序。",
+      "notes": "此作品的个人备注。仅在此编辑器中显示，不会被播放。"
+    },
     "action": {
       "actions": "动作",
       "action": "动作",
@@ -140,6 +168,34 @@
     "remote-devices-hint": "您可以在网络设置中配置远程设备。"
   },
   "settings": {
+    "help": {
+      "default-composition": "设备启动时以及每次停止播放时自动播放的作品，例如待机灯光画面或背景循环。",
+      "monitoring": "启用 MIDI、音频和灯光的实时活动与电平监测，例如\"开始\"页面上的活动指示灯。停用可降低处理负载。",
+      "global-play-offset": "将此输出的播放延迟指定的毫秒数（负值则提前播放），以补偿延迟并使音频、MIDI、视频和灯光保持同步。",
+      "audio-sample-rate": "音频设备使用的采样率。除非硬件需要特定采样率，否则请保持默认值。",
+      "alsa-period-size": "每个周期处理的音频帧数。数值越小延迟越低，但音频中断的风险越高。",
+      "alsa-buffer-size": "音频缓冲区中的周期数。缓冲区越大越能抵抗中断，但会增加延迟。",
+      "audio-buses": "音频总线将作品的各个音频通道路由到音频设备的特定输出，例如分开的监听和主扩声混音。",
+      "lighting-ola-plugins": "OLA（开放式灯光架构）插件提供与灯光硬件的连接，例如 USB-DMX 接口或 Art-Net。",
+      "lighting-universes": "一个 Universe 是一条最多 512 通道的 DMX 线路。为每个 Universe 分配一个 OLA 输出端口，即可将其发送到灯光硬件。",
+      "lighting-ola-universe-id": "此 Universe 在 OLA 中的数字 ID，必须与 OLA 中配置的 Universe 一致。",
+      "lighting-ola-output-port": "此 Universe 发送到的 OLA 输出端口（即你的灯光接口）。",
+      "lighting-send-delay": "在此时间窗口内发生的灯光变化会在发送前合并为一次更新，从而减少网络和 DMX 流量。",
+      "designer-frequency-hertz": "每秒重新计算并发送灯光输出的次数。数值越高越流畅，但占用更多处理性能。",
+      "designer-live-preview": "在编辑时于设计器中显示灯光输出的实时预览，而不仅在播放时显示。",
+      "midi-timecode": "在播放过程中发送 MIDI 时间码（MTC），以便 DAW 或灯光控台等外部设备跟随当前位置。",
+      "device-in-midi-routing": "定义从已连接输入设备收到的 MIDI 发送到何处，例如发送到 MIDI 输出、灯光或远程设备。",
+      "remote-midi-routing": "定义从远程 RocketShow 设备收到的 MIDI 发送到何处。",
+      "global-midi-mapping": "在处理之前对传入的 MIDI 进行全局转换，例如移调通道或音符。",
+      "midi-control": "将传入的 MIDI 消息（如音符或程序变更）映射到启动、停止或选择作品等动作。",
+      "lan-ip": "默认情况下，设备会自动获取 IP 地址（DHCP）。启用手动配置可指定固定 IP 地址。",
+      "remote-devices": "此设备可在演出期间控制并保持同步的其他 RocketShow 设备。",
+      "remote-device-api-key": "在远程设备上（在\"安全\"中）生成的 API 密钥，用于授权此设备对其进行控制。",
+      "remote-device-synchronize": "使远程设备上的作品和媒体与此设备保持同步。",
+      "instruments": "定义乐队使用的乐器。主奏谱可按乐器分配，每台设备都可以选择显示哪种乐器。",
+      "personal-instrument": "此设备使用的乐器。它决定此处显示哪些主奏谱和分谱。",
+      "api-keys": "API 密钥允许外部系统和其他 RocketShow 设备无需密码即可访问此设备。"
+    },
     "default": "默认",
     "system": "系统",
     "personal": "个人",
