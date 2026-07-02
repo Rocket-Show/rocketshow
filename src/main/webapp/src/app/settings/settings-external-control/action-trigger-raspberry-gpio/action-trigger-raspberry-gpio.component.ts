@@ -19,10 +19,8 @@ export class ActionTriggerRaspberryGpioComponent {
   constructor(private settingsService: SettingsService, private deviceInformationService: DeviceInformationService) {
     if (this.deviceInformationService.deviceInformation.available) {
       // ready to use version
-      this.pinList.push(new RaspberryPiPin(27, "1"));
-      this.pinList.push(new RaspberryPiPin(22, "2"));
-      this.pinList.push(new RaspberryPiPin(23, "3"));
-      this.pinList.push(new RaspberryPiPin(24, "4"));
+      this.pinList.push(new RaspberryPiPin(23, "1"));
+      this.pinList.push(new RaspberryPiPin(25, "2"));
     } else {
       this.pinList = this.settingsService.raspberryPiPinIdList;
     }

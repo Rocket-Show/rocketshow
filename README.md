@@ -274,7 +274,12 @@ MIDI input, output routing and mapping.
 
 ##### Raspberry
 
-Raspberry Pi specific services (e.g. GPIO triggers).
+Raspberry Pi specific services (e.g. GPIO triggers). Check the Raspberry Pi GPIO state like this:
+```shell
+gpioget -c gpiochip0 24
+```
+
+Where active = high and inactive = low.
 
 ##### Util
 

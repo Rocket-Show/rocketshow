@@ -131,9 +131,14 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
         }
     }
 
-    private void calculateRemainingActionTriggerList() {
+    // Build the list of triggers still ahead of us. The anchor must be the intended start position
+    // (0 on a fresh play/loop, the seek target on a seek), NOT the live getPositionMillis(): the
+    // pipeline starts advancing asynchronously (onPlaying() flips playState to PLAYING from the bus
+    // thread), so by the time this runs the live position can already be a few ms > 0. That would
+    // drop a trigger at position 0 (0 >= 3 is false) before it is ever scheduled, so it never fires.
+    private void calculateRemainingActionTriggerList(long fromMillis) {
         remainingActionTriggerCompositionList = new CopyOnWriteArrayList<>();
-        remainingActionTriggerCompositionList.addAll(composition.getActionTriggerList().stream().filter(trigger -> trigger.getPositionMillis() >= getPositionMillis()).toList());
+        remainingActionTriggerCompositionList.addAll(composition.getActionTriggerList().stream().filter(trigger -> trigger.getPositionMillis() >= fromMillis).toList());
     }
 
     // Load all files and construct the complete GST pipeline
@@ -323,7 +328,7 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
             }
             compositionPipeline.startSlaves(0);
             lastPlayTimeMillis = System.currentTimeMillis();
-            calculateRemainingActionTriggerList();
+            calculateRemainingActionTriggerList(0);
         } catch (Exception e) {
             logger.error("Could not recreate the H.265 pipeline to loop the composition", e);
         }
@@ -456,7 +461,7 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
 
         lastPlayTimeMillis = System.currentTimeMillis();
 
-        calculateRemainingActionTriggerList();
+        calculateRemainingActionTriggerList(startPosition);
 
         startAutoStopTimer();
         scheduleActionTriggerTimers();
@@ -585,7 +590,7 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
 
         this.lastPlayTimeMillis = System.currentTimeMillis();
 
-        calculateRemainingActionTriggerList();
+        calculateRemainingActionTriggerList(startPosition);
         scheduleActionTriggerTimers();
         if (playState == PlayState.PLAYING) {
             startMidiTimecode();
