@@ -9,6 +9,7 @@ import com.ascargon.rocketshow.gstreamer.GstreamerInitService;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.midi.MidiTimecodeService;
+import com.ascargon.rocketshow.raspberry.RaspberryGpioOutService;
 import com.ascargon.rocketshow.session.SessionService;
 import com.ascargon.rocketshow.settings.CapabilitiesService;
 import com.ascargon.rocketshow.settings.DefaultCompositionChangedEvent;
@@ -56,6 +57,7 @@ public class DefaultPlayerService implements PlayerService {
     private final CapabilitiesService capabilitiesService;
     @Getter
     private final CompositionPipelineBuilder compositionPipelineBuilder;
+    private final RaspberryGpioOutService raspberryGpioOutService;
 
     // Regular composition player
     private final CompositionPlayer currentCompositionPlayer;
@@ -80,6 +82,7 @@ public class DefaultPlayerService implements PlayerService {
             ActionExecutionService actionExecutionService,
             CapabilitiesService capabilitiesService,
             CompositionPipelineBuilder compositionPipelineBuilder,
+            RaspberryGpioOutService raspberryGpioOutService,
 
             // import to make sure, Gstreamer is initialized before using it here
             GstreamerInitService gstreamerInitService
@@ -96,6 +99,7 @@ public class DefaultPlayerService implements PlayerService {
         this.actionExecutionService = actionExecutionService;
         this.capabilitiesService = capabilitiesService;
         this.compositionPipelineBuilder = compositionPipelineBuilder;
+        this.raspberryGpioOutService = raspberryGpioOutService;
 
         currentCompositionPlayer = new CompositionPlayer(this);
         defaultCompositionPlayer = new CompositionPlayer(this);
@@ -325,6 +329,9 @@ public class DefaultPlayerService implements PlayerService {
 
         // Reset the lighting universe to clear left out signals
         lightingService.reset();
+
+        // Set all configured external control GPIO output pins low (same as blacking out the lighting)
+        raspberryGpioOutService.setAllLow();
 
         // Play the default composition, if necessary
         if (playDefaultComposition) {
