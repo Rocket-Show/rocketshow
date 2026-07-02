@@ -15,3 +15,42 @@
   <label class="col-lg-3 col-form-label">{{ "settings.build-number" | translate }}</label>
   <div class="col-lg-9 col-form-label">{{ buildInfo?.buildNumber }}</div>
 </div>
+
+<hr>
+
+<h4>{{ "settings.licenses.title" | translate }}</h4>
+
+<p>{{ "settings.licenses.intro" | translate }}</p>
+
+<div class="form-group row">
+  <label class="col-lg-3 col-form-label">{{ "settings.licenses.license" | translate }}</label>
+  <div class="col-lg-9 col-form-label">
+    <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank">GNU General Public License v3.0</a>
+  </div>
+</div>
+
+<div class="form-group row">
+  <label class="col-lg-3 col-form-label">{{ "settings.licenses.source-code" | translate }}</label>
+  <div class="col-lg-9 col-form-label">
+    <a href="https://github.com/Rocket-Show/rocketshow" target="_blank">github.com/Rocket-Show/rocketshow</a>
+  </div>
+</div>
+
+<p>{{ "settings.licenses.install-info" | translate }}</p>
+
+<h5>{{ "settings.licenses.third-party" | translate }}</h5>
+
+<p>{{ "settings.licenses.third-party-intro" | translate }}</p>
+
+<ul>
+  <li>Spring Framework / Spring Boot &mdash; Apache License 2.0</li>
+  <li>Apache HttpClient, Apache Commons IO, Apache Commons FileUpload &mdash; Apache License 2.0</li>
+  <li>Google Protocol Buffers (protobuf-java) &mdash; BSD 3-Clause License</li>
+  <li>Pi4J (core, Raspberry Pi and gpiod plugins) &mdash; Apache License 2.0</li>
+  <li>Jakarta XML Binding (JAXB) API and runtime &mdash; Eclipse Distribution License 1.0 (BSD)</li>
+  <li>Jakarta Activation &mdash; Eclipse Distribution License 1.0 (BSD)</li>
+  <li>PureJavaComm &mdash; BSD 2-Clause License</li>
+  <li>Open Lighting Architecture (OLA) Java client &mdash; GNU Lesser General Public License 2.1</li>
+  <li>GStreamer and gst1-java-core &mdash; GNU Lesser General Public License 2.1 (some plugins are licensed under the GPL)</li>
+  <li>Angular and web application dependencies &mdash; MIT License</li>
+</ul>
