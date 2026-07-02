@@ -291,6 +291,7 @@
     "update-install": "Installation...",
     "update-reboot": "Redémarrage...",
     "update-finished": "La mise à jour s'est terminée avec succès.",
+    "update-error": "La mise à jour a échoué.",
     "reboot-device": "Redémarrer",
     "shutdown-device": "Éteindre",
     "default-composition": "Composition par défaut",

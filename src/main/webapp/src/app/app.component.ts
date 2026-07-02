@@ -13,6 +13,8 @@ import { OperatingSystemInformationService } from "./services/operating-system-i
 import { AuthService } from "./services/auth.service";
 import { DeviceInformationService } from "./services/device-information.service";
 import { ToastrService } from "ngx-toastr";
+import { UpdateService } from "./services/update.service";
+import { UpdateState } from "./models/update-state";
 
 @Component({
   selector: "body",
@@ -25,6 +27,7 @@ export class AppComponent implements OnInit {
   isIntro: boolean = false;
   isProvision: boolean = false;
   isPlay: boolean = false;
+  isUpdating: boolean = false;
   loaded: boolean = false;
   settings: Settings;
   mobileAppHost: boolean = false;
@@ -42,7 +45,8 @@ export class AppComponent implements OnInit {
     private operatingSystemInformationService: OperatingSystemInformationService,
     private route: ActivatedRoute,
     public authService: AuthService,
-    private toastrService: ToastrService
+    private toastrService: ToastrService,
+    private updateService: UpdateService
   ) {
     translateService.setDefaultLang("en");
   }
@@ -56,6 +60,20 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit() {
+    // If an update is currently in progress (e.g. the page was reloaded while
+    // updating), show the full-screen update status and block everything else
+    // until the update is done or failed. The update-state endpoint is public,
+    // so this also works while rebooting into a new slot without a session.
+    this.updateService.getUpdateState().subscribe((updateState: UpdateState) => {
+      if (
+        updateState.step === "UPDATING" ||
+        updateState.step === "REBOOTING" ||
+        updateState.step === "FALLING_BACK"
+      ) {
+        this.isUpdating = true;
+      }
+    });
+
     this.router.events.subscribe((e) => {
       if (e instanceof NavigationEnd) {
         const mobileAppHost =

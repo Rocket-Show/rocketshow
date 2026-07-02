@@ -291,6 +291,7 @@
     "update-install": "Installazione...",
     "update-reboot": "Riavvio...",
     "update-finished": "L'aggiornamento è stato completato con successo.",
+    "update-error": "L'aggiornamento non è riuscito.",
     "reboot-device": "Riavvia",
     "shutdown-device": "Spegni",
     "default-composition": "Composizione predefinita",
