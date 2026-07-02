@@ -67,6 +67,11 @@ public class DefaultUpdateService implements UpdateService {
             } else if (UpdateStep.FALLING_BACK.equals(updateState.getStep())) {
                 // We booted back into the original slot after the update failed
                 error("Update failed. Reverted original state.");
+            } else if (UpdateStep.UPDATING.equals(updateState.getStep())) {
+                // We got interrupted (e.g. by a reboot or crash) while still installing.
+                // The installation runs synchronously in the update process and cannot be
+                // resumed, so mark the update as failed instead of waiting forever.
+                error("Update was interrupted during installation.");
             }
         }
     }

@@ -34,57 +34,59 @@ export class UpdateProgressComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
+    // The websocket gives smooth progress while installing.
     this.updateStateServiceSubscription = this.updateStateService.updateState.subscribe((updateState: UpdateState) => {
       this.processUpdateState(updateState);
     });
 
-    // Seed the current state, because the websocket only pushes future changes
-    // (e.g. right after a page reload there might not be a new state for a while).
+    // Poll the current state as a reliable fallback. The websocket only pushes
+    // future changes, so it can miss the final state after a reboot: e.g. when an
+    // update is interrupted while installing, the backend marks it as failed on
+    // startup before any client is connected, and no state is pushed afterwards.
+    // Seed immediately and keep polling until the update is done or has failed.
+    this.pollUpdateState();
+    this.pollStateInterval = setInterval(() => this.pollUpdateState(), 5000);
+  }
+
+  private pollUpdateState() {
     this.updateService.getUpdateState().subscribe((updateState) => {
       this.processUpdateState(updateState);
     });
   }
 
+  private stopPolling() {
+    if (this.pollStateInterval) {
+      clearInterval(this.pollStateInterval);
+      this.pollStateInterval = undefined;
+    }
+  }
+
   private finishUpdateSuccess() {
     this.updateFinished = true;
     this.updatePerc = 100;
+    this.stopPolling();
   }
 
   private finishUpdateError(error: string) {
     this.updateError = true;
+    this.stopPolling();
     this.toastGeneralErrorService.show(new Error(error));
   }
 
   private processUpdateState(updateState: UpdateState) {
-    if (updateState.step === 'REBOOTING' || updateState.step === 'FALLING_BACK') {
-      this.updateStep = 'settings.update-reboot';
-      this.updatePerc = 99;
-
-      // Don't rely on states pushed from the backend, because it's rebooting now
-      // and we might not be able to reconnect to the websocket in time. Instead, poll
-      // for a new status until the update is finished.
-      if (this.updateStateServiceSubscription) {
-        this.updateStateServiceSubscription.unsubscribe();
-        this.updateStateServiceSubscription = undefined;
+    if (updateState.step === 'FINISHED') {
+      if (this.updateFinished || this.updateError) {
+        // Already handled (e.g. by a concurrent websocket message and poll).
+        return;
       }
-
-      if (!this.pollStateInterval) {
-        this.pollStateInterval = setInterval(() => {
-          this.updateService.getUpdateState().subscribe((polledState) => {
-            if (polledState.step === 'FINISHED') {
-              clearInterval(this.pollStateInterval);
-              this.pollStateInterval = undefined;
-            }
-            this.processUpdateState(polledState);
-          });
-        }, 5000);
-      }
-    } else if (updateState.step === 'FINISHED') {
       if (updateState.error) {
         this.finishUpdateError(updateState.error);
       } else {
         this.finishUpdateSuccess();
       }
+    } else if (updateState.step === 'REBOOTING' || updateState.step === 'FALLING_BACK') {
+      this.updateStep = 'settings.update-reboot';
+      this.updatePerc = 99;
     } else {
       this.updateStep = 'settings.update-install';
       if (updateState.progressPercentage > 98) {
