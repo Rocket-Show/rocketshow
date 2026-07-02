@@ -1,0 +1,49 @@
+<div class="container d-flex h-100">
+  <div class="row justify-content-center align-self-center mx-auto">
+    <div class="col">
+      <div class="card border-secondary">
+        <div class="card-header">
+          {{ 'misc.update' | translate }}
+        </div>
+        <div class="card-body">
+          @if (!updateFinished && !updateError) {
+          <p>
+            <i>{{ 'settings.update-hint' | translate }}</i>
+          </p>
+          <div class="progress">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+              [style.width]="updatePerc + '%'"></div>
+          </div>
+          <p class="text-center mt-2 mb-0">
+            <i class="fa fa-spinner fa-pulse fa-fw"></i> {{ updateStep | translate }}
+          </p>
+          }
+
+          @if (updateFinished) {
+          <h1 class="text-center text-success">
+            <i class="fa fa-check-circle-o fa-2x" aria-hidden="true"></i>
+          </h1>
+          <p class="text-center mt-2">{{ 'settings.update-finished' | translate }}</p>
+          <div class="d-flex justify-content-center">
+            <button type="button" class="btn btn-primary" (click)="reload(); false">
+              {{ 'misc.ok' | translate }}
+            </button>
+          </div>
+          }
+
+          @if (updateError) {
+          <h1 class="text-center text-danger">
+            <i class="fa fa-exclamation-circle fa-2x" aria-hidden="true"></i>
+          </h1>
+          <p class="text-center mt-2">{{ 'settings.update-error' | translate }}</p>
+          <div class="d-flex justify-content-center">
+            <button type="button" class="btn btn-primary" (click)="reload(); false">
+              {{ 'misc.ok' | translate }}
+            </button>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

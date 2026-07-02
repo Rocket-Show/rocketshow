@@ -61,6 +61,17 @@
     "designer": "Designer",
     "settings": "Settings"
   },
+  "play": {
+    "help": {
+      "auto-select-next": "When enabled, the next composition is automatically selected and played as soon as the current one finishes — useful for playing through a whole set hands-free.",
+      "switch-to-grid": "Switch to the cue grid, where every composition is a large button you can trigger directly.",
+      "switch-to-setlist": "Switch to the setlist view with transport controls and a scrolling composition list.",
+      "activity-midi-in": "Blinks when MIDI data is received.",
+      "activity-midi-out": "Blinks when MIDI data is sent.",
+      "activity-audio": "Shows the current audio output level per channel.",
+      "activity-lighting": "Blinks when lighting data is sent."
+    }
+  },
   "editor": {
     "compositions": "Compositions",
     "available-compositions": "Available compositions",
@@ -83,7 +94,7 @@
     "lead-sheet": "Leadsheet",
     "lead-sheets-library": "Library",
     "files": "Media files",
-    "mute": "Mute",
+    "deactivate": "Deactivate",
     "offset-millis": "Delay in milliseconds",
     "offset-placeholder": "Delay in milliseconds",
     "loop": "Loop",
@@ -115,6 +126,23 @@
     "toast-composition-save-error": "The composition could not be saved. Please check the log for more details.",
     "toast-set-save-error": "The set could not be saved. Please check the log for further details.",
     "add": "Add",
+    "help": {
+      "test-play": "Test-play this composition to preview it. This does not affect the live show on the “Start” page.",
+      "test-stop": "Stop the test playback.",
+      "loop": "When enabled, this composition automatically starts again from the beginning once it reaches the end.",
+      "audio-volume": "Overall playback volume for all audio files in this composition.",
+      "add-file": "A media file (audio, video or MIDI) that is played as part of this composition.",
+      "add-action": "Trigger an action — such as MIDI, HTTP or lighting — at a defined position within the composition.",
+      "add-lead-sheet": "Attach sheet music or chord charts that are shown for a chosen instrument while this composition plays.",
+      "file-active": "Activate or deactivate this file. A deactivated file stays in the composition but is skipped during playback.",
+      "file-loop": "Repeats this file within the composition until the composition finishes — useful for looping a short backing track, video or lighting clip under a longer composition.",
+      "file-audio-bus": "The audio bus — an output of your audio device — that this file is played through.",
+      "file-offset": "Delays the start of this file by the given number of milliseconds, relative to the start of the composition.",
+      "file-midi-routing": "Defines where this MIDI file is sent during playback, for example to the MIDI output, lighting or remote devices.",
+      "edit-details": "Open the detailed settings.",
+      "reorder": "Drag to change the order.",
+      "notes": "Personal notes for this composition. They are only shown here in the editor and are never played back."
+    },
     "action": {
       "actions": "Actions",
       "action": "Action",
@@ -140,6 +168,34 @@
     "remote-devices-hint": "You can configure the remote devices in the network-settings."
   },
   "settings": {
+    "help": {
+      "default-composition": "The composition that plays automatically when the device starts and whenever playback is stopped — for example a standby lighting look or a background loop.",
+      "monitoring": "Enables real-time activity and level metering for MIDI, audio and lighting, such as the activity indicators on the Start page. Disable it to reduce processing load.",
+      "global-play-offset": "Delays playback of this output by the given number of milliseconds (use a negative value to play it earlier) to compensate for latency and keep audio, MIDI, video and lighting in sync.",
+      "audio-sample-rate": "Sample rate used by the audio device. Leave at default unless your hardware requires a specific rate.",
+      "alsa-period-size": "Number of audio frames processed per period. Smaller values reduce latency but increase the risk of audio dropouts.",
+      "alsa-buffer-size": "Number of periods in the audio buffer. Larger buffers are more robust against dropouts but add latency.",
+      "audio-buses": "Audio buses route the individual audio channels of a composition to specific outputs of your audio device, for example separate monitor and front-of-house mixes.",
+      "lighting-ola-plugins": "OLA (Open Lighting Architecture) plugins provide the connection to your lighting hardware, such as a USB-DMX interface or Art-Net.",
+      "lighting-universes": "A universe is a single DMX line of up to 512 channels. Map each universe to an OLA output port to send it to your lighting hardware.",
+      "lighting-ola-universe-id": "The numeric ID of this universe within OLA. It must match the universe configured in OLA.",
+      "lighting-ola-output-port": "The OLA output port (your lighting interface) that this universe is sent to.",
+      "lighting-send-delay": "Lighting changes that occur within this time window are grouped into a single update before being sent, reducing network and DMX traffic.",
+      "designer-frequency-hertz": "How many times per second the lighting output is recalculated and sent. Higher values are smoother but use more processing power.",
+      "designer-live-preview": "Shows a live preview of the lighting output in the Designer while you edit, instead of only during playback.",
+      "midi-timecode": "Sends MIDI Timecode (MTC) during playback so external devices, such as a DAW or lighting desk, can follow the current position.",
+      "device-in-midi-routing": "Defines where MIDI received from connected input devices is sent, for example to the MIDI output, lighting or remote devices.",
+      "remote-midi-routing": "Defines where MIDI received from remote RocketShow devices is sent.",
+      "global-midi-mapping": "Transforms incoming MIDI globally — for example shifting channels or notes — before it is processed.",
+      "midi-control": "Map incoming MIDI messages (such as notes or program changes) to actions like starting, stopping or selecting compositions.",
+      "lan-ip": "By default the device obtains its IP address automatically (DHCP). Enable manual configuration to assign a fixed IP address.",
+      "remote-devices": "Other RocketShow devices that this device can control and keep in sync during a show.",
+      "remote-device-api-key": "An API key generated on the remote device (under Security) that authorizes this device to control it.",
+      "remote-device-synchronize": "Keep the compositions and media on the remote device in sync with this device.",
+      "instruments": "Define the instruments used in your band. Leadsheets can be assigned per instrument, and each device can choose which instrument it shows.",
+      "personal-instrument": "The instrument used on this device. It determines which leadsheets and parts are shown here.",
+      "api-keys": "API keys let external systems and other RocketShow devices access this device without a password."
+    },
     "default": "Default",
     "system": "System",
     "personal": "Personal",
@@ -236,6 +292,7 @@
     "update-install": "Installing...",
     "update-reboot": "Rebooting...",
     "update-finished": "The update has finished successfully.",
+    "update-error": "The update failed.",
     "reboot-device": "Reboot",
     "shutdown-device": "Shutdown",
     "default-composition": "Default composition",
@@ -350,7 +407,16 @@
     "secure-connection-enable": "Activated",
     "build-date": "Build date",
     "build-timestamp": "Build timestamp",
-    "build-number": "Build number"
+    "build-number": "Build number",
+    "licenses": {
+      "title": "Open Source Licenses",
+      "intro": "Rocket Show is free and open source software, licensed under the GNU General Public License v3.0. It is distributed with no warranty, to the extent permitted by law.",
+      "license": "License",
+      "source-code": "Source code",
+      "install-info": "The complete corresponding source code is available at the link above. In accordance with the license, you are free to run, study, modify and redistribute this software. You may build your own image and install a modified version on this device.",
+      "third-party": "Third-party components",
+      "third-party-intro": "Rocket Show includes the following open source components, which remain under their respective licenses:"
+    }
   },
   "action": {
     "action": "Action",

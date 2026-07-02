@@ -2,25 +2,18 @@ package com.ascargon.rocketshow.play;
 
 import com.ascargon.rocketshow.api.NotificationService;
 import com.ascargon.rocketshow.api.RemoteDevice;
-import com.ascargon.rocketshow.audio.ActivityNotificationAudioService;
-import com.ascargon.rocketshow.audio.AudioService;
 import com.ascargon.rocketshow.composition.Composition;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.gstreamer.GstreamerInitService;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
-import com.ascargon.rocketshow.midi.ActivityNotificationMidiService;
-import com.ascargon.rocketshow.midi.MidiRouterFactory;
-import com.ascargon.rocketshow.midi.MidiService;
 import com.ascargon.rocketshow.midi.MidiTimecodeService;
 import com.ascargon.rocketshow.session.SessionService;
 import com.ascargon.rocketshow.settings.CapabilitiesService;
 import com.ascargon.rocketshow.settings.DefaultCompositionChangedEvent;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.ActionExecutionService;
-import com.ascargon.rocketshow.util.OperatingSystemInformationService;
-import com.ascargon.rocketshow.video.HdmiService;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,9 +39,6 @@ public class DefaultPlayerService implements PlayerService {
 
     @Getter
     private final NotificationService notificationService;
-    @Getter
-    private final ActivityNotificationMidiService activityNotificationMidiService;
-    @Getter
     private final SettingsService settingsService;
     private final CompositionService compositionService;
     @Getter
@@ -57,25 +47,15 @@ public class DefaultPlayerService implements PlayerService {
     @Getter
     private final LightingService lightingService;
     @Getter
-    private final ActivityNotificationAudioService activityNotificationAudioService;
-    @Getter
-    private final AudioService audioService;
-    @Getter
     private final DesignerService designerService;
     @Getter
-    private final OperatingSystemInformationService operatingSystemInformationService;
-    @Getter
-    private final MidiRouterFactory midiRouterFactory;
-    @Getter
     private final ActionExecutionService actionExecutionService;
-    @Getter
-    private final MidiService midiService;
     @Getter
     private final MidiTimecodeService midiTimecodeService;
     @Getter
     private final CapabilitiesService capabilitiesService;
     @Getter
-    private final HdmiService hdmiService;
+    private final CompositionPipelineBuilder compositionPipelineBuilder;
 
     // Regular composition player
     private final CompositionPlayer currentCompositionPlayer;
@@ -90,49 +70,37 @@ public class DefaultPlayerService implements PlayerService {
 
     public DefaultPlayerService(
             NotificationService notificationService,
-            ActivityNotificationMidiService activityNotificationMidiService,
             SettingsService settingsService,
             CompositionService compositionService,
             SetService setService,
             SessionService sessionService,
             LightingService lightingService,
-            ActivityNotificationAudioService activityNotificationAudioService,
-            AudioService audioService,
             DesignerService designerService,
-            OperatingSystemInformationService operatingSystemInformationService,
-            MidiService midiService,
             MidiTimecodeService midiTimecodeService,
-            MidiRouterFactory midiRouterFactory,
             ActionExecutionService actionExecutionService,
             CapabilitiesService capabilitiesService,
-            HdmiService hdmiService,
+            CompositionPipelineBuilder compositionPipelineBuilder,
 
             // import to make sure, Gstreamer is initialized before using it here
             GstreamerInitService gstreamerInitService
     ) {
 
         this.notificationService = notificationService;
-        this.activityNotificationMidiService = activityNotificationMidiService;
         this.settingsService = settingsService;
         this.compositionService = compositionService;
         this.setService = setService;
         this.sessionService = sessionService;
         this.lightingService = lightingService;
-        this.activityNotificationAudioService = activityNotificationAudioService;
-        this.audioService = audioService;
         this.designerService = designerService;
-        this.operatingSystemInformationService = operatingSystemInformationService;
-        this.midiRouterFactory = midiRouterFactory;
-        this.midiService = midiService;
         this.midiTimecodeService = midiTimecodeService;
         this.actionExecutionService = actionExecutionService;
         this.capabilitiesService = capabilitiesService;
-        this.hdmiService = hdmiService;
+        this.compositionPipelineBuilder = compositionPipelineBuilder;
 
-        currentCompositionPlayer = new CompositionPlayer(this, midiRouterFactory);
-        defaultCompositionPlayer = new CompositionPlayer(this, midiRouterFactory);
+        currentCompositionPlayer = new CompositionPlayer(this);
+        defaultCompositionPlayer = new CompositionPlayer(this);
         defaultCompositionPlayer.setDefaultComposition(true);
-        testCompositionPlayer = new CompositionPlayer(this, midiRouterFactory);
+        testCompositionPlayer = new CompositionPlayer(this);
 
         try {
             playDefaultComposition();
@@ -300,7 +268,7 @@ public class DefaultPlayerService implements PlayerService {
         // to share the same instance) and play it
         Composition composition = compositionService
                 .cloneComposition(compositionService.getComposition(compositionName));
-        CompositionPlayer compositionPlayer = new CompositionPlayer(this, midiRouterFactory);
+        CompositionPlayer compositionPlayer = new CompositionPlayer(this);
         compositionPlayer.setSample(true);
         compositionPlayer.setComposition(composition);
         sampleCompositionPlayerList.add(compositionPlayer);

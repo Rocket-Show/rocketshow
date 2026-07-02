@@ -12,7 +12,9 @@
             <div class="col-auto mx-auto">
               <!-- Automatically select the next song when finished -->
               <button type="button" (click)="toggleAutoSelectNextSong()" class="btn btn-transport"
-                [class.text-danger]="session?.autoSelectNextComposition">
+                [class.text-danger]="session?.autoSelectNextComposition"
+                [popover]="'play.help.auto-select-next' | translate" triggers="mouseenter:mouseleave"
+                container="body" placement="bottom">
                 <i class="fa fa-level-down fa-fw" aria-hidden="true"></i>
               </button>
 
@@ -91,28 +93,36 @@
         <div class="card-footer">
           <div class="row">
             <div class="col d-flex align-items-center">
-              <button class="btn-view-toggle" (click)="toggleViewMode()" title="Switch to cue grid">
+              <button class="btn-view-toggle" (click)="toggleViewMode()"
+                [popover]="'play.help.switch-to-grid' | translate" triggers="mouseenter:mouseleave"
+                container="body" placement="top">
                 <i class="fa fa-th-large fa-fw" aria-hidden="true"></i>
               </button>
             </div>
 
             <div class="col col-auto pl-1 pr-1 d-flex">
               <div class="d-flex pr-2">
-                <small class="my-auto"><i class="fa fa-sign-in" aria-hidden="true"></i></small>
+                <small class="my-auto" style="cursor: help;" [popover]="'play.help.activity-midi-in' | translate"
+                  triggers="mouseenter:mouseleave" container="body" placement="top"><i class="fa fa-sign-in"
+                    aria-hidden="true"></i></small>
               </div>
               <div class="pr-2 d-flex">
                 <div class="my-auto activity-indicator" [class.activity-indicator-received]="activityMidiIn"></div>
               </div>
 
               <div class="d-flex pr-2">
-                <small class="my-auto"><i class="fa fa-sign-out" aria-hidden="true"></i></small>
+                <small class="my-auto" style="cursor: help;" [popover]="'play.help.activity-midi-out' | translate"
+                  triggers="mouseenter:mouseleave" container="body" placement="top"><i class="fa fa-sign-out"
+                    aria-hidden="true"></i></small>
               </div>
               <div class="pr-2 d-flex">
                 <div class="my-auto activity-indicator" [class.activity-indicator-received]="activityMidiOut"></div>
               </div>
 
               <div class="d-flex pr-2">
-                <small class="my-auto"><i class="fa fa-microphone" aria-hidden="true"></i></small>
+                <small class="my-auto" style="cursor: help;" [popover]="'play.help.activity-audio' | translate"
+                  triggers="mouseenter:mouseleave" container="body" placement="top"><i class="fa fa-microphone"
+                    aria-hidden="true"></i></small>
               </div>
               <div class="d-flex">
                 @for (audioBus of activityAudio?.activityAudioBusList; track audioBus) {
@@ -129,7 +139,9 @@
               </div>
 
               <div class="d-flex pr-2">
-                <small class="my-auto"><i class="fa fa-lightbulb-o" aria-hidden="true"></i></small>
+                <small class="my-auto" style="cursor: help;" [popover]="'play.help.activity-lighting' | translate"
+                  triggers="mouseenter:mouseleave" container="body" placement="top"><i class="fa fa-lightbulb-o"
+                    aria-hidden="true"></i></small>
               </div>
               <div class="d-flex">
                 <div class="my-auto activity-indicator" [class.activity-indicator-received]="activityLighting"></div>
@@ -152,7 +164,9 @@
       <div class="list-group d-none d-sm-flex" style="flex: 0 0 auto; border-top: 1px solid #444;">
         <div class="list-group-item flex-column align-items-start">
           @if (viewMode === 'grid') {
-            <button class="btn-view-toggle mr-3" (click)="toggleViewMode()" title="Switch to setlist">
+            <button class="btn-view-toggle mr-3" (click)="toggleViewMode()"
+              [popover]="'play.help.switch-to-setlist' | translate" triggers="mouseenter:mouseleave"
+              container="body" placement="bottom">
               <i class="fa fa-play-circle-o fa-fw" aria-hidden="true"></i>
             </button>
           }
@@ -233,7 +247,9 @@
       <div class="list-group d-sm-none" style="flex: 0 0 auto;">
         <div class="list-group-item flex-column align-items-start pt-2 pb-2">
           @if (viewMode === 'grid') {
-            <button class="btn-view-toggle mr-2" (click)="toggleViewMode()" title="Switch to setlist">
+            <button class="btn-view-toggle mr-2" (click)="toggleViewMode()"
+              [popover]="'play.help.switch-to-setlist' | translate" triggers="mouseenter:mouseleave"
+              container="body" placement="bottom">
               <i class="fa fa-play-circle-o fa-fw" aria-hidden="true"></i>
             </button>
           }

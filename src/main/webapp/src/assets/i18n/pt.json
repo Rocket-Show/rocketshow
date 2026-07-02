@@ -61,6 +61,17 @@
     "designer": "Designer",
     "settings": "Definições"
   },
+  "play": {
+    "help": {
+      "auto-select-next": "Quando ativado, a composição seguinte é selecionada e reproduzida automaticamente assim que a atual termina, útil para reproduzir um set completo sem intervenção.",
+      "switch-to-grid": "Muda para a grelha de cues, onde cada composição é um botão grande que pode acionar diretamente.",
+      "switch-to-setlist": "Muda para a vista de setlist com os controlos de reprodução e uma lista de composições deslizável.",
+      "activity-midi-in": "Pisca quando são recebidos dados MIDI.",
+      "activity-midi-out": "Pisca quando são enviados dados MIDI.",
+      "activity-audio": "Mostra o nível de saída de áudio atual por canal.",
+      "activity-lighting": "Pisca quando são enviados dados de iluminação."
+    }
+  },
   "editor": {
     "compositions": "Composições",
     "available-compositions": "Composições disponíveis",
@@ -83,7 +94,7 @@
     "lead-sheet": "Leadsheet",
     "lead-sheets-library": "Biblioteca",
     "files": "Ficheiros multimédia",
-    "mute": "Silenciar",
+    "deactivate": "Desativar",
     "offset-millis": "Atraso em milissegundos",
     "offset-placeholder": "Atraso em milissegundos",
     "loop": "Repetir",
@@ -115,6 +126,23 @@
     "toast-composition-save-error": "A composição não foi guardada. Consulte o registo para mais detalhes.",
     "toast-set-save-error": "O set não foi guardado. Consulte o registo para mais detalhes.",
     "add": "Adicionar",
+    "help": {
+      "test-play": "Reproduz esta composição como teste para a pré-visualizar. Não afeta o espetáculo ao vivo na página \"Início\".",
+      "test-stop": "Para a reprodução de teste.",
+      "loop": "Quando ativado, esta composição recomeça automaticamente desde o início assim que chega ao fim.",
+      "audio-volume": "Volume de reprodução geral de todos os ficheiros de áudio desta composição.",
+      "add-file": "Um ficheiro multimédia (áudio, vídeo ou MIDI) reproduzido como parte desta composição.",
+      "add-action": "Aciona uma ação, como MIDI, HTTP ou iluminação, numa posição definida dentro da composição.",
+      "add-lead-sheet": "Anexa partituras ou cifras mostradas para um instrumento escolhido durante a reprodução desta composição.",
+      "file-active": "Ativa ou desativa este ficheiro. Um ficheiro desativado permanece na composição, mas é ignorado durante a reprodução.",
+      "file-loop": "Repete este ficheiro dentro da composição até a composição terminar — útil para repetir em ciclo uma base curta, um vídeo ou um clipe de luz por baixo de uma composição mais longa.",
+      "file-audio-bus": "O barramento de áudio (uma saída do seu dispositivo de áudio) através do qual este ficheiro é reproduzido.",
+      "file-offset": "Atrasa o início deste ficheiro pelo número de milissegundos indicado, em relação ao início da composição.",
+      "file-midi-routing": "Define para onde este ficheiro MIDI é enviado durante a reprodução, por exemplo para a saída MIDI, a iluminação ou dispositivos remotos.",
+      "edit-details": "Abre as definições detalhadas.",
+      "reorder": "Arraste para alterar a ordem.",
+      "notes": "Notas pessoais para esta composição. São apenas mostradas aqui no editor e nunca são reproduzidas."
+    },
     "action": {
       "actions": "Ações",
       "action": "Ação",
@@ -140,6 +168,34 @@
     "remote-devices-hint": "Pode configurar os dispositivos remotos nas definições de rede."
   },
   "settings": {
+    "help": {
+      "default-composition": "A composição que é reproduzida automaticamente quando o dispositivo arranca e sempre que a reprodução é parada — por exemplo um ambiente de luz em espera ou um ciclo de fundo.",
+      "monitoring": "Ativa a medição em tempo real da atividade e dos níveis de MIDI, áudio e iluminação, como os indicadores de atividade na página \"Início\". Desative-a para reduzir a carga de processamento.",
+      "global-play-offset": "Atrasa a reprodução desta saída pelo número de milissegundos indicado (um valor negativo adianta-a) para compensar a latência e manter o áudio, o MIDI, o vídeo e a iluminação sincronizados.",
+      "audio-sample-rate": "Frequência de amostragem usada pelo dispositivo de áudio. Deixe no valor predefinido a não ser que o seu hardware exija uma frequência específica.",
+      "alsa-period-size": "Número de frames de áudio processados por período. Valores mais baixos reduzem a latência, mas aumentam o risco de falhas de áudio.",
+      "alsa-buffer-size": "Número de períodos no buffer de áudio. Buffers maiores são mais robustos contra falhas, mas aumentam a latência.",
+      "audio-buses": "Os barramentos de áudio encaminham os diferentes canais de áudio de uma composição para saídas específicas do seu dispositivo de áudio, por exemplo misturas separadas de monitor e de sala.",
+      "lighting-ola-plugins": "Os plugins OLA (Open Lighting Architecture) fornecem a ligação ao seu hardware de iluminação, como uma interface USB-DMX ou Art-Net.",
+      "lighting-universes": "Um universo é uma única linha DMX com até 512 canais. Associe cada universo a uma porta de saída OLA para o enviar ao seu hardware de iluminação.",
+      "lighting-ola-universe-id": "O ID numérico deste universo no OLA. Tem de corresponder ao universo configurado no OLA.",
+      "lighting-ola-output-port": "A porta de saída OLA (a sua interface de iluminação) para a qual este universo é enviado.",
+      "lighting-send-delay": "As alterações de iluminação que ocorrem dentro deste intervalo de tempo são agrupadas numa única atualização antes de serem enviadas, reduzindo o tráfego de rede e DMX.",
+      "designer-frequency-hertz": "Quantas vezes por segundo a saída de iluminação é recalculada e enviada. Valores mais altos são mais suaves, mas usam mais potência de processamento.",
+      "designer-live-preview": "Mostra uma pré-visualização em direto da saída de iluminação no Designer enquanto edita, em vez de apenas durante a reprodução.",
+      "midi-timecode": "Envia o MIDI Timecode (MTC) durante a reprodução para que dispositivos externos, como uma DAW ou uma mesa de luz, possam seguir a posição atual.",
+      "device-in-midi-routing": "Define para onde é enviado o MIDI recebido dos dispositivos de entrada ligados, por exemplo para a saída MIDI, a iluminação ou dispositivos remotos.",
+      "remote-midi-routing": "Define para onde é enviado o MIDI recebido de dispositivos RocketShow remotos.",
+      "global-midi-mapping": "Transforma o MIDI recebido de forma global — por exemplo, deslocando canais ou notas — antes de ser processado.",
+      "midi-control": "Associe mensagens MIDI recebidas (como notas ou mudanças de programa) a ações como iniciar, parar ou selecionar composições.",
+      "lan-ip": "Por predefinição, o dispositivo obtém o endereço IP automaticamente (DHCP). Ative a configuração manual para atribuir um endereço IP fixo.",
+      "remote-devices": "Outros dispositivos RocketShow que este dispositivo pode controlar e manter sincronizados durante um espetáculo.",
+      "remote-device-api-key": "Uma chave de API gerada no dispositivo remoto (em Segurança) que autoriza este dispositivo a controlá-lo.",
+      "remote-device-synchronize": "Mantém as composições e os ficheiros multimédia do dispositivo remoto sincronizados com este dispositivo.",
+      "instruments": "Defina os instrumentos usados na sua banda. Os leadsheets podem ser atribuídos por instrumento e cada dispositivo pode escolher que instrumento mostra.",
+      "personal-instrument": "O instrumento usado neste dispositivo. Determina que leadsheets e partes são mostrados aqui.",
+      "api-keys": "As chaves de API permitem que sistemas externos e outros dispositivos RocketShow acedam a este dispositivo sem palavra-passe."
+    },
     "default": "Predefinição",
     "system": "Sistema",
     "personal": "Pessoal",
@@ -235,6 +291,7 @@
     "update-install": "A instalar...",
     "update-reboot": "A reiniciar...",
     "update-finished": "A atualização foi concluída com sucesso.",
+    "update-error": "A atualização falhou.",
     "reboot-device": "Reiniciar",
     "shutdown-device": "Desligar",
     "default-composition": "Composição predefinida",

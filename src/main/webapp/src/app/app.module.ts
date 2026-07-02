@@ -39,6 +39,7 @@ import { WaitDialogService } from "./services/wait-dialog.service";
 import { AppComponent } from "./app.component";
 import { IntroComponent } from "./intro/intro.component";
 import { ProvisionComponent } from "./provision/provision.component";
+import { UpdateProgressComponent } from "./update-progress/update-progress.component";
 import { ConnectionComponent } from "./connection/connection.component";
 import { PlayComponent } from "./play/play.component";
 import { SettingsComponent } from "./settings/settings.component";
@@ -142,6 +143,7 @@ const appRoutes: Routes = [
         WarningDialogComponent,
         SettingsAdvancedComponent,
         UpdateDialogComponent,
+        UpdateProgressComponent,
         BackupRestoreDialogComponent,
         WaitDialogComponent,
         InfoDialogComponent,

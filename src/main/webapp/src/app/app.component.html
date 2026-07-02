@@ -1,3 +1,8 @@
+<!-- Update in progress: block everything else until the update is done or failed -->
+@if (isUpdating) {
+<app-update-progress></app-update-progress>
+} @else {
+
 <!-- Login -->
 @if (authService.initiallyLoaded && !isIntro && !isProvision && !authService.currentState?.authenticated) {
 <app-login></app-login>
@@ -97,4 +102,6 @@
 <!-- Main content -->
 @if ((loaded && authService.currentState?.authenticated) || isIntro || isProvision) {
 <router-outlet></router-outlet>
+}
+
 }
