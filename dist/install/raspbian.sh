@@ -14,7 +14,7 @@ echo "Install packages"
 apt-get update
 apt-get upgrade -y
 
-apt-get -y install unzip openjdk-21-jdk dhcpcd dnsmasq hostapd fbi ola libnss-mdns iptables libasound2 alsa-utils openssh-sftp-server libgstreamer1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl
+apt-get -y install unzip openjdk-21-jdk dhcpcd dnsmasq hostapd fbi ola libnss-mdns iptables netcat-openbsd libasound2 alsa-utils openssh-sftp-server libgstreamer1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl
 
 # ---- USER MANAGEMENT ----
 # Add the rocketshow user
@@ -119,7 +119,8 @@ listen-address=192.168.4.1
 dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h
 EOF
 
-cat <<'EOF' >hostapd.conf
+install -d /etc/hostapd
+cat <<'EOF' >/etc/hostapd/hostapd.conf
 interface=wlan0
 driver=nl80211
 ssid=Rocket Show
@@ -347,7 +348,6 @@ WorkingDirectory=/opt/rocketshow
 
 # Main process: KEEP IN FOREGROUND (no &)
 # Wait for port 9010 from OLA to be ready before starting the app
-[Service]
 ExecStartPre=/bin/sh -c 'for i in $(seq 1 120); do nc -z 127.0.0.1 9010 && exit 0; echo "Waiting for olad on :9010 ($i/120)"; sleep 1; done; echo "olad not ready"; exit 1'
 ExecStart=/usr/bin/java -Xmx512m -jar /opt/rocketshow/rocketshow.jar
 
