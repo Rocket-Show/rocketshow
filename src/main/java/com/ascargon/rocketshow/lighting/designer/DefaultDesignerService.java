@@ -1484,6 +1484,17 @@ public class DefaultDesignerService implements DesignerService {
         logger.debug("Calculated " + cachedFixtures.size() + " fixtures");
     }
 
+    // Unregister all universe states of a previous load/preview and forget them. They must not be
+    // kept around, because setUniverseValues writes to the first state matching a mapping uuid. A
+    // stale state would swallow all values, while the currently registered one stays empty.
+    private void removeLightingUniverses() {
+        for (LightingUniverseState lightingUniverse : lightingUniverses) {
+            lightingService.removeLightingUniverse(lightingUniverse);
+        }
+
+        lightingUniverses = new ArrayList<>();
+    }
+
     @Override
     public void load(CompositionPlayer compositionPlayer, Project project, Pipeline pipeline) {
         this.compositionPlayer = compositionPlayer;
@@ -1496,6 +1507,10 @@ public class DefaultDesignerService implements DesignerService {
 
         // Create the caches
         updateCachedFixtures();
+
+        // A previous load might still hold universe states (e.g. resuming a paused composition
+        // calls load again without closing first)
+        removeLightingUniverses();
 
         for (LightingUniverse lightingUniverse : settingsService.getSettings().getLightingUniverseList()) {
             LightingUniverseState newUniverse = new LightingUniverseState();
@@ -1533,9 +1548,7 @@ public class DefaultDesignerService implements DesignerService {
 
         stopTimer();
 
-        for (LightingUniverseState lightingUniverse : lightingUniverses) {
-            lightingService.removeLightingUniverse(lightingUniverse);
-        }
+        removeLightingUniverses();
 
         project = null;
         pipeline = null;
@@ -1560,11 +1573,7 @@ public class DefaultDesignerService implements DesignerService {
 
         stopTimer();
 
-        for (LightingUniverseState lightingUniverse : lightingUniverses) {
-            lightingService.removeLightingUniverse(lightingUniverse);
-        }
-
-        lightingUniverses = new ArrayList<>();
+        removeLightingUniverses();
     }
 
     @Override
