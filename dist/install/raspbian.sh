@@ -67,7 +67,7 @@ mkdir sessions
 mkdir upload-tmp
 
 # Download current JAR and version info
-wget https://www.rocketshow.net/update/rocketshow.jar
+wget https://www.rocketshow.net/install/rocketshow.jar
 
 # Create default config files
 cat <<'EOF' >/home/rocketshow/.asoundrc
@@ -78,6 +78,7 @@ pcm.!default {
   }
 }
 EOF
+chown -R rocketshow:rocketshow /home/rocketshow/.asoundrc
 
 # Download a black image to be displayed as default
 wget https://www.rocketshow.net/install/black.jpg
@@ -119,7 +120,7 @@ listen-address=192.168.4.1
 dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h
 EOF
 
-cat <<'EOF' >hostapd.conf
+cat <<'EOF' >/etc/hostapd/hostapd.conf
 interface=wlan0
 driver=nl80211
 ssid=Rocket Show
@@ -136,6 +137,7 @@ wpa_pairwise=TKIP
 rsn_pairwise=CCMP
 EOF
 chmod 777 /etc/hostapd/hostapd.conf
+chown -R rocketshow:rocketshow /etc/hostapd/hostapd.conf
 
 cat <<'EOF' >/opt/rocketshow/set-wifi-ap-country.sh
 #!/usr/bin/env bash
@@ -242,8 +244,19 @@ echo "Install services"
 cat <<'EOF' >/opt/rocketshow/iptables.sh
 #!/bin/bash
 set -euo pipefail
-if ! iptables -t nat -C PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8080 2>/dev/null; then
-  iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8080
+
+# REDIRECT can't reach a loopback-only listener; DNAT to 127.0.0.1 can,
+# but only if the martian-packet check is relaxed.
+sysctl -qw net.ipv4.conf.all.route_localnet=1
+
+# external traffic
+if ! iptables -t nat -C PREROUTING -p tcp --dport 80 -j DNAT --to-destination 127.0.0.1:8080 2>/dev/null; then
+  iptables -t nat -A PREROUTING -p tcp --dport 80 -j DNAT --to-destination 127.0.0.1:8080
+fi
+
+# traffic originating on the Pi itself
+if ! iptables -t nat -C OUTPUT -p tcp -d 127.0.0.1 --dport 80 -j DNAT --to-destination 127.0.0.1:8080 2>/dev/null; then
+  iptables -t nat -A OUTPUT -p tcp -d 127.0.0.1 --dport 80 -j DNAT --to-destination 127.0.0.1:8080
 fi
 EOF
 sudo chmod +x /opt/rocketshow/iptables.sh

@@ -936,9 +936,25 @@ public class DefaultDesignerService implements DesignerService {
         }
     }
 
+    // the position of a channel name inside the fine channel aliases of a cached channel
+    // (-1 for the coarse channel itself, 0 for the first fine channel, 1 for the second, ...)
+    private int getFineIndexByChannelName(CachedFixtureChannel channel, String channelName) {
+        // fine channel aliases of template channels still contain the pixel key placeholder
+        // -> resolve them with the pixel key of the cached channel before comparing
+        List<String> fineChannelAliases = channel.getChannel().getFineChannelAliases();
+
+        for (int i = 0; i < fineChannelAliases.size(); i++) {
+            if (getChannelNameWithPixelKey(fineChannelAliases.get(i), channel.getPixelKey()).equals(channelName)) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
     private CachedFixtureChannel getChannelByName(CachedFixture fixture, String channelName) {
         for (CachedFixtureChannel channel : fixture.getChannels()) {
-            if ((channel.getName() != null && channel.getName().equals(channelName)) || (channel.getChannel() != null && channel.getChannel().getFineChannelAliases().contains(channelName))) {
+            if ((channel.getName() != null && channel.getName().equals(channelName)) || (channel.getChannel() != null && getFineIndexByChannelName(channel, channelName) > -1)) {
                 return channel;
             }
         }
@@ -949,16 +965,21 @@ public class DefaultDesignerService implements DesignerService {
     private void setUniverseValueForChannel(HashMap<Integer, Integer> universe, int channelIndex, CachedFixture cachedFixture, String templateChannelName, String pixelKey, List<FixtureChannelValue> fixtureChannelValues) {
         String channelName = getChannelNameWithPixelKey(templateChannelName, pixelKey);
 
-        // match this mode channel with a channel value
+        // fine channels are not cached separately -> this returns the coarse channel for them
+        CachedFixtureChannel channel = getChannelByName(cachedFixture, channelName);
+
+        if (channel == null || channel.getChannel() == null) {
+            return;
+        }
+
+        int fineIndex = getFineIndexByChannelName(channel, channelName);
+
+        // match this mode channel with the value of its coarse channel
         for (FixtureChannelValue channelValue : fixtureChannelValues) {
-            CachedFixtureChannel channel = getChannelByName(cachedFixture, channelName);
-            if (channel != null && channel.getChannel() != null) {
-                int fineIndex = channel.getChannel().getFineChannelAliases().indexOf(channelName);
-                if (channel.getName().equals(channelValue.getChannelName()) || fineIndex > -1) {
-                    int dmxValue = (int) Math.floor(channelValue.getValue() / Math.pow(256, channel.getChannel().getFineChannelAliases().size() - (fineIndex + 1))) % 256;
-                    universe.put(channelIndex, dmxValue);
-                    break;
-                }
+            if (channel.getName().equals(channelValue.getChannelName())) {
+                int dmxValue = (int) Math.floor(channelValue.getValue() / Math.pow(256, channel.getChannel().getFineChannelAliases().size() - (fineIndex + 1))) % 256;
+                universe.put(channelIndex, dmxValue);
+                break;
             }
         }
     }
@@ -1112,6 +1133,7 @@ public class DefaultDesignerService implements DesignerService {
 
         cachedFixtureChannel.setChannel(channel);
         cachedFixtureChannel.setName(channelName);
+        cachedFixtureChannel.setPixelKey(pixelKey);
         cachedFixtureChannel.setCapabilities(getCapabilitiesByChannel(cachedFixtureChannel.getChannel(), channelName, profile));
         Double defaultValue = getDefaultValueByChannel(cachedFixtureChannel.getChannel());
         if (defaultValue != null) {

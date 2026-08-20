@@ -134,7 +134,6 @@ apt-get update
 - Run the following script (might take about 45 minutes)
 
 ```shell
-cd /opt
 rm -rf build
 mkdir build
 cd build
@@ -173,9 +172,6 @@ cd work/RocketShow/export-image
 
 mv "$(date '+%Y-%m-%d')-RocketShow-lite.img" "$(date '+%Y-%m-%d')-RocketShow.img"
 zip "$(date '+%Y-%m-%d')-RocketShow.zip" "$(date '+%Y-%m-%d')-RocketShow.img"
-
-# copy the zip to a folder where we can get it with SFTP:
-mv "$(date '+%Y-%m-%d')-RocketShow.zip" /home/rocketshow
 ```
 
 ### Update process
