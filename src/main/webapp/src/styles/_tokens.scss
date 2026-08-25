@@ -1,0 +1,131 @@
+// ---------------------------------------------------------------------------
+// Design tokens
+//
+// Single source of truth for colors, spacing, radii and control metrics.
+// Consumed twice:
+//   * as SCSS variables, to feed the bootstrap theme (see src/theme.scss)
+//   * as CSS custom properties, so the component stylesheets can use them too
+//
+// Kept byte-for-byte in sync with the same file in the show-designer repo
+// (projects/designer/src/lib/styles/_tokens.scss), which the embedded designer
+// emits globally as well. Both must declare the same values.
+// ---------------------------------------------------------------------------
+
+// Surfaces, from the deepest background up to the most raised element
+$sd-bg: #131519;
+$sd-surface-1: #191c21;
+$sd-surface-2: #1f232a;
+$sd-surface-3: #272c34;
+$sd-surface-4: #323841;
+
+// Lines
+$sd-border: #2b3038;
+$sd-border-strong: #3b424d;
+
+// Text. Deliberately off-white: pure white on a dark surface glares.
+$sd-text: #dfe3e8;
+$sd-text-muted: #99a1ac;
+$sd-text-dim: #6b7280;
+
+// Accent
+$sd-primary: #fd7e14;
+$sd-primary-hover: #ff9440;
+$sd-primary-active: #e56f0b;
+$sd-primary-text: #ffa45c;
+$sd-on-primary: #1a1206;
+
+// Accent washes, for selected rows and other large tinted areas
+$sd-primary-soft: rgba(253, 126, 20, 0.16);
+$sd-primary-soft-hover: rgba(253, 126, 20, 0.24);
+$sd-primary-soft-strong: rgba(253, 126, 20, 0.28);
+
+// Status
+$sd-success: #2eb872;
+$sd-info: #3d9df0;
+$sd-warning: #f0a92e;
+$sd-danger: #e5544b;
+
+// Radii
+$sd-radius-sm: 4px;
+$sd-radius: 6px;
+$sd-radius-lg: 10px;
+
+// Spacing scale, 4 px base
+$sd-space-1: 4px;
+$sd-space-2: 8px;
+$sd-space-3: 12px;
+$sd-space-4: 16px;
+$sd-space-5: 20px;
+$sd-space-6: 24px;
+
+// Control metrics. The designer is a dense tool UI, so controls are compact
+// but all share the same height so rows line up.
+$sd-control-height: 28px;
+$sd-control-height-sm: 22px;
+$sd-row-height: 28px;
+
+// Slider metrics. Both the track and the handle are centred on the slider's
+// own axis, so these two can change independently without knocking the handle
+// off the track.
+$sd-slider-track-size: 4px;
+$sd-slider-handle-size: 14px;
+
+// Elevation
+$sd-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3);
+$sd-shadow-2: 0 4px 12px rgba(0, 0, 0, 0.35);
+$sd-shadow-3: 0 12px 32px rgba(0, 0, 0, 0.45);
+
+// Focus ring
+$sd-focus-ring: 0 0 0 2px rgba(253, 126, 20, 0.45);
+
+// Re-export everything as custom properties so that the individual component
+// stylesheets (which cannot import SCSS from here) can use the same values.
+:root {
+  --sd-bg: #{$sd-bg};
+  --sd-surface-1: #{$sd-surface-1};
+  --sd-surface-2: #{$sd-surface-2};
+  --sd-surface-3: #{$sd-surface-3};
+  --sd-surface-4: #{$sd-surface-4};
+
+  --sd-border: #{$sd-border};
+  --sd-border-strong: #{$sd-border-strong};
+
+  --sd-text: #{$sd-text};
+  --sd-text-muted: #{$sd-text-muted};
+  --sd-text-dim: #{$sd-text-dim};
+
+  --sd-primary: #{$sd-primary};
+  --sd-primary-hover: #{$sd-primary-hover};
+  --sd-primary-active: #{$sd-primary-active};
+  --sd-primary-text: #{$sd-primary-text};
+  --sd-on-primary: #{$sd-on-primary};
+  --sd-primary-soft: #{$sd-primary-soft};
+  --sd-primary-soft-hover: #{$sd-primary-soft-hover};
+  --sd-primary-soft-strong: #{$sd-primary-soft-strong};
+
+  --sd-success: #{$sd-success};
+  --sd-info: #{$sd-info};
+  --sd-warning: #{$sd-warning};
+  --sd-danger: #{$sd-danger};
+
+  --sd-radius-sm: #{$sd-radius-sm};
+  --sd-radius: #{$sd-radius};
+  --sd-radius-lg: #{$sd-radius-lg};
+
+  --sd-space-1: #{$sd-space-1};
+  --sd-space-2: #{$sd-space-2};
+  --sd-space-3: #{$sd-space-3};
+  --sd-space-4: #{$sd-space-4};
+  --sd-space-5: #{$sd-space-5};
+  --sd-space-6: #{$sd-space-6};
+
+  --sd-control-height: #{$sd-control-height};
+  --sd-control-height-sm: #{$sd-control-height-sm};
+  --sd-row-height: #{$sd-row-height};
+
+  --sd-shadow-1: #{$sd-shadow-1};
+  --sd-shadow-2: #{$sd-shadow-2};
+  --sd-shadow-3: #{$sd-shadow-3};
+
+  --sd-focus-ring: #{$sd-focus-ring};
+}

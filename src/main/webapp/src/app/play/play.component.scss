@@ -1,11 +1,24 @@
 .container-fluid {
     display: flex;
     flex-flow: column;
-    height: calc(100% - 88px);
+    /* fill what the sticky navbar leaves, minus this container's own top margin */
+    height: calc(100% - var(--rs-navbar-height) - 15px);
 }
 
-.list-group-item:first-child {
-    border-top: none;
+/* the set header and the setlist below it read as one framed block */
+.list-group:has(+ .main-list) {
+    border-bottom: none;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.list-group.main-list {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+/* the list joins the header above it, so its first row must stay square too */
+.list-group.main-list > .list-group-item:first-child {
     border-top-left-radius: 0;
     border-top-right-radius: 0;
 }
@@ -18,15 +31,28 @@
 
 .btn-transport {
     background-color: transparent;
-    color: white;
+    border: 1px solid transparent;
+    color: var(--sd-text);
+}
+
+.btn-transport:hover:not(:disabled) {
+    background-color: var(--sd-surface-3);
+    color: var(--sd-text);
 }
 
 .btn-transport-main {
-    border: 1px solid white;
+    border: 1px solid var(--sd-text);
     border-radius: 50%;
 
     width: 46px;
     height: 46px;
+    padding: 0;
+}
+
+.btn-transport-main:hover:not(:disabled) {
+    border-color: var(--sd-primary);
+    background-color: var(--sd-primary-soft);
+    color: var(--sd-primary-text);
 }
 
 .list-group-item.active {
@@ -36,33 +62,36 @@
 .activity-indicator {
     width: 10px;
     height: 10px;
-    border: 1px solid white;
+    border: 1px solid var(--sd-border-strong);
     border-radius: 5px;
-    background-color: black;
+    background-color: var(--sd-surface-1);
     transition: all ease-in-out 0.5s;
 }
 
 .activity-indicator-received {
-    background-color: #fd7e14 !important;
+    background-color: var(--sd-primary) !important;
+    border-color: var(--sd-primary) !important;
     transition: all 0s;
-    box-shadow: 0px 0px 17px 0px white;
+    box-shadow: 0px 0px 12px 0px rgba(253, 126, 20, 0.75);
 }
 
 /* View toggle button in set header */
 .btn-view-toggle {
     background: transparent;
-    color: rgba(255, 255, 255, 0.65);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 4px;
+    color: var(--sd-text-muted);
+    border: 1px solid var(--sd-border-strong);
+    border-radius: var(--sd-radius-sm);
     padding: 2px 7px;
     cursor: pointer;
     font-size: 0.85rem;
     line-height: 1.4;
+    transition: color 0.12s ease, border-color 0.12s ease, background-color 0.12s ease;
 }
 
 .btn-view-toggle:hover {
-    color: white;
-    border-color: rgba(255, 255, 255, 0.55);
+    color: var(--sd-text);
+    border-color: var(--sd-border-strong);
+    background-color: var(--sd-surface-3);
 }
 
 .btn-view-toggle:focus {
@@ -81,8 +110,8 @@
 .cue-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 15px;
-    padding-top: 15px;
+    gap: var(--sd-space-3);
+    padding-top: var(--sd-space-4);
     overflow-y: auto;
     flex: 1 1 auto;
     align-content: start;
@@ -92,10 +121,10 @@
 .cue-button {
     position: relative;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 6px;
-    background-color: rgba(0, 0, 0, 0.2);
-    color: #fff;
+    border: 1px solid var(--sd-border);
+    border-radius: var(--sd-radius-lg);
+    background-color: var(--sd-surface-1);
+    color: var(--sd-text);
     min-height: 90px;
     width: 100%;
     display: flex;
@@ -104,10 +133,15 @@
     padding: 12px 8px;
     cursor: pointer;
     text-align: center;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
     -webkit-user-select: none;
+}
+
+.cue-button:hover {
+    background-color: var(--sd-surface-2);
+    border-color: var(--sd-border-strong);
 }
 
 .cue-button:focus {
@@ -120,7 +154,7 @@
 }
 
 .cue-button.cue-playing {
-    border: 2px solid #fd7e14;
+    border: 2px solid var(--sd-primary);
     animation: cue-glow-pulse 1.6s ease-in-out infinite;
 }
 
@@ -134,7 +168,7 @@
 }
 
 .cue-button.cue-stopping {
-    border: 2px solid rgba(255, 255, 255, 0.18);
+    border: 2px solid var(--sd-border-strong);
     opacity: 0.55;
 }
 
@@ -143,7 +177,7 @@
     top: 0;
     left: 0;
     height: 100%;
-    background: rgba(253, 126, 20, 0.14);
+    background: var(--sd-primary-soft);
     pointer-events: none;
     transition: width 0.08s linear;
 }
@@ -169,12 +203,12 @@
 
 .cue-duration {
     font-size: 0.72rem;
-    opacity: 0.5;
+    color: var(--sd-text-dim);
 }
 
 .cue-loop-icon {
     font-size: 0.65rem;
-    opacity: 0.4;
+    color: var(--sd-text-dim);
     margin-top: 2px;
 }
 

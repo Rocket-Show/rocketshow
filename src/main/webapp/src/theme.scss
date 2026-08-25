@@ -1,181 +1,351 @@
-// Darkly 4.1.3
-// Bootswatch
-// https://bootswatch.com/darkly/
+// ---------------------------------------------------------------------------
+// Bootstrap theme
+//
+// Maps the design tokens (see src/styles/_tokens.scss) onto the bootstrap 4
+// variable API, so that stock bootstrap components come out in the dark
+// palette without per-component overrides. Shared with the show-designer
+// project, so that the embedded designer and the surrounding app match.
+// ---------------------------------------------------------------------------
+
+@import 'styles/tokens';
 
 //
 // Color system
 //
 
-@use "sass:color";
+$white: #fff !default;
+$gray-100: #f2f4f7 !default;
+$gray-200: $sd-text !default;
+$gray-300: #c3c8d0 !default;
+$gray-400: $sd-text-muted !default;
+$gray-500: $sd-text-dim !default;
+$gray-600: $sd-border-strong !default;
+$gray-700: $sd-surface-4 !default;
+$gray-800: $sd-surface-2 !default;
+$gray-900: $sd-bg !default;
+$black: #000 !default;
 
-$white:    #fff !default;
-$gray-100: #f8f9fa !default;
-$gray-200: #ebebeb !default;
-$gray-300: #dee2e6 !default;
-$gray-400: #ced4da !default;
-$gray-500: #adb5bd !default;
-$gray-600: #999 !default;
-$gray-700: #444 !default;
-$gray-800: #303030 !default;
-$gray-900: #222 !default;
-$black:    #000 !default;
+$blue: $sd-info !default;
+$indigo: #6610f2 !default;
+$purple: #6f42c1 !default;
+$pink: #e83e8c !default;
+$red: $sd-danger !default;
+$orange: $sd-primary !default;
+$yellow: $sd-warning !default;
+$green: $sd-success !default;
+$teal: #20c997 !default;
+$cyan: $sd-info !default;
 
-$blue:    #375a7f !default;
-$indigo:  #6610f2 !default;
-$purple:  #6f42c1 !default;
-$pink:    #e83e8c !default;
-$red:     #E74C3C !default;
-$orange:  #fd7e14 !default;
-$yellow:  #F39C12 !default;
-$green:   #00bc8c !default;
-$teal:    #20c997 !default;
-$cyan:    #3498DB !default;
+$primary: $sd-primary !default;
+$secondary: $sd-surface-3 !default;
+$success: $sd-success !default;
+$info: $sd-info !default;
+$warning: $sd-warning !default;
+$danger: $sd-danger !default;
+$light: $sd-surface-2 !default;
+$dark: $sd-surface-1 !default;
 
-$primary:       $orange !default;
-$secondary:     $gray-700 !default;
-$success:       $green !default;
-$info:          $cyan !default;
-$warning:       $yellow !default;
-$danger:        $red !default;
-$light:         $gray-800 !default;
-$dark:          $gray-500 !default;
+// Keep light text on the orange primary rather than letting bootstrap flip it
+// to black, which reads as a disabled control on a dark background.
+$yiq-contrasted-threshold: 210 !default;
+$yiq-text-dark: $sd-on-primary !default;
+$yiq-text-light: #fff !default;
 
-$yiq-contrasted-threshold:  175 !default;
+// Options
+
+$enable-rounded: true !default;
+$enable-shadows: false !default;
+$enable-gradients: false !default;
 
 // Body
 
-$body-bg:                   #171717 !default; //$gray-900 !default;
-$body-color:                $white !default;
+$body-bg: $sd-bg !default;
+$body-color: $sd-text !default;
 
 // Links
 
-$link-color:                $orange !default;
+$link-color: $sd-primary-text !default;
+$link-hover-color: $sd-primary-hover !default;
+$link-hover-decoration: none !default;
 
 // Fonts
 
-$font-family-sans-serif:      "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" !default;
+$font-family-sans-serif: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, 'Helvetica Neue', Arial, sans-serif,
+  'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol' !default;
 
-$font-size-base:              0.9375rem !default;
+$font-size-base: 0.875rem !default;
+$font-weight-normal: 400 !default;
+$font-weight-bold: 600 !default;
+$headings-font-weight: 600 !default;
+$line-height-base: 1.5 !default;
 
-$h1-font-size:                3rem !default;
-$h2-font-size:                2.5rem !default;
-$h3-font-size:                2rem !default;
+$h1-font-size: 1.75rem !default;
+$h2-font-size: 1.5rem !default;
+$h3-font-size: 1.25rem !default;
+$h4-font-size: 1.125rem !default;
+$h5-font-size: 1rem !default;
+$h6-font-size: 0.875rem !default;
+
+$text-muted: $sd-text-muted !default;
+$hr-border-color: $sd-border !default;
+
+// Borders and radii
+
+$border-color: $sd-border !default;
+$border-radius: $sd-radius !default;
+$border-radius-lg: $sd-radius-lg !default;
+$border-radius-sm: $sd-radius-sm !default;
+
+$box-shadow-sm: $sd-shadow-1 !default;
+$box-shadow: $sd-shadow-2 !default;
+$box-shadow-lg: $sd-shadow-3 !default;
+
+// Components
+
+$component-active-color: #fff !default;
+$component-active-bg: $sd-primary !default;
 
 // Tables
 
-$table-accent-bg:             $gray-800 !default;
+$table-color: $sd-text !default;
+$table-bg: transparent !default;
+$table-accent-bg: rgba(255, 255, 255, 0.03) !default;
+$table-hover-bg: rgba(255, 255, 255, 0.05) !default;
+$table-border-color: $sd-border !default;
+$table-head-bg: $sd-surface-2 !default;
+$table-head-color: $sd-text-muted !default;
 
-$table-border-color:          $gray-700 !default;
+$table-dark-bg: $sd-surface-2 !default;
+$table-dark-border-color: $sd-border !default;
+$table-dark-color: $sd-text !default;
 
-$table-dark-bg:               $gray-500 !default;
-$table-dark-border-color: color.adjust($gray-500, $lightness: -7.5%) !default;
-$table-dark-color:            $body-bg !default;
+// Buttons and forms
+
+$input-btn-padding-y: 0.25rem !default;
+$input-btn-padding-x: 0.625rem !default;
+$input-btn-font-size: 0.875rem !default;
+$input-btn-line-height: 1.4 !default;
+
+$input-btn-focus-width: 2px !default;
+$input-btn-focus-color: rgba($sd-primary, 0.45) !default;
+$input-btn-focus-box-shadow: $sd-focus-ring !default;
+
+$btn-font-weight: 500 !default;
+$btn-disabled-opacity: 0.45 !default;
 
 // Forms
 
-$input-border-color:                    transparent !default;
+$input-bg: $sd-surface-2 !default;
+$input-disabled-bg: $sd-surface-1 !default;
+$input-color: $sd-text !default;
+$input-border-color: $sd-border-strong !default;
+$input-placeholder-color: $sd-text-dim !default;
+$input-focus-bg: $sd-surface-2 !default;
+$input-focus-border-color: $sd-primary !default;
+$input-focus-color: $sd-text !default;
+$input-box-shadow: none !default;
 
-$input-group-addon-color:               $gray-500 !default;
-$input-group-addon-bg:                  $gray-700 !default;
+$input-group-addon-color: $sd-text-muted !default;
+$input-group-addon-bg: $sd-surface-3 !default;
+$input-group-addon-border-color: $sd-border-strong !default;
 
-$custom-file-color:                 $gray-500 !default;
-$custom-file-border-color:          $gray-700 !default;
+$custom-select-bg: $sd-surface-2 !default;
+$custom-select-color: $sd-text !default;
+$custom-select-border-color: $sd-border-strong !default;
+$custom-select-disabled-bg: $sd-surface-1 !default;
+$custom-select-disabled-color: $sd-text-dim !default;
+$custom-select-indicator-color: $sd-text-muted !default;
+$custom-select-focus-border-color: $sd-primary !default;
+
+$custom-control-indicator-bg: $sd-surface-3 !default;
+$custom-control-indicator-border-color: $sd-border-strong !default;
+$custom-control-indicator-checked-bg: $sd-primary !default;
+$custom-control-indicator-checked-border-color: $sd-primary !default;
+$custom-control-indicator-disabled-bg: $sd-surface-1 !default;
+$custom-control-label-disabled-color: $sd-text-dim !default;
+
+$custom-file-color: $sd-text !default;
+$custom-file-bg: $sd-surface-2 !default;
+$custom-file-border-color: $sd-border-strong !default;
+$custom-file-button-bg: $sd-surface-3 !default;
+
+$custom-range-track-bg: $sd-surface-4 !default;
+$custom-range-thumb-bg: $sd-primary !default;
+
+$form-feedback-valid-color: $sd-success !default;
+$form-feedback-invalid-color: $sd-danger !default;
 
 // Dropdowns
 
-$dropdown-bg:                       $gray-900 !default;
-$dropdown-border-color:             $gray-700 !default;
-$dropdown-divider-bg:               $gray-700 !default;
+$dropdown-bg: $sd-surface-2 !default;
+$dropdown-border-color: $sd-border !default;
+$dropdown-border-radius: $sd-radius !default;
+$dropdown-divider-bg: $sd-border !default;
+$dropdown-box-shadow: $sd-shadow-2 !default;
+$dropdown-padding-y: 0.25rem !default;
+$dropdown-item-padding-y: 0.375rem !default;
+$dropdown-item-padding-x: 0.875rem !default;
 
-$dropdown-link-color:               $white !default;
-$dropdown-link-hover-color:         $white !default;
-$dropdown-link-hover-bg:            $primary !default;
+$dropdown-link-color: $sd-text !default;
+$dropdown-link-hover-color: $sd-text !default;
+$dropdown-link-hover-bg: $sd-surface-3 !default;
+$dropdown-link-active-color: #fff !default;
+$dropdown-link-active-bg: $sd-primary !default;
+$dropdown-link-disabled-color: $sd-text-dim !default;
+$dropdown-header-color: $sd-text-muted !default;
 
 // Navs
 
-$nav-link-padding-x:                2rem !default;
-$nav-link-disabled-color:           $gray-500 !default;
+$nav-link-padding-y: 0.375rem !default;
+$nav-link-padding-x: 0.75rem !default;
+$nav-link-disabled-color: $sd-text-dim !default;
 
-$nav-tabs-border-color:             $gray-700 !default;
-$nav-tabs-link-hover-border-color:  $nav-tabs-border-color $nav-tabs-border-color transparent !default;
-$nav-tabs-link-active-color:        $white !default;
-$nav-tabs-link-active-border-color: $nav-tabs-border-color $nav-tabs-border-color transparent !default;
+$nav-tabs-border-color: $sd-border !default;
+$nav-tabs-link-hover-border-color: transparent transparent $sd-border-strong !default;
+$nav-tabs-link-active-color: $sd-text !default;
+$nav-tabs-link-active-bg: transparent !default;
+$nav-tabs-link-active-border-color: transparent transparent $sd-primary !default;
+
+$nav-pills-link-active-color: #fff !default;
+$nav-pills-link-active-bg: $sd-primary !default;
 
 // Navbar
 
-$navbar-padding-y:                  1rem !default;
+$navbar-padding-y: 0 !default;
+$navbar-padding-x: 0.5rem !default;
+$navbar-nav-link-padding-x: 0.625rem !default;
 
-$navbar-dark-color:                 $white !default;
-$navbar-dark-hover-color:           $success !default;
+$navbar-dark-color: $sd-text-muted !default;
+$navbar-dark-hover-color: $sd-text !default;
+$navbar-dark-active-color: $sd-text !default;
 
-$navbar-light-color:                rgba($white,.5) !default;
-$navbar-light-hover-color:          $white !default;
-$navbar-light-active-color:         $white !default;
-$navbar-light-disabled-color:       rgba($white,.3) !default;
-$navbar-light-toggler-border-color: rgba($white,.1) !default;
+$navbar-light-color: $sd-text-muted !default;
+$navbar-light-hover-color: $sd-text !default;
+$navbar-light-active-color: $sd-text !default;
+$navbar-light-disabled-color: $sd-text-dim !default;
+$navbar-light-toggler-border-color: $sd-border !default;
 
 // Pagination
 
-$pagination-color:                  $white !default;
-$pagination-bg:                     $success !default;
-$pagination-border-width:           0 !default;
-$pagination-border-color:           transparent !default;
+$pagination-color: $sd-text !default;
+$pagination-bg: $sd-surface-2 !default;
+$pagination-border-color: $sd-border !default;
 
-$pagination-hover-color:            $white !default;
-$pagination-hover-bg: color.adjust($success, $lightness: 10%) !default;
-$pagination-hover-border-color:     transparent !default;
+$pagination-hover-color: $sd-text !default;
+$pagination-hover-bg: $sd-surface-3 !default;
+$pagination-hover-border-color: $sd-border !default;
 
-$pagination-active-bg:              $pagination-hover-bg !default;
-$pagination-active-border-color:    transparent !default;
+$pagination-active-color: #fff !default;
+$pagination-active-bg: $sd-primary !default;
+$pagination-active-border-color: $sd-primary !default;
 
-$pagination-disabled-color:         $white !default;
-$pagination-disabled-bg: color.adjust($success, $lightness: -15%) !default;
-$pagination-disabled-border-color:  transparent !default;
+$pagination-disabled-color: $sd-text-dim !default;
+$pagination-disabled-bg: $sd-surface-1 !default;
+$pagination-disabled-border-color: $sd-border !default;
 
 // Jumbotron
 
-$jumbotron-bg:                      $gray-800 !default;
+$jumbotron-bg: $sd-surface-2 !default;
 
 // Cards
 
-$card-cap-bg:                       $gray-700 !default;
-$card-bg:                           $gray-800 !default;
+$card-bg: $sd-surface-1 !default;
+$card-border-color: $sd-border !default;
+$card-border-radius: $sd-radius-lg !default;
+$card-cap-bg: $sd-surface-2 !default;
+$card-spacer-y: 0.75rem !default;
+$card-spacer-x: 1rem !default;
 
-// Popovers
+// Tooltips and popovers
 
-$popover-bg:                        $gray-800 !default;
+$tooltip-bg: $sd-surface-4 !default;
+$tooltip-color: $sd-text !default;
+$tooltip-opacity: 1 !default;
+$tooltip-border-radius: $sd-radius-sm !default;
 
-$popover-header-bg:                 $gray-700 !default;
+$popover-bg: $sd-surface-3 !default;
+$popover-border-color: $sd-border-strong !default;
+$popover-border-radius: $sd-radius !default;
+$popover-box-shadow: $sd-shadow-2 !default;
+$popover-header-bg: $sd-surface-4 !default;
+$popover-header-color: $sd-text !default;
+$popover-body-color: $sd-text !default;
+$popover-arrow-color: $sd-surface-3 !default;
+$popover-arrow-outer-color: $sd-border-strong !default;
+
+// Toasts
+
+$toast-background-color: $sd-surface-3 !default;
+$toast-border-color: $sd-border-strong !default;
+$toast-header-background-color: $sd-surface-4 !default;
+$toast-header-color: $sd-text !default;
 
 // Modals
 
-$modal-content-bg:                  $gray-800 !default;
-$modal-content-border-color:        $gray-700 !default;
+$modal-content-bg: $sd-surface-1 !default;
+$modal-content-border-color: $sd-border !default;
+$modal-content-border-radius: $sd-radius-lg !default;
+$modal-content-box-shadow-xs: $sd-shadow-3 !default;
+$modal-content-box-shadow-sm-up: $sd-shadow-3 !default;
 
-$modal-header-border-color:         $gray-700 !default;
+$modal-header-border-color: $sd-border !default;
+$modal-footer-border-color: $sd-border !default;
+$modal-header-padding-y: 0.75rem !default;
+$modal-header-padding-x: 1.25rem !default;
+$modal-inner-padding: 1.25rem !default;
+
+$modal-backdrop-bg: #000 !default;
+$modal-backdrop-opacity: 0.6 !default;
 
 // Progress bars
 
-$progress-height:                   0.625rem !default;
-$progress-font-size:                0.625rem !default;
-$progress-bg:                       $gray-700 !default;
+$progress-height: 0.5rem !default;
+$progress-font-size: 0.625rem !default;
+$progress-bg: $sd-surface-3 !default;
+$progress-border-radius: $sd-radius-sm !default;
+$progress-box-shadow: none !default;
+$progress-bar-bg: $sd-primary !default;
 
 // List group
 
-$list-group-bg:                     $gray-800 !default;
-$list-group-border-color:           $gray-700 !default;
+$list-group-bg: transparent !default;
+$list-group-color: $sd-text !default;
+$list-group-border-color: $sd-border !default;
+$list-group-item-padding-y: 0.375rem !default;
+$list-group-item-padding-x: 0.75rem !default;
 
-$list-group-hover-bg:               $gray-700 !default;
+$list-group-hover-bg: rgba(255, 255, 255, 0.04) !default;
+$list-group-active-color: #fff !default;
+$list-group-active-bg: $sd-primary !default;
+$list-group-active-border-color: $sd-primary !default;
+$list-group-disabled-color: $sd-text-dim !default;
+$list-group-action-color: $sd-text !default;
+$list-group-action-hover-color: $sd-text !default;
 
 // Breadcrumbs
 
-$breadcrumb-bg:                     $gray-700 !default;
+$breadcrumb-bg: $sd-surface-2 !default;
+$breadcrumb-divider-color: $sd-text-dim !default;
+$breadcrumb-active-color: $sd-text-muted !default;
+
+// Alerts
+
+$alert-bg-level: -10 !default;
+$alert-border-level: -8 !default;
+$alert-color-level: 6 !default;
+
+// Badges
+
+$badge-font-weight: 600 !default;
+$badge-padding-y: 0.3em !default;
+$badge-padding-x: 0.55em !default;
 
 // Close
 
-$close-color:                       $white !default;
-$close-text-shadow:                 none !default;
+$close-color: $sd-text-muted !default;
+$close-text-shadow: none !default;
 
 // Code
 
-$pre-color:                         inherit !default;
+$pre-color: inherit !default;
+$code-color: $sd-primary-text !default;

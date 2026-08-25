@@ -506,6 +506,43 @@ export class PlayComponent implements OnInit, OnDestroy {
     this.transportService.previousComposition().subscribe();
   }
 
+  private currentCompositionIndex(): number {
+    const compositionList = this.currentSet?.compositionList;
+
+    if (!compositionList || !this.currentState?.currentCompositionName) {
+      return -1;
+    }
+
+    return compositionList.findIndex(
+      (composition) =>
+        composition.name === this.currentState.currentCompositionName
+    );
+  }
+
+  // The backend rewinds the running composition rather than stepping back when
+  // it is not at the start, so the button stays useful on the first entry.
+  previousCompositionDisabled(): boolean {
+    if (!this.currentState?.currentCompositionName) {
+      return true;
+    }
+
+    if (this.currentState.positionMillis > 0) {
+      return false;
+    }
+
+    return this.currentCompositionIndex() <= 0;
+  }
+
+  nextCompositionDisabled(): boolean {
+    if (!this.currentState?.currentCompositionName) {
+      return true;
+    }
+
+    const index = this.currentCompositionIndex();
+
+    return index < 0 || index >= this.currentSet.compositionList.length - 1;
+  }
+
   toggleViewMode() {
     this.viewMode = this.viewMode === 'setlist' ? 'grid' : 'setlist';
     this.sessionService.setPlayViewMode(this.viewMode).subscribe();

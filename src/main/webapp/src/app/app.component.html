@@ -38,8 +38,7 @@
 
 <!-- Navigation -->
 @if (loaded && !isIntro && authService.currentState?.authenticated) {
-<nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light border-secondary"
-  style="border-bottom: 1px solid #444">
+<nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light">
   <!-- Branding/Back button-->
   @if (!mobileAppHost) {
   <a class="navbar-brand d-flex" href="#" routerLink="/">
@@ -50,9 +49,9 @@
   @if (mobileAppHost) {
   <div class="d-flex navbar-brand">
     <a href="#" (click)="mobileHostBack()" class="my-auto"
-      style="color: white; font-size: 1rem; text-decoration: none"><i class="fa fa-chevron-left" aria-hidden="true"></i>
+      style="color: var(--sd-text); font-size: 1rem; text-decoration: none"><i class="fa fa-chevron-left" aria-hidden="true"></i>
       Back</a>
-    <a href="#" routerLink="/" class="my-auto ml-3" style="color: white; text-decoration: none">{{ settings.deviceName
+    <a href="#" routerLink="/" class="my-auto ml-3" style="color: var(--sd-text); text-decoration: none">{{ settings.deviceName
       }}</a>
   </div>
   }

@@ -12,14 +12,14 @@
             <div class="col-auto mx-auto">
               <!-- Automatically select the next song when finished -->
               <button type="button" (click)="toggleAutoSelectNextSong()" class="btn btn-transport"
-                [class.text-danger]="session?.autoSelectNextComposition"
+                [class.text-primary]="session?.autoSelectNextComposition"
                 [popover]="'play.help.auto-select-next' | translate" triggers="mouseenter:mouseleave"
                 container="body" placement="bottom">
                 <i class="fa fa-level-down fa-fw" aria-hidden="true"></i>
               </button>
 
               <!-- Previous composition -->
-              <button type="button" [disabled]="!currentState?.currentCompositionName" (click)="previousComposition()"
+              <button type="button" [disabled]="previousCompositionDisabled()" (click)="previousComposition()"
                 class="btn btn-transport">
                 <i class="fa fa-step-backward fa-fw" aria-hidden="true"></i>
               </button>
@@ -50,7 +50,7 @@
               }
 
               <!-- Next composition -->
-              <button type="button" [disabled]="!currentState?.currentCompositionName" (click)="nextComposition()"
+              <button type="button" [disabled]="nextCompositionDisabled()" (click)="nextComposition()"
                 class="btn btn-transport">
                 <i class="fa fa-step-forward fa-fw" aria-hidden="true"></i>
               </button>
@@ -100,7 +100,7 @@
               </button>
             </div>
 
-            <div class="col col-auto pl-1 pr-1 d-flex">
+            <div class="col col-auto pl-1 d-flex">
               <div class="d-flex pr-2">
                 <small class="my-auto" style="cursor: help;" [popover]="'play.help.activity-midi-in' | translate"
                   triggers="mouseenter:mouseleave" container="body" placement="top"><i class="fa fa-sign-in"
@@ -161,7 +161,7 @@
     <div class="col" style="display: flex; flex-flow: column; padding-right: 0;">
 
       <!-- For larger screens -->
-      <div class="list-group d-none d-sm-flex" style="flex: 0 0 auto; border-top: 1px solid #444;">
+      <div class="list-group d-none d-sm-flex" style="flex: 0 0 auto;">
         <div class="list-group-item flex-column align-items-start">
           @if (viewMode === 'grid') {
             <button class="btn-view-toggle mr-3" (click)="toggleViewMode()"

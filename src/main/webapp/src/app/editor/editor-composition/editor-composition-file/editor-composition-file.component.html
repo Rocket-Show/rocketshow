@@ -9,6 +9,10 @@
         <div class="col-lg-6">
           <!-- Selected file -->
           <div class="card border-secondary mb-3">
+            <div class="card-header">
+              {{ "editor.selected-file" | translate }}
+            </div>
+
             <div class="card-body">
               <!-- No file selected -->
               @if (!file?.name) {

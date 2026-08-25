@@ -107,6 +107,7 @@
     "media-library": "Médiathèque",
     "file-settings": "Paramètres",
     "dropzone-message": "Déposez des fichiers ici ou cliquez pour téléverser",
+    "selected-file": "Fichier sélectionné",
     "no-file-selected": "Aucun fichier sélectionné",
     "error-multiple-video-images-title": "Plus d'une vidéo",
     "error-multiple-video-images": "Plus d'une vidéo n'est pas autorisée dans la même composition.",
@@ -470,7 +471,9 @@
       "method": "Méthode",
       "url": "URL",
       "body": "Corps",
-      "headers": "En-têtes"
+      "headers": "En-têtes",
+      "header-name": "Nom",
+      "header-value": "Valeur"
     },
     "raspberry-gpio": {
       "pin": "Broche",

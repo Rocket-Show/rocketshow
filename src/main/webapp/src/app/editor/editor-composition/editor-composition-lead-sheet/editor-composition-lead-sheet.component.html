@@ -9,6 +9,10 @@
         <div class="col-lg-6">
           <!-- Selected file -->
           <div class="card mb-3 border-secondary">
+            <div class="card-header">
+              {{ "editor.selected-file" | translate }}
+            </div>
+
             <div class="card-body">
               <!-- No file selected -->
               @if (!leadSheet?.name) {

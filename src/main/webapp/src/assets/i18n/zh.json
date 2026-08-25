@@ -107,6 +107,7 @@
     "media-library": "媒体库",
     "file-settings": "设置",
     "dropzone-message": "将文件拖放到此处或点击上传",
+    "selected-file": "已选择的文件",
     "no-file-selected": "未选择文件",
     "error-multiple-video-images-title": "多个视频",
     "error-multiple-video-images": "同一作品中不允许有多个视频。",
@@ -470,7 +471,9 @@
       "method": "方法",
       "url": "URL",
       "body": "正文",
-      "headers": "请求头"
+      "headers": "请求头",
+      "header-name": "名称",
+      "header-value": "值"
     },
     "raspberry-gpio": {
       "pin": "引脚",
