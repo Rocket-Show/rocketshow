@@ -23,6 +23,82 @@
     border-top-right-radius: 0;
 }
 
+/* The transport competes with the setlist for vertical space, so it runs
+   tighter than the app's default card. The hit targets are untouched -- only
+   the padding around them and the row that the readout used to occupy. */
+.card-transport > .card-body {
+    padding: 10px 16px 12px;
+}
+
+.card-transport > .card-footer {
+    padding: 6px 16px;
+}
+
+/* the readout sits beside the buttons from lg up, where there is room for a
+   full composition name; below that it goes back onto its own line so the name
+   is never truncated */
+/* Stacked, the readout sits between the transport buttons and the slider, so
+   the two gaps around it are its own; beside the buttons it needs neither. */
+.transport-row {
+    margin-bottom: 10px;
+}
+
+.transport-readout {
+    min-width: 0;
+    margin-top: 14px;
+}
+
+.transport-readout h5 {
+    /* on its own line it flows as ordinary centred text, so a long name wraps
+       as a centred block rather than hanging off the time */
+    text-align: center;
+    font-size: 1.125rem;
+}
+
+.transport-time {
+    /* digits keep a constant width, so the line does not jitter while playing */
+    font-variant-numeric: tabular-nums;
+}
+
+.transport-name::before {
+    content: '\2013';
+    margin: 0 0.4rem;
+    color: var(--sd-text-dim);
+}
+
+@media (min-width: 992px) {
+    /* beside the buttons the readout is already part of the same line, so the
+       group needs no extra room below it */
+    .transport-row {
+        margin-bottom: 4px;
+    }
+
+    .transport-readout {
+        margin-top: 0;
+    }
+
+    .transport-readout h5 {
+        display: flex;
+        align-items: baseline;
+        justify-content: flex-start;
+        min-width: 0;
+        text-align: left;
+    }
+
+    .transport-time {
+        flex: 0 0 auto;
+    }
+
+    /* beside the buttons a long name has to be clipped, or it would push the
+       transport cluster off centre. On its own line it wraps instead. */
+    .transport-name {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
 .btn-transport:focus, .btn-transport:active:focus, .btn-transport.active:focus { 
     outline: none !important;
     outline-style: none;

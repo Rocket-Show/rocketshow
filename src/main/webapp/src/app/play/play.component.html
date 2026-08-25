@@ -4,12 +4,24 @@
   @if (viewMode === 'setlist') {
   <div class="row" style="flex: 0 0 auto;">
     <div class="col">
-      <div class="card border-secondary mb-3">
+      <div class="card border-secondary card-transport mb-3">
         <div class="card-body">
 
-          <!-- The transport buttons -->
-          <div class="row d-flex mb-1">
-            <div class="col-auto mx-auto">
+          <!-- The transport buttons, with the readout beside them where there is room -->
+          <div class="row d-flex align-items-center transport-row">
+
+            <!-- Current position and composition. Below lg it drops under the
+                 transport buttons; from lg up it sits beside them. -->
+            <div class="col-12 col-lg order-2 order-lg-1 transport-readout">
+              <h5 class="mb-0">
+                <span class="transport-time">{{ playTime }}</span>
+                @if (currentState?.currentCompositionName) {
+                  <span class="transport-name">{{ currentState?.currentCompositionName }}</span>
+                }
+              </h5>
+            </div>
+
+            <div class="col-auto mx-auto order-1 order-lg-2">
               <!-- Automatically select the next song when finished -->
               <button type="button" (click)="toggleAutoSelectNextSong()" class="btn btn-transport"
                 [class.text-primary]="session?.autoSelectNextComposition"
@@ -62,29 +74,18 @@
                 <i class="fa fa-stop fa-fw" aria-hidden="true"></i>
               </button>
             </div>
+
+            <!-- balances the readout, so the buttons stay centred on the card -->
+            <div class="col d-none d-lg-block order-lg-3"></div>
           </div>
 
           <!-- The slider -->
-          <div class="row d-flex mb-2">
+          <div class="row d-flex">
             <div class="col-sm my-auto">
               <mv-slider min="0" [enabled]="currentState?.currentCompositionName" tooltip="hide"
                 [max]="currentState?.currentCompositionDurationMillis" [(value)]="positionMillis"
                 (slideStart)="slideStart($event)" (slideStop)="slideStop($event)" (change)="slideChange($event)">
               </mv-slider>
-            </div>
-          </div>
-
-          <!-- Current position and composition -->
-          <div class="row">
-            <div class="col my-auto py-0 px-2 d-flex">
-              <h5 class="mx-auto mb-0" style="text-align: center;">
-                <span
-                style="width: 100px; text-align: left; display: inline-block; margin-left: 5px;">{{ playTime }}</span>
-                @if (currentState?.currentCompositionName) {
-                  <span style="display: inline-block;"> -
-                  {{ currentState?.currentCompositionName }}</span>
-                }
-              </h5>
             </div>
           </div>
 

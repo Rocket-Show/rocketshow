@@ -121,9 +121,16 @@ hr {
   border-bottom: 1px solid $sd-border;
 }
 
+/* The brand sets the height of the navbar's first line. Pinning it to the bar's
+   own height keeps that line the same whether the collapsed menu is open or
+   shut -- otherwise opening the menu drops the line to its natural height and
+   the branding jumps up. */
 .navbar-brand {
-  padding-top: $sd-space-2;
-  padding-bottom: $sd-space-2;
+  display: flex;
+  align-items: center;
+  height: calc(var(--rs-navbar-height) - 1px);
+  padding-top: 0;
+  padding-bottom: 0;
   color: $sd-text;
   font-size: 0.9375rem;
   font-weight: 600;
@@ -195,6 +202,17 @@ hr {
 /* Collapsed: the menu drops into a vertical stack, where an underline would
    read as a stray line between entries. */
 @include media-breakpoint-down(md) {
+  /* The open menu is a full-width flex line, so anything after it in the markup
+     is pushed onto a third row and the first row's items shift. Ordering the
+     menu last keeps the bar's own row identical open or shut. */
+  .navbar > .navbar-collapse {
+    order: 1;
+  }
+
+  .navbar > .navbar-actions {
+    order: 0;
+  }
+
   .navbar .navbar-collapse .nav-link {
     padding-left: $sd-space-2 !important;
     border-radius: $sd-radius-sm;
