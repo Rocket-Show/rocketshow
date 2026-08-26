@@ -26,18 +26,40 @@ public class EffectCurve extends Effect {
     private long phaseMillis = 0;
     private float amplitude = 1;
     private float position = 0.5f;
+
+    // how the curve is shifted from one fixture to the next (chasing):
+    // "millis" shifts it by a fixed time, "spread" distributes phasingCycles full
+    // cycles over all fixtures of the preset, which keeps the chase intact when the
+    // period or the number of fixtures changes.
+    // both values are signed: a negative one chases in the opposite direction.
+    private String phasingMode = "millis";
     private long phasingMillis = 0;
+    private float phasingCycles = 1;
 
-    @Override
-    public double getValueAtMillis(long timeMillis, Integer fixtureIndex) {
-        // Calculate the offset for phasing
-        int phasingIndex = 0;
+    // how many fixtures share the same chase step (1 = each fixture on its own)
+    private int phasingGroupSize = 1;
 
-        if (fixtureIndex != null) {
-            phasingIndex = fixtureIndex;
+    // the time the curve is shifted by for the passed fixture of the preset
+    public double getPhasingMillis(Integer fixtureIndex, Integer fixtureCount) {
+        int groupSize = Math.max(this.phasingGroupSize, 1);
+        int step = (fixtureIndex == null ? 0 : fixtureIndex) / groupSize;
+
+        if ("spread".equals(this.phasingMode)) {
+            // distribute the cycles over all chase steps of the preset
+            int count = fixtureCount == null ? 1 : fixtureCount;
+            int steps = Math.max((int) Math.ceil((double) count / groupSize), 1);
+            return (double) step / steps * this.phasingCycles * this.lengthMillis;
         }
 
-        double phase = this.phaseMillis + phasingIndex * this.phasingMillis;
+        return (double) step * this.phasingMillis;
+    }
+
+    @Override
+    public double getValueAtMillis(long timeMillis, Integer fixtureIndex, Integer fixtureCount) {
+        double phase = this.phaseMillis + this.getPhasingMillis(fixtureIndex, fixtureCount);
+
+        // the position inside the current cycle, between 0 and 1
+        double cyclePosition = (((timeMillis - phase) / lengthMillis) % 1 + 1) % 1;
 
         // Calculate the value between 0 and 1 according to the curve
         double value = 0d;
@@ -54,13 +76,16 @@ public class EffectCurve extends Effect {
                 }
                 break;
             case "triangle":
-                // TODO
+                // rises and falls linearly, in phase with the sine
+                value = position + amplitude / 2 * (1 - 4 * Math.abs((cyclePosition + 0.25) % 1 - 0.5)) / 2d;
                 break;
             case "sawtooth":
-                // TODO
+                // ramps up over the whole cycle, then jumps back
+                value = position + amplitude / 2 * (2 * cyclePosition - 1) / 2d;
                 break;
             case "reverse-sawtooth":
-                // TODO
+                // ramps down over the whole cycle, then jumps back
+                value = position + amplitude / 2 * (1 - 2 * cyclePosition) / 2d;
                 break;
         }
 
@@ -129,5 +154,29 @@ public class EffectCurve extends Effect {
 
     public void setPhasingMillis(long phasingMillis) {
         this.phasingMillis = phasingMillis;
+    }
+
+    public String getPhasingMode() {
+        return phasingMode;
+    }
+
+    public void setPhasingMode(String phasingMode) {
+        this.phasingMode = phasingMode;
+    }
+
+    public float getPhasingCycles() {
+        return phasingCycles;
+    }
+
+    public void setPhasingCycles(float phasingCycles) {
+        this.phasingCycles = phasingCycles;
+    }
+
+    public int getPhasingGroupSize() {
+        return phasingGroupSize;
+    }
+
+    public void setPhasingGroupSize(int phasingGroupSize) {
+        this.phasingGroupSize = phasingGroupSize;
     }
 }

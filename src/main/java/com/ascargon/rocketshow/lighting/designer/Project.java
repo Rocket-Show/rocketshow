@@ -17,6 +17,9 @@ import java.util.List;
 @Setter
 public class Project {
 
+    // the project-file version (older ones are migrated when the project is loaded)
+    private int version = 0;
+
     private String uuid;
     private String name;
     private float masterDimmerValue = 1;
