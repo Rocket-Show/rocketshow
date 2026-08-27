@@ -7,6 +7,7 @@ import com.ascargon.rocketshow.lighting.LightingUniverse;
 import com.ascargon.rocketshow.lighting.OlaPlugin;
 import com.ascargon.rocketshow.midi.*;
 import com.ascargon.rocketshow.raspberry.ActionTriggerRaspberryGpio;
+import com.ascargon.rocketshow.scheduler.ScheduledComposition;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;
@@ -85,6 +86,10 @@ public class Settings {
     private List<MidiRouting> deviceInMidiRoutingList = new ArrayList<>();
     private List<MidiRouting> remoteMidiRoutingList = new ArrayList<>();
     private String defaultComposition;
+
+    // Start compositions based on a timer
+    private List<ScheduledComposition> scheduledCompositionList = new ArrayList<>();
+
     private LoggingLevel loggingLevel;
     private String language = "en";
     private String deviceName;
@@ -230,6 +235,12 @@ public class Settings {
     @XmlElementWrapper(name = "lightingUniverseList")
     public List<LightingUniverse> getLightingUniverseList() {
         return lightingUniverseList;
+    }
+
+    @XmlElement(name = "scheduledComposition")
+    @XmlElementWrapper(name = "scheduledCompositionList")
+    public List<ScheduledComposition> getScheduledCompositionList() {
+        return scheduledCompositionList;
     }
 
 }

@@ -383,6 +383,36 @@
       "title": "外部控制",
       "bcm-pin-id": "BCM引脚ID"
     },
+    "scheduler": {
+      "title": "定时启动",
+      "description": "在指定时间或经过设定的时长后自动开始播放作品。时长从 Rocket Show 启动时或这些设置最后一次更改时开始计算。",
+      "add": "添加定时作品",
+      "composition": "作品",
+      "schedule-type": "开始",
+      "schedule-type-enum": {
+        "INTERVAL": "重复",
+        "DAILY": "每天",
+        "WEEKLY": "每周",
+        "MONTHLY": "每月",
+        "YEARLY": "每年"
+      },
+      "interval": "每隔",
+      "interval-unit-enum": {
+        "SECONDS": "秒",
+        "MINUTES": "分钟",
+        "HOURS": "小时",
+        "DAYS": "天",
+        "WEEKS": "周"
+      },
+      "weekdays": "星期",
+      "weekday-required": "请至少选择一天。",
+      "day-of-month": "日期",
+      "day-of-month-hint": "如果所选日期在某个月份中不存在，作品将在该月的最后一天开始播放。",
+      "date": "日期",
+      "time-of-day": "时间",
+      "state": "状态",
+      "enable": "启用"
+    },
     "security": "安全",
     "session": "会话",
     "password": "密码",

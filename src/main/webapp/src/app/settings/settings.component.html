@@ -26,6 +26,8 @@
                   }}</a>
                 <a class="nav-link" data-toggle="pill" href="#external-control" role="tab">{{
                   "settings.external-control.title" | translate }}</a>
+                <a class="nav-link" data-toggle="pill" href="#scheduler" role="tab">{{ "settings.scheduler.title" |
+                  translate }}</a>
                 <a class="nav-link" data-toggle="pill" href="#band" role="tab">{{ "settings.band" | translate }}</a>
                 <a class="nav-link" data-toggle="pill" href="#personal" role="tab">{{ "settings.personal" | translate
                   }}</a>
@@ -61,6 +63,9 @@
                     </div>
                     <div class="tab-pane" id="external-control" role="tabpanel">
                       <app-settings-external-control></app-settings-external-control>
+                    </div>
+                    <div class="tab-pane" id="scheduler" role="tabpanel">
+                      <app-settings-scheduler></app-settings-scheduler>
                     </div>
                     <div class="tab-pane" id="band" role="tabpanel">
                       <app-settings-band></app-settings-band>

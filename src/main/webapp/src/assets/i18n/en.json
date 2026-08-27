@@ -384,6 +384,36 @@
       "title": "External control",
       "bcm-pin-id": "BCM Pin ID"
     },
+    "scheduler": {
+      "title": "Scheduler",
+      "description": "Start compositions automatically at specific times or after a fixed amount of time. Fixed amounts of time are counted from the start of Rocket Show or from the last change of these settings.",
+      "add": "Add scheduled composition",
+      "composition": "Composition",
+      "schedule-type": "Start",
+      "schedule-type-enum": {
+        "INTERVAL": "Repeatedly",
+        "DAILY": "Each day",
+        "WEEKLY": "Each week",
+        "MONTHLY": "Each month",
+        "YEARLY": "Each year"
+      },
+      "interval": "Every",
+      "interval-unit-enum": {
+        "SECONDS": "Seconds",
+        "MINUTES": "Minutes",
+        "HOURS": "Hours",
+        "DAYS": "Days",
+        "WEEKS": "Weeks"
+      },
+      "weekdays": "Days",
+      "weekday-required": "Select at least one day.",
+      "day-of-month": "Day of the month",
+      "day-of-month-hint": "If the selected day does not exist in a month, the composition is started on the last day of that month.",
+      "date": "Date",
+      "time-of-day": "Time",
+      "state": "State",
+      "enable": "Enabled"
+    },
     "security": "Security",
     "session": "Session",
     "password": "Password",

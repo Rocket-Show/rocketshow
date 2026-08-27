@@ -1,0 +1,27 @@
+<div class="form-group row">
+  <div class="col-lg-12">
+    <p class="text-muted">{{ "settings.scheduler.description" | translate }}</p>
+
+    <div class="list-group">
+      @for (
+        scheduledComposition of settings?.scheduledCompositionList; track
+        scheduledComposition; let i = $index) {
+        <div class="list-group-item">
+          <app-scheduled-composition
+            [index]="i"
+            [scheduledComposition]="scheduledComposition"
+            (delete)="deleteScheduledComposition($event)"
+          ></app-scheduled-composition>
+        </div>
+      }
+      <a
+        href="#"
+        (click)="addScheduledComposition(); (false)"
+        class="list-group-item text-center"
+        >
+        <i class="fa fa-plus" aria-hidden="true"></i>
+        {{ "settings.scheduler.add" | translate }}
+      </a>
+    </div>
+  </div>
+</div>

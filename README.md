@@ -277,6 +277,12 @@ gpioget -c gpiochip0 24
 
 Where active = high and inactive = low.
 
+##### Scheduler
+
+Starts compositions based on a timer. A scheduled composition either repeats after a fixed amount of time (e.g. every
+5 minutes) or is started at a specific time of the day, daily, on selected weekdays, monthly or yearly. The scheduled
+compositions are stored in the settings and are planned again as soon as they are changed.
+
 ##### Util
 
 Various utilities used across the project.

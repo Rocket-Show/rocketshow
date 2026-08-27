@@ -383,6 +383,36 @@
       "title": "Controlo externo",
       "bcm-pin-id": "ID de pino BCM"
     },
+    "scheduler": {
+      "title": "Agendamento",
+      "description": "Iniciar composições automaticamente a horas específicas ou após um período definido. Os períodos são contados a partir do arranque do Rocket Show ou da última alteração destas definições.",
+      "add": "Adicionar composição agendada",
+      "composition": "Composição",
+      "schedule-type": "Iniciar",
+      "schedule-type-enum": {
+        "INTERVAL": "Repetidamente",
+        "DAILY": "Todos os dias",
+        "WEEKLY": "Todas as semanas",
+        "MONTHLY": "Todos os meses",
+        "YEARLY": "Todos os anos"
+      },
+      "interval": "A cada",
+      "interval-unit-enum": {
+        "SECONDS": "Segundos",
+        "MINUTES": "Minutos",
+        "HOURS": "Horas",
+        "DAYS": "Dias",
+        "WEEKS": "Semanas"
+      },
+      "weekdays": "Dias",
+      "weekday-required": "Selecione pelo menos um dia.",
+      "day-of-month": "Dia do mês",
+      "day-of-month-hint": "Se o dia selecionado não existir num mês, a composição é iniciada no último dia desse mês.",
+      "date": "Data",
+      "time-of-day": "Hora",
+      "state": "Estado",
+      "enable": "Ativado"
+    },
     "security": "Segurança",
     "session": "Sessão",
     "password": "Palavra-passe",

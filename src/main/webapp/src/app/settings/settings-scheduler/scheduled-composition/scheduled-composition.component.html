@@ -1,0 +1,218 @@
+<div class="form-group row">
+  <label class="col-md-3 col-form-label">{{
+    "settings.scheduler.composition" | translate
+  }}</label>
+  <div class="col-md-9">
+    <select
+      class="custom-select"
+      [ngModel]="scheduledComposition.compositionName"
+      (ngModelChange)="scheduledComposition.compositionName = $event"
+      >
+      <option [ngValue]="selectUndefinedOptionValue">
+        - {{ "settings.no-composition" | translate }} -
+      </option>
+      @for (composition of compositions; track composition) {
+        <option [ngValue]="composition.name">
+          {{ composition.name }}
+        </option>
+      }
+    </select>
+  </div>
+</div>
+
+<div class="form-group row">
+  <label class="col-md-3 col-form-label">{{
+    "settings.scheduler.schedule-type" | translate
+  }}</label>
+  <div class="col-md-9">
+    <select
+      class="custom-select"
+      [(ngModel)]="scheduledComposition.scheduleType"
+      >
+      @for (scheduleType of scheduleTypeList; track scheduleType) {
+        <option value="{{ scheduleType }}">
+          {{ "settings.scheduler.schedule-type-enum." + scheduleType | translate }}
+        </option>
+      }
+    </select>
+  </div>
+</div>
+
+@if (scheduledComposition.scheduleType == 'INTERVAL') {
+  <div class="form-group row">
+    <label class="col-md-3 col-form-label">{{
+      "settings.scheduler.interval" | translate
+    }}</label>
+    <div class="col-md-4">
+      <input
+        type="number"
+        min="1"
+        class="form-control"
+        [(ngModel)]="scheduledComposition.intervalValue"
+        />
+    </div>
+    <div class="col-md-5">
+      <select
+        class="custom-select"
+        [(ngModel)]="scheduledComposition.intervalUnit"
+        >
+        @for (intervalUnit of intervalUnitList; track intervalUnit) {
+          <option value="{{ intervalUnit }}">
+            {{ "settings.scheduler.interval-unit-enum." + intervalUnit | translate }}
+          </option>
+        }
+      </select>
+    </div>
+  </div>
+}
+
+@if (scheduledComposition.scheduleType == 'WEEKLY') {
+  <div class="form-group row">
+    <label class="col-md-3 col-form-label">{{
+      "settings.scheduler.weekdays" | translate
+    }}</label>
+    <div class="col-md-9">
+      <div class="d-flex flex-wrap">
+        @for (weekday of weekdays; track weekday.value) {
+          <div class="form-check mr-3">
+            <input
+              type="checkbox"
+              class="form-check-input"
+              id="scheduledCompositionWeekday{{ index }}-{{ weekday.value }}"
+              [ngModel]="isWeekdaySelected(weekday.value)"
+              (ngModelChange)="setWeekdaySelected(weekday.value, $event)"
+              />
+
+            <label
+              class="form-check-label"
+              for="scheduledCompositionWeekday{{ index }}-{{ weekday.value }}"
+              >
+              {{ weekday.label }}
+            </label>
+          </div>
+        }
+      </div>
+      @if (!scheduledComposition.weekdayList.length) {
+        <small class="text-danger">{{
+          "settings.scheduler.weekday-required" | translate
+        }}</small>
+      }
+    </div>
+  </div>
+}
+
+@if (scheduledComposition.scheduleType == 'MONTHLY') {
+  <div class="form-group row">
+    <label class="col-md-3 col-form-label">{{
+      "settings.scheduler.day-of-month" | translate
+    }}</label>
+    <div class="col-md-9">
+      <select
+        class="custom-select"
+        [(ngModel)]="scheduledComposition.dayOfMonth"
+        >
+        @for (dayOfMonth of dayOfMonthList; track dayOfMonth) {
+          <option [ngValue]="dayOfMonth">
+            {{ dayOfMonth }}
+          </option>
+        }
+      </select>
+    </div>
+  </div>
+}
+
+@if (scheduledComposition.scheduleType == 'YEARLY') {
+  <div class="form-group row">
+    <label class="col-md-3 col-form-label">{{
+      "settings.scheduler.date" | translate
+    }}</label>
+    <div class="col-md-5">
+      <select
+        class="custom-select"
+        [(ngModel)]="scheduledComposition.monthOfYear"
+        >
+        @for (month of months; track month.value) {
+          <option [ngValue]="month.value">
+            {{ month.label }}
+          </option>
+        }
+      </select>
+    </div>
+    <div class="col-md-4">
+      <select
+        class="custom-select"
+        [(ngModel)]="scheduledComposition.dayOfMonth"
+        >
+        @for (dayOfMonth of dayOfMonthList; track dayOfMonth) {
+          <option [ngValue]="dayOfMonth">
+            {{ dayOfMonth }}
+          </option>
+        }
+      </select>
+    </div>
+  </div>
+}
+
+@if ((scheduledComposition.scheduleType == 'MONTHLY' ||
+  scheduledComposition.scheduleType == 'YEARLY') &&
+  scheduledComposition.dayOfMonth > 28) {
+  <div class="form-group row">
+    <div class="col-md-9 offset-md-3">
+      <small class="text-muted">{{
+        "settings.scheduler.day-of-month-hint" | translate
+      }}</small>
+    </div>
+  </div>
+}
+
+@if (scheduledComposition.scheduleType != 'INTERVAL') {
+  <div class="form-group row">
+    <label class="col-md-3 col-form-label">{{
+      "settings.scheduler.time-of-day" | translate
+    }}</label>
+    <div class="col-md-9">
+      <input
+        type="time"
+        class="form-control"
+        [(ngModel)]="scheduledComposition.timeOfDay"
+        />
+    </div>
+  </div>
+}
+
+<div class="form-group row">
+  <div class="col-md-3 col-form-label">
+    {{ "settings.scheduler.state" | translate }}
+  </div>
+  <div class="col-md-9 d-flex">
+    <div class="form-check my-auto">
+      <input
+        type="checkbox"
+        [(ngModel)]="scheduledComposition.enabled"
+        class="form-check-input"
+        id="scheduledCompositionEnabled{{ index }}"
+        />
+
+      <label
+        class="form-check-label"
+        for="scheduledCompositionEnabled{{ index }}"
+        >
+        {{ "settings.scheduler.enable" | translate }}
+      </label>
+    </div>
+  </div>
+</div>
+
+<div class="form-group row">
+  <div class="col-md-12 d-flex">
+    <a
+      class="ml-auto my-auto text-danger"
+      href="#"
+      role="button"
+      (click)="delete.next(index); (false)"
+      >
+      <i class="fa fa-trash-o" aria-hidden="true"></i>
+      {{ "misc.delete" | translate }}
+    </a>
+  </div>
+</div>

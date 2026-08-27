@@ -8,6 +8,7 @@ import com.ascargon.rocketshow.lighting.designer.FixtureService;
 import com.ascargon.rocketshow.midi.MidiDeviceInService;
 import com.ascargon.rocketshow.midi.MidiDeviceOutService;
 import com.ascargon.rocketshow.play.PlayerService;
+import com.ascargon.rocketshow.scheduler.SchedulerService;
 import com.ascargon.rocketshow.settings.SettingsUpdateSystemService;
 import com.ascargon.rocketshow.util.ErrorLogAppender;
 import com.ascargon.rocketshow.util.ErrorLogService;
@@ -46,6 +47,9 @@ public class RocketShowApplication {
 
         // Initialize the player to start the default composition, if required
         context.getBean(PlayerService.class);
+
+        // Plan the compositions, which are started by a timer
+        context.getBean(SchedulerService.class);
 
         // Connect to the MIDI in device, if available
         context.getBean(MidiDeviceInService.class);

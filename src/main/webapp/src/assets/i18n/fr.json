@@ -383,6 +383,36 @@
       "title": "Contrôle externe",
       "bcm-pin-id": "ID de broche BCM"
     },
+    "scheduler": {
+      "title": "Planification",
+      "description": "Démarrer des compositions automatiquement à des heures précises ou après une durée déterminée. Les durées sont comptées à partir du démarrage de Rocket Show ou de la dernière modification de ces réglages.",
+      "add": "Ajouter une composition planifiée",
+      "composition": "Composition",
+      "schedule-type": "Démarrer",
+      "schedule-type-enum": {
+        "INTERVAL": "Régulièrement",
+        "DAILY": "Chaque jour",
+        "WEEKLY": "Chaque semaine",
+        "MONTHLY": "Chaque mois",
+        "YEARLY": "Chaque année"
+      },
+      "interval": "Toutes les",
+      "interval-unit-enum": {
+        "SECONDS": "Secondes",
+        "MINUTES": "Minutes",
+        "HOURS": "Heures",
+        "DAYS": "Jours",
+        "WEEKS": "Semaines"
+      },
+      "weekdays": "Jours",
+      "weekday-required": "Sélectionnez au moins un jour.",
+      "day-of-month": "Jour du mois",
+      "day-of-month-hint": "Si le jour choisi n'existe pas dans un mois, la composition est démarrée le dernier jour de ce mois.",
+      "date": "Date",
+      "time-of-day": "Heure",
+      "state": "État",
+      "enable": "Activé"
+    },
     "security": "Sécurité",
     "session": "Session",
     "password": "Mot de passe",
