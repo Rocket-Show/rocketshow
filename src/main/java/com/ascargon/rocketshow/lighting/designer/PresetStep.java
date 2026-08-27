@@ -19,15 +19,15 @@ import java.util.List;
 public class PresetStep {
 
     private String uuid;
-    private String name;
 
     // when this step is fully reached, relative to the start of the preset. The
     // transition runs over the time before it, so a step lands on its millisecond (and
     // with it on its beat) instead of only starting to move there.
     private long startMillis = 0;
 
-    // how the values travel from the previous step to this one (0 = jump)
-    private long transitionMillis = 0;
+    // how long the values travel from the previous step to this one: null = the whole
+    // time since that step, 0 = a jump
+    private Long transitionMillis;
     private String transitionCurve = "linear";
 
     // the selected values

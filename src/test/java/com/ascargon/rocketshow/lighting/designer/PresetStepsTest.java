@@ -17,7 +17,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class PresetStepsTest {
 
-    // a step driving one channel to the passed value, reached at startMillis
+    // a step driving one channel to the passed value, reached at startMillis. Without a
+    // transition of its own a step travels over the whole gap, so the cases which want a
+    // jump ask for one.
     private PresetStep step(long startMillis, double value, long transitionMillis) {
         PresetStep step = new PresetStep();
         step.setUuid("step-" + startMillis);
@@ -41,7 +43,7 @@ class PresetStepsTest {
     }
 
     private double dimmerAt(Preset preset, long timeMillis) {
-        PresetStepState state = PresetSteps.getStateAtMillis(preset, timeMillis, false);
+        PresetStepState state = PresetSteps.getStateAtMillis(preset, timeMillis);
 
         for (FixtureChannelValue channelValue : state.getFixtureChannelValues()) {
             if ("dimmer".equals(channelValue.getChannelName())) {
@@ -142,10 +144,31 @@ class PresetStepsTest {
     }
 
     @Test
-    void sequenceCanBeRunWithoutThePresetLooping() {
-        Preset sequence = preset(step(0, 100, 0), step(500, 200, 0), step(1000, 300, 0));
+    void stepWithoutATransitionOfItsOwnTravelsOverTheWholeGap() {
+        Preset sequence = preset(step(0, 100, 0), step(1000, 200, 0));
+        sequence.getSteps().get(1).setTransitionMillis(null);
 
-        assertEquals(200, PresetSteps.getStateAtMillis(sequence, 2000, true).getFixtureChannelValues().get(0).getValue());
+        assertEquals(100, dimmerAt(sequence, 0));
+        assertEquals(150, dimmerAt(sequence, 500));
+        assertEquals(200, dimmerAt(sequence, 1000));
+    }
+
+    @Test
+    void stepWhoseTransitionWasSetToNothingJumps() {
+        Preset sequence = preset(step(0, 100, 0), step(1000, 200, 0));
+
+        assertEquals(100, dimmerAt(sequence, 999));
+        assertEquals(200, dimmerAt(sequence, 1000));
+    }
+
+    @Test
+    void stateNamesTheStepItIsOn() {
+        Preset sequence = preset(step(0, 100, 0), step(1000, 200, 400));
+
+        assertEquals(sequence.getSteps().get(0), PresetSteps.getStateAtMillis(sequence, 500).getCurrentStep());
+        // it is still travelling away from the first step until it arrives at the second
+        assertEquals(sequence.getSteps().get(0), PresetSteps.getStateAtMillis(sequence, 800).getCurrentStep());
+        assertEquals(sequence.getSteps().get(1), PresetSteps.getStateAtMillis(sequence, 1000).getCurrentStep());
     }
 
     @Test
@@ -165,7 +188,7 @@ class PresetStepsTest {
         onlyInTo.setValue(70d);
         to.getFixtureChannelValues().add(onlyInTo);
 
-        PresetStepState state = PresetSteps.getStateAtMillis(preset(from, to), 500, false);
+        PresetStepState state = PresetSteps.getStateAtMillis(preset(from, to), 500);
 
         assertEquals(50, valueOf(state, "strobe"));
         assertEquals(70, valueOf(state, "zoom"));
@@ -189,7 +212,7 @@ class PresetStepsTest {
         from.getFixtureCapabilityValues().add(colorIntensity(0.2));
         to.getFixtureCapabilityValues().add(colorIntensity(1));
 
-        PresetStepState state = PresetSteps.getStateAtMillis(preset(from, to), 500, false);
+        PresetStepState state = PresetSteps.getStateAtMillis(preset(from, to), 500);
 
         assertEquals(0.6, state.getFixtureCapabilityValues().get(0).getValuePercentage(), 1e-10);
     }
@@ -222,8 +245,8 @@ class PresetStepsTest {
 
         Preset sequence = preset(from, to);
 
-        assertEquals(1, (int) PresetSteps.getStateAtMillis(sequence, 0, false).getFixtureCapabilityValues().get(0).getSlotNumber());
-        assertEquals(4, (int) PresetSteps.getStateAtMillis(sequence, 500, false).getFixtureCapabilityValues().get(0).getSlotNumber());
+        assertEquals(1, (int) PresetSteps.getStateAtMillis(sequence, 0).getFixtureCapabilityValues().get(0).getSlotNumber());
+        assertEquals(4, (int) PresetSteps.getStateAtMillis(sequence, 500).getFixtureCapabilityValues().get(0).getSlotNumber());
     }
 
     @Test
@@ -237,8 +260,8 @@ class PresetStepsTest {
 
         Preset sequence = preset(from, to);
 
-        assertEquals(1, (int) PresetSteps.getStateAtMillis(sequence, 500, false).getFixtureCapabilityValues().get(0).getSlotNumber());
-        assertEquals(4, (int) PresetSteps.getStateAtMillis(sequence, 1000, false).getFixtureCapabilityValues().get(0).getSlotNumber());
+        assertEquals(1, (int) PresetSteps.getStateAtMillis(sequence, 500).getFixtureCapabilityValues().get(0).getSlotNumber());
+        assertEquals(4, (int) PresetSteps.getStateAtMillis(sequence, 1000).getFixtureCapabilityValues().get(0).getSlotNumber());
     }
 
     @Test
@@ -254,7 +277,7 @@ class PresetStepsTest {
     void effectRunsFullyUnlessAStepSaysOtherwise() {
         Preset sequence = preset(step(0, 0, 0), step(1000, 100, 0));
 
-        assertEquals(1, PresetSteps.getStateAtMillis(sequence, 0, false).getEffectAmount("effect"));
+        assertEquals(1, PresetSteps.getStateAtMillis(sequence, 0).getEffectAmount("effect"));
     }
 
     @Test
@@ -265,7 +288,7 @@ class PresetStepsTest {
         from.getEffectAmounts().add(effectAmount(0));
         to.getEffectAmounts().add(effectAmount(1));
 
-        assertEquals(0.5, PresetSteps.getStateAtMillis(preset(from, to), 500, false).getEffectAmount("effect"), 1e-10);
+        assertEquals(0.5, PresetSteps.getStateAtMillis(preset(from, to), 500).getEffectAmount("effect"), 1e-10);
     }
 
     private PresetStepEffectAmount effectAmount(double amount) {

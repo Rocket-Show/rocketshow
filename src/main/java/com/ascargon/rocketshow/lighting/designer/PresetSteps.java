@@ -68,6 +68,21 @@ public final class PresetSteps {
         return (double) step * preset.getStepsPhasingMillis();
     }
 
+    // Where the transition into a step starts: the whole time since the step before it,
+    // unless the step carries a shorter time of its own. A transition never reaches back
+    // past the step it starts from, and the first step has nothing to travel from.
+    public static double getTransitionStartMillis(PresetStep step, double reachedMillis, Double previousReachedMillis) {
+        if (previousReachedMillis == null) {
+            return reachedMillis;
+        }
+
+        if (step.getTransitionMillis() == null) {
+            return previousReachedMillis;
+        }
+
+        return Math.max(reachedMillis - step.getTransitionMillis(), previousReachedMillis);
+    }
+
     // the values of a single step, without copying them: the state is only read from
     public static PresetStepState getStepState(PresetStep step) {
         PresetStepState state = new PresetStepState();
@@ -75,6 +90,8 @@ public final class PresetSteps {
         if (step == null) {
             return state;
         }
+
+        state.setCurrentStep(step);
 
         if (step.getFixtureChannelValues() != null) {
             state.setFixtureChannelValues(step.getFixtureChannelValues());
@@ -91,10 +108,8 @@ public final class PresetSteps {
         return state;
     }
 
-    // the values the preset applies at the passed time, relative to its own start.
-    // forceLoop runs the sequence over and over even when the preset does not loop,
-    // which is what the designer watches while it edits the steps.
-    public static PresetStepState getStateAtMillis(Preset preset, long presetTimeMillis, boolean forceLoop) {
+    // the values the preset applies at the passed time, relative to its own start
+    public static PresetStepState getStateAtMillis(Preset preset, long presetTimeMillis) {
         List<PresetStep> steps = preset.getSteps();
 
         if (steps == null || steps.isEmpty()) {
@@ -119,7 +134,7 @@ public final class PresetSteps {
         double timeMillis = presetTimeMillis;
         long loopMillis = 0;
 
-        if (preset.isStepsLoop() || forceLoop) {
+        if (preset.isStepsLoop()) {
             loopMillis = getStepsLoopMillis(preset);
 
             if (loopMillis > 0) {
@@ -162,8 +177,7 @@ public final class PresetSteps {
             return getStepState(current);
         }
 
-        // the transition never reaches back past the step it starts from
-        double transitionStartMillis = Math.max(targetStartMillis - target.getTransitionMillis(), current.getStartMillis());
+        double transitionStartMillis = getTransitionStartMillis(target, targetStartMillis, (double) current.getStartMillis());
 
         if (timeMillis <= transitionStartMillis || targetStartMillis <= transitionStartMillis) {
             return getStepState(current);
@@ -204,6 +218,9 @@ public final class PresetSteps {
 
     private static PresetStepState interpolate(PresetStep from, PresetStep to, double position) {
         PresetStepState state = new PresetStepState();
+
+        // the preset is on the step it is travelling from until it arrives
+        state.setCurrentStep(from);
 
         // A value only one of the two steps carries is held as it is: a step not naming
         // a channel means it does not drive that channel, not that it drives it to zero.

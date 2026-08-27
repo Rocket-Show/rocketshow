@@ -59,6 +59,7 @@ public class DefaultDesignerService implements DesignerService {
     private String selectedPresetUuid;
     private String selectedStepUuid;
     private boolean stepPreviewRunning = false;
+    private long stepPreviewStartMillis = 0;
     private List<String> selectedSceneUuids = new ArrayList<>();
 
     private List<LightingUniverseState> lightingUniverses = new ArrayList<>();
@@ -779,13 +780,23 @@ public class DefaultDesignerService implements DesignerService {
     // designer's panels are editing one step, so that is the one to show: the sequence
     // only runs on the timeline, or when the designer asks to watch it.
     private PresetStepState getPresetStepState(PresetRegionScene preset, double timeMillis) {
-        List<PresetStep> steps = preset.getPreset().getSteps();
-
-        if (preset.getRegion() == null && !stepPreviewRunning && steps != null && !steps.isEmpty()) {
-            return PresetSteps.getStepState(getEditStep(preset.getPreset()));
+        if (preset.getRegion() != null) {
+            return PresetSteps.getStateAtMillis(preset.getPreset(), Math.round(timeMillis - getPresetStartMillis(preset)));
         }
 
-        return PresetSteps.getStateAtMillis(preset.getPreset(), Math.round(timeMillis - getPresetStartMillis(preset)), preset.getRegion() == null);
+        if (stepPreviewRunning) {
+            // the sequence was started by hand, so it runs from the point it was started at
+            return PresetSteps.getStateAtMillis(preset.getPreset(), Math.round(timeMillis - stepPreviewStartMillis));
+        }
+
+        List<PresetStep> steps = preset.getPreset().getSteps();
+
+        if (steps == null || steps.isEmpty()) {
+            // an old project keeps its values on the preset itself
+            return PresetSteps.getStateAtMillis(preset.getPreset(), 0);
+        }
+
+        return PresetSteps.getStepState(getEditStep(preset.getPreset()));
     }
 
     private double getPresetIntensity(PresetRegionScene preset, long timeMillis) {
@@ -1864,8 +1875,9 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     @Override
-    public void setStepPreviewRunning(boolean stepPreviewRunning) {
+    public void setStepPreviewRunning(boolean stepPreviewRunning, long stepPreviewStartMillis) {
         this.stepPreviewRunning = stepPreviewRunning;
+        this.stepPreviewStartMillis = stepPreviewStartMillis;
     }
 
     @Override
