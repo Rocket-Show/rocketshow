@@ -38,6 +38,10 @@ public interface DesignerService {
 
     void setSelectedPresetUuid(String selectedPresetUuid);
 
+    void setSelectedStepUuid(String selectedStepUuid);
+
+    void setStepPreviewRunning(boolean stepPreviewRunning);
+
     void setSelectedSceneUuids(List<String> selectedSceneUuids);
 
     Project getCurrentProject();
