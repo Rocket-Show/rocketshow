@@ -289,7 +289,9 @@ public class DefaultDesignerService implements DesignerService {
             // Only use active presets in current regions
             presets = getPresetsInTime(timeMillis);
         } else {
-            if (previewPreset) {
+            // previewPreset = solo. Without a selected scene there is nothing else to
+            // show than the selected preset anyway.
+            if (previewPreset || selectedSceneUuids == null || selectedSceneUuids.isEmpty()) {
                 // Only preview the selected preset
                 if (selectedPresetUuid != null) {
                     presets.add(new PresetRegionScene(getPresetByUuid(selectedPresetUuid), null, null));

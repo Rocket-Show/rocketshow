@@ -25,7 +25,8 @@ public class Project {
     private float masterDimmerValue = 1;
     private String selectedPresetUuid;
     private List<String> selectedSceneUuids = new ArrayList<>();
-    private boolean previewPreset = true;
+    // play the selected preset on its own (solo) instead of the selected scenes
+    private boolean previewPreset = false;
     private Composition[] compositions;
     private List<FixtureProfile> fixtureProfiles;
 
