@@ -39,7 +39,9 @@ public abstract class Effect {
     private EffectChannel[] effectChannels;
     private boolean visible = true;
 
-    public abstract double getValueAtMillis(long timeMillis, Integer fixtureIndex, Integer fixtureCount);
+    // the value the effect puts on its channels, or null if it does not apply at this
+    // moment - the fixtures keep whatever the rest of the preset puts on them then
+    public abstract Double getValueAtMillis(long timeMillis, Integer fixtureIndex, Integer fixtureCount);
 
     public String getUuid() {
         return uuid;

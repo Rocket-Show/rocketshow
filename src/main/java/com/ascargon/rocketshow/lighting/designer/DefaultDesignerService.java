@@ -1038,6 +1038,24 @@ public class DefaultDesignerService implements DesignerService {
         return calculatedFixtures;
     }
 
+    // a preset that is not placed in a composition has no moment it starts at: the preview
+    // clock has been running since the designer was opened, so a curve that stops after a
+    // while would always be over already. repeat its run instead, the way the grid of the
+    // effect shows it.
+    private long getCurveTimeMillis(EffectCurve curve, long effectTimeMillis, PresetRegionScene preset, Integer fixtureCount) {
+        if (preset.getRegion() != null) {
+            return effectTimeMillis;
+        }
+
+        Double loopMillis = curve.getRunLoopMillis(fixtureCount);
+
+        if (loopMillis == null) {
+            return effectTimeMillis;
+        }
+
+        return (long) ((effectTimeMillis % loopMillis + loopMillis) % loopMillis);
+    }
+
     private void mixEffects(long timeMillis, int fixtureIndex, Integer fixtureCount, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double intensityPercentage, PresetStepState state) {
         long effectTimeMillis = timeMillis;
 
@@ -1053,16 +1071,23 @@ public class DefaultDesignerService implements DesignerService {
             if (effect.isVisible() && effectAmount > 0) {
                 // EffectCurve
                 if (effect instanceof EffectCurve effectCurve) {
+                    long curveTimeMillis = getCurveTimeMillis(effectCurve, effectTimeMillis, preset, fixtureCount);
+
                     // capabilities
                     for (FixtureCapability capability : effectCurve.getCapabilities()) {
                         for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
                             for (CachedFixtureCapability channelCapability : cachedChannel.getCapabilities()) {
                                 if (capabilitiesMatch(capability.getType(), channelCapability.getCapability().getType(), capability.getColor(), channelCapability.getCapability().getColor(), null, null, null, null)) {
-                                    FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
-                                    fixtureChannelValue.setChannelName(cachedChannel.getName());
-                                    fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
-                                    fixtureChannelValue.setValue(cachedChannel.getMaxValue() * effectCurve.getValueAtMillis(effectTimeMillis, fixtureIndex, fixtureCount));
-                                    mixChannelValue(values, fixtureChannelValue, effectIntensityPercentage);
+                                    Double value = effectCurve.getValueAtMillis(curveTimeMillis, fixtureIndex, fixtureCount);
+
+                                    // the curve does not apply anymore after it has finished running
+                                    if (value != null) {
+                                        FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
+                                        fixtureChannelValue.setChannelName(cachedChannel.getName());
+                                        fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
+                                        fixtureChannelValue.setValue(cachedChannel.getMaxValue() * value);
+                                        mixChannelValue(values, fixtureChannelValue, effectIntensityPercentage);
+                                    }
                                 }
                             }
                         }
@@ -1074,11 +1099,16 @@ public class DefaultDesignerService implements DesignerService {
                             for (String channel : channelProfile.getChannels()) {
                                 for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
                                     if (cachedChannel.getName().equals(channel)) {
-                                        FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
-                                        fixtureChannelValue.setChannelName(cachedChannel.getName());
-                                        fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
-                                        fixtureChannelValue.setValue(cachedChannel.getMaxValue() * effectCurve.getValueAtMillis(effectTimeMillis, fixtureIndex, fixtureCount));
-                                        mixChannelValue(values, fixtureChannelValue, effectIntensityPercentage);
+                                        Double value = effectCurve.getValueAtMillis(curveTimeMillis, fixtureIndex, fixtureCount);
+
+                                        // the curve does not apply anymore after it has finished running
+                                        if (value != null) {
+                                            FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
+                                            fixtureChannelValue.setChannelName(cachedChannel.getName());
+                                            fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
+                                            fixtureChannelValue.setValue(cachedChannel.getMaxValue() * value);
+                                            mixChannelValue(values, fixtureChannelValue, effectIntensityPercentage);
+                                        }
                                     }
                                 }
                             }
