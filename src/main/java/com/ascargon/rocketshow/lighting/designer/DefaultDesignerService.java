@@ -848,7 +848,7 @@ public class DefaultDesignerService implements DesignerService {
         return intensityPercentage;
     }
 
-    private void mixCapabilityValues(PresetStepState state, CachedFixture cachedFixture, List<FixtureChannelValue> values, double intensityPercentage) {
+    private void mixCapabilityValues(PresetStepState state, CachedFixture cachedFixture, List<FixtureChannelValue> values, double intensityPercentage, Preset preset) {
         boolean hasColor = false;
 
         // mix the capability values of the state the preset is in
@@ -902,10 +902,13 @@ public class DefaultDesignerService implements DesignerService {
                                     }
                                 }
                             } else if ((presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Pan || presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Tilt) && presetCapabilityValue.getValuePercentage() != null) {
+                                // a preset which mirrors this axis points its fixtures at the mirrored position
+                                double valuePercentage = preset.getMirroredValuePercentage(presetCapabilityValue.getType(), presetCapabilityValue.getValuePercentage());
+
                                 FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
                                 fixtureChannelValue.setChannelName(cachedChannel.getName());
                                 fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
-                                fixtureChannelValue.setValue(cachedChannel.getMaxValue() * presetCapabilityValue.getValuePercentage());
+                                fixtureChannelValue.setValue(cachedChannel.getMaxValue() * valuePercentage);
                                 this.mixChannelValue(values, fixtureChannelValue, 1);
                             } else if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.WheelSlot && channelCapability.getCapability().getSlotNumber().equals(presetCapabilityValue.getSlotNumber())) {
                                 // wheel slot (color, gobo, etc.)
@@ -1024,7 +1027,7 @@ public class DefaultDesignerService implements DesignerService {
                             state = getPresetStepState(preset, timeMillis - PresetSteps.getStepsPhasingMillis(preset.getPreset(), fixtureIndex, fixtureCounts.get(preset.getPreset())));
                         }
 
-                        mixCapabilityValues(state, cachedFixture, values, intensityPercentage);
+                        mixCapabilityValues(state, cachedFixture, values, intensityPercentage, preset.getPreset());
                         mixChannelValues(state, cachedFixture, values, intensityPercentage);
                         mixEffects(timeMillis, fixtureIndex, fixtureCounts.get(preset.getPreset()), preset, cachedFixture, values, intensityPercentage, state);
                     }
@@ -1082,6 +1085,9 @@ public class DefaultDesignerService implements DesignerService {
 
                                     // the curve does not apply anymore after it has finished running
                                     if (value != null) {
+                                        // a preset which mirrors this axis mirrors the movement of its curves as well
+                                        value = preset.getPreset().getMirroredValuePercentage(capability.getType(), value);
+
                                         FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
                                         fixtureChannelValue.setChannelName(cachedChannel.getName());
                                         fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
