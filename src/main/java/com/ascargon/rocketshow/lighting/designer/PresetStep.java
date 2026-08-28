@@ -20,13 +20,13 @@ public class PresetStep {
 
     private String uuid;
 
-    // when this step is fully reached, relative to the start of the preset. The
-    // transition runs over the time before it, so a step lands on its millisecond (and
-    // with it on its beat) instead of only starting to move there.
+    // when this step starts, relative to the start of the preset. It is what the preset
+    // shows from that millisecond (and with it from that beat) until the next step
+    // starts, and the transition into it runs over the beginning of that time.
     private long startMillis = 0;
 
-    // how long the values travel from the previous step to this one: null = the whole
-    // time since that step, 0 = a jump
+    // how long the values travel from the previous step into this one, counted from the
+    // start of this step: null = the whole time this step lasts, 0 = a jump
     private Long transitionMillis;
     private String transitionCurve = "linear";
 
