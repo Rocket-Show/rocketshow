@@ -19,7 +19,7 @@ import java.util.Map;
 @Setter
 public class PresetStepState {
 
-    // the step reached last, which is the one a preset is on while it plays
+    // the step started last, which is the one a preset is on while it plays
     private PresetStep currentStep;
 
     private List<FixtureChannelValue> fixtureChannelValues = new ArrayList<>();

@@ -68,19 +68,32 @@ public final class PresetSteps {
         return (double) step * preset.getStepsPhasingMillis();
     }
 
-    // Where the transition into a step starts: the whole time since the step before it,
-    // unless the step carries a shorter time of its own. A transition never reaches back
-    // past the step it starts from, and the first step has nothing to travel from.
-    public static double getTransitionStartMillis(PresetStep step, double reachedMillis, Double previousReachedMillis) {
-        if (previousReachedMillis == null) {
-            return reachedMillis;
+    // When the step at the passed index gives way to the next one. The last step holds
+    // for as long as a pass of the sequence would have given it, which is what a looping
+    // preset starts over after and what one which does not loop stands still on.
+    public static double getStepEndMillis(Preset preset, int index) {
+        List<PresetStep> steps = preset.getSteps();
+
+        if (index < steps.size() - 1) {
+            return steps.get(index + 1).getStartMillis();
+        }
+
+        return (double) steps.get(0).getStartMillis() + getStepsLoopMillis(preset);
+    }
+
+    // Where the transition into a step ends: it begins as the step does and travels from
+    // the step before it over the whole time this step lasts, unless the step carries a
+    // shorter time of its own. A transition never runs past the step which follows it.
+    public static double getTransitionEndMillis(PresetStep step, double startMillis, double endMillis) {
+        if (endMillis <= startMillis) {
+            return startMillis;
         }
 
         if (step.getTransitionMillis() == null) {
-            return previousReachedMillis;
+            return endMillis;
         }
 
-        return Math.max(reachedMillis - step.getTransitionMillis(), previousReachedMillis);
+        return Math.min(startMillis + step.getTransitionMillis(), endMillis);
     }
 
     // the values of a single step, without copying them: the state is only read from
@@ -144,7 +157,7 @@ public final class PresetSteps {
             }
         }
 
-        // the step reached last
+        // the step started last
         int index = -1;
 
         for (int i = 0; i < steps.size(); i++) {
@@ -161,31 +174,30 @@ public final class PresetSteps {
         }
 
         PresetStep current = steps.get(index);
+        double endMillis = getStepEndMillis(preset, index);
 
-        // the step being travelled to, which is the first one again once the sequence loops
-        PresetStep target;
-        double targetStartMillis;
+        // The step travelled from, which is the last one again once the sequence starts
+        // over. The first step of a preset which does not loop has nothing to travel
+        // from, so it is simply what the preset opens with.
+        PresetStep previous;
 
-        if (index < steps.size() - 1) {
-            target = steps.get(index + 1);
-            targetStartMillis = target.getStartMillis();
+        if (index > 0) {
+            previous = steps.get(index - 1);
         } else if (loopMillis > 0) {
-            target = first;
-            targetStartMillis = (double) first.getStartMillis() + loopMillis;
+            previous = steps.get(steps.size() - 1);
         } else {
-            // the last step is held until the preset ends
+            previous = null;
+        }
+
+        double transitionEndMillis = getTransitionEndMillis(current, current.getStartMillis(), endMillis);
+
+        if (previous == null || timeMillis >= transitionEndMillis) {
             return getStepState(current);
         }
 
-        double transitionStartMillis = getTransitionStartMillis(target, targetStartMillis, (double) current.getStartMillis());
+        double position = TransitionCurve.apply(current.getTransitionCurve(), (timeMillis - current.getStartMillis()) / (transitionEndMillis - current.getStartMillis()));
 
-        if (timeMillis <= transitionStartMillis || targetStartMillis <= transitionStartMillis) {
-            return getStepState(current);
-        }
-
-        double position = TransitionCurve.apply(target.getTransitionCurve(), (timeMillis - transitionStartMillis) / (targetStartMillis - transitionStartMillis));
-
-        return interpolate(current, target, position);
+        return interpolate(previous, current, position);
     }
 
     private static boolean capabilityValuesMatch(FixtureCapabilityValue value1, FixtureCapabilityValue value2) {
@@ -219,8 +231,8 @@ public final class PresetSteps {
     private static PresetStepState interpolate(PresetStep from, PresetStep to, double position) {
         PresetStepState state = new PresetStepState();
 
-        // the preset is on the step it is travelling from until it arrives
-        state.setCurrentStep(from);
+        // the preset is on the step it is travelling into from the moment that step starts
+        state.setCurrentStep(to);
 
         // A value only one of the two steps carries is held as it is: a step not naming
         // a channel means it does not drive that channel, not that it drives it to zero.
