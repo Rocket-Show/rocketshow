@@ -1042,16 +1042,22 @@ public class DefaultDesignerService implements DesignerService {
         return calculatedFixtures;
     }
 
+    // the tempo the curves synced to the beat follow. a preset can be previewed without a
+    // composition being played, which leaves the curves on their default tempo.
+    private Double getBeatsPerMinute() {
+        return composition == null ? null : composition.getBeatsPerMinute();
+    }
+
     // a preset that is not placed in a composition has no moment it starts at: the preview
     // clock has been running since the designer was opened, so a curve that stops after a
     // while would always be over already. repeat its run instead, the way the grid of the
     // effect shows it.
-    private long getCurveTimeMillis(EffectCurve curve, long effectTimeMillis, PresetRegionScene preset, Integer fixtureCount) {
+    private long getCurveTimeMillis(EffectCurve curve, long effectTimeMillis, PresetRegionScene preset, Integer fixtureCount, Double beatsPerMinute) {
         if (preset.getRegion() != null) {
             return effectTimeMillis;
         }
 
-        Double loopMillis = curve.getRunLoopMillis(fixtureCount);
+        Double loopMillis = curve.getRunLoopMillis(fixtureCount, beatsPerMinute);
 
         if (loopMillis == null) {
             return effectTimeMillis;
@@ -1075,14 +1081,15 @@ public class DefaultDesignerService implements DesignerService {
             if (effect.isVisible() && effectAmount > 0) {
                 // EffectCurve
                 if (effect instanceof EffectCurve effectCurve) {
-                    long curveTimeMillis = getCurveTimeMillis(effectCurve, effectTimeMillis, preset, fixtureCount);
+                    Double beatsPerMinute = this.getBeatsPerMinute();
+                    long curveTimeMillis = getCurveTimeMillis(effectCurve, effectTimeMillis, preset, fixtureCount, beatsPerMinute);
 
                     // capabilities
                     for (FixtureCapability capability : effectCurve.getCapabilities()) {
                         for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
                             for (CachedFixtureCapability channelCapability : cachedChannel.getCapabilities()) {
                                 if (capabilitiesMatch(capability.getType(), channelCapability.getCapability().getType(), capability.getColor(), channelCapability.getCapability().getColor(), null, null, null, null)) {
-                                    Double value = effectCurve.getValueAtMillis(curveTimeMillis, fixtureIndex, fixtureCount);
+                                    Double value = effectCurve.getValueAtMillis(curveTimeMillis, fixtureIndex, fixtureCount, beatsPerMinute);
 
                                     // the curve does not apply anymore after it has finished running
                                     if (value != null) {
@@ -1103,7 +1110,7 @@ public class DefaultDesignerService implements DesignerService {
                             for (String channel : channelProfile.getChannels()) {
                                 for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
                                     if (cachedChannel.getName().equals(channel)) {
-                                        Double value = effectCurve.getValueAtMillis(curveTimeMillis, fixtureIndex, fixtureCount);
+                                        Double value = effectCurve.getValueAtMillis(curveTimeMillis, fixtureIndex, fixtureCount, beatsPerMinute);
 
                                         // the curve does not apply anymore after it has finished running
                                         if (value != null) {
