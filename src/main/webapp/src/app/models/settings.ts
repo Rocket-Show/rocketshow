@@ -11,6 +11,7 @@ import { ActionTriggerMidiNoteOn } from "./action-trigger-midi-note-on";
 import { ActionTriggerMidiProgramChange } from "./action-trigger-midi-program-change";
 import { ApiKey } from "./api-key";
 import { LightingUniverse } from "./lighting-universe";
+import { ScheduledComposition } from "./scheduled-composition";
 
 export class Settings {
   version: number;
@@ -29,6 +30,7 @@ export class Settings {
   lightingOlaPluginList: OlaPlugin[] = [];
   lightingUniverseList: LightingUniverse[] = [];
   defaultComposition: string;
+  scheduledCompositionList: ScheduledComposition[] = [];
   offsetMillisMidi: number;
   offsetMillisAudio: number;
   offsetMillisVideo: number;
@@ -159,6 +161,17 @@ export class Settings {
     }
 
     this.defaultComposition = data.defaultComposition;
+
+    if (data.scheduledCompositionList) {
+      this.scheduledCompositionList = [];
+
+      for (let scheduledComposition of data.scheduledCompositionList) {
+        this.scheduledCompositionList.push(
+          new ScheduledComposition(scheduledComposition)
+        );
+      }
+    }
+
     this.offsetMillisMidi = data.offsetMillisMidi;
     this.offsetMillisAudio = data.offsetMillisAudio;
     this.offsetMillisVideo = data.offsetMillisVideo;

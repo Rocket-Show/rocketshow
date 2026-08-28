@@ -45,13 +45,17 @@ export class ParticleBackgroundComponent implements OnInit {
     };
   }
 
+  // The particles mirror the design tokens in src/styles/_tokens.scss. They are
+  // repeated here because the stylesheet composes them as rgba(<colour>, <alpha>)
+  // and so needs the raw channels, which a hex custom property cannot supply.
+  // Mostly accent tones, with the two neutrals for depth.
   private randomGlowColor(): string {
     const colors = [
-      '255,255,255', // white
-      '100,220,255', // soft blue
-      '210,100,255', // lavender
-      '80,240,255', // cyan
-      '120,110,255', // purple tint
+      '253,126,20', // $sd-primary
+      '255,164,92', // $sd-primary-text
+      '240,169,46', // $sd-warning
+      '223,227,232', // $sd-text
+      '153,161,172', // $sd-text-muted
     ];
 
     return colors[Math.floor(Math.random() * colors.length)];

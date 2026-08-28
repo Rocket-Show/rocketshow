@@ -21,6 +21,9 @@ public class CachedFixtureChannel {
     // the name of the channel
     private String name;
 
+    // the pixel key of the channel, if it stems from a template channel
+    private String pixelKey;
+
     // all channel capabilities
     private List<CachedFixtureCapability> capabilities = new ArrayList<>();
 

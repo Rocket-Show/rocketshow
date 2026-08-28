@@ -15,7 +15,8 @@ public class Scene {
     private String uuid;
     private String name;
 
-    // All contained presets
+    // All contained presets, in the order they are layered in this scene: the first
+    // one is the topmost layer, overwriting the values of the ones below it
     private String[] presetUuids;
 
     // Fading times

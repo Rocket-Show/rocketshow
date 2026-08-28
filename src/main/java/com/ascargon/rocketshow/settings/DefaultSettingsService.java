@@ -5,6 +5,7 @@ import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.lighting.OlaPlugin;
 import com.ascargon.rocketshow.midi.*;
+import com.ascargon.rocketshow.scheduler.ScheduledComposition;
 import com.ascargon.rocketshow.util.*;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
@@ -20,6 +21,8 @@ import org.springframework.stereotype.Service;
 
 import javax.sound.midi.MidiUnavailableException;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -39,6 +42,7 @@ public class DefaultSettingsService implements SettingsService {
 
     private Settings settings;
     private String lastSavedDefaultComposition;
+    private List<ScheduledComposition> lastSavedScheduledCompositionList = new ArrayList<>();
 
     public DefaultSettingsService(
             OperatingSystemInformationService operatingSystemInformationService,
@@ -71,6 +75,7 @@ public class DefaultSettingsService implements SettingsService {
         // Save the settings to store migrations, default values, etc.
         try {
             lastSavedDefaultComposition = getNormalizedDefaultComposition();
+            lastSavedScheduledCompositionList = getScheduledCompositionListCopy();
             save();
         } catch (JAXBException e) {
             logger.error("Could not save settings", e);
@@ -369,6 +374,7 @@ public class DefaultSettingsService implements SettingsService {
         logger.info("Settings saved");
 
         publishDefaultCompositionChangedEventIfNeeded();
+        publishScheduledCompositionsChangedEventIfNeeded();
     }
 
     @Override
@@ -393,6 +399,7 @@ public class DefaultSettingsService implements SettingsService {
         }
 
         lastSavedDefaultComposition = getNormalizedDefaultComposition();
+        lastSavedScheduledCompositionList = getScheduledCompositionListCopy();
 
         logger.info("Settings loaded");
     }
@@ -422,6 +429,25 @@ public class DefaultSettingsService implements SettingsService {
 
         lastSavedDefaultComposition = defaultComposition;
         applicationEventPublisher.publishEvent(new DefaultCompositionChangedEvent(defaultComposition));
+    }
+
+    private List<ScheduledComposition> getScheduledCompositionListCopy() {
+        if (settings == null) {
+            return new ArrayList<>();
+        }
+
+        return new ArrayList<>(settings.getScheduledCompositionList());
+    }
+
+    private void publishScheduledCompositionsChangedEventIfNeeded() {
+        List<ScheduledComposition> scheduledCompositionList = getScheduledCompositionListCopy();
+
+        if (scheduledCompositionList.equals(lastSavedScheduledCompositionList)) {
+            return;
+        }
+
+        lastSavedScheduledCompositionList = scheduledCompositionList;
+        applicationEventPublisher.publishEvent(new ScheduledCompositionsChangedEvent());
     }
 
     private void migrateToVersion2() {

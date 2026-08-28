@@ -146,8 +146,11 @@
         <div class="card-header">Update</div>
         <div class="card-body">
           <p class="mb-3">Check for available updates and install them.</p>
+          @if (!canUpdate) {
+          <p class="mb-3 text-muted">You need to be logged in to update this device.</p>
+          }
           <div class="d-flex float-right">
-            <button type="button" class="btn btn-primary" (click)="openUpdateDialog(); false">
+            <button type="button" class="btn btn-primary" (click)="openUpdateDialog(); false" [disabled]="!canUpdate">
               <i class="fa fa-download" aria-hidden="true"></i> Start update
             </button>
           </div>

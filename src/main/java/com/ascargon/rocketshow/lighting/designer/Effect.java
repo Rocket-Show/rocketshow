@@ -39,7 +39,7 @@ public abstract class Effect {
     private EffectChannel[] effectChannels;
     private boolean visible = true;
 
-    public abstract double getValueAtMillis(long timeMillis, Integer fixtureIndex);
+    public abstract double getValueAtMillis(long timeMillis, Integer fixtureIndex, Integer fixtureCount);
 
     public String getUuid() {
         return uuid;

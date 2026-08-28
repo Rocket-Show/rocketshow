@@ -20,8 +20,13 @@ public class Preset {
     private String uuid;
     private String name;
 
-    // all related fixtures
+    // all related fixtures, in the order they are chased in (only relevant, if
+    // useGlobalFixtureOrder is false)
     private List<PresetFixture> fixtures = new ArrayList<>();
+
+    // chase the fixtures in the global order (project.presetFixtures) instead of
+    // this preset's own order
+    private boolean useGlobalFixtureOrder = true;
 
     // the selected values
     private List<FixtureChannelValue> fixtureChannelValues;

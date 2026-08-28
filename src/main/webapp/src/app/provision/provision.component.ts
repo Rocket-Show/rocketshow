@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { BsModalService } from 'ngx-bootstrap/modal';
 import { DeviceInformation } from '../models/device-information';
 import { HealthStatus } from '../models/health-status';
+import { AuthService } from '../services/auth.service';
 import { DeviceInformationService } from '../services/device-information.service';
 import { HealthService } from '../services/health.service';
 import { ToastGeneralErrorService } from '../services/toast-general-error.service';
@@ -27,8 +28,17 @@ export class ProvisionComponent implements OnInit {
     private deviceInformationService: DeviceInformationService,
     private healthService: HealthService,
     private modalService: BsModalService,
-    private toastGeneralErrorService: ToastGeneralErrorService
+    private toastGeneralErrorService: ToastGeneralErrorService,
+    private authService: AuthService
   ) { }
+
+  // Updating is only possible while the device is still unprovisioned (no admin
+  // password set yet) or when an admin is logged in. Otherwise the backend
+  // rejects the update with an authorization error, so the button is disabled.
+  get canUpdate(): boolean {
+    const state = this.authService.currentState;
+    return !!state && (!state.passwordConfigured || state.authenticated);
+  }
 
   ngOnInit() {
     this.loadDeviceInformation();

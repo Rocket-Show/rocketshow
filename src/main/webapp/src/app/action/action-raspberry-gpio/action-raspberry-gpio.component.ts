@@ -27,8 +27,10 @@ export class ActionRaspberryGpioComponent {
 
     if (this.deviceInformationService.deviceInformation.available) {
       // Ready to use version
-      this.pinList.push(new RaspberryPiPin(5, "1"));
-      this.pinList.push(new RaspberryPiPin(25, "2"));
+      this.pinList.push(new RaspberryPiPin(24, "1"));
+      this.pinList.push(new RaspberryPiPin(5, "2"));
+      this.pinList.push(new RaspberryPiPin(27, "3"));
+      this.pinList.push(new RaspberryPiPin(22, "4"));
     } else {
       this.pinList = this.settingsService.raspberryPiPinIdList;
     }

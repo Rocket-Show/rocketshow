@@ -17,6 +17,10 @@ export class ActionRaspberryGpio extends Action {
     if(!this.pinId) {
       this.pinId = 4;
     }
+
+    if(this.high === undefined || this.high === null) {
+      this.high = false;
+    }
   }
 
   toJSON() {

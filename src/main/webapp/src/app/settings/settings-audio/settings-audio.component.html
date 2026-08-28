@@ -6,7 +6,9 @@
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{
     "settings.global-play-offset" | translate
-    }}</label>
+    }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+      [popover]="'settings.help.global-play-offset' | translate" triggers="mouseenter:mouseleave" container="body"
+      placement="right" aria-hidden="true"></i></label>
   <div class="col-lg-9">
     <input type="text" class="form-control" [ngModel]="settings?.offsetMillisAudio"
       (ngModelChange)="settings.offsetMillisAudio = $event" />
@@ -17,7 +19,9 @@
 <div class="form-group row">
   <label class="col-sm-3 col-form-label">{{
     "settings.audio-sample-rate" | translate
-    }}</label>
+    }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+      [popover]="'settings.help.audio-sample-rate' | translate" triggers="mouseenter:mouseleave" container="body"
+      placement="right" aria-hidden="true"></i></label>
   <div class="col-sm-9">
     <select class="custom-select" [ngModel]="settings?.audioRate" (ngModelChange)="settings.audioRate = $event">
       <option [ngValue]="selectUndefinedOptionValue">
@@ -34,7 +38,9 @@
 <div class="form-group row">
   <label class="col-sm-3 col-form-label">{{
     "settings.alsa-period-size" | translate
-    }}</label>
+    }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+      [popover]="'settings.help.alsa-period-size' | translate" triggers="mouseenter:mouseleave" container="body"
+      placement="right" aria-hidden="true"></i></label>
   <div class="col-sm-9">
     <select class="custom-select" [ngModel]="settings?.alsaPeriodSize"
       (ngModelChange)="settings.alsaPeriodSize = $event">
@@ -57,7 +63,9 @@
 <div class="form-group row">
   <label class="col-sm-3 col-form-label">{{
     "settings.alsa-buffer-size" | translate
-    }}</label>
+    }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+      [popover]="'settings.help.alsa-buffer-size' | translate" triggers="mouseenter:mouseleave" container="body"
+      placement="right" aria-hidden="true"></i></label>
   <div class="col-sm-9">
     <select class="custom-select" [ngModel]="settings?.alsaBufferSize"
       (ngModelChange)="settings.alsaBufferSize = $event">
@@ -102,7 +110,9 @@ settings?.audioOutput == 'DEVICE' || settings?.audioOutput == 'DEFAULT'
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{
     "settings.audio-buses" | translate
-    }}</label>
+    }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+      [popover]="'settings.help.audio-buses' | translate" triggers="mouseenter:mouseleave" container="body"
+      placement="right" aria-hidden="true"></i></label>
   <div class="col-lg-9">
     <div class="list-group" [sortablejs]="settings?.audioBusList" [sortablejsOptions]="{ onMove: sortMove }">
       @for (audioBus of settings?.audioBusList; track audioBus; let i = $index) {

@@ -39,6 +39,7 @@ import { WaitDialogService } from "./services/wait-dialog.service";
 import { AppComponent } from "./app.component";
 import { IntroComponent } from "./intro/intro.component";
 import { ProvisionComponent } from "./provision/provision.component";
+import { UpdateProgressComponent } from "./update-progress/update-progress.component";
 import { ConnectionComponent } from "./connection/connection.component";
 import { PlayComponent } from "./play/play.component";
 import { SettingsComponent } from "./settings/settings.component";
@@ -80,6 +81,8 @@ import { ActionTriggerCompositionComponent } from "./editor/editor-composition/a
 import { EditorMediaComponent } from "./editor/editor-media/editor-media.component";
 import { SettingsExternalControlComponent } from "./settings/settings-external-control/settings-external-control.component";
 import { ActionTriggerRaspberryGpioComponent } from "./settings/settings-external-control/action-trigger-raspberry-gpio/action-trigger-raspberry-gpio.component";
+import { SettingsSchedulerComponent } from "./settings/settings-scheduler/settings-scheduler.component";
+import { ScheduledCompositionComponent } from "./settings/settings-scheduler/scheduled-composition/scheduled-composition.component";
 import { ActionNullComponent } from "./action/action-null/action-null.component";
 import { ActionSystemComponent } from "./action/action-system/action-system.component";
 import { ActionTransportComponent } from "./action/action-transport/action-transport.component";
@@ -142,6 +145,7 @@ const appRoutes: Routes = [
         WarningDialogComponent,
         SettingsAdvancedComponent,
         UpdateDialogComponent,
+        UpdateProgressComponent,
         BackupRestoreDialogComponent,
         WaitDialogComponent,
         InfoDialogComponent,
@@ -172,6 +176,8 @@ const appRoutes: Routes = [
         ActionTriggerCompositionComponent,
         SettingsExternalControlComponent,
         ActionTriggerRaspberryGpioComponent,
+        SettingsSchedulerComponent,
+        ScheduledCompositionComponent,
         ActionNullComponent,
         ActionSystemComponent,
         ActionTransportComponent,

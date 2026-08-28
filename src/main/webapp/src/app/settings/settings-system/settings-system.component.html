@@ -44,7 +44,9 @@
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{
     "settings.default-composition" | translate
-    }}</label>
+    }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+      [popover]="'settings.help.default-composition' | translate" triggers="mouseenter:mouseleave" container="body"
+      placement="right" aria-hidden="true"></i></label>
   <div class="col-lg-9">
     <select class="custom-select" [ngModel]="settings?.defaultComposition"
       (ngModelChange)="settings.defaultComposition = $event">
@@ -62,7 +64,9 @@
 
 <div class="form-group row">
   <div class="col-lg-3 col-form-label">
-    {{ "settings.monitoring" | translate }}
+    {{ "settings.monitoring" | translate }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+      [popover]="'settings.help.monitoring' | translate" triggers="mouseenter:mouseleave" container="body"
+      placement="right" aria-hidden="true"></i>
   </div>
   <div class="col-lg-9 d-flex">
     <div class="form-check my-auto">

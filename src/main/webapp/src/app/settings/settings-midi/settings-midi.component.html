@@ -54,7 +54,9 @@
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{
     "settings.midi-timecode" | translate
-    }}</label>
+    }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+      [popover]="'settings.help.midi-timecode' | translate" triggers="mouseenter:mouseleave" container="body"
+      placement="right" aria-hidden="true"></i></label>
   <div class="col-lg-9">
     <div class="form-check">
       <input type="checkbox" [ngModel]="settings?.midiTimecodeEnabled"
@@ -87,7 +89,9 @@
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{
     "settings.global-play-offset" | translate
-    }}</label>
+    }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+      [popover]="'settings.help.global-play-offset' | translate" triggers="mouseenter:mouseleave" container="body"
+      placement="right" aria-hidden="true"></i></label>
   <div class="col-lg-9">
     <input type="text" class="form-control" [ngModel]="settings?.offsetMillisMidi"
       (ngModelChange)="settings.offsetMillisMidi = $event" />
@@ -97,7 +101,9 @@
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{
     "settings.device-in-midi-routing" | translate
-    }}</label>
+    }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+      [popover]="'settings.help.device-in-midi-routing' | translate" triggers="mouseenter:mouseleave" container="body"
+      placement="right" aria-hidden="true"></i></label>
   <div class="col-lg-9">
     <app-midi-routing [midiRoutingList]="settings?.deviceInMidiRoutingList"></app-midi-routing>
   </div>
@@ -106,7 +112,9 @@
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{
     "settings.remote-midi-routing" | translate
-    }}</label>
+    }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+      [popover]="'settings.help.remote-midi-routing' | translate" triggers="mouseenter:mouseleave" container="body"
+      placement="right" aria-hidden="true"></i></label>
   <div class="col-lg-9">
     <app-midi-routing [midiRoutingList]="settings?.remoteMidiRoutingList"></app-midi-routing>
   </div>
@@ -115,7 +123,9 @@
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{
     "settings.global-midi-mapping" | translate
-    }}</label>
+    }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+      [popover]="'settings.help.global-midi-mapping' | translate" triggers="mouseenter:mouseleave" container="body"
+      placement="right" aria-hidden="true"></i></label>
   <div class="col-lg-9">
     <div class="card border-secondary">
       <div class="card-body">
@@ -128,7 +138,9 @@
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">{{
     "settings.midi-control" | translate
-    }}</label>
+    }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+      [popover]="'settings.help.midi-control' | translate" triggers="mouseenter:mouseleave" container="body"
+      placement="right" aria-hidden="true"></i></label>
   <div class="col-lg-9">
     <div class="list-group" [sortablejs]="settings?.actionTriggerMidiList" [sortablejsOptions]="{ onMove: sortMove }">
       @for (

@@ -1,31 +1,1290 @@
-/* Add the theme */
-@import "theme.scss";
-
-/* Some overrides */
-$enable-rounded: false;
-
-$theme-colors: (
-  warning: $orange,
-  danger: $orange,
-) !default;
+/* The theme variables have to come first, so bootstrap picks them up */
+@import 'theme.scss';
 
 /* Add bootstrap */
-@import "../node_modules/bootstrap/scss/bootstrap";
+@import '../node_modules/bootstrap/scss/bootstrap';
 
-/* To vertically center some parts (like the intro wizard) */
-html,
-body {
+// ---------------------------------------------------------------------------
+// Control metrics
+//
+// The designer is a dense, mouse-driven tool UI and uses $sd-control-height
+// (28px). This app is also driven from a phone or a tablet standing on an amp,
+// so its controls are one step bigger while everything else -- palette,
+// borders, radii, shadows, states -- stays identical to the designer.
+// ---------------------------------------------------------------------------
+
+$rs-control-height: 34px;
+$rs-control-height-sm: 28px;
+$rs-font-size: 0.875rem;
+
+/* ------------------------------------------------------------------ */
+/* Base                                                                */
+/* ------------------------------------------------------------------ */
+
+body,
+html {
   height: 100%;
+}
+
+body {
+  background-color: $sd-bg;
+  color: $sd-text;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Bootstrap's focus glow is far too heavy. Drop it, but keep a proper ring
+   for keyboard users. */
+*:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+*:focus-visible {
+  outline: none;
+  box-shadow: $sd-focus-ring;
+}
+
+a {
+  transition: color 0.12s ease;
+}
+
+hr {
+  border-top-color: $sd-border;
+}
+
+/* Scrollbars, so they blend into the dark surfaces instead of punching
+   light rectangles into them */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: $sd-surface-4 transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: $sd-surface-4;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  border-radius: 6px;
+
+  &:hover {
+    background-color: $sd-border-strong;
+  }
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+::selection {
+  background-color: $sd-primary-soft-strong;
+}
+
+/* Enable a column taking up the left space */
+.flex-grow {
+  flex: 1 0;
+}
+
+.text-break-word {
+  word-break: break-word;
 }
 
 /* Better spacing for container */
 .container-fluid {
-  padding-bottom: 15px;
+  padding-bottom: $sd-space-4;
 }
 
-/* Style the dropzone */
+/* ------------------------------------------------------------------ */
+/* Navbar                                                              */
+/* ------------------------------------------------------------------ */
+
+/* The screens that fill the viewport have to subtract the sticky navbar from
+   their own height, so its height lives in a custom property rather than being
+   repeated as a literal in each of them. Keep [menuHeightPx] on <lib-designer>
+   in designer.component.html in step with this. */
+:root {
+  --rs-navbar-height: 56px;
+}
+
+.navbar {
+  min-height: var(--rs-navbar-height);
+  padding: 0 $sd-space-4;
+  background-color: $sd-surface-1 !important;
+  border-bottom: 1px solid $sd-border;
+}
+
+/* The brand sets the height of the navbar's first line. Pinning it to the bar's
+   own height keeps that line the same whether the collapsed menu is open or
+   shut -- otherwise opening the menu drops the line to its natural height and
+   the branding jumps up. */
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  height: calc(var(--rs-navbar-height) - 1px);
+  padding-top: 0;
+  padding-bottom: 0;
+  color: $sd-text;
+  font-size: 0.9375rem;
+  font-weight: 600;
+
+  &:hover,
+  &:focus {
+    color: $sd-text;
+  }
+}
+
+.navbar .nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: $sd-space-2 $sd-space-3 !important;
+  color: $sd-text-muted;
+  font-size: $rs-font-size;
+  transition: color 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
+
+  &:hover,
+  &:focus {
+    color: $sd-text;
+  }
+}
+
+.navbar-toggler {
+  padding: 0.25rem 0.5rem;
+  border-color: $sd-border-strong;
+  border-radius: $sd-radius-sm;
+  color: $sd-text-muted;
+}
+
+/* Expanded: the entries fill the bar's height so the marker of the active one
+   can sit on the bar's own bottom edge instead of floating inside it. */
+@include media-breakpoint-up(lg) {
+  .navbar-expand-lg > .navbar-collapse {
+    align-self: stretch;
+    align-items: stretch;
+  }
+
+  .navbar .navbar-nav {
+    align-items: stretch;
+  }
+
+  .navbar .nav-item {
+    display: flex;
+  }
+
+  .navbar .nav-link {
+    padding: 0 $sd-space-4 !important;
+    /* pull the marker down over the navbar's own hairline */
+    margin-bottom: -1px;
+    border-bottom: 2px solid transparent;
+
+    &:hover,
+    &:focus {
+      background-color: rgba(255, 255, 255, 0.03);
+      border-bottom-color: $sd-border-strong;
+    }
+
+    &.active {
+      color: $sd-text;
+      background-color: transparent;
+      border-bottom-color: $sd-primary;
+    }
+  }
+}
+
+/* Collapsed: the menu drops into a vertical stack, where an underline would
+   read as a stray line between entries. */
+@include media-breakpoint-down(md) {
+  /* The open menu is a full-width flex line, so anything after it in the markup
+     is pushed onto a third row and the first row's items shift. Ordering the
+     menu last keeps the bar's own row identical open or shut. */
+  .navbar > .navbar-collapse {
+    order: 1;
+  }
+
+  .navbar > .navbar-actions {
+    order: 0;
+  }
+
+  .navbar .navbar-collapse .nav-link {
+    padding-left: $sd-space-2 !important;
+    border-radius: $sd-radius-sm;
+
+    &:hover,
+    &:focus {
+      background-color: $sd-surface-3;
+    }
+
+    &.active {
+      color: $sd-text;
+      background-color: $sd-surface-3;
+      box-shadow: inset 2px 0 0 $sd-primary;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Cards                                                               */
+/* ------------------------------------------------------------------ */
+
+.card {
+  background-color: $sd-surface-1;
+  border: 1px solid $sd-border;
+  border-radius: $sd-radius-lg;
+}
+
+/* .border-secondary is on most cards in this app and would otherwise paint a
+   lighter frame than the rest of the new chrome */
+.card.border-secondary {
+  border-color: $sd-border !important;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: $sd-space-2;
+  /* same side padding as the body, so header, body and footer line up */
+  padding: $sd-space-2 $sd-space-4;
+  background-color: $sd-surface-2;
+  border-bottom: 1px solid $sd-border;
+  border-radius: ($sd-radius-lg - 1px) ($sd-radius-lg - 1px) 0 0;
+  color: $sd-text;
+  font-size: $rs-font-size;
+  font-weight: 600;
+}
+
+/* bootstrap 4 pads .card-body with $card-spacer-x on all four sides, so the
+   footer has to use the same value to line up with it */
+.card-footer {
+  padding: $sd-space-4;
+  background-color: transparent;
+  border-top: 1px solid $sd-border;
+}
+
+/* a list that is itself the card's body takes the card's frame rather than
+   painting a second one just inside it */
+.card > .list-group {
+  border: none;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+/* the settings and editor screens nest a card inside another one, which would
+   otherwise disappear into its parent */
+.card .card {
+  background-color: $sd-surface-2;
+}
+
+.card .card .card-header {
+  background-color: $sd-surface-3;
+}
+
+/* ------------------------------------------------------------------ */
+/* Buttons                                                             */
+/* ------------------------------------------------------------------ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-height: $rs-control-height;
+  padding: 0 $sd-space-3;
+  border-radius: $sd-radius;
+  font-size: $rs-font-size;
+  font-weight: 500;
+  line-height: 1.4;
+  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.btn-sm {
+  min-height: $rs-control-height-sm;
+  padding: 0 $sd-space-2;
+  font-size: 0.8125rem;
+  border-radius: $sd-radius-sm;
+}
+
+.btn-lg {
+  min-height: 42px;
+  padding: 0 $sd-space-4;
+  font-size: 1rem;
+  border-radius: $sd-radius-lg;
+}
+
+.btn-block {
+  display: flex;
+  width: 100%;
+}
+
+.btn-primary {
+  background-color: $sd-primary;
+  border-color: $sd-primary;
+  color: #fff;
+
+  &:hover,
+  &:focus {
+    background-color: $sd-primary-hover;
+    border-color: $sd-primary-hover;
+    color: #fff;
+  }
+
+  &:active,
+  &:not(:disabled):not(.disabled):active {
+    background-color: $sd-primary-active;
+    border-color: $sd-primary-active;
+    color: #fff;
+  }
+}
+
+.btn-secondary {
+  background-color: $sd-surface-3;
+  border-color: $sd-border-strong;
+  color: $sd-text;
+
+  &:hover,
+  &:focus {
+    background-color: $sd-surface-4;
+    border-color: $sd-border-strong;
+    color: $sd-text;
+  }
+
+  &:active,
+  &:not(:disabled):not(.disabled):active {
+    background-color: $sd-surface-4;
+    border-color: $sd-border-strong;
+    color: $sd-text;
+  }
+}
+
+/* toggle buttons in a .btn-group, as used by the intro wizard. Bootstrap's own
+   .active state on a secondary button is barely distinguishable on the dark
+   surfaces, so the selected segment gets the accent wash instead. */
+.btn-secondary.active,
+.btn-secondary:not(:disabled):not(.disabled).active {
+  background-color: $sd-primary-soft-strong;
+  border-color: $sd-primary;
+  color: $sd-primary-text;
+}
+
+.btn-primary.active,
+.btn-primary:not(:disabled):not(.disabled).active {
+  background-color: $sd-primary-active;
+  border-color: $sd-primary-active;
+  color: #fff;
+}
+
+.btn-outline-secondary {
+  border-color: $sd-border-strong;
+  color: $sd-text-muted;
+
+  &:hover,
+  &:focus {
+    background-color: $sd-surface-3;
+    border-color: $sd-border-strong;
+    color: $sd-text;
+  }
+}
+
+.btn-link {
+  color: $sd-text;
+
+  &:hover {
+    color: $sd-primary-text;
+    text-decoration: none;
+  }
+}
+
+.btn-group > .btn {
+  border-radius: 0;
+
+  &:first-child {
+    border-top-left-radius: $sd-radius;
+    border-bottom-left-radius: $sd-radius;
+  }
+
+  &:last-child {
+    border-top-right-radius: $sd-radius;
+    border-bottom-right-radius: $sd-radius;
+  }
+}
+
+/* hairline between adjacent buttons, so a run of same-coloured buttons still
+   reads as separate controls */
+.btn-group > .btn + .btn {
+  border-left: 1px solid rgba(0, 0, 0, 0.25);
+}
+
+/* ------------------------------------------------------------------ */
+/* Form controls                                                       */
+/* ------------------------------------------------------------------ */
+
+input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+select,
+.form-control,
+.custom-select {
+  height: $rs-control-height;
+  padding: 0 $sd-space-2;
+  background-color: $sd-surface-2;
+  border: 1px solid $sd-border-strong;
+  border-radius: $sd-radius;
+  color: $sd-text;
+  font-size: $rs-font-size;
+  line-height: 1.4;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+
+  &:hover:not(:disabled):not([readonly]) {
+    border-color: $sd-text-dim;
+  }
+
+  &:focus {
+    background-color: $sd-surface-2;
+    border-color: $sd-primary;
+    color: $sd-text;
+    box-shadow: none;
+    outline: none;
+  }
+
+  /* :focus above clears the ring for mouse use, so put it back for the keyboard */
+  &:focus-visible {
+    box-shadow: $sd-focus-ring;
+  }
+
+  &:disabled,
+  &[readonly] {
+    background-color: $sd-surface-1;
+    border-color: $sd-border;
+    color: $sd-text-dim;
+    cursor: not-allowed;
+  }
+
+  &::placeholder {
+    color: $sd-text-dim;
+  }
+}
+
+textarea,
+textarea.form-control {
+  height: auto;
+  min-height: $rs-control-height;
+  padding: $sd-space-2;
+  background-color: $sd-surface-2;
+  border: 1px solid $sd-border-strong;
+  border-radius: $sd-radius;
+  color: $sd-text;
+  font-size: $rs-font-size;
+  line-height: 1.5;
+
+  &:focus {
+    background-color: $sd-surface-2;
+    border-color: $sd-primary;
+    color: $sd-text;
+    box-shadow: none;
+  }
+
+  &::placeholder {
+    color: $sd-text-dim;
+  }
+}
+
+.form-control-sm,
+.custom-select-sm {
+  height: $rs-control-height-sm;
+  font-size: 0.8125rem;
+  border-radius: $sd-radius-sm;
+}
+
+/* custom chevron, so the native control matches the rest of the palette */
+select,
+.custom-select {
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: $sd-space-6;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%2399a1ac' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' d='M4 6.5l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right $sd-space-2 center;
+  background-size: 14px 14px;
+
+  option {
+    background-color: $sd-surface-2;
+    color: $sd-text;
+  }
+}
+
+select[multiple] {
+  height: auto;
+  padding: $sd-space-1;
+  background-image: none;
+}
+
+.input-group-text {
+  height: $rs-control-height;
+  padding: 0 $sd-space-2;
+  background-color: $sd-surface-3;
+  border: 1px solid $sd-border-strong;
+  border-radius: $sd-radius;
+  color: $sd-text-muted;
+  font-size: $rs-font-size;
+}
+
+label {
+  margin-bottom: $sd-space-1;
+  color: $sd-text-muted;
+  font-size: $rs-font-size;
+}
+
+.col-form-label {
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: $rs-control-height;
+}
+
+.form-group {
+  margin-bottom: $sd-space-3;
+}
+
+.form-text,
+small.form-text {
+  color: $sd-text-dim;
+}
+
+/* ------------------------------------------------------------------ */
+/* Checkboxes and radios                                               */
+/* ------------------------------------------------------------------ */
+
+.form-check-label,
+.custom-control-label {
+  color: $sd-text;
+  font-size: $rs-font-size;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+/* bootstrap positions the box with a fixed top margin that assumes its own
+   metrics; centre it on the row instead so it lines up with the label */
+.form-check {
+  min-height: 18px;
+  padding-left: 26px;
+}
+
+.form-check-input {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  margin: 0;
+  transform: translateY(-50%);
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  padding: 0;
+  background-color: $sd-surface-3;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  border: 1px solid $sd-border-strong;
+  border-radius: $sd-radius-sm;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+
+  &:hover:not(:disabled) {
+    border-color: $sd-text-dim;
+    background-color: $sd-surface-4;
+  }
+
+  &:checked {
+    background-color: $sd-primary;
+    border-color: $sd-primary;
+
+    &:hover {
+      background-color: $sd-primary-hover;
+      border-color: $sd-primary-hover;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+input[type='checkbox']:checked {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='none' stroke='%23fff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round' d='M5.5 10.5l3 3 6-6'/%3E%3C/svg%3E");
+}
+
+input[type='checkbox']:indeterminate {
+  background-color: $sd-primary;
+  border-color: $sd-primary;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath stroke='%23fff' stroke-width='2.6' stroke-linecap='round' d='M6 10h8'/%3E%3C/svg%3E");
+}
+
+input[type='radio'] {
+  border-radius: 50%;
+
+  &:checked {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3E%3Ccircle r='2' fill='%23fff'/%3E%3C/svg%3E");
+  }
+}
+
+/* bootstrap's .custom-control paints its own box in a pseudo element, so the
+   real input has to stay invisible underneath it */
+.custom-control-input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1rem;
+  height: 1.25rem;
+  background: none;
+  border: none;
+  border-radius: 0;
+}
+
+.custom-control-label::before {
+  background-color: $sd-surface-3;
+  border-color: $sd-border-strong;
+}
+
+.custom-control-input:checked ~ .custom-control-label::before {
+  background-color: $sd-primary;
+  border-color: $sd-primary;
+}
+
+/* the switch knob. Scoped to .custom-switch -- an unscoped ::after rule would
+   paint a solid square over the check mark of every custom checkbox. */
+.custom-switch .custom-control-label::after {
+  background-color: $sd-text-muted;
+}
+
+.custom-switch .custom-control-input:checked ~ .custom-control-label::after {
+  background-color: #fff;
+}
+
+/* ------------------------------------------------------------------ */
+/* Lists                                                               */
+/* ------------------------------------------------------------------ */
+
+/* most of the lists in this app are a framed box of editable rows sitting in a
+   form group, so the frame belongs on the list itself. Lists that fill a card
+   body are marked .list-group-flush and take the card's frame instead. */
+.list-group {
+  border: 1px solid $sd-border;
+  border-radius: $sd-radius;
+}
+
+.list-group-flush {
+  border: none;
+  border-radius: 0;
+}
+
+.list-group-item {
+  padding: $sd-space-2 $sd-space-3;
+  background-color: transparent;
+  border: none;
+  border-bottom: 1px solid $sd-border;
+  /* a rounded first/last row would only show as a notch against the square
+     inner edge of the card it usually sits in */
+  border-radius: 0;
+  color: $sd-text;
+  transition: background-color 0.12s ease;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  /* a bootstrap row carries -15px side margins to cancel its columns' gutters.
+     Inside a list item that pulls the first column out through the item's own
+     padding, so the row is squared up here and the columns keep their gutters. */
+  > .row {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  /* long values (file names, device names) have to ellipsize rather than push
+     the rest of the row out of the item */
+  > .row > [class^='col'],
+  > .row > [class*=' col'] {
+    min-width: 0;
+  }
+}
+
+a.list-group-item,
+button.list-group-item {
+  color: $sd-text;
+
+  &:hover,
+  &:focus {
+    background-color: rgba(255, 255, 255, 0.04);
+    color: $sd-text;
+  }
+}
+
+/* the entry that is currently selected / being played */
+.list-group-item.active {
+  background-color: $sd-primary-soft-strong !important;
+  border-color: $sd-border !important;
+  color: #ffd0a8 !important;
+  box-shadow: inset 3px 0 0 $sd-primary;
+
+  &:hover,
+  &:focus {
+    background-color: rgba(253, 126, 20, 0.34) !important;
+    color: #ffd0a8 !important;
+  }
+}
+
+/* the setlist gets a heavier marker, it is read from a distance on stage */
+.main-list .list-group-item.active {
+  box-shadow: inset 6px 0 0 $sd-primary;
+}
+
+/* the row wash has to follow the frame's corners. Set after the active rules,
+   which flatten every row so the inner rows stay square. */
+.list-group:not(.list-group-flush) > .list-group-item:first-child,
+.list-group:not(.list-group-flush) > *:first-child > .list-group-item:first-child {
+  border-top-left-radius: ($sd-radius - 1px);
+  border-top-right-radius: ($sd-radius - 1px);
+}
+
+.list-group:not(.list-group-flush) > .list-group-item:last-child,
+.list-group:not(.list-group-flush) > *:last-child > .list-group-item:last-child {
+  border-bottom-left-radius: ($sd-radius - 1px);
+  border-bottom-right-radius: ($sd-radius - 1px);
+}
+
+.list-sort-handle {
+  color: $sd-text-dim;
+
+  &:hover {
+    color: $sd-text-muted;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Tabs and pills                                                      */
+/* ------------------------------------------------------------------ */
+
+.nav a {
+  color: $sd-text;
+}
+
+.nav-tabs {
+  border-bottom: 1px solid $sd-border;
+
+  .nav-link {
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    color: $sd-text-muted;
+    padding: $sd-space-2 $sd-space-3;
+
+    &:hover {
+      color: $sd-text;
+      border-bottom-color: $sd-border-strong;
+    }
+
+    &.active {
+      background-color: transparent;
+      color: $sd-text;
+      border-bottom-color: $sd-primary;
+    }
+  }
+}
+
+.nav-pills {
+  gap: 2px;
+
+  .nav-link {
+    border-radius: $sd-radius;
+    color: $sd-text-muted;
+    transition: color 0.12s ease, background-color 0.12s ease;
+
+    &:hover {
+      color: $sd-text;
+      background-color: $sd-surface-3;
+    }
+  }
+
+  .nav-link.active,
+  .show > .nav-link {
+    background-color: $sd-primary-soft-strong;
+    color: $sd-primary-text;
+  }
+}
+
+/* a vertical rail, as used by the settings navigation, reads better as one
+   contained block than as a stack of loose entries */
+.nav-pills.flex-column {
+  padding: $sd-space-1;
+  background-color: $sd-surface-1;
+  border: 1px solid $sd-border;
+  border-radius: $sd-radius-lg;
+}
+
+/* ------------------------------------------------------------------ */
+/* Sliders (bootstrap-slider)                                          */
+/* ------------------------------------------------------------------ */
+
+.slider {
+  cursor: pointer;
+}
+
+.slider.slider-horizontal {
+  width: 100%;
+  height: 22px;
+
+  .slider-track {
+    height: $sd-slider-track-size !important;
+    top: 50% !important;
+    margin-top: (-$sd-slider-track-size * 0.5) !important;
+  }
+
+  .slider-handle {
+    top: 50% !important;
+    margin-top: (-$sd-slider-handle-size * 0.5) !important;
+    margin-left: (-$sd-slider-handle-size * 0.5) !important;
+  }
+}
+
+.slider.slider-vertical {
+  .slider-track {
+    width: $sd-slider-track-size !important;
+    left: 50% !important;
+    margin-left: (-$sd-slider-track-size * 0.5) !important;
+  }
+
+  .slider-handle {
+    left: 50% !important;
+    margin-left: (-$sd-slider-handle-size * 0.5) !important;
+    margin-top: (-$sd-slider-handle-size * 0.5) !important;
+  }
+}
+
+.slider-track,
+.slider-track-low,
+.slider-track-high,
+.slider-selection {
+  border-radius: 3px !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.slider-track {
+  background-color: $sd-surface-4 !important;
+}
+
+.slider-track-low,
+.slider-track-high {
+  background-color: transparent !important;
+}
+
+.slider-selection {
+  background-color: $sd-primary !important;
+}
+
+.slider-handle {
+  width: $sd-slider-handle-size !important;
+  height: $sd-slider-handle-size !important;
+  background-color: #eef1f5 !important;
+  background-image: none !important;
+  border: none;
+  box-shadow: $sd-shadow-1, 0 0 0 1px rgba(0, 0, 0, 0.35) !important;
+  transition: transform 0.1s ease, background-color 0.12s ease;
+
+  &:hover {
+    background-color: #fff !important;
+    transform: scale(1.12);
+  }
+}
+
+.slider.slider-disabled .slider-selection {
+  background-color: $sd-border-strong !important;
+}
+
+.slider.slider-disabled .slider-handle {
+  background-color: $sd-text-dim !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* Alerts, badges, progress and tables                                 */
+/* ------------------------------------------------------------------ */
+
+.alert {
+  padding: $sd-space-3 $sd-space-4;
+  border-radius: $sd-radius;
+  border: 1px solid $sd-border-strong;
+  background-color: $sd-surface-2;
+  color: $sd-text;
+  font-size: $rs-font-size;
+}
+
+.alert-primary {
+  border-color: rgba(253, 126, 20, 0.4);
+  background-color: $sd-primary-soft;
+  color: $sd-text;
+}
+
+.alert-success {
+  border-color: rgba(46, 184, 114, 0.4);
+  background-color: rgba(46, 184, 114, 0.14);
+  color: $sd-text;
+}
+
+.alert-info {
+  border-color: rgba(61, 157, 240, 0.4);
+  background-color: rgba(61, 157, 240, 0.14);
+  color: $sd-text;
+}
+
+.alert-warning {
+  border-color: rgba(240, 169, 46, 0.4);
+  background-color: rgba(240, 169, 46, 0.14);
+  color: $sd-text;
+}
+
+.alert-danger {
+  border-color: rgba(229, 84, 75, 0.4);
+  background-color: rgba(229, 84, 75, 0.14);
+  color: $sd-text;
+}
+
+.progress {
+  height: 6px;
+  background-color: $sd-surface-3;
+  border-radius: 3px;
+}
+
+.progress-bar {
+  background-color: $sd-primary;
+}
+
+.table {
+  color: $sd-text;
+
+  th,
+  td {
+    border-top-color: $sd-border;
+    padding: $sd-space-2 $sd-space-3;
+  }
+
+  thead th {
+    border-bottom-color: $sd-border;
+    color: $sd-text-muted;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+}
+
+.badge {
+  border-radius: $sd-radius-sm;
+}
+
+/* ------------------------------------------------------------------ */
+/* Overlays: modals, dropdowns, popovers                               */
+/* ------------------------------------------------------------------ */
+
+.modal-full {
+  max-width: unset !important;
+  margin: $sd-space-5 !important;
+}
+
+.modal-backdrop {
+  background-color: #05060a;
+
+  &.show {
+    opacity: 0.65;
+  }
+}
+
+.modal-content {
+  background-color: $sd-surface-1;
+  border: 1px solid $sd-border;
+  border-radius: $sd-radius-lg;
+  box-shadow: $sd-shadow-3;
+  overflow: hidden;
+}
+
+.modal-header {
+  align-items: center;
+  padding: $sd-space-3 $sd-space-5;
+  background-color: $sd-surface-2;
+  border-bottom: 1px solid $sd-border;
+}
+
+.modal-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: $sd-text;
+  line-height: 1.4;
+}
+
+.modal-body {
+  padding: $sd-space-5;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: $sd-space-2;
+  padding: $sd-space-3 $sd-space-5;
+  background-color: transparent;
+  border-top: 1px solid $sd-border;
+
+  > * {
+    margin: 0;
+  }
+}
+
+/* the dialogs render a .card inside the modal shell, so that card has to stay
+   flat and its header has to read as the dialog title. Direct children only --
+   the bigger dialogs nest further cards inside their body, and those keep the
+   normal card chrome. */
+.modal .card-modal > .card {
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.modal .card-modal > .card > .card-header {
+  padding: $sd-space-3 $sd-space-5;
+  font-size: 0.9375rem;
+}
+
+.modal .card-modal > .card > .card-body {
+  padding: $sd-space-5;
+}
+
+.modal .card-modal > .card > .card-footer {
+  padding: $sd-space-3 $sd-space-5;
+}
+
+.modal .close,
+.card-modal .close {
+  padding: 0;
+  margin: 0 0 0 auto;
+  width: 26px;
+  height: 26px;
+  font-size: 1.25rem;
+  font-weight: 400;
+  line-height: 1;
+  color: $sd-text-muted;
+  border-radius: $sd-radius-sm;
+  opacity: 1;
+  transition: color 0.12s ease, background-color 0.12s ease;
+
+  &:hover {
+    color: $sd-text;
+    background-color: $sd-surface-3;
+    opacity: 1;
+  }
+}
+
+.dropdown-menu {
+  padding: $sd-space-1;
+  background-color: $sd-surface-2;
+  border: 1px solid $sd-border;
+  border-radius: $sd-radius;
+  box-shadow: $sd-shadow-2;
+  font-size: $rs-font-size;
+}
+
+.dropdown-item {
+  padding: 0.375rem $sd-space-2;
+  border-radius: $sd-radius-sm;
+  color: $sd-text;
+
+  &:hover,
+  &:focus {
+    background-color: $sd-surface-3;
+    color: $sd-text;
+  }
+
+  &.active,
+  &:active {
+    background-color: $sd-primary;
+    color: #fff;
+  }
+
+  .fa {
+    color: $sd-text-muted;
+    margin-right: $sd-space-1;
+  }
+
+  &:hover .fa {
+    color: $sd-text;
+  }
+
+  /* a muted icon on the filled active row is close to unreadable */
+  &.active .fa,
+  &:active .fa {
+    color: #fff;
+  }
+}
+
+.dropdown-divider {
+  border-top-color: $sd-border;
+}
+
+.popover {
+  background-color: $sd-surface-3;
+  border: 1px solid $sd-border-strong;
+  border-radius: $sd-radius;
+  box-shadow: $sd-shadow-2;
+  font-size: 0.75rem;
+}
+
+.popover-body {
+  padding: 0.375rem $sd-space-2;
+  color: $sd-text;
+}
+
+.popover-header {
+  background-color: $sd-surface-4;
+  border-bottom-color: $sd-border-strong;
+  color: $sd-text;
+}
+
+.bs-popover-right > .arrow::after,
+.bs-popover-auto[x-placement^='right'] > .arrow::after {
+  border-right-color: $sd-surface-3;
+}
+
+.bs-popover-left > .arrow::after,
+.bs-popover-auto[x-placement^='left'] > .arrow::after {
+  border-left-color: $sd-surface-3;
+}
+
+.bs-popover-bottom > .arrow::after,
+.bs-popover-auto[x-placement^='bottom'] > .arrow::after {
+  border-bottom-color: $sd-surface-3;
+}
+
+.bs-popover-top > .arrow::after,
+.bs-popover-auto[x-placement^='top'] > .arrow::after {
+  border-top-color: $sd-surface-3;
+}
+
+.bs-popover-right > .arrow::before,
+.bs-popover-auto[x-placement^='right'] > .arrow::before {
+  border-right-color: $sd-border-strong;
+}
+
+.bs-popover-left > .arrow::before,
+.bs-popover-auto[x-placement^='left'] > .arrow::before {
+  border-left-color: $sd-border-strong;
+}
+
+.bs-popover-bottom > .arrow::before,
+.bs-popover-auto[x-placement^='bottom'] > .arrow::before {
+  border-bottom-color: $sd-border-strong;
+}
+
+.bs-popover-top > .arrow::before,
+.bs-popover-auto[x-placement^='top'] > .arrow::before {
+  border-top-color: $sd-border-strong;
+}
+
+/* ------------------------------------------------------------------ */
+/* Toasts                                                              */
+/* ------------------------------------------------------------------ */
+
+/* ngx-toastr renders .ngx-toastr, so that is what has to be targeted here */
+.toast-container .ngx-toastr {
+  width: 320px;
+  padding: $sd-space-3 $sd-space-4 $sd-space-3 ($sd-space-6 + $sd-space-4);
+  background-color: $sd-surface-3;
+  background-position: $sd-space-4 center;
+  background-size: 20px;
+  border: 1px solid $sd-border-strong;
+  border-radius: $sd-radius;
+  box-shadow: $sd-shadow-2;
+  color: $sd-text;
+  font-size: 0.8125rem;
+  opacity: 1;
+
+  &:hover {
+    box-shadow: $sd-shadow-3;
+    opacity: 1;
+  }
+}
+
+/* one accent stripe per severity, so the toast body stays on the dark surface */
+.toast-container .ngx-toastr.toast-error {
+  border-left: 3px solid $sd-danger;
+}
+
+.toast-container .ngx-toastr.toast-success {
+  border-left: 3px solid $sd-success;
+}
+
+.toast-container .ngx-toastr.toast-info {
+  border-left: 3px solid $sd-info;
+}
+
+.toast-container .ngx-toastr.toast-warning {
+  border-left: 3px solid $sd-warning;
+}
+
+.toast-title {
+  margin-bottom: 2px;
+  font-weight: 600;
+}
+
+.toast-message a,
+.toast-message label {
+  color: $sd-primary-text;
+}
+
+.toast-close-button {
+  color: $sd-text-muted;
+  text-shadow: none;
+  font-size: 1.125rem;
+  opacity: 1;
+
+  &:hover,
+  &:focus {
+    color: $sd-text;
+    opacity: 1;
+  }
+}
+
+.toast-progress {
+  background-color: $sd-primary;
+  opacity: 0.6;
+}
+
+/* ------------------------------------------------------------------ */
+/* Dropzone                                                            */
+/* ------------------------------------------------------------------ */
+
 dropzone.dz-wrapper > .dropzone {
   overflow: visible !important;
+  color: $sd-text !important;
+  background-color: $sd-surface-2 !important;
+  border: 1px dashed $sd-border-strong !important;
+  border-radius: $sd-radius !important;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+
+  &:hover {
+    border-color: $sd-primary !important;
+    background-color: $sd-surface-3 !important;
+  }
 }
 
 .dz-message {
@@ -39,27 +1298,24 @@ dropzone.dz-wrapper > .dropzone {
 
 .dz-text {
   margin: auto;
+  color: $sd-text-muted;
 }
 
 .dz-details {
-  color: white !important;
+  color: $sd-text !important;
 }
 
 .dropzone .dz-preview {
   margin: 0 !important;
-  margin-top: 10px !important;
+  margin-top: $sd-space-2 !important;
   width: 100%;
   min-height: 0 !important;
 }
 
 dropzone > .dropzone.dz-wrapper .dz-preview .dz-details {
   padding: 0 !important;
-  padding-left: 3px !important;
-  padding-top: 3px !important;
-}
-
-dropzone.dz-wrapper > .dropzone {
-  color: white !important;
+  padding-left: $sd-space-1 !important;
+  padding-top: $sd-space-1 !important;
 }
 
 .dz-max-files-reached {
@@ -67,72 +1323,8 @@ dropzone.dz-wrapper > .dropzone {
   cursor: default;
 }
 
-/* Enable a column taking up the left space */
-.flex-grow {
-  flex: 1 0;
-}
-
-.text-break-word {
-  word-break: break-word;
-}
-
-/* Style the slider for the play component */
-.slider.slider-horizontal {
-  width: 100%;
-}
-
-.slider-horizontal .slider-track {
-  background-image: none;
-  background-color: #e9ecef;
-  box-shadow: none;
-  height: 8px !important;
-}
-
-.slider-selection {
-  background-color: theme-color("primary");
-  background-image: none;
-}
-
-.slider-horizontal .slider-handle {
-  background-color: theme-color("primary");
-  background-image: none;
-
-  border: 1px solid white;
-
-  top: -1px;
-}
-
-/* Style the toasts */
-/* Overwrite some wrong styles from bootstrap */
-.toast {
-  opacity: 1 !important;
-}
-
-.toast-error {
-  background-color: #bd362f !important;
-}
-
-.toast-success {
-  background-color: #51a351 !important;
-}
-
-.toast-container .toast {
-  border-radius: 0;
-  box-shadow: none;
-}
-
-/* Misc */
-.list-group-item {
-  color: white;
-}
-
-.list-group .active {
-  background-color: #303030;
-  color: theme-color("primary");
-  border-color: #444;
-}
-
-.main-list .active {
-  border-left: 10px solid #fd7e14;
-  padding-left: 11px;
+/* Border-style for the intro wizard */
+.card-intro-active {
+  border-color: $sd-primary !important;
+  box-shadow: 0 0 0 1px $sd-primary, 0 0 24px rgba(253, 126, 20, 0.25) !important;
 }

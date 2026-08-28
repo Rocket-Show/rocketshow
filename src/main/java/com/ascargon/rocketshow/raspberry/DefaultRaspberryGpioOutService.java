@@ -64,7 +64,19 @@ public class DefaultRaspberryGpioOutService implements RaspberryGpioOutService {
             return;
         }
 
-        setPinState(gpioAction.getPinId(), gpioAction.getHigh());
+        setPinState(gpioAction.getPinId(), Boolean.TRUE.equals(gpioAction.getHigh()));
+    }
+
+    @Override
+    public void setAllLow() {
+        if (!settingsService.getSettings().getEnableRaspberryGpio()) {
+            return;
+        }
+
+        for (DigitalOutput digitalOutput : digitalOutputList) {
+            logger.trace("Set GPIO PIN BCM ID " + digitalOutput.getAddress() + " to low");
+            digitalOutput.low();
+        }
     }
 
 }

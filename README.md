@@ -134,7 +134,6 @@ apt-get update
 - Run the following script (might take about 45 minutes)
 
 ```shell
-cd /opt
 rm -rf build
 mkdir build
 cd build
@@ -173,9 +172,6 @@ cd work/RocketShow/export-image
 
 mv "$(date '+%Y-%m-%d')-RocketShow-lite.img" "$(date '+%Y-%m-%d')-RocketShow.img"
 zip "$(date '+%Y-%m-%d')-RocketShow.zip" "$(date '+%Y-%m-%d')-RocketShow.img"
-
-# copy the zip to a folder where we can get it with SFTP:
-mv "$(date '+%Y-%m-%d')-RocketShow.zip" /home/rocketshow
 ```
 
 ### Update process
@@ -274,7 +270,18 @@ MIDI input, output routing and mapping.
 
 ##### Raspberry
 
-Raspberry Pi specific services (e.g. GPIO triggers).
+Raspberry Pi specific services (e.g. GPIO triggers). Check the Raspberry Pi GPIO state like this:
+```shell
+gpioget -c gpiochip0 24
+```
+
+Where active = high and inactive = low.
+
+##### Scheduler
+
+Starts compositions based on a timer. A scheduled composition either repeats after a fixed amount of time (e.g. every
+5 minutes) or is started at a specific time of the day, daily, on selected weekdays, monthly or yearly. The scheduled
+compositions are stored in the settings and are planned again as soon as they are changed.
 
 ##### Util
 

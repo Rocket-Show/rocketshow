@@ -1,5 +1,8 @@
 <div class="form-group row">
-  <label class="col-lg-3 col-form-label">{{ 'settings.instrument' | translate }}</label>
+  <label class="col-lg-3 col-form-label">{{ 'settings.instrument' | translate }}<i
+      class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+      [popover]="'settings.help.personal-instrument' | translate" triggers="mouseenter:mouseleave" container="body"
+      placement="right" aria-hidden="true"></i></label>
   <div class="col-lg-9">
     <select class="custom-select" [ngModel]="settingsPersonal?.instrumentUuid" (ngModelChange)="settingsPersonal.instrumentUuid = $event">
       <option [ngValue]="selectUndefinedOptionValue">- {{ 'settings.instrument-not-specified' | translate }} -</option>

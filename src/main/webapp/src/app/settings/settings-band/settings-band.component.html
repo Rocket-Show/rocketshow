@@ -1,5 +1,8 @@
 <div class="form-group row">
-  <label class="col-lg-3 col-form-label">{{ 'settings.instruments' | translate }}</label>
+  <label class="col-lg-3 col-form-label">{{ 'settings.instruments' | translate }}<i
+      class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+      [popover]="'settings.help.instruments' | translate" triggers="mouseenter:mouseleave" container="body"
+      placement="right" aria-hidden="true"></i></label>
   <div class="col-lg-9">
     <div class="list-group" [sortablejs]="settings?.instrumentList" [sortablejsOptions]="{ onMove: sortMove }">
       @for (instrument of settings?.instrumentList; track instrument; let i = $index) {
