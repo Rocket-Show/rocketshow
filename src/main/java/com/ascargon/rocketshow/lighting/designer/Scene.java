@@ -27,6 +27,10 @@ public class Scene {
     private boolean fadeInPre = false;
     private boolean fadeOutPost = false;
 
+    // how the fades are shaped over their time (see TransitionCurve)
+    private String fadeInCurve = "linear";
+    private String fadeOutCurve = "linear";
+
     public String getUuid() {
         return uuid;
     }
@@ -81,5 +85,21 @@ public class Scene {
 
     public void setFadeOutPost(boolean fadeOutPost) {
         this.fadeOutPost = fadeOutPost;
+    }
+
+    public String getFadeInCurve() {
+        return fadeInCurve;
+    }
+
+    public void setFadeInCurve(String fadeInCurve) {
+        this.fadeInCurve = fadeInCurve;
+    }
+
+    public String getFadeOutCurve() {
+        return fadeOutCurve;
+    }
+
+    public void setFadeOutCurve(String fadeOutCurve) {
+        this.fadeOutCurve = fadeOutCurve;
     }
 }

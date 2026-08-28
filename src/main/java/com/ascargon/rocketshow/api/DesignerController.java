@@ -75,6 +75,8 @@ public class DesignerController {
 
         designerService.setPreviewPreset(project.isPreviewPreset());
         designerService.setSelectedPresetUuid(project.getSelectedPresetUuid());
+        designerService.setSelectedStepUuid(project.getSelectedStepUuid());
+        designerService.setStepPreviewRunning(project.isStepPreviewRunning(), project.getStepPreviewStartMillis());
         designerService.setSelectedSceneUuids(project.getSelectedSceneUuids());
         designerService.setPreviewComposition(compositionName);
 
