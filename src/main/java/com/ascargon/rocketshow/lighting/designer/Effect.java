@@ -40,8 +40,10 @@ public abstract class Effect {
     private boolean visible = true;
 
     // the value the effect puts on its channels, or null if it does not apply at this
-    // moment - the fixtures keep whatever the rest of the preset puts on them then
-    public abstract Double getValueAtMillis(long timeMillis, Integer fixtureIndex, Integer fixtureCount);
+    // moment - the fixtures keep whatever the rest of the preset puts on them then.
+    // the tempo is the one of the composition the effect is played in, which the curves
+    // synced to the beat run on. it is null while a preset is previewed on its own.
+    public abstract Double getValueAtMillis(long timeMillis, Integer fixtureIndex, Integer fixtureCount, Double beatsPerMinute);
 
     public String getUuid() {
         return uuid;

@@ -27,13 +27,32 @@ public class EffectCurve extends Effect {
     // after a run is taken just before it
     private final static double CYCLE_EPSILON = 1e-9;
 
+    // the tempo a curve synced to the beat falls back to: a preset previewed on its own is
+    // not played inside a composition, so there is no tempo to take it from
+    public final static double DEFAULT_BEATS_PER_MINUTE = 120;
+
     private String curveType = "sine";
 
     private List<FixtureCapability> capabilities = new ArrayList<>();
     private List<EffectCurveProfileChannels> channels = new ArrayList<>();
 
+    // how the period is measured: "millis" holds it at a fixed time, "beats" locks it to
+    // the tempo of the composition, so the curve keeps running with the music when the
+    // tempo is changed or guessed again
+    private String lengthMode = "millis";
+
     private long lengthMillis = 2500;
+
+    // the period in beats, while it follows the tempo: 1 is a beat, 4 a bar in 4/4 time,
+    // 0.5 an eighth
+    private float lengthBeats = 4;
+
     private long phaseMillis = 0;
+
+    // the phase in beats, while the period follows the tempo. keeping it musical as well
+    // holds the curve at the same place inside its period when the tempo changes.
+    private float phaseBeats = 0;
+
     private float amplitude = 1;
     private float position = 0.5f;
 
@@ -56,19 +75,52 @@ public class EffectCurve extends Effect {
     private String endMode = "hold";
 
     // how the curve is shifted from one fixture to the next (chasing):
-    // "millis" shifts it by a fixed time, "spread" distributes phasingCycles full
-    // cycles over all fixtures of the preset, which keeps the chase intact when the
-    // period or the number of fixtures changes.
-    // both values are signed: a negative one chases in the opposite direction.
+    // "millis" shifts it by a fixed time, "beats" by a musical one that follows the tempo,
+    // "spread" distributes phasingCycles full cycles over all fixtures of the preset, which
+    // keeps the chase intact when the period or the number of fixtures changes.
+    // all three values are signed: a negative one chases in the opposite direction.
     private String phasingMode = "millis";
     private long phasingMillis = 0;
+    private float phasingBeats = 0;
     private float phasingCycles = 1;
 
     // how many fixtures share the same chase step (1 = each fixture on its own)
     private int phasingGroupSize = 1;
 
+    // how long a beat lasts at the passed tempo
+    public static double getBeatMillis(Double beatsPerMinute) {
+        double bpm = beatsPerMinute != null && beatsPerMinute > 0 ? beatsPerMinute : DEFAULT_BEATS_PER_MINUTE;
+
+        return 60000 / bpm;
+    }
+
+    // whether the curve follows the tempo instead of a fixed time
+    @JsonIgnore
+    public boolean isBeatSynced() {
+        return "beats".equals(this.lengthMode);
+    }
+
+    // the period of the curve at the tempo it is played at
+    public double getLengthMillis(Double beatsPerMinute) {
+        if (!this.isBeatSynced()) {
+            return this.lengthMillis;
+        }
+
+        // a period of zero would divide by zero when the cycle is sampled
+        return Math.max(this.lengthBeats * getBeatMillis(beatsPerMinute), 1);
+    }
+
+    // the time the curve is shifted by inside its period
+    public double getPhaseMillis(Double beatsPerMinute) {
+        if (!this.isBeatSynced()) {
+            return this.phaseMillis;
+        }
+
+        return this.phaseBeats * getBeatMillis(beatsPerMinute);
+    }
+
     // the time the curve is shifted by for the passed fixture of the preset
-    public double getPhasingMillis(Integer fixtureIndex, Integer fixtureCount) {
+    public double getPhasingMillis(Integer fixtureIndex, Integer fixtureCount, Double beatsPerMinute) {
         int groupSize = Math.max(this.phasingGroupSize, 1);
         int step = (fixtureIndex == null ? 0 : fixtureIndex) / groupSize;
 
@@ -76,7 +128,11 @@ public class EffectCurve extends Effect {
             // distribute the cycles over all chase steps of the preset
             int count = fixtureCount == null ? 1 : fixtureCount;
             int steps = Math.max((int) Math.ceil((double) count / groupSize), 1);
-            return (double) step / steps * this.phasingCycles * this.lengthMillis;
+            return (double) step / steps * this.phasingCycles * this.getLengthMillis(beatsPerMinute);
+        }
+
+        if ("beats".equals(this.phasingMode)) {
+            return (double) step * this.phasingBeats * getBeatMillis(beatsPerMinute);
         }
 
         return (double) step * this.phasingMillis;
@@ -90,9 +146,9 @@ public class EffectCurve extends Effect {
     // how long the curve runs, measured from the moment its fixture starts, or null if it
     // never stops
     @JsonIgnore
-    public Double getRunEndMillis() {
+    public Double getRunEndMillis(Double beatsPerMinute) {
         if ("cycles".equals(this.runMode)) {
-            return (double) Math.max(this.runCycles, 1) * this.lengthMillis;
+            return Math.max(this.runCycles, 1) * this.getLengthMillis(beatsPerMinute);
         }
 
         if ("duration".equals(this.runMode)) {
@@ -107,8 +163,8 @@ public class EffectCurve extends Effect {
     // a preset that is not placed in a composition has no moment it starts at, so it is
     // previewed by repeating this pass. null for a curve that never stops.
     @JsonIgnore
-    public Double getRunLoopMillis(Integer fixtureCount) {
-        Double runEndMillis = this.getRunEndMillis();
+    public Double getRunLoopMillis(Integer fixtureCount, Double beatsPerMinute) {
+        Double runEndMillis = this.getRunEndMillis(beatsPerMinute);
 
         if (runEndMillis == null) {
             return null;
@@ -117,7 +173,7 @@ public class EffectCurve extends Effect {
         // the chase delays the fixtures against each other, so the pass is only over once
         // the last of them has run
         int count = fixtureCount == null ? 1 : fixtureCount;
-        double chaseMillis = Math.abs(this.getPhasingMillis(Math.max(count - 1, 0), fixtureCount));
+        double chaseMillis = Math.abs(this.getPhasingMillis(Math.max(count - 1, 0), fixtureCount, beatsPerMinute));
 
         return Math.max((runEndMillis + chaseMillis) * 1.25, 1);
     }
@@ -125,11 +181,13 @@ public class EffectCurve extends Effect {
     // the value the curve puts on its channels, or null if it does not apply at this
     // moment - the fixtures keep whatever the rest of the preset puts on them then
     @Override
-    public Double getValueAtMillis(long timeMillis, Integer fixtureIndex, Integer fixtureCount) {
-        double phasingMillis = this.getPhasingMillis(fixtureIndex, fixtureCount);
-        double phase = this.phaseMillis + phasingMillis;
+    public Double getValueAtMillis(long timeMillis, Integer fixtureIndex, Integer fixtureCount, Double beatsPerMinute) {
+        double lengthMillis = this.getLengthMillis(beatsPerMinute);
+        double phasingMillis = this.getPhasingMillis(fixtureIndex, fixtureCount, beatsPerMinute);
+        double phaseMillis = this.getPhaseMillis(beatsPerMinute);
+        double phase = phaseMillis + phasingMillis;
 
-        Double runEndMillis = this.getRunEndMillis();
+        Double runEndMillis = this.getRunEndMillis(beatsPerMinute);
 
         if (runEndMillis != null) {
             // the chase delays the whole run of a fixture, so each of them runs its cycles
@@ -146,15 +204,15 @@ public class EffectCurve extends Effect {
                     return null;
                 }
 
-                return this.getCurveValue(this.getCyclePosition(runEndMillis - this.phaseMillis, true));
+                return this.getCurveValue(this.getCyclePosition(runEndMillis - phaseMillis, true, lengthMillis));
             }
         }
 
-        return this.getCurveValue(this.getCyclePosition(timeMillis - phase, false));
+        return this.getCurveValue(this.getCyclePosition(timeMillis - phase, false, lengthMillis));
     }
 
     // the position inside the current cycle, between 0 and 1
-    private double getCyclePosition(double shiftedMillis, boolean atRunEnd) {
+    private double getCyclePosition(double shiftedMillis, boolean atRunEnd, double lengthMillis) {
         double cyclePosition = ((shiftedMillis / lengthMillis) % 1 + 1) % 1;
 
         if (atRunEnd && cyclePosition < CYCLE_EPSILON) {
@@ -254,6 +312,14 @@ public class EffectCurve extends Effect {
         this.channels = channels;
     }
 
+    public String getLengthMode() {
+        return lengthMode;
+    }
+
+    public void setLengthMode(String lengthMode) {
+        this.lengthMode = lengthMode;
+    }
+
     public long getLengthMillis() {
         return lengthMillis;
     }
@@ -262,12 +328,28 @@ public class EffectCurve extends Effect {
         this.lengthMillis = lengthMillis;
     }
 
+    public float getLengthBeats() {
+        return lengthBeats;
+    }
+
+    public void setLengthBeats(float lengthBeats) {
+        this.lengthBeats = lengthBeats;
+    }
+
     public long getPhaseMillis() {
         return phaseMillis;
     }
 
     public void setPhaseMillis(long phaseMillis) {
         this.phaseMillis = phaseMillis;
+    }
+
+    public float getPhaseBeats() {
+        return phaseBeats;
+    }
+
+    public void setPhaseBeats(float phaseBeats) {
+        this.phaseBeats = phaseBeats;
     }
 
     public float getAmplitude() {
@@ -292,6 +374,14 @@ public class EffectCurve extends Effect {
 
     public void setPhasingMillis(long phasingMillis) {
         this.phasingMillis = phasingMillis;
+    }
+
+    public float getPhasingBeats() {
+        return phasingBeats;
+    }
+
+    public void setPhasingBeats(float phasingBeats) {
+        this.phasingBeats = phasingBeats;
     }
 
     public String getPhasingMode() {
