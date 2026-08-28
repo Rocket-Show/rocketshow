@@ -19,6 +19,12 @@ public class Scene {
     // one is the topmost layer, overwriting the values of the ones below it
     private String[] presetUuids;
 
+    // how much of the scene reaches the stage: 1 = all of it, 0 = nothing. It scales
+    // everything the scene's presets put out, the way the master dimmer scales the whole
+    // project, and the fades take away from what it leaves. A project written before the
+    // scenes had a dimmer brings none, which leaves it at full.
+    private double dimmer = 1;
+
     // Fading times
     private long fadeInMillis = 2000;
     private long fadeOutMillis = 2000;
@@ -53,6 +59,14 @@ public class Scene {
 
     public void setPresetUuids(String[] presetUuids) {
         this.presetUuids = presetUuids;
+    }
+
+    public double getDimmer() {
+        return dimmer;
+    }
+
+    public void setDimmer(double dimmer) {
+        this.dimmer = dimmer;
     }
 
     public long getFadeInMillis() {
