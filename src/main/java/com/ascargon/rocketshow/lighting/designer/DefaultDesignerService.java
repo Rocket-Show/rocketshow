@@ -799,13 +799,19 @@ public class DefaultDesignerService implements DesignerService {
         return PresetSteps.getStepState(getEditStep(preset.getPreset()));
     }
 
-    private double getPresetIntensity(PresetRegionScene preset, long timeMillis) {
+    // worked out from the passed preset alone, so the specs can run it without a service
+    static double getPresetIntensity(PresetRegionScene preset, long timeMillis) {
         // When fading is in progress (on preset or scene-level), the current preset does not
         // fully cover underlying values.
         // -> 0 = no covering at all, 1 = fully cover (no fading)
         double intensityPercentageScene = 1;
         double intensityPercentagePreset = 1;
-        double intensityPercentage = 1;
+
+        if (preset.getScene() != null) {
+            // the dimmer holds the scene below full for as long as it plays, whether it sits
+            // on the timeline or is only being watched in the preview
+            intensityPercentageScene = preset.getScene().getDimmer();
+        }
 
         if (preset.getRegion() != null && preset.getScene() != null) {
             // Fade out is stronger than fade in (if they overlap)
@@ -818,10 +824,10 @@ public class DefaultDesignerService implements DesignerService {
             // already handed over, which shapes a fade out just as well as a fade in
             if (timeMillis > sceneEndMillis - preset.getScene().getFadeOutMillis() && timeMillis < sceneEndMillis) {
                 // Scene fades out
-                intensityPercentageScene = TransitionCurve.apply(preset.getScene().getFadeOutCurve(), ((double) (sceneEndMillis - timeMillis)) / ((double) preset.getScene().getFadeOutMillis()));
+                intensityPercentageScene *= TransitionCurve.apply(preset.getScene().getFadeOutCurve(), ((double) (sceneEndMillis - timeMillis)) / ((double) preset.getScene().getFadeOutMillis()));
             } else if (timeMillis < sceneStartMillis + preset.getScene().getFadeInMillis() && timeMillis > sceneStartMillis) {
                 // Scene fades in
-                intensityPercentageScene = TransitionCurve.apply(preset.getScene().getFadeInCurve(), ((double) (timeMillis - sceneStartMillis)) / ((double) preset.getScene().getFadeInMillis()));
+                intensityPercentageScene *= TransitionCurve.apply(preset.getScene().getFadeInCurve(), ((double) (timeMillis - sceneStartMillis)) / ((double) preset.getScene().getFadeInMillis()));
             }
         }
 
@@ -841,11 +847,9 @@ public class DefaultDesignerService implements DesignerService {
                 // Preset fades in
                 intensityPercentagePreset = TransitionCurve.apply(preset.getPreset().getFadeInCurve(), ((double) (timeMillis - presetStartMillis)) / ((double) preset.getPreset().getFadeInMillis()));
             }
-
-            intensityPercentage = intensityPercentageScene * intensityPercentagePreset;
         }
 
-        return intensityPercentage;
+        return intensityPercentageScene * intensityPercentagePreset;
     }
 
     private void mixCapabilityValues(PresetStepState state, CachedFixture cachedFixture, List<FixtureChannelValue> values, double intensityPercentage) {
