@@ -63,6 +63,13 @@ public class Preset {
     // them (see PresetStep.effectAmounts).
     private List<Effect> effects;
 
+    // mirror what the preset puts on the pan or the tilt of its moving heads: every one
+    // of its fixtures is pointed at the mirrored position (1 - value) on that axis, its
+    // steps and its effects alike, which turns a copy of a preset into the same movement
+    // played the other way round without touching a single value it is written with.
+    private boolean mirrorPan = false;
+    private boolean mirrorTilt = false;
+
     // position offset, relative to the scene start
     // (null = start/end of the scene itself)
     private Long startMillis;
@@ -79,5 +86,17 @@ public class Preset {
     // how the fades are shaped over their time (see TransitionCurve)
     private String fadeInCurve = "linear";
     private String fadeOutCurve = "linear";
+
+    // whether the preset mirrors what it puts on the passed capability
+    public boolean mirrorsCapability(FixtureCapability.FixtureCapabilityType type) {
+        return (type == FixtureCapability.FixtureCapabilityType.Pan && mirrorPan)
+                || (type == FixtureCapability.FixtureCapabilityType.Tilt && mirrorTilt);
+    }
+
+    // the position the preset points its fixtures at on the passed capability: a mirrored
+    // axis is folded around the middle of its range, the rest is passed through
+    public double getMirroredValuePercentage(FixtureCapability.FixtureCapabilityType type, double valuePercentage) {
+        return mirrorsCapability(type) ? 1 - valuePercentage : valuePercentage;
+    }
 
 }
