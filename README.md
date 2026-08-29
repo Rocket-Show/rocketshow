@@ -116,6 +116,7 @@ make -j$(nproc)
 
 Building is recommended on a Raspberry Pi device with enough storage. Steps to follow:
 
+- Upload the new rocketshow.jar to rocketshow.net → /install
 - Switch to user `root`:
 
 ````shell
@@ -130,7 +131,6 @@ apt-get update
 
 - Prepare the environment according to [https://github.com/RPi-distro/pi-gen](pi-gen Readme) (e.g. install the required
   dependencies)
-
 - Run the following script (might take about 45 minutes)
 
 ```shell
@@ -173,18 +173,6 @@ cd work/RocketShow/export-image
 mv "$(date '+%Y-%m-%d')-RocketShow-lite.img" "$(date '+%Y-%m-%d')-RocketShow.img"
 zip "$(date '+%Y-%m-%d')-RocketShow.zip" "$(date '+%Y-%m-%d')-RocketShow.img"
 ```
-
-### Update process
-
-- Update POM
-- Update dist/currentversion2.xml version/date on top and add the release notes
-- Build the jar with Maven `./mvnw clean package`
-- Copy target/rocketshow.jar to rocketshow.net/update/test/rocketshow.jar (and parent-directory to release it directly)
-- Copy dist/currentversion2.xml to rocketshow.net/update/test/currentversion2.xml (and parent-directory to release it
-  directly)
-- GIT merge DEV branch to MASTER
-- GIT tag with the current version
-- Switch back to DEV
 
 #### Optional
 
