@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+
+jobs:
+  test:
+    name: Build & test (backend)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # Run the Java unit tests only. The Angular frontend build (frontend-maven-plugin)
+      # is skipped here to keep CI fast and free of a Node toolchain; it still runs as part
+      # of the regular packaging build.
+      - name: Run tests
+        run: ./mvnw -B -Dskip.installnodenpm=true -Dskip.npm=true test

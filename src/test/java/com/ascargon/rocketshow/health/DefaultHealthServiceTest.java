@@ -35,6 +35,7 @@ class DefaultHealthServiceTest {
         RaucService raucService = mock(RaucService.class);
         DeviceInformationService deviceInformationService = mock(DeviceInformationService.class);
         EepromService eepromService = mock(EepromService.class);
+        SystemTestService systemTestService = mock(SystemTestService.class);
 
         DiskSpace diskSpace = new DiskSpace();
         diskSpace.setUsedMB(50);
@@ -57,7 +58,8 @@ class DefaultHealthServiceTest {
                 versionService,
                 raucService,
                 deviceInformationService,
-                eepromService
+                eepromService,
+                systemTestService
         );
 
         HealthStatus healthStatus = healthService.getHealthStatus();

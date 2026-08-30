@@ -85,6 +85,13 @@ public class MidiMessageParser {
 
         // Data byte, possibly part of running status
         if (runningStatus >= 0x80) {
+            // Running status: when a new message starts without a repeated status byte,
+            // the buffer is empty, so re-insert the (implied) status byte first. Otherwise
+            // the message would always be one byte short and never be completed.
+            if (buffer.size() == 0) {
+                buffer.write((byte) runningStatus);
+            }
+
             buffer.write(b);
             int expectedLength = getMidiMessageLength(runningStatus);
 
