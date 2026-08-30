@@ -524,15 +524,10 @@
   "spark": {
     "discover": "Discover SPARK",
     "hint": {
-      "system-update": "Rocket Show SPARK installs new versions straight from this screen — no card to re-flash and no command line.",
-      "security-https": "Rocket Show SPARK switches this web interface to HTTPS with a single setting.",
+      "system": "Rocket Show SPARK backs up your whole configuration and puts it back in a click, and installs new versions straight from this screen.",
       "advanced-factory-reset": "Rocket Show SPARK goes back to its delivered state in one step, and comes with two years of warranty and support from us.",
-      "audio": "Rocket Show SPARK has two independent stereo outputs on board — four channels, already tuned, with no USB sound card to add.",
-      "midi": "Rocket Show SPARK has MIDI In and Out on board, so there is no USB interface to add.",
       "lighting": "Rocket Show SPARK has a DMX512 output on board next to Art-Net over Ethernet — no USB interface to pick or configure.",
-      "external-control": "Rocket Show SPARK brings two inputs and four outputs out on screw terminals, ready for buttons, footswitches, sensors and relays.",
-      "info": "You are running the free Community Edition. Rocket Show SPARK runs the very same show engine on hardware we build, test and support.",
-      "intro": "Everything you just set up arrives ready to run on Rocket Show SPARK: DMX, MIDI, four audio channels and digital I/O on board, assembled and tested."
+      "info": "You are running the free Community Edition. Rocket Show SPARK runs the very same show engine on hardware we build, test and support."
     }
   }
 }

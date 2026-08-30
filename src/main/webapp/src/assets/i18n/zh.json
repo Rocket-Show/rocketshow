@@ -514,15 +514,10 @@
   "spark": {
     "discover": "了解 SPARK",
     "hint": {
-      "system-update": "Rocket Show SPARK 可直接在此界面安装新版本，无需重新烧录存储卡，也无需使用命令行。",
-      "security-https": "Rocket Show SPARK 只需一项设置即可将此网页界面切换为 HTTPS。",
+      "system": "Rocket Show SPARK 可备份全部配置并一键还原，还可直接在此界面安装新版本。",
       "advanced-factory-reset": "Rocket Show SPARK 一步即可恢复到出厂状态，并提供两年保修和我们的支持。",
-      "audio": "Rocket Show SPARK 板载两组独立立体声输出，共四个通道且已调校完毕，无需外接 USB 声卡。",
-      "midi": "Rocket Show SPARK 板载 MIDI 输入和输出，无需外接 USB 接口。",
       "lighting": "Rocket Show SPARK 除以太网 Art-Net 外还板载 DMX512 输出，无需挑选和配置 USB 接口。",
-      "external-control": "Rocket Show SPARK 通过螺丝端子引出两路输入和四路输出，可直接连接按钮、脚踏开关、传感器和继电器。",
-      "info": "您正在使用免费的 Community Edition。Rocket Show SPARK 在我们自行制造、测试并提供支持的硬件上运行完全相同的演出引擎。",
-      "intro": "您刚刚完成的所有设置，在 Rocket Show SPARK 上开箱即用：板载 DMX、MIDI、四个音频通道和数字输入输出，已组装并测试完毕。"
+      "info": "您正在使用免费的 Community Edition。Rocket Show SPARK 在我们自行制造、测试并提供支持的硬件上运行完全相同的演出引擎。"
     }
   }
 }
