@@ -66,8 +66,8 @@ cd rocketshow
 mkdir sessions
 mkdir upload-tmp
 
-# Download current JAR and version info
-wget https://www.rocketshow.net/install/rocketshow.jar
+# Copy the JAR prepared on the host
+cp /root/rocketshow.jar .
 
 # Create default config files
 cat <<'EOF' >/home/rocketshow/.asoundrc
