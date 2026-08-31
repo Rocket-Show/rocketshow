@@ -36,6 +36,38 @@ EOF
 touch ./stage3/SKIP ./stage4/SKIP ./stage5/SKIP
 rm stage4/EXPORT* stage5/EXPORT*
 
+# ---- MAKE THE IMAGE EXPORT ROBUST ----
+# Partition scanning of loop devices is racy on the build server: the stock
+# pi-gen prerun.sh formats ${LOOP_DEV}p1 before the partition nodes show up
+# ("mkdosfs: unable to open /dev/loop0p1"). Wait for them explicitly.
+cat > wait-for-partitions.snippet <<'EOF'
+
+# Explicitly add the partition entries and wait until they are really usable
+partx -a "${LOOP_DEV}" 2>/dev/null || true
+cnt=0
+until blockdev --getsz "${LOOP_DEV}p1" > /dev/null 2>&1 \
+   && blockdev --getsz "${LOOP_DEV}p2" > /dev/null 2>&1; do
+	if [ $cnt -lt 10 ]; then
+		cnt=$((cnt + 1))
+		echo "Waiting for ${LOOP_DEV} partitions to become ready..."
+		partx -a "${LOOP_DEV}" 2>/dev/null || true
+		sleep 2
+	else
+		echo "ERROR: ${LOOP_DEV} partitions not usable after retries; exiting"
+		exit 1
+	fi
+done
+udevadm settle
+
+EOF
+
+if ! grep -q '^ensure_loopdev_partitions ' ./export-image/prerun.sh; then
+    echo "ERROR: cannot patch export-image/prerun.sh, anchor not found" >&2
+    exit 1
+fi
+sed -i '/^ensure_loopdev_partitions /r wait-for-partitions.snippet' ./export-image/prerun.sh
+rm -f wait-for-partitions.snippet
+
 # Enhance stage2 with rocketshow
 mkdir ./stage2/99-rocket-show
 
