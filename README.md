@@ -135,6 +135,10 @@ apt-get update
   - `rocketshow.jar` (the application built above)
   - `dist/install/build-community.sh`
   - `dist/install/raspbian-community.sh`
+  - `designer_template.json` (from `dist/designer_template.json`)
+  - `black.jpg` (previously hosted on rocketshow.net/install)
+  - `defaults.tar.gz` (previously hosted on rocketshow.net/install, contains a top level `defaults` directory)
+  - `fixtures.zip` (the current fixture set, previously hosted on rocketshow.net/designer/downloads)
 - Make the scripts executable:
 
 ````shell
