@@ -116,7 +116,8 @@ make -j$(nproc)
 
 Building is recommended on a Raspberry Pi device with enough storage. Steps to follow:
 
-- Upload the new rocketshow.jar to rocketshow.net → /install
+- Build the application (see [Build](#build)) and copy the resulting `rocketshow.jar` to `/root/` on the
+  build server
 - Switch to user `root`:
 
 ````shell
@@ -153,7 +154,17 @@ rm stage2/EXPORT_NOOBS
 # Enhance stage2 with rocketshow
 mkdir ./stage2/99-rocket-show
 
-cat <<'EOF' >./stage2/99-rocket-show/00-run-chroot.sh
+# Script to run outside chroot (provide the files prepared on the host)
+cat <<'EOF' >./stage2/99-rocket-show/00-run.sh
+#!/bin/bash -e
+#
+install -d "${ROOTFS_DIR}/root"
+install -m 0644 /root/rocketshow.jar "${ROOTFS_DIR}/root/rocketshow.jar"
+EOF
+
+chmod +x ./stage2/99-rocket-show/00-run.sh
+
+cat <<'EOF' >./stage2/99-rocket-show/01-run-chroot.sh
 #!/bin/bash
 #
 cd /tmp
@@ -161,9 +172,10 @@ wget https://rocketshow.net/install/script/raspbian.sh
 chmod +x raspbian.sh
 ./raspbian.sh
 rm -rf raspbian.sh
+rm -f /root/rocketshow.jar
 EOF
 
-chmod +x ./stage2/99-rocket-show/00-run-chroot.sh
+chmod +x ./stage2/99-rocket-show/01-run-chroot.sh
 
 ./build.sh
 
