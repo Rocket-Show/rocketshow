@@ -80,16 +80,14 @@ pcm.!default {
 EOF
 chown -R rocketshow:rocketshow /home/rocketshow/.asoundrc
 
-# Download a black image to be displayed as default
-wget https://www.rocketshow.net/install/black.jpg
+# Copy the black image to be displayed as default
+cp /root/black.jpg .
 
-# Download the designer template
-wget https://www.rocketshow.net/install/designer_template.json
+# Copy the designer template
+cp /root/designer_template.json .
 
-# Download the defaults including some sample files
-wget https://rocketshow.net/install/defaults.tar.gz
-tar xvzf ./defaults.tar.gz
-rm defaults.tar.gz
+# Unpack the defaults including some sample files
+tar xvzf /root/defaults.tar.gz
 mv defaults/* .
 rm -rf defaults
 
@@ -376,6 +374,13 @@ systemctl enable rocketshow.service
 # ---- FINISH ----
 
 echo "Finish"
+
+# Remove the files staged in /root by the host. They are all installed by now
+# and would otherwise be shipped a second time inside the image.
+rm -f /root/rocketshow.jar \
+      /root/black.jpg \
+      /root/designer_template.json \
+      /root/defaults.tar.gz
 
 # Set owner of directory
 chown -R rocketshow:rocketshow /opt/rocketshow
