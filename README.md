@@ -135,10 +135,10 @@ apt-get update
   - `rocketshow.jar` (the application built above)
   - `dist/install/build-community.sh`
   - `dist/install/raspbian-community.sh`
+  - `dist/install/black.jpg`
   - `designer_template.json` (from `dist/designer_template.json`)
-  - `black.jpg` (previously hosted on rocketshow.net/install)
-  - `defaults.tar.gz` (previously hosted on rocketshow.net/install, contains a top level `defaults` directory)
-- Make the scripts executable:
+  - Tar gz `dist/defaults` and copy `defaults.tar.gz` to `/root/` on the build server
+- Make the scripts executable
 
 ````shell
 chmod +x /root/build-community.sh /root/raspbian-community.sh
