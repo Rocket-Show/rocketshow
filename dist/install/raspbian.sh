@@ -377,6 +377,10 @@ systemctl enable rocketshow.service
 
 echo "Finish"
 
+# Remove the files staged in /root by the host. They are all installed by now
+# and would otherwise be shipped a second time inside the image.
+rm -f /root/rocketshow.jar
+
 # Set owner of directory
 chown -R rocketshow:rocketshow /opt/rocketshow
 

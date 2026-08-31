@@ -164,7 +164,7 @@ EOF
 
 chmod +x ./stage2/99-rocket-show/00-run.sh
 
-cat <<'EOF' >./stage2/99-rocket-show/01-run-chroot.sh
+cat <<'EOF' >./stage2/99-rocket-show/00-run-chroot.sh
 #!/bin/bash
 #
 cd /tmp
@@ -172,10 +172,9 @@ wget https://rocketshow.net/install/script/raspbian.sh
 chmod +x raspbian.sh
 ./raspbian.sh
 rm -rf raspbian.sh
-rm -f /root/rocketshow.jar
 EOF
 
-chmod +x ./stage2/99-rocket-show/01-run-chroot.sh
+chmod +x ./stage2/99-rocket-show/00-run-chroot.sh
 
 ./build.sh
 
