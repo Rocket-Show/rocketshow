@@ -37,27 +37,28 @@ touch ./stage3/SKIP ./stage4/SKIP ./stage5/SKIP
 rm stage4/EXPORT* stage5/EXPORT*
 
 # ---- MAKE THE IMAGE EXPORT ROBUST ----
-# Partition scanning of loop devices is racy on the build server: the stock
-# pi-gen prerun.sh formats ${LOOP_DEV}p1 before the partition nodes show up
-# ("mkdosfs: unable to open /dev/loop0p1"). Wait for them explicitly.
+# ensure_loopdev_partitions in the stock prerun.sh only creates device nodes
+# for the partitions lsblk already reports, it never triggers a scan itself.
+# If the kernel did not scan the table of the freshly attached loop device,
+# the build dies with "mkdosfs: unable to open /dev/loop0p1". Force the scan
+# in that case. This is a no-op whenever the stock code already worked.
 cat > wait-for-partitions.snippet <<'EOF'
 
-# Explicitly add the partition entries and wait until they are really usable
-partx -a "${LOOP_DEV}" 2>/dev/null || true
-cnt=0
-until blockdev --getsz "${LOOP_DEV}p1" > /dev/null 2>&1 \
-   && blockdev --getsz "${LOOP_DEV}p2" > /dev/null 2>&1; do
-	if [ $cnt -lt 10 ]; then
-		cnt=$((cnt + 1))
-		echo "Waiting for ${LOOP_DEV} partitions to become ready..."
-		partx -a "${LOOP_DEV}" 2>/dev/null || true
-		sleep 2
-	else
-		echo "ERROR: ${LOOP_DEV} partitions not usable after retries; exiting"
-		exit 1
-	fi
-done
-udevadm settle
+if [ ! -b "${LOOP_DEV}p1" ] || [ ! -b "${LOOP_DEV}p2" ]; then
+	cnt=0
+	until [ -b "${LOOP_DEV}p1" ] && [ -b "${LOOP_DEV}p2" ]; do
+		if [ $cnt -lt 10 ]; then
+			cnt=$((cnt + 1))
+			echo "Scanning the partitions of ${LOOP_DEV}..."
+			partx -a "${LOOP_DEV}" 2>/dev/null || true
+			ensure_loopdev_partitions "${LOOP_DEV}"
+			sleep 2
+		else
+			echo "ERROR: no partitions found on ${LOOP_DEV}; exiting"
+			exit 1
+		fi
+	done
+fi
 
 EOF
 
