@@ -89,7 +89,7 @@
             @if (wifiApEnabled) {
             <p class="pt-3">{{ 'intro.suggest-disable-hotspot' | translate }}</p>
 
-            <div class="form-check pb-3">
+            <div class="form-check d-inline-block text-left mb-3">
               <input name="wifi-ap-password" type="checkbox" [(ngModel)]="wifiApPasswordSame" class="form-check-input"
                 id="wifiApSame" />
               <label class="form-check-label" for="wifiApSame">
