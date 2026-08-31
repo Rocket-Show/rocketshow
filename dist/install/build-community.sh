@@ -1,16 +1,14 @@
 #!/bin/bash
 #
 # Script to build the Rocket Show community image on a build server.
+# The image is built in the current directory, which needs a lot of free space.
 #
 
 set -euo pipefail
 
-# Directory the image is built in. Needs a lot of free space.
-BUILD_DIR="${BUILD_DIR:-/root}"
+START_DIR="$(pwd)"
 
-echo "Building the community image in: ${BUILD_DIR}"
-
-cd "$BUILD_DIR"
+echo "Building the community image in: ${START_DIR}"
 
 # ---- UNMOUNT AND DETACH ALL DEVICES ----
 for m in $(mount | grep '^/dev/loop' | awk '{print $3}'); do
@@ -82,4 +80,4 @@ IMG_FILE="$FINAL_IMG"
 echo "ZIP the image..."
 zip "$(date '+%Y-%m-%d')-RocketShow-community.zip" "${IMG_FILE}"
 
-mv "$(date '+%Y-%m-%d')-RocketShow-community.zip" /root/
+mv "$(date '+%Y-%m-%d')-RocketShow-community.zip" "$START_DIR/"

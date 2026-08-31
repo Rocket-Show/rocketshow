@@ -144,15 +144,15 @@ apt-get update
 chmod +x /root/build-community.sh /root/raspbian-community.sh
 ````
 
-- Run the build script (might take about 45 minutes):
+- Change into a directory with enough free space and run the build script (might take about 45 minutes):
 
 ````shell
 bash /root/build-community.sh
 ````
 
-- Grab the image ZIP `<date>-RocketShow-community.zip` in directory `/root`
+- Grab the image ZIP `<date>-RocketShow-community.zip` in that same directory
 
-The image is built in `/root/build` by default, which can be changed with the environment variable `BUILD_DIR`.
+The image is built in the `build` subdirectory of the current directory.
 
 #### Optional
 
