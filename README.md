@@ -150,7 +150,7 @@ chmod +x /root/build-community.sh /root/raspbian-community.sh
 bash /root/build-community.sh
 ````
 
-- Grab the image ZIP `<date>-RocketShow-community.zip` in that same directory
+- Grab the image ZIP `<date>-RocketShow-community.zip` in directory `/root`
 
 The image is built in the `build` subdirectory of the current directory.
 
