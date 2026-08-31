@@ -116,8 +116,7 @@ make -j$(nproc)
 
 Building is recommended on a Raspberry Pi device with enough storage. Steps to follow:
 
-- Build the application (see [Build](#build)) and copy the resulting `rocketshow.jar` to `/root/` on the
-  build server
+- Build the application (see [Build](#build))
 - Switch to user `root`:
 
 ````shell
@@ -132,62 +131,29 @@ apt-get update
 
 - Prepare the environment according to [https://github.com/RPi-distro/pi-gen](pi-gen Readme) (e.g. install the required
   dependencies)
-- Run the following script (might take about 45 minutes)
+- Copy these files to `/root/` on the build server:
+  - `rocketshow.jar` (the application built above)
+  - `dist/install/build-community.sh`
+  - `dist/install/raspbian-community.sh`
+- Make the scripts executable:
 
-```shell
-rm -rf build
-mkdir build
-cd build
+````shell
+chmod +x /root/build-community.sh /root/raspbian-community.sh
+````
 
-git clone https://github.com/RPi-distro/pi-gen.git
-cd pi-gen
-git checkout tags/2025-12-04-raspios-trixie-arm64
+- Run the build script (might take about 45 minutes):
 
-echo "IMG_NAME='RocketShow'" > config
+````shell
+bash /root/build-community.sh
+````
 
-touch ./stage3/SKIP ./stage4/SKIP ./stage5/SKIP
-rm stage4/EXPORT* stage5/EXPORT*
+- Grab the image ZIP `<date>-RocketShow-community.zip` in directory `/root`
 
-# Disable noobs build
-rm stage2/EXPORT_NOOBS
-
-# Enhance stage2 with rocketshow
-mkdir ./stage2/99-rocket-show
-
-# Script to run outside chroot (provide the files prepared on the host)
-cat <<'EOF' >./stage2/99-rocket-show/00-run.sh
-#!/bin/bash -e
-#
-install -d "${ROOTFS_DIR}/root"
-install -m 0644 /root/rocketshow.jar "${ROOTFS_DIR}/root/rocketshow.jar"
-EOF
-
-chmod +x ./stage2/99-rocket-show/00-run.sh
-
-cat <<'EOF' >./stage2/99-rocket-show/00-run-chroot.sh
-#!/bin/bash
-#
-cd /tmp
-wget https://rocketshow.net/install/script/raspbian.sh
-chmod +x raspbian.sh
-./raspbian.sh
-rm -rf raspbian.sh
-EOF
-
-chmod +x ./stage2/99-rocket-show/00-run-chroot.sh
-
-./build.sh
-
-# rename and zip the image
-cd work/RocketShow/export-image
-
-mv "$(date '+%Y-%m-%d')-RocketShow-lite.img" "$(date '+%Y-%m-%d')-RocketShow.img"
-zip "$(date '+%Y-%m-%d')-RocketShow.zip" "$(date '+%Y-%m-%d')-RocketShow.img"
-```
+The image is built in `/root/build` by default, which can be changed with the environment variable `BUILD_DIR`.
 
 #### Optional
 
-- Copy install/*.sh scripts to rocketshow.net/install/script/*.sh, if updated
+- Copy dist/install/*.sh scripts to rocketshow.net/install/script/*.sh, if updated
 - Copy dist/before.sh, dist/after.sh to rocketshow.net/update/xy.sh, if updated
 - Copy the new complete image to rocketshow.net/install/images and change the file latest.php to link the new version
 - Copy seed directory directory.tar.gz to rocketshow.net/install, if updated
