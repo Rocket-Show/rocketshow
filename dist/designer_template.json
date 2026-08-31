@@ -9,7 +9,9 @@
   "selectedSceneUuids": [
     "9e40f72c-be2c-4f6e-ba5f-a293302f26d3"
   ],
-  "previewPreset": true,
+  "stepPreviewRunning": false,
+  "stepPreviewStartMillis": 0,
+  "previewPreset": false,
   "compositions": [
     {
       "syncType": "audio",
@@ -323,8 +325,7 @@
             }
           ],
           "name": "9-Channel",
-          "shortName": "9ch",
-          "channelCount": 9
+          "shortName": "9ch"
         },
         {
           "channels": [
@@ -400,8 +401,7 @@
             }
           ],
           "name": "14-Channel",
-          "shortName": "14ch",
-          "channelCount": 14
+          "shortName": "14ch"
         }
       ],
       "uuid": "stairville/mh-100",
@@ -423,8 +423,8 @@
       "uuid": "b68d0f3d-aa79-40e5-a5f4-deabc42aad30",
       "profileUuid": "stairville/mh-100",
       "name": "MH-100",
-      "modeShortName": "9ch",
-      "dmxUniverseUuid": "f869189e-4068-4800-a61f-66a1499946fd"
+      "dmxUniverseUuid": "f869189e-4068-4800-a61f-66a1499946fd",
+      "modeShortName": "9ch"
     },
     {
       "dmxFirstChannel": 9,
@@ -438,8 +438,8 @@
       "uuid": "6ab68501-f63a-400f-9641-d1df90210357",
       "profileUuid": "stairville/mh-100",
       "name": "MH-100",
-      "modeShortName": "9ch",
-      "dmxUniverseUuid": "f869189e-4068-4800-a61f-66a1499946fd"
+      "dmxUniverseUuid": "f869189e-4068-4800-a61f-66a1499946fd",
+      "modeShortName": "9ch"
     },
     {
       "dmxFirstChannel": 18,
@@ -453,35 +453,47 @@
       "uuid": "0530fb32-77a7-47d0-a8d3-e7eed7f61161",
       "profileUuid": "stairville/mh-100",
       "name": "MH-100",
-      "modeShortName": "9ch",
-      "dmxUniverseUuid": "f869189e-4068-4800-a61f-66a1499946fd"
+      "dmxUniverseUuid": "f869189e-4068-4800-a61f-66a1499946fd",
+      "modeShortName": "9ch"
     }
   ],
   "presetFixtures": [
     {
-      "fixtureUuid": "b68d0f3d-aa79-40e5-a5f4-deabc42aad30"
+      "fixtureUuid": "b68d0f3d-aa79-40e5-a5f4-deabc42aad30",
+      "sortIndex": 0
     },
     {
-      "fixtureUuid": "6ab68501-f63a-400f-9641-d1df90210357"
+      "fixtureUuid": "6ab68501-f63a-400f-9641-d1df90210357",
+      "sortIndex": 1
     },
     {
-      "fixtureUuid": "0530fb32-77a7-47d0-a8d3-e7eed7f61161"
+      "fixtureUuid": "0530fb32-77a7-47d0-a8d3-e7eed7f61161",
+      "sortIndex": 2
     }
   ],
+  "universes": [],
   "scenes": [
     {
-      "color": "#945fda",
+      "sortIndex": 0,
+      "colorAuto": true,
+      "expanded": true,
       "presetUuids": [
         "71b6c41a-91a6-4781-bf83-ba8d9ceac985"
       ],
+      "dimmer": 1,
       "fadeInMillis": 0,
       "fadeOutMillis": 0,
+      "fadeInCurve": "linear",
+      "fadeOutCurve": "linear",
       "uuid": "9e40f72c-be2c-4f6e-ba5f-a293302f26d3",
-      "name": "Scene 1"
+      "name": "Scene 1",
+      "color": "#945fda"
     }
   ],
   "presets": [
     {
+      "sortIndex": 0,
+      "colorAuto": true,
       "fixtures": [
         {
           "fixtureUuid": "b68d0f3d-aa79-40e5-a5f4-deabc42aad30"
@@ -493,6 +505,8 @@
           "fixtureUuid": "0530fb32-77a7-47d0-a8d3-e7eed7f61161"
         }
       ],
+      "fixtureFolders": [],
+      "useGlobalFixtureOrder": true,
       "fixtureChannelValues": [],
       "fixtureCapabilityValues": [
         {
@@ -515,6 +529,41 @@
           "valuePercentage": 1
         }
       ],
+      "steps": [
+        {
+          "startMillis": 0,
+          "transitionCurve": "linear",
+          "fixtureChannelValues": [],
+          "fixtureCapabilityValues": [
+            {
+              "type": "ColorIntensity",
+              "valuePercentage": 1,
+              "color": "Red"
+            },
+            {
+              "type": "ColorIntensity",
+              "valuePercentage": 0.4196078431372549,
+              "color": "Green"
+            },
+            {
+              "type": "ColorIntensity",
+              "valuePercentage": 0.9215686274509803,
+              "color": "Blue"
+            },
+            {
+              "type": "Intensity",
+              "valuePercentage": 1
+            }
+          ],
+          "effectAmounts": [],
+          "uuid": "148b5873-6bd2-4cef-a8b2-551519355ea2"
+        }
+      ],
+      "stepsLoop": false,
+      "stepsPhasingMode": "millis",
+      "stepsPhasingMillis": 0,
+      "stepsPhasingCycles": 1,
+      "stepsPhasingGroupSize": 1,
       "effects": [
         {
           "visible": true,
@@ -528,22 +577,42 @@
             }
           ],
           "channels": [],
+          "lengthMode": "millis",
           "lengthMillis": 2924,
+          "lengthBeats": 4,
           "phaseMillis": 0,
+          "phaseBeats": 0,
           "amplitude": 0.95,
           "position": 0.5,
-          "phasingMillis": 287
+          "dutyCycle": 0.5,
+          "runMode": "infinite",
+          "runCycles": 1,
+          "runDurationMillis": 5000,
+          "endMode": "hold",
+          "phasingMode": "millis",
+          "phasingMillis": 287,
+          "phasingBeats": 0,
+          "phasingCycles": 1,
+          "phasingGroupSize": 1
         }
       ],
+      "mirrorPan": false,
+      "mirrorTilt": false,
       "fadeInMillis": 0,
       "fadeOutMillis": 0,
+      "fadeInCurve": "linear",
+      "fadeOutCurve": "linear",
       "uuid": "71b6c41a-91a6-4781-bf83-ba8d9ceac985",
       "name": "Preset 1"
     }
   ],
-  "version": 2,
+  "sceneFolders": [],
+  "presetFolders": [],
+  "fixtureFolders": [],
+  "version": 7,
   "name": "New Project",
   "shareToken": "53171cec-7c65-4d86-929b-8b8c1e3f5957",
   "selectedPresetUuid": "71b6c41a-91a6-4781-bf83-ba8d9ceac985",
+  "selectedStepUuid": "148b5873-6bd2-4cef-a8b2-551519355ea2",
   "selectedCompositionUuid": "c145e55b-23ec-48ce-85d0-2eb2563fcffd"
 }
