@@ -520,5 +520,14 @@
       "status": "Status",
       "high": "High"
     }
+  },
+  "spark": {
+    "discover": "Discover SPARK",
+    "hint": {
+      "system": "Rocket Show SPARK backs up your whole configuration and puts it back in a click, and installs new versions straight from this screen.",
+      "advanced-factory-reset": "Rocket Show SPARK goes back to its delivered state in one step, and comes with two years of warranty and support from us.",
+      "lighting": "Rocket Show SPARK has a DMX512 output on board next to Art-Net over Ethernet — no USB interface to pick or configure.",
+      "info": "You are running the free Community Edition. Rocket Show SPARK runs the very same show engine on hardware we build, test and support."
+    }
   }
 }

@@ -510,5 +510,14 @@
       "status": "状态",
       "high": "高"
     }
+  },
+  "spark": {
+    "discover": "了解 SPARK",
+    "hint": {
+      "system": "Rocket Show SPARK 可备份全部配置并一键还原，还可直接在此界面安装新版本。",
+      "advanced-factory-reset": "Rocket Show SPARK 一步即可恢复到出厂状态，并提供两年保修和我们的支持。",
+      "lighting": "Rocket Show SPARK 除以太网 Art-Net 外还板载 DMX512 输出，无需挑选和配置 USB 接口。",
+      "info": "您正在使用免费的 Community Edition。Rocket Show SPARK 在我们自行制造、测试并提供支持的硬件上运行完全相同的演出引擎。"
+    }
   }
 }

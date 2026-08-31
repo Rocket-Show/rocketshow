@@ -510,5 +510,14 @@
       "status": "Estado",
       "high": "Alto"
     }
+  },
+  "spark": {
+    "discover": "Descubre SPARK",
+    "hint": {
+      "system": "Rocket Show SPARK guarda toda tu configuración y la restaura con un clic, e instala las nuevas versiones directamente desde esta pantalla.",
+      "advanced-factory-reset": "Rocket Show SPARK vuelve a su estado de fábrica en un solo paso, y llega con dos años de garantía y soporte nuestro.",
+      "lighting": "Rocket Show SPARK lleva una salida DMX512 integrada junto a Art-Net por Ethernet: ninguna interfaz USB que elegir ni configurar.",
+      "info": "Estás usando la Community Edition gratuita. Rocket Show SPARK ejecuta exactamente el mismo motor de shows sobre hardware que construimos, probamos y damos soporte."
+    }
   }
 }

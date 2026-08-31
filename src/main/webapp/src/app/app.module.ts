@@ -96,6 +96,8 @@ import { SettingsSecurityComponent } from "./settings/settings-security/settings
 import { ChangePasswordDialogComponent } from './settings/change-password-dialog/change-password-dialog.component';
 import { NewApiKeyDialogComponent } from "./settings/new-api-key-dialog/new-api-key-dialog.component";
 import { DeviceInformationService } from "./services/device-information.service";
+import { SparkUpsellService } from "./services/spark-upsell.service";
+import { SparkHintComponent } from "./spark-hint/spark-hint.component";
 import { HealthService } from "./services/health.service";
 
 const appRoutes: Routes = [
@@ -188,6 +190,7 @@ const appRoutes: Routes = [
         ChangePasswordDialogComponent,
         NewApiKeyDialogComponent,
         SortablejsDirective,
+        SparkHintComponent,
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
         RouterModule.forRoot(appRoutes, { enableTracing: false, useHash: true }),
@@ -231,6 +234,7 @@ const appRoutes: Routes = [
         InfoDialogService,
         ToastGeneralErrorService,
         DeviceInformationService,
+        SparkUpsellService,
         HealthService,
         provideHttpClient(withInterceptorsFromDi()),
     ] })
