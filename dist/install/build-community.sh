@@ -9,15 +9,6 @@ set -euo pipefail
 
 echo "Building the community image in: $(pwd)"
 
-# ---- UNMOUNT AND DETACH ALL DEVICES ----
-for m in $(mount | grep '^/dev/loop' | awk '{print $3}'); do
-    sudo umount "$m" 2>/dev/null || true
-done
-
-for l in $(losetup -a | cut -d: -f1); do
-    sudo losetup -d "$l" 2>/dev/null || true
-done
-
 # ---- PREPARE BUILD ENV ----
 echo "Deleting previous build directory..."
 rm -rf build
