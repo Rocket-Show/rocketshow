@@ -52,7 +52,6 @@ install -m 0644 /root/rocketshow.jar "${ROOTFS_DIR}/root/rocketshow.jar"
 install -m 0644 /root/black.jpg "${ROOTFS_DIR}/root/black.jpg"
 install -m 0644 /root/designer_template.json "${ROOTFS_DIR}/root/designer_template.json"
 install -m 0644 /root/defaults.tar.gz "${ROOTFS_DIR}/root/defaults.tar.gz"
-install -m 0644 /root/fixtures.zip "${ROOTFS_DIR}/root/fixtures.zip"
 EOF
 chmod +x ./stage2/99-rocket-show/00-run.sh
 

@@ -91,8 +91,10 @@ tar xvzf /root/defaults.tar.gz
 mv defaults/* .
 rm -rf defaults
 
-# Unpack the current set of fixtures
-unzip /root/fixtures.zip -d fixtures
+# Download the current set of fixtures
+wget https://rocketshow.net/designer/downloads/fixtures.zip
+unzip fixtures.zip -d fixtures
+rm fixtures.zip
 
 # Install wireless access point, but only enable from the java app (after setting the country)
 # https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
@@ -378,8 +380,7 @@ echo "Finish"
 rm -f /root/rocketshow.jar \
       /root/black.jpg \
       /root/designer_template.json \
-      /root/defaults.tar.gz \
-      /root/fixtures.zip
+      /root/defaults.tar.gz
 
 # Set owner of directory
 chown -R rocketshow:rocketshow /opt/rocketshow
