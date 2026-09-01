@@ -27,39 +27,6 @@ EOF
 touch ./stage3/SKIP ./stage4/SKIP ./stage5/SKIP
 rm stage4/EXPORT* stage5/EXPORT*
 
-# ---- MAKE THE IMAGE EXPORT ROBUST ----
-# ensure_loopdev_partitions in the stock prerun.sh only creates device nodes
-# for the partitions lsblk already reports, it never triggers a scan itself.
-# If the kernel did not scan the table of the freshly attached loop device,
-# the build dies with "mkdosfs: unable to open /dev/loop0p1". Force the scan
-# in that case. This is a no-op whenever the stock code already worked.
-cat > wait-for-partitions.snippet <<'EOF'
-
-if [ ! -b "${LOOP_DEV}p1" ] || [ ! -b "${LOOP_DEV}p2" ]; then
-	cnt=0
-	until [ -b "${LOOP_DEV}p1" ] && [ -b "${LOOP_DEV}p2" ]; do
-		if [ $cnt -lt 10 ]; then
-			cnt=$((cnt + 1))
-			echo "Scanning the partitions of ${LOOP_DEV}..."
-			partx -a "${LOOP_DEV}" 2>/dev/null || true
-			ensure_loopdev_partitions "${LOOP_DEV}"
-			sleep 2
-		else
-			echo "ERROR: no partitions found on ${LOOP_DEV}; exiting"
-			exit 1
-		fi
-	done
-fi
-
-EOF
-
-if ! grep -q '^ensure_loopdev_partitions ' ./export-image/prerun.sh; then
-    echo "ERROR: cannot patch export-image/prerun.sh, anchor not found" >&2
-    exit 1
-fi
-sed -i '/^ensure_loopdev_partitions /r wait-for-partitions.snippet' ./export-image/prerun.sh
-rm -f wait-for-partitions.snippet
-
 # Enhance stage2 with rocketshow
 mkdir ./stage2/99-rocket-show
 
