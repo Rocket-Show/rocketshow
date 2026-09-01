@@ -9,6 +9,22 @@ set -euo pipefail
 
 echo "Building the community image in: $(pwd)"
 
+# ---- REMOVE STALE LOOP PARTITION NODES ----
+# pi-gen creates /dev/loopXpY with mknod whenever the node is missing, but it
+# never removes it again. The minor numbers are allocated dynamically, so a
+# node left over from an earlier build can end up pointing to nothing and the
+# image export dies with "mkdosfs: unable to open /dev/loop0p1: No such device
+# or address". Drop the nodes of all loop devices that are not attached.
+shopt -s nullglob
+for node in /dev/loop[0-9]*p[0-9]*; do
+    dev="${node%p[0-9]*}"
+    if ! losetup "$dev" > /dev/null 2>&1; then
+        echo "Removing stale loop partition node: $node"
+        rm -f "$node"
+    fi
+done
+shopt -u nullglob
+
 # ---- PREPARE BUILD ENV ----
 echo "Deleting previous build directory..."
 rm -rf build
