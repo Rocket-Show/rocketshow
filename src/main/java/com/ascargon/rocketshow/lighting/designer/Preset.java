@@ -20,15 +20,55 @@ public class Preset {
     private String uuid;
     private String name;
 
-    // all related fixtures
+    // all related fixtures, in the order they are chased in (only relevant, if
+    // useGlobalFixtureOrder is false)
     private List<PresetFixture> fixtures = new ArrayList<>();
 
+    // chase the fixtures in the global order (project.presetFixtures) instead of
+    // this preset's own order
+    private boolean useGlobalFixtureOrder = true;
+
     // the selected values
+    // OBSOLETE: replaced with the values of the first step. The designer still writes
+    // them when a project is saved, so that an older Rocket Show shows the first step
+    // instead of nothing.
     private List<FixtureChannelValue> fixtureChannelValues;
     private List<FixtureCapabilityValue> fixtureCapabilityValues;
 
-    // all related effects
+    // the states this preset runs through over its playing time, in the order they are
+    // reached. Empty only in a project written before the designer knew steps, which
+    // PresetSteps falls back to the values above for.
+    private List<PresetStep> steps = new ArrayList<>();
+
+    // start the sequence over instead of holding the last step
+    private boolean stepsLoop = false;
+
+    // the length of one pass (null = the last step holds as long as the one before it
+    // lasted, see PresetSteps.getStepsLoopMillis)
+    private Long stepsLoopMillis;
+
+    // how the sequence is shifted from one fixture to the next (chasing), following the
+    // same rules as the effect curves: "millis" shifts it by a fixed time, "spread"
+    // distributes stepsPhasingCycles full passes over all fixtures of the preset.
+    // both values are signed: a negative one chases in the opposite direction.
+    private String stepsPhasingMode = "millis";
+    private long stepsPhasingMillis = 0;
+    private float stepsPhasingCycles = 1;
+
+    // how many fixtures share the same chase step (1 = each fixture on its own)
+    private int stepsPhasingGroupSize = 1;
+
+    // all related effects. They stay on the preset instead of moving into the steps, so
+    // that they keep their phase across a step transition: a step only opens or closes
+    // them (see PresetStep.effectAmounts).
     private List<Effect> effects;
+
+    // mirror what the preset puts on the pan or the tilt of its moving heads: every one
+    // of its fixtures is pointed at the mirrored position (1 - value) on that axis, its
+    // steps and its effects alike, which turns a copy of a preset into the same movement
+    // played the other way round without touching a single value it is written with.
+    private boolean mirrorPan = false;
+    private boolean mirrorTilt = false;
 
     // position offset, relative to the scene start
     // (null = start/end of the scene itself)
@@ -42,5 +82,21 @@ public class Preset {
     // fade in/out outside the start/end times?
     private boolean fadeInPre = false;
     private boolean fadeOutPost = false;
+
+    // how the fades are shaped over their time (see TransitionCurve)
+    private String fadeInCurve = "linear";
+    private String fadeOutCurve = "linear";
+
+    // whether the preset mirrors what it puts on the passed capability
+    public boolean mirrorsCapability(FixtureCapability.FixtureCapabilityType type) {
+        return (type == FixtureCapability.FixtureCapabilityType.Pan && mirrorPan)
+                || (type == FixtureCapability.FixtureCapabilityType.Tilt && mirrorTilt);
+    }
+
+    // the position the preset points its fixtures at on the passed capability: a mirrored
+    // axis is folded around the middle of its range, the rest is passed through
+    public double getMirroredValuePercentage(FixtureCapability.FixtureCapabilityType type, double valuePercentage) {
+        return mirrorsCapability(type) ? 1 - valuePercentage : valuePercentage;
+    }
 
 }

@@ -22,7 +22,10 @@
             ],
             "assets": [
               "src/assets",
-              "src/favicon.ico"
+              "src/favicon.ico",
+              "src/favicon_16.png",
+              "src/favicon_32.png",
+              "src/apple-touch-icon.png"
             ],
             "styles": [
               "node_modules/font-awesome/css/font-awesome.css",
@@ -117,7 +120,10 @@
             ],
             "assets": [
               "src/assets",
-              "src/favicon.ico"
+              "src/favicon.ico",
+              "src/favicon_16.png",
+              "src/favicon_32.png",
+              "src/apple-touch-icon.png"
             ]
           }
         }

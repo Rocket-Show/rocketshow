@@ -111,7 +111,7 @@ public class DefaultLightingService implements LightingService {
             logger.error("Could not initialize OLA client (attempt {}/{})", attempt, OLA_MAX_RETRIES, e);
         }
 
-        if (!olaReady && attempt < OLA_MAX_RETRIES) {
+        if (!olaReady && attempt <= OLA_MAX_RETRIES) {
             logger.warn("OLA not ready, retrying in {}ms (attempt {}/{})", OLA_RETRY_DELAY_MS, attempt, OLA_MAX_RETRIES);
             olaRetryExecutor.schedule(() -> tryInitializeOla(attempt + 1), OLA_RETRY_DELAY_MS, TimeUnit.MILLISECONDS);
         } else if (olaReady) {

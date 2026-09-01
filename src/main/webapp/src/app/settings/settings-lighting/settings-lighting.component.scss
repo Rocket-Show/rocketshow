@@ -2,3 +2,32 @@
   opacity: 0.55;
   transition: opacity 120ms ease-in-out;
 }
+
+/* The plugin list and the control that adds to it are one block, so the seam
+   between them stays square and the two share a single border line. */
+.card:has(+ .btn-group) {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.card + .btn-group {
+  margin-top: -1px;
+
+  > :first-child {
+    border-top-left-radius: 0;
+  }
+
+  > :last-child {
+    border-top-right-radius: 0;
+  }
+
+  /* the select carries the group's width; the button sizes to its label */
+  > .custom-select {
+    flex: 1 1 auto;
+    width: 1%;
+  }
+
+  > .btn {
+    flex: 0 0 auto;
+  }
+}

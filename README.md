@@ -116,6 +116,7 @@ make -j$(nproc)
 
 Building is recommended on a Raspberry Pi device with enough storage. Steps to follow:
 
+- Build the application (see [Build](#build))
 - Switch to user `root`:
 
 ````shell
@@ -130,69 +131,32 @@ apt-get update
 
 - Prepare the environment according to [https://github.com/RPi-distro/pi-gen](pi-gen Readme) (e.g. install the required
   dependencies)
+- Copy these files to `/root/` on the build server:
+  - `rocketshow.jar` (the application built above)
+  - `dist/install/build-community.sh`
+  - `dist/install/raspbian-community.sh`
+  - `dist/install/black.jpg`
+  - `designer_template.json` (from `dist/designer_template.json`)
+  - Tar gz `dist/defaults` and copy `defaults.tar.gz` to `/root/` on the build server
+- Make the scripts executable
 
-- Run the following script (might take about 45 minutes)
+````shell
+chmod +x /root/build-community.sh /root/raspbian-community.sh
+````
 
-```shell
-cd /opt
-rm -rf build
-mkdir build
-cd build
+- Change into a directory with enough free space and run the build script (might take about 45 minutes):
 
-git clone https://github.com/RPi-distro/pi-gen.git
-cd pi-gen
-git checkout tags/2025-12-04-raspios-trixie-arm64
+````shell
+bash /root/build-community.sh
+````
 
-echo "IMG_NAME='RocketShow'" > config
+- Grab the image ZIP `<date>-RocketShow-community.zip` in directory `/root`
 
-touch ./stage3/SKIP ./stage4/SKIP ./stage5/SKIP
-rm stage4/EXPORT* stage5/EXPORT*
-
-# Disable noobs build
-rm stage2/EXPORT_NOOBS
-
-# Enhance stage2 with rocketshow
-mkdir ./stage2/99-rocket-show
-
-cat <<'EOF' >./stage2/99-rocket-show/00-run-chroot.sh
-#!/bin/bash
-#
-cd /tmp
-wget https://rocketshow.net/install/script/raspbian.sh
-chmod +x raspbian.sh
-./raspbian.sh
-rm -rf raspbian.sh
-EOF
-
-chmod +x ./stage2/99-rocket-show/00-run-chroot.sh
-
-./build.sh
-
-# rename and zip the image
-cd work/RocketShow/export-image
-
-mv "$(date '+%Y-%m-%d')-RocketShow-lite.img" "$(date '+%Y-%m-%d')-RocketShow.img"
-zip "$(date '+%Y-%m-%d')-RocketShow.zip" "$(date '+%Y-%m-%d')-RocketShow.img"
-
-# copy the zip to a folder where we can get it with SFTP:
-mv "$(date '+%Y-%m-%d')-RocketShow.zip" /home/rocketshow
-```
-
-### Update process
-
-- Update POM
-- Update dist/currentversion2.xml version/date on top and add the release notes
-- Build the jar with Maven `./mvnw clean package`
-- Copy target/rocketshow.jar to rocketshow.net/update/test/rocketshow.jar (and parent-directory to release it directly)
-- Copy dist/currentversion2.xml to rocketshow.net/update/test/currentversion2.xml (and parent-directory to release it
-  directly)
-- GIT merge DEV branch to MASTER
-- GIT tag with the current version
-- Switch back to DEV
+The image is built in the `build` subdirectory of the current directory.
 
 #### Optional
 
-- Copy install/*.sh scripts to rocketshow.net/install/script/*.sh, if updated
+- Copy dist/install/*.sh scripts to rocketshow.net/install/script/*.sh, if updated
 - Copy dist/before.sh, dist/after.sh to rocketshow.net/update/xy.sh, if updated
 - Copy the new complete image to rocketshow.net/install/images and change the file latest.php to link the new version
 - Copy seed directory directory.tar.gz to rocketshow.net/install, if updated
@@ -280,6 +244,12 @@ gpioget -c gpiochip0 24
 ```
 
 Where active = high and inactive = low.
+
+##### Scheduler
+
+Starts compositions based on a timer. A scheduled composition either repeats after a fixed amount of time (e.g. every
+5 minutes) or is started at a specific time of the day, daily, on selected weekdays, monthly or yearly. The scheduled
+compositions are stored in the settings and are planned again as soon as they are changed.
 
 ##### Util
 

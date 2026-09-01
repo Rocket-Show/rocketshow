@@ -1,0 +1,36 @@
+/* Deliberately quieter than an alert: this is an aside next to a setting
+   somebody came here to change, not a message about their show.
+
+   The box is the host element, so that hiding it (see the component) also
+   takes its margins with it, and so that a caller can add bootstrap spacing
+   classes to the tag. */
+:host {
+  display: flex;
+  gap: var(--sd-space-2);
+  margin-bottom: var(--sd-space-4);
+  padding: var(--sd-space-3);
+  border: 1px solid var(--sd-border);
+  border-left: 2px solid var(--sd-primary);
+  border-radius: var(--sd-radius);
+  background-color: var(--sd-surface-1);
+  color: var(--sd-text-muted);
+  text-align: left;
+}
+
+.spark-hint-icon {
+  /* Sits on the first line of the text rather than centred on the block, so a
+     hint that wraps to three lines does not leave the icon floating. */
+  margin-top: 2px;
+  color: var(--sd-primary-text);
+}
+
+.spark-hint-body {
+  flex: 1;
+}
+
+/* The link goes on its own line rather than trailing the sentence: where it
+   trails, a hint whose last line is nearly full pushes it onto a line of its
+   own anyway, and it lands there indented and looking misplaced. */
+.spark-hint-text {
+  margin-bottom: var(--sd-space-1);
+}

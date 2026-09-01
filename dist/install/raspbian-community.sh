@@ -14,7 +14,7 @@ echo "Install packages"
 apt-get update
 apt-get upgrade -y
 
-apt-get -y install unzip openjdk-21-jdk dhcpcd dnsmasq hostapd fbi ola libnss-mdns iptables libasound2 alsa-utils openssh-sftp-server libgstreamer1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl
+apt-get -y install unzip openjdk-21-jdk dhcpcd dnsmasq hostapd fbi ola libnss-mdns iptables netcat-openbsd libasound2 alsa-utils openssh-sftp-server libgstreamer1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-gl
 
 # ---- USER MANAGEMENT ----
 # Add the rocketshow user
@@ -66,8 +66,8 @@ cd rocketshow
 mkdir sessions
 mkdir upload-tmp
 
-# Download current JAR and version info
-wget https://www.rocketshow.net/update/rocketshow.jar
+# Copy the JAR prepared on the host
+cp /root/rocketshow.jar .
 
 # Create default config files
 cat <<'EOF' >/home/rocketshow/.asoundrc
@@ -78,17 +78,16 @@ pcm.!default {
   }
 }
 EOF
+chown -R rocketshow:rocketshow /home/rocketshow/.asoundrc
 
-# Download a black image to be displayed as default
-wget https://www.rocketshow.net/install/black.jpg
+# Copy the black image to be displayed as default
+cp /root/black.jpg .
 
-# Download the designer template
-wget https://www.rocketshow.net/install/designer_template.json
+# Copy the designer template
+cp /root/designer_template.json .
 
-# Download the defaults including some sample files
-wget https://rocketshow.net/install/defaults.tar.gz
-tar xvzf ./defaults.tar.gz
-rm defaults.tar.gz
+# Unpack the defaults including some sample files
+tar xvzf /root/defaults.tar.gz
 mv defaults/* .
 rm -rf defaults
 
@@ -119,7 +118,8 @@ listen-address=192.168.4.1
 dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h
 EOF
 
-cat <<'EOF' >hostapd.conf
+install -d /etc/hostapd
+cat <<'EOF' >/etc/hostapd/hostapd.conf
 interface=wlan0
 driver=nl80211
 ssid=Rocket Show
@@ -136,6 +136,7 @@ wpa_pairwise=TKIP
 rsn_pairwise=CCMP
 EOF
 chmod 777 /etc/hostapd/hostapd.conf
+chown -R rocketshow:rocketshow /etc/hostapd/hostapd.conf
 
 cat <<'EOF' >/opt/rocketshow/set-wifi-ap-country.sh
 #!/usr/bin/env bash
@@ -242,8 +243,19 @@ echo "Install services"
 cat <<'EOF' >/opt/rocketshow/iptables.sh
 #!/bin/bash
 set -euo pipefail
-if ! iptables -t nat -C PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8080 2>/dev/null; then
-  iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8080
+
+# REDIRECT can't reach a loopback-only listener; DNAT to 127.0.0.1 can,
+# but only if the martian-packet check is relaxed.
+sysctl -qw net.ipv4.conf.all.route_localnet=1
+
+# external traffic
+if ! iptables -t nat -C PREROUTING -p tcp --dport 80 -j DNAT --to-destination 127.0.0.1:8080 2>/dev/null; then
+  iptables -t nat -A PREROUTING -p tcp --dport 80 -j DNAT --to-destination 127.0.0.1:8080
+fi
+
+# traffic originating on the Pi itself
+if ! iptables -t nat -C OUTPUT -p tcp -d 127.0.0.1 --dport 80 -j DNAT --to-destination 127.0.0.1:8080 2>/dev/null; then
+  iptables -t nat -A OUTPUT -p tcp -d 127.0.0.1 --dport 80 -j DNAT --to-destination 127.0.0.1:8080
 fi
 EOF
 sudo chmod +x /opt/rocketshow/iptables.sh
@@ -347,7 +359,6 @@ WorkingDirectory=/opt/rocketshow
 
 # Main process: KEEP IN FOREGROUND (no &)
 # Wait for port 9010 from OLA to be ready before starting the app
-[Service]
 ExecStartPre=/bin/sh -c 'for i in $(seq 1 120); do nc -z 127.0.0.1 9010 && exit 0; echo "Waiting for olad on :9010 ($i/120)"; sleep 1; done; echo "olad not ready"; exit 1'
 ExecStart=/usr/bin/java -Xmx512m -jar /opt/rocketshow/rocketshow.jar
 
@@ -363,6 +374,13 @@ systemctl enable rocketshow.service
 # ---- FINISH ----
 
 echo "Finish"
+
+# Remove the files staged in /root by the host. They are all installed by now
+# and would otherwise be shipped a second time inside the image.
+rm -f /root/rocketshow.jar \
+      /root/black.jpg \
+      /root/designer_template.json \
+      /root/defaults.tar.gz
 
 # Set owner of directory
 chown -R rocketshow:rocketshow /opt/rocketshow

@@ -16,6 +16,10 @@ class Composition {
     private String uuid;
     private String syncType;
     private long durationMillis;
+
+    // the tempo of the composition, which the curves synced to the beat run on
+    private double beatsPerMinute = EffectCurve.DEFAULT_BEATS_PER_MINUTE;
+
     private ScenePlaybackRegion[] scenePlaybackRegions;
 
     public String getName() {
@@ -48,6 +52,14 @@ class Composition {
 
     public void setDurationMillis(long durationMillis) {
         this.durationMillis = durationMillis;
+    }
+
+    public double getBeatsPerMinute() {
+        return beatsPerMinute;
+    }
+
+    public void setBeatsPerMinute(double beatsPerMinute) {
+        this.beatsPerMinute = beatsPerMinute;
     }
 
     public ScenePlaybackRegion[] getScenePlaybackRegions() {

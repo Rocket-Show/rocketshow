@@ -11,9 +11,9 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EffectPanTilt extends Effect {
 
-    public double getValueAtMillis(long timeMillis, Integer fixtureIndex) {
+    public Double getValueAtMillis(long timeMillis, Integer fixtureIndex, Integer fixtureCount, Double beatsPerMinute) {
         // TODO
-        return 0;
+        return 0d;
     }
 
 }

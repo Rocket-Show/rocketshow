@@ -107,6 +107,7 @@
     "media-library": "Mediathek",
     "file-settings": "Einstellungen",
     "dropzone-message": "Ziehe Dateien hier hinein oder klicke, um hochzuladen",
+    "selected-file": "Ausgewählte Datei",
     "no-file-selected": "Keine Datei ausgewählt",
     "error-multiple-video-images-title": "Mehr als ein Video",
     "error-multiple-video-images": "Mehr als ein Video ist nicht erlaubt in der selben Komposition.",
@@ -383,6 +384,36 @@
       "title": "Externe Steuerung",
       "bcm-pin-id": "BCM Pin ID"
     },
+    "scheduler": {
+      "title": "Zeitplan",
+      "description": "Kompositionen automatisch zu bestimmten Zeiten oder nach einer bestimmten Dauer starten. Dauern werden ab dem Start von Rocket Show oder ab der letzten Änderung dieser Einstellungen gezählt.",
+      "add": "Geplante Komposition hinzufügen",
+      "composition": "Komposition",
+      "schedule-type": "Starten",
+      "schedule-type-enum": {
+        "INTERVAL": "Wiederholt",
+        "DAILY": "Täglich",
+        "WEEKLY": "Wöchentlich",
+        "MONTHLY": "Monatlich",
+        "YEARLY": "Jährlich"
+      },
+      "interval": "Alle",
+      "interval-unit-enum": {
+        "SECONDS": "Sekunden",
+        "MINUTES": "Minuten",
+        "HOURS": "Stunden",
+        "DAYS": "Tage",
+        "WEEKS": "Wochen"
+      },
+      "weekdays": "Tage",
+      "weekday-required": "Mindestens einen Tag auswählen.",
+      "day-of-month": "Tag des Monats",
+      "day-of-month-hint": "Existiert der gewählte Tag in einem Monat nicht, wird die Komposition am letzten Tag dieses Monats gestartet.",
+      "date": "Datum",
+      "time-of-day": "Zeit",
+      "state": "Status",
+      "enable": "Aktiviert"
+    },
     "security": "Sicherheit",
     "session": "Sitzung",
     "password": "Passwort",
@@ -471,12 +502,23 @@
       "method": "Methode",
       "url": "URL",
       "body": "Body",
-      "headers": "Headers"
+      "headers": "Headers",
+      "header-name": "Name",
+      "header-value": "Wert"
     },
     "raspberry-gpio": {
       "pin": "Pin",
       "status": "Status",
       "high": "High"
+    }
+  },
+  "spark": {
+    "discover": "SPARK entdecken",
+    "hint": {
+      "system": "Rocket Show SPARK sichert deine ganze Konfiguration und stellt sie mit einem Klick wieder her — und installiert neue Versionen direkt hier.",
+      "advanced-factory-reset": "Rocket Show SPARK ist in einem Schritt wieder im Auslieferungszustand — mit 2 Jahren Garantie und Support von uns.",
+      "lighting": "Rocket Show SPARK hat neben Art-Net über Ethernet einen DMX512-Ausgang an Bord — kein USB-Interface auswählen, keines konfigurieren.",
+      "info": "Du verwendest die kostenlose Community Edition. Rocket Show SPARK fährt genau dieselbe Show-Engine auf Hardware, die wir bauen, testen und supporten."
     }
   }
 }

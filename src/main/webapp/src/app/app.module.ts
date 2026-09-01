@@ -81,6 +81,8 @@ import { ActionTriggerCompositionComponent } from "./editor/editor-composition/a
 import { EditorMediaComponent } from "./editor/editor-media/editor-media.component";
 import { SettingsExternalControlComponent } from "./settings/settings-external-control/settings-external-control.component";
 import { ActionTriggerRaspberryGpioComponent } from "./settings/settings-external-control/action-trigger-raspberry-gpio/action-trigger-raspberry-gpio.component";
+import { SettingsSchedulerComponent } from "./settings/settings-scheduler/settings-scheduler.component";
+import { ScheduledCompositionComponent } from "./settings/settings-scheduler/scheduled-composition/scheduled-composition.component";
 import { ActionNullComponent } from "./action/action-null/action-null.component";
 import { ActionSystemComponent } from "./action/action-system/action-system.component";
 import { ActionTransportComponent } from "./action/action-transport/action-transport.component";
@@ -94,6 +96,8 @@ import { SettingsSecurityComponent } from "./settings/settings-security/settings
 import { ChangePasswordDialogComponent } from './settings/change-password-dialog/change-password-dialog.component';
 import { NewApiKeyDialogComponent } from "./settings/new-api-key-dialog/new-api-key-dialog.component";
 import { DeviceInformationService } from "./services/device-information.service";
+import { SparkUpsellService } from "./services/spark-upsell.service";
+import { SparkHintComponent } from "./spark-hint/spark-hint.component";
 import { HealthService } from "./services/health.service";
 
 const appRoutes: Routes = [
@@ -174,6 +178,8 @@ const appRoutes: Routes = [
         ActionTriggerCompositionComponent,
         SettingsExternalControlComponent,
         ActionTriggerRaspberryGpioComponent,
+        SettingsSchedulerComponent,
+        ScheduledCompositionComponent,
         ActionNullComponent,
         ActionSystemComponent,
         ActionTransportComponent,
@@ -184,6 +190,7 @@ const appRoutes: Routes = [
         ChangePasswordDialogComponent,
         NewApiKeyDialogComponent,
         SortablejsDirective,
+        SparkHintComponent,
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
         RouterModule.forRoot(appRoutes, { enableTracing: false, useHash: true }),
@@ -227,6 +234,7 @@ const appRoutes: Routes = [
         InfoDialogService,
         ToastGeneralErrorService,
         DeviceInformationService,
+        SparkUpsellService,
         HealthService,
         provideHttpClient(withInterceptorsFromDi()),
     ] })

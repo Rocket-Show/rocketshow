@@ -182,7 +182,7 @@ public class DefaultUpdateService implements UpdateService {
         try {
             raucService.installBundle(remoteVersionInfo.getRaucBundle());
         } catch (Exception e) {
-            error("Unable to install RAUC bundle");
+            error("Unable to install RAUC bundle: " + e.getMessage());
             return;
         }
 

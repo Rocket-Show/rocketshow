@@ -3,19 +3,19 @@
 }
 
 .setup-wizard {
-    box-shadow: 0px 0px 30px 1px #000000;
+    box-shadow: var(--sd-shadow-3);
     width: 470px;
 }
 
 .card-img-top {
     height: 5rem;
-    object-fit:cover;
+    object-fit: cover;
 }
 
 .wizard-step-label {
     font-size: 0.9rem;
     font-weight: 600;
-    color: #6c757d;
+    color: var(--sd-text-dim);
     text-transform: uppercase;
     letter-spacing: 0.08em;
 }
@@ -32,16 +32,20 @@
     height: 12px;
     border: 0;
     border-radius: 50%;
-    background: #d6dbe1;
+    background: var(--sd-surface-4);
     padding: 0;
     transition: all 0.2s ease;
     cursor: pointer;
 }
 
+.wizard-dot:hover {
+    background: var(--sd-border-strong);
+}
+
 .wizard-dot.active {
     width: 30px;
     border-radius: 999px;
-    background: #fd7e14;
+    background: var(--sd-primary);
 }
 
 .wizard-dot:focus {
