@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.settings;
 
+import com.ascargon.rocketshow.midi.MidiRouting;
 import com.ascargon.rocketshow.midi.MidiService;
 import com.ascargon.rocketshow.util.DeviceInformation;
 import com.ascargon.rocketshow.util.DeviceInformationService;
@@ -29,7 +30,11 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -52,6 +57,7 @@ class DefaultSettingsServiceTest {
     private final OperatingSystemInformationService operatingSystemInformationService = mock(OperatingSystemInformationService.class);
     private final MidiService midiService = mock(MidiService.class);
     private final DeviceInformationService deviceInformationService = mock(DeviceInformationService.class);
+    private final ApplicationEventPublisher applicationEventPublisher = mock(ApplicationEventPublisher.class);
 
     @BeforeEach
     void setUp() {
@@ -65,7 +71,7 @@ class DefaultSettingsServiceTest {
 
     // Start the service like the app does. It loads, migrates and saves the settings in the directory.
     private DefaultSettingsService start(Path directory) {
-        return new DefaultSettingsService(operatingSystemInformationService, midiService, deviceInformationService, mock(ApplicationEventPublisher.class), directory.toString());
+        return new DefaultSettingsService(operatingSystemInformationService, midiService, deviceInformationService, applicationEventPublisher, directory.toString());
     }
 
     // All values of an XML file by their path, e.g. "settings/audioBusList/audioBus[0]/name" -> "My audio bus 1"
@@ -170,6 +176,35 @@ class DefaultSettingsServiceTest {
         }
 
         assertTrue(differences.isEmpty(), "Old settings don't get the defaults of a new device: " + differences);
+    }
+
+    @Test
+    void publishesChangedMidiRoutings() throws Exception {
+        DefaultSettingsService settingsService = start(Files.createTempDirectory(tempPath, "settings"));
+
+        // Nothing changed
+        settingsService.save();
+        verify(applicationEventPublisher, never()).publishEvent(any(MidiRoutingsChangedEvent.class));
+
+        // Another routing of the MIDI input
+        settingsService.getSettings().getDeviceInMidiRoutingList().add(new MidiRouting());
+        settingsService.save();
+        verify(applicationEventPublisher, times(1)).publishEvent(any(MidiRoutingsChangedEvent.class));
+
+        // Another routing of remote MIDI
+        settingsService.getSettings().getRemoteMidiRoutingList().add(new MidiRouting());
+        settingsService.save();
+        verify(applicationEventPublisher, times(2)).publishEvent(any(MidiRoutingsChangedEvent.class));
+
+        // Another global mapping
+        settingsService.getSettings().getMidiMapping().setNoteOffset(12);
+        settingsService.save();
+        verify(applicationEventPublisher, times(3)).publishEvent(any(MidiRoutingsChangedEvent.class));
+
+        // Other settings don't touch the routings (e.g. while a show is running)
+        settingsService.getSettings().setOffsetMillisMidi(10);
+        settingsService.save();
+        verify(applicationEventPublisher, times(3)).publishEvent(any(MidiRoutingsChangedEvent.class));
     }
 
 }

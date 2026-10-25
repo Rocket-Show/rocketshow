@@ -19,10 +19,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.system.ApplicationHome;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
 import javax.sound.midi.MidiUnavailableException;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -44,6 +46,7 @@ public class DefaultSettingsService implements SettingsService {
     private Settings settings;
     private String lastSavedDefaultComposition;
     private List<ScheduledComposition> lastSavedScheduledCompositionList = new ArrayList<>();
+    private String lastSavedMidiRoutings;
 
     @Autowired
     public DefaultSettingsService(
@@ -92,6 +95,7 @@ public class DefaultSettingsService implements SettingsService {
         try {
             lastSavedDefaultComposition = getNormalizedDefaultComposition();
             lastSavedScheduledCompositionList = getScheduledCompositionListCopy();
+            lastSavedMidiRoutings = getMidiRoutings();
             save();
         } catch (JAXBException e) {
             logger.error("Could not save settings", e);
@@ -391,6 +395,7 @@ public class DefaultSettingsService implements SettingsService {
 
         publishDefaultCompositionChangedEventIfNeeded();
         publishScheduledCompositionsChangedEventIfNeeded();
+        publishMidiRoutingsChangedEventIfNeeded();
     }
 
     @Override
@@ -416,6 +421,7 @@ public class DefaultSettingsService implements SettingsService {
 
         lastSavedDefaultComposition = getNormalizedDefaultComposition();
         lastSavedScheduledCompositionList = getScheduledCompositionListCopy();
+        lastSavedMidiRoutings = getMidiRoutings();
 
         logger.info("Settings loaded");
     }
@@ -464,6 +470,31 @@ public class DefaultSettingsService implements SettingsService {
 
         lastSavedScheduledCompositionList = scheduledCompositionList;
         applicationEventPublisher.publishEvent(new ScheduledCompositionsChangedEvent());
+    }
+
+    // The MIDI routings and the global MIDI mapping, to find out whether they changed
+    private String getMidiRoutings() {
+        if (settings == null) {
+            return null;
+        }
+
+        return new ObjectMapper().writeValueAsString(Arrays.asList(
+                settings.getDeviceInMidiRoutingList(),
+                settings.getRemoteMidiRoutingList(),
+                settings.getMidiMapping()
+        ));
+    }
+
+    private void publishMidiRoutingsChangedEventIfNeeded() {
+        String midiRoutings = getMidiRoutings();
+
+        // Only when they changed, because the routers start over (e.g. the lighting of MIDI routings)
+        if (Objects.equals(lastSavedMidiRoutings, midiRoutings)) {
+            return;
+        }
+
+        lastSavedMidiRoutings = midiRoutings;
+        applicationEventPublisher.publishEvent(new MidiRoutingsChangedEvent());
     }
 
     private void migrateToVersion2() {

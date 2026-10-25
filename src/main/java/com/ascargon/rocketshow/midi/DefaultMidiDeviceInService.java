@@ -27,7 +27,6 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
 
     private final SettingsService settingsService;
     private final MidiService midiService;
-    private final MidiRouter midiRouter;
     private Timer connectMidiDeviceTimer;
     private javax.sound.midi.MidiDevice midiDevice;
     private SerialPort midiSerialDevice;
@@ -38,10 +37,7 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
         this.midiService = midiService;
 
         // Initialize the MIDI in device receiver to executeFromTrigger MIDI control actions
-        midiInDeviceReceiver = new MidiInDeviceReceiver(actionMidiExecutionService, settingsService, midiRouterFactory);
-
-        // Initialize the MIDI router
-        midiRouter = midiRouterFactory.getMidiRouter(settingsService.getSettings().getDeviceInMidiRoutingList());
+        midiInDeviceReceiver = new MidiInDeviceReceiver(actionMidiExecutionService, midiRouterFactory);
     }
 
     @PostConstruct
@@ -63,9 +59,7 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
 
             midiDevice.open();
 
-            // Connect the transmitters (getTransmitter() returns a new transmitter each call)
-            midiRouter.connectTransmitter(midiDevice.getTransmitter(), midiDevice.getTransmitter());
-
+            // The receiver executes the actions and routes the messages
             midiDevice.getTransmitter().setReceiver(midiInDeviceReceiver);
 
             logger.info("Successfully connected to MIDI IN device " + midiDevice.getDeviceInfo().getName());
@@ -195,8 +189,6 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
             midiDevice.close();
             midiDevice = null;
         }
-
-        midiRouter.close();
     }
 
     @Override

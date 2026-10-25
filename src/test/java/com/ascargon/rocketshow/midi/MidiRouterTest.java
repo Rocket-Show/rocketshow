@@ -221,6 +221,26 @@ class MidiRouterTest {
     }
 
     @Test
+    void appliesChangedRoutings() throws Exception {
+        MidiRouter midiRouter = getMidiRouter(getMidiRouting(MidiDestination.OUT_DEVICE, getMidiMapping(0, 12)));
+
+        midiRouter.setMidiRoutingList(List.of(getMidiRouting(MidiDestination.REMOTE, new MidiMapping())));
+        midiRouter.sendSignal(getNoteOn(), MidiSource.IN_DEVICE);
+
+        assertEquals(List.of(), outDeviceMessages);
+        assertEquals(List.of("90 3C 64"), remoteMessages);
+    }
+
+    @Test
+    void closesTheLightingUniversesOfChangedRoutings() {
+        MidiRouter midiRouter = getMidiRouter(getMidiRouting(MidiDestination.LIGHTING, new MidiMapping()));
+
+        midiRouter.setMidiRoutingList(List.of());
+
+        verify(lightingService).removeLightingUniverse(any());
+    }
+
+    @Test
     void closesTheLightingUniverses() {
         getMidiRouter(getMidiRouting(MidiDestination.LIGHTING, new MidiMapping())).close();
 

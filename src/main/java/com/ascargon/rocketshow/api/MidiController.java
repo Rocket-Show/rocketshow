@@ -1,6 +1,6 @@
 package com.ascargon.rocketshow.api;
 
-import com.ascargon.rocketshow.settings.SettingsService;
+import com.ascargon.rocketshow.settings.Settings;
 import com.ascargon.rocketshow.midi.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,13 +22,13 @@ class MidiController {
 
     private final MidiRouter midiRouter;
 
-    private MidiController(ControllerService controllerService, SettingsService settingsService, ActivityNotificationMidiService activityNotificationMidiService, MidiService midiService, ActionMidiExecutionService actionMidiExecutionService, MidiRouterFactory midiRouterFactory) {
+    private MidiController(ControllerService controllerService, ActivityNotificationMidiService activityNotificationMidiService, MidiService midiService, ActionMidiExecutionService actionMidiExecutionService, MidiRouterFactory midiRouterFactory) {
         this.controllerService = controllerService;
         this.activityNotificationMidiService = activityNotificationMidiService;
         this.midiService = midiService;
         this.actionMidiExecutionService = actionMidiExecutionService;
 
-        midiRouter = midiRouterFactory.getMidiRouter(settingsService.getSettings().getRemoteMidiRoutingList());
+        midiRouter = midiRouterFactory.getSettingsMidiRouter(Settings::getRemoteMidiRoutingList);
     }
 
     @ExceptionHandler(Exception.class)

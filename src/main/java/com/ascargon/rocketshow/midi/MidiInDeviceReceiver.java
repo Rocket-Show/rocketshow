@@ -1,6 +1,6 @@
 package com.ascargon.rocketshow.midi;
 
-import com.ascargon.rocketshow.settings.SettingsService;
+import com.ascargon.rocketshow.settings.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,10 +22,10 @@ class MidiInDeviceReceiver implements Receiver {
 
     private final MidiRouter midiRouter;
 
-    MidiInDeviceReceiver(ActionMidiExecutionService actionMidiExecutionService, SettingsService settingsService, MidiRouterFactory midiRouterFactory) {
+    MidiInDeviceReceiver(ActionMidiExecutionService actionMidiExecutionService, MidiRouterFactory midiRouterFactory) {
         this.actionMidiExecutionService = actionMidiExecutionService;
 
-        midiRouter = midiRouterFactory.getMidiRouter(settingsService.getSettings().getDeviceInMidiRoutingList());
+        midiRouter = midiRouterFactory.getSettingsMidiRouter(Settings::getDeviceInMidiRoutingList);
     }
 
     @Override

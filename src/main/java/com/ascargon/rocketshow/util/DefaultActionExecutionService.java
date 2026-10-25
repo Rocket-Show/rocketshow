@@ -11,6 +11,7 @@ import com.ascargon.rocketshow.midi.MidiSource;
 import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.raspberry.ActionRaspberryGpio;
 import com.ascargon.rocketshow.raspberry.RaspberryGpioOutService;
+import com.ascargon.rocketshow.settings.Settings;
 import com.ascargon.rocketshow.settings.SettingsService;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -49,7 +50,7 @@ public class DefaultActionExecutionService implements ActionExecutionService {
         this.lightingService = lightingService;
         this.raspberryGpioOutService = raspberryGpioOutService;
 
-        midiRouter = midiRouterFactory.getMidiRouter(settingsService.getSettings().getRemoteMidiRoutingList());
+        midiRouter = midiRouterFactory.getSettingsMidiRouter(Settings::getRemoteMidiRoutingList);
 
         RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(60000 /* 60 seconds */).build();
         httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
