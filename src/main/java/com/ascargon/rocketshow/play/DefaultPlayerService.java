@@ -174,6 +174,12 @@ public class DefaultPlayerService implements PlayerService {
             setCompositionName(compositionName);
         }
 
+        if (currentCompositionPlayer.getComposition() == null) {
+            // E.g. a synchronized unit playing a composition this one doesn't have: nothing gets played here
+            logger.warn("Composition '{}' to load doesn't exist", compositionName);
+            return;
+        }
+
         currentCompositionPlayer.loadFiles();
     }
 

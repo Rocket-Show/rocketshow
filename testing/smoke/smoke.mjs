@@ -16,9 +16,10 @@ const screenshotDirectory = process.env.SCREENSHOT_DIRECTORY || 'screenshots';
 const adminPassword = 'smoke-test-password';
 const deviceName = 'Smoke test unit';
 const renamedDeviceName = 'Renamed smoke test unit';
-const compositionName = 'Smoke test composition';
-const setName = 'Smoke test set';
-const mediaFileName = 'smoke-test-click.wav';
+// Names with characters, which have to be encoded in a URL
+const compositionName = 'Smoke test & composition #1 + 50%';
+const setName = 'Smoke test set & more #2';
+const mediaFileName = 'smoke test click #1 + 2.wav';
 
 mkdirSync(screenshotDirectory, { recursive: true });
 
@@ -57,6 +58,24 @@ function wavFile() {
   buffer.write('data', 36);
   buffer.writeUInt32LE(samples * 2, 40);
   return buffer;
+}
+
+// Wait until the check is true
+async function waitUntil(check, description) {
+  for (let i = 0; i < 100; i++) {
+    if (await check()) {
+      return;
+    }
+    await page.waitForTimeout(100);
+  }
+
+  throw new Error(`Timed out waiting for ${description}`);
+}
+
+// The state of the unit, as the web app gets it
+async function state() {
+  const response = await page.request.get(`${baseUrl}/api/system/state`);
+  return response.json();
 }
 
 // Wait for the message of a successful action. An error message fails the test right away.
@@ -138,6 +157,12 @@ try {
     await page.getByText(compositionName).first().waitFor();
   });
 
+  await step('Open the composition', async () => {
+    await page.locator('#compositions .list-group-item', { hasText: compositionName }).first().click();
+    const name = page.locator('#compositionName');
+    await waitUntil(async () => (await name.inputValue()) === compositionName, `the composition "${compositionName}" to open`);
+  });
+
   await step('Create a set with the composition', async () => {
     await page.locator('#sets-tab').click();
     await page.getByRole('button', { name: 'Create set' }).click();
@@ -152,7 +177,29 @@ try {
   await step('Find the set after a reload', async () => {
     await page.reload();
     await page.locator('#sets-tab').click();
-    await page.locator('#sets').getByText(setName).first().waitFor();
+    await page.locator('#sets .list-group-item', { hasText: setName }).first().click();
+    const name = page.locator('#setName');
+    await waitUntil(async () => (await name.inputValue()) === setName, `the set "${setName}" to open`);
+  });
+
+  await step('Delete the media file', async () => {
+    await page.locator('#media-tab').click();
+    await page.locator('#media .list-group-item', { hasText: mediaFileName }).locator('.text-danger').click();
+    await page.getByRole('button', { name: 'OK' }).click();
+    await waitUntil(async () => (await page.locator('#media .list-group-item', { hasText: mediaFileName }).count()) === 0, `the media file "${mediaFileName}" to disappear`);
+
+    await page.reload();
+    await page.locator('#media-tab').click();
+    await page.locator('#media').getByText('GB').first().waitFor();
+    if ((await page.locator('#media .list-group-item', { hasText: mediaFileName }).count()) > 0) {
+      throw new Error(`The media file "${mediaFileName}" is still there`);
+    }
+  });
+
+  await step('Select the composition to play', async () => {
+    await page.goto(`${baseUrl}/#/play`);
+    await page.locator('.list-group-item:visible', { hasText: compositionName }).first().click();
+    await waitUntil(async () => (await state()).currentCompositionName === compositionName, `the composition "${compositionName}" to be selected`);
   });
 
   await step('Open the designer', async () => {
