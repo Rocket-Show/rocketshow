@@ -240,6 +240,12 @@
                         <groupId>org.jacoco</groupId>
                         <artifactId>jacoco-maven-plugin</artifactId>
                         <version>0.8.12</version>
+                        <configuration>
+                            <excludes>
+                                <!-- Libraries shipped with the app (e.g. the OLA client) -->
+                                <exclude>lib/**</exclude>
+                            </excludes>
+                        </configuration>
                         <executions>
                             <execution>
                                 <goals>

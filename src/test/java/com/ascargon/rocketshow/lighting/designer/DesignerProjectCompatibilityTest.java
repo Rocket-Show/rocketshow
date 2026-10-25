@@ -169,6 +169,8 @@ class DesignerProjectCompatibilityTest {
             CompositionPlayer compositionPlayer = mock(CompositionPlayer.class);
             when(compositionPlayer.getComposition()).thenReturn(composition);
             when(compositionPlayer.getPositionMillis()).thenReturn(position.positionMillis());
+            // Playing: the engine plays the scenes on the timeline, not the preset selected in the designer
+            when(compositionPlayer.getPlayState()).thenReturn(CompositionPlayer.PlayState.PLAYING);
 
             // Keep the first values the engine sends
             CountDownLatch sent = new CountDownLatch(1);

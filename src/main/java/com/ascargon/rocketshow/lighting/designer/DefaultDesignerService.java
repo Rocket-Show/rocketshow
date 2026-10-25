@@ -518,7 +518,8 @@ public class DefaultDesignerService implements DesignerService {
 
         if (!isNumeric(fixtureChannel.getDefaultValue()) && fixtureChannel.getDefaultValue().endsWith("%")) {
             // percentage value
-            double percentage = Integer.parseInt(fixtureChannel.getDefaultValue().replace("%", ""));
+            // the fixture library also has fractions, e.g. 33.3%
+            double percentage = Double.parseDouble(fixtureChannel.getDefaultValue().replace("%", ""));
             double maxValue = getMaxValueByChannel(fixtureChannel);
             return maxValue / 100 * percentage;
         } else {
@@ -537,6 +538,11 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     private boolean wheelHasSlotType(FixtureWheel wheel, FixtureWheelSlot.FixtureWheelSlotType slotType) {
+        if (wheel == null) {
+            // a slot of a wheel the profile doesn't have (e.g. a channel named differently than its wheel)
+            return false;
+        }
+
         for (FixtureWheelSlot slot : wheel.getSlots()) {
             if (slot.getType() == slotType) {
                 return true;
@@ -1189,6 +1195,11 @@ public class DefaultDesignerService implements DesignerService {
         }
     }
 
+    private boolean isUnusedChannel(FixtureModeChannel fixtureModeChannel) {
+        return (fixtureModeChannel.getName() == null || fixtureModeChannel.getName().isEmpty())
+                && (fixtureModeChannel.getRepeatFor() == null || fixtureModeChannel.getRepeatFor().isEmpty());
+    }
+
     private void setUniverseValues(Map<CachedFixture, List<FixtureChannelValue>> fixtures) {
         logger.trace("Set universe values...");
 
@@ -1220,7 +1231,10 @@ public class DefaultDesignerService implements DesignerService {
             for (FixtureModeChannel fixtureModeChannel : entry.getKey().getMode().getChannels()) {
                 logger.trace("Process channel " + fixtureModeChannel.getName());
 
-                if (fixtureModeChannel.getName() == null || fixtureModeChannel.getName().isEmpty()) {
+                if (isUnusedChannel(fixtureModeChannel)) {
+                    // an unused channel ("null" in the fixture library) still takes its DMX address
+                    channelIndex++;
+                } else if (fixtureModeChannel.getName() == null || fixtureModeChannel.getName().isEmpty()) {
                     // reference a channel through a pixel matrix
 
                     List<CachedFixturePixel> availablePixels = getPixelsInOrder(entry.getKey().getProfile(), fixtureModeChannel.getRepeatFor());
@@ -1404,8 +1418,14 @@ public class DefaultDesignerService implements DesignerService {
 
     // get pixel keys in order for a specific channel repeatFor
     private List<CachedFixturePixel> getPixelsInOrder(FixtureProfile profile, List<String> repeatFor) {
-        List<CachedFixturePixel> allPixelKeys = this.getAllPixelKeys(profile);
         List<CachedFixturePixel> result = new ArrayList<>();
+
+        if (repeatFor == null || repeatFor.isEmpty()) {
+            // a channel of its own, no pixels
+            return result;
+        }
+
+        List<CachedFixturePixel> allPixelKeys = this.getAllPixelKeys(profile);
 
         // could contain different things
 
