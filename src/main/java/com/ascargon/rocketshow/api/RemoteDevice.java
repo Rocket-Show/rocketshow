@@ -46,9 +46,25 @@ public class RemoteDevice {
 
     private String apiKey;
 
+    // TODO Add these timeouts to the settings
+    private final static int CONNECT_TIMEOUT_MILLIS = 10000;
+
+    // A device, which accepts the request but never answers (e.g. it hangs or lost its power in the middle of
+    // a request), must not keep the request and its connection forever. Otherwise, all connections to the
+    // device are used up and every play waits for the remote devices to load.
+    private final static int READ_TIMEOUT_MILLIS = 30000;
+
     private RemoteDevice() {
-        // TODO Add this timeout to the settings
-        RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(10000 /* 10 seconds */).build();
+        this(CONNECT_TIMEOUT_MILLIS, READ_TIMEOUT_MILLIS);
+    }
+
+    // Package visible for the tests
+    RemoteDevice(int connectTimeoutMillis, int readTimeoutMillis) {
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(connectTimeoutMillis)
+                .setSocketTimeout(readTimeoutMillis)
+                .setConnectionRequestTimeout(readTimeoutMillis)
+                .build();
         httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
     }
 
@@ -67,10 +83,13 @@ public class RemoteDevice {
 
             response = httpClient.execute(httpPost);
 
-            logger.debug("Response from remote device POST: {}", EntityUtils.toString(response.getEntity()));
+            // The body can only be read once
+            String body = response.getEntity() == null ? "" : EntityUtils.toString(response.getEntity());
+
+            logger.debug("Response from remote device POST: {}", body);
 
             if (response.getStatusLine().getStatusCode() != 200) {
-                logger.error("Could not executeFromTrigger action on remote device with URL '{}'. Reason: '{}'. Body: {}", url, response.getStatusLine().getReasonPhrase(), EntityUtils.toString(response.getEntity()));
+                logger.error("Could not executeFromTrigger action on remote device with URL '{}'. Reason: '{}'. Body: {}", url, response.getStatusLine().getReasonPhrase(), body);
             }
         } catch (Exception e) {
             logger.error("Could not executeFromTrigger action on remote device '{}' with url '{}'", name, url, e);
@@ -117,7 +136,7 @@ public class RemoteDevice {
     }
 
     public void playAsSample(String compositionName) {
-        doPost("transport/play-as-sample?name=" + compositionName);
+        doPost("transport/play-as-sample?name=" + URLEncoder.encode(compositionName, StandardCharsets.UTF_8));
     }
 
     public void pause() {
@@ -133,7 +152,7 @@ public class RemoteDevice {
     }
 
     public void setCompositionName(String compositionName) {
-        doPost("transport/set-composition-name?name=" + compositionName, null, true);
+        doPost("transport/set-composition-name?name=" + URLEncoder.encode(compositionName, StandardCharsets.UTF_8), null, true);
     }
 
     public void sendMidiSignal(MidiSignal midiSignal) {
