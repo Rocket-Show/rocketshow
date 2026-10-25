@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Loads the files written by earlier releases with the current classes. Add the files of every release to
- * src/test/resources/compat/&lt;version&gt;/ (settings.xml, session.xml, update.xml, compositions/, sets/).
+ * src/test/resources/compat/&lt;version&gt;/ (settings.xml, session.xml, update.xml, compositions/, sets/, designer/).
  * <p>
  * An element the current version does not understand fails the test, because its content would be lost silently
  * on the next save.
@@ -94,7 +94,12 @@ class CompatibilityTest {
 
         List<Path> files;
         try (Stream<Path> paths = Files.walk(compatPath)) {
-            files = paths.filter(Files::isRegularFile).sorted().toList();
+            // Designer projects are played in DesignerProjectCompatibilityTest
+            files = paths
+                    .filter(Files::isRegularFile)
+                    .filter(path -> !path.getParent().getFileName().toString().equals("designer"))
+                    .sorted()
+                    .toList();
         }
 
         assertFalse(files.isEmpty());
