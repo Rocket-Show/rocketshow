@@ -72,4 +72,30 @@ class DefaultRaucServiceTest {
                 "100 Installing"), progress);
     }
 
+    @Test
+    void tellsWhyAnInstallationFailed() {
+        List<String> output = List.of(
+                "installing",
+                "  0% Installing",
+                "  0% Determining slot states",
+                " 20% Determining slot states done.",
+                " 20% Checking bundle",
+                " 20% Verifying signature",
+                " 40% Verifying signature failed.",
+                " 40% Checking bundle failed.",
+                "100% Installing failed.",
+                "LastError: Failed verifying signature: signature verification failed: certificate has expired",
+                "idle",
+                "Installing `https://example.com/rocketshow.raucb` failed");
+
+        assertEquals("Failed verifying signature: signature verification failed: certificate has expired", DefaultRaucService.getFailureReason(output, 1));
+    }
+
+    @Test
+    void tellsWhatRaucWroteWithoutLastError() {
+        assertEquals("Failed to connect to the D-Bus service of RAUC",
+                DefaultRaucService.getFailureReason(List.of("Failed to connect to the D-Bus service of RAUC", ""), 1));
+        assertEquals("RAUC exited with exit code 127", DefaultRaucService.getFailureReason(List.of(), 127));
+    }
+
 }

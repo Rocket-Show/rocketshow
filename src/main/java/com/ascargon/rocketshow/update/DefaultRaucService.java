@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -87,6 +89,27 @@ public class DefaultRaucService implements RaucService {
         return updateState;
     }
 
+    // Why "rauc install" failed, for the web app: the last error RAUC reported (e.g. "LastError: Failed verifying
+    // signature: ..."), otherwise the last line it wrote (e.g. when its service didn't run) or its exit code
+    // Package visible for the tests
+    static String getFailureReason(List<String> output, int exitCode) {
+        String lastLine = null;
+
+        for (int i = output.size() - 1; i >= 0; i--) {
+            String line = output.get(i).trim();
+
+            if (line.startsWith("LastError:")) {
+                return line.substring("LastError:".length()).trim();
+            }
+
+            if (lastLine == null && !line.isEmpty() && !line.equals("idle") && !(line.startsWith("Installing `") && line.endsWith("failed")) && getProgress(line) == null) {
+                lastLine = line;
+            }
+        }
+
+        return lastLine == null ? "RAUC exited with exit code " + exitCode : lastLine;
+    }
+
     @Override
     public void installBundle(String url) throws Exception {
         ShellManager shellManager = new ShellManager(
@@ -95,12 +118,20 @@ public class DefaultRaucService implements RaucService {
 
         Process process = shellManager.getProcess();
 
+        // The last lines, to tell why it failed
+        List<String> output = new ArrayList<>();
+
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
 
             String line;
             while ((line = reader.readLine()) != null) {
                 logger.info("RAUC output: {}", line);
+
+                output.add(line);
+                if (output.size() > 50) {
+                    output.removeFirst();
+                }
 
                 UpdateState updateState = getProgress(line);
                 if (updateState != null) {
@@ -112,7 +143,7 @@ public class DefaultRaucService implements RaucService {
         int exitCode = process.waitFor();
 
         if (exitCode != 0) {
-            throw new Exception("RAUC exited with exit code " + exitCode);
+            throw new Exception(getFailureReason(output, exitCode));
         }
     }
 
