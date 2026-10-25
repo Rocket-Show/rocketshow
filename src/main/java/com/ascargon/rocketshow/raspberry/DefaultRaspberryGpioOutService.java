@@ -27,16 +27,27 @@ public class DefaultRaspberryGpioOutService implements RaspberryGpioOutService {
             return;
         }
 
-        pi4j = pi4jService.getContext();
+        // The app has to start, even without GPIO (e.g. on a device model without supported GPIO). Otherwise,
+        // GPIO can't even be disabled in the settings anymore.
+        try {
+            pi4j = pi4jService.getContext();
+        } catch (Exception e) {
+            logger.error("Could not initialize GPIO", e);
+            return;
+        }
 
         initializeOutput(settingsService);
     }
 
     private void initializeOutput(SettingsService settingsService) {
-        // Add a input for each configured input
+        // Add an output for each configured output. One pin, which can't be used, must not break the others.
         for (Integer outputAddress : settingsService.getSettings().getRaspberryGpioOutputPinBcmList()) {
-            DigitalOutput digitalOutput = pi4j.digitalOutput().create(outputAddress);
-            digitalOutputList.add(digitalOutput);
+            try {
+                DigitalOutput digitalOutput = pi4j.digitalOutput().create(outputAddress);
+                digitalOutputList.add(digitalOutput);
+            } catch (Exception e) {
+                logger.error("Could not initialize GPIO output BCM " + outputAddress + " ID", e);
+            }
         }
     }
 
