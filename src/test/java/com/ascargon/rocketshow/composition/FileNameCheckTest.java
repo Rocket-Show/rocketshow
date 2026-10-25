@@ -1,7 +1,6 @@
 package com.ascargon.rocketshow.composition;
 
 import com.ascargon.rocketshow.gstreamer.GstDiscovererService;
-import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.settings.CapabilitiesService;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.settings.TestSettings;
@@ -20,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Names of media files, lead sheets, compositions and sets come from the web app. They must not reach files
@@ -56,12 +54,6 @@ class FileNameCheckTest {
 
     private DefaultCompositionService compositionService() {
         return new DefaultCompositionService(settingsService, mock(CapabilitiesService.class), mock(GstDiscovererService.class));
-    }
-
-    private PlayerService playerService() {
-        PlayerService playerService = mock(PlayerService.class);
-        when(playerService.getCompositionName()).thenReturn("");
-        return playerService;
     }
 
     @Test
@@ -104,7 +96,7 @@ class FileNameCheckTest {
         Path file = directory.resolve("compositions/Song 1.xml");
         assertTrue(Files.exists(file));
 
-        compositionService.deleteComposition("Song 1", playerService());
+        compositionService.deleteComposition("Song 1");
         assertFalse(Files.exists(file));
     }
 
@@ -116,7 +108,7 @@ class FileNameCheckTest {
         Set set = new Set();
         set.setName("../settings");
 
-        assertRejected(settingsFile, () -> compositionService.deleteComposition("../settings", playerService()));
+        assertRejected(settingsFile, () -> compositionService.deleteComposition("../settings"));
         assertRejected(settingsFile, () -> compositionService.deleteSet("../settings"));
         assertRejected(settingsFile, () -> compositionService.saveComposition(composition));
         assertRejected(settingsFile, () -> compositionService.saveSet(set, false));

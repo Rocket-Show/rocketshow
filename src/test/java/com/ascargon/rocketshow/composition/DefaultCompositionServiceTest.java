@@ -3,7 +3,6 @@ package com.ascargon.rocketshow.composition;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.gstreamer.GstDiscovererService;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
-import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.settings.Capabilities;
 import com.ascargon.rocketshow.settings.CapabilitiesService;
 import com.ascargon.rocketshow.settings.SettingsService;
@@ -24,10 +23,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -40,14 +36,12 @@ class DefaultCompositionServiceTest {
 
     private SettingsService settingsService;
     private final CapabilitiesService capabilitiesService = mock(CapabilitiesService.class);
-    private final PlayerService playerService = mock(PlayerService.class);
     private DefaultCompositionService compositionService;
 
     @BeforeEach
     void setUp() {
         settingsService = TestSettings.inDirectory(directory);
         when(capabilitiesService.getCapabilities()).thenReturn(new Capabilities());
-        when(playerService.getCompositionName()).thenReturn("");
         compositionService = start();
     }
 
@@ -195,33 +189,11 @@ class DefaultCompositionServiceTest {
         compositionService.saveComposition(composition("Song 2"));
         compositionService.saveSet(set("Show", "Song 1", "Song 2"));
 
-        compositionService.deleteComposition("Song 1", playerService);
+        compositionService.deleteComposition("Song 1");
 
         assertNull(compositionService.getComposition("Song 1"));
         assertEquals(List.of("Song 2 0"), setEntries("Show"));
         assertEquals(List.of("Song 2"), names(start().getAllCompositions()));
-    }
-
-    @Test
-    void selectsAnotherCompositionWhenTheCurrentOneIsDeleted() throws Exception {
-        compositionService.saveComposition(composition("Song 1"));
-        compositionService.saveComposition(composition("Song 2"));
-        when(playerService.getCompositionName()).thenReturn("Song 1");
-
-        compositionService.deleteComposition("Song 1", playerService);
-
-        verify(playerService).setComposition(compositionService.getComposition("Song 2"));
-    }
-
-    @Test
-    void deletesACompositionWhileNoneIsSelected() throws Exception {
-        compositionService.saveComposition(composition("Song 1"));
-        when(playerService.getCompositionName()).thenReturn(null);
-
-        compositionService.deleteComposition("Song 1", playerService);
-
-        assertNull(compositionService.getComposition("Song 1"));
-        verify(playerService, never()).setComposition(any());
     }
 
     @Test

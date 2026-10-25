@@ -69,8 +69,8 @@ class TransportApiTest extends ApiTest {
         playerService.stop();
         playerService.loadSetAndComposition("");
         compositionService.deleteSet("Transport test set");
-        compositionService.deleteComposition(SONG, playerService);
-        compositionService.deleteComposition(OTHER_SONG, playerService);
+        compositionService.deleteComposition(SONG);
+        compositionService.deleteComposition(OTHER_SONG);
     }
 
     @Test

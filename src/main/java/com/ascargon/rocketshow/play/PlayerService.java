@@ -39,6 +39,8 @@ public interface PlayerService {
 
     void loadSetAndComposition(String setName) throws Exception;
 
+    void compositionsChanged() throws Exception;
+
     CompositionPlayer.PlayState getPlayState();
 
     String getCompositionName();

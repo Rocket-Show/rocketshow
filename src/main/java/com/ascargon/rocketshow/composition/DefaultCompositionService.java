@@ -1,7 +1,6 @@
 package com.ascargon.rocketshow.composition;
 
 import com.ascargon.rocketshow.settings.CapabilitiesService;
-import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.gstreamer.GstDiscovererService;
@@ -225,31 +224,72 @@ public class DefaultCompositionService implements CompositionService {
         return duration;
     }
 
+    // The file as analyzed when the composition was saved, if it didn't change since. Saving a composition doesn't
+    // stop the one playing, so its unchanged files aren't analyzed again during a show.
+    private CompositionFile getUnchangedFile(Composition savedComposition, CompositionFile compositionFile, File mediaFile) {
+        if (savedComposition == null) {
+            return null;
+        }
+
+        File savedFile = new File(settingsService.getSettings().getBasePath() + File.separator + COMPOSITIONS_PATH + File.separator + FileNames.check(savedComposition.getName()) + ".xml");
+
+        for (CompositionFile savedCompositionFile : savedComposition.getCompositionFileList()) {
+            if (savedCompositionFile.getClass().equals(compositionFile.getClass())
+                    && savedCompositionFile.getName().equals(compositionFile.getName())
+                    && savedCompositionFile.getDurationMillis() > 0
+                    && mediaFile.lastModified() < savedFile.lastModified()) {
+
+                return savedCompositionFile;
+            }
+        }
+
+        return null;
+    }
+
     @Override
     public void analyzeComposition(Composition composition) throws Exception {
+        Composition savedComposition = getComposition(composition.getName());
+
         // Set additional information for each file
         for (CompositionFile compositionFile : composition.getCompositionFileList()) {
             String path = settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator;
 
             if (compositionFile instanceof MidiCompositionFile) {
+                File mediaFile = new File(path + settingsService.getSettings().getMidiPath() + File.separator + compositionFile.getName());
+                CompositionFile unchangedFile = getUnchangedFile(savedComposition, compositionFile, mediaFile);
+
                 // Getting duration with Gstreamer does not work (missing plugins)
-                compositionFile.setDurationMillis(getMidiDuration(path + settingsService.getSettings().getMidiPath() + File.separator + compositionFile.getName()));
-            } else if (compositionFile instanceof AudioCompositionFile) {
+                compositionFile.setDurationMillis(unchangedFile == null ? getMidiDuration(mediaFile.getPath()) : unchangedFile.getDurationMillis());
+            } else if (compositionFile instanceof AudioCompositionFile audioCompositionFile) {
+                File mediaFile = new File(path + settingsService.getSettings().getAudioPath() + File.separator + compositionFile.getName());
+
+                if (getUnchangedFile(savedComposition, compositionFile, mediaFile) instanceof AudioCompositionFile unchangedFile) {
+                    audioCompositionFile.setDurationMillis(unchangedFile.getDurationMillis());
+                    audioCompositionFile.setChannels(unchangedFile.getChannels());
+                    continue;
+                }
+
                 if (!capabilitiesService.getCapabilities().isGstreamer()) {
                     throw new Exception("Gstreamer is not available");
                 }
 
-                AudioCompositionFile audioCompositionFile = ((AudioCompositionFile) compositionFile);
-
-                Pointer discovererInformation = gstDiscovererService.getDiscovererInformation(path + settingsService.getSettings().getAudioPath() + File.separator + compositionFile.getName());
+                Pointer discovererInformation = gstDiscovererService.getDiscovererInformation(mediaFile.getPath());
                 audioCompositionFile.setDurationMillis(gstDiscovererService.getDurationMillis(discovererInformation));
                 audioCompositionFile.setChannels(gstDiscovererService.getChannels(discovererInformation));
             } else if (compositionFile instanceof VideoCompositionFile) {
+                File mediaFile = new File(path + settingsService.getSettings().getVideoPath() + File.separator + compositionFile.getName());
+                CompositionFile unchangedFile = getUnchangedFile(savedComposition, compositionFile, mediaFile);
+
+                if (unchangedFile != null) {
+                    compositionFile.setDurationMillis(unchangedFile.getDurationMillis());
+                    continue;
+                }
+
                 if (!capabilitiesService.getCapabilities().isGstreamer()) {
                     throw new Exception("Gstreamer is not available");
                 }
 
-                Pointer discovererInformation = gstDiscovererService.getDiscovererInformation(path + settingsService.getSettings().getVideoPath() + File.separator + compositionFile.getName());
+                Pointer discovererInformation = gstDiscovererService.getDiscovererInformation(mediaFile.getPath());
                 compositionFile.setDurationMillis(gstDiscovererService.getDurationMillis(discovererInformation));
             }
         }
@@ -359,7 +399,7 @@ public class DefaultCompositionService implements CompositionService {
     }
 
     @Override
-    public synchronized void deleteComposition(String name, PlayerService playerService) throws Exception {
+    public synchronized void deleteComposition(String name) throws Exception {
         // Delete the composition
         File file = new File(settingsService.getSettings().getBasePath() + File.separator + COMPOSITIONS_PATH + File.separator + FileNames.check(name) + ".xml");
 
@@ -379,13 +419,6 @@ public class DefaultCompositionService implements CompositionService {
         }
 
         updateSets();
-
-        // Set another composition, if we deleted the current one (there might be none)
-        if (name.equals(playerService.getCompositionName())) {
-            if (compositionCache.size() > 0) {
-                playerService.setComposition(compositionCache.get(0));
-            }
-        }
 
         logger.info("Composition '" + name + "' deleted");
     }
