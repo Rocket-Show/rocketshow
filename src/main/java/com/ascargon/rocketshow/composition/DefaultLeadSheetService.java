@@ -2,6 +2,7 @@ package com.ascargon.rocketshow.composition;
 
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.ChunkedFileUploadService;
+import com.ascargon.rocketshow.util.FileNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -54,7 +55,7 @@ public class DefaultLeadSheetService implements LeadSheetService {
 
     @Override
     public void deleteLeadSheet(String name) {
-        String path = settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getLeadSheetPath() + File.separator + name;
+        String path = settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getLeadSheetPath() + File.separator + FileNames.check(name);
 
         logger.info("Delete lead sheet '" + path + "'");
 
@@ -90,7 +91,7 @@ public class DefaultLeadSheetService implements LeadSheetService {
             logger.error("Could not create directory to save the lead sheet", e);
         }
 
-        path += fileName;
+        path += FileNames.check(fileName);
 
         return new File(path);
     }
@@ -120,7 +121,7 @@ public class DefaultLeadSheetService implements LeadSheetService {
 
     @Override
     public File getImage(String name) throws Exception {
-        return new File(settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getLeadSheetPath() + File.separator + name);
+        return new File(settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getLeadSheetPath() + File.separator + FileNames.check(name));
     }
 
 }

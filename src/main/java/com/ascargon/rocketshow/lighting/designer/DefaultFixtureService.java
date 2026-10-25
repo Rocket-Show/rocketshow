@@ -2,6 +2,7 @@ package com.ascargon.rocketshow.lighting.designer;
 
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.FileFilterService;
+import com.ascargon.rocketshow.util.FileNames;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,14 +128,29 @@ public class DefaultFixtureService implements FixtureService {
         }
     }
 
+    // The uuid is "<manufacturer>/<fixture>" and must not leave the fixture directory
+    private String checkUuid(String uuid) {
+        String[] parts = uuid == null ? new String[0] : uuid.split("/", -1);
+
+        if (parts.length != 2) {
+            throw new IllegalArgumentException("Invalid fixture uuid '" + uuid + "'");
+        }
+
+        FileNames.check(parts[0]);
+        FileNames.check(parts[1]);
+
+        return uuid;
+    }
+
     @Override
     public String getFixture(String uuid) throws IOException {
         // Return a single fixture based on the uuid
-        File file = new File(basePath + File.separator + uuid + ".json");
+        File file = new File(basePath + File.separator + checkUuid(uuid) + ".json");
         return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
     }
 
-    private void extractFolder(String zipFile) throws ZipException, IOException {
+    // Package visible for the tests
+    void extractFolder(String zipFile) throws ZipException, IOException {
         int BUFFER = 2048;
         File file = new File(zipFile);
 
@@ -150,7 +166,11 @@ public class DefaultFixtureService implements FixtureService {
             ZipEntry entry = (ZipEntry) zipFileEntries.nextElement();
             String currentEntry = entry.getName();
             File destFile = new File(newPath, currentEntry);
-            //destFile = new File(newPath, destFile.getName());
+
+            // Don't write outside the target directory (e.g. an entry named "../x")
+            if (!destFile.getCanonicalPath().startsWith(new File(newPath).getCanonicalPath() + File.separator)) {
+                throw new IOException("Entry is outside of the target dir: " + currentEntry);
+            }
             File destinationParent = destFile.getParentFile();
 
             // create the parent directory structure if needed

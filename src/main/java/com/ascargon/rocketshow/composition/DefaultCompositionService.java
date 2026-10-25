@@ -6,6 +6,7 @@ import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.gstreamer.GstDiscovererService;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
+import com.ascargon.rocketshow.util.FileNames;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
 import com.sun.jna.Pointer;
 import jakarta.xml.bind.JAXBContext;
@@ -92,7 +93,7 @@ public class DefaultCompositionService implements CompositionService {
         // Load a composition
         JAXBContext jaxbContext = JAXBContext.newInstance(Composition.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-        composition = (Composition) jaxbUnmarshaller.unmarshal(new File(settingsService.getSettings().getBasePath() + File.separator + COMPOSITIONS_PATH + File.separator + name + ".xml"));
+        composition = (Composition) jaxbUnmarshaller.unmarshal(new File(settingsService.getSettings().getBasePath() + File.separator + COMPOSITIONS_PATH + File.separator + FileNames.check(name) + ".xml"));
 
         finalizeLoadedComposition(composition, name);
 
@@ -109,7 +110,7 @@ public class DefaultCompositionService implements CompositionService {
         // Load a set
         JAXBContext jaxbContext = JAXBContext.newInstance(Set.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-        set = (Set) jaxbUnmarshaller.unmarshal(new File(settingsService.getSettings().getBasePath() + File.separator + SETS_PATH + File.separator + name + ".xml"));
+        set = (Set) jaxbUnmarshaller.unmarshal(new File(settingsService.getSettings().getBasePath() + File.separator + SETS_PATH + File.separator + FileNames.check(name) + ".xml"));
 
         logger.info("Set '" + name + "' successfully loaded");
 
@@ -277,7 +278,7 @@ public class DefaultCompositionService implements CompositionService {
         String directory = settingsService.getSettings().getBasePath() + File.separator + COMPOSITIONS_PATH;
         createDirectoryIfNotExists(directory);
 
-        File file = new File(directory + File.separator + composition.getName() + ".xml");
+        File file = new File(directory + File.separator + FileNames.check(composition.getName()) + ".xml");
         JAXBContext jaxbContext = JAXBContext.newInstance(Composition.class);
         Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
@@ -330,7 +331,7 @@ public class DefaultCompositionService implements CompositionService {
         String directory = settingsService.getSettings().getBasePath() + File.separator + SETS_PATH;
         createDirectoryIfNotExists(directory);
 
-        File file = new File(directory + File.separator + set.getName() + ".xml");
+        File file = new File(directory + File.separator + FileNames.check(set.getName()) + ".xml");
         JAXBContext jaxbContext = JAXBContext.newInstance(Set.class);
         Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
@@ -358,7 +359,7 @@ public class DefaultCompositionService implements CompositionService {
     @Override
     public synchronized void deleteComposition(String name, PlayerService playerService) throws Exception {
         // Delete the composition
-        File file = new File(settingsService.getSettings().getBasePath() + File.separator + COMPOSITIONS_PATH + File.separator + name + ".xml");
+        File file = new File(settingsService.getSettings().getBasePath() + File.separator + COMPOSITIONS_PATH + File.separator + FileNames.check(name) + ".xml");
 
         if (file.exists()) {
             boolean result = file.delete();
@@ -390,7 +391,7 @@ public class DefaultCompositionService implements CompositionService {
     @Override
     public synchronized void deleteSet(String name) {
         // Delete the set
-        File file = new File(settingsService.getSettings().getBasePath() + File.separator + SETS_PATH + File.separator + name + ".xml");
+        File file = new File(settingsService.getSettings().getBasePath() + File.separator + SETS_PATH + File.separator + FileNames.check(name) + ".xml");
 
         if (file.exists()) {
             boolean result = file.delete();

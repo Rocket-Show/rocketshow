@@ -5,6 +5,7 @@ import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
 import com.ascargon.rocketshow.util.ChunkedFileUploadService;
 import com.ascargon.rocketshow.util.FileFilterService;
+import com.ascargon.rocketshow.util.FileNames;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
@@ -102,7 +103,7 @@ public class DefaultCompositionFileService implements CompositionFileService {
             path += settingsService.getSettings().getVideoPath();
         }
 
-        path += File.separator + name;
+        path += File.separator + FileNames.check(name);
 
         return path;
     }
@@ -177,7 +178,7 @@ public class DefaultCompositionFileService implements CompositionFileService {
             logger.error("Could not create directory to save the file", e);
         }
 
-        path += fileName;
+        path += FileNames.check(fileName);
 
         return new File(path);
     }

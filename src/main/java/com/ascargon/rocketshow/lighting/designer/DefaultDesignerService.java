@@ -6,6 +6,7 @@ import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.LightingUniverse;
 import com.ascargon.rocketshow.lighting.LightingUniverseState;
 import com.ascargon.rocketshow.util.FileFilterService;
+import com.ascargon.rocketshow.util.FileNames;
 import org.freedesktop.gstreamer.Pipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -152,7 +153,7 @@ public class DefaultDesignerService implements DesignerService {
     @Override
     public void deleteProjectByName(String name) {
         // Delete the project
-        File file = new File(settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getDesignerPath() + File.separator + name + ".json");
+        File file = new File(settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getDesignerPath() + File.separator + FileNames.check(name) + ".json");
 
         if (file.exists()) {
             boolean result = file.delete();
@@ -183,7 +184,7 @@ public class DefaultDesignerService implements DesignerService {
         // about a part of the properties not all (e.g. preview-related ones).
         ObjectMapper mapper = new ObjectMapper();
         Project projectObject = mapper.readValue(project, Project.class);
-        String projectName = projectObject.getName();
+        String projectName = FileNames.check(projectObject.getName());
         String designerPath = settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getDesignerPath();
 
         createDirectoryIfNotExists(designerPath);
