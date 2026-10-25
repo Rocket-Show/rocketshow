@@ -3,6 +3,7 @@ package com.ascargon.rocketshow.midi;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlTransient;
 
@@ -19,7 +20,9 @@ public class MidiMapping {
     // Completely ignore all parent's settings
     private Boolean overrideParent = false;
 
+    // Set at runtime only. Not sent to the web app, where it would be saved into every routing.
     @XmlTransient
+    @JsonIgnore
     public MidiMapping getParent() {
         return parent;
     }

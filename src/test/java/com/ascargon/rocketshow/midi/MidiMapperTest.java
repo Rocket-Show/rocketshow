@@ -87,6 +87,73 @@ class MidiMapperTest {
     }
 
     @Test
+    void addsTheOffsetsOfTheParent() throws Exception {
+        MidiMapping parent = new MidiMapping();
+        parent.setChannelOffset(1);
+        parent.setNoteOffset(12);
+
+        MidiMapping midiMapping = new MidiMapping();
+        midiMapping.setChannelOffset(2);
+        midiMapping.setNoteOffset(1);
+        midiMapping.setParent(parent);
+
+        ShortMessage shortMessage = map(ShortMessage.NOTE_ON, 0, 60, 100, midiMapping);
+
+        assertEquals(3, shortMessage.getChannel());
+        assertEquals(73, shortMessage.getData1());
+    }
+
+    @Test
+    void addsTheOffsetsOfAllParents() throws Exception {
+        // Like a composition: routing mapping -> composition mapping -> global mapping
+        MidiMapping globalMidiMapping = new MidiMapping();
+        globalMidiMapping.setNoteOffset(12);
+
+        MidiMapping compositionMidiMapping = new MidiMapping();
+        compositionMidiMapping.setParent(globalMidiMapping);
+
+        MidiMapping midiMapping = new MidiMapping();
+        midiMapping.setParent(compositionMidiMapping);
+
+        assertEquals(72, map(ShortMessage.NOTE_ON, 0, 60, 100, midiMapping).getData1());
+    }
+
+    @Test
+    void ignoresTheParentWhenOverridingIt() throws Exception {
+        MidiMapping parent = new MidiMapping();
+        parent.getChannelMap().add(getChannelMapping(0, 9));
+        parent.setChannelOffset(1);
+        parent.setNoteOffset(12);
+
+        MidiMapping midiMapping = new MidiMapping();
+        midiMapping.setNoteOffset(1);
+        midiMapping.setOverrideParent(true);
+        midiMapping.setParent(parent);
+
+        ShortMessage shortMessage = map(ShortMessage.NOTE_ON, 0, 60, 100, midiMapping);
+
+        assertEquals(0, shortMessage.getChannel());
+        assertEquals(61, shortMessage.getData1());
+    }
+
+    @Test
+    void treatsMissingValuesAsUnset() throws Exception {
+        MidiMapping parent = new MidiMapping();
+        parent.setNoteOffset(12);
+
+        MidiMapping midiMapping = new MidiMapping();
+        midiMapping.setChannelOffset(null);
+        midiMapping.setNoteOffset(null);
+        midiMapping.setOverrideParent(null);
+        midiMapping.setParent(parent);
+
+        ShortMessage shortMessage = map(ShortMessage.NOTE_ON, 0, 60, 100, midiMapping);
+
+        assertEquals(0, shortMessage.getChannel());
+        assertEquals(72, shortMessage.getData1());
+    }
+
+    @Test
     void mapsOnlyNotes() throws Exception {
         MidiMapping midiMapping = new MidiMapping();
         midiMapping.getChannelMap().add(getChannelMapping(0, 5));

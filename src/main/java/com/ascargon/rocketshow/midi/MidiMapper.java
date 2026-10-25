@@ -6,6 +6,12 @@ import javax.sound.midi.ShortMessage;
 
 class MidiMapper {
 
+    // Whether the parent mapping (in the end the global one) applies as well. A mapping overriding its parent
+    // ignores it completely.
+    private static boolean usesParent(MidiMapping midiMapping) {
+        return midiMapping.getParent() != null && !Boolean.TRUE.equals(midiMapping.isOverrideParent());
+    }
+
     private static int getChannelTo(int channelFrom, MidiMapping midiMapping) {
         // Search the channel map on the current mapping
         if (midiMapping.getChannelMap() != null) {
@@ -17,10 +23,8 @@ class MidiMapper {
         }
 
         // We haven't found a mapping -> search the parent
-        if (midiMapping.getParent() != null) {
-            if (!midiMapping.getParent().isOverrideParent()) {
-                return getChannelTo(channelFrom, midiMapping.getParent());
-            }
+        if (usesParent(midiMapping)) {
+            return getChannelTo(channelFrom, midiMapping.getParent());
         }
 
         // There is no mapping on the whole parent-chain -> channelTo =
@@ -29,20 +33,14 @@ class MidiMapper {
     }
 
     private static int getChannelOffset(MidiMapping midiMapping) {
-        // Check the current mapping
-        if (midiMapping.getChannelOffset() != null) {
-            return midiMapping.getChannelOffset();
+        // The offsets of the mapping and its parents add up
+        int channelOffset = midiMapping.getChannelOffset() == null ? 0 : midiMapping.getChannelOffset();
+
+        if (usesParent(midiMapping)) {
+            channelOffset += getChannelOffset(midiMapping.getParent());
         }
 
-        // There is no offset on the current mapping -> check the parent
-        if (midiMapping.getParent() != null) {
-            if (!midiMapping.getParent().isOverrideParent()) {
-                return getChannelOffset(midiMapping.getParent());
-            }
-        }
-
-        // There is no offset on the whole parent-chain -> return default 0
-        return 0;
+        return channelOffset;
     }
 
     private static int mapChannel(int channelFrom, MidiMapping midiMapping) {
@@ -50,20 +48,14 @@ class MidiMapper {
     }
 
     private static int getNoteOffset(MidiMapping midiMapping) {
-        // Check the current mapping
-        if (midiMapping.getNoteOffset() != null) {
-            return midiMapping.getNoteOffset();
+        // The offsets of the mapping and its parents add up
+        int noteOffset = midiMapping.getNoteOffset() == null ? 0 : midiMapping.getNoteOffset();
+
+        if (usesParent(midiMapping)) {
+            noteOffset += getNoteOffset(midiMapping.getParent());
         }
 
-        // There is no offset on the current mapping -> check the parent
-        if (midiMapping.getParent() != null) {
-            if (!midiMapping.getParent().isOverrideParent()) {
-                return getNoteOffset(midiMapping.getParent());
-            }
-        }
-
-        // There is no offset on the whole parent-chain -> return default 0
-        return 0;
+        return noteOffset;
     }
 
     public static void processMidiEvent(MidiMessage midiMessage, MidiMapping midiMapping) throws InvalidMidiDataException {

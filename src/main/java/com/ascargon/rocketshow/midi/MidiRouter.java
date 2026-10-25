@@ -35,6 +35,12 @@ public class MidiRouter {
 
         // Create a receiver for each routing
         for (MidiRouting midirouting : midiRoutingList) {
+            // The global mapping applies to every routing. Routings of a composition get the composition's mapping
+            // as parent instead, which uses the global mapping itself.
+            if (midirouting.getMidiMapping() != null && midirouting.getMidiMapping().getParent() == null) {
+                midirouting.getMidiMapping().setParent(settingsService.getSettings().getMidiMapping());
+            }
+
             receiverList.put(midirouting, getReceiver(midirouting));
         }
     }
@@ -82,11 +88,13 @@ public class MidiRouter {
             activityNotificationMidiService.notifyClients((ShortMessage) midiMessage, MidiDirection.IN, midiSource, null);
         }
 
-        // Send the signal to each receiver
+        // Send the signal to each receiver. Each one gets its own copy, because the receivers map the message.
         for (Map.Entry<MidiRouting, Receiver> entry : receiverList.entrySet()) {
-            entry.getValue().send(midiMessage, -1);
-            if (midiMessage instanceof ShortMessage) {
-                activityNotificationMidiService.notifyClients((ShortMessage) midiMessage, MidiDirection.OUT, midiSource, entry.getKey().getMidiDestination());
+            MidiMessage routedMidiMessage = (MidiMessage) midiMessage.clone();
+
+            entry.getValue().send(routedMidiMessage, -1);
+            if (routedMidiMessage instanceof ShortMessage) {
+                activityNotificationMidiService.notifyClients((ShortMessage) routedMidiMessage, MidiDirection.OUT, midiSource, entry.getKey().getMidiDestination());
             }
         }
     }
