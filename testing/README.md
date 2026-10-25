@@ -38,7 +38,8 @@ CI (`.github/workflows/ci.yml`) runs on every push and on pull requests from for
 The unit tests live in `src/test/java`:
 
 - Update state machine across reboots (`DefaultUpdateServiceTest`)
-- MIDI input parsing, mapping and routing (`MidiMessageParserTest`, `MidiMapperTest`, `MidiRouterTest`)
+- MIDI input parsing, mapping and routing (`MidiMessageParserTest`, `MidiMapperTest`, `MidiRouterTest`,
+  `DefaultMidiRouterFactoryTest`)
 - Backup and restore, broken and failed backups (`DefaultBackupServiceTest`)
 - Files of earlier releases (`CompatibilityTest`, `DefaultSettingsServiceTest`, `DesignerProjectCompatibilityTest`,
   see below)
@@ -54,7 +55,7 @@ Run them locally without the web app build:
 ./mvnw test -Dskip.npm -Dskip.installnodenpm
 ```
 
-All 127 tests pass without any hardware attached, in about a minute. One backup test needs an unreadable file, so it
+All 130 tests pass without any hardware attached, in about a minute. One backup test needs an unreadable file, so it
 is skipped when running as root (root can read every file). It runs in CI.
 
 GStreamer pipelines are not tested here. They need real audio and video devices and belong to the hardware rig
@@ -76,8 +77,18 @@ session of 3.0.0, and the designer template of project version 2 and 7.
 
 ### Real sample files
 
-Real files from real shows catch much more than defaults, because they use the features. Collect them from our own
-units, and from customers' units only with their permission.
+**Why.** After an update, a unit loads the show the previous release saved: settings, compositions, sets, designer
+projects. If the new release no longer understands a part of it, that part is lost without a warning, at the latest
+when the files are saved again. For example, a renamed field in the MIDI routings and every routing of the user is
+gone after the update.
+
+The tests above catch this before a release, but only for what is in the sample files. The samples so far are the
+defaults of a new device: no MIDI routings, no remote devices, no scheduled compositions, a single audio bus. A release
+that broke any of these would still pass every test. Removing override parent from the MIDI mapping was flagged only
+because the default files happen to contain that element.
+
+So the samples should contain every feature that is in use on real units. Collect them from our own units, and from
+customers' units only with their permission.
 
 **Where from.** The backup of a unit (system settings, backup) is a `.tar.gz` of its data directory. Take the
 settings, the session, the compositions, the sets and the designer projects, not the media (large, and irrelevant for
@@ -136,8 +147,9 @@ update a folder later: it stands for what that release wrote. Add a new folder i
   - [ ] The fixture library (`fixtures/`, used by the designer's fixture search).
 - [x] `MidiMessageParser`: messages split across reads, running status, real-time bytes inside messages and SysEx,
   SysEx without end byte.
-- [x] MIDI mapping (`MidiMapper`): channel map, offsets, global mapping, override parent.
-- [x] MIDI routing (`MidiRouter`): every destination, own mapping per routing, global mapping, monitor.
+- [x] MIDI mapping (`MidiMapper`): channel map, offsets, global mapping.
+- [x] MIDI routing (`MidiRouter`, `DefaultMidiRouterFactory`): every destination, own mapping per routing, global
+  mapping, monitor, changed routings without a restart.
 - [x] Backup and restore round trip, broken and incomplete backups, failed backup creation (`BackupService`).
 - [x] `RocketShowApplicationTests` passes without GStreamer, OLA or GPIO hardware, checked by CI.
 
@@ -507,11 +519,18 @@ Found by reading the code. Each one gets a unit test or rig test before it is fi
   as if it was complete (`DefaultBackupServiceTest`).
 - [x] **The global MIDI channel and note offsets had no effect.** A routing's own offsets (`0` by default) replaced
   them, and the routings of the live MIDI input had no parent at all. Now the offsets add up: the global offsets apply
-  to every routing, plus the routing's own. A composition's MIDI mapping overriding its parent ignores the global
-  mapping (the flag was checked on the parent before) (`MidiMapperTest`, `MidiRouterTest`).
+  to every routing, plus the routing's own. Override parent was removed, the global mapping always applies
+  (`MidiMapperTest`, `MidiRouterTest`).
 - [x] **The MIDI mapping of a routing leaked into the other routings.** All routings mapped the same message object,
   so a routing got the offsets of the routings before it, and the caller's message changed as well. Each routing gets
   its own copy now (`MidiRouterTest`).
+- [x] **Changes to the MIDI routings and the global MIDI mapping applied only after a restart.** The routers of the
+  MIDI input, of remote MIDI and of actions were created once at startup. Now the settings service publishes an event
+  when the routings or the global mapping change, and these routers switch to the new ones
+  (`DefaultMidiRouterFactoryTest`, `DefaultSettingsServiceTest`).
+- [x] **USB MIDI input was routed twice.** The device was also connected directly to a single routing, so with one
+  routing every message arrived twice (e.g. two note on). Found while fixing the routing changes, from reading the
+  code. Now USB input is routed once, like serial input.
 
 ### Accepted
 
@@ -527,8 +546,3 @@ Found by reading the code. Each one gets a unit test or rig test before it is fi
 - [ ] **A hung synchronized unit blocks the main unit.** `RemoteDevice` only sets a connect timeout, no read timeout.
   If a remote unit accepts the connection but never answers, `DefaultPlayerService.play()` waits the full 60 seconds
   while holding the player lock, so stop and pause wait as well. Scenario 6.4 "Freeze unit B" confirms it.
-- [ ] **Override parent is not offered in the web app.** A composition's MIDI mapping can only override the global
-  mapping by editing the composition file.
-- [ ] **Changes to the live MIDI routings and the global MIDI mapping apply only after a restart.** The routers of
-  the live MIDI input, of remote MIDI and of actions are created once at startup. Saving the settings replaces the
-  settings object, but these routers keep the old one. Compositions pick up the changes when they are loaded.
