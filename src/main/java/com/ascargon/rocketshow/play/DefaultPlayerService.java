@@ -25,6 +25,7 @@ import jakarta.annotation.PreDestroy;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -68,7 +69,8 @@ public class DefaultPlayerService implements PlayerService {
     // Used to play the composition from the editor to test it/try it out before saving
     private final CompositionPlayer testCompositionPlayer;
 
-    private final List<CompositionPlayer> sampleCompositionPlayerList = new ArrayList<>();
+    // Started and finished from different threads (e.g. MIDI input and the end of a sample)
+    private final List<CompositionPlayer> sampleCompositionPlayerList = new CopyOnWriteArrayList<>();
 
     public DefaultPlayerService(
             NotificationService notificationService,
@@ -465,9 +467,10 @@ public class DefaultPlayerService implements PlayerService {
     @Override
     public void compositionPlayerFinishedPlaying(CompositionPlayer compositionPlayer) throws Exception {
         if (compositionPlayer.isSample()) {
-            // Do nothing, if we played the composition as sample (multiple parallel possible)
-
+            // Do nothing else, if we played the composition as sample (multiple parallel possible). Stop it to
+            // free its pipeline.
             sampleCompositionPlayerList.remove(compositionPlayer);
+            compositionPlayer.stop();
             return;
         }
 
