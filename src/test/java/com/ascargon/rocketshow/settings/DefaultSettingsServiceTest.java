@@ -3,6 +3,8 @@ package com.ascargon.rocketshow.settings;
 import com.ascargon.rocketshow.StrictXml;
 import com.ascargon.rocketshow.midi.MidiRouting;
 import com.ascargon.rocketshow.midi.MidiService;
+import com.ascargon.rocketshow.raspberry.ActionTriggerRaspberryGpio;
+import com.ascargon.rocketshow.util.ActionTransport;
 import com.ascargon.rocketshow.util.DeviceInformation;
 import com.ascargon.rocketshow.util.DeviceInformationService;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
@@ -220,6 +222,37 @@ class DefaultSettingsServiceTest {
         settingsService.getSettings().setOffsetMillisMidi(10);
         settingsService.save();
         verify(applicationEventPublisher, times(3)).publishEvent(any(MidiRoutingsChangedEvent.class));
+    }
+
+    @Test
+    void publishesChangedGpio() throws Exception {
+        DefaultSettingsService settingsService = start(Files.createTempDirectory(tempPath, "settings"));
+
+        settingsService.save();
+        verify(applicationEventPublisher, never()).publishEvent(any(RaspberryGpioChangedEvent.class));
+
+        // Another button
+        ActionTriggerRaspberryGpio trigger = new ActionTriggerRaspberryGpio();
+        trigger.setPinId(22);
+        settingsService.getSettings().getActionTriggerRaspberryGpioList().add(trigger);
+        settingsService.save();
+        verify(applicationEventPublisher, times(1)).publishEvent(any(RaspberryGpioChangedEvent.class));
+
+        // Another action of the button
+        ActionTransport play = new ActionTransport();
+        play.setTransportActionType(ActionTransport.TransportActionType.PLAY);
+        trigger.getActionList().add(play);
+        settingsService.save();
+        verify(applicationEventPublisher, times(2)).publishEvent(any(RaspberryGpioChangedEvent.class));
+
+        // Another output
+        settingsService.getSettings().getRaspberryGpioOutputPinBcmList().add(23);
+        settingsService.save();
+        verify(applicationEventPublisher, times(3)).publishEvent(any(RaspberryGpioChangedEvent.class));
+
+        settingsService.getSettings().setOffsetMillisMidi(10);
+        settingsService.save();
+        verify(applicationEventPublisher, times(3)).publishEvent(any(RaspberryGpioChangedEvent.class));
     }
 
 

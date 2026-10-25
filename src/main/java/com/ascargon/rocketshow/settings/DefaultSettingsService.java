@@ -49,6 +49,7 @@ public class DefaultSettingsService implements SettingsService {
     private String lastSavedDefaultComposition;
     private List<ScheduledComposition> lastSavedScheduledCompositionList = new ArrayList<>();
     private String lastSavedMidiRoutings;
+    private String lastSavedRaspberryGpio;
 
     public DefaultSettingsService(
             OperatingSystemInformationService operatingSystemInformationService,
@@ -97,6 +98,7 @@ public class DefaultSettingsService implements SettingsService {
             lastSavedDefaultComposition = getNormalizedDefaultComposition();
             lastSavedScheduledCompositionList = getScheduledCompositionListCopy();
             lastSavedMidiRoutings = getMidiRoutings();
+            lastSavedRaspberryGpio = getRaspberryGpio();
             save();
         } catch (JAXBException e) {
             logger.error("Could not save settings", e);
@@ -397,6 +399,7 @@ public class DefaultSettingsService implements SettingsService {
         publishDefaultCompositionChangedEventIfNeeded();
         publishScheduledCompositionsChangedEventIfNeeded();
         publishMidiRoutingsChangedEventIfNeeded();
+        publishRaspberryGpioChangedEventIfNeeded();
     }
 
     @Override
@@ -423,6 +426,7 @@ public class DefaultSettingsService implements SettingsService {
         lastSavedDefaultComposition = getNormalizedDefaultComposition();
         lastSavedScheduledCompositionList = getScheduledCompositionListCopy();
         lastSavedMidiRoutings = getMidiRoutings();
+        lastSavedRaspberryGpio = getRaspberryGpio();
 
         logger.info("Settings loaded");
     }
@@ -496,6 +500,32 @@ public class DefaultSettingsService implements SettingsService {
 
         lastSavedMidiRoutings = midiRoutings;
         applicationEventPublisher.publishEvent(new MidiRoutingsChangedEvent());
+    }
+
+    // The GPIO triggers and outputs, to find out whether they changed
+    private String getRaspberryGpio() {
+        if (settings == null) {
+            return null;
+        }
+
+        return new ObjectMapper().writeValueAsString(Arrays.asList(
+                settings.getEnableRaspberryGpio(),
+                settings.getRaspberryGpioDebounceMillis(),
+                settings.getActionTriggerRaspberryGpioList(),
+                settings.getRaspberryGpioOutputPinBcmList()
+        ));
+    }
+
+    private void publishRaspberryGpioChangedEventIfNeeded() {
+        String raspberryGpio = getRaspberryGpio();
+
+        // Only when they changed, because the pins are set up again
+        if (Objects.equals(lastSavedRaspberryGpio, raspberryGpio)) {
+            return;
+        }
+
+        lastSavedRaspberryGpio = raspberryGpio;
+        applicationEventPublisher.publishEvent(new RaspberryGpioChangedEvent());
     }
 
     private void migrateToVersion2() {

@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.raspberry;
 
+import com.ascargon.rocketshow.settings.RaspberryGpioChangedEvent;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.ActionExecutionService;
 import com.ascargon.rocketshow.util.DeviceInformationService;
@@ -12,6 +13,7 @@ import com.pi4j.io.gpio.digital.DigitalState;
 import com.pi4j.io.gpio.digital.PullResistance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -29,12 +31,16 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultRaspberryGpioInService.class);
 
+    private final SettingsService settingsService;
+    private final ActionExecutionService actionExecutionService;
+    private final Pi4jService pi4jService;
     private final DeviceInformationService deviceInformationService;
     private final FactoryResetService factoryResetService;
     private final RebootService rebootService;
 
     private Context pi4j = null;
-    private List<DigitalInput> digitalInputList = new ArrayList<>();
+    private DigitalInput resetButton;
+    private final List<DigitalInput> digitalInputList = new ArrayList<>();
 
     ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     AtomicBoolean resetScheduled = new AtomicBoolean(false);
@@ -49,29 +55,54 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
             FactoryResetService factoryResetService,
             RebootService rebootService
     ) {
+        this.settingsService = settingsService;
+        this.actionExecutionService = actionExecutionService;
+        this.pi4jService = pi4jService;
         this.deviceInformationService = deviceInformationService;
         this.factoryResetService = factoryResetService;
         this.rebootService = rebootService;
 
+        initialize();
+    }
+
+    private synchronized void initialize() {
         if (!settingsService.getSettings().getEnableRaspberryGpio()) {
             return;
         }
 
         // The app has to start, even without GPIO (e.g. on a device model without supported GPIO). Otherwise,
         // GPIO can't even be disabled in the settings anymore.
-        try {
-            pi4j = pi4jService.getContext();
-        } catch (Exception e) {
-            logger.error("Could not initialize GPIO", e);
-            return;
+        if (pi4j == null) {
+            try {
+                pi4j = pi4jService.getContext();
+            } catch (Exception e) {
+                logger.error("Could not initialize GPIO", e);
+                return;
+            }
         }
 
         // Currently not working on the Pi CM5. See https://github.com/Pi4J/pi4j-example-minimal/issues/13
-        initializeInput(settingsService, actionExecutionService);
+        initializeInput();
+    }
+
+    @EventListener
+    public synchronized void raspberryGpioChanged(RaspberryGpioChangedEvent event) {
+        // Saving the settings replaces them, so listen with the triggers of the new settings. The reset button stays.
+        for (DigitalInput digitalInput : digitalInputList) {
+            try {
+                pi4j.shutdown(digitalInput);
+            } catch (Exception e) {
+                logger.error("Could not stop listening to GPIO BCM " + digitalInput.address() + " ID", e);
+            }
+        }
+
+        digitalInputList.clear();
+
+        initialize();
     }
 
     private void initializeResetButton() {
-        if (deviceInformationService.getDeviceInformation().isAvailable()) {
+        if (resetButton == null && deviceInformationService.getDeviceInformation().isAvailable()) {
             // Ready to use version
             DigitalInputConfigBuilder buttonConfig = DigitalInput.newConfigBuilder(pi4j)
                     .id("io_" + UUID.randomUUID())
@@ -80,6 +111,7 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
                     .pull(PullResistance.PULL_UP)
                     .debounce(3000L);
             DigitalInput digitalInput = pi4j.create(buttonConfig);
+            resetButton = digitalInput;
 
             digitalInput.addListener(event -> {
                 if (event.state() == DigitalState.LOW) {
@@ -117,7 +149,7 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
         }
     }
 
-    private void initializeTrigger(SettingsService settingsService, ActionExecutionService actionExecutionService, ActionTriggerRaspberryGpio actionTriggerRaspberryGpio) {
+    private void initializeTrigger(ActionTriggerRaspberryGpio actionTriggerRaspberryGpio) {
         logger.info("Start GPIO listener for BCM " + actionTriggerRaspberryGpio.getPinId() + " ID");
 
         DigitalInputConfigBuilder buttonConfig = DigitalInput.newConfigBuilder(pi4j)
@@ -128,11 +160,8 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
                 .debounce(settingsService.getSettings().getRaspberryGpioDebounceMillis() * 1000L);
         DigitalInput digitalInput = pi4j.create(buttonConfig);
         digitalInput.addListener(event -> {
-            logger.debug("Input low from GPIO BCM " + event.source().address() + " ID recognized");
-            System.out.println("Input low from GPIO BCM " + event.source().address() + " ID recognized");
             if (event.state() == DigitalState.LOW) {
                 logger.debug("Input low from GPIO BCM " + event.source().address() + " ID recognized");
-                System.out.println("Input low from GPIO BCM " + event.source().address() + " ID recognized");
                 try {
                     actionExecutionService.executeFromTrigger(actionTriggerRaspberryGpio);
                 } catch (Exception e) {
@@ -140,11 +169,11 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
                 }
             }
         });
-        System.out.println("Initial state: " + digitalInput.state() + " for id " + digitalInput.address());
+        logger.debug("Initial state: " + digitalInput.state() + " for GPIO BCM " + digitalInput.address() + " ID");
         digitalInputList.add(digitalInput);
     }
 
-    private void initializeInput(SettingsService settingsService, ActionExecutionService actionExecutionService) {
+    private void initializeInput() {
         logger.info("Initialize GPIO listener...");
 
         // One pin, which can't be used, must not break the others
@@ -157,7 +186,7 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
         // Add a button for each configured control
         for (ActionTriggerRaspberryGpio actionTriggerRaspberryGpio : settingsService.getSettings().getActionTriggerRaspberryGpioList()) {
             try {
-                initializeTrigger(settingsService, actionExecutionService, actionTriggerRaspberryGpio);
+                initializeTrigger(actionTriggerRaspberryGpio);
             } catch (Exception e) {
                 logger.error("Could not initialize GPIO BCM " + actionTriggerRaspberryGpio.getPinId() + " ID", e);
             }
