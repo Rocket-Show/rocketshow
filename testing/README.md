@@ -33,7 +33,8 @@ CI (`.github/workflows/ci.yml`) runs on every push and on pull requests from for
 
 - **Unit tests:** `./mvnw -B test -Pcoverage` without the web app build. The summary of the run shows the line
   coverage, the full JaCoCo report is kept as an artifact (`coverage-report`), and so are the reports of failed tests.
-  The run fails when the tests cover less than 60 % of the lines or 45 % of the branches (today 65 % and 51 %).
+  The run fails when the tests cover less than 70 % of the lines or 55 % of the branches (today 73 % and 60 %).
+- **Web app unit tests:** the unit tests of the web app in headless Chrome (see [below](#web-app-unit-tests)).
 - **Build with web app:** `./mvnw -B package -DskipTests`. The built `rocketshow.jar` is kept as a build artifact for
   14 days, so every commit has a jar to put on a test unit.
 - **Web app smoke test:** starts the built jar as a new unit and drives the web app in a browser (see
@@ -59,27 +60,39 @@ The unit tests live in `src/test/java`:
   admin, the initial setup, the login throttle, saving the settings like the web app does (`ApiSecurityTest`,
   `SaveSettingsTest`, `LoginThrottleServiceTest`), logging in, the passwords of the admin and the access point, the
   answers to requests it can't fulfill (`AuthApiTest`, `ApiErrorsTest`), the states sent to the web app
-  (`DefaultNotificationServiceTest`)
+  (`DefaultNotificationServiceTest`), selecting and playing compositions with symbols in their name, positions outside
+  the set (`TransportApiTest`)
+- The monitors of the web app: the latest DMX values and audio levels by bus, MIDI routed while the monitor sends
+  (`ActivityMonitorsTest`)
 - File names from the web app can't leave their folder (`FileNamesTest`, `FileNameCheckTest`)
 - Requests to other units: encoded names, units that don't answer (`RemoteDeviceTest`)
 - Compositions and sets: storing them, their durations, keeping the sets up to date (`DefaultCompositionServiceTest`),
-  stepping through a set (`PlayerSetTest`)
+  stepping through a set and starting the next composition by itself (`PlayerSetTest`)
 - Playing compositions without audio, video or MIDI files: play, pause, seek and stop, their timers and actions,
   samples (`CompositionPlayerTest`, `SamplePlayTest`)
+- Playing compositions with media, the pipelines simulated: the end of the media, the actions after it, looping, errors
+  of the pipeline (`MediaCompositionPlayerTest`), and on the synchronized units: loading before playing, stopping,
+  pausing, samples (`SynchronizedUnitsTest`)
+- MIDI devices on a simulated MIDI system of Java: which devices are offered, sending, receiving, finding a device by
+  its name and connecting it again (`MidiDevicesTest`)
 - Actions of triggers: HTTP requests to other systems, lighting, selecting compositions
   (`DefaultActionExecutionServiceTest`)
 - Data on units switched off at the wall: files written in one step, broken files at the start (settings, session,
   compositions, sets, designer projects, fixture profiles), uploads of media and lead sheets in chunks
   (`AtomicFileTest`, `DefaultSettingsServiceTest`, `DefaultSessionServiceTest`, `DefaultCompositionServiceTest`,
   `DesignerProjectsTest`, `FixtureLibraryTest`, `MediaUploadTest`)
-- Audio: the generated `.asoundrc`, the output channels each file channel plays on (`SystemConfigFilesTest`,
-  `AudioChannelTest`)
+- Audio: the generated `.asoundrc`, the output channels each file channel plays on, the sound cards offered for the
+  buses (`SystemConfigFilesTest`, `AudioChannelTest`, `AudioDevicesTest`)
 - Wireless access point: the generated `hostapd.conf` (`SystemConfigFilesTest`)
+- System settings: what each save applies and in which order, with the commands recorded instead of run
+  (`ApplySystemSettingsTest`)
 - DMX: mixing the universes, which universe a value goes to, sending values set while sending, MIDI to DMX
-  (`DefaultLightingServiceTest`, `DefaultMidi2LightingConvertServiceTest`)
+  (`DefaultLightingServiceTest`, `DefaultMidi2LightingConvertServiceTest`), patching the universes in OLA, with a
+  simulated OLA (`OlaSetupTest`)
 - Lighting designer: presets (`PresetMirrorTest`, `PresetIntensityTest`, `PresetStepsTest`), effect curves and fades
   (`EffectCurveTest`, `TransitionCurveTest`, mirroring the specs of the designer), pixels and pixel groups of fixture
-  matrices (`FixturePixelGroupTest`), the DMX values a project sends (`DesignerDmxTest`)
+  matrices (`FixturePixelGroupTest`), the DMX values a project sends and the live preview of presets, scenes and the
+  timeline (`DesignerDmxTest`)
 - Fixture library: searching and reading it like the designer, updating it from rocketshow.net, every mode of a few
   real profiles played by the engine (`FixtureLibraryTest`, profiles in `src/test/resources/fixtures/`)
 - GPIO buttons, the reset button and outputs, on the simulated pins of the Pi4J mock plugin (`GpioTest`)
@@ -101,10 +114,11 @@ Run them locally without the web app build, with or without the coverage report 
 ./mvnw test -Pcoverage -Dskip.npm -Dskip.installnodenpm
 ```
 
-All 383 tests pass without any hardware attached, in about three minutes. One backup test needs an unreadable file,
-so it is skipped when running as root (root can read every file). It runs in CI. The tests cover 65 % of the lines and
-51 % of the branches, without the libraries shipped with the app (e.g. the OLA client). What's left is mostly the code
-talking to the hardware: GStreamer, OLA, ALSA and the system commands.
+All 428 tests pass without any hardware attached, in about three minutes. One backup test needs an unreadable file,
+so it is skipped when running as root (root can read every file). It runs in CI. The tests cover 73 % of the lines and
+60 % of the branches, without the libraries shipped with the app (e.g. the OLA client). What's left is mostly the code
+building and running the GStreamer pipelines (`CompositionPipelineBuilder`, `CompositionPipeline`) and the video
+player, which need GStreamer and real devices.
 
 GStreamer pipelines are not tested here. They need real audio and video devices and belong to the hardware rig
 ([section 3](#3-hardware-in-the-loop-rig)). Which output channel a file channel plays on is plain logic, so that is
@@ -114,8 +128,10 @@ tested here.
 
 `testing/smoke/smoke.mjs` drives the web app of a new unit in Chromium with Playwright, like a user after unpacking a
 unit: the initial setup (refusing an access point password which would leave it open), uploading a media file,
-creating a composition and a set, opening the designer, renaming the unit in the settings, each checked after a
-reload. Any uncaught error of the web app, API call failing with a server error or error message of the web app fails
+creating a composition and a set, opening the composition again, deleting the media file, selecting the composition
+to play, opening the designer, renaming the unit in the settings, each checked after a reload. The names contain
+symbols which have a meaning in URLs (`&`, `#`, `+`, `%`). Any uncaught error of the web app, API call failing with a
+server error or error message of the web app fails
 the test. CI runs it against the jar of the build job, with the designer template next to it like on a unit, and keeps
 the screenshots of every step and the log of the unit (artifact `smoke-test`). Backups are only offered on SPARK units,
 so they are tested on the rig.
@@ -126,6 +142,21 @@ Run it locally against a new unit (a fresh directory, because the setup only run
 mkdir /tmp/unit && cp target/rocketshow.jar dist/designer_template.json /tmp/unit && (cd /tmp/unit && java -jar rocketshow.jar &)
 cd testing/smoke && npm install && npx playwright install chromium
 BASE_URL=http://localhost:8080 node smoke.mjs
+```
+
+### Web app unit tests
+
+The web app in `src/main/webapp` has its own unit tests (Karma and Jasmine, `*.spec.ts`), run by CI in headless
+Chrome: names with symbols encoded in the requests to the API (`encoded-names.spec.ts`), the access point password of
+the setup (`intro.component.spec.ts`), the links to the SPARK page and logging in again after a 401 or 403. The
+generated specs of every component and service only checked that it could be created, and none of them compiled
+anymore, so they were removed. New specs test behaviour, not that a component exists.
+
+Run them locally (`CHROME_BIN` if Karma doesn't find Chrome or Chromium by itself):
+
+```shell
+cd src/main/webapp && npm install --force
+npx ng test --watch=false --browsers=ChromeHeadlessCI
 ```
 
 ### Files of earlier releases
@@ -229,7 +260,7 @@ The designer migrations are tested with a project in version 2 and the same proj
 - [x] Coverage (JaCoCo) in CI, Dependabot, web app smoke test against the built jar.
   - [x] Start the app with the samples of every release, not only the latest.
   - [x] More flows in the smoke test: sets, the designer, uploading media. Backups are SPARK only, see the rig.
-  - [x] A minimum coverage for the whole app.
+  - [x] A minimum coverage for the whole app (raised to 70 % and 55 % with the second round of tests).
   - [ ] A minimum coverage per package, once the numbers are stable.
 - [x] Playing compositions without files: timers, seeking, pausing, samples.
 - [x] Actions of triggers, including HTTP requests to systems which don't answer.
@@ -238,6 +269,13 @@ The designer migrations are tested with a project in version 2 and the same proj
 - [x] Data files and uploads on units switched off at the wall, broken files at the start.
 - [x] Watchdog, MIDI timecode, scheduler timing, zipping the logs.
 - [x] GPIO with the Pi4J mock plugin.
+- [x] The player with media and synchronized units, the transport API with symbols in names.
+- [x] The monitors of the web app, MIDI devices on a simulated MIDI system, the sound cards offered.
+- [x] Patching the universes in OLA, the live preview of the designer, applying the system settings.
+- [x] The unit tests of the web app, in CI.
+  - [ ] More specs for the parts of the web app with logic, e.g. the settings forms and the composition editor.
+- [ ] The GStreamer pipelines a composition builds, with GStreamer installed in CI and test sources and sinks instead
+  of the devices.
 
 ## 2. Device self-test
 
@@ -703,6 +741,35 @@ Found by reading the code and by the tests. Each one gets a unit test or rig tes
 - [x] **A missing file was answered with a server error and logged as an error.** E.g. the demo audio of the designer
   template after deleting it, each time the designer opened. It's answered with 404 now (`ApiErrorsTest`, found by the
   smoke test).
+- [x] **The default composition started between two compositions of a set.** When a composition started the next one
+  by itself, the default composition (e.g. the lighting between songs) was loaded, started and stopped again right
+  away in between (`PlayerSetTest`).
+- [x] **Names with `&`, `#`, `+` or `%` broke the web app.** It put the names of compositions, sets, media files and
+  lead sheets into its requests without encoding them, so they arrived cut off or changed: selecting, opening or
+  loading such a composition failed, and deleting the media file "Rock+Roll" could delete "Rock Roll" instead
+  (`encoded-names.spec.ts`, `TransportApiTest`, smoke test).
+- [x] **Selecting a position outside the set was accepted.** E.g. from a web app showing a set which changed meanwhile:
+  the set stood at a position it doesn't have, no composition was selected and "previous" failed. It's refused now,
+  also without a set loaded. Loading a composition the unit doesn't have (e.g. on a synchronized unit) is a warning in
+  the log now instead of a server error (`TransportApiTest`).
+- [x] **The monitors of the web app showed old values and broke MIDI routing.** The DMX monitor sent the first change
+  of every 50 ms instead of the last one, so the end of a fade or a blackout never showed. The MIDI monitor collected
+  messages from several threads without a lock, which threw errors back into the MIDI routing, so the message wasn't
+  routed. The audio monitor started a thread per level message, and the levels arrived out of order with a slow web
+  app (`ActivityMonitorsTest`).
+- [x] **MIDI devices on USB never connected.** Looking up the device of the settings returned "not found" whenever a
+  device was set, so MIDI in and out only worked over serial ports (`MidiDevicesTest`).
+- [x] **MIDI out kept every message sent in memory.** It asked the device for a new receiver for each message, and Java
+  keeps every receiver until the device is closed: with MIDI clock 48 per second, about 350,000 in a two-hour show.
+  MIDI out keeps one receiver per connection now (`MidiDevicesTest`).
+- [x] **Connecting the MIDI devices again did nothing for serial ports**, and each MIDI message received over a serial
+  port was logged as info, e.g. 48 lines per second of MIDI clock (`MidiDevicesTest`).
+- [x] **Saving any setting restarted the access point and interrupted the DMX output.** Every save applied all system
+  settings again: it restarted the access point (disconnecting a tablet controlling the unit through it), ran the LAN
+  and connection mode scripts and patched the DMX universes in OLA again, e.g. when changing a MIDI routing during a
+  show. These run when they changed now, and a patch of OLA matching the settings is kept. The commands ran at the
+  same time, so e.g. the access point could restart before its country was set. They run one after the other now,
+  and failures are logged with their output (`ApplySystemSettingsTest`, `OlaSetupTest`).
 
 ### Accepted
 
@@ -725,7 +792,8 @@ Found by reading the code and by the tests. Each one gets a unit test or rig tes
   deleting the old composition and saving a new one, and the sets and designer projects refer to compositions by name.
   Needs a rename in the backend that updates the sets and projects.
 - [ ] **Saving or deleting a composition jumps back to the first composition of the set.** The current set is loaded
-  again from its start, so a fix during a show loses the position in the set.
+  again from its start, so a fix during a show loses the position in the set. Saving any composition also stops the
+  one playing, even when another composition was changed.
 - [ ] **"Previous" during a composition rewinds and selects the previous one.** The code says "rewind instead of
   selecting the previous one", but it does both. Decide which one a press should do (`PlayerSetTest` only covers a
   stopped composition).
@@ -739,11 +807,28 @@ Found by reading the code and by the tests. Each one gets a unit test or rig tes
 - [ ] **The master dimmer of the designer only dims the preview.** The DMX values sent by the app ignore it.
 - [ ] **Pixel group channels of the fixture library are not supported** by the designer nor the app: 176 modes of
   the library stay dark on their pixels. Found by playing every mode of the whole library once.
-- [ ] **Brightness given by a channel with several capabilities is not set.** 6 modes of the library, whose dimmer
-  shares its channel with other functions, stay dark.
+- [ ] **Brightness given by a channel with several capabilities is often not set.** The app and the designer only set
+  it when its range goes from "dark" or "off" to "bright" (`DesignerDmxTest`). 36 channels of the library give it
+  differently (in percent, only "bright", or not at all), and 6 modes stay dark because of it.
 - [ ] **Split colors of a wheel are sent as the slot before them.** The library gives colors between two slots as
   e.g. slot 1.5, the app cuts off the fraction.
 - [ ] **MIDI timecode is sent 2 frames ahead.** The app adds the 2 frames the 8 quarter frames take, which receivers
   usually add themselves. Check with a receiver on the rig before changing it.
 - [ ] **The fixture library is downloaded at every start.** About 1.5 MB and 600 files rewritten on each boot, which
   wears the SD card, and every start waits for it. Once a week or on demand would do.
+- [ ] **Requests to other units can arrive in another order than sent.** Play, pause, stop and MIDI
+  messages to other units each run on a new thread, so e.g. a note off can arrive before its note on and leave the
+  note hanging, and each MIDI message starts a thread. One queue per unit keeps the order, but then a unit which
+  doesn't answer holds up everything after it for up to 30 seconds per request. Decide which one matters more.
+- [ ] **Effects move a channel by a quarter of their amplitude.** A sine with the full amplitude around the middle
+  swings between 64 and 191 instead of 0 and 255, in the designer as well (`DesignerDmxTest`). Decide whether that's
+  intended.
+- [ ] **A failed update only tells the exit code of RAUC.** The web app shows "RAUC exited with exit code 1", the reason
+  (e.g. a wrong signature or a full disk) is only in the log. The progress shown is read from the lines RAUC writes,
+  so a release of RAUC writing other lines shows none.
+- [ ] **Backups need half of the disk free.** The backup is written to the unit first, so a unit whose disk is more than
+  half full (e.g. with media) can't make a backup at all.
+- [ ] **Sound cards chosen after the start aren't kept open.** Against sound artifacts, the audio devices are kept open
+  with silence, but only those in use when the app started, until the next restart.
+- [ ] **A Compute Module 3 isn't recognized as a Raspberry Pi 3**, so it doesn't get the video pipeline of the Pi 3.
+  Only matters if such units exist.
