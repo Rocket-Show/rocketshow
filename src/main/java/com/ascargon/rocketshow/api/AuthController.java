@@ -72,6 +72,11 @@ public class AuthController {
         loginThrottleService.onSuccess();
         logger.info("User logged successfully in");
 
+        // A session known before the login (e.g. planted by someone else) must not get the rights of the admin
+        if (httpRequest.getSession(false) != null) {
+            httpRequest.changeSessionId();
+        }
+
         authenticateAdmin(httpRequest, httpResponse);
 
         return ResponseEntity.ok(Map.of(
@@ -134,6 +139,10 @@ public class AuthController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin password already configured");
         }
 
+        if (request.isWifiApEnabled()) {
+            WlanApPassphrase.check(request.getWifiApPassword());
+        }
+
         String hash = passwordEncoder.encode(request.getPassword());
         Settings settings = settingsService.getSettings();
 
@@ -182,6 +191,10 @@ public class AuthController {
         if (!passwordEncoder.matches(request.getOldPassword(), oldPasswordHash)) {
             logger.info("Change password attempt failed");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+
+        if (request.getNewPassword() == null || request.getNewPassword().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must not be empty");
         }
 
         String newPasswordHash = passwordEncoder.encode(request.getNewPassword());

@@ -225,7 +225,7 @@
     "wlan-ap-ssid": "名称",
     "wlan-ap-ssid-hide": "隐藏网络",
     "wlan-ap-wpa-passphrase": "密码（WPA2-PSK）",
-    "wlan-ap-wpa-passphrase-short-error": "无线接入点密码太短（至少8个字符）。",
+    "wlan-ap-wpa-passphrase-short-error": "无线接入点密码需要8到63个字符。",
     "wlan-ap-hw-mode": "协议",
     "wlan-ap-channel": "频道",
     "wlan-ap-country-code": "国家",

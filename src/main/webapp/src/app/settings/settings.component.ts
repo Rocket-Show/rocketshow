@@ -228,10 +228,10 @@ export class SettingsComponent implements OnInit {
                 result.wlanApSsid = "Rocket Show";
               }
 
+              // The access point only gets protected by a passphrase of 8 to 63 characters
               if (
                 result.wlanApPassphrase &&
-                result.wlanApPassphrase.length < 8 &&
-                result.wlanApPassphrase.length > 0
+                (result.wlanApPassphrase.length < 8 || result.wlanApPassphrase.length > 63)
               ) {
                 this.settingsError(
                   "settings.wlan-ap-wpa-passphrase-short-error"

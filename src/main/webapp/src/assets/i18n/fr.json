@@ -225,7 +225,7 @@
     "wlan-ap-ssid": "Nom",
     "wlan-ap-ssid-hide": "Masquer le réseau",
     "wlan-ap-wpa-passphrase": "Phrase secrète (WPA2-PSK)",
-    "wlan-ap-wpa-passphrase-short-error": "La phrase secrète du point d'accès sans fil est trop courte (au moins 8 caractères).",
+    "wlan-ap-wpa-passphrase-short-error": "La phrase secrète du point d'accès sans fil doit comporter de 8 à 63 caractères.",
     "wlan-ap-hw-mode": "Protocole",
     "wlan-ap-channel": "Canal",
     "wlan-ap-country-code": "Pays",
