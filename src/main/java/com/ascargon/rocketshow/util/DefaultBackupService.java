@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -66,11 +67,24 @@ public class DefaultBackupService implements BackupService {
             }
         }
 
+        // Only back up what exists (e.g. there might be no fixtures yet), because tar fails on missing files
+        String basePath = settingsService.getSettings().getBasePath();
+        List<String> existingFileList = backedUpFileList.stream()
+                .filter(file -> new File(basePath, file).exists())
+                .toList();
+
         // tar all backed up files
         // don't use zip, because the file permissions (e.g. execution rights) are not preserved easily with java
-        ShellManager shellManager = new ShellManager(new String[]{"bash", "-c", "cd " + settingsService.getSettings().getBasePath() + " && tar -czpf " + BACKUP_FILE_NAME + " " + String.join(" ", backedUpFileList)});
-        shellManager.getProcess().waitFor();
+        ShellManager shellManager = new ShellManager(new String[]{"bash", "-c", "cd " + basePath + " && tar -czpf " + BACKUP_FILE_NAME + " " + String.join(" ", existingFileList)});
+        String output = new String(shellManager.getProcess().getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        int exitCode = shellManager.getProcess().waitFor();
         shellManager.close();
+
+        // Never offer an incomplete backup (e.g. when the disk is full)
+        if (exitCode != 0) {
+            deleteBackupFile();
+            throw new Exception("Could not create the backup: " + output.trim());
+        }
 
         // Return the prepared zip
         return backupFile;

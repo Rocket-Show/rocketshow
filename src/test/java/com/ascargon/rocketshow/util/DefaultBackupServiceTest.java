@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -108,6 +109,35 @@ class DefaultBackupServiceTest {
         assertEquals("<composition/>", read("compositions/Song.xml"));
         assertFalse(Files.exists(basePath.resolve("compositions/New.xml")));
         assertEquals("audio", read("media/audio/song.wav"));
+        assertFalse(Files.exists(basePath.resolve("backup.tar.gz")));
+    }
+
+    @Test
+    void createsTheBackupOfANewDevice() throws Exception {
+        // No sets, designer projects, fixtures or media yet
+        write("settings.xml", "<settings>original</settings>");
+        write("compositions/Song.xml", "<composition/>");
+        byte[] backup = createBackup();
+
+        write("settings.xml", "<settings>changed</settings>");
+
+        upload(backup);
+        backupService.restoreFinish();
+
+        assertTrue(rebooted.await(30, TimeUnit.SECONDS));
+        assertEquals("<settings>original</settings>", read("settings.xml"));
+        assertEquals("<composition/>", read("compositions/Song.xml"));
+    }
+
+    @Test
+    void failsWhenTheBackupCannotBeCreated() throws Exception {
+        assumeFalse("root".equals(System.getProperty("user.name")), "root can read every file");
+
+        writeData();
+        File unreadable = basePath.resolve("compositions/Song.xml").toFile();
+        assertTrue(unreadable.setReadable(false, false));
+
+        assertThrows(Exception.class, () -> backupService.create());
         assertFalse(Files.exists(basePath.resolve("backup.tar.gz")));
     }
 
