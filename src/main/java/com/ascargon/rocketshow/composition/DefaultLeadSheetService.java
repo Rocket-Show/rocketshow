@@ -42,7 +42,7 @@ public class DefaultLeadSheetService implements LeadSheetService {
 
         if (fileList != null) {
             for (File file : fileList) {
-                if (file.isFile()) {
+                if (file.isFile() && !ChunkedFileUploadService.isUploadFile(file.getName()) && !".DS_Store".equals(file.getName())) {
                     LeadSheet leadSheet = new LeadSheet();
                     leadSheet.setName(file.getName());
                     returnLeadSheetList.add(leadSheet);
@@ -98,22 +98,18 @@ public class DefaultLeadSheetService implements LeadSheetService {
 
     @Override
     public void saveLeadSheetInit(String fileName) throws Exception {
-        File file = saveLeadSheetGetFile(fileName);
-        if (file.exists()) {
-            boolean result = file.delete();
-            if (!result) {
-                throw new Exception("Could not delete lead sheet '" + file.getPath() + "'");
-            }
-        }
+        chunkedFileUploadService.startUpload(saveLeadSheetGetFile(fileName));
     }
 
     @Override
     public void saveLeadSheetAddChunk(InputStream inputStream, String fileName) throws Exception {
-        chunkedFileUploadService.handleChunk(inputStream, saveLeadSheetGetFile(fileName));
+        chunkedFileUploadService.uploadChunk(inputStream, saveLeadSheetGetFile(fileName));
     }
 
     @Override
     public LeadSheet saveLeadSheetFinish(String fileName) throws Exception {
+        chunkedFileUploadService.finishUpload(saveLeadSheetGetFile(fileName));
+
         LeadSheet leadSheet = new LeadSheet();
         leadSheet.setName(fileName);
         return leadSheet;

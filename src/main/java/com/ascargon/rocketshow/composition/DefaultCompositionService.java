@@ -6,6 +6,7 @@ import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.gstreamer.GstDiscovererService;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
+import com.ascargon.rocketshow.util.AtomicFile;
 import com.ascargon.rocketshow.util.FileNames;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
 import com.sun.jna.Pointer;
@@ -169,7 +170,8 @@ public class DefaultCompositionService implements CompositionService {
 
         if (fileList != null) {
             for (File file : fileList) {
-                if (file.isFile()) {
+                // Hidden files are e.g. compositions being written
+                if (file.isFile() && !file.getName().startsWith(".")) {
                     try {
                         Composition composition = loadComposition(file.getName().substring(0, file.getName().length() - 4));
                         compositionCache.add(composition);
@@ -190,7 +192,7 @@ public class DefaultCompositionService implements CompositionService {
 
         if (fileList != null) {
             for (File file : fileList) {
-                if (file.isFile()) {
+                if (file.isFile() && !file.getName().startsWith(".")) {
                     String setName = file.getName().substring(0, file.getName().length() - 4);
                     try {
                         Set set = loadSet(setName);
@@ -283,7 +285,7 @@ public class DefaultCompositionService implements CompositionService {
         Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
         jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-        jaxbMarshaller.marshal(composition, file);
+        AtomicFile.marshal(jaxbMarshaller, composition, file);
 
         // Update the cache
         for (Composition cachedComposition : compositionCache) {
@@ -336,7 +338,7 @@ public class DefaultCompositionService implements CompositionService {
         Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
         jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-        jaxbMarshaller.marshal(set, file);
+        AtomicFile.marshal(jaxbMarshaller, set, file);
 
         // Update the cache
         for (Set cachedCompositionSet : compositionSetCache) {

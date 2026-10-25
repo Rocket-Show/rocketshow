@@ -185,18 +185,12 @@ public class DefaultCompositionFileService implements CompositionFileService {
 
     @Override
     public void saveFileInit(String fileName) throws Exception {
-        File file = saveFileGetFile(fileName);
-        if (file.exists()) {
-            boolean result = file.delete();
-            if (!result) {
-                throw new Exception("Could not delete composition file '" + file.getPath() + "'");
-            }
-        }
+        chunkedFileUploadService.startUpload(saveFileGetFile(fileName));
     }
 
     @Override
     public void saveFileAddChunk(InputStream inputStream, String fileName) throws Exception {
-        chunkedFileUploadService.handleChunk(inputStream, saveFileGetFile(fileName));
+        chunkedFileUploadService.uploadChunk(inputStream, saveFileGetFile(fileName));
     }
 
     @Override
@@ -217,6 +211,8 @@ public class DefaultCompositionFileService implements CompositionFileService {
         }
 
         compositionFile.setName(fileName);
+
+        chunkedFileUploadService.finishUpload(saveFileGetFile(fileName));
 
         return compositionFile;
     }

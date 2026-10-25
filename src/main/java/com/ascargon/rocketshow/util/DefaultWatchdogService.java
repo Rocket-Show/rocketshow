@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class DefaultWatchdogService implements WatchdogService {
 
@@ -16,6 +18,10 @@ public class DefaultWatchdogService implements WatchdogService {
     private final HealthService healthService;
     private final RebootService rebootService;
     private final DeviceInformationService deviceInformationService;
+
+    // The reasons of the degraded health logged last. Logged once per change: the health lists the latest errors, so
+    // logging it as an error on each check would add the last health to the next one, which grows with every check.
+    private List<String> loggedDegradedReasons = List.of();
 
     public DefaultWatchdogService(HealthService healthService, RebootService rebootService, DeviceInformationService deviceInformationService, OperatingSystemInformationService operatingSystemInformationService) {
         this.healthService = healthService;
@@ -28,9 +34,7 @@ public class DefaultWatchdogService implements WatchdogService {
         }
 
         try {
-            ShellManager shellManager = new ShellManager(new String[]{"systemd-notify", "--ready", "--status=RocketShow ready"});
-            shellManager.getProcess().waitFor();
-            shellManager.close();
+            notifySystemd("--ready", "--status=RocketShow ready");
 
             logger.info("Watchdog is activated");
         } catch (Exception e) {
@@ -85,19 +89,32 @@ public class DefaultWatchdogService implements WatchdogService {
         }
 
         if (healthStatus.getHealthStatusSeverity() == HealthStatusSeverity.DEGRADED) {
-            logger.error("System health is degraded");
-            logger.error(healthStatus.toFailureString());
+            if (!healthStatus.getReasons().equals(loggedDegradedReasons)) {
+                logger.warn("System health is degraded: {}", healthStatus.getReasons());
+                loggedDegradedReasons = healthStatus.getReasons();
+            }
+        } else if (healthStatus.getHealthStatusSeverity() == HealthStatusSeverity.OK && !loggedDegradedReasons.isEmpty()) {
+            logger.info("System health is OK again");
+            loggedDegradedReasons = List.of();
         }
 
         // Everything fine, pet the watchdog
         logger.debug("App healthy. Pet the watchdog.");
         try {
-            ShellManager shellManager = new ShellManager(new String[]{"systemd-notify", "WATCHDOG=1"});
-            shellManager.getProcess().waitFor();
-            shellManager.close();
+            notifySystemd("WATCHDOG=1");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    void notifySystemd(String... arguments) throws Exception {
+        String[] command = new String[arguments.length + 1];
+        command[0] = "systemd-notify";
+        System.arraycopy(arguments, 0, command, 1, arguments.length);
+
+        ShellManager shellManager = new ShellManager(command);
+        shellManager.getProcess().waitFor();
+        shellManager.close();
     }
 
 }

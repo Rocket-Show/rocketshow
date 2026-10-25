@@ -4,6 +4,7 @@ import com.ascargon.rocketshow.health.HealthService;
 import com.ascargon.rocketshow.health.HealthStatus;
 import com.ascargon.rocketshow.health.HealthStatusSeverity;
 import com.ascargon.rocketshow.settings.SettingsService;
+import com.ascargon.rocketshow.util.AtomicFile;
 import com.ascargon.rocketshow.util.RebootService;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
@@ -124,7 +125,7 @@ public class DefaultUpdateService implements UpdateService {
             // output pretty printed
             jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 
-            jaxbMarshaller.marshal(updateState, file);
+            AtomicFile.marshal(jaxbMarshaller, updateState, file);
         } catch (JAXBException e) {
             logger.error("Could not save the update state", e);
         }

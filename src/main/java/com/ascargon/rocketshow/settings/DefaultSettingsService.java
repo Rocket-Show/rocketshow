@@ -23,6 +23,8 @@ import tools.jackson.databind.ObjectMapper;
 
 import javax.sound.midi.MidiUnavailableException;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -73,6 +75,15 @@ public class DefaultSettingsService implements SettingsService {
             load();
         } catch (Exception e) {
             logger.error("Could not load the settings", e);
+
+            // Keep the file, before the defaults are saved instead of it: someone may get the settings back from it
+            try {
+                File file = new File(this.directory, FILE_NAME + ".xml");
+                Files.copy(file.toPath(), new File(this.directory, FILE_NAME + ".xml.broken").toPath(), StandardCopyOption.REPLACE_EXISTING);
+                logger.error("Kept the settings, which could not be loaded, in {}.xml.broken", FILE_NAME);
+            } catch (Exception copyException) {
+                logger.error("Could not keep the settings, which could not be loaded", copyException);
+            }
         }
 
         // Apply default settings (if not loaded)
@@ -379,7 +390,7 @@ public class DefaultSettingsService implements SettingsService {
         Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
         jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 
-        jaxbMarshaller.marshal(settings, file);
+        AtomicFile.marshal(jaxbMarshaller, settings, file);
 
         logger.info("Settings saved");
 

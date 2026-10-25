@@ -235,4 +235,22 @@ class DefaultCompositionServiceTest {
         assertEquals(List.of("Rehearsal"), start().getAllSets().stream().map(Set::getName).toList());
     }
 
+
+    @Test
+    void skipsHiddenAndBrokenFiles() throws Exception {
+        compositionService.saveComposition(composition("Song 1"));
+        compositionService.saveSet(set("Show", "Song 1"));
+
+        // Left by a power cut while writing, copied from a Mac, damaged
+        Files.writeString(directory.resolve("compositions/.Song 2.xml.tmp"), "<composition>");
+        Files.writeString(directory.resolve("compositions/._Song 1.xml"), "binary");
+        Files.writeString(directory.resolve("compositions/Song 3.xml"), "<composition><name>Song 3");
+        Files.writeString(directory.resolve("sets/.Show.xml.tmp"), "<set>");
+
+        DefaultCompositionService restarted = start();
+
+        assertEquals(List.of("Song 1"), names(restarted.getAllCompositions()));
+        assertEquals(List.of("Show"), restarted.getAllSets().stream().map(Set::getName).toList());
+    }
+
 }

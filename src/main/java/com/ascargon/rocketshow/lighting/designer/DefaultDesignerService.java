@@ -5,6 +5,7 @@ import com.ascargon.rocketshow.play.CompositionPlayer;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.LightingUniverse;
 import com.ascargon.rocketshow.lighting.LightingUniverseState;
+import com.ascargon.rocketshow.util.AtomicFile;
 import com.ascargon.rocketshow.util.FileFilterService;
 import com.ascargon.rocketshow.util.FileNames;
 import org.freedesktop.gstreamer.Pipeline;
@@ -13,9 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -115,10 +114,15 @@ public class DefaultDesignerService implements DesignerService {
                 if (file.isFile() && !fileFilterService.filterFile(file.getName())) {
                     logger.debug("Found project '" + file.getName() + "'");
 
-                    ObjectMapper mapper = new ObjectMapper();
-                    Project project = mapper.readValue(file, Project.class);
+                    // A project, which can't be read, must not take the others with it
+                    try {
+                        ObjectMapper mapper = new ObjectMapper();
+                        Project project = mapper.readValue(file, Project.class);
 
-                    projects.add(project);
+                        projects.add(project);
+                    } catch (Exception e) {
+                        logger.error("Could not load the designer project '{}'", file.getName(), e);
+                    }
                 }
             }
         }
@@ -189,9 +193,7 @@ public class DefaultDesignerService implements DesignerService {
 
         createDirectoryIfNotExists(designerPath);
 
-        BufferedWriter writer = new BufferedWriter(new FileWriter(designerPath + File.separator + projectName + ".json"));
-        writer.write(project);
-        writer.close();
+        AtomicFile.writeString(new File(designerPath + File.separator + projectName + ".json"), project);
 
         // Add the file to the cache
         for (Project existingProject : projects) {
