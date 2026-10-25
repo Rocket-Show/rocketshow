@@ -40,6 +40,12 @@ class DefaultSettingsServiceTest {
 
     private final static int CURRENT_SETTINGS_VERSION = 2;
 
+    // Settings of earlier releases, which were removed on purpose
+    private final static Set<String> REMOVED_ELEMENTS = Set.of(
+            // The global MIDI mapping always applies
+            "overrideParent"
+    );
+
     @TempDir
     Path tempPath;
 
@@ -91,6 +97,11 @@ class DefaultSettingsServiceTest {
         List<String> lostValues = new ArrayList<>();
 
         for (Map.Entry<String, String> entry : before.entrySet()) {
+            String element = entry.getKey().substring(entry.getKey().lastIndexOf('/') + 1, entry.getKey().lastIndexOf('['));
+            if (REMOVED_ELEMENTS.contains(element)) {
+                continue;
+            }
+
             if (!entry.getValue().equals(after.get(entry.getKey()))) {
                 lostValues.add(entry.getKey() + "=" + entry.getValue() + " (now " + after.get(entry.getKey()) + ")");
             }

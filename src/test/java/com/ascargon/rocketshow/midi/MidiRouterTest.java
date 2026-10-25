@@ -176,21 +176,6 @@ class MidiRouterTest {
     }
 
     @Test
-    void ignoresTheGlobalMappingWhenOverridingIt() throws Exception {
-        settings.setMidiMapping(getMidiMapping(1, 12));
-
-        MidiMapping compositionMidiMapping = new MidiMapping();
-        compositionMidiMapping.setParent(settings.getMidiMapping());
-        MidiMapping midiMapping = getMidiMapping(0, 1);
-        midiMapping.setOverrideParent(true);
-        midiMapping.setParent(compositionMidiMapping);
-
-        getMidiRouter(getMidiRouting(MidiDestination.OUT_DEVICE, midiMapping)).sendSignal(getNoteOn(), MidiSource.MIDI_FILE);
-
-        assertEquals(List.of("90 3D 64"), outDeviceMessages);
-    }
-
-    @Test
     void keepsTheOriginalMessage() throws Exception {
         ShortMessage noteOn = getNoteOn();
 

@@ -119,24 +119,6 @@ class MidiMapperTest {
     }
 
     @Test
-    void ignoresTheParentWhenOverridingIt() throws Exception {
-        MidiMapping parent = new MidiMapping();
-        parent.getChannelMap().add(getChannelMapping(0, 9));
-        parent.setChannelOffset(1);
-        parent.setNoteOffset(12);
-
-        MidiMapping midiMapping = new MidiMapping();
-        midiMapping.setNoteOffset(1);
-        midiMapping.setOverrideParent(true);
-        midiMapping.setParent(parent);
-
-        ShortMessage shortMessage = map(ShortMessage.NOTE_ON, 0, 60, 100, midiMapping);
-
-        assertEquals(0, shortMessage.getChannel());
-        assertEquals(61, shortMessage.getData1());
-    }
-
-    @Test
     void treatsMissingValuesAsUnset() throws Exception {
         MidiMapping parent = new MidiMapping();
         parent.setNoteOffset(12);
@@ -144,7 +126,6 @@ class MidiMapperTest {
         MidiMapping midiMapping = new MidiMapping();
         midiMapping.setChannelOffset(null);
         midiMapping.setNoteOffset(null);
-        midiMapping.setOverrideParent(null);
         midiMapping.setParent(parent);
 
         ShortMessage shortMessage = map(ShortMessage.NOTE_ON, 0, 60, 100, midiMapping);

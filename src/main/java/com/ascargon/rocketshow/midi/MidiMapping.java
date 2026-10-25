@@ -17,9 +17,6 @@ public class MidiMapping {
     private Integer channelOffset = 0;
     private Integer noteOffset = 0;
 
-    // Completely ignore all parent's settings
-    private Boolean overrideParent = false;
-
     // Set at runtime only. Not sent to the web app, where it would be saved into every routing.
     @XmlTransient
     @JsonIgnore
@@ -29,15 +26,6 @@ public class MidiMapping {
 
     public void setParent(MidiMapping parent) {
         this.parent = parent;
-    }
-
-    public Boolean isOverrideParent() {
-        return overrideParent;
-    }
-
-    @SuppressWarnings("unused")
-    public void setOverrideParent(Boolean overrideParent) {
-        this.overrideParent = overrideParent;
     }
 
     public List<ChannelMapping> getChannelMap() {

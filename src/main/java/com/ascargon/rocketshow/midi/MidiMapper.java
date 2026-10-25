@@ -6,10 +6,9 @@ import javax.sound.midi.ShortMessage;
 
 class MidiMapper {
 
-    // Whether the parent mapping (in the end the global one) applies as well. A mapping overriding its parent
-    // ignores it completely.
+    // Whether there is a parent mapping (in the end the global one), which applies as well
     private static boolean usesParent(MidiMapping midiMapping) {
-        return midiMapping.getParent() != null && !Boolean.TRUE.equals(midiMapping.isOverrideParent());
+        return midiMapping.getParent() != null;
     }
 
     private static int getChannelTo(int channelFrom, MidiMapping midiMapping) {

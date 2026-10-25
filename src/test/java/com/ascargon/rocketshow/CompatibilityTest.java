@@ -38,7 +38,13 @@ class CompatibilityTest {
                     "type",
                     // 2.x compositions assign audio files to a bus by name. They are not migrated, the files play on
                     // the first bus (accepted, see testing/README.md, known issues).
-                    "outputBus"
+                    "outputBus",
+                    // Removed from the MIDI mapping, the global mapping always applies
+                    "overrideParent"
+            ),
+            Settings.class, Set.of(
+                    // Removed from the MIDI mapping, the global mapping always applies
+                    "overrideParent"
             )
     );
 
