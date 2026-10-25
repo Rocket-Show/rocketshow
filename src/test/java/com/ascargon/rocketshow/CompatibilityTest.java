@@ -36,8 +36,8 @@ class CompatibilityTest {
             Composition.class, Set.of(
                     // Only written. The file type follows from the element (audioFile, midiFile, videoFile).
                     "type",
-                    // TODO 2.x compositions assign audio files to a bus by name. The name is not migrated to the bus
-                    //  UUID yet, so these files play on the first bus. See testing/README.md, known issues.
+                    // 2.x compositions assign audio files to a bus by name. They are not migrated, the files play on
+                    // the first bus (accepted, see testing/README.md, known issues).
                     "outputBus"
             )
     );

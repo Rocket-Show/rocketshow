@@ -7,6 +7,12 @@ import com.ascargon.rocketshow.play.CompositionPlayer;
 import com.ascargon.rocketshow.settings.Settings;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.FileFilterService;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
@@ -18,8 +24,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -28,8 +37,8 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
@@ -42,8 +51,27 @@ import static org.mockito.Mockito.when;
  */
 class DesignerProjectCompatibilityTest {
 
-    // The DMX universe used by the designer template
-    private final static String UNIVERSE_UUID = "f869189e-4068-4800-a61f-66a1499946fd";
+    // A position in a composition of the project
+    private record Position(String compositionName, long positionMillis) {
+    }
+
+    // Collects the errors logged while playing (e.g. when the engine can't calculate the universe)
+    private static class ErrorCollector extends AbstractAppender {
+
+        private final List<String> errors = new CopyOnWriteArrayList<>();
+
+        ErrorCollector() {
+            super("DesignerProjectCompatibilityTest", null, null, true, Property.EMPTY_ARRAY);
+        }
+
+        @Override
+        public void append(LogEvent event) {
+            if (event.getLevel().isMoreSpecificThan(Level.ERROR)) {
+                errors.add(event.getMessage().getFormattedMessage());
+            }
+        }
+
+    }
 
     @TempDir
     Path basePath;
@@ -56,23 +84,59 @@ class DesignerProjectCompatibilityTest {
         return getCompatPath().resolve(version).resolve("designer").resolve(fileName);
     }
 
-    private Settings getSettings(Path projectBasePath) {
-        LightingUniverse lightingUniverse = new LightingUniverse();
-        lightingUniverse.setUuid(UNIVERSE_UUID);
+    private Project readProject(Path projectFile) {
+        return new tools.jackson.databind.ObjectMapper().readValue(projectFile.toFile(), Project.class);
+    }
 
+    // The settings of a device with a DMX universe for each universe used in the project
+    private Settings getSettings(Path projectBasePath, Project project) {
         Settings settings = new Settings();
         settings.setBasePath(projectBasePath + File.separator);
         settings.setDesignerPath("designer");
         settings.setDesignerFrequencyHertz(40);
         settings.setDesignerLivePreview(false);
         settings.setEnableMonitor(false);
-        settings.getLightingUniverseList().add(lightingUniverse);
+
+        Set<String> universeUuids = new LinkedHashSet<>();
+        if (project.getFixtures() != null) {
+            for (Fixture fixture : project.getFixtures()) {
+                universeUuids.add(fixture.getDmxUniverseUuid());
+            }
+        }
+
+        for (String universeUuid : universeUuids) {
+            LightingUniverse lightingUniverse = new LightingUniverse();
+            lightingUniverse.setUuid(universeUuid);
+            settings.getLightingUniverseList().add(lightingUniverse);
+        }
+
         return settings;
     }
 
+    // The middle of each scene playback region of each composition in the project
+    private List<Position> getScenePositions(Project project) {
+        List<Position> positions = new ArrayList<>();
+
+        if (project.getCompositions() == null) {
+            return positions;
+        }
+
+        for (Composition composition : project.getCompositions()) {
+            if (composition.getScenePlaybackRegions() == null) {
+                continue;
+            }
+
+            for (ScenePlaybackRegion region : composition.getScenePlaybackRegions()) {
+                positions.add(new Position(composition.getName(), (region.getStartMillis() + region.getEndMillis()) / 2));
+            }
+        }
+
+        return positions;
+    }
+
     // Load the project like the app does (from the designer directory) and return the DMX values the engine sends
-    // at each position of the composition
-    private List<Map<Integer, Integer>> play(Path projectFile, List<Long> positionMillisList) throws Exception {
+    // at each position, by universe and channel (e.g. "<universe uuid>/0")
+    private List<Map<String, Integer>> play(Path projectFile, List<Position> positions) throws Exception {
         // Each project gets its own base directory with only this project in it
         Path projectBasePath = Files.createTempDirectory(basePath, "project");
         Path designerPath = projectBasePath.resolve("designer");
@@ -80,39 +144,41 @@ class DesignerProjectCompatibilityTest {
         Files.copy(projectFile, designerPath.resolve(projectFile.getFileName()));
 
         SettingsService settingsService = mock(SettingsService.class);
-        when(settingsService.getSettings()).thenReturn(getSettings(projectBasePath));
+        when(settingsService.getSettings()).thenReturn(getSettings(projectBasePath, readProject(projectFile)));
 
         FileFilterService fileFilterService = mock(FileFilterService.class);
         when(fileFilterService.filterFile(anyString())).thenReturn(false);
 
         LightingService lightingService = mock(LightingService.class);
-        AtomicReference<LightingUniverseState> lightingUniverse = new AtomicReference<>();
-        doAnswer(invocation -> {
-            lightingUniverse.set(invocation.getArgument(0));
-            return null;
-        }).when(lightingService).addLightingUniverse(org.mockito.ArgumentMatchers.any());
+        List<LightingUniverseState> lightingUniverses = new CopyOnWriteArrayList<>();
+        doAnswer(invocation -> lightingUniverses.add(invocation.getArgument(0))).when(lightingService).addLightingUniverse(any());
+        doAnswer(invocation -> lightingUniverses.remove((LightingUniverseState) invocation.getArgument(0))).when(lightingService).removeLightingUniverse(any());
 
         DefaultDesignerService designerService = new DefaultDesignerService(settingsService, fileFilterService, lightingService, new DefaultFixturePixelGroupResolveService());
 
         assertEquals(1, designerService.getAllProjects().size());
         Project project = designerService.getAllProjects().getFirst();
 
-        List<Map<Integer, Integer>> universes = new ArrayList<>();
+        List<Map<String, Integer>> universes = new ArrayList<>();
 
-        for (long positionMillis : positionMillisList) {
+        for (Position position : positions) {
             com.ascargon.rocketshow.composition.Composition composition = new com.ascargon.rocketshow.composition.Composition();
-            composition.setName(project.getCompositions()[0].getName());
+            composition.setName(position.compositionName());
 
             CompositionPlayer compositionPlayer = mock(CompositionPlayer.class);
             when(compositionPlayer.getComposition()).thenReturn(composition);
-            when(compositionPlayer.getPositionMillis()).thenReturn(positionMillis);
+            when(compositionPlayer.getPositionMillis()).thenReturn(position.positionMillis());
 
-            // Keep the first universe the engine sends
+            // Keep the first values the engine sends
             CountDownLatch sent = new CountDownLatch(1);
-            AtomicReference<Map<Integer, Integer>> universe = new AtomicReference<>();
+            AtomicReference<Map<String, Integer>> universe = new AtomicReference<>();
             doAnswer(invocation -> {
                 if (universe.get() == null) {
-                    universe.set(new HashMap<>(lightingUniverse.get().getUniverse()));
+                    Map<String, Integer> values = new HashMap<>();
+                    for (LightingUniverseState lightingUniverse : lightingUniverses) {
+                        lightingUniverse.getUniverse().forEach((channel, value) -> values.put(lightingUniverse.getMappingUuid() + "/" + channel, value));
+                    }
+                    universe.set(values);
                     sent.countDown();
                 }
                 return null;
@@ -130,8 +196,23 @@ class DesignerProjectCompatibilityTest {
         return universes;
     }
 
-    private Project readProject(Path projectFile) {
-        return new tools.jackson.databind.ObjectMapper().readValue(projectFile.toFile(), Project.class);
+    // Play while collecting the logged errors
+    private List<String> getErrorsWhilePlaying(Path projectFile, List<Position> positions, List<Map<String, Integer>> universes) throws Exception {
+        LoggerContext context = (LoggerContext) LogManager.getContext(false);
+        ErrorCollector errorCollector = new ErrorCollector();
+        errorCollector.start();
+        context.getConfiguration().getRootLogger().addAppender(errorCollector, null, null);
+        context.updateLoggers();
+
+        try {
+            universes.addAll(play(projectFile, positions));
+        } finally {
+            context.getConfiguration().getRootLogger().removeAppender(errorCollector.getName());
+            context.updateLoggers();
+            errorCollector.stop();
+        }
+
+        return errorCollector.errors;
     }
 
     // Load the project into the engine, which migrates it
@@ -139,7 +220,7 @@ class DesignerProjectCompatibilityTest {
         Path projectBasePath = Files.createTempDirectory(basePath, "project");
 
         SettingsService settingsService = mock(SettingsService.class);
-        when(settingsService.getSettings()).thenReturn(getSettings(projectBasePath));
+        when(settingsService.getSettings()).thenReturn(getSettings(projectBasePath, project));
 
         DefaultDesignerService designerService = new DefaultDesignerService(settingsService, mock(FileFilterService.class), mock(LightingService.class), new DefaultFixturePixelGroupResolveService());
         designerService.load(null, project, null);
@@ -150,16 +231,8 @@ class DesignerProjectCompatibilityTest {
         return presetFixtures.stream().map(PresetFixture::getFixtureUuid).toList();
     }
 
-    // A position in the middle of each scene playback region of the project's first composition
-    private List<Long> getScenePositions(Path projectFile) throws Exception {
-        Project project = readProject(projectFile);
-        List<Long> positionMillisList = new ArrayList<>();
-
-        for (ScenePlaybackRegion region : project.getCompositions()[0].getScenePlaybackRegions()) {
-            positionMillisList.add((region.getStartMillis() + region.getEndMillis()) / 2);
-        }
-
-        return positionMillisList;
+    private boolean hasLight(Map<String, Integer> universe) {
+        return universe.values().stream().anyMatch(value -> value > 0);
     }
 
     @TestFactory
@@ -178,12 +251,17 @@ class DesignerProjectCompatibilityTest {
         assertFalse(projectFiles.isEmpty());
 
         return projectFiles.stream().map(projectFile -> DynamicTest.dynamicTest(compatPath.relativize(projectFile).toString(), () -> {
-            List<Long> positionMillisList = getScenePositions(projectFile);
-            assertFalse(positionMillisList.isEmpty(), compatPath.relativize(projectFile) + " has no scene to play");
+            Path relativePath = compatPath.relativize(projectFile);
+            List<Position> positions = getScenePositions(readProject(projectFile));
+            List<Map<String, Integer>> universes = new ArrayList<>();
 
-            for (Map<Integer, Integer> universe : play(projectFile, positionMillisList)) {
-                assertNotNull(universe);
-                assertTrue(universe.values().stream().anyMatch(value -> value > 0), compatPath.relativize(projectFile) + " produces no light");
+            List<String> errors = getErrorsWhilePlaying(projectFile, positions, universes);
+
+            assertTrue(errors.isEmpty(), relativePath + " logged errors: " + errors);
+
+            // A single scene may be dark on purpose (e.g. a blackout), but not the whole project
+            if (!positions.isEmpty()) {
+                assertTrue(universes.stream().anyMatch(this::hasLight), relativePath + " produces no light");
             }
         }));
     }
@@ -242,13 +320,16 @@ class DesignerProjectCompatibilityTest {
         Path version7 = getDesignerProject("3.0.0", "Template version 7.json");
 
         // Before, at the start, in the middle and at the end of the scene, and after it
-        List<Long> positionMillisList = List.of(1000L, 48801L, 63801L, 78800L, 90000L);
+        List<Position> positions = new ArrayList<>();
+        for (long positionMillis : List.of(1000L, 48801L, 63801L, 78800L, 90000L)) {
+            positions.add(new Position("Example Composition", positionMillis));
+        }
 
-        List<Map<Integer, Integer>> version2Universes = play(version2, positionMillisList);
-        List<Map<Integer, Integer>> version7Universes = play(version7, positionMillisList);
+        List<Map<String, Integer>> version2Universes = play(version2, positions);
+        List<Map<String, Integer>> version7Universes = play(version7, positions);
 
         assertEquals(version7Universes, version2Universes);
-        assertTrue(version7Universes.get(2).values().stream().anyMatch(value -> value > 0));
+        assertTrue(hasLight(version7Universes.get(2)));
     }
 
 }
