@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.system.ApplicationHome;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -44,20 +45,35 @@ public class DefaultSettingsService implements SettingsService {
     private String lastSavedDefaultComposition;
     private List<ScheduledComposition> lastSavedScheduledCompositionList = new ArrayList<>();
 
+    @Autowired
     public DefaultSettingsService(
             OperatingSystemInformationService operatingSystemInformationService,
             MidiService midiService,
             DeviceInformationService deviceInformationService,
             ApplicationEventPublisher applicationEventPublisher
     ) {
+        this(operatingSystemInformationService, midiService, deviceInformationService, applicationEventPublisher, null);
+    }
+
+    // Tests pass the directory of the settings. Otherwise, it depends on the device.
+    DefaultSettingsService(
+            OperatingSystemInformationService operatingSystemInformationService,
+            MidiService midiService,
+            DeviceInformationService deviceInformationService,
+            ApplicationEventPublisher applicationEventPublisher,
+            String directory
+    ) {
         this.operatingSystemInformationService = operatingSystemInformationService;
         this.midiService = midiService;
         this.deviceInformationService = deviceInformationService;
         this.applicationEventPublisher = applicationEventPublisher;
 
-        directory = new ApplicationHome(RocketShowApplication.class).getDir().toString();
-        if (isReadOnlyFileSystem()) {
-            directory = "/data/rocketshow";
+        this.directory = directory;
+        if (this.directory == null) {
+            this.directory = new ApplicationHome(RocketShowApplication.class).getDir().toString();
+            if (isReadOnlyFileSystem()) {
+                this.directory = "/data/rocketshow";
+            }
         }
 
         try {
