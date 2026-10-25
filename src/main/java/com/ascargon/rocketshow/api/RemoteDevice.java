@@ -19,6 +19,16 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Defines a remote RocketShow device to be triggered by the local one one.
@@ -53,6 +63,40 @@ public class RemoteDevice {
     // a request), must not keep the request and its connection forever. Otherwise, all connections to the
     // device are used up and every play waits for the remote devices to load.
     private final static int READ_TIMEOUT_MILLIS = 30000;
+
+    // A unit which doesn't answer holds up the requests after it, each up to the timeouts. Requests beyond this many
+    // waiting are dropped instead of filling the memory, e.g. with MIDI clock.
+    private final static int MAX_WAITING_REQUESTS = 1000;
+
+    // How long a caller waits for its request at most, including the requests before it
+    private final static int MAX_WAIT_MILLIS = 60000;
+
+    // Sends the requests to a unit one after the other, in the order they were made, so e.g. a note off never arrives
+    // before its note on. By host, because saving the settings creates new remote devices.
+    private final static Map<String, Sender> senders = new ConcurrentHashMap<>();
+
+    private static class Sender {
+
+        private final AtomicBoolean dropping = new AtomicBoolean();
+        private final ThreadPoolExecutor executor;
+
+        private Sender(String host) {
+            executor = new ThreadPoolExecutor(1, 1, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(MAX_WAITING_REQUESTS), runnable -> {
+                Thread thread = new Thread(runnable, "remote-device-" + host);
+                thread.setDaemon(true);
+                return thread;
+            }, (runnable, executor) -> {
+                if (dropping.compareAndSet(false, true)) {
+                    logger.warn("Unit '{}' doesn't keep up with the requests, dropping requests until it does", host);
+                }
+
+                // Don't let a caller wait for a request which is never sent
+                ((Future<?>) runnable).cancel(false);
+            });
+            executor.allowCoreThreadTimeOut(true);
+        }
+
+    }
 
     private RemoteDevice() {
         this(CONNECT_TIMEOUT_MILLIS, READ_TIMEOUT_MILLIS);
@@ -100,10 +144,28 @@ public class RemoteDevice {
         // Build the url for the post request
         String url = "http://" + host + "/api/" + apiUrl;
 
-        if (synchronous) {
+        Sender sender = senders.computeIfAbsent(String.valueOf(host), Sender::new);
+
+        Future<?> request = sender.executor.submit(() -> {
             executeRequest(url, payload);
-        } else {
-            new Thread(() -> executeRequest(url, payload)).start();
+
+            if (sender.executor.getQueue().isEmpty() && sender.dropping.compareAndSet(true, false)) {
+                logger.info("Unit '{}' caught up with the requests", host);
+            }
+        });
+
+        if (!synchronous) {
+            return;
+        }
+
+        try {
+            request.get(MAX_WAIT_MILLIS, TimeUnit.MILLISECONDS);
+        } catch (CancellationException | ExecutionException e) {
+            // Dropped or failed, already logged
+        } catch (TimeoutException e) {
+            logger.error("Request to unit '{}' with url '{}' not sent within {} ms, continuing without waiting", name, url, MAX_WAIT_MILLIS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
