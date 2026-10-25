@@ -391,6 +391,16 @@ public class DefaultPlayerService implements PlayerService {
         }
     }
 
+    // Plays the default composition again, if it plays, e.g. on the devices of changed audio settings
+    @Override
+    public synchronized void restartDefaultComposition() throws Exception {
+        if (defaultCompositionPlayer.getComposition() == null) {
+            return;
+        }
+
+        refreshDefaultComposition();
+    }
+
     private synchronized void refreshDefaultComposition() throws Exception {
         stopDefaultComposition();
 

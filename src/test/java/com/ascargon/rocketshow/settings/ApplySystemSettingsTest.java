@@ -1,6 +1,8 @@
 package com.ascargon.rocketshow.settings;
 
-import com.ascargon.rocketshow.audio.AudioService;
+import com.ascargon.rocketshow.audio.AudioBus;
+import com.ascargon.rocketshow.audio.AudioDevice;
+import com.ascargon.rocketshow.audio.DefaultAudioService;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.util.LanInfo;
 import com.ascargon.rocketshow.util.LanService;
@@ -8,13 +10,20 @@ import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
+
+import java.io.File;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -26,6 +35,8 @@ class ApplySystemSettingsTest {
     private final List<String> commands = new CopyOnWriteArrayList<>();
     private final List<String> files = new CopyOnWriteArrayList<>();
     private final LanInfo lanInfo = new LanInfo();
+    private final ApplicationEventPublisher applicationEventPublisher = mock(ApplicationEventPublisher.class);
+    private final AtomicInteger alsaReloads = new AtomicInteger();
     private DefaultSettingsUpdateSystemService settingsUpdateSystemService;
 
     @BeforeEach
@@ -50,7 +61,8 @@ class ApplySystemSettingsTest {
         LanService lanService = mock(LanService.class);
         when(lanService.getLanInfo()).thenReturn(lanInfo);
 
-        settingsUpdateSystemService = new DefaultSettingsUpdateSystemService(settingsService, mock(AudioService.class), operatingSystemInformationService, mock(LightingService.class), lanService) {
+        settingsUpdateSystemService = new DefaultSettingsUpdateSystemService(settingsService, new DefaultAudioService(operatingSystemInformationService),
+                operatingSystemInformationService, mock(LightingService.class), lanService, applicationEventPublisher) {
             @Override
             void runCommand(String... command) {
                 commands.add(String.join(" ", command).replaceAll("/\\S*/(set-[a-z-]+\\.sh)", "$1"));
@@ -59,6 +71,11 @@ class ApplySystemSettingsTest {
             @Override
             void writeFile(String path, String content) {
                 files.add(path);
+            }
+
+            @Override
+            void reloadAlsaConfiguration() {
+                alsaReloads.incrementAndGet();
             }
         };
     }
@@ -126,6 +143,40 @@ class ApplySystemSettingsTest {
         assertTrue(commands.contains("sudo set-lan-ip.sh static 10.0.0.5 255.255.255.0 10.0.0.1  "), commands.toString());
         assertTrue(commands.contains("sudo set-connection-mode.sh https"), commands.toString());
         assertTrue(commands.stream().anyMatch(command -> command.contains("ip = 10.0.0.5")), commands.toString());
+    }
+
+    @Test
+    void opensTheAudioDevicesAgainWhenTheyChanged() throws Exception {
+        settings.setAudioOutput(Settings.AudioOutput.DEVICE);
+        AudioBus audioBus = new AudioBus();
+        audioBus.setName("Main");
+        audioBus.setChannels(2);
+        audioBus.setAudioDevice(audioDevice(1, "Headphones"));
+        settings.getAudioBusList().add(audioBus);
+
+        // At the start, the devices are opened after
+        apply();
+        assertEquals(List.of(System.getProperty("user.home") + File.separator + ".asoundrc"), files.subList(0, 1));
+
+        settings.setOffsetMillisMidi(10);
+        apply();
+        assertEquals(List.of(), files);
+
+        // Another sound card for the bus
+        audioBus.setAudioDevice(audioDevice(2, "UMC1820"));
+        apply();
+
+        assertEquals(List.of(System.getProperty("user.home") + File.separator + ".asoundrc"), files);
+        assertEquals(1, alsaReloads.get());
+        verify(applicationEventPublisher, times(1)).publishEvent(any(AudioSettingsChangedEvent.class));
+    }
+
+    private static AudioDevice audioDevice(int id, String key) {
+        AudioDevice audioDevice = new AudioDevice();
+        audioDevice.setId(id);
+        audioDevice.setKey(key);
+        audioDevice.setName(key + " name");
+        return audioDevice;
     }
 
 }

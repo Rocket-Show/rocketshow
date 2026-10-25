@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.settings;
 
 import com.ascargon.rocketshow.RocketShowApplication;
+import com.ascargon.rocketshow.audio.AlsaConfiguration;
 import com.ascargon.rocketshow.audio.AudioDevice;
 import com.ascargon.rocketshow.audio.AudioService;
 import com.ascargon.rocketshow.lighting.LightingService;
@@ -13,6 +14,7 @@ import org.apache.logging.log4j.core.config.Configurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.system.ApplicationHome;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -37,6 +39,7 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
     private final AudioService audioService;
     private final LightingService lightingService;
     private final LanService lanService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     // Runs the system commands one after the other, in the order they were given, without holding up saving the
     // settings
@@ -52,18 +55,21 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
     private String appliedLanIp;
     private String appliedOlaArtNetIp;
     private String appliedConnectionMode;
+    private String appliedAlsaSettings;
 
     public DefaultSettingsUpdateSystemService(
             SettingsService settingsService, AudioService audioService,
             OperatingSystemInformationService operatingSystemInformationService,
             LightingService lightingService,
-            LanService lanService
+            LanService lanService,
+            ApplicationEventPublisher applicationEventPublisher
     ) {
         this.settingsService = settingsService;
         this.audioService = audioService;
         this.operatingSystemInformationService = operatingSystemInformationService;
         this.lightingService = lightingService;
         this.lanService = lanService;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     // Package visible for the tests
@@ -205,13 +211,34 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
                 alsaSettingsPath = "/data/rocketshow/.asoundrc";
             }
 
+            String alsaSettings = getAlsaSettings(settings);
+
+            if (alsaSettings.equals(appliedAlsaSettings)) {
+                return;
+            }
+
             // Create a new file the Rocket Show settings
             try {
-                writeFile(alsaSettingsPath, getAlsaSettings(settings));
+                writeFile(alsaSettingsPath, alsaSettings);
             } catch (IOException e) {
                 logger.error("Could not write .asoundrc", e);
+                return;
             }
+
+            // Changed after the start: ALSA reads its settings once, unless told to read them again. Then the audio
+            // devices are opened again with them, without a restart.
+            if (appliedAlsaSettings != null) {
+                reloadAlsaConfiguration();
+                applicationEventPublisher.publishEvent(new AudioSettingsChangedEvent());
+            }
+
+            appliedAlsaSettings = alsaSettings;
         }
+    }
+
+    // Package visible for the tests
+    void reloadAlsaConfiguration() {
+        AlsaConfiguration.reload();
     }
 
     private void updateLoggingLevel(Settings settings) {

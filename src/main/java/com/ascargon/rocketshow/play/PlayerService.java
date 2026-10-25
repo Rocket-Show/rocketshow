@@ -41,6 +41,8 @@ public interface PlayerService {
 
     void compositionsChanged() throws Exception;
 
+    void restartDefaultComposition() throws Exception;
+
     CompositionPlayer.PlayState getPlayState();
 
     String getCompositionName();

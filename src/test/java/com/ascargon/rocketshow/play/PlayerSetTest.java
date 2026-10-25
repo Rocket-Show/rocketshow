@@ -282,4 +282,28 @@ class PlayerSetTest {
         playerService.stop();
     }
 
+
+    @Test
+    void playsTheDefaultCompositionAgainOnOtherAudioDevices() throws Exception {
+        // Without default composition
+        playerService.restartDefaultComposition();
+
+        Composition ambient = new Composition();
+        ambient.setName("Ambient");
+        ActionTriggerComposition later = new ActionTriggerComposition();
+        later.setPositionMillis(600_000);
+        ambient.getActionTriggerList().add(later);
+        compositionService.saveComposition(ambient);
+        settingsService.getSettings().setDefaultComposition("Ambient");
+
+        playerService = start();
+        verify(designerService, atLeastOnce()).getProjectByCompositionName("Ambient");
+        clearInvocations(designerService);
+
+        playerService.restartDefaultComposition();
+
+        verify(designerService, atLeastOnce()).getProjectByCompositionName("Ambient");
+        playerService.stop(false);
+    }
+
 }

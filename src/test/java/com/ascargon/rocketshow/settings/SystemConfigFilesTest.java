@@ -9,6 +9,7 @@ import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -51,7 +52,7 @@ class SystemConfigFilesTest {
         when(operatingSystemInformationService.getOperatingSystemInformation()).thenReturn(operatingSystemInformation);
 
         settingsUpdateSystemService = new DefaultSettingsUpdateSystemService(settingsService, new DefaultAudioService(operatingSystemInformationService),
-                operatingSystemInformationService, mock(LightingService.class), mock(LanService.class));
+                operatingSystemInformationService, mock(LightingService.class), mock(LanService.class), mock(ApplicationEventPublisher.class));
 
         settings.setAudioOutput(Settings.AudioOutput.DEVICE);
         settings.setAlsaPeriodSize(16384);
