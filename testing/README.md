@@ -33,7 +33,7 @@ CI (`.github/workflows/ci.yml`) runs on every push and on pull requests from for
 
 - **Unit tests:** `./mvnw -B test -Pcoverage` without the web app build. The summary of the run shows the line
   coverage, the full JaCoCo report is kept as an artifact (`coverage-report`), and so are the reports of failed tests.
-  The run fails when the tests cover less than 70 % of the lines or 55 % of the branches (today 73 % and 60 %).
+  The run fails when the tests cover less than 70 % of the lines or 55 % of the branches (today 74 % and 61 %).
 - **Web app unit tests:** the unit tests of the web app in headless Chrome (see [below](#web-app-unit-tests)).
 - **Build with web app:** `./mvnw -B package -DskipTests`. The built `rocketshow.jar` is kept as a build artifact for
   14 days, so every commit has a jar to put on a test unit.
@@ -48,10 +48,12 @@ Dependabot alerts and security updates are enabled in the settings of the reposi
 
 The unit tests live in `src/test/java`:
 
-- Update state machine across reboots (`DefaultUpdateServiceTest`) and reading RAUC (`DefaultRaucServiceTest`)
+- Update state machine across reboots (`DefaultUpdateServiceTest`) and reading RAUC, also why an installation failed
+  (`DefaultRaucServiceTest`)
 - MIDI input parsing, mapping and routing (`MidiMessageParserTest`, `MidiMapperTest`, `MidiRouterTest`,
   `DefaultMidiRouterFactoryTest`), MIDI triggers (`DefaultActionMidiExecutionServiceTest`)
-- Backup and restore, broken and failed backups (`DefaultBackupServiceTest`)
+- Backup and restore without room for a backup file, broken and failed backups (`DefaultBackupServiceTest`), a backup
+  failing during its download in a real web server (`BackupDownloadTest`)
 - Files of earlier releases and seed files of new units (`CompatibilityTest`, `DefaultSettingsServiceTest`,
   `DesignerProjectCompatibilityTest`, `SeedFilesTest`, see below)
 - The whole app started with each release sample, where every setting is set and every list filled
@@ -65,9 +67,11 @@ The unit tests live in `src/test/java`:
 - The monitors of the web app: the latest DMX values and audio levels by bus, MIDI routed while the monitor sends
   (`ActivityMonitorsTest`)
 - File names from the web app can't leave their folder (`FileNamesTest`, `FileNameCheckTest`)
-- Requests to other units: encoded names, units that don't answer (`RemoteDeviceTest`)
+- Requests to other units: in the order they were made, encoded names, units that don't answer or don't keep up
+  (`RemoteDeviceTest`)
 - Compositions and sets: storing them, their durations, keeping the sets up to date (`DefaultCompositionServiceTest`),
-  stepping through a set and starting the next composition by itself (`PlayerSetTest`)
+  stepping through a set and starting the next composition by itself (`PlayerSetTest`), saving and deleting
+  compositions during a show (`ChangeCompositionsWhilePlayingTest`)
 - Playing compositions without audio, video or MIDI files: play, pause, seek and stop, their timers and actions,
   samples (`CompositionPlayerTest`, `SamplePlayTest`)
 - Playing compositions with media, the pipelines simulated: the end of the media, the actions after it, looping, errors
@@ -82,7 +86,8 @@ The unit tests live in `src/test/java`:
   (`AtomicFileTest`, `DefaultSettingsServiceTest`, `DefaultSessionServiceTest`, `DefaultCompositionServiceTest`,
   `DesignerProjectsTest`, `FixtureLibraryTest`, `MediaUploadTest`)
 - Audio: the generated `.asoundrc`, the output channels each file channel plays on, the sound cards offered for the
-  buses (`SystemConfigFilesTest`, `AudioChannelTest`, `AudioDevicesTest`)
+  buses (`SystemConfigFilesTest`, `AudioChannelTest`, `AudioDevicesTest`), ALSA reading changed audio settings
+  without a restart (`AlsaConfigurationTest`, on devices of the type null)
 - Wireless access point: the generated `hostapd.conf` (`SystemConfigFilesTest`)
 - System settings: what each save applies and in which order, with the commands recorded instead of run
   (`ApplySystemSettingsTest`)
@@ -114,9 +119,9 @@ Run them locally without the web app build, with or without the coverage report 
 ./mvnw test -Pcoverage -Dskip.npm -Dskip.installnodenpm
 ```
 
-All 428 tests pass without any hardware attached, in about three minutes. One backup test needs an unreadable file,
-so it is skipped when running as root (root can read every file). It runs in CI. The tests cover 73 % of the lines and
-60 % of the branches, without the libraries shipped with the app (e.g. the OLA client). What's left is mostly the code
+All 446 tests pass without any hardware attached, in about three minutes. One backup test needs an unreadable file,
+so it is skipped when running as root (root can read every file). It runs in CI. The tests cover 74 % of the lines and
+61 % of the branches, without the libraries shipped with the app (e.g. the OLA client). What's left is mostly the code
 building and running the GStreamer pipelines (`CompositionPipelineBuilder`, `CompositionPipeline`) and the video
 player, which need GStreamer and real devices.
 
@@ -273,6 +278,7 @@ The designer migrations are tested with a project in version 2 and the same proj
 - [x] The monitors of the web app, MIDI devices on a simulated MIDI system, the sound cards offered.
 - [x] Patching the universes in OLA, the live preview of the designer, applying the system settings.
 - [x] The unit tests of the web app, in CI.
+- [x] Changes during a show: saving compositions, audio settings, MIDI to other units in order.
   - [ ] More specs for the parts of the web app with logic, e.g. the settings forms and the composition editor.
 - [ ] The GStreamer pipelines a composition builds, with GStreamer installed in CI and test sources and sinks instead
   of the devices.
@@ -590,6 +596,8 @@ These are the paths that brick units in the field, and nobody runs them by hand.
 - [ ] Scheduler starts a composition at the planned time.
 - [ ] Settings save and reload while idle.
 - [ ] Backup and restore.
+- [ ] Change the sound card of a bus, the rate and the ALSA period and buffer while idle and while the default
+  composition plays: audio plays on the new settings without a restart, without sound artifacts.
 
 ### 6.4 Chaos
 
@@ -770,6 +778,25 @@ Found by reading the code and by the tests. Each one gets a unit test or rig tes
   show. These run when they changed now, and a patch of OLA matching the settings is kept. The commands ran at the
   same time, so e.g. the access point could restart before its country was set. They run one after the other now,
   and failures are logged with their output (`ApplySystemSettingsTest`, `OlaSetupTest`).
+- [x] **Requests to other units arrived in another order than sent.** Play, pause, stop and MIDI messages each ran on
+  a new thread, so e.g. a note off could arrive before its note on and leave the note hanging. Each unit gets its
+  requests one after the other now. A unit which doesn't answer holds up the requests after it (each up to the
+  timeouts): at most 1000 wait, more are dropped with a warning (`RemoteDeviceTest`).
+- [x] **Saving a composition stopped the show.** Saving any composition stopped the one playing and jumped back to the
+  start of the set, e.g. when fixing the next song, and deleting one jumped back as well. The composition playing
+  plays on now, the set keeps its position, a saved composition playing is taken once it stops, and only new or
+  changed files are analyzed again (`ChangeCompositionsWhilePlayingTest`).
+- [x] **A failed update only showed "RAUC exited with exit code 1".** It shows the error RAUC reported now, e.g. a
+  wrong signature (`DefaultRaucServiceTest`).
+- [x] **Backups needed half of the disk free.** The backup file was written to the unit before the download. Restoring
+  stored the uploaded backup and unpacked it next to it, so a new unit needed room for it twice, and a failed unpacking
+  (e.g. a full disk) went unnoticed: the unit restarted with a part of the backup. A backup is written straight into
+  the download now and breaks it off when it fails, a restored backup is unpacked aside while it's uploaded and
+  replaces the data only when it's complete (`DefaultBackupServiceTest`, `BackupDownloadTest`).
+- [x] **Changed audio settings needed a restart.** ALSA reads the `.asoundrc` once in a process, and the sound cards
+  kept open against sound artifacts were only opened at the start. ALSA reads it again after a change now, and the
+  sound cards are opened again (`AlsaConfigurationTest`, `ApplySystemSettingsTest`). Needs the rig to confirm it on
+  real sound cards (see the show scenarios).
 
 ### Accepted
 
@@ -791,9 +818,6 @@ Found by reading the code and by the tests. Each one gets a unit test or rig tes
 - [ ] **Renaming a composition removes it from all sets and from its designer project.** The web app renames by
   deleting the old composition and saving a new one, and the sets and designer projects refer to compositions by name.
   Needs a rename in the backend that updates the sets and projects.
-- [ ] **Saving or deleting a composition jumps back to the first composition of the set.** The current set is loaded
-  again from its start, so a fix during a show loses the position in the set. Saving any composition also stops the
-  one playing, even when another composition was changed.
 - [ ] **"Previous" during a composition rewinds and selects the previous one.** The code says "rewind instead of
   selecting the previous one", but it does both. Decide which one a press should do (`PlayerSetTest` only covers a
   stopped composition).
@@ -816,19 +840,11 @@ Found by reading the code and by the tests. Each one gets a unit test or rig tes
   usually add themselves. Check with a receiver on the rig before changing it.
 - [ ] **The fixture library is downloaded at every start.** About 1.5 MB and 600 files rewritten on each boot, which
   wears the SD card, and every start waits for it. Once a week or on demand would do.
-- [ ] **Requests to other units can arrive in another order than sent.** Play, pause, stop and MIDI
-  messages to other units each run on a new thread, so e.g. a note off can arrive before its note on and leave the
-  note hanging, and each MIDI message starts a thread. One queue per unit keeps the order, but then a unit which
-  doesn't answer holds up everything after it for up to 30 seconds per request. Decide which one matters more.
-- [ ] **Effects move a channel by a quarter of their amplitude.** A sine with the full amplitude around the middle
-  swings between 64 and 191 instead of 0 and 255, in the designer as well (`DesignerDmxTest`). Decide whether that's
-  intended.
-- [ ] **A failed update only tells the exit code of RAUC.** The web app shows "RAUC exited with exit code 1", the reason
-  (e.g. a wrong signature or a full disk) is only in the log. The progress shown is read from the lines RAUC writes,
-  so a release of RAUC writing other lines shows none.
-- [ ] **Backups need half of the disk free.** The backup is written to the unit first, so a unit whose disk is more than
-  half full (e.g. with media) can't make a backup at all.
-- [ ] **Sound cards chosen after the start aren't kept open.** Against sound artifacts, the audio devices are kept open
-  with silence, but only those in use when the app started, until the next restart.
+- [ ] **Sine, triangle and sawtooth effects swing over half of their amplitude, the square over all of it.** At the
+  default amplitude of 1 around the middle, a sine swings between 64 and 191, a square between 0 and 255, in the
+  designer as well (`DesignerDmxTest`). The amplitude goes up to 4, so 2 gives a full sine. Changing it changes the
+  shows already made: both projects need the same change and a migration of the projects.
+- [ ] **Restoring a backup over a full unit needs room for both.** The data is replaced only when the restored backup
+  is complete, so the old and the new data are on the unit at once. A new unit only needs room for the backup.
 - [ ] **A Compute Module 3 isn't recognized as a Raspberry Pi 3**, so it doesn't get the video pipeline of the Pi 3.
   Only matters if such units exist.
