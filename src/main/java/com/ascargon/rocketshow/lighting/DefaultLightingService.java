@@ -370,7 +370,8 @@ public class DefaultLightingService implements LightingService {
         return lightingUniverseState.getName().equals(lightingUniverse.getName());
     }
 
-    private short[] mixLightingUniverses(List<LightingUniverseState> sourceLightingUniverses, LightingUniverse lightingUniverse, boolean onlyOneMapping) {
+    // Package visible for the tests
+    short[] mixLightingUniverses(List<LightingUniverseState> sourceLightingUniverses, LightingUniverse lightingUniverse, boolean onlyOneMapping) {
         List<LightingUniverseState> matchingLightingUniverses = new ArrayList<>();
 
         for (LightingUniverseState lightingUniverseState : sourceLightingUniverses) {
@@ -430,26 +431,33 @@ public class DefaultLightingService implements LightingService {
             return;
         }
 
+        Timer timer = new Timer();
+
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
+                // Let the next value schedule a new send before sending this one. Otherwise, a value set while
+                // sending would not be sent at all.
+                synchronized (DefaultLightingService.this) {
+                    if (sendUniverseTimer == timer) {
+                        sendUniverseTimer = null;
+                    }
+                }
+
+                // End the thread of the timer after this task
+                timer.cancel();
+
                 try {
                     // Send the universe
                     sendUniverse(settingsService.getSettings().getEnableMonitor());
                 } catch (Exception e) {
                     logger.error("Could not send the lighting universe", e);
                 }
-
-                if (sendUniverseTimer != null) {
-                    sendUniverseTimer.cancel();
-                }
-
-                sendUniverseTimer = null;
             }
         };
 
-        sendUniverseTimer = new Timer();
-        sendUniverseTimer.schedule(timerTask, settingsService.getSettings().getLightingSendDelayMillis());
+        sendUniverseTimer = timer;
+        timer.schedule(timerTask, settingsService.getSettings().getLightingSendDelayMillis());
     }
 
     @Override
