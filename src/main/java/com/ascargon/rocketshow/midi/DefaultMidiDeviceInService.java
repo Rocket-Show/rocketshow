@@ -108,7 +108,8 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
                                     try {
                                         Optional<MidiMessage> maybe = parser.offerByte(b);
                                         maybe.ifPresent(midiMessage -> {
-                                            logger.info("Received MIDI message over serial: {}", midiMessage.toString());
+                                            // E.g. 48 MIDI clock messages per second at 120 BPM
+                                            logger.debug("Received MIDI message over serial: {}", midiMessage);
                                             midiInDeviceReceiver.send(midiMessage, -1);
                                         });
                                     } catch (InvalidMidiDataException e) {
@@ -188,6 +189,12 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
         if (midiDevice != null) {
             midiDevice.close();
             midiDevice = null;
+        }
+
+        // The serial port stays open for MIDI out, but stops being listened to
+        if (midiSerialDevice != null) {
+            midiSerialDevice.removeEventListener();
+            midiSerialDevice = null;
         }
     }
 

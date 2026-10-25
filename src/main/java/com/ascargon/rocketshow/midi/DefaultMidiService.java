@@ -40,7 +40,7 @@ public class DefaultMidiService implements MidiService {
         // Get a hardware device for a given MIDI device
         MidiDevice.Info[] midiDeviceInfos = MidiSystem.getMidiDeviceInfo();
 
-        if (midiDevice != null) {
+        if (midiDevice == null) {
             return null;
         }
 
