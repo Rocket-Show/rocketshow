@@ -36,6 +36,25 @@ jobs:
           path: target/surefire-reports
           retention-days: 14
 
+  web-unit:
+    name: Web app unit tests
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Like the Maven build (frontend-maven-plugin in the pom)
+          node-version: 24
+          cache: npm
+          cache-dependency-path: src/main/webapp/package-lock.json
+      - name: Install the dependencies
+        working-directory: src/main/webapp
+        run: npm install --force --no-audit --no-fund
+      - name: Run the unit tests
+        working-directory: src/main/webapp
+        run: npx ng test --watch=false --browsers=ChromeHeadlessCI
+
   build:
     name: Build with web app
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
