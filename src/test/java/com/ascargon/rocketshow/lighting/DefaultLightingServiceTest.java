@@ -129,6 +129,33 @@ class DefaultLightingServiceTest {
     }
 
     @Test
+    void holdsTheValuesOfALightingAction() throws Exception {
+        LightingUniverse stage = universe("Stage");
+        settings.getLightingUniverseList().add(stage);
+
+        ActionLighting action = new ActionLighting();
+        action.getLightingActionUniverseList().add(actionUniverse(stage.getUuid(), 5, 200));
+        action.getLightingActionUniverseList().add(actionUniverse("deleted universe", 6, 100));
+
+        lightingService.executeAction(action);
+
+        HashMap<Integer, Integer> sent = nextSentUniverse();
+        assertEquals(200, sent.get(5));
+        assertEquals(0, sent.get(6));
+    }
+
+    private static LightingActionUniverse actionUniverse(String universeUuid, int channel, int value) {
+        LightingActionChannelValue channelValue = new LightingActionChannelValue();
+        channelValue.setChannel(channel);
+        channelValue.setValue(value);
+
+        LightingActionUniverse actionUniverse = new LightingActionUniverse();
+        actionUniverse.setUniverseUuid(universeUuid);
+        actionUniverse.getChannelValueList().add(channelValue);
+        return actionUniverse;
+    }
+
+    @Test
     void sendsTheChangedValues() throws Exception {
         LightingUniverseState composition = state(null, null, 0, 100);
         lightingService.addLightingUniverse(composition);

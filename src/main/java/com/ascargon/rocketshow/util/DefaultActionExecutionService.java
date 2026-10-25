@@ -26,6 +26,8 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 public class DefaultActionExecutionService implements ActionExecutionService {
@@ -41,6 +43,14 @@ public class DefaultActionExecutionService implements ActionExecutionService {
 
     private final HttpClient httpClient;
 
+    // HTTP actions run one after the other in a thread of their own. A slow or unreachable server must not hold up
+    // what triggers the actions, e.g. the MIDI input, a GPIO button or a composition.
+    private final ExecutorService httpActionExecutor = Executors.newSingleThreadExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "http-actions");
+        thread.setDaemon(true);
+        return thread;
+    });
+
     // Lazy load the playerService to avoid a circular dependency, because the playerService can execute actions and
     // is called by this service for transport actions.
     public DefaultActionExecutionService(@Lazy PlayerService playerService, SettingsService settingsService, RebootService rebootService, LightingService lightingService, MidiRouterFactory midiRouterFactory, RaspberryGpioOutService raspberryGpioOutService) {
@@ -52,7 +62,11 @@ public class DefaultActionExecutionService implements ActionExecutionService {
 
         midiRouter = midiRouterFactory.getSettingsMidiRouter(Settings::getRemoteMidiRoutingList);
 
-        RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(60000 /* 60 seconds */).build();
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(10000)
+                .setSocketTimeout(30000)
+                .setConnectionRequestTimeout(30000)
+                .build();
         httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
     }
 
@@ -99,10 +113,13 @@ public class DefaultActionExecutionService implements ActionExecutionService {
         HttpResponse response;
         response = httpClient.execute(request);
 
+        // Read the body in any case, which releases the connection
+        String body = response.getEntity() == null ? "" : EntityUtils.toString(response.getEntity());
+
         logger.debug("Received response from HTTP action");
         logger.debug("Status code: " + response.getStatusLine().getStatusCode());
         logger.debug("Status phrase: " + response.getStatusLine().getReasonPhrase());
-        logger.debug("Response body: " + EntityUtils.toString(response.getEntity()));
+        logger.debug("Response body: " + body);
     }
 
     private void executeActionOnRemoteDevice(Action action, RemoteDevice remoteDevice) {
@@ -139,7 +156,17 @@ public class DefaultActionExecutionService implements ActionExecutionService {
                     case REBOOT -> rebootService.reboot();
                 }
             }
-            case HTTP -> executeActionHttp((ActionHttp) action);
+            case HTTP -> {
+                ActionHttp actionHttp = (ActionHttp) action;
+
+                httpActionExecutor.execute(() -> {
+                    try {
+                        executeActionHttp(actionHttp);
+                    } catch (Exception e) {
+                        logger.error("Could not execute the HTTP action to URL '{}'", actionHttp.getUrl(), e);
+                    }
+                });
+            }
             default -> logger.warn("Action '" + action.getType() + "' is unknown and cannot be executed");
         }
     }

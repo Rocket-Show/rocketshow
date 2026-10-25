@@ -4,6 +4,7 @@ import com.ascargon.rocketshow.api.NotificationService;
 import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.composition.Composition;
 import com.ascargon.rocketshow.composition.CompositionService;
+import com.ascargon.rocketshow.composition.Set;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.gstreamer.GstreamerInitService;
 import com.ascargon.rocketshow.lighting.LightingService;
@@ -23,7 +24,6 @@ import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PreDestroy;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -521,7 +521,25 @@ public class DefaultPlayerService implements PlayerService {
     }
 
     public void setCompositionName(String name) throws Exception {
+        selectInSet(name);
         setComposition(compositionService.getComposition(name));
+    }
+
+    // Continue the set from the selected composition, e.g. after a trigger selected it by its name. A set may hold a
+    // composition twice, so the current position stays, if it already holds it.
+    private void selectInSet(String name) {
+        Set currentSet = setService.getCurrentSet();
+
+        if (currentSet == null || name == null || name.equals(setService.getCurrentCompositionName())) {
+            return;
+        }
+
+        for (int i = 0; i < currentSet.getSetCompositionList().size(); i++) {
+            if (name.equals(currentSet.getSetCompositionList().get(i).getName())) {
+                setService.setCurrentCompositionIndex(i);
+                return;
+            }
+        }
     }
 
     @Override

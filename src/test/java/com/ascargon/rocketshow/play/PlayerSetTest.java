@@ -158,6 +158,32 @@ class PlayerSetTest {
     }
 
     @Test
+    void continuesTheSetFromACompositionSelectedByName() throws Exception {
+        playerService.loadSetAndComposition("Show");
+
+        // E.g. selected by a MIDI trigger
+        playerService.setCompositionName("D");
+        assertEquals(2, setService.getCurrentCompositionIndex());
+        assertEquals(List.of("A", "C"), press(this::previous, 2));
+
+        // A composition outside the set leaves the position in the set
+        playerService.setCompositionName("B");
+        assertEquals("B", playerService.getCompositionName());
+        assertEquals(0, setService.getCurrentCompositionIndex());
+    }
+
+    @Test
+    void keepsThePositionOfACompositionInTheSetTwice() throws Exception {
+        compositionService.saveSet(set("Reprise", "A", "B", "A"));
+        playerService.loadSetAndComposition("Reprise");
+
+        assertEquals(List.of("B", "A"), press(this::next, 2));
+        playerService.setCompositionName("A");
+
+        assertEquals(2, setService.getCurrentCompositionIndex());
+    }
+
+    @Test
     void stepsThroughAllCompositionsWithoutSet() throws Exception {
         playerService.loadSetAndComposition("");
 
