@@ -86,8 +86,9 @@ class AuthApiTest extends ApiTest {
 
         assertEquals(400, postJson("/api/auth/setup", setupRequest(ADMIN_PASSWORD, true, "x".repeat(64)), null).getResponse().getStatus());
 
-        // Without access point, its passphrase doesn't matter
+        // Without access point, its passphrase doesn't matter and is not kept
         assertEquals(200, postJson("/api/auth/setup", setupRequest("123456", false, "123456"), null).getResponse().getStatus());
+        assertNotEquals("123456", settingsService.getSettings().getWlanApPassphrase());
     }
 
     @Test
@@ -152,6 +153,7 @@ class AuthApiTest extends ApiTest {
         MockHttpSession admin = loginAsAdmin();
         String settingsJson = mockMvc.perform(get("/api/system/settings").session(admin)).andReturn().getResponse().getContentAsString();
         ObjectNode settings = (ObjectNode) objectMapper.readTree(settingsJson);
+        settings.put("wlanApEnable", true);
 
         settings.put("wlanApPassphrase", "1234567");
         assertEquals(400, postJson("/api/system/settings", settings, admin).getResponse().getStatus());
@@ -162,6 +164,21 @@ class AuthApiTest extends ApiTest {
         // Open on purpose
         settings.put("wlanApPassphrase", "");
         assertEquals(200, postJson("/api/system/settings", settings, admin).getResponse().getStatus());
+    }
+
+    @Test
+    void savesTheSettingsWithAShortPassphraseOfADisabledAccessPoint() throws Exception {
+        MockHttpSession admin = loginAsAdmin();
+        String settingsJson = mockMvc.perform(get("/api/system/settings").session(admin)).andReturn().getResponse().getContentAsString();
+        ObjectNode settings = (ObjectNode) objectMapper.readTree(settingsJson);
+
+        // e.g. left by an earlier release
+        settings.put("wlanApEnable", false);
+        settings.put("wlanApPassphrase", "123456");
+        settings.put("deviceName", "Stage right");
+
+        assertEquals(200, postJson("/api/system/settings", settings, admin).getResponse().getStatus());
+        assertEquals("Stage right", settingsService.getSettings().getDeviceName());
     }
 
 }

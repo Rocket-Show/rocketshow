@@ -99,7 +99,7 @@ build job and keeps the screenshots of every step and the log of the unit (artif
 Run it locally against a new unit (a fresh directory, because the setup only runs once):
 
 ```shell
-mkdir /tmp/unit && cp target/rocketshow.jar /tmp/unit && (cd /tmp/unit && java -jar rocketshow.jar &)
+mkdir /tmp/unit && cp target/rocketshow.jar dist/designer_template.json /tmp/unit && (cd /tmp/unit && java -jar rocketshow.jar &)
 cd testing/smoke && npm install && npx playwright install chromium
 BASE_URL=http://localhost:8080 node smoke.mjs
 ```

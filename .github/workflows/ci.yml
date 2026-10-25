@@ -84,6 +84,8 @@ jobs:
       - name: Start a new unit
         working-directory: ${{ runner.temp }}/unit
         run: |
+          # Installed next to the app on a unit, like by dist/install
+          cp "$GITHUB_WORKSPACE/dist/designer_template.json" .
           nohup java -jar rocketshow.jar > rocketshow.log 2>&1 &
           for i in $(seq 1 90); do
             curl -sf http://localhost:8080/api/system/health > /dev/null && exit 0

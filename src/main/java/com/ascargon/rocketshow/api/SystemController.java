@@ -212,7 +212,7 @@ class SystemController {
 
     @PostMapping("settings")
     public ResponseEntity<Void> saveSettings(@RequestBody Settings settings) throws JAXBException {
-        WlanApPassphrase.check(settings.getWlanApPassphrase());
+        WlanApPassphrase.check(settings.getWlanApEnable(), settings.getWlanApPassphrase());
 
         // Process API keys
         for (ApiKey apiKey : settings.getApiKeyList()) {

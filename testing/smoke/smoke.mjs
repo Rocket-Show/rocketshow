@@ -1,5 +1,6 @@
-// Smoke test of the web app on a new unit: the initial setup, creating a composition and saving the settings,
-// like a user does after unpacking a unit. Run it against a unit started from the built jar:
+// Smoke test of the web app on a new unit: the initial setup, uploading media, creating a composition and a set,
+// opening the designer and saving the settings, like a user does after unpacking a unit. Run it against a unit
+// started from the built jar:
 //
 //   BASE_URL=http://localhost:8080 node smoke.mjs
 //
@@ -16,6 +17,8 @@ const adminPassword = 'smoke-test-password';
 const deviceName = 'Smoke test unit';
 const renamedDeviceName = 'Renamed smoke test unit';
 const compositionName = 'Smoke test composition';
+const setName = 'Smoke test set';
+const mediaFileName = 'smoke-test-click.wav';
 
 mkdirSync(screenshotDirectory, { recursive: true });
 
@@ -34,6 +37,37 @@ page.on('response', (response) => {
 // The device name in the system settings
 function deviceNameInput() {
   return page.getByPlaceholder('My Device');
+}
+
+// A tenth of a second of silence
+function wavFile() {
+  const samples = 4410;
+  const buffer = Buffer.alloc(44 + samples * 2);
+  buffer.write('RIFF', 0);
+  buffer.writeUInt32LE(36 + samples * 2, 4);
+  buffer.write('WAVE', 8);
+  buffer.write('fmt ', 12);
+  buffer.writeUInt32LE(16, 16);
+  buffer.writeUInt16LE(1, 20);
+  buffer.writeUInt16LE(1, 22);
+  buffer.writeUInt32LE(44100, 24);
+  buffer.writeUInt32LE(88200, 28);
+  buffer.writeUInt16LE(2, 32);
+  buffer.writeUInt16LE(16, 34);
+  buffer.write('data', 36);
+  buffer.writeUInt32LE(samples * 2, 40);
+  return buffer;
+}
+
+// Wait for the message of a successful action. An error message fails the test right away.
+async function expectMessage(text) {
+  const message = page.getByText(text).first();
+  const error = page.locator('.toast-error').first();
+  await message.or(error).first().waitFor();
+
+  if (await error.isVisible()) {
+    throw new Error(`The web app showed the error "${await error.innerText()}" instead of "${text}"`);
+  }
 }
 
 async function step(name, action) {
@@ -64,17 +98,39 @@ try {
     await page.locator('input[name="password1"]').fill(adminPassword);
     await page.locator('input[name="password2"]').fill(adminPassword);
     await page.getByRole('button', { name: 'Next' }).click();
+  });
+
+  await step('Refuse a short password of the wireless access point', async () => {
+    // A passphrase with less than 8 characters leaves the access point open
+    await page.locator('input[name="wifiApEnabled"]').check({ force: true });
+    await page.locator('#wifiApSame').uncheck();
+    await page.locator('input[name="password1"]:visible').fill('short12');
+    await page.locator('input[name="password2"]:visible').fill('short12');
+    await page.getByText('needs 8 to 63 characters').waitFor();
+    if (await page.getByRole('button', { name: 'Finish' }).isEnabled()) {
+      throw new Error('The setup can be finished with an access point passphrase of 7 characters');
+    }
+  });
+
+  await step('Finish the setup', async () => {
     await page.locator('input[name="wifiApDeactivated"]').check({ force: true });
     await page.getByRole('button', { name: 'Finish' }).click();
     await page.waitForURL(/#\/play/);
   });
 
-  await step('Create a composition', async () => {
+  await step('Upload a media file', async () => {
     await page.goto(`${baseUrl}/#/editor`);
+    await page.locator('#media-tab').click();
+    await page.locator('input.dz-hidden-input').setInputFiles({ name: mediaFileName, mimeType: 'audio/wav', buffer: wavFile() });
+    await page.locator('#media').getByText(mediaFileName).waitFor();
+  });
+
+  await step('Create a composition', async () => {
+    await page.locator('#compositions-tab').click();
     await page.getByRole('button', { name: 'Create composition' }).click();
     await page.locator('#compositionName').fill(compositionName);
     await page.getByRole('button', { name: 'Save' }).click();
-    await page.getByText('The composition has been saved.').first().waitFor();
+    await expectMessage('The composition has been saved.');
   });
 
   await step('Find the composition after a reload', async () => {
@@ -82,11 +138,35 @@ try {
     await page.getByText(compositionName).first().waitFor();
   });
 
+  await step('Create a set with the composition', async () => {
+    await page.locator('#sets-tab').click();
+    await page.getByRole('button', { name: 'Create set' }).click();
+    await page.locator('#setName').fill(setName);
+    // The arrow next to the composition in the available compositions
+    await page.locator('#sets .list-group-item', { hasText: compositionName }).first().getByRole('button').click();
+    await page.locator('#sets .list-sort-handle').first().waitFor();
+    await page.locator('#sets').getByRole('button', { name: 'Save' }).click();
+    await expectMessage('The set has been saved.');
+  });
+
+  await step('Find the set after a reload', async () => {
+    await page.reload();
+    await page.locator('#sets-tab').click();
+    await page.locator('#sets').getByText(setName).first().waitFor();
+  });
+
+  await step('Open the designer', async () => {
+    await page.goto(`${baseUrl}/#/designer`);
+    await page.locator('lib-designer').waitFor();
+    // Give the designer time to load its project and the fixture library
+    await page.waitForTimeout(3000);
+  });
+
   await step('Rename the unit in the settings', async () => {
     await page.goto(`${baseUrl}/#/settings`);
     await deviceNameInput().fill(renamedDeviceName);
     await page.getByRole('button', { name: 'Save' }).click();
-    await page.getByText('The settings have been saved.').first().waitFor();
+    await expectMessage('The settings have been saved.');
   });
 
   await step('Find the new name after a reload', async () => {

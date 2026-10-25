@@ -12,9 +12,10 @@ public class WlanApPassphrase {
     private WlanApPassphrase() {
     }
 
-    // An empty passphrase opens the access point on purpose
-    public static void check(String passphrase) {
-        if (passphrase != null && !passphrase.isEmpty() && (passphrase.length() < 8 || passphrase.length() > 63)) {
+    // Only checked for an enabled access point: a passphrase left from earlier (e.g. by a release taking shorter
+    // ones) must not stop the other settings from being saved. An empty passphrase opens the access point on purpose.
+    public static void check(Boolean enabled, String passphrase) {
+        if (Boolean.TRUE.equals(enabled) && passphrase != null && !passphrase.isEmpty() && (passphrase.length() < 8 || passphrase.length() > 63)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The passphrase of the wireless access point needs 8 to 63 characters");
         }
     }

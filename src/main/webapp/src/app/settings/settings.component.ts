@@ -230,6 +230,7 @@ export class SettingsComponent implements OnInit {
 
               // The access point only gets protected by a passphrase of 8 to 63 characters
               if (
+                result.wlanApEnable &&
                 result.wlanApPassphrase &&
                 (result.wlanApPassphrase.length < 8 || result.wlanApPassphrase.length > 63)
               ) {

@@ -139,9 +139,7 @@ public class AuthController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin password already configured");
         }
 
-        if (request.isWifiApEnabled()) {
-            WlanApPassphrase.check(request.getWifiApPassword());
-        }
+        WlanApPassphrase.check(request.isWifiApEnabled(), request.getWifiApPassword());
 
         String hash = passwordEncoder.encode(request.getPassword());
         Settings settings = settingsService.getSettings();
@@ -150,7 +148,10 @@ public class AuthController {
         settings.setLanguage(request.getLanguage());
         settings.setDeviceName(request.getDeviceName());
         settings.setWlanApEnable(request.isWifiApEnabled());
-        settings.setWlanApPassphrase(request.getWifiApPassword());
+        // E.g. a refused passphrase, before the access point was disabled in the setup
+        if (request.isWifiApEnabled()) {
+            settings.setWlanApPassphrase(request.getWifiApPassword());
+        }
         settings.setTlsEnable(request.isTlsEnabled());
 
         try {

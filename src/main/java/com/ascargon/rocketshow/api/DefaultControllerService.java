@@ -7,6 +7,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.FileNotFoundException;
+import java.nio.file.NoSuchFileException;
+
 @Service
 public class DefaultControllerService implements ControllerService {
 
@@ -28,6 +31,10 @@ public class DefaultControllerService implements ControllerService {
             // e.g. a file name leaving its folder
             httpStatus = HttpStatus.BAD_REQUEST;
             logger.info("Request rejected: {}", exception.getMessage());
+        } else if (exception instanceof FileNotFoundException || exception instanceof NoSuchFileException) {
+            // e.g. a media file of the designer template, which has been deleted
+            httpStatus = HttpStatus.NOT_FOUND;
+            logger.info("Requested file not found: {}", exception.getMessage());
         } else {
             logger.error("An exception has been thrown in the controller", exception);
         }
