@@ -18,7 +18,11 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Update the system according to the specified settings.
@@ -34,6 +38,21 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
     private final LightingService lightingService;
     private final LanService lanService;
 
+    // Runs the system commands one after the other, in the order they were given, without holding up saving the
+    // settings
+    private final ExecutorService commandExecutor = Executors.newSingleThreadExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "system-settings");
+        thread.setDaemon(true);
+        return thread;
+    });
+
+    // The settings applied to the system last. Each save of the settings applies them, but applying them again
+    // would e.g. restart the access point and disconnect the web app connected through it, maybe during a show.
+    private String appliedWlanAp;
+    private String appliedLanIp;
+    private String appliedOlaArtNetIp;
+    private String appliedConnectionMode;
+
     public DefaultSettingsUpdateSystemService(
             SettingsService settingsService, AudioService audioService,
             OperatingSystemInformationService operatingSystemInformationService,
@@ -45,6 +64,44 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
         this.operatingSystemInformationService = operatingSystemInformationService;
         this.lightingService = lightingService;
         this.lanService = lanService;
+    }
+
+    // Package visible for the tests
+    void runCommand(String... command) throws Exception {
+        ShellManager shellManager = new ShellManager(command, false);
+        String output = new String(shellManager.getProcess().getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        int exitCode = shellManager.getProcess().waitFor();
+
+        if (exitCode != 0) {
+            logger.error("Command '{}' failed with exit code {}: {}", String.join(" ", command), exitCode, output.trim());
+        } else {
+            logger.debug("Command '{}' done: {}", String.join(" ", command), output.trim());
+        }
+    }
+
+    private void runCommands(List<String[]> commands) {
+        commandExecutor.execute(() -> {
+            for (String[] command : commands) {
+                try {
+                    runCommand(command);
+                } catch (Exception e) {
+                    logger.error("Could not run '{}'", String.join(" ", command), e);
+                }
+            }
+        });
+    }
+
+    // Package visible for the tests
+    void waitForCommands() throws Exception {
+        commandExecutor.submit(() -> {
+        }).get();
+    }
+
+    // Package visible for the tests
+    void writeFile(String path, String content) throws IOException {
+        try (FileWriter fileWriter = new FileWriter(path, false)) {
+            fileWriter.write(content);
+        }
     }
 
     private void setSystemAudioOutput(int id) throws Exception {
@@ -150,9 +207,7 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
 
             // Create a new file the Rocket Show settings
             try {
-                FileWriter fileWriter = new FileWriter(alsaSettingsPath, false);
-                fileWriter.write(getAlsaSettings(settings));
-                fileWriter.close();
+                writeFile(alsaSettingsPath, getAlsaSettings(settings));
             } catch (IOException e) {
                 logger.error("Could not write .asoundrc", e);
             }
@@ -222,51 +277,46 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
 
     private void updateWlanAp(Settings settings) {
         String apConfig = getHostapdConfig(settings);
-        String statusCommand;
         String countryCode = getWlanApCountryCode(settings);
+        boolean enable = Boolean.TRUE.equals(settings.getWlanApEnable());
+
+        String wlanAp = apConfig + "|" + countryCode + "|" + enable;
+        if (wlanAp.equals(appliedWlanAp)) {
+            return;
+        }
+        appliedWlanAp = wlanAp;
 
         // Update the access point configuration
-        try {
-            String fileName = "/etc/hostapd/hostapd.conf";
-            if (settingsService.isReadOnlyFileSystem()) {
-                fileName = "/data/rocketshow/hostapd.conf";
-            }
-            FileWriter fileWriter = new FileWriter(fileName, false);
-            fileWriter.write(apConfig);
-            fileWriter.close();
-        } catch (IOException e) {
-            logger.error("Could not write /etc/hostapd/hostapd.conf", e);
+        String fileName = "/etc/hostapd/hostapd.conf";
+        if (settingsService.isReadOnlyFileSystem()) {
+            fileName = "/data/rocketshow/hostapd.conf";
         }
 
-        // Set the country in the raspberry settings (and temporarily remount /boot/firmware as rw to do so)
+        try {
+            writeFile(fileName, apConfig);
+        } catch (IOException e) {
+            logger.error("Could not write {}", fileName, e);
+        }
+
+        List<String[]> commands = new ArrayList<>();
+
+        // Set the country in the raspberry settings (and temporarily remount /boot/firmware as rw to do so), before
+        // starting the access point with it
         if (countryCode != null) {
-            try {
-                new ShellManager(new String[]{"sudo", new ApplicationHome(RocketShowApplication.class).getDir() + File.separator + "set-wifi-ap-country.sh", countryCode});
-            } catch (IOException e) {
-                logger.error("Could not update wifi country '{}'", countryCode, e);
-            }
+            commands.add(new String[]{"sudo", new ApplicationHome(RocketShowApplication.class).getDir() + File.separator + "set-wifi-ap-country.sh", countryCode});
         }
 
         // Activate/deactivate the access point completely
-        if (settings.getWlanApEnable()) {
-            statusCommand = "enable";
+        if (enable) {
+            commands.add(new String[]{"sudo", "systemctl", "enable", "hostapd"});
+            // Restart, even if already started, to cater for updated configs
+            commands.add(new String[]{"sudo", "systemctl", "restart", "hostapd"});
         } else {
-            statusCommand = "disable";
+            commands.add(new String[]{"sudo", "systemctl", "disable", "hostapd"});
+            commands.add(new String[]{"sudo", "systemctl", "stop", "hostapd"});
         }
 
-        try {
-            new ShellManager(new String[]{"sudo", "systemctl", statusCommand, "hostapd"});
-
-            if (settings.getWlanApEnable()) {
-                // Restart, even if already started, to cater for updated configs
-                new ShellManager(new String[]{"sudo", "systemctl", "restart", "hostapd"});
-            } else {
-                new ShellManager(new String[]{"sudo", "systemctl", "stop", "hostapd"});
-            }
-        } catch (
-                IOException e) {
-            logger.error("Could not update the access point status with '{}'", statusCommand, e);
-        }
+        runCommands(commands);
     }
 
     private void updateLanIp(Settings settings) {
@@ -287,11 +337,13 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
             command = new String[]{"sudo", scriptPath, "dhcp"};
         }
 
-        try {
-            new ShellManager(command);
-        } catch (IOException e) {
-            logger.error("Could not update LAN IP settings", e);
+        String lanIp = String.join("|", command);
+        if (lanIp.equals(appliedLanIp)) {
+            return;
         }
+        appliedLanIp = lanIp;
+
+        runCommands(List.<String[]>of(command));
     }
 
     private void updateOlaArtNetConf(String ipAddress) {
@@ -300,21 +352,20 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
             return;
         }
 
+        if (ipAddress.equals(appliedOlaArtNetIp)) {
+            return;
+        }
+        appliedOlaArtNetIp = ipAddress;
+
         String confPath = settingsService.isReadOnlyFileSystem()
                 ? "/data/ola/ola-artnet.conf"
                 : "/etc/ola/ola-artnet.conf";
 
-        try {
-            ShellManager shellManager = new ShellManager(new String[]{
-                    "sudo", "sed", "-i",
-                    "s/^ip[[:space:]]*=[[:space:]]*.*/ip = " + ipAddress + "/",
-                    confPath
-            });
-            shellManager.getProcess().waitFor();
-            logger.debug("Updated OLA ArtNet conf '{}' with IP '{}'", confPath, ipAddress);
-        } catch (Exception e) {
-            logger.error("Could not update OLA ArtNet conf '{}' with IP '{}'", confPath, ipAddress, e);
-        }
+        runCommands(List.<String[]>of(new String[]{
+                "sudo", "sed", "-i",
+                "s/^ip[[:space:]]*=[[:space:]]*.*/ip = " + ipAddress + "/",
+                confPath
+        }));
     }
 
     private String getWlanApCountryCode(Settings settings) {
@@ -332,15 +383,16 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
 
         String mode = "http";
 
-        if (settings.getTlsEnable()) {
+        if (Boolean.TRUE.equals(settings.getTlsEnable())) {
             mode = "https";
         }
 
-        try {
-            new ShellManager(new String[]{"sudo", new ApplicationHome(RocketShowApplication.class).getDir() + File.separator + "set-connection-mode.sh", mode});
-        } catch (IOException e) {
-            logger.error("Could not update the connection mode with '{}'", mode, e);
+        if (mode.equals(appliedConnectionMode)) {
+            return;
         }
+        appliedConnectionMode = mode;
+
+        runCommands(List.<String[]>of(new String[]{"sudo", new ApplicationHome(RocketShowApplication.class).getDir() + File.separator + "set-connection-mode.sh", mode}));
     }
 
     @Override

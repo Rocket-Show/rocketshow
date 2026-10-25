@@ -124,15 +124,19 @@ public class DefaultLightingService implements LightingService {
     void setUpOlaUniverses() {
         if (olaUniversesMatchDesiredMapping()) {
             logger.debug("OLA universes already match desired mapping, skipping reconciliation and rebuild");
-            olaReady = getLightingUniverses().stream().anyMatch(u ->
-                    u.getOlaUniverseId() != null &&
-                    u.getOlaOutputPortId() != null && !u.getOlaOutputPortId().isBlank()
-            );
+            olaReady = hasPatchedUniverse();
         } else {
             logger.debug("Reconcile OLA ports/universes...");
             reconcileOlaPortIds();
-            initializeUniverses();
+            updateUniverses(getLightingUniverses());
         }
+    }
+
+    private boolean hasPatchedUniverse() {
+        return getLightingUniverses().stream().anyMatch(u ->
+                u.getOlaUniverseId() != null &&
+                u.getOlaOutputPortId() != null && !u.getOlaOutputPortId().isBlank()
+        );
     }
 
     private boolean olaUniversesMatchDesiredMapping() {
@@ -594,7 +598,18 @@ public class DefaultLightingService implements LightingService {
     }
 
     @Override
-    public void initializeUniverses() {
+    public synchronized void initializeUniverses() {
+        if (olaClient == null) {
+            // OLA client is not connected
+            return;
+        }
+
+        // Patching again unpatches the ports for a moment, e.g. while a show sends DMX on each saved setting
+        if (olaUniversesMatchDesiredMapping()) {
+            olaReady = hasPatchedUniverse();
+            return;
+        }
+
         updateUniverses(getLightingUniverses());
     }
 

@@ -125,6 +125,34 @@ class OlaSetupTest {
     }
 
     @Test
+    void keepsThePatchWhenOtherSettingsAreSaved() throws Exception {
+        universe(1, "Stage", "3-O-0", "Enttec DMX USB Pro");
+        olaUniverses(olaUniverse(1, "Stage"));
+        olaDevice(3, 1);
+        lightingService.setUpOlaUniverses();
+
+        // Saving the settings applies them to the system, e.g. during a show
+        lightingService.initializeUniverses();
+
+        assertEquals(List.of(), requests);
+        assertTrue(lightingService.isOlaReady());
+    }
+
+    @Test
+    void patchesAChangedUniverse() throws Exception {
+        LightingUniverse stage = universe(1, "Stage", "3-O-0", "Enttec DMX USB Pro");
+        olaUniverses(olaUniverse(1, "Stage"));
+        olaDevice(3, 1);
+        lightingService.setUpOlaUniverses();
+
+        stage.setName("Front");
+        lightingService.initializeUniverses();
+
+        verify(olaClient).setUniverseName(1, "Front");
+        assertTrue(requests.contains("/modify_universe id=1&name=Front&add_ports=3-O-0"), requests.toString());
+    }
+
+    @Test
     void followsAnInterfaceWhichGotAnotherPort() throws Exception {
         // E.g. the USB interfaces were plugged in in another order
         LightingUniverse stage = universe(1, "Stage", "2-O-0", "Enttec DMX USB Pro");
