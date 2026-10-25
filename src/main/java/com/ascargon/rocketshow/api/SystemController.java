@@ -291,12 +291,6 @@ class SystemController {
         return buildInfoService.getBuildInfo();
     }
 
-    @GetMapping("create-backup")
-    public ResponseEntity<Resource> createBackup() throws Exception {
-        InputStreamResource resource = new InputStreamResource(new FileInputStream(backupService.create()));
-        return ResponseEntity.ok().body(resource);
-    }
-
     @PostMapping("restore-backup")
     public ResponseEntity<Void> restoreBackup(
             @RequestParam("file") MultipartFile file,
