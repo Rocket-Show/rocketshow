@@ -53,7 +53,8 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
         //shellManager.getProcess().waitFor();
     }
 
-    private String getAlsaSettings(Settings settings) {
+    // Package visible for the tests
+    String getAlsaSettings(Settings settings) {
         // Generate the ALSA settings
         StringBuilder alsaSettings = new StringBuilder();
 
@@ -183,12 +184,11 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
         }
     }
 
-    private void updateWlanAp(Settings settings) {
+    // Package visible for the tests
+    String getHostapdConfig(Settings settings) {
         String apConfig = "";
-        String statusCommand;
         String countryCode = getWlanApCountryCode(settings);
 
-        // Update the access point configuration
         apConfig += "interface=wlan0\n";
         apConfig += "driver=nl80211\n";
         apConfig += "ssid=" + settings.getWlanApSsid() + "\n";
@@ -217,6 +217,15 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
         apConfig += "wpa_pairwise=TKIP\n";
         apConfig += "rsn_pairwise=CCMP\n";
 
+        return apConfig;
+    }
+
+    private void updateWlanAp(Settings settings) {
+        String apConfig = getHostapdConfig(settings);
+        String statusCommand;
+        String countryCode = getWlanApCountryCode(settings);
+
+        // Update the access point configuration
         try {
             String fileName = "/etc/hostapd/hostapd.conf";
             if (settingsService.isReadOnlyFileSystem()) {

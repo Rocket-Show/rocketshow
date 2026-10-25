@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executor;
@@ -259,8 +260,10 @@ public class CompositionPipelineBuilder {
 
         // Get the starting channel of the current bus
         for (AudioBus settingsAudioBus : settingsService.getSettings().getAudioBusList()) {
-            if (settingsAudioBus.getAudioDevice().getId() == audioBus.getAudioDevice().getId()) {
-                if (settingsAudioBus.getName().equals(audioBus.getName())) {
+            // A bus without device doesn't play
+            if (settingsAudioBus.getAudioDevice() != null && settingsAudioBus.getAudioDevice().getId() == audioBus.getAudioDevice().getId()) {
+                // Names are not unique
+                if (Objects.equals(settingsAudioBus.getUuid(), audioBus.getUuid())) {
                     break;
                 } else {
                     startChannelIndex += settingsAudioBus.getChannels();
@@ -271,7 +274,8 @@ public class CompositionPipelineBuilder {
         return startChannelIndex;
     }
 
-    private float getChannelVolume(AudioBus audioBus, int outputChannelIndex, int inputChannelIndex, float volume) {
+    // Package visible for the tests
+    float getChannelVolume(AudioBus audioBus, int outputChannelIndex, int inputChannelIndex, float volume) {
         int startChannelIndex = getAudioBusStartChannel(audioBus);
 
         if (outputChannelIndex < startChannelIndex) {

@@ -16,6 +16,7 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -192,7 +193,8 @@ public class DefaultAudioService implements AudioService {
         }
 
         for (AudioBus audioBus : settings.getAudioBusList()) {
-            if (audioBus.getAudioDevice().getId() == audioDevice.getId()) {
+            // A bus without device doesn't play
+            if (audioBus.getAudioDevice() != null && audioBus.getAudioDevice().getId() == audioDevice.getId()) {
                 count += audioBus.getChannels();
             }
         }
@@ -209,7 +211,8 @@ public class DefaultAudioService implements AudioService {
                 audioDeviceSet.add(audioBus.getAudioDevice());
             }
         }
-        return audioDeviceSet.stream().toList();
+        // Always in the same order, e.g. to write the same .asoundrc for the same settings
+        return audioDeviceSet.stream().sorted(Comparator.comparingInt(AudioDevice::getId)).toList();
     }
 
 }
