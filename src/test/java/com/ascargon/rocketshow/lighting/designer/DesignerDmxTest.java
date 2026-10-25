@@ -274,4 +274,112 @@ class DesignerDmxTest {
         assertEquals(Math.round(65535 * 0.333), head.get(2) * 256 + head.get(3), 1);
     }
 
+
+    // A preset lighting the pars in one color only
+    private void addColorPreset(ObjectNode project, String name, double red, double blue) {
+        ObjectNode redValue = capability(project, "ColorIntensity", red);
+        redValue.put("color", "Red");
+        ObjectNode greenValue = capability(project, "ColorIntensity", 0.0);
+        greenValue.put("color", "Green");
+        ObjectNode blueValue = capability(project, "ColorIntensity", blue);
+        blueValue.put("color", "Blue");
+        addPreset(project, name, List.of("par-1"), List.of(capability(project, "Intensity", 1.0), redValue, greenValue, blueValue));
+    }
+
+    private Map<String, Map<Integer, Integer>> preview(ObjectNode project, java.util.function.Consumer<DefaultDesignerService> select) throws Exception {
+        DesignerTestEngine engine = new DesignerTestEngine();
+        Map<String, Map<Integer, Integer>> universes = engine.preview(directory, project.toString(), select, List.of(FRONT, BACK));
+
+        assertEquals(List.of(), engine.errors);
+        return universes;
+    }
+
+    @Test
+    void previewsTheSelectedPreset() throws Exception {
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+        addColorPreset(project, "Blue", 0, 1);
+
+        Map<Integer, Integer> front = preview(project, designerService -> {
+            designerService.setPreviewPreset(true);
+            designerService.setSelectedPresetUuid("Blue");
+            designerService.setSelectedSceneUuids(List.of("Red-scene", "Blue-scene"));
+        }).get(FRONT);
+
+        // Dimmer, red, green, blue of par 1
+        assertEquals(List.of(255, 0, 0, 255), addresses(front, 1, 4));
+    }
+
+    @Test
+    void previewsTheSelectedScenesWithTheFirstOnTop() throws Exception {
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+        addColorPreset(project, "Blue", 0, 1);
+
+        Map<Integer, Integer> front = preview(project, designerService -> {
+            designerService.setPreviewPreset(false);
+            designerService.setSelectedPresetUuid("Blue");
+            designerService.setSelectedSceneUuids(List.of("Red-scene", "Blue-scene"));
+        }).get(FRONT);
+
+        assertEquals(List.of(255, 255, 0, 0), addresses(front, 1, 4));
+    }
+
+    @Test
+    void previewsTheTimelineOfAComposition() throws Exception {
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+
+        Map<Integer, Integer> front = preview(project, designerService -> designerService.setPreviewComposition("Song")).get(FRONT);
+
+        assertEquals(List.of(255, 255, 0, 0), addresses(front, 1, 4));
+    }
+
+    @Test
+    void movesAChannelWithAnEffect() throws Exception {
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+
+        // A sine on the strobe channel of the pars, at its top 5 seconds into the composition. Like in the designer, a
+        // sine swings by a quarter of its amplitude around its position.
+        ObjectNode effect = ((ArrayNode) project.get("presets").get(0).get("effects")).addObject();
+        effect.put("type", "curve");
+        effect.put("uuid", "strobe-sine");
+        effect.put("visible", true);
+        effect.put("curveType", "sine");
+        effect.putArray("capabilities");
+        ObjectNode channels = effect.putArray("channels").addObject();
+        channels.put("profileUuid", "test/rgb-par");
+        channels.putArray("channels").add("Strobe");
+        effect.put("lengthMillis", 20000);
+        effect.put("amplitude", 1);
+        effect.put("position", 0.5);
+
+        Map<Integer, Integer> front = play(project).get(FRONT);
+
+        assertEquals(191, front.get(6));
+    }
+
+    @Test
+    void setsADimmerSharingItsChannelWithOtherFunctions() throws Exception {
+        ObjectNode project = project();
+        ObjectNode dimmer = (ObjectNode) objectMapper.readTree("""
+                {"fineChannelAliases": [], "capabilities": [
+                  {"dmxRange": [0, 7], "type": "Intensity", "brightness": "off"},
+                  {"dmxRange": [8, 134], "type": "Intensity", "brightnessStart": "dark", "brightnessEnd": "bright"},
+                  {"dmxRange": [135, 255], "type": "ShutterStrobe", "shutterEffect": "Strobe"}
+                ]}
+                """);
+        ((ObjectNode) project.get("fixtureProfiles").get(0).get("availableChannels")).set("Dimmer", dimmer);
+        addPreset(project, "Half", List.of("par-1"), List.of(capability(project, "Intensity", 0.5)));
+        addPreset(project, "Off", List.of("par-2"), List.of(capability(project, "Intensity", 0.0)));
+
+        Map<Integer, Integer> front = play(project).get(FRONT);
+
+        // Half way between dark and bright, not in the strobe range. Off is the start of the range (dark), like in
+        // the designer, which also lets the later capability win.
+        assertEquals(71, front.get(1));
+        assertEquals(8, front.get(11));
+    }
+
 }

@@ -63,6 +63,34 @@ class DesignerTestEngine {
      * by universe and DMX address (1 to 512).
      */
     Map<String, Map<Integer, Integer>> play(Path directory, String project, String compositionName, long positionMillis, List<String> universeUuids) throws Exception {
+        com.ascargon.rocketshow.composition.Composition composition = new com.ascargon.rocketshow.composition.Composition();
+        composition.setName(compositionName);
+        CompositionPlayer compositionPlayer = mock(CompositionPlayer.class);
+        when(compositionPlayer.getComposition()).thenReturn(composition);
+        when(compositionPlayer.getPositionMillis()).thenReturn(positionMillis);
+        when(compositionPlayer.getPlayState()).thenReturn(CompositionPlayer.PlayState.PLAYING);
+
+        return run(directory, project, universeUuids, (designerService, loadedProject) -> {
+            designerService.load(compositionPlayer, loadedProject, null);
+            designerService.play();
+        });
+    }
+
+    /**
+     * Preview the project like the designer of the web app does, while editing it, and return the first DMX values
+     * the engine sends.
+     */
+    Map<String, Map<Integer, Integer>> preview(Path directory, String project, java.util.function.Consumer<DefaultDesignerService> select, List<String> universeUuids) throws Exception {
+        return run(directory, project, universeUuids, (designerService, loadedProject) -> {
+            // Like DesignerController.preview
+            designerService.stopPreview();
+            designerService.load(null, loadedProject, null);
+            select.accept(designerService);
+            designerService.startPreview(0);
+        });
+    }
+
+    private Map<String, Map<Integer, Integer>> run(Path directory, String project, List<String> universeUuids, java.util.function.BiConsumer<DefaultDesignerService, Project> start) throws Exception {
         Path designerPath = Files.createDirectories(directory.resolve("designer"));
         try (var files = Files.list(designerPath)) {
             for (Path file : files.toList()) {
@@ -107,13 +135,6 @@ class DesignerTestEngine {
             return null;
         }).when(lightingService).sendExternalSync(anyBoolean());
 
-        com.ascargon.rocketshow.composition.Composition composition = new com.ascargon.rocketshow.composition.Composition();
-        composition.setName(compositionName);
-        CompositionPlayer compositionPlayer = mock(CompositionPlayer.class);
-        when(compositionPlayer.getComposition()).thenReturn(composition);
-        when(compositionPlayer.getPositionMillis()).thenReturn(positionMillis);
-        when(compositionPlayer.getPlayState()).thenReturn(CompositionPlayer.PlayState.PLAYING);
-
         LoggerContext context = (LoggerContext) LogManager.getContext(false);
         ErrorCollector errorCollector = new ErrorCollector(errors);
         errorCollector.start();
@@ -122,8 +143,7 @@ class DesignerTestEngine {
 
         try {
             DefaultDesignerService designerService = new DefaultDesignerService(settingsService, mock(FileFilterService.class), lightingService, new DefaultFixturePixelGroupResolveService());
-            designerService.load(compositionPlayer, designerService.getAllProjects().getFirst(), null);
-            designerService.play();
+            start.accept(designerService, designerService.getAllProjects().getFirst());
 
             try {
                 assertTrue(sent.await(10, TimeUnit.SECONDS), "The engine did not send the universe");
