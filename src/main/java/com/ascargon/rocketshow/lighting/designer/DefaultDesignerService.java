@@ -1364,13 +1364,14 @@ public class DefaultDesignerService implements DesignerService {
         }
 
         pixel.setX(x);
-        pixel.setX(y);
-        pixel.setX(z);
+        pixel.setY(y);
+        pixel.setZ(z);
 
         return pixel;
     }
 
-    private List<CachedFixturePixel> getAllPixelKeys(FixtureProfile profile) {
+    // Package visible for the tests
+    List<CachedFixturePixel> getAllPixelKeys(FixtureProfile profile) {
         List<CachedFixturePixel> result = new ArrayList<>();
         if (profile.getMatrix() == null || profile.getMatrix().getPixelKeys() == null) {
             return result;
