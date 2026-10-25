@@ -39,7 +39,8 @@ public class LoginThrottleService {
         nextAllowedAttempt = Instant.EPOCH;
     }
 
-    private long computeDelayMillis(int failures) {
+    // Package visible for the tests
+    static long computeDelayMillis(int failures) {
         if (failures <= 1) {
             return 0; // first failed login: no delay
         }
