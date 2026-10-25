@@ -75,7 +75,7 @@ public class DefaultBackupService implements BackupService {
 
         // tar all backed up files
         // don't use zip, because the file permissions (e.g. execution rights) are not preserved easily with java
-        ShellManager shellManager = new ShellManager(new String[]{"bash", "-c", "cd " + basePath + " && tar -czpf " + BACKUP_FILE_NAME + " " + String.join(" ", existingFileList)});
+        ShellManager shellManager = new ShellManager(new String[]{"bash", "-c", "cd " + basePath + " && tar -czpf " + BACKUP_FILE_NAME + " " + String.join(" ", existingFileList)}, false);
         String output = new String(shellManager.getProcess().getInputStream().readAllBytes(), StandardCharsets.UTF_8);
         int exitCode = shellManager.getProcess().waitFor();
         shellManager.close();
@@ -103,7 +103,7 @@ public class DefaultBackupService implements BackupService {
     // Make sure the uploaded backup can be unpacked before anything gets deleted. A broken backup (e.g. an
     // incomplete upload) would otherwise delete all data and restore nothing.
     private void checkBackupFile() throws Exception {
-        ShellManager shellManager = new ShellManager(new String[]{"tar", "-tzf", backupFile.getPath()});
+        ShellManager shellManager = new ShellManager(new String[]{"tar", "-tzf", backupFile.getPath()}, false);
 
         // Read the listed files, so tar can't block on a full output buffer
         shellManager.getProcess().getInputStream().transferTo(OutputStream.nullOutputStream());

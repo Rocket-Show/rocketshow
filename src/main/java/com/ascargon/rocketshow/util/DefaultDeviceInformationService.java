@@ -38,53 +38,75 @@ public class DefaultDeviceInformationService implements DeviceInformationService
             return loadedDeviceInformation;
         }
 
-        loadedDeviceInformation.setAvailable(true);
-        logger.debug("Device information is available");
-
         try {
-            List<String> lines = Files.readAllLines(CFG_PATH, StandardCharsets.UTF_8);
-
-            for (String line : lines) {
-                if (line == null) {
-                    continue;
-                }
-
-                line = line.trim();
-
-                if (line.isEmpty() || line.startsWith("#")) {
-                    continue;
-                }
-
-                int idx = line.indexOf('=');
-                if (idx < 0) {
-                    continue;
-                }
-
-                String key = line.substring(0, idx).trim();
-                String value = line.substring(idx + 1).trim();
-
-                switch (key) {
-                    case "FILE_VERSION" -> loadedDeviceInformation.setFileVersion(value);
-                    case "COUNTRY" -> loadedDeviceInformation.setCountry(value);
-                    case "SERIAL" -> loadedDeviceInformation.setSerial(value);
-                    case "MODEL" -> loadedDeviceInformation.setModel(value);
-                    case "HARDWARE_REVISION" -> loadedDeviceInformation.setHardwareRevision(value);
-                    case "SKU" -> loadedDeviceInformation.setSku(value);
-                    default -> {
-                        // ignore unknown keys
-                    }
-                }
-            }
+            loadedDeviceInformation = parse(Files.readAllLines(CFG_PATH, StandardCharsets.UTF_8));
         } catch (IOException e) {
             // Don't cache a failed read, so it can be retried on the next call.
             logger.error("Failed to read device information from {}", CFG_PATH, e);
+            loadedDeviceInformation.setAvailable(true);
             return loadedDeviceInformation;
         }
+
+        logger.debug("Device information is available");
 
         // Only cache a successful read, so a transient failure or a not-yet-ready
         // /provision partition can never poison the cache with empty data.
         deviceInformation = loadedDeviceInformation;
         return deviceInformation;
+    }
+
+    // The device information in the lines of the file
+    // Package visible for the tests
+    static DeviceInformation parse(List<String> lines) {
+        DeviceInformation deviceInformation = new DeviceInformation();
+        deviceInformation.setAvailable(true);
+
+        for (String line : lines) {
+            if (line == null) {
+                continue;
+            }
+
+            line = line.trim();
+
+            if (line.isEmpty() || line.startsWith("#")) {
+                continue;
+            }
+
+            int idx = line.indexOf('=');
+            if (idx < 0) {
+                continue;
+            }
+
+            String key = line.substring(0, idx).trim();
+            String value = line.substring(idx + 1).trim();
+
+            switch (key) {
+                case "FILE_VERSION" -> deviceInformation.setFileVersion(value);
+                case "COUNTRY" -> deviceInformation.setCountry(value);
+                case "SERIAL" -> deviceInformation.setSerial(value);
+                case "MODEL" -> deviceInformation.setModel(value);
+                case "HARDWARE_REVISION" -> deviceInformation.setHardwareRevision(value);
+                case "SKU" -> deviceInformation.setSku(value);
+                default -> {
+                    // ignore unknown keys
+                }
+            }
+        }
+
+        return deviceInformation;
+    }
+
+    // The content of the file for the device information
+    // Package visible for the tests
+    static String format(DeviceInformation deviceInformation) {
+        StringBuilder sb = new StringBuilder();
+        append(sb, "FILE_VERSION", deviceInformation.getFileVersion());
+        append(sb, "COUNTRY", deviceInformation.getCountry());
+        append(sb, "SERIAL", deviceInformation.getSerial());
+        append(sb, "MODEL", deviceInformation.getModel());
+        append(sb, "HARDWARE_REVISION", deviceInformation.getHardwareRevision());
+        append(sb, "SKU", deviceInformation.getSku());
+        return sb.toString();
     }
 
     private static void append(StringBuilder sb, String key, String value) {
@@ -114,13 +136,7 @@ public class DefaultDeviceInformationService implements DeviceInformationService
             toStore.setFileVersion("1.0");
         }
 
-        StringBuilder sb = new StringBuilder();
-        append(sb, "FILE_VERSION", toStore.getFileVersion());
-        append(sb, "COUNTRY", toStore.getCountry());
-        append(sb, "SERIAL", toStore.getSerial());
-        append(sb, "MODEL", toStore.getModel());
-        append(sb, "HARDWARE_REVISION", toStore.getHardwareRevision());
-        append(sb, "SKU", toStore.getSku());
+        String content = format(toStore);
 
         ProcessBuilder pb = new ProcessBuilder(
                 "sudo",
@@ -130,7 +146,7 @@ public class DefaultDeviceInformationService implements DeviceInformationService
         Process p = pb.start();
 
         try (OutputStream os = p.getOutputStream()) {
-            os.write(sb.toString().getBytes(StandardCharsets.UTF_8));
+            os.write(content.getBytes(StandardCharsets.UTF_8));
             os.flush();
         }
 
