@@ -378,8 +378,8 @@ public class DefaultCompositionService implements CompositionService {
 
         updateSets();
 
-        // Set another composition, if we deleted the current one
-        if (playerService.getCompositionName().equals(name)) {
+        // Set another composition, if we deleted the current one (there might be none)
+        if (name.equals(playerService.getCompositionName())) {
             if (compositionCache.size() > 0) {
                 playerService.setComposition(compositionCache.get(0));
             }
