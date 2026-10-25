@@ -431,14 +431,18 @@ public class DefaultPlayerService implements PlayerService {
 
     @Override
     public void setNextComposition() throws Exception {
+        setNextComposition(true);
+    }
+
+    private void setNextComposition(boolean playDefaultComposition) throws Exception {
         if (setService.getCurrentSet() == null) {
             if (compositionService.getNextComposition(currentCompositionPlayer.getComposition()) != null) {
-                setComposition(compositionService.getNextComposition(currentCompositionPlayer.getComposition()));
+                setComposition(compositionService.getNextComposition(currentCompositionPlayer.getComposition()), playDefaultComposition, false);
             }
         } else {
             if (setService.getNextSetComposition() != null) {
                 setService.setCurrentCompositionIndex(setService.getCurrentCompositionIndex() + 1);
-                setCompositionName(setService.getCurrentCompositionName());
+                setComposition(compositionService.getComposition(setService.getCurrentCompositionName()), playDefaultComposition, false);
             }
         }
     }
@@ -485,7 +489,7 @@ public class DefaultPlayerService implements PlayerService {
             // playing the next composition
             logger.info("Automatically start the next composition");
             stop(false);
-            setNextComposition();
+            setNextComposition(false);
             play();
         } else if (sessionService.getSession().isAutoSelectNextComposition()) {
             // Stop the current composition, play the default composition and select the

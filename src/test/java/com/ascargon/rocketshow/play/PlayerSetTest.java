@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.play;
 
 import com.ascargon.rocketshow.api.NotificationService;
+import com.ascargon.rocketshow.composition.ActionTriggerComposition;
 import com.ascargon.rocketshow.composition.Composition;
 import com.ascargon.rocketshow.composition.DefaultCompositionService;
 import com.ascargon.rocketshow.composition.DefaultSetService;
@@ -31,6 +32,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -50,6 +53,7 @@ class PlayerSetTest {
     private final Session session = new Session();
     private final DefaultSetService setService = new DefaultSetService();
     private DefaultCompositionService compositionService;
+    private final DesignerService designerService = mock(DesignerService.class);
     private DefaultPlayerService playerService;
 
     @BeforeEach
@@ -75,7 +79,7 @@ class PlayerSetTest {
     // Like a start of the unit, which loads the set of the last session
     private DefaultPlayerService start() {
         return new DefaultPlayerService(mock(NotificationService.class), settingsService, compositionService, setService, sessionService,
-                mock(LightingService.class), mock(DesignerService.class), mock(MidiTimecodeService.class), mock(ActionExecutionService.class),
+                mock(LightingService.class), designerService, mock(MidiTimecodeService.class), mock(ActionExecutionService.class),
                 capabilitiesService, mock(CompositionPipelineBuilder.class), mock(RaspberryGpioOutService.class), mock(GstreamerInitService.class));
     }
 
@@ -219,6 +223,63 @@ class PlayerSetTest {
         playerService.compositionPlayerFinishedPlaying(new CompositionPlayer(playerService));
         assertEquals("A", playerService.getCompositionName());
         assertEquals(1, setService.getCurrentCompositionIndex());
+    }
+
+
+    @Test
+    void startsTheNextCompositionOfTheSetWithoutTheDefaultComposition() throws Exception {
+        // Compositions of lighting actions, e.g. a loop of the stage lighting between the songs
+        for (String name : new String[]{"Ambient", "C", "A"}) {
+            Composition composition = new Composition();
+            composition.setName(name);
+            ActionTriggerComposition later = new ActionTriggerComposition();
+            later.setPositionMillis(600_000);
+            composition.getActionTriggerList().add(later);
+            compositionService.saveComposition(composition);
+        }
+        settingsService.getSettings().setDefaultComposition("Ambient");
+
+        Set show = set("Auto", "C", "A");
+        show.getSetCompositionList().getFirst().setAutoStartNextComposition(true);
+        compositionService.saveSet(show);
+        session.setAutoSelectNextComposition(true);
+
+        playerService = start();
+        playerService.loadSetAndComposition("Auto");
+        playerService.play();
+        assertEquals(CompositionPlayer.PlayState.PLAYING, playerService.getPlayState());
+        clearInvocations(designerService);
+
+        // C reached its end
+        playerService.compositionPlayerFinishedPlaying(new CompositionPlayer(playerService));
+
+        assertEquals("A", playerService.getCompositionName());
+        assertEquals(CompositionPlayer.PlayState.PLAYING, playerService.getPlayState());
+        verify(designerService, never()).getProjectByCompositionName("Ambient");
+    }
+
+
+    @Test
+    void stopsAndContinuesWithoutTheDefaultComposition() throws Exception {
+        // The default composition was deleted or renamed
+        settingsService.getSettings().setDefaultComposition("Deleted");
+        Composition song = new Composition();
+        song.setName("C");
+        ActionTriggerComposition later = new ActionTriggerComposition();
+        later.setPositionMillis(600_000);
+        song.getActionTriggerList().add(later);
+        compositionService.saveComposition(song);
+        session.setAutoSelectNextComposition(true);
+
+        playerService = start();
+        playerService.loadSetAndComposition("Show");
+        playerService.play();
+
+        // C reached its end, the next composition gets selected
+        playerService.compositionPlayerFinishedPlaying(new CompositionPlayer(playerService));
+        assertEquals("A", playerService.getCompositionName());
+
+        playerService.stop();
     }
 
 }
