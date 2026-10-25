@@ -7,9 +7,9 @@ src/main/resources/static/*
 logs.zip
 /dist/defaults.tar.gz
 
-# generated from test run
-session.xml
-settings.xml
+# generated in the project directory by a test run
+/session.xml
+/settings.xml
 log/*
 
 ### STS ###
