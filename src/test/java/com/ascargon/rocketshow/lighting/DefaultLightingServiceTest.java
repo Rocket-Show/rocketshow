@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -173,12 +174,14 @@ class DefaultLightingServiceTest {
         LightingUniverseState composition = state(null, null, 0, 100);
         lightingService.addLightingUniverse(composition);
 
-        // While the first value is being sent, the last one of a fade arrives
+        // While the first value is being sent, the last one of a fade arrives. Counted apart from the sent universes,
+        // which the test takes out meanwhile.
+        AtomicInteger sendCount = new AtomicInteger();
         doAnswer(invocation -> {
             LightingUniverseState activityUniverse = invocation.getArgument(0);
             sentUniverses.add(new HashMap<>(activityUniverse.getUniverse()));
 
-            if (sentUniverses.size() == 1) {
+            if (sendCount.incrementAndGet() == 1) {
                 composition.getUniverse().put(0, 0);
                 lightingService.send();
             }
