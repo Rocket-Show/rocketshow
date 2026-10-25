@@ -80,8 +80,9 @@ class DesignerProjectCompatibilityTest {
         return Path.of(DesignerProjectCompatibilityTest.class.getResource("/compat").toURI());
     }
 
-    private static Path getDesignerProject(String version, String fileName) throws Exception {
-        return getCompatPath().resolve(version).resolve("designer").resolve(fileName);
+    // Projects in an older and the current format, for the migrations
+    private static Path getMigrationProject(String fileName) throws Exception {
+        return Path.of(DesignerProjectCompatibilityTest.class.getResource("/designer").toURI()).resolve(fileName);
     }
 
     private Project readProject(Path projectFile) {
@@ -267,8 +268,26 @@ class DesignerProjectCompatibilityTest {
     }
 
     @Test
+    void playsTheTemplateOfNewProjects() throws Exception {
+        // A new project starts with the designer template of the latest release (see SeedFilesTest)
+        Path template = Path.of("dist", "designer_template.json");
+        Project project = readProject(template);
+        List<Position> positions = getScenePositions(project);
+        List<Map<String, Integer>> universes = new ArrayList<>();
+
+        // In the current format, a new project is not migrated
+        assertEquals(DefaultDesignerService.SUPPORTED_PROJECT_VERSION, project.getVersion());
+        assertFalse(positions.isEmpty());
+
+        List<String> errors = getErrorsWhilePlaying(template, positions, universes);
+
+        assertTrue(errors.isEmpty(), "The designer template logged errors: " + errors);
+        assertTrue(universes.stream().anyMatch(this::hasLight), "The designer template produces no light");
+    }
+
+    @Test
     void movesTheLookOfOldPresetsIntoTheirFirstStep() throws Exception {
-        Project project = readProject(getDesignerProject("3.0.0", "Template version 2.json"));
+        Project project = readProject(getMigrationProject("Template version 2.json"));
         Preset preset = project.getPresets().getFirst();
         List<FixtureCapabilityValue> look = preset.getFixtureCapabilityValues();
         assertTrue(preset.getSteps().isEmpty());
@@ -282,7 +301,7 @@ class DesignerProjectCompatibilityTest {
 
     @Test
     void keepsTheStepsOfCurrentProjects() throws Exception {
-        Project project = readProject(getDesignerProject("3.0.0", "Template version 7.json"));
+        Project project = readProject(getMigrationProject("Template version 7.json"));
         List<PresetStep> steps = project.getPresets().getFirst().getSteps();
 
         migrate(project);
@@ -295,7 +314,7 @@ class DesignerProjectCompatibilityTest {
     void ordersOldPresetsAndFixturesLikeTheProject() throws Exception {
         // Until version 3, the project's preset list defined the layer order in a scene and its fixture list
         // the order a preset chases its fixtures in
-        Path version2 = getDesignerProject("3.0.0", "Template version 2.json");
+        Path version2 = getMigrationProject("Template version 2.json");
         Project project = readProject(version2);
         Preset firstPreset = project.getPresets().getFirst();
 
@@ -316,8 +335,8 @@ class DesignerProjectCompatibilityTest {
     @Test
     void migratedTemplateLooksLikeTheCurrentTemplate() throws Exception {
         // The template before and after the preset steps (project version 2 and 7) define the same show
-        Path version2 = getDesignerProject("3.0.0", "Template version 2.json");
-        Path version7 = getDesignerProject("3.0.0", "Template version 7.json");
+        Path version2 = getMigrationProject("Template version 2.json");
+        Path version7 = getMigrationProject("Template version 7.json");
 
         // Before, at the start, in the middle and at the end of the scene, and after it
         List<Position> positions = new ArrayList<>();

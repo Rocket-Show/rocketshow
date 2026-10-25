@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<updateState>
+    <error>error-1</error>
+    <originalRaucSlot>originalRaucSlot-2</originalRaucSlot>
+    <progressMessage>progressMessage-3</progressMessage>
+    <progressPercentage>4.5</progressPercentage>
+    <step>UPDATING</step>
+    <updatingFromVersion>updatingFromVersion-5</updatingFromVersion>
+</updateState>

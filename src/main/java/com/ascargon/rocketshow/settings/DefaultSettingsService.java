@@ -34,7 +34,7 @@ public class DefaultSettingsService implements SettingsService {
 
     private final static Logger logger = LoggerFactory.getLogger(Settings.class);
 
-    private final int CURRENT_SETTINGS_VERSION = 2;
+    public final static int CURRENT_SETTINGS_VERSION = 2;
     private String directory;
     private final String FILE_NAME = "settings";
 

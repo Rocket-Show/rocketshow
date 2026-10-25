@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.settings;
 
+import com.ascargon.rocketshow.StrictXml;
 import com.ascargon.rocketshow.midi.MidiRouting;
 import com.ascargon.rocketshow.midi.MidiService;
 import com.ascargon.rocketshow.util.DeviceInformation;
@@ -42,8 +43,6 @@ import static org.mockito.Mockito.when;
  * (src/test/resources/compat/&lt;version&gt;/settings.xml), like a device does after an update.
  */
 class DefaultSettingsServiceTest {
-
-    private final static int CURRENT_SETTINGS_VERSION = 2;
 
     // Settings of earlier releases, which were removed on purpose
     private final static Set<String> REMOVED_ELEMENTS = Set.of(
@@ -134,7 +133,7 @@ class DefaultSettingsServiceTest {
 
             DefaultSettingsService settingsService = start(directory);
 
-            assertEquals(CURRENT_SETTINGS_VERSION, settingsService.getSettings().getVersion());
+            assertEquals(DefaultSettingsService.CURRENT_SETTINGS_VERSION, settingsService.getSettings().getVersion());
 
             // Nothing of the old file is lost when the settings are saved
             List<String> lostValues = getLostValues(getValues(settingsFile), getValues(savedFile));
@@ -148,10 +147,26 @@ class DefaultSettingsServiceTest {
     }
 
     @Test
+    void startsANewUnit() throws Exception {
+        // A new unit has no settings yet and saves the defaults
+        Path directory = Files.createTempDirectory(tempPath, "new");
+        Path settingsFile = directory.resolve("settings.xml");
+        start(directory);
+
+        List<String> problems = StrictXml.getProblems(settingsFile, Settings.class);
+        assertTrue(problems.isEmpty(), "The settings of a new unit are not understood: " + problems);
+
+        // The next start loads the saved settings unchanged
+        String saved = Files.readString(settingsFile);
+        start(directory);
+        assertEquals(saved, Files.readString(settingsFile));
+    }
+
+    @Test
     void appliesTheDefaultsOfANewDeviceToOldSettings() throws Exception {
         // Settings of an older release don't contain the settings added since then
         Path oldDirectory = Files.createTempDirectory(tempPath, "old");
-        Files.writeString(oldDirectory.resolve("settings.xml"), "<settings><version>" + CURRENT_SETTINGS_VERSION + "</version></settings>");
+        Files.writeString(oldDirectory.resolve("settings.xml"), "<settings><version>" + DefaultSettingsService.CURRENT_SETTINGS_VERSION + "</version></settings>");
         start(oldDirectory);
 
         Path newDirectory = Files.createTempDirectory(tempPath, "new");

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<set>
+    <name>Sample set</name>
+    <notes>notes-2</notes>
+    <compositionList>
+        <composition>
+            <autoStartNextComposition>true</autoStartNextComposition>
+            <durationMillis>3</durationMillis>
+            <name>name-4</name>
+        </composition>
+    </compositionList>
+</set>

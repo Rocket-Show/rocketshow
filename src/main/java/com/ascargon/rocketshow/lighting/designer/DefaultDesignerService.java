@@ -50,8 +50,8 @@ public class DefaultDesignerService implements DesignerService {
 
     // the highest project version this player knows. A project written by a newer
     // designer still plays as well as it can, but whatever came after this version is
-    // missing from it.
-    private static final int SUPPORTED_PROJECT_VERSION = 7;
+    // missing from it. Package visible for the test of the designer template.
+    static final int SUPPORTED_PROJECT_VERSION = 7;
 
     // Live preview
     private boolean playPreview = false; // Is the preview playing a composition?
