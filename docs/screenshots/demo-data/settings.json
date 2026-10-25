@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "language": "en",
+  "deviceName": "Main Stage",
+  "defaultComposition": "Walk-in Loop",
+  "enableMonitor": true,
+  "loggingLevel": "INFO",
+  "updateTestBranch": false,
+  "tlsEnable": true,
+
+  "midiInDevice": { "id": 1, "name": "FC-300 MIDI", "vendor": "Roland", "description": "Roland FC-300 MIDI foot controller", "serialPort": false },
+  "midiOutDevice": { "id": 2, "name": "Nord Stage 3 MIDI", "vendor": "Clavia", "description": "Nord Stage 3 USB MIDI", "serialPort": false },
+  "midiTimecodeEnabled": true,
+  "midiTimecodeFrameRate": "FPS_25",
+  "offsetMillisMidi": 0,
+  "deviceInMidiRoutingList": [
+    { "midiDestination": "OUT_DEVICE", "midiMapping": { "channelOffset": 0, "noteOffset": 0 }, "universeUuid": "", "remoteDeviceList": [] }
+  ],
+  "remoteMidiRoutingList": [
+    { "midiDestination": "LIGHTING", "midiMapping": { "channelOffset": 0, "noteOffset": 0 }, "universeUuid": "f869189e-4068-4800-a61f-66a1499946fd", "remoteDeviceList": [] }
+  ],
+  "midiMapping": { "channelOffset": 0, "noteOffset": 0 },
+  "actionTriggerMidiList": [
+    {
+      "actionTriggerMidiProgramChange": {
+        "channel": 0,
+        "program": 1,
+        "actionList": [
+          { "actionTransport": { "type": "TRANSPORT", "transportActionType": "NEXT_COMPOSITION", "executeLocally": true, "remoteDeviceList": [] } }
+        ]
+      }
+    },
+    {
+      "actionTriggerMidiNoteOn": {
+        "channel": 9,
+        "note": 36,
+        "actionList": [
+          { "actionTransport": { "type": "TRANSPORT", "transportActionType": "TOGGLE_PLAY", "executeLocally": true, "remoteDeviceList": ["Backstage Video"] } }
+        ]
+      }
+    }
+  ],
+
+  "audioOutput": "DEVICE",
+  "offsetMillisAudio": 0,
+  "audioBusList": [
+    {
+      "uuid": "2d9b6f4a-8c1e-47a3-b5d8-7f29c4e87562",
+      "name": "Front of house",
+      "channels": 2,
+      "audioDevice": { "id": 0, "key": "hw:CARD=SPARK,DEV=0", "name": "SPARK Audio, outputs 1-2" }
+    },
+    {
+      "uuid": "7b3f9a2d-4c81-4e6f-9d73-a8f14c2e9101",
+      "name": "In-ear click & cues",
+      "channels": 2,
+      "audioDevice": { "id": 1, "key": "hw:CARD=SPARK,DEV=1", "name": "SPARK Audio, outputs 3-4" }
+    }
+  ],
+
+  "offsetMillisVideo": 0,
+  "customVideoResolution": false,
+
+  "lightingSendDelayMillis": 10,
+  "designerFrequencyHertz": 40,
+  "designerLivePreview": true,
+  "lightingOlaPluginList": [
+    { "id": 2, "name": "Enttec USB Pro", "conflictList": [] },
+    { "id": 13, "name": "FTDI USB DMX", "conflictList": [] },
+    { "id": 1, "name": "ArtNet", "conflictList": [] }
+  ],
+  "lightingUniverseList": [
+    { "uuid": "f869189e-4068-4800-a61f-66a1499946fd", "name": "Stage DMX", "olaUniverseId": 1, "olaOutputPortId": "1-0", "olaOutputPortDevice": "SPARK DMX512" },
+    { "uuid": "3c1d5e2a-9b7f-4a61-8d2e-5f0a7b6c4e13", "name": "Art-Net truss", "olaUniverseId": 2, "olaOutputPortId": "2-0", "olaOutputPortDevice": "ArtNet" }
+  ],
+
+  "enableRaspberryGpio": true,
+  "raspberryGpioOutputPinBcmList": [22],
+  "actionTriggerRaspberryGpioList": [
+    {
+      "pinId": 17,
+      "actionList": [
+        { "actionTransport": { "type": "TRANSPORT", "transportActionType": "TOGGLE_PLAY", "executeLocally": true, "remoteDeviceList": [] } }
+      ]
+    },
+    {
+      "pinId": 27,
+      "actionList": [
+        { "actionTransport": { "type": "TRANSPORT", "transportActionType": "SELECT_COMPOSITION_BY_NAME_AND_PLAY", "compositionName": "Fireworks (Encore)", "executeLocally": true, "remoteDeviceList": [] } }
+      ]
+    }
+  ],
+
+  "scheduledCompositionList": [
+    { "uuid": "9a7d3c1e-2f4b-4c8a-b6e5-0d1f2a3b4c01", "enabled": true, "compositionName": "Walk-in Loop", "scheduleType": "DAILY", "intervalValue": 5, "intervalUnit": "MINUTES", "timeOfDay": "19:30", "weekdayList": [], "dayOfMonth": 1, "monthOfYear": 1 },
+    { "uuid": "9a7d3c1e-2f4b-4c8a-b6e5-0d1f2a3b4c02", "enabled": true, "compositionName": "Soundcheck – Pink Noise", "scheduleType": "WEEKLY", "intervalValue": 5, "intervalUnit": "MINUTES", "timeOfDay": "16:00", "weekdayList": [5, 6], "dayOfMonth": 1, "monthOfYear": 1 },
+    { "uuid": "9a7d3c1e-2f4b-4c8a-b6e5-0d1f2a3b4c03", "enabled": false, "compositionName": "Example Composition", "scheduleType": "INTERVAL", "intervalValue": 30, "intervalUnit": "MINUTES", "timeOfDay": "20:00", "weekdayList": [1], "dayOfMonth": 1, "monthOfYear": 1 }
+  ],
+
+  "lanStaticIpEnable": false,
+  "lanIpAddress": "",
+  "lanSubnetMask": "",
+  "lanGateway": "",
+  "lanDns1": "",
+  "lanDns2": "",
+  "wlanApEnable": true,
+  "wlanApSsid": "RocketShow-MainStage",
+  "wlanApPassphrase": "showtime-2026",
+  "wlanApSsidHide": false,
+  "wlanApHwMode": "g",
+  "wlanApChannel": 6,
+  "wlanApCountryCode": "CH",
+  "remoteDeviceList": [
+    { "name": "Backstage Video", "host": "192.168.1.42", "synchronize": true, "apiKey": "rs_2f8c41d0a7b94e53" },
+    { "name": "FOH Screen", "host": "192.168.1.43", "synchronize": false, "apiKey": "rs_91be07c35a6d4f28" }
+  ],
+
+  "instrumentList": [
+    { "uuid": "5f1c2a9e-3b7d-4e21-9a6f-1c0d8e2b7a01", "name": "Vocals" },
+    { "uuid": "5f1c2a9e-3b7d-4e21-9a6f-1c0d8e2b7a02", "name": "Guitar" },
+    { "uuid": "5f1c2a9e-3b7d-4e21-9a6f-1c0d8e2b7a03", "name": "Bass" },
+    { "uuid": "5f1c2a9e-3b7d-4e21-9a6f-1c0d8e2b7a04", "name": "Keys" },
+    { "uuid": "5f1c2a9e-3b7d-4e21-9a6f-1c0d8e2b7a05", "name": "Drums" }
+  ],
+
+  "apiKeyList": [
+    { "uuid": "c0a8e1f2-7d3b-4e6a-9f15-2b4c6d8e0a01", "description": "Backstage Video (remote device)" },
+    { "uuid": "c0a8e1f2-7d3b-4e6a-9f15-2b4c6d8e0a02", "description": "Stream Deck via Companion" }
+  ]
+}

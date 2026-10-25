@@ -1,0 +1,268 @@
+[
+  {
+    "videoFile": {
+      "name": "intro_countdown.mp4",
+      "type": "VIDEO",
+      "durationMillis": 92000
+    }
+  },
+  {
+    "audioFile": {
+      "name": "intro_countdown.wav",
+      "type": "AUDIO",
+      "durationMillis": 92000
+    }
+  },
+  {
+    "audioFile": {
+      "name": "intro_countdown_cues.wav",
+      "type": "AUDIO",
+      "durationMillis": 92000
+    }
+  },
+  {
+    "midiFile": {
+      "name": "intro_lights.mid",
+      "type": "MIDI",
+      "durationMillis": 92000
+    }
+  },
+  {
+    "audioFile": {
+      "name": "neon_skyline_backing.wav",
+      "type": "AUDIO",
+      "durationMillis": 245000
+    }
+  },
+  {
+    "audioFile": {
+      "name": "neon_skyline_click.wav",
+      "type": "AUDIO",
+      "durationMillis": 245000
+    }
+  },
+  {
+    "midiFile": {
+      "name": "neon_skyline_keys.mid",
+      "type": "MIDI",
+      "durationMillis": 245000
+    }
+  },
+  {
+    "midiFile": {
+      "name": "neon_skyline_lights.mid",
+      "type": "MIDI",
+      "durationMillis": 245000
+    }
+  },
+  {
+    "videoFile": {
+      "name": "neon_skyline_visuals.mp4",
+      "type": "VIDEO",
+      "durationMillis": 245000
+    }
+  },
+  {
+    "audioFile": {
+      "name": "midnight_run_backing.wav",
+      "type": "AUDIO",
+      "durationMillis": 228000
+    }
+  },
+  {
+    "audioFile": {
+      "name": "midnight_run_click.wav",
+      "type": "AUDIO",
+      "durationMillis": 228000
+    }
+  },
+  {
+    "midiFile": {
+      "name": "midnight_run_lights.mid",
+      "type": "MIDI",
+      "durationMillis": 228000
+    }
+  },
+  {
+    "audioFile": {
+      "name": "glass_hearts_strings.wav",
+      "type": "AUDIO",
+      "durationMillis": 261000
+    }
+  },
+  {
+    "audioFile": {
+      "name": "glass_hearts_click.wav",
+      "type": "AUDIO",
+      "durationMillis": 261000
+    }
+  },
+  {
+    "videoFile": {
+      "name": "glass_hearts_lyrics.mp4",
+      "type": "VIDEO",
+      "durationMillis": 261000
+    }
+  },
+  {
+    "audioFile": {
+      "name": "satellite_backing.wav",
+      "type": "AUDIO",
+      "durationMillis": 213000
+    }
+  },
+  {
+    "audioFile": {
+      "name": "satellite_click.wav",
+      "type": "AUDIO",
+      "durationMillis": 213000
+    }
+  },
+  {
+    "midiFile": {
+      "name": "satellite_synth.mid",
+      "type": "MIDI",
+      "durationMillis": 213000
+    }
+  },
+  {
+    "audioFile": {
+      "name": "afterglow_pad.wav",
+      "type": "AUDIO",
+      "durationMillis": 302000
+    }
+  },
+  {
+    "videoFile": {
+      "name": "afterglow_sunset.mp4",
+      "type": "VIDEO",
+      "durationMillis": 302000
+    }
+  },
+  {
+    "audioFile": {
+      "name": "thunder_road_backing.wav",
+      "type": "AUDIO",
+      "durationMillis": 237000
+    }
+  },
+  {
+    "audioFile": {
+      "name": "thunder_road_click.wav",
+      "type": "AUDIO",
+      "durationMillis": 237000
+    }
+  },
+  {
+    "midiFile": {
+      "name": "thunder_road_lights.mid",
+      "type": "MIDI",
+      "durationMillis": 237000
+    }
+  },
+  {
+    "audioFile": {
+      "name": "fireworks_backing.wav",
+      "type": "AUDIO",
+      "durationMillis": 280000
+    }
+  },
+  {
+    "audioFile": {
+      "name": "fireworks_click.wav",
+      "type": "AUDIO",
+      "durationMillis": 280000
+    }
+  },
+  {
+    "midiFile": {
+      "name": "fireworks_lights.mid",
+      "type": "MIDI",
+      "durationMillis": 280000
+    }
+  },
+  {
+    "videoFile": {
+      "name": "fireworks_led_wall.mp4",
+      "type": "VIDEO",
+      "durationMillis": 280000
+    }
+  },
+  {
+    "audioFile": {
+      "name": "outro_music.wav",
+      "type": "AUDIO",
+      "durationMillis": 45000
+    }
+  },
+  {
+    "videoFile": {
+      "name": "venue_logo_loop.mp4",
+      "type": "VIDEO",
+      "durationMillis": 30000
+    }
+  },
+  {
+    "audioFile": {
+      "name": "walk_in_playlist.mp3",
+      "type": "AUDIO",
+      "durationMillis": 600000
+    }
+  },
+  {
+    "audioFile": {
+      "name": "pink_noise.wav",
+      "type": "AUDIO",
+      "durationMillis": 60000
+    }
+  },
+  {
+    "audioFile": {
+      "name": "head_smashed_far_away.wav",
+      "type": "AUDIO",
+      "durationMillis": 242000
+    }
+  },
+  {
+    "audioFile": {
+      "name": "head_smashed_far_away_click.wav",
+      "type": "AUDIO",
+      "durationMillis": 242000
+    }
+  },
+  {
+    "midiFile": {
+      "name": "light_example.mid",
+      "type": "MIDI",
+      "durationMillis": 72858
+    }
+  },
+  {
+    "videoFile": {
+      "name": "RocketShow.mp4",
+      "type": "VIDEO",
+      "durationMillis": 31000
+    }
+  },
+  {
+    "audioFile": {
+      "name": "crowd_ambience.wav",
+      "type": "AUDIO",
+      "durationMillis": 180000
+    }
+  },
+  {
+    "videoFile": {
+      "name": "countdown_10s.mp4",
+      "type": "VIDEO",
+      "durationMillis": 10000
+    }
+  },
+  {
+    "midiFile": {
+      "name": "strobe_hits.mid",
+      "type": "MIDI",
+      "durationMillis": 16000
+    }
+  }
+]
