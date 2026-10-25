@@ -38,9 +38,10 @@ CI (`.github/workflows/ci.yml`) runs on every push and on pull requests from for
 The unit tests live in `src/test/java`:
 
 - Update state machine across reboots (`DefaultUpdateServiceTest`)
-- MIDI input parsing and MIDI mapping (`MidiMessageParserTest`, `MidiMapperTest`)
-- Backup and restore, broken backups (`DefaultBackupServiceTest`)
-- Files of earlier releases (`CompatibilityTest`, see below)
+- MIDI input parsing, mapping and routing (`MidiMessageParserTest`, `MidiMapperTest`, `MidiRouterTest`)
+- Backup and restore, broken and failed backups (`DefaultBackupServiceTest`)
+- Files of earlier releases (`CompatibilityTest`, `DefaultSettingsServiceTest`, `DesignerProjectCompatibilityTest`,
+  see below)
 - Lighting designer presets (`PresetMirrorTest`, `PresetIntensityTest`, `PresetStepsTest`)
 - Scheduler (`DefaultSchedulerServiceTest`, `ScheduledCompositionSerializationTest`)
 - MIDI timecode (`MidiTimecodeMessageFactoryTest`)
@@ -53,17 +54,63 @@ Run them locally without the web app build:
 ./mvnw test -Dskip.npm -Dskip.installnodenpm
 ```
 
-All 100 tests pass without any hardware attached, in about a minute.
+All 127 tests pass without any hardware attached, in about a minute. One backup test needs an unreadable file, so it
+is skipped when running as root (root can read every file). It runs in CI.
+
+GStreamer pipelines are not tested here. They need real audio and video devices and belong to the hardware rig
+([section 3](#3-hardware-in-the-loop-rig)).
 
 ### Files of earlier releases
 
-`CompatibilityTest` loads every file in `src/test/resources/compat/<version>/` with the current classes:
-`settings.xml`, `session.xml`, `update.xml`, `compositions/*.xml` and `sets/*.xml`. Loading is strict: an element the
-current classes don't read fails the test, because its content would be lost on the next save. Elements that are
-dropped on purpose are listed in the test, with the reason.
+The files of earlier releases live in `src/test/resources/compat/<folder>/`, one folder per release (and unit, see
+below), laid out like the data directory of a unit.
 
-So far it only has the example compositions of 2.4.1 and 3.0.0 and the default settings and session of 3.0.0. Real
-files with real content catch much more.
+| Test | Files | Checks |
+|---|---|---|
+| `CompatibilityTest` | `settings.xml`, `session.xml`, `update.xml`, `compositions/*.xml`, `sets/*.xml` | Loaded strictly: an element the current classes don't read fails the test, because its content would be lost on the next save. Elements dropped on purpose are listed in the test, with the reason. |
+| `DefaultSettingsServiceTest` | `settings.xml` | Started like after an update: ends at the current settings version, keeps every value of the old file when saving, doesn't change on the next start. Old settings also get the defaults of a new device. |
+| `DesignerProjectCompatibilityTest` | `designer/*.json` | Loaded like the app does and played at every scene by the current engine: no errors, and light somewhere. The migrations of project version 2 are tested, and the migrated template sends the same DMX values as the current one. |
+
+So far there are only defaults and examples: the example compositions of 2.4.1 and 3.0.0, the default settings and
+session of 3.0.0, and the designer template of project version 2 and 7.
+
+### Real sample files
+
+Real files from real shows catch much more than defaults, because they use the features. Collect them from our own
+units, and from customers' units only with their permission.
+
+**Where from.** The backup of a unit (system settings, backup) is a `.tar.gz` of its data directory. Take the
+settings, the session, the compositions, the sets and the designer projects, not the media (large, and irrelevant for
+the file formats):
+
+```shell
+mkdir -p src/test/resources/compat/3.0.0-spark-1
+tar -xzf backup.tar.gz -C src/test/resources/compat/3.0.0-spark-1 settings.xml session.xml compositions sets designer
+```
+
+`update.xml` is not part of the backup. Copy it from `/data/rocketshow/` of a SPARK unit after an update.
+
+**Which releases.** Every release that is still in use, e.g. the last 2.x release and every 3.x release. Name the
+folder after the release that wrote the files (system settings, info) and the unit, e.g. `3.0.0-spark-1`. Never
+update a folder later: it stands for what that release wrote. Add a new folder instead.
+
+**What makes a good sample.** The features the files use:
+
+- Settings: several audio buses, MIDI devices, routings to every destination (out device, lighting, remote), global
+  MIDI offsets, remote devices, lighting universes and OLA ports, scheduled compositions, GPIO triggers and outputs, API
+  keys.
+- Compositions: audio files on different buses, MIDI files with routings to lighting and remote devices, video,
+  looping files, offsets, MIDI mappings overriding the global one.
+- Sets with several compositions.
+- Designer projects: several compositions and scenes, several presets in a scene, effects, chases over several
+  fixtures, presets with several steps, matrix fixtures.
+
+**Before committing.** The repository is public. Remove or replace:
+
+- In `settings.xml`: `adminPasswordHash`, the `keyHash` of every API key, the `apiKey` of every remote device (stored
+  in plain text), `wlanApPassphrase` and the `host` of every remote device.
+- In designer projects: `shareToken`.
+- Names of shows, compositions and media that are not ours to publish.
 
 ### TODO
 
@@ -82,18 +129,16 @@ files with real content catch much more.
   - [x] Update started by an older release, which did not store the original slot: finishes in the new slot, reports
     the fallback in the original slot.
 - [x] Compatibility test for files of earlier releases.
-  - [ ] Add real files of every release, e.g. from backups of our own units: settings with several audio buses,
-    remote devices, routings and API keys, sets, sessions, compositions with several buses, MIDI routings and video.
-  - [ ] Cover designer projects and fixtures.
-  - [ ] Cover the settings migrations through `DefaultSettingsService`. Today a test can't set its settings directory.
+  - [x] Designer projects, played by the current engine, and their migrations.
+  - [x] Settings, started through `DefaultSettingsService`.
+  - [ ] Add real sample files of every release in use (see above).
+  - [ ] A script that removes the secrets from a sample (see above).
+  - [ ] The fixture library (`fixtures/`, used by the designer's fixture search).
 - [x] `MidiMessageParser`: messages split across reads, running status, real-time bytes inside messages and SysEx,
   SysEx without end byte.
-- [x] MIDI mapping (`MidiMapper`, `ChannelMapping`), for the cases with a clear expected result (see
-  [Known issues](#8-known-issues)).
-- [ ] MIDI routing (`MidiRouter`).
-- [ ] `CompositionPipelineBuilder`: expected pipeline for a set of compositions and audio bus settings (channel
-  mapping, mix matrix). It creates real GStreamer elements, so the CI runner needs GStreamer and its plugins.
-- [x] Backup and restore round trip, broken and incomplete backups (`BackupService`).
+- [x] MIDI mapping (`MidiMapper`): channel map, offsets, global mapping, override parent.
+- [x] MIDI routing (`MidiRouter`): every destination, own mapping per routing, global mapping, monitor.
+- [x] Backup and restore round trip, broken and incomplete backups, failed backup creation (`BackupService`).
 - [x] `RocketShowApplicationTests` passes without GStreamer, OLA or GPIO hardware, checked by CI.
 
 ## 2. Device self-test
@@ -251,6 +296,8 @@ and measures what physically comes out of them. Almost everything a test needs i
 - [ ] Audio capture and analysis: presence, routing, dropouts, A↔B offset. Track the offset per build.
 - [ ] Video capture and analysis: non-black frames, audio/video offset.
 - [ ] DMX capture through `olad` on the controller.
+- [ ] GStreamer pipelines (`CompositionPipelineBuilder`): compositions with several audio buses, channel mapping and
+  mix matrix, video and MIDI files. Checked with the audio, video and DMX capture.
 - [ ] Smart plug control for power cut tests.
 - [ ] Test report per run (pass/fail per test, sync offsets, soak graphs), stored per build.
 
@@ -456,6 +503,22 @@ Found by reading the code. Each one gets a unit test or rig test before it is fi
 - [x] **Restoring a broken backup deleted all data.** An incomplete or broken upload deleted the settings,
   compositions, sets and media, unpacked nothing and rebooted. Now the backup is checked first and the restore is
   refused with an error (`DefaultBackupServiceTest`).
+- [x] **Creating a backup ignored the exit code of `tar`.** A failed backup (e.g. disk full) was offered for download
+  as if it was complete (`DefaultBackupServiceTest`).
+- [x] **The global MIDI channel and note offsets had no effect.** A routing's own offsets (`0` by default) replaced
+  them, and the routings of the live MIDI input had no parent at all. Now the offsets add up: the global offsets apply
+  to every routing, plus the routing's own. A composition's MIDI mapping overriding its parent ignores the global
+  mapping (the flag was checked on the parent before) (`MidiMapperTest`, `MidiRouterTest`).
+- [x] **The MIDI mapping of a routing leaked into the other routings.** All routings mapped the same message object,
+  so a routing got the offsets of the routings before it, and the caller's message changed as well. Each routing gets
+  its own copy now (`MidiRouterTest`).
+
+### Accepted
+
+- **2.x compositions lose their audio bus.** They assign audio files to a bus by name (`<outputBus>`), 3.0 only reads
+  the bus UUID, so all audio files of such a composition play on the first bus.
+- **Settings without a version end up at version 3, while the current version is 2.** Only settings of very old
+  releases are affected. Every start logs an error, the settings are kept, and the old MIDI controls are lost.
 
 ### Open
 
@@ -464,18 +527,8 @@ Found by reading the code. Each one gets a unit test or rig test before it is fi
 - [ ] **A hung synchronized unit blocks the main unit.** `RemoteDevice` only sets a connect timeout, no read timeout.
   If a remote unit accepts the connection but never answers, `DefaultPlayerService.play()` waits the full 60 seconds
   while holding the player lock, so stop and pause wait as well. Scenario 6.4 "Freeze unit B" confirms it.
-- [ ] **2.x compositions lose their audio bus.** They assign audio files to a bus by name (`<outputBus>`), 3.0 only
-  reads the bus UUID. All audio files of such a composition play on the first bus, e.g. a click track meant for the
-  in-ear monitors on the PA. This affects restoring a 2.x backup on 3.0. Decide whether 2.x files are supported. If
-  so, map the bus name to its UUID when loading.
-- [ ] **Settings without a version end up at version 3, while the current version is 2.** `migrateFromOldSettings()`
-  runs `migrateToVersion2()` and then `migrateToVersion3()`. Every following start rejects the settings as "saved with
-  a newer version" and logs an error. They are kept anyway, because they are set before the check.
-  `migrateToVersion3()` also creates the MIDI note triggers for the old MIDI controls but never adds them to the
-  settings, so the old controls are lost. Only settings of very old releases are affected.
-- [ ] **The global MIDI channel and note offsets seem to have no effect.** The MIDI settings page offers them, but
-  routing mappings default their offsets to `0` instead of "not set", so the offsets of the parent mapping are never
-  used. Routings of the live MIDI input don't use the global mapping at all. `overrideParent` is checked on the parent
-  instead of the mapping itself. Decide the intended behavior, then test it in `MidiMapperTest`.
-- [ ] **Creating a backup ignores the exit code of `tar`.** A failed backup (e.g. disk full) is offered for download
-  as if it was complete.
+- [ ] **Override parent is not offered in the web app.** A composition's MIDI mapping can only override the global
+  mapping by editing the composition file.
+- [ ] **Changes to the live MIDI routings and the global MIDI mapping apply only after a restart.** The routers of
+  the live MIDI input, of remote MIDI and of actions are created once at startup. Saving the settings replaces the
+  settings object, but these routers keep the old one. Compositions pick up the changes when they are loaded.
