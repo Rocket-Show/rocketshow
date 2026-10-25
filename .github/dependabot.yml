@@ -1,0 +1,43 @@
+# Proposes updates of the dependencies as pull requests. Security updates are proposed as soon as they are
+# known (enable the Dependabot alerts and security updates in the settings of the repository), all others once
+# a month in a single pull request per ecosystem, to keep the reviews and the tests of the units manageable.
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    groups:
+      maven:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: npm
+    directory: /src/main/webapp
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    groups:
+      angular:
+        patterns:
+          - "@angular*"
+        update-types:
+          - minor
+          - patch
+      npm:
+        exclude-patterns:
+          - "@angular*"
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - "*"

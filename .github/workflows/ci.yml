@@ -18,7 +18,22 @@ jobs:
           java-version: 21
           cache: maven
       - name: Run the unit tests
-        run: ./mvnw -B test -Dskip.npm -Dskip.installnodenpm
+        run: ./mvnw -B test -Pcoverage -Dskip.npm -Dskip.installnodenpm
+      - name: Summarize the coverage
+        run: |
+          awk -F, 'NR > 1 { missed += $8; covered += $9 } END { printf "Line coverage of the unit tests: %.1f %%\n", 100 * covered / (covered + missed) }' \
+            target/site/jacoco/jacoco.csv >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: target/site/jacoco
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-reports
+          path: target/surefire-reports
+          retention-days: 14
 
   build:
     name: Build with web app
@@ -41,4 +56,52 @@ jobs:
         with:
           name: rocketshow-jar
           path: target/rocketshow.jar
+          retention-days: 14
+
+  smoke:
+    name: Web app smoke test
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: rocketshow-jar
+          path: ${{ runner.temp }}/unit
+      - name: Install the browser
+        working-directory: testing/smoke
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Start a new unit
+        working-directory: ${{ runner.temp }}/unit
+        run: |
+          nohup java -jar rocketshow.jar > rocketshow.log 2>&1 &
+          for i in $(seq 1 90); do
+            curl -sf http://localhost:8080/api/system/health > /dev/null && exit 0
+            sleep 1
+          done
+          cat rocketshow.log
+          exit 1
+      - name: Run the smoke test
+        working-directory: testing/smoke
+        run: node smoke.mjs
+        env:
+          BASE_URL: http://localhost:8080
+          SCREENSHOT_DIRECTORY: ${{ runner.temp }}/screenshots
+      - name: Collect the log of the unit
+        if: always()
+        run: cp ${{ runner.temp }}/unit/rocketshow.log ${{ runner.temp }}/screenshots/ 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-test
+          path: ${{ runner.temp }}/screenshots
           retention-days: 14
