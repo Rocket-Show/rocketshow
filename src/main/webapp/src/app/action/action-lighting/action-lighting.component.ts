@@ -34,7 +34,9 @@ export class ActionLightingComponent implements OnInit {
   }
 
   private loadUniverseNameList() {
-    this.settingsService.getSettings(true).subscribe((settings) => {
+    // Don't clear the cache: this component is also used on the settings page,
+    // where a reload would discard unsaved changes.
+    this.settingsService.getSettings().subscribe((settings) => {
       this.lightingUniverseList = settings.lightingUniverseList;
 
       if (this.lightingUniverseList.length === 0) {

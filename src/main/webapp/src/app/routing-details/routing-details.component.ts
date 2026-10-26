@@ -33,7 +33,9 @@ export class RoutingDetailsComponent implements OnInit {
   ngOnInit() {
     this.onClose = new Subject();
 
-    this.settingsService.getSettings(true).subscribe((result) => {
+    // Don't clear the cache: the settings page edits the cached settings and
+    // saves them later. A reload would discard its unsaved changes.
+    this.settingsService.getSettings().subscribe((result) => {
       this.remoteDevices = result.remoteDeviceList;
       this.lightingUniverseList = result.lightingUniverseList;
 
