@@ -340,8 +340,8 @@ class DesignerDmxTest {
         ObjectNode project = project();
         addColorPreset(project, "Red", 1, 0);
 
-        // A sine on the strobe channel of the pars, at its top 5 seconds into the composition. Like in the designer, a
-        // sine swings by a quarter of its amplitude around its position.
+        // A sine on the strobe channel of the pars, at its top 5 seconds into the composition. A project of version 7
+        // swings it over half of its amplitude, like the designer did then.
         ObjectNode effect = ((ArrayNode) project.get("presets").get(0).get("effects")).addObject();
         effect.put("type", "curve");
         effect.put("uuid", "strobe-sine");
@@ -358,6 +358,10 @@ class DesignerDmxTest {
         Map<Integer, Integer> front = play(project).get(FRONT);
 
         assertEquals(191, front.get(6));
+
+        // Since version 8 over its whole amplitude
+        project.put("version", 8);
+        assertEquals(255, play(project).get(FRONT).get(6));
     }
 
     @Test

@@ -213,8 +213,8 @@ default settings on its first start. Seed files only need to work with the lates
 they are, not kept per release:
 
 - The example compositions load strictly (`SeedFilesTest`).
-- The designer template uses the example compositions (`SeedFilesTest`), is in the current project version and plays
-  with light and without errors (`DesignerProjectCompatibilityTest`).
+- The designer template uses the example compositions (`SeedFilesTest`), is in the project version of the designer the
+  web app comes with and plays with light and without errors (`DesignerProjectCompatibilityTest`).
 - The settings of a new unit load strictly and don't change on the next start (`DefaultSettingsServiceTest`).
 
 The designer migrations are tested with a project in version 2 and the same project in version 7, in
@@ -280,6 +280,10 @@ The designer migrations are tested with a project in version 2 and the same proj
 - [x] The unit tests of the web app, in CI.
 - [x] Changes during a show: saving compositions, audio settings, MIDI to other units in order.
   - [ ] More specs for the parts of the web app with logic, e.g. the settings forms and the composition editor.
+- [ ] When the web app gets the designer writing project version 8 (`@rocketshow/designer`), raise
+  `dist/designer_template.json` to version 8 (halving the amplitude of its sine) and
+  `WEB_APP_DESIGNER_PROJECT_VERSION` in `DesignerProjectCompatibilityTest`. Until then the app migrates the template
+  like any older project, with the same light.
 - [ ] The GStreamer pipelines a composition builds, with GStreamer installed in CI and test sources and sinks instead
   of the devices.
 
@@ -797,6 +801,12 @@ Found by reading the code and by the tests. Each one gets a unit test or rig tes
   kept open against sound artifacts were only opened at the start. ALSA reads it again after a change now, and the
   sound cards are opened again (`AlsaConfigurationTest`, `ApplySystemSettingsTest`). Needs the rig to confirm it on
   real sound cards (see the show scenarios).
+- [x] **Sine, triangle and sawtooth effects swung over half of their amplitude, the square over all of it.** At the
+  default amplitude of 1 around the middle, a sine moved a channel between 64 and 191, a square between 0 and 255, in
+  the designer as well. Every curve swings over its whole amplitude now, in the app and in the designer
+  (Rocket-Show/show-designer `claude/curve-amplitude`). Designer projects are version 8: older ones get half the
+  amplitude for these curves, so they look exactly the same (`EffectCurveTest`, `DesignerDmxTest`,
+  `DesignerProjectCompatibilityTest`).
 
 ### Accepted
 
@@ -840,10 +850,6 @@ Found by reading the code and by the tests. Each one gets a unit test or rig tes
   usually add themselves. Check with a receiver on the rig before changing it.
 - [ ] **The fixture library is downloaded at every start.** About 1.5 MB and 600 files rewritten on each boot, which
   wears the SD card, and every start waits for it. Once a week or on demand would do.
-- [ ] **Sine, triangle and sawtooth effects swing over half of their amplitude, the square over all of it.** At the
-  default amplitude of 1 around the middle, a sine swings between 64 and 191, a square between 0 and 255, in the
-  designer as well (`DesignerDmxTest`). The amplitude goes up to 4, so 2 gives a full sine. Changing it changes the
-  shows already made: both projects need the same change and a migration of the projects.
 - [ ] **Restoring a backup over a full unit needs room for both.** The data is replaced only when the restored backup
   is complete, so the old and the new data are on the unit at once. A new unit only needs room for the backup.
 - [ ] **A Compute Module 3 isn't recognized as a Raspberry Pi 3**, so it doesn't get the video pipeline of the Pi 3.
