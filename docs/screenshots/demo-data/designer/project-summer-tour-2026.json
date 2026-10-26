@@ -1,0 +1,1433 @@
+{
+  "stageWidthCm": 600,
+  "stageHeightCm": 350,
+  "stageDepthCm": 600,
+  "stageFloorHeightCm": 30,
+  "stageCeilingHeightCm": 5,
+  "stagePillarWidthCm": 20,
+  "masterDimmerValue": 1,
+  "selectedSceneUuids": [
+    "f6000000-0000-4000-8000-000000000024"
+  ],
+  "stepPreviewRunning": false,
+  "stepPreviewStartMillis": 0,
+  "previewPreset": false,
+  "compositions": [
+    {
+      "syncType": "audio",
+      "audioFileInLibrary": true,
+      "beatsPerMinute": 120,
+      "timeSignatureUpper": 4,
+      "timeSignatureLower": 4,
+      "snapToGrid": true,
+      "tempoGuessed": true,
+      "gridType": "musical",
+      "gridOffsetMillis": 0,
+      "gridResolution": 1,
+      "durationMillis": 0,
+      "scenePlaybackRegions": [
+        {
+          "sceneUuid": "f6000000-0000-4000-8000-000000000022",
+          "startMillis": 0,
+          "endMillis": 15000
+        },
+        {
+          "sceneUuid": "f6000000-0000-4000-8000-000000000023",
+          "startMillis": 15000,
+          "endMillis": 45000
+        },
+        {
+          "sceneUuid": "f6000000-0000-4000-8000-000000000024",
+          "startMillis": 45000,
+          "endMillis": 75000
+        },
+        {
+          "sceneUuid": "f6000000-0000-4000-8000-000000000023",
+          "startMillis": 75000,
+          "endMillis": 105000
+        },
+        {
+          "sceneUuid": "f6000000-0000-4000-8000-000000000024",
+          "startMillis": 105000,
+          "endMillis": 135000
+        },
+        {
+          "sceneUuid": "f6000000-0000-4000-8000-000000000025",
+          "startMillis": 135000,
+          "endMillis": 165000
+        },
+        {
+          "sceneUuid": "f6000000-0000-4000-8000-000000000026",
+          "startMillis": 165000,
+          "endMillis": 167000
+        },
+        {
+          "sceneUuid": "f6000000-0000-4000-8000-000000000024",
+          "startMillis": 167000,
+          "endMillis": 205000
+        },
+        {
+          "sceneUuid": "f6000000-0000-4000-8000-000000000027",
+          "startMillis": 205000,
+          "endMillis": 243000
+        }
+      ],
+      "uuid": "a7000000-0000-4000-8000-000000000028",
+      "name": "Neon Skyline",
+      "audioFileName": "neon_skyline_backing.wav"
+    }
+  ],
+  "fixtureProfiles": [
+    {
+      "createdFromFile": false,
+      "categories": [
+        "Moving Head",
+        "Color Changer"
+      ],
+      "availableChannels": {
+        "Pan": {
+          "fineChannelAliases": [
+            "Pan fine"
+          ],
+          "capabilities": [],
+          "defaultValue": "50%",
+          "capability": {
+            "dmxRange": [],
+            "type": "Pan",
+            "angleStart": "0deg",
+            "angleEnd": "630deg"
+          }
+        },
+        "Tilt": {
+          "fineChannelAliases": [
+            "Tilt fine"
+          ],
+          "capabilities": [],
+          "defaultValue": "50%",
+          "capability": {
+            "dmxRange": [],
+            "type": "Tilt",
+            "angleStart": "0deg",
+            "angleEnd": "220deg"
+          }
+        },
+        "Pan/Tilt Speed": {
+          "fineChannelAliases": [],
+          "capabilities": [],
+          "capability": {
+            "dmxRange": [],
+            "type": "PanTiltSpeed"
+          }
+        },
+        "Dimmer": {
+          "fineChannelAliases": [],
+          "capabilities": [],
+          "capability": {
+            "dmxRange": [],
+            "type": "Intensity"
+          }
+        },
+        "Red": {
+          "fineChannelAliases": [],
+          "capabilities": [],
+          "capability": {
+            "dmxRange": [],
+            "type": "ColorIntensity",
+            "color": "Red"
+          }
+        },
+        "Green": {
+          "fineChannelAliases": [],
+          "capabilities": [],
+          "capability": {
+            "dmxRange": [],
+            "type": "ColorIntensity",
+            "color": "Green"
+          }
+        },
+        "Blue": {
+          "fineChannelAliases": [],
+          "capabilities": [],
+          "capability": {
+            "dmxRange": [],
+            "type": "ColorIntensity",
+            "color": "Blue"
+          }
+        },
+        "White": {
+          "fineChannelAliases": [],
+          "capabilities": [],
+          "capability": {
+            "dmxRange": [],
+            "type": "ColorIntensity",
+            "color": "White"
+          }
+        },
+        "Color Temperature": {
+          "fineChannelAliases": [],
+          "capabilities": [
+            {
+              "dmxRange": [
+                0,
+                35
+              ],
+              "type": "ShutterStrobe"
+            },
+            {
+              "dmxRange": [
+                36,
+                55
+              ],
+              "type": "ColorTemperature"
+            },
+            {
+              "dmxRange": [
+                56,
+                75
+              ],
+              "type": "ColorTemperature"
+            },
+            {
+              "dmxRange": [
+                76,
+                95
+              ],
+              "type": "ColorTemperature"
+            },
+            {
+              "dmxRange": [
+                96,
+                115
+              ],
+              "type": "ColorTemperature"
+            },
+            {
+              "dmxRange": [
+                116,
+                135
+              ],
+              "type": "ColorTemperature"
+            },
+            {
+              "dmxRange": [
+                136,
+                175
+              ],
+              "type": "ColorTemperature"
+            },
+            {
+              "dmxRange": [
+                176,
+                195
+              ],
+              "type": "ColorTemperature"
+            },
+            {
+              "dmxRange": [
+                196,
+                215
+              ],
+              "type": "ColorTemperature"
+            },
+            {
+              "dmxRange": [
+                216,
+                235
+              ],
+              "type": "ColorTemperature"
+            },
+            {
+              "dmxRange": [
+                236,
+                255
+              ],
+              "type": "ColorTemperature"
+            }
+          ]
+        },
+        "Constant Color": {
+          "fineChannelAliases": [],
+          "capabilities": [
+            {
+              "dmxRange": [
+                0,
+                14
+              ],
+              "type": "ShutterStrobe"
+            },
+            {
+              "dmxRange": [
+                15,
+                255
+              ],
+              "type": "ColorPreset",
+              "comment": "One of 28 preprogrammed colors"
+            }
+          ]
+        },
+        "Strobe": {
+          "fineChannelAliases": [],
+          "capabilities": [
+            {
+              "dmxRange": [
+                0,
+                19
+              ],
+              "type": "NoFunction"
+            },
+            {
+              "dmxRange": [
+                20,
+                255
+              ],
+              "type": "ShutterStrobe"
+            }
+          ]
+        },
+        "Special Functions": {
+          "fineChannelAliases": [],
+          "capabilities": [
+            {
+              "dmxRange": [
+                0,
+                99
+              ],
+              "type": "NoFunction"
+            },
+            {
+              "dmxRange": [
+                100,
+                199
+              ],
+              "type": "Maintenance",
+              "comment": "Sound control"
+            },
+            {
+              "dmxRange": [
+                200,
+                255
+              ],
+              "type": "Maintenance",
+              "comment": "Reset"
+            }
+          ]
+        }
+      },
+      "templateChannels": {},
+      "wheels": {},
+      "modes": [
+        {
+          "channels": [
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Pan"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Tilt"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Pan/Tilt Speed"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Dimmer"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Red"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Green"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Blue"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "White"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Strobe"
+            }
+          ],
+          "name": "9-Channel",
+          "shortName": "9ch"
+        },
+        {
+          "channels": [
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Pan"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Pan fine"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Tilt"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Tilt fine"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Pan/Tilt Speed"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Dimmer"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Red"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Green"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Blue"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "White"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Color Temperature"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Constant Color"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Strobe"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Special Functions"
+            }
+          ],
+          "name": "14-Channel",
+          "shortName": "14ch"
+        }
+      ],
+      "uuid": "stairville/mh-100",
+      "name": "MH-100",
+      "manufacturerName": "Stairville",
+      "manufacturerShortName": "stairville"
+    },
+    {
+      "createdFromFile": false,
+      "categories": [
+        "Color Changer"
+      ],
+      "availableChannels": {
+        "Dimmer": {
+          "fineChannelAliases": [],
+          "capabilities": [],
+          "capability": {
+            "dmxRange": [],
+            "type": "Intensity"
+          }
+        },
+        "Red": {
+          "fineChannelAliases": [],
+          "capabilities": [],
+          "capability": {
+            "dmxRange": [],
+            "type": "ColorIntensity",
+            "color": "Red"
+          }
+        },
+        "Green": {
+          "fineChannelAliases": [],
+          "capabilities": [],
+          "capability": {
+            "dmxRange": [],
+            "type": "ColorIntensity",
+            "color": "Green"
+          }
+        },
+        "Blue": {
+          "fineChannelAliases": [],
+          "capabilities": [],
+          "capability": {
+            "dmxRange": [],
+            "type": "ColorIntensity",
+            "color": "Blue"
+          }
+        },
+        "White": {
+          "fineChannelAliases": [],
+          "capabilities": [],
+          "capability": {
+            "dmxRange": [],
+            "type": "ColorIntensity",
+            "color": "White"
+          }
+        },
+        "Strobe": {
+          "fineChannelAliases": [],
+          "capabilities": [
+            {
+              "dmxRange": [
+                0,
+                9
+              ],
+              "type": "NoFunction"
+            },
+            {
+              "dmxRange": [
+                10,
+                255
+              ],
+              "type": "ShutterStrobe"
+            }
+          ]
+        }
+      },
+      "templateChannels": {},
+      "wheels": {},
+      "modes": [
+        {
+          "channels": [
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Red"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Green"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Blue"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "White"
+            }
+          ],
+          "name": "4-Channel",
+          "shortName": "4ch"
+        },
+        {
+          "channels": [
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Dimmer"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Red"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Green"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Blue"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "White"
+            },
+            {
+              "repeatFor": [],
+              "templateChannels": [],
+              "name": "Strobe"
+            }
+          ],
+          "name": "6-Channel",
+          "shortName": "6ch"
+        }
+      ],
+      "uuid": "generic/rgbw-par",
+      "name": "RGBW LED PAR",
+      "manufacturerName": "Generic",
+      "manufacturerShortName": "generic"
+    }
+  ],
+  "fixtures": [
+    {
+      "dmxFirstChannel": 0,
+      "positioning": "topFront",
+      "positionX": -225,
+      "positionY": 380,
+      "positionZ": 230,
+      "rotationX": 0,
+      "rotationY": 0,
+      "rotationZ": 0,
+      "uuid": "a1000000-0000-4000-8000-000000000001",
+      "profileUuid": "stairville/mh-100",
+      "name": "Moving head 1",
+      "dmxUniverseUuid": "f869189e-4068-4800-a61f-66a1499946fd",
+      "modeShortName": "9ch"
+    },
+    {
+      "dmxFirstChannel": 9,
+      "positioning": "topFront",
+      "positionX": -75,
+      "positionY": 380,
+      "positionZ": 230,
+      "rotationX": 0,
+      "rotationY": 0,
+      "rotationZ": 0,
+      "uuid": "a1000000-0000-4000-8000-000000000002",
+      "profileUuid": "stairville/mh-100",
+      "name": "Moving head 2",
+      "dmxUniverseUuid": "f869189e-4068-4800-a61f-66a1499946fd",
+      "modeShortName": "9ch"
+    },
+    {
+      "dmxFirstChannel": 18,
+      "positioning": "topFront",
+      "positionX": 75,
+      "positionY": 380,
+      "positionZ": 230,
+      "rotationX": 0,
+      "rotationY": 0,
+      "rotationZ": 0,
+      "uuid": "a1000000-0000-4000-8000-000000000003",
+      "profileUuid": "stairville/mh-100",
+      "name": "Moving head 3",
+      "dmxUniverseUuid": "f869189e-4068-4800-a61f-66a1499946fd",
+      "modeShortName": "9ch"
+    },
+    {
+      "dmxFirstChannel": 27,
+      "positioning": "topFront",
+      "positionX": 225,
+      "positionY": 380,
+      "positionZ": 230,
+      "rotationX": 0,
+      "rotationY": 0,
+      "rotationZ": 0,
+      "uuid": "a1000000-0000-4000-8000-000000000004",
+      "profileUuid": "stairville/mh-100",
+      "name": "Moving head 4",
+      "dmxUniverseUuid": "f869189e-4068-4800-a61f-66a1499946fd",
+      "modeShortName": "9ch"
+    },
+    {
+      "dmxFirstChannel": 36,
+      "positioning": "topBack",
+      "positionX": -250,
+      "positionY": 380,
+      "positionZ": -230,
+      "rotationX": 0,
+      "rotationY": 0,
+      "rotationZ": 0,
+      "uuid": "b2000000-0000-4000-8000-000000000005",
+      "profileUuid": "generic/rgbw-par",
+      "name": "PAR 1",
+      "dmxUniverseUuid": "f869189e-4068-4800-a61f-66a1499946fd",
+      "modeShortName": "6ch"
+    },
+    {
+      "dmxFirstChannel": 42,
+      "positioning": "topBack",
+      "positionX": -150,
+      "positionY": 380,
+      "positionZ": -230,
+      "rotationX": 0,
+      "rotationY": 0,
+      "rotationZ": 0,
+      "uuid": "b2000000-0000-4000-8000-000000000006",
+      "profileUuid": "generic/rgbw-par",
+      "name": "PAR 2",
+      "dmxUniverseUuid": "f869189e-4068-4800-a61f-66a1499946fd",
+      "modeShortName": "6ch"
+    },
+    {
+      "dmxFirstChannel": 48,
+      "positioning": "topBack",
+      "positionX": -50,
+      "positionY": 380,
+      "positionZ": -230,
+      "rotationX": 0,
+      "rotationY": 0,
+      "rotationZ": 0,
+      "uuid": "b2000000-0000-4000-8000-000000000007",
+      "profileUuid": "generic/rgbw-par",
+      "name": "PAR 3",
+      "dmxUniverseUuid": "f869189e-4068-4800-a61f-66a1499946fd",
+      "modeShortName": "6ch"
+    },
+    {
+      "dmxFirstChannel": 54,
+      "positioning": "topBack",
+      "positionX": 50,
+      "positionY": 380,
+      "positionZ": -230,
+      "rotationX": 0,
+      "rotationY": 0,
+      "rotationZ": 0,
+      "uuid": "b2000000-0000-4000-8000-000000000008",
+      "profileUuid": "generic/rgbw-par",
+      "name": "PAR 4",
+      "dmxUniverseUuid": "f869189e-4068-4800-a61f-66a1499946fd",
+      "modeShortName": "6ch"
+    },
+    {
+      "dmxFirstChannel": 60,
+      "positioning": "topBack",
+      "positionX": 150,
+      "positionY": 380,
+      "positionZ": -230,
+      "rotationX": 0,
+      "rotationY": 0,
+      "rotationZ": 0,
+      "uuid": "b2000000-0000-4000-8000-000000000009",
+      "profileUuid": "generic/rgbw-par",
+      "name": "PAR 5",
+      "dmxUniverseUuid": "f869189e-4068-4800-a61f-66a1499946fd",
+      "modeShortName": "6ch"
+    },
+    {
+      "dmxFirstChannel": 66,
+      "positioning": "topBack",
+      "positionX": 250,
+      "positionY": 380,
+      "positionZ": -230,
+      "rotationX": 0,
+      "rotationY": 0,
+      "rotationZ": 0,
+      "uuid": "b2000000-0000-4000-8000-000000000010",
+      "profileUuid": "generic/rgbw-par",
+      "name": "PAR 6",
+      "dmxUniverseUuid": "f869189e-4068-4800-a61f-66a1499946fd",
+      "modeShortName": "6ch"
+    }
+  ],
+  "presetFixtures": [
+    {
+      "fixtureUuid": "a1000000-0000-4000-8000-000000000001",
+      "sortIndex": 0
+    },
+    {
+      "fixtureUuid": "a1000000-0000-4000-8000-000000000002",
+      "sortIndex": 1
+    },
+    {
+      "fixtureUuid": "a1000000-0000-4000-8000-000000000003",
+      "sortIndex": 2
+    },
+    {
+      "fixtureUuid": "a1000000-0000-4000-8000-000000000004",
+      "sortIndex": 3
+    },
+    {
+      "fixtureUuid": "b2000000-0000-4000-8000-000000000005",
+      "sortIndex": 4
+    },
+    {
+      "fixtureUuid": "b2000000-0000-4000-8000-000000000006",
+      "sortIndex": 5
+    },
+    {
+      "fixtureUuid": "b2000000-0000-4000-8000-000000000007",
+      "sortIndex": 6
+    },
+    {
+      "fixtureUuid": "b2000000-0000-4000-8000-000000000008",
+      "sortIndex": 7
+    },
+    {
+      "fixtureUuid": "b2000000-0000-4000-8000-000000000009",
+      "sortIndex": 8
+    },
+    {
+      "fixtureUuid": "b2000000-0000-4000-8000-000000000010",
+      "sortIndex": 9
+    }
+  ],
+  "universes": [],
+  "scenes": [
+    {
+      "sortIndex": 0,
+      "colorAuto": false,
+      "expanded": true,
+      "presetUuids": [
+        "c3000000-0000-4000-8000-000000000013"
+      ],
+      "dimmer": 1,
+      "fadeInMillis": 0,
+      "fadeOutMillis": 0,
+      "fadeInCurve": "linear",
+      "fadeOutCurve": "linear",
+      "uuid": "f6000000-0000-4000-8000-000000000022",
+      "name": "Intro",
+      "color": "#3b82f6"
+    },
+    {
+      "sortIndex": 1,
+      "colorAuto": false,
+      "expanded": true,
+      "presetUuids": [
+        "c3000000-0000-4000-8000-000000000011"
+      ],
+      "dimmer": 1,
+      "fadeInMillis": 0,
+      "fadeOutMillis": 0,
+      "fadeInCurve": "linear",
+      "fadeOutCurve": "linear",
+      "uuid": "f6000000-0000-4000-8000-000000000023",
+      "name": "Verse",
+      "color": "#f59e0b"
+    },
+    {
+      "sortIndex": 2,
+      "colorAuto": false,
+      "expanded": true,
+      "presetUuids": [
+        "c3000000-0000-4000-8000-000000000011",
+        "c3000000-0000-4000-8000-000000000015"
+      ],
+      "dimmer": 1,
+      "fadeInMillis": 0,
+      "fadeOutMillis": 0,
+      "fadeInCurve": "linear",
+      "fadeOutCurve": "linear",
+      "uuid": "f6000000-0000-4000-8000-000000000024",
+      "name": "Chorus",
+      "color": "#d946ef"
+    },
+    {
+      "sortIndex": 3,
+      "colorAuto": false,
+      "expanded": true,
+      "presetUuids": [
+        "c3000000-0000-4000-8000-000000000013",
+        "c3000000-0000-4000-8000-000000000015"
+      ],
+      "dimmer": 1,
+      "fadeInMillis": 0,
+      "fadeOutMillis": 0,
+      "fadeInCurve": "linear",
+      "fadeOutCurve": "linear",
+      "uuid": "f6000000-0000-4000-8000-000000000025",
+      "name": "Bridge",
+      "color": "#8b5cf6"
+    },
+    {
+      "sortIndex": 4,
+      "colorAuto": false,
+      "expanded": true,
+      "presetUuids": [
+        "c3000000-0000-4000-8000-000000000020"
+      ],
+      "dimmer": 1,
+      "fadeInMillis": 0,
+      "fadeOutMillis": 0,
+      "fadeInCurve": "linear",
+      "fadeOutCurve": "linear",
+      "uuid": "f6000000-0000-4000-8000-000000000026",
+      "name": "Hit",
+      "color": "#f8fafc"
+    },
+    {
+      "sortIndex": 5,
+      "colorAuto": false,
+      "expanded": true,
+      "presetUuids": [
+        "c3000000-0000-4000-8000-000000000018"
+      ],
+      "dimmer": 1,
+      "fadeInMillis": 0,
+      "fadeOutMillis": 0,
+      "fadeInCurve": "linear",
+      "fadeOutCurve": "linear",
+      "uuid": "f6000000-0000-4000-8000-000000000027",
+      "name": "Outro",
+      "color": "#ef4444"
+    }
+  ],
+  "presets": [
+    {
+      "sortIndex": 0,
+      "colorAuto": true,
+      "fixtures": [
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000005"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000006"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000007"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000008"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000009"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000010"
+        }
+      ],
+      "fixtureFolders": [],
+      "useGlobalFixtureOrder": true,
+      "fixtureChannelValues": [],
+      "fixtureCapabilityValues": [
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 1,
+          "color": "Red"
+        },
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 0.55,
+          "color": "Green"
+        },
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 0.1,
+          "color": "Blue"
+        },
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 0.35,
+          "color": "White"
+        },
+        {
+          "type": "Intensity",
+          "valuePercentage": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "startMillis": 0,
+          "transitionCurve": "linear",
+          "fixtureChannelValues": [],
+          "fixtureCapabilityValues": [
+            {
+              "type": "ColorIntensity",
+              "valuePercentage": 1,
+              "color": "Red"
+            },
+            {
+              "type": "ColorIntensity",
+              "valuePercentage": 0.55,
+              "color": "Green"
+            },
+            {
+              "type": "ColorIntensity",
+              "valuePercentage": 0.1,
+              "color": "Blue"
+            },
+            {
+              "type": "ColorIntensity",
+              "valuePercentage": 0.35,
+              "color": "White"
+            },
+            {
+              "type": "Intensity",
+              "valuePercentage": 1.0
+            }
+          ],
+          "effectAmounts": [],
+          "uuid": "d4000000-0000-4000-8000-000000000012"
+        }
+      ],
+      "stepsLoop": false,
+      "stepsPhasingMode": "millis",
+      "stepsPhasingMillis": 0,
+      "stepsPhasingCycles": 1,
+      "stepsPhasingGroupSize": 1,
+      "effects": [],
+      "mirrorPan": false,
+      "mirrorTilt": false,
+      "fadeInMillis": 0,
+      "fadeOutMillis": 0,
+      "fadeInCurve": "linear",
+      "fadeOutCurve": "linear",
+      "uuid": "c3000000-0000-4000-8000-000000000011",
+      "name": "Warm wash"
+    },
+    {
+      "sortIndex": 1,
+      "colorAuto": true,
+      "fixtures": [
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000005"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000006"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000007"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000008"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000009"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000010"
+        },
+        {
+          "fixtureUuid": "a1000000-0000-4000-8000-000000000001"
+        },
+        {
+          "fixtureUuid": "a1000000-0000-4000-8000-000000000002"
+        },
+        {
+          "fixtureUuid": "a1000000-0000-4000-8000-000000000003"
+        },
+        {
+          "fixtureUuid": "a1000000-0000-4000-8000-000000000004"
+        }
+      ],
+      "fixtureFolders": [],
+      "useGlobalFixtureOrder": true,
+      "fixtureChannelValues": [],
+      "fixtureCapabilityValues": [
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 0,
+          "color": "Red"
+        },
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 0.15,
+          "color": "Green"
+        },
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 1,
+          "color": "Blue"
+        },
+        {
+          "type": "Intensity",
+          "valuePercentage": 0.8
+        }
+      ],
+      "steps": [
+        {
+          "startMillis": 0,
+          "transitionCurve": "linear",
+          "fixtureChannelValues": [],
+          "fixtureCapabilityValues": [
+            {
+              "type": "ColorIntensity",
+              "valuePercentage": 0,
+              "color": "Red"
+            },
+            {
+              "type": "ColorIntensity",
+              "valuePercentage": 0.15,
+              "color": "Green"
+            },
+            {
+              "type": "ColorIntensity",
+              "valuePercentage": 1,
+              "color": "Blue"
+            },
+            {
+              "type": "Intensity",
+              "valuePercentage": 0.8
+            }
+          ],
+          "effectAmounts": [],
+          "uuid": "d4000000-0000-4000-8000-000000000014"
+        }
+      ],
+      "stepsLoop": false,
+      "stepsPhasingMode": "millis",
+      "stepsPhasingMillis": 0,
+      "stepsPhasingCycles": 1,
+      "stepsPhasingGroupSize": 1,
+      "effects": [],
+      "mirrorPan": false,
+      "mirrorTilt": false,
+      "fadeInMillis": 0,
+      "fadeOutMillis": 0,
+      "fadeInCurve": "linear",
+      "fadeOutCurve": "linear",
+      "uuid": "c3000000-0000-4000-8000-000000000013",
+      "name": "Deep blue"
+    },
+    {
+      "sortIndex": 2,
+      "colorAuto": true,
+      "fixtures": [
+        {
+          "fixtureUuid": "a1000000-0000-4000-8000-000000000001"
+        },
+        {
+          "fixtureUuid": "a1000000-0000-4000-8000-000000000002"
+        },
+        {
+          "fixtureUuid": "a1000000-0000-4000-8000-000000000003"
+        },
+        {
+          "fixtureUuid": "a1000000-0000-4000-8000-000000000004"
+        }
+      ],
+      "fixtureFolders": [],
+      "useGlobalFixtureOrder": true,
+      "fixtureChannelValues": [],
+      "fixtureCapabilityValues": [
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 1,
+          "color": "Red"
+        },
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 0,
+          "color": "Green"
+        },
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 0.8,
+          "color": "Blue"
+        },
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 0,
+          "color": "White"
+        },
+        {
+          "type": "Intensity",
+          "valuePercentage": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "startMillis": 0,
+          "transitionCurve": "linear",
+          "fixtureChannelValues": [],
+          "fixtureCapabilityValues": [
+            {
+              "type": "ColorIntensity",
+              "valuePercentage": 1,
+              "color": "Red"
+            },
+            {
+              "type": "ColorIntensity",
+              "valuePercentage": 0,
+              "color": "Green"
+            },
+            {
+              "type": "ColorIntensity",
+              "valuePercentage": 0.8,
+              "color": "Blue"
+            },
+            {
+              "type": "ColorIntensity",
+              "valuePercentage": 0,
+              "color": "White"
+            },
+            {
+              "type": "Intensity",
+              "valuePercentage": 1.0
+            }
+          ],
+          "effectAmounts": [],
+          "uuid": "d4000000-0000-4000-8000-000000000016"
+        }
+      ],
+      "stepsLoop": false,
+      "stepsPhasingMode": "millis",
+      "stepsPhasingMillis": 0,
+      "stepsPhasingCycles": 1,
+      "stepsPhasingGroupSize": 1,
+      "effects": [
+        {
+          "visible": true,
+          "type": "curve",
+          "uuid": "e5000000-0000-4000-8000-000000000017",
+          "curveType": "sine",
+          "capabilities": [
+            {
+              "dmxRange": [],
+              "type": "Tilt"
+            }
+          ],
+          "channels": [],
+          "lengthMode": "millis",
+          "lengthMillis": 2924,
+          "lengthBeats": 4,
+          "phaseMillis": 0,
+          "phaseBeats": 0,
+          "amplitude": 0.95,
+          "position": 0.5,
+          "dutyCycle": 0.5,
+          "runMode": "infinite",
+          "runCycles": 1,
+          "runDurationMillis": 5000,
+          "endMode": "hold",
+          "phasingMode": "millis",
+          "phasingMillis": 287,
+          "phasingBeats": 0,
+          "phasingCycles": 1,
+          "phasingGroupSize": 1
+        }
+      ],
+      "mirrorPan": false,
+      "mirrorTilt": false,
+      "fadeInMillis": 0,
+      "fadeOutMillis": 0,
+      "fadeInCurve": "linear",
+      "fadeOutCurve": "linear",
+      "uuid": "c3000000-0000-4000-8000-000000000015",
+      "name": "Magenta beams"
+    },
+    {
+      "sortIndex": 3,
+      "colorAuto": true,
+      "fixtures": [
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000005"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000006"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000009"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000010"
+        }
+      ],
+      "fixtureFolders": [],
+      "useGlobalFixtureOrder": true,
+      "fixtureChannelValues": [],
+      "fixtureCapabilityValues": [
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 1,
+          "color": "Red"
+        },
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 0.4,
+          "color": "Green"
+        },
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 0,
+          "color": "Blue"
+        },
+        {
+          "type": "Intensity",
+          "valuePercentage": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "startMillis": 0,
+          "transitionCurve": "linear",
+          "fixtureChannelValues": [],
+          "fixtureCapabilityValues": [
+            {
+              "type": "ColorIntensity",
+              "valuePercentage": 1,
+              "color": "Red"
+            },
+            {
+              "type": "ColorIntensity",
+              "valuePercentage": 0.4,
+              "color": "Green"
+            },
+            {
+              "type": "ColorIntensity",
+              "valuePercentage": 0,
+              "color": "Blue"
+            },
+            {
+              "type": "Intensity",
+              "valuePercentage": 1.0
+            }
+          ],
+          "effectAmounts": [],
+          "uuid": "d4000000-0000-4000-8000-000000000019"
+        }
+      ],
+      "stepsLoop": false,
+      "stepsPhasingMode": "millis",
+      "stepsPhasingMillis": 0,
+      "stepsPhasingCycles": 1,
+      "stepsPhasingGroupSize": 1,
+      "effects": [],
+      "mirrorPan": false,
+      "mirrorTilt": false,
+      "fadeInMillis": 0,
+      "fadeOutMillis": 0,
+      "fadeInCurve": "linear",
+      "fadeOutCurve": "linear",
+      "uuid": "c3000000-0000-4000-8000-000000000018",
+      "name": "Amber sidelight"
+    },
+    {
+      "sortIndex": 4,
+      "colorAuto": true,
+      "fixtures": [
+        {
+          "fixtureUuid": "a1000000-0000-4000-8000-000000000001"
+        },
+        {
+          "fixtureUuid": "a1000000-0000-4000-8000-000000000002"
+        },
+        {
+          "fixtureUuid": "a1000000-0000-4000-8000-000000000003"
+        },
+        {
+          "fixtureUuid": "a1000000-0000-4000-8000-000000000004"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000005"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000006"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000007"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000008"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000009"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000010"
+        }
+      ],
+      "fixtureFolders": [],
+      "useGlobalFixtureOrder": true,
+      "fixtureChannelValues": [],
+      "fixtureCapabilityValues": [
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 1,
+          "color": "Red"
+        },
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 1,
+          "color": "Green"
+        },
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 1,
+          "color": "Blue"
+        },
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 1,
+          "color": "White"
+        },
+        {
+          "type": "Intensity",
+          "valuePercentage": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "startMillis": 0,
+          "transitionCurve": "linear",
+          "fixtureChannelValues": [],
+          "fixtureCapabilityValues": [
+            {
+              "type": "ColorIntensity",
+              "valuePercentage": 1,
+              "color": "Red"
+            },
+            {
+              "type": "ColorIntensity",
+              "valuePercentage": 1,
+              "color": "Green"
+            },
+            {
+              "type": "ColorIntensity",
+              "valuePercentage": 1,
+              "color": "Blue"
+            },
+            {
+              "type": "ColorIntensity",
+              "valuePercentage": 1,
+              "color": "White"
+            },
+            {
+              "type": "Intensity",
+              "valuePercentage": 1.0
+            }
+          ],
+          "effectAmounts": [],
+          "uuid": "d4000000-0000-4000-8000-000000000021"
+        }
+      ],
+      "stepsLoop": false,
+      "stepsPhasingMode": "millis",
+      "stepsPhasingMillis": 0,
+      "stepsPhasingCycles": 1,
+      "stepsPhasingGroupSize": 1,
+      "effects": [],
+      "mirrorPan": false,
+      "mirrorTilt": false,
+      "fadeInMillis": 0,
+      "fadeOutMillis": 0,
+      "fadeInCurve": "linear",
+      "fadeOutCurve": "linear",
+      "uuid": "c3000000-0000-4000-8000-000000000020",
+      "name": "White flash"
+    }
+  ],
+  "sceneFolders": [],
+  "presetFolders": [],
+  "fixtureFolders": [],
+  "version": 7,
+  "name": "Summer Tour 2026",
+  "shareToken": "00000000-0000-4000-8000-000000000000",
+  "selectedPresetUuid": "c3000000-0000-4000-8000-000000000015",
+  "selectedStepUuid": "d4000000-0000-4000-8000-000000000016",
+  "selectedCompositionUuid": "a7000000-0000-4000-8000-000000000028"
+}

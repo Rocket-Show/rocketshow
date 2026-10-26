@@ -1,0 +1,74 @@
+[
+  {
+    "uuid": "generic/rgbw-par",
+    "name": "RGBW LED PAR",
+    "manufacturerShortName": "generic",
+    "manufacturerName": "Generic"
+  },
+  {
+    "uuid": "stairville/mh-100",
+    "name": "MH-100",
+    "manufacturerShortName": "stairville",
+    "manufacturerName": "Stairville"
+  },
+  {
+    "uuid": "cameo/flat-par-can-rgbw-7x3w",
+    "name": "Flat PAR Can RGBW 7x3W",
+    "manufacturerShortName": "cameo",
+    "manufacturerName": "Cameo"
+  },
+  {
+    "uuid": "eurolite/led-par-56-rgb",
+    "name": "LED PAR-56 RGB",
+    "manufacturerShortName": "eurolite",
+    "manufacturerName": "Eurolite"
+  },
+  {
+    "uuid": "chauvet-dj/slimpar-56",
+    "name": "SlimPAR 56",
+    "manufacturerShortName": "chauvet-dj",
+    "manufacturerName": "Chauvet DJ"
+  },
+  {
+    "uuid": "american-dj/mega-bar-rgba",
+    "name": "Mega Bar RGBA",
+    "manufacturerShortName": "american-dj",
+    "manufacturerName": "American DJ"
+  },
+  {
+    "uuid": "showtec/phantom-50-led-spot",
+    "name": "Phantom 50 LED Spot",
+    "manufacturerShortName": "showtec",
+    "manufacturerName": "Showtec"
+  },
+  {
+    "uuid": "stairville/led-par-56-mkii-rgba",
+    "name": "LED PAR 56 MKII RGBA",
+    "manufacturerShortName": "stairville",
+    "manufacturerName": "Stairville"
+  },
+  {
+    "uuid": "laluce-natz/18leds-par-light",
+    "name": "18LEDs Par Light",
+    "manufacturerShortName": "laluce-natz",
+    "manufacturerName": "LaluceNatz"
+  },
+  {
+    "uuid": "varytec/hero-wash-340fx-rgbw",
+    "name": "Hero Wash 340FX RGBW",
+    "manufacturerShortName": "varytec",
+    "manufacturerName": "Varytec"
+  },
+  {
+    "uuid": "martin/mac-aura",
+    "name": "MAC Aura",
+    "manufacturerShortName": "martin",
+    "manufacturerName": "Martin"
+  },
+  {
+    "uuid": "robe/robin-600-ledwash",
+    "name": "Robin 600 LEDWash",
+    "manufacturerShortName": "robe",
+    "manufacturerName": "Robe"
+  }
+]

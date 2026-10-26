@@ -1,0 +1,105 @@
+[
+  {
+    "name": "Summer Tour 2026",
+    "notes": "",
+    "compositionList": [
+      {
+        "name": "Intro – Countdown",
+        "durationMillis": 92000,
+        "autoStartNextComposition": true
+      },
+      {
+        "name": "Neon Skyline",
+        "durationMillis": 245000,
+        "autoStartNextComposition": false
+      },
+      {
+        "name": "Midnight Run",
+        "durationMillis": 228000,
+        "autoStartNextComposition": false
+      },
+      {
+        "name": "Glass Hearts",
+        "durationMillis": 261000,
+        "autoStartNextComposition": false
+      },
+      {
+        "name": "Satellite",
+        "durationMillis": 213000,
+        "autoStartNextComposition": false
+      },
+      {
+        "name": "Afterglow",
+        "durationMillis": 302000,
+        "autoStartNextComposition": false
+      },
+      {
+        "name": "Thunder Road",
+        "durationMillis": 237000,
+        "autoStartNextComposition": false
+      },
+      {
+        "name": "Fireworks (Encore)",
+        "durationMillis": 280000,
+        "autoStartNextComposition": true
+      },
+      {
+        "name": "Applause & Outro",
+        "durationMillis": 45000,
+        "autoStartNextComposition": false
+      }
+    ]
+  },
+  {
+    "name": "Festival Short Set",
+    "notes": "",
+    "compositionList": [
+      {
+        "name": "Intro – Countdown",
+        "durationMillis": 92000,
+        "autoStartNextComposition": true
+      },
+      {
+        "name": "Neon Skyline",
+        "durationMillis": 245000,
+        "autoStartNextComposition": false
+      },
+      {
+        "name": "Satellite",
+        "durationMillis": 213000,
+        "autoStartNextComposition": false
+      },
+      {
+        "name": "Thunder Road",
+        "durationMillis": 237000,
+        "autoStartNextComposition": false
+      },
+      {
+        "name": "Fireworks (Encore)",
+        "durationMillis": 280000,
+        "autoStartNextComposition": false
+      }
+    ]
+  },
+  {
+    "name": "Acoustic Evening",
+    "notes": "",
+    "compositionList": [
+      {
+        "name": "Walk-in Loop",
+        "durationMillis": 600000,
+        "autoStartNextComposition": false
+      },
+      {
+        "name": "Afterglow",
+        "durationMillis": 302000,
+        "autoStartNextComposition": false
+      },
+      {
+        "name": "Glass Hearts",
+        "durationMillis": 261000,
+        "autoStartNextComposition": false
+      }
+    ]
+  }
+]

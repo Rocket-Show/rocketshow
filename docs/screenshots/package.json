@@ -1,0 +1,11 @@
+{
+  "name": "rocketshow-docs-screenshots",
+  "private": true,
+  "description": "Retakes the screenshots for rocketshow.net/docs from the demo data in ./demo-data",
+  "scripts": {
+    "capture": "node capture.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.48.0"
+  }
+}
