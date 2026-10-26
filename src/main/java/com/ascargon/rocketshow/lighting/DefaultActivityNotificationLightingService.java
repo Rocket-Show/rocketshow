@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.lighting;
 
+import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -14,12 +15,13 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
- * Notify all connected websocket clients about a MIDI event.
+ * Notify all connected websocket clients about the DMX values sent.
  */
 @Service
 public class DefaultActivityNotificationLightingService extends TextWebSocketHandler implements ActivityNotificationLightingService {
@@ -28,7 +30,17 @@ public class DefaultActivityNotificationLightingService extends TextWebSocketHan
 
     private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
 
-    private Timer sendActivityTimer;
+    // Sends all messages, so a session never gets two at once and nobody waits for a slow web app
+    private final ScheduledExecutorService sender = Executors.newSingleThreadScheduledExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "lighting-monitor");
+        thread.setDaemon(true);
+        return thread;
+    });
+
+    // The latest values, sent at most every 50 milliseconds for performance reasons. The latest, because the last
+    // values of a change (e.g. a blackout) must not get lost.
+    private final Object pendingLock = new Object();
+    private LightingUniverseState pendingLightingUniverse;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
@@ -40,62 +52,62 @@ public class DefaultActivityNotificationLightingService extends TextWebSocketHan
         sessions.remove(session);
     }
 
-    private synchronized void sendWebsocketMessage(LightingUniverseState lightingUniverse) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        String returnValue = mapper.writeValueAsString(lightingUniverse);
+    private void sendPending() {
+        LightingUniverseState lightingUniverse;
 
-        for (WebSocketSession webSocketSession : sessions) {
-            try {
-                webSocketSession.sendMessage(new TextMessage(returnValue));
-            } catch (Exception e) {
-                sessions.remove(webSocketSession);
+        synchronized (pendingLock) {
+            lightingUniverse = pendingLightingUniverse;
+            pendingLightingUniverse = null;
+        }
+
+        try {
+            String returnValue = new ObjectMapper().writeValueAsString(lightingUniverse);
+
+            for (WebSocketSession webSocketSession : sessions) {
+                try {
+                    webSocketSession.sendMessage(new TextMessage(returnValue));
+                } catch (Exception e) {
+                    sessions.remove(webSocketSession);
+                }
             }
+        } catch (Exception e) {
+            logger.error("Could not send the lighting activity", e);
         }
     }
 
     @Override
     public void notifyClients(LightingUniverseState lightingUniverse) {
-        // Mix all pending events into one instead of dropping information
+        synchronized (pendingLock) {
+            boolean sendScheduled = pendingLightingUniverse != null;
+            pendingLightingUniverse = lightingUniverse;
 
-        if (sendActivityTimer != null) {
-            // There is already a timer running -> let it finish and ignore this event for performance reasons
-            return;
+            if (sendScheduled) {
+                return;
+            }
         }
 
-        TimerTask timerTask = new TimerTask() {
-            @Override
-            public void run() {
-                try {
-                    // Send the universe
-                    sendWebsocketMessage(lightingUniverse);
-                } catch (Exception e) {
-                    logger.error("Could not send the lighting activity", e);
-                }
-
-                if (sendActivityTimer != null) {
-                    sendActivityTimer.cancel();
-                }
-
-                sendActivityTimer = null;
-            }
-        };
-
-        sendActivityTimer = new Timer();
-        sendActivityTimer.schedule(timerTask, 50);
+        sender.schedule(this::sendPending, 50, TimeUnit.MILLISECONDS);
     }
-    
+
     @Scheduled(fixedRate = 25000) // every 25 seconds
     public void sendPing() {
-        for (WebSocketSession session : sessions) {
-            if (session.isOpen()) {
-                try {
-                    session.sendMessage(new PingMessage(ByteBuffer.wrap(new byte[]{1})));
-                } catch (IOException e) {
-                    logger.debug("Ping failed, closing websocket session", e);
-                    sessions.remove(session);
+        sender.execute(() -> {
+            for (WebSocketSession session : sessions) {
+                if (session.isOpen()) {
+                    try {
+                        session.sendMessage(new PingMessage(ByteBuffer.wrap(new byte[]{1})));
+                    } catch (IOException e) {
+                        logger.debug("Ping failed, closing websocket session", e);
+                        sessions.remove(session);
+                    }
                 }
             }
-        }
+        });
+    }
+
+    @PreDestroy
+    public void close() {
+        sender.shutdownNow();
     }
 
 }

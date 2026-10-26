@@ -225,7 +225,7 @@
     "wlan-ap-ssid": "Nome",
     "wlan-ap-ssid-hide": "Nascondi rete",
     "wlan-ap-wpa-passphrase": "Passphrase (WPA2-PSK)",
-    "wlan-ap-wpa-passphrase-short-error": "La passphrase del punto di accesso wireless è troppo corta (almeno 8 caratteri).",
+    "wlan-ap-wpa-passphrase-short-error": "La passphrase del punto di accesso wireless deve avere da 8 a 63 caratteri.",
     "wlan-ap-hw-mode": "Protocollo",
     "wlan-ap-channel": "Canale",
     "wlan-ap-country-code": "Paese",

@@ -4,6 +4,8 @@ import com.ascargon.rocketshow.api.NotificationService;
 import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.composition.Composition;
 import com.ascargon.rocketshow.composition.CompositionService;
+import com.ascargon.rocketshow.composition.Set;
+import com.ascargon.rocketshow.composition.SetComposition;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.gstreamer.GstreamerInitService;
 import com.ascargon.rocketshow.lighting.LightingService;
@@ -23,8 +25,8 @@ import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PreDestroy;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -68,7 +70,8 @@ public class DefaultPlayerService implements PlayerService {
     // Used to play the composition from the editor to test it/try it out before saving
     private final CompositionPlayer testCompositionPlayer;
 
-    private final List<CompositionPlayer> sampleCompositionPlayerList = new ArrayList<>();
+    // Started and finished from different threads (e.g. MIDI input and the end of a sample)
+    private final List<CompositionPlayer> sampleCompositionPlayerList = new CopyOnWriteArrayList<>();
 
     public DefaultPlayerService(
             NotificationService notificationService,
@@ -172,6 +175,12 @@ public class DefaultPlayerService implements PlayerService {
             setCompositionName(compositionName);
         }
 
+        if (currentCompositionPlayer.getComposition() == null) {
+            // E.g. a synchronized unit playing a composition this one doesn't have: nothing gets played here
+            logger.warn("Composition '{}' to load doesn't exist", compositionName);
+            return;
+        }
+
         currentCompositionPlayer.loadFiles();
     }
 
@@ -180,6 +189,9 @@ public class DefaultPlayerService implements PlayerService {
         if (currentCompositionPlayer.getComposition() == null) {
             return;
         }
+
+        // The composition may have been saved while it played
+        refreshCurrentComposition();
 
         if (currentCompositionPlayer.getPlayState() == CompositionPlayer.PlayState.PLAYING || currentCompositionPlayer.getPlayState() == CompositionPlayer.PlayState.STOPPING
                 || currentCompositionPlayer.getPlayState() == CompositionPlayer.PlayState.LOADING) {
@@ -333,6 +345,9 @@ public class DefaultPlayerService implements PlayerService {
         // Set all configured external control GPIO output pins low (same as blacking out the lighting)
         raspberryGpioOutService.setAllLow();
 
+        // The composition may have been saved while it played
+        refreshCurrentComposition();
+
         // Play the default composition, if necessary
         if (playDefaultComposition) {
             playDefaultComposition();
@@ -374,6 +389,16 @@ public class DefaultPlayerService implements PlayerService {
         } catch (Exception e) {
             logger.error("Could not refresh default composition", e);
         }
+    }
+
+    // Plays the default composition again, if it plays, e.g. on the devices of changed audio settings
+    @Override
+    public synchronized void restartDefaultComposition() throws Exception {
+        if (defaultCompositionPlayer.getComposition() == null) {
+            return;
+        }
+
+        refreshDefaultComposition();
     }
 
     private synchronized void refreshDefaultComposition() throws Exception {
@@ -429,14 +454,18 @@ public class DefaultPlayerService implements PlayerService {
 
     @Override
     public void setNextComposition() throws Exception {
+        setNextComposition(true);
+    }
+
+    private void setNextComposition(boolean playDefaultComposition) throws Exception {
         if (setService.getCurrentSet() == null) {
             if (compositionService.getNextComposition(currentCompositionPlayer.getComposition()) != null) {
-                setComposition(compositionService.getNextComposition(currentCompositionPlayer.getComposition()));
+                setComposition(compositionService.getNextComposition(currentCompositionPlayer.getComposition()), playDefaultComposition, false);
             }
         } else {
             if (setService.getNextSetComposition() != null) {
                 setService.setCurrentCompositionIndex(setService.getCurrentCompositionIndex() + 1);
-                setCompositionName(setService.getCurrentCompositionName());
+                setComposition(compositionService.getComposition(setService.getCurrentCompositionName()), playDefaultComposition, false);
             }
         }
     }
@@ -465,9 +494,10 @@ public class DefaultPlayerService implements PlayerService {
     @Override
     public void compositionPlayerFinishedPlaying(CompositionPlayer compositionPlayer) throws Exception {
         if (compositionPlayer.isSample()) {
-            // Do nothing, if we played the composition as sample (multiple parallel possible)
-
+            // Do nothing else, if we played the composition as sample (multiple parallel possible). Stop it to
+            // free its pipeline.
             sampleCompositionPlayerList.remove(compositionPlayer);
+            compositionPlayer.stop();
             return;
         }
 
@@ -482,7 +512,7 @@ public class DefaultPlayerService implements PlayerService {
             // playing the next composition
             logger.info("Automatically start the next composition");
             stop(false);
-            setNextComposition();
+            setNextComposition(false);
             play();
         } else if (sessionService.getSession().isAutoSelectNextComposition()) {
             // Stop the current composition, play the default composition and select the
@@ -518,7 +548,114 @@ public class DefaultPlayerService implements PlayerService {
     }
 
     public void setCompositionName(String name) throws Exception {
+        selectInSet(name);
         setComposition(compositionService.getComposition(name));
+    }
+
+    // A composition was saved or deleted, and the sets with it. Continue with the saved current set at the same
+    // position and with the saved current composition, without stopping the composition playing.
+    @Override
+    public synchronized void compositionsChanged() throws Exception {
+        String compositionName = getCompositionName();
+
+        if (setService.getCurrentSet() != null) {
+            setService.setCurrentSet(compositionService.getSet(setService.getCurrentSet().getName()));
+        }
+
+        if (compositionName != null && compositionService.getComposition(compositionName) == null) {
+            selectInsteadOfDeleted();
+        } else {
+            keepPositionInSet(compositionName);
+            refreshCurrentComposition();
+        }
+
+        notificationService.notifyClients(this, setService);
+    }
+
+    // The current composition was deleted: select the one which took its place in the set, or the first one
+    private void selectInsteadOfDeleted() throws Exception {
+        Set currentSet = setService.getCurrentSet();
+
+        if (currentSet == null) {
+            List<Composition> compositions = compositionService.getAllCompositions();
+            setComposition(compositions.isEmpty() ? null : compositions.getFirst());
+            return;
+        }
+
+        List<SetComposition> setCompositions = currentSet.getSetCompositionList();
+
+        if (setCompositions.isEmpty()) {
+            setService.setCurrentCompositionIndex(0);
+            setComposition(null);
+            return;
+        }
+
+        int index = Math.min(setService.getCurrentCompositionIndex(), setCompositions.size() - 1);
+        setService.setCurrentCompositionIndex(index);
+        setComposition(compositionService.getComposition(setCompositions.get(index).getName()));
+    }
+
+    // Compositions before the current one may have been removed from the set. Look for the current composition at its
+    // position and before, then after it, because a set may hold a composition twice.
+    private void keepPositionInSet(String compositionName) {
+        Set currentSet = setService.getCurrentSet();
+
+        if (currentSet == null) {
+            return;
+        }
+
+        List<SetComposition> setCompositions = currentSet.getSetCompositionList();
+        int index = Math.max(Math.min(setService.getCurrentCompositionIndex(), setCompositions.size() - 1), 0);
+
+        for (int i = index; i >= 0 && i < setCompositions.size(); i--) {
+            if (setCompositions.get(i).getName().equals(compositionName)) {
+                setService.setCurrentCompositionIndex(i);
+                return;
+            }
+        }
+
+        for (int i = index + 1; i < setCompositions.size(); i++) {
+            if (setCompositions.get(i).getName().equals(compositionName)) {
+                setService.setCurrentCompositionIndex(i);
+                return;
+            }
+        }
+
+        // A composition outside the set
+        setService.setCurrentCompositionIndex(index);
+    }
+
+    // Take the saved version of the current composition. A composition is only changed while it's stopped, one playing
+    // or loaded keeps playing as it is and is taken when stopped.
+    private void refreshCurrentComposition() throws Exception {
+        Composition composition = currentCompositionPlayer.getComposition();
+
+        if (composition == null || currentCompositionPlayer.getPlayState() != CompositionPlayer.PlayState.STOPPED) {
+            return;
+        }
+
+        Composition savedComposition = compositionService.getComposition(composition.getName());
+
+        if (savedComposition != null && savedComposition != composition) {
+            currentCompositionPlayer.setComposition(savedComposition);
+        }
+    }
+
+    // Continue the set from the selected composition, e.g. after a trigger selected it by its name. A set may hold a
+    // composition twice, so the current position stays, if it already holds it.
+    private void selectInSet(String name) {
+        Set currentSet = setService.getCurrentSet();
+
+        if (currentSet == null || name == null || name.equals(setService.getCurrentCompositionName())) {
+            return;
+        }
+
+        for (int i = 0; i < currentSet.getSetCompositionList().size(); i++) {
+            if (name.equals(currentSet.getSetCompositionList().get(i).getName())) {
+                setService.setCurrentCompositionIndex(i);
+                return;
+            }
+        }
     }
 
     @Override

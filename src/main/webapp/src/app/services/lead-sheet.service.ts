@@ -61,7 +61,7 @@ export class LeadSheetService {
             }
 
             this.currentLeadSheetUrl +=
-              "api/lead-sheet/image?name=" + leadSheet.name;
+              "api/lead-sheet/image?name=" + encodeURIComponent(leadSheet.name);
             break;
           }
         }
@@ -115,7 +115,7 @@ export class LeadSheetService {
 
   deleteLeadSheet(leadSheet: LeadSheet): Observable<void> {
     return this.http
-      .post("lead-sheet/delete?name=" + leadSheet.name, undefined)
+      .post("lead-sheet/delete?name=" + encodeURIComponent(leadSheet.name), undefined)
       .pipe(
         map((response: Response) => {
           return null;

@@ -16,6 +16,7 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,7 +34,7 @@ public class DefaultAudioService implements AudioService {
         this.operatingSystemInformationService = operatingSystemInformationService;
     }
 
-    private AudioDevice getAudioDeviceFromString(String line) {
+    private static AudioDevice getAudioDeviceFromString(String line) {
         AudioDevice audioDevice = new AudioDevice();
 
         audioDevice.setId(Integer.parseInt(line.substring(0, 3).trim()));
@@ -45,38 +46,45 @@ public class DefaultAudioService implements AudioService {
 
     @Override
     public List<AudioDevice> getAudioDevices() {
-        List<AudioDevice> audioDeviceList = new ArrayList<>();
-
         logger.debug("List audio devices...");
 
         try (BufferedReader reader = Files.newBufferedReader(Path.of("/proc/asound/cards"))) {
-            String line;
-            int lineIndex = 0;
-
-            while ((line = reader.readLine()) != null) {
-                logger.trace("Output from audio device list file: {}", line);
-
-                if (lineIndex % 2 == 0 && !line.startsWith("---")) {
-                    AudioDevice audioDevice = getAudioDeviceFromString(line);
-
-                    if (audioDevice.getName() != null
-                            && !audioDevice.getName().isEmpty()
-                            && !"ALSA".equals(audioDevice.getKey())
-                            && !"Headphones".equals(audioDevice.getKey())
-                            && !"vc4hdmi0".equals(audioDevice.getKey())
-                            && !"vc4hdmi1".equals(audioDevice.getKey())
-                    ) {
-                        audioDeviceList.add(audioDevice);
-                    }
-                }
-
-                lineIndex++;
-            }
+            List<AudioDevice> audioDeviceList = readAudioDevices(reader);
+            logger.debug("Audio devices listed");
+            return audioDeviceList;
         } catch (IOException e) {
             logger.error("Could not list audio devices", e);
         }
 
-        logger.debug("Audio devices listed");
+        return new ArrayList<>();
+    }
+
+    // Read the sound cards of ALSA (/proc/asound/cards), without the ones built into the Raspberry Pi. Package visible
+    // for the tests.
+    static List<AudioDevice> readAudioDevices(BufferedReader reader) throws IOException {
+        List<AudioDevice> audioDeviceList = new ArrayList<>();
+        String line;
+        int lineIndex = 0;
+
+        while ((line = reader.readLine()) != null) {
+            logger.trace("Output from audio device list file: {}", line);
+
+            if (lineIndex % 2 == 0 && !line.startsWith("---")) {
+                AudioDevice audioDevice = getAudioDeviceFromString(line);
+
+                if (audioDevice.getName() != null
+                        && !audioDevice.getName().isEmpty()
+                        && !"ALSA".equals(audioDevice.getKey())
+                        && !"Headphones".equals(audioDevice.getKey())
+                        && !"vc4hdmi0".equals(audioDevice.getKey())
+                        && !"vc4hdmi1".equals(audioDevice.getKey())
+                ) {
+                    audioDeviceList.add(audioDevice);
+                }
+            }
+
+            lineIndex++;
+        }
 
         return audioDeviceList;
     }
@@ -192,7 +200,8 @@ public class DefaultAudioService implements AudioService {
         }
 
         for (AudioBus audioBus : settings.getAudioBusList()) {
-            if (audioBus.getAudioDevice().getId() == audioDevice.getId()) {
+            // A bus without device doesn't play
+            if (audioBus.getAudioDevice() != null && audioBus.getAudioDevice().getId() == audioDevice.getId()) {
                 count += audioBus.getChannels();
             }
         }
@@ -209,7 +218,8 @@ public class DefaultAudioService implements AudioService {
                 audioDeviceSet.add(audioBus.getAudioDevice());
             }
         }
-        return audioDeviceSet.stream().toList();
+        // Always in the same order, e.g. to write the same .asoundrc for the same settings
+        return audioDeviceSet.stream().sorted(Comparator.comparingInt(AudioDevice::getId)).toList();
     }
 
 }

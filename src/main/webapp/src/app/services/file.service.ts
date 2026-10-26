@@ -24,7 +24,7 @@ export class FileService {
   }
 
   deleteFile(file: CompositionFile): Observable<void> {
-    return this.http.post('file/delete?name=' + file.name + '&type=' + file.type, undefined).pipe(map((response: Response) => {
+    return this.http.post('file/delete?name=' + encodeURIComponent(file.name) + '&type=' + file.type, undefined).pipe(map((response: Response) => {
       return null;
     }));
   }

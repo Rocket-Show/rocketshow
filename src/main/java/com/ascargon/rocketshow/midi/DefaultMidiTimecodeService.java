@@ -24,8 +24,50 @@ public class DefaultMidiTimecodeService implements MidiTimecodeService {
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
     private ScheduledFuture<?> sendTimecodeHandle;
+    private QuarterFrameSender quarterFrameSender;
     private Object owner;
-    private int quarterFrameMessageType = 0;
+
+    // Sends the quarter frames of a start. A receiver puts 8 of them together to one timecode, so they carry the
+    // position at the first one. Parts of different positions make the timecode jump, e.g. by a second on a new second.
+    private class QuarterFrameSender implements Runnable {
+
+        private final LongSupplier positionMillisSupplier;
+        private final MidiTimecodeFrameRate frameRate;
+        private int messageType = 0;
+        private long positionMillis;
+
+        QuarterFrameSender(LongSupplier positionMillisSupplier, MidiTimecodeFrameRate frameRate) {
+            this.positionMillisSupplier = positionMillisSupplier;
+            this.frameRate = frameRate;
+        }
+
+        @Override
+        public void run() {
+            synchronized (DefaultMidiTimecodeService.this) {
+                // Stopped, while waiting to send
+                if (quarterFrameSender != this) {
+                    return;
+                }
+
+                Settings settings = settingsService.getSettings();
+                if (!Boolean.TRUE.equals(settings.getMidiTimecodeEnabled()) || !midiDeviceOutService.isConnected()) {
+                    return;
+                }
+
+                if (messageType == 0) {
+                    positionMillis = positionMillisSupplier.getAsLong();
+                }
+
+                try {
+                    midiDeviceOutService.sendMessage(MidiTimecodeMessageFactory.createQuarterFrameMessage(positionMillis, frameRate, messageType));
+                    messageType = (messageType + 1) % 8;
+                } catch (InvalidMidiDataException e) {
+                    logger.error("Could not send MIDI timecode quarter-frame message", e);
+                }
+            }
+        }
+
+    }
 
     public DefaultMidiTimecodeService(SettingsService settingsService, MidiDeviceOutService midiDeviceOutService) {
         this.settingsService = settingsService;
@@ -42,7 +84,6 @@ public class DefaultMidiTimecodeService implements MidiTimecodeService {
         stopCurrent();
 
         this.owner = owner;
-        quarterFrameMessageType = 0;
         MidiTimecodeFrameRate frameRate = settings.getMidiTimecodeFrameRate();
 
         try {
@@ -52,21 +93,8 @@ public class DefaultMidiTimecodeService implements MidiTimecodeService {
         }
 
         long periodNanos = Math.round(1_000_000_000.0 / (frameRate.getFramesPerSecond() * 4.0));
-        sendTimecodeHandle = scheduler.scheduleAtFixedRate(() -> sendQuarterFrame(positionMillisSupplier, frameRate), 0, periodNanos, TimeUnit.NANOSECONDS);
-    }
-
-    private void sendQuarterFrame(LongSupplier positionMillisSupplier, MidiTimecodeFrameRate frameRate) {
-        Settings settings = settingsService.getSettings();
-        if (!Boolean.TRUE.equals(settings.getMidiTimecodeEnabled()) || !midiDeviceOutService.isConnected()) {
-            return;
-        }
-
-        try {
-            midiDeviceOutService.sendMessage(MidiTimecodeMessageFactory.createQuarterFrameMessage(positionMillisSupplier.getAsLong(), frameRate, quarterFrameMessageType));
-            quarterFrameMessageType = (quarterFrameMessageType + 1) % 8;
-        } catch (InvalidMidiDataException e) {
-            logger.error("Could not send MIDI timecode quarter-frame message", e);
-        }
+        quarterFrameSender = new QuarterFrameSender(positionMillisSupplier, frameRate);
+        sendTimecodeHandle = scheduler.scheduleAtFixedRate(quarterFrameSender, 0, periodNanos, TimeUnit.NANOSECONDS);
     }
 
     @Override
@@ -83,11 +111,12 @@ public class DefaultMidiTimecodeService implements MidiTimecodeService {
             sendTimecodeHandle.cancel(false);
             sendTimecodeHandle = null;
         }
+        quarterFrameSender = null;
         owner = null;
     }
 
     @PreDestroy
-    private void close() {
+    private synchronized void close() {
         stopCurrent();
         scheduler.shutdownNow();
     }

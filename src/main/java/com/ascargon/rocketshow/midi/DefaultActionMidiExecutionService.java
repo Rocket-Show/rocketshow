@@ -26,6 +26,11 @@ public class DefaultActionMidiExecutionService implements ActionMidiExecutionSer
             return false;
         }
 
+        // A note on with velocity 0 is a released key (many devices send it instead of a note off)
+        if (shortMessage.getCommand() == ShortMessage.NOTE_ON && shortMessage.getData2() == 0) {
+            return false;
+        }
+
         if (shortMessage.getCommand() == ShortMessage.NOTE_ON && actionTriggerMidi instanceof ActionTriggerMidiNoteOn actionTriggerMidiNoteOn) {
             return actionTriggerMidiNoteOn.getNote() == null || actionTriggerMidiNoteOn.getNote() == shortMessage.getData1();
         }

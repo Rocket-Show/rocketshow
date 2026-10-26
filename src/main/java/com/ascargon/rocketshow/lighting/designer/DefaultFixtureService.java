@@ -2,6 +2,7 @@ package com.ascargon.rocketshow.lighting.designer;
 
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.FileFilterService;
+import com.ascargon.rocketshow.util.FileNames;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,12 +11,10 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.io.*;
 import java.net.URL;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
+import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -37,6 +36,9 @@ public class DefaultFixtureService implements FixtureService {
     private List<SearchFixtureTemplate> searchFixtureTemplates;
 
     private String basePath = "";
+
+    // Package visible for the tests
+    String libraryUrl = "https://www.rocketshow.net/designer/downloads/fixtures.zip";
 
     public DefaultFixtureService(
             SettingsService settingsService,
@@ -74,7 +76,8 @@ public class DefaultFixtureService implements FixtureService {
 
                         searchFixtureTemplates.add(searchFixtureTemplate);
                     } catch (Exception e) {
-                        throw new Exception("Could not parse fixture " + file.getPath(), e);
+                        // A profile, which can't be read, must not hide the others from the search
+                        logger.error("Could not parse fixture {}", file.getPath(), e);
                     }
                 }
             }
@@ -127,18 +130,36 @@ public class DefaultFixtureService implements FixtureService {
         }
     }
 
+    // The uuid is "<manufacturer>/<fixture>" and must not leave the fixture directory
+    private String checkUuid(String uuid) {
+        String[] parts = uuid == null ? new String[0] : uuid.split("/", -1);
+
+        if (parts.length != 2) {
+            throw new IllegalArgumentException("Invalid fixture uuid '" + uuid + "'");
+        }
+
+        FileNames.check(parts[0]);
+        FileNames.check(parts[1]);
+
+        return uuid;
+    }
+
     @Override
     public String getFixture(String uuid) throws IOException {
         // Return a single fixture based on the uuid
-        File file = new File(basePath + File.separator + uuid + ".json");
+        File file = new File(basePath + File.separator + checkUuid(uuid) + ".json");
         return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
     }
 
-    private void extractFolder(String zipFile) throws ZipException, IOException {
-        int BUFFER = 2048;
-        File file = new File(zipFile);
+    // Package visible for the tests
+    void extractFolder(String zipFile) throws ZipException, IOException {
+        try (ZipFile zip = new ZipFile(new File(zipFile))) {
+            extractFolder(zip, zipFile);
+        }
+    }
 
-        ZipFile zip = new ZipFile(file);
+    private void extractFolder(ZipFile zip, String zipFile) throws IOException {
+        int BUFFER = 2048;
         String newPath = zipFile.substring(0, zipFile.length() - 4);
 
         new File(newPath).mkdir();
@@ -150,7 +171,11 @@ public class DefaultFixtureService implements FixtureService {
             ZipEntry entry = (ZipEntry) zipFileEntries.nextElement();
             String currentEntry = entry.getName();
             File destFile = new File(newPath, currentEntry);
-            //destFile = new File(newPath, destFile.getName());
+
+            // Don't write outside the target directory (e.g. an entry named "../x")
+            if (!destFile.getCanonicalPath().startsWith(new File(newPath).getCanonicalPath() + File.separator)) {
+                throw new IOException("Entry is outside of the target dir: " + currentEntry);
+            }
             File destinationParent = destFile.getParentFile();
 
             // create the parent directory structure if needed
@@ -184,49 +209,48 @@ public class DefaultFixtureService implements FixtureService {
         }
     }
 
-    private void createDirectoryIfNotExists(String directory) throws IOException {
-        Path path = Paths.get(directory);
-
-        if (Files.notExists(path)) {
-            Files.createDirectories(path);
-        }
-    }
-
     @Override
     public void updateProfiles() throws IOException {
-        String fixturesPath = settingsService.getSettings().getBasePath() + "fixtures";
-        File fixturesDirectory = new File(fixturesPath);
+        // Download the current profile set, if an internet connection is available. The library is replaced, once
+        // the new one is complete: a download breaking off (e.g. on a stage network) must not leave the unit without
+        // a library. The download is hidden next to the library.
+        File libraryDirectory = new File(basePath).getAbsoluteFile();
+        File parentDirectory = libraryDirectory.getParentFile();
+        File downloadFile = new File(parentDirectory, "." + libraryDirectory.getName() + "-download.zip");
+        File downloadDirectory = new File(parentDirectory, "." + libraryDirectory.getName() + "-download");
+        File oldDirectory = new File(parentDirectory, "." + libraryDirectory.getName() + "-old");
 
-        // Download the current profile set, if an internet connection is available
-        String downloadFile = settingsService.getSettings().getBasePath() + "fixtures.zip";
-
-        // Download the fixtures ZIP
-        URL url = new URL("https://www.rocketshow.net/designer/downloads/fixtures.zip");
-        ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
-        FileOutputStream fileOutputStream = new FileOutputStream(downloadFile);
-        fileOutputStream.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
-        fileOutputStream.close();
-
-        // Delete the local directory
-        FileUtils.deleteDirectory(fixturesDirectory);
-
-        // Create the directory
-        createDirectoryIfNotExists(fixturesPath);
-
-        // Unzip the archive
-        extractFolder(downloadFile);
-
-        // Delete the ZIP file
-        File systemFile = new File(downloadFile);
-
-        if (!systemFile.exists()) {
-            return;
+        // Switched off while replacing the library the last time
+        if (!libraryDirectory.exists() && oldDirectory.exists()) {
+            Files.move(oldDirectory.toPath(), libraryDirectory.toPath());
         }
 
-        boolean result = systemFile.delete();
+        try {
+            // The app updates the library at the start, maybe without internet
+            URLConnection connection = new URL(libraryUrl).openConnection();
+            connection.setConnectTimeout(10000);
+            connection.setReadTimeout(30000);
 
-        if (!result) {
-            logger.error("Could not delete fixtures ZIP file '" + downloadFile + "'");
+            try (InputStream inputStream = connection.getInputStream()) {
+                Files.copy(inputStream, downloadFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            FileUtils.deleteDirectory(downloadDirectory);
+            extractFolder(downloadFile.getPath());
+
+            if (!new File(downloadDirectory, MANUFACTURERS_FILE_NAME).isFile()) {
+                throw new IOException("The downloaded fixture library has no " + MANUFACTURERS_FILE_NAME);
+            }
+
+            FileUtils.deleteDirectory(oldDirectory);
+            if (libraryDirectory.exists()) {
+                Files.move(libraryDirectory.toPath(), oldDirectory.toPath());
+            }
+            Files.move(downloadDirectory.toPath(), libraryDirectory.toPath());
+            FileUtils.deleteDirectory(oldDirectory);
+        } finally {
+            Files.deleteIfExists(downloadFile.toPath());
+            FileUtils.deleteDirectory(downloadDirectory);
         }
 
         invalidateCache();

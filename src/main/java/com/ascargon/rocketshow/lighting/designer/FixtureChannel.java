@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -16,7 +17,7 @@ import java.util.List;
 @Setter
 public class FixtureChannel {
 
-    private List<String> fineChannelAliases;
+    private List<String> fineChannelAliases = new ArrayList<>();
     private String defaultValue;
     private FixtureCapability capability;
     private List<FixtureCapability> capabilities;

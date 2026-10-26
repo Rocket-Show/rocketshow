@@ -89,6 +89,25 @@ export class IntroComponent {
     this.nextStep();
   }
 
+  // The access point is the last step on units without secured connection
+  finishWifiApPw() {
+    this.validateWifiApPassword();
+    if (this.wifiApPasswordsDontMatch) {
+      return;
+    }
+    this.finish();
+  }
+
+  // The access point only gets protected by a password of 8 to 63 characters. A shorter one leaves it open.
+  wifiApPasswordTooShort(): boolean {
+    if (!this.wifiApEnabled) {
+      return false;
+    }
+
+    const password = this.wifiApPasswordSame ? this.adminPassword1 : this.wifiApPassword1;
+    return !password || password.length < 8 || password.length > 63;
+  }
+
   finish() {
     this.loading = true;
 

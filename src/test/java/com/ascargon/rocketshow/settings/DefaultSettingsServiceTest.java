@@ -3,6 +3,8 @@ package com.ascargon.rocketshow.settings;
 import com.ascargon.rocketshow.StrictXml;
 import com.ascargon.rocketshow.midi.MidiRouting;
 import com.ascargon.rocketshow.midi.MidiService;
+import com.ascargon.rocketshow.raspberry.ActionTriggerRaspberryGpio;
+import com.ascargon.rocketshow.util.ActionTransport;
 import com.ascargon.rocketshow.util.DeviceInformation;
 import com.ascargon.rocketshow.util.DeviceInformationService;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
@@ -220,6 +222,66 @@ class DefaultSettingsServiceTest {
         settingsService.getSettings().setOffsetMillisMidi(10);
         settingsService.save();
         verify(applicationEventPublisher, times(3)).publishEvent(any(MidiRoutingsChangedEvent.class));
+    }
+
+    @Test
+    void publishesChangedGpio() throws Exception {
+        DefaultSettingsService settingsService = start(Files.createTempDirectory(tempPath, "settings"));
+
+        settingsService.save();
+        verify(applicationEventPublisher, never()).publishEvent(any(RaspberryGpioChangedEvent.class));
+
+        // Another button
+        ActionTriggerRaspberryGpio trigger = new ActionTriggerRaspberryGpio();
+        trigger.setPinId(22);
+        settingsService.getSettings().getActionTriggerRaspberryGpioList().add(trigger);
+        settingsService.save();
+        verify(applicationEventPublisher, times(1)).publishEvent(any(RaspberryGpioChangedEvent.class));
+
+        // Another action of the button
+        ActionTransport play = new ActionTransport();
+        play.setTransportActionType(ActionTransport.TransportActionType.PLAY);
+        trigger.getActionList().add(play);
+        settingsService.save();
+        verify(applicationEventPublisher, times(2)).publishEvent(any(RaspberryGpioChangedEvent.class));
+
+        // Another output
+        settingsService.getSettings().getRaspberryGpioOutputPinBcmList().add(23);
+        settingsService.save();
+        verify(applicationEventPublisher, times(3)).publishEvent(any(RaspberryGpioChangedEvent.class));
+
+        settingsService.getSettings().setOffsetMillisMidi(10);
+        settingsService.save();
+        verify(applicationEventPublisher, times(3)).publishEvent(any(RaspberryGpioChangedEvent.class));
+    }
+
+
+    @Test
+    void keepsSettingsWhichCannotBeLoaded() throws Exception {
+        // E.g. damaged by an earlier release losing its power while saving
+        Path directory = Files.createTempDirectory(tempPath, "broken");
+        String broken = "<?xml version=\"1.0\"?>\n<settings>\n    <deviceName>Stage left</deviceName>\n    <audioBus";
+        Files.writeString(directory.resolve("settings.xml"), broken);
+
+        DefaultSettingsService settingsService = start(directory);
+
+        // The unit starts with the defaults, someone can get the settings back from the copy
+        assertEquals(broken, Files.readString(directory.resolve("settings.xml.broken")));
+        assertEquals(directory + java.io.File.separator, settingsService.getSettings().getBasePath());
+    }
+
+    @Test
+    void writesNoHalfSettings() throws Exception {
+        Path directory = Files.createTempDirectory(tempPath, "atomic");
+        DefaultSettingsService settingsService = start(directory);
+
+        settingsService.getSettings().setDeviceName("Stage right");
+        settingsService.save();
+
+        try (Stream<Path> files = Files.list(directory)) {
+            assertEquals(List.of("settings.xml"), files.map(path -> path.getFileName().toString()).toList());
+        }
+        assertEquals("Stage right", start(directory).getSettings().getDeviceName());
     }
 
 }

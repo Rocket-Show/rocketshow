@@ -197,6 +197,7 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
 
         // Prepare the scheduler for all contained action triggers (and some buffer for overlapping
         // runs). Created before the pipeline so it can recreate H.265 slaves off the bus thread.
+        shutdownScheduler();
         scheduler = Executors.newScheduledThreadPool(composition.getActionTriggerList().size() + 5);
 
         if (hasActiveFile) {
@@ -210,6 +211,21 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
             playState = PlayState.LOADED;
             notificationService.notifyClients(playerService, setService);
         }
+    }
+
+    // End the threads of the scheduler. Every load creates a new one, so they would pile up otherwise. A task
+    // running at the moment (e.g. the end of the composition stopping it) still finishes, the pending ones don't run.
+    private void shutdownScheduler() {
+        if (scheduler == null) {
+            return;
+        }
+
+        if (scheduler instanceof ScheduledThreadPoolExecutor scheduledThreadPoolExecutor) {
+            scheduledThreadPoolExecutor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+            scheduledThreadPoolExecutor.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
+        }
+
+        scheduler.shutdown();
     }
 
     private void stopPipeline() {
@@ -285,7 +301,8 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
         }
 
         try {
-            if (compositionPipeline != null && compositionPipeline.hasMedia()) {
+            // A sample always reports its end, so the player service lets it go
+            if (isSample || (compositionPipeline != null && compositionPipeline.hasMedia())) {
                 playerService.compositionPlayerFinishedPlaying(this);
             } else {
                 stop();
@@ -414,6 +431,11 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
         // Load the files, if not already done by a previously by a separate call
         loadFiles();
 
+        if (playState == PlayState.STOPPED) {
+            // Nothing to play (no media, no actions, no designer project)
+            return;
+        }
+
         // Load the designer files
         // -> no separate step, because there's only one global handler and the default composition is closed
         // after the loading step.
@@ -481,7 +503,8 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
     }
 
     public void pause() throws Exception {
-        if (playState == PlayState.PAUSED) {
+        if (playState == PlayState.PAUSED || playState == PlayState.STOPPED || playState == PlayState.STOPPING) {
+            // Nothing plays. Pausing would skip loading the files on the next play.
             return;
         }
 
@@ -539,6 +562,7 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
         stopAutoStopTimer();
         stopActionTriggerTimer();
         cancelPendingActionTriggers();
+        shutdownScheduler();
         midiTimecodeService.stop(this);
 
         if (!isSample && !isDefaultComposition) {
@@ -590,9 +614,13 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
 
         this.lastPlayTimeMillis = System.currentTimeMillis();
 
-        calculateRemainingActionTriggerList(startPosition);
-        scheduleActionTriggerTimers();
         if (playState == PlayState.PLAYING) {
+            calculateRemainingActionTriggerList(startPosition);
+            scheduleActionTriggerTimers();
+
+            // Without a master pipeline, the end moves with the position
+            startAutoStopTimer();
+
             startMidiTimecode();
         }
 

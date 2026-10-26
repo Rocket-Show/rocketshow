@@ -37,10 +37,10 @@ public class DefaultStateService implements StateService {
         } else {
             currentState.setCurrentCompositionIndex(setService.getCurrentCompositionIndex());
 
-            if (setService.getCurrentSet() == null && playerService != null) {
-                currentState.setCurrentCompositionIndex(getCompositionIndexWithoutSet(compositionService, playerService.getCompositionName()));
-            } else {
+            if (setService.getCurrentSet() != null) {
                 currentState.setCurrentSetName(setService.getCurrentSet().getName());
+            } else if (playerService != null) {
+                currentState.setCurrentCompositionIndex(getCompositionIndexWithoutSet(compositionService, playerService.getCompositionName()));
             }
         }
 

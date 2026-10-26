@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController()
 @RequestMapping("${spring.data.rest.base-path}/transport")
@@ -108,6 +109,11 @@ class TransportController {
     @PostMapping("set-composition-index")
     public ResponseEntity<Void> setCompositionIndex(@RequestParam("index") int compositionIndex) throws Exception {
         logger.info("Received API request for transport/set-composition-index");
+
+        // E.g. from a web app showing a set, which changed meanwhile
+        if (setService.getCurrentSet() == null || compositionIndex < 0 || compositionIndex >= setService.getCurrentSet().getSetCompositionList().size()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "There is no composition " + compositionIndex + " in the current set");
+        }
 
         setService.setCurrentCompositionIndex(compositionIndex);
         playerService.setCompositionName(setService.getCurrentCompositionName());

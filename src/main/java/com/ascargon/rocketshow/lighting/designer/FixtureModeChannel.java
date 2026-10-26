@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import tools.jackson.databind.annotation.JsonDeserialize;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -24,8 +25,8 @@ public class FixtureModeChannel {
     private String insert;
     // the list of string could be a single string (no JSON array), e.g. 'eachPixelABC'
     @JsonDeserialize(using = StringOrListDeserializer.class)
-    private List<String> repeatFor;
+    private List<String> repeatFor = new ArrayList<>();
     private String channelOrder;
-    private List<String> templateChannels;
+    private List<String> templateChannels = new ArrayList<>();
 
 }

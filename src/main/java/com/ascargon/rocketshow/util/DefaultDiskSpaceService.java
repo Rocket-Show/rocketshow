@@ -2,8 +2,7 @@ package com.ascargon.rocketshow.util;
 
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Returns the used and available disk space.
@@ -33,11 +32,17 @@ public class DefaultDiskSpaceService implements DiskSpaceService {
         // Get the used and available space in MB
         ProcessBuilder pb = new ProcessBuilder("df", "-BMB", root);
         Process process = pb.start();
-        BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
-        String line;
+
+        return parse(new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8), root);
+    }
+
+    // The used and available space of the passed mount point in the output of "df -BMB"
+    // Package visible for the tests
+    static DiskSpace parse(String output, String root) {
+        DiskSpace diskSpace = new DiskSpace();
 
         // Loop over each line
-        while ((line = br.readLine()) != null) {
+        for (String line : output.split("\\R")) {
             line = line.replaceAll("\t", " ");
             line = line.replaceAll(" +", " ");
             line = line.replaceAll("MB", "");

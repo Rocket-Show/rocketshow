@@ -4,7 +4,6 @@ import com.ascargon.rocketshow.composition.TestPlayResponse;
 import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.composition.Composition;
 import com.ascargon.rocketshow.composition.CompositionService;
-import com.ascargon.rocketshow.composition.SetService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,13 +18,11 @@ public class CompositionController {
     private final ControllerService controllerService;
     private final CompositionService compositionService;
     private final PlayerService playerService;
-    private final SetService setService;
 
-    public CompositionController(ControllerService controllerService, CompositionService compositionService, PlayerService playerService, SetService setService) {
+    public CompositionController(ControllerService controllerService, CompositionService compositionService, PlayerService playerService) {
         this.controllerService = controllerService;
         this.compositionService = compositionService;
         this.playerService = playerService;
-        this.setService = setService;
     }
 
     @ExceptionHandler(Exception.class)
@@ -45,36 +42,18 @@ public class CompositionController {
 
     @PostMapping
     public ResponseEntity<Void> save(@RequestBody Composition composition) throws Exception {
-        // Stop the current composition, because we cannot determine the MIDI duration
-        // if a MIDI file is already playing. Also, the composition will be stopped anyway, if we need
-        // to read it again because it changed.
-        playerService.stop();
-
         compositionService.saveComposition(composition);
 
-        // If this is the current composition, read it again
-        if (playerService.getCompositionName() != null
-                && playerService.getCompositionName().equals(composition.getName())) {
-
-            playerService.setComposition(compositionService.getComposition(composition.getName()),
-                    true, true);
-        }
-
-        // Refresh the current set
-        if (setService.getCurrentSet() != null) {
-            playerService.loadSetAndComposition(setService.getCurrentSet().getName());
-        }
+        // Doesn't stop the composition playing, e.g. when the next song is changed during a show
+        playerService.compositionsChanged();
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("delete")
     public ResponseEntity<Void> delete(@RequestParam("name") String name) throws Exception {
-        compositionService.deleteComposition(name, playerService);
-
-        if (setService.getCurrentSet() != null) {
-            playerService.loadSetAndComposition(setService.getCurrentSet().getName());
-        }
+        compositionService.deleteComposition(name);
+        playerService.compositionsChanged();
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

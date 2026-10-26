@@ -5,6 +5,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.io.FileNotFoundException;
+import java.nio.file.NoSuchFileException;
 
 @Service
 public class DefaultControllerService implements ControllerService {
@@ -19,12 +23,21 @@ public class DefaultControllerService implements ControllerService {
         errorResponse.setCode("unknown");
 
         // specific mapping
-//        if (exception instanceof NotFoundException) {
-//            httpStatus = HttpStatus.NOT_FOUND;
-//            errorResponse.setCode("not-found");
-//        } else {
-        logger.error("An exception has been thrown in the controller", exception);
-//        }
+        if (exception instanceof ResponseStatusException responseStatusException) {
+            httpStatus = HttpStatus.valueOf(responseStatusException.getStatusCode().value());
+            errorResponse.setMessage(responseStatusException.getReason());
+            logger.info("Request rejected: {}", responseStatusException.getReason());
+        } else if (exception instanceof IllegalArgumentException) {
+            // e.g. a file name leaving its folder
+            httpStatus = HttpStatus.BAD_REQUEST;
+            logger.info("Request rejected: {}", exception.getMessage());
+        } else if (exception instanceof FileNotFoundException || exception instanceof NoSuchFileException) {
+            // e.g. a media file of the designer template, which has been deleted
+            httpStatus = HttpStatus.NOT_FOUND;
+            logger.info("Requested file not found: {}", exception.getMessage());
+        } else {
+            logger.error("An exception has been thrown in the controller", exception);
+        }
 
         return new ResponseEntity<>(errorResponse, httpStatus);
     }

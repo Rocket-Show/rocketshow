@@ -16,13 +16,18 @@ public class ShellManager {
     private final PrintStream outStream;
 
     public ShellManager(String[] command) throws IOException {
+        this(command, true);
+    }
+
+    // Callers reading the output themselves don't log it. Otherwise, the log takes away parts of the output.
+    public ShellManager(String[] command, boolean logOutput) throws IOException {
         validateCommand(command);
         logger.debug("Execute shell command: {}", String.join(" ", command));
 
         process = new ProcessBuilder(command).redirectErrorStream(true).start();
         outStream = new PrintStream(process.getOutputStream());
 
-        if (logger.isDebugEnabled()) {
+        if (logOutput && logger.isDebugEnabled()) {
             // log the output from the call
             logInputStreamAsync(process.getInputStream(), command);
         }

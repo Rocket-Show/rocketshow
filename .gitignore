@@ -33,3 +33,7 @@ log/*
 /nbbuild/
 /nbdist/
 /.nb-gradle/
+# Smoke test of the web app
+/testing/smoke/node_modules
+/testing/smoke/package-lock.json
+/testing/smoke/screenshots

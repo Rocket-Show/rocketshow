@@ -117,6 +117,12 @@
               {{ 'login.error-no-match' | translate }}
             </div>
             }
+
+            @if(wifiApPasswordTooShort()) {
+            <div class="alert alert-danger mt-3 mb-0">
+              {{ 'settings.wlan-ap-wpa-passphrase-short-error' | translate }}
+            </div>
+            }
             }
 
           </div>
@@ -212,13 +218,13 @@
                   @if(currentStep === 4) {
                   @if (deviceInformation?.available) {
                   <button type="button"
-                    [disabled]="(wifiApEnabled && !wifiApPasswordSame && (!wifiApPassword1 || !wifiApPassword2 || wifiApPassword1.length < 6))"
+                    [disabled]="wifiApPasswordTooShort() || (wifiApEnabled && !wifiApPasswordSame && !wifiApPassword2)"
                     class="btn btn-primary px-4" (click)="nextStepWifiApPw()">{{ 'misc.nav-next' | translate }}
                   </button>
                   } @else {
                   <button type="button"
-                    [disabled]="loading || (wifiApEnabled && !wifiApPasswordSame && (!wifiApPassword1 || !wifiApPassword2 || wifiApPassword1.length < 6))"
-                    class="btn btn-primary px-4" (click)="finish()">@if (loading) {<i class="fa fa-spinner fa-pulse fa-fw"></i>}@if(!loading){<i class="fa fa-check"
+                    [disabled]="loading || wifiApPasswordTooShort() || (wifiApEnabled && !wifiApPasswordSame && !wifiApPassword2)"
+                    class="btn btn-primary px-4" (click)="finishWifiApPw()">@if (loading) {<i class="fa fa-spinner fa-pulse fa-fw"></i>}@if(!loading){<i class="fa fa-check"
                       aria-hidden="true"></i>} {{ 'misc.finish' | translate }}
                   </button>
                   }

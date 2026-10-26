@@ -5,16 +5,16 @@ import com.ascargon.rocketshow.play.CompositionPlayer;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.LightingUniverse;
 import com.ascargon.rocketshow.lighting.LightingUniverseState;
+import com.ascargon.rocketshow.util.AtomicFile;
 import com.ascargon.rocketshow.util.FileFilterService;
+import com.ascargon.rocketshow.util.FileNames;
 import org.freedesktop.gstreamer.Pipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -114,10 +114,15 @@ public class DefaultDesignerService implements DesignerService {
                 if (file.isFile() && !fileFilterService.filterFile(file.getName())) {
                     logger.debug("Found project '" + file.getName() + "'");
 
-                    ObjectMapper mapper = new ObjectMapper();
-                    Project project = mapper.readValue(file, Project.class);
+                    // A project, which can't be read, must not take the others with it
+                    try {
+                        ObjectMapper mapper = new ObjectMapper();
+                        Project project = mapper.readValue(file, Project.class);
 
-                    projects.add(project);
+                        projects.add(project);
+                    } catch (Exception e) {
+                        logger.error("Could not load the designer project '{}'", file.getName(), e);
+                    }
                 }
             }
         }
@@ -152,7 +157,7 @@ public class DefaultDesignerService implements DesignerService {
     @Override
     public void deleteProjectByName(String name) {
         // Delete the project
-        File file = new File(settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getDesignerPath() + File.separator + name + ".json");
+        File file = new File(settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getDesignerPath() + File.separator + FileNames.check(name) + ".json");
 
         if (file.exists()) {
             boolean result = file.delete();
@@ -183,14 +188,12 @@ public class DefaultDesignerService implements DesignerService {
         // about a part of the properties not all (e.g. preview-related ones).
         ObjectMapper mapper = new ObjectMapper();
         Project projectObject = mapper.readValue(project, Project.class);
-        String projectName = projectObject.getName();
+        String projectName = FileNames.check(projectObject.getName());
         String designerPath = settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getDesignerPath();
 
         createDirectoryIfNotExists(designerPath);
 
-        BufferedWriter writer = new BufferedWriter(new FileWriter(designerPath + File.separator + projectName + ".json"));
-        writer.write(project);
-        writer.close();
+        AtomicFile.writeString(new File(designerPath + File.separator + projectName + ".json"), project);
 
         // Add the file to the cache
         for (Project existingProject : projects) {
@@ -517,7 +520,8 @@ public class DefaultDesignerService implements DesignerService {
 
         if (!isNumeric(fixtureChannel.getDefaultValue()) && fixtureChannel.getDefaultValue().endsWith("%")) {
             // percentage value
-            double percentage = Integer.parseInt(fixtureChannel.getDefaultValue().replace("%", ""));
+            // the fixture library also has fractions, e.g. 33.3%
+            double percentage = Double.parseDouble(fixtureChannel.getDefaultValue().replace("%", ""));
             double maxValue = getMaxValueByChannel(fixtureChannel);
             return maxValue / 100 * percentage;
         } else {
@@ -536,6 +540,11 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     private boolean wheelHasSlotType(FixtureWheel wheel, FixtureWheelSlot.FixtureWheelSlotType slotType) {
+        if (wheel == null) {
+            // a slot of a wheel the profile doesn't have (e.g. a channel named differently than its wheel)
+            return false;
+        }
+
         for (FixtureWheelSlot slot : wheel.getSlots()) {
             if (slot.getType() == slotType) {
                 return true;
@@ -1188,6 +1197,11 @@ public class DefaultDesignerService implements DesignerService {
         }
     }
 
+    private boolean isUnusedChannel(FixtureModeChannel fixtureModeChannel) {
+        return (fixtureModeChannel.getName() == null || fixtureModeChannel.getName().isEmpty())
+                && (fixtureModeChannel.getRepeatFor() == null || fixtureModeChannel.getRepeatFor().isEmpty());
+    }
+
     private void setUniverseValues(Map<CachedFixture, List<FixtureChannelValue>> fixtures) {
         logger.trace("Set universe values...");
 
@@ -1219,7 +1233,10 @@ public class DefaultDesignerService implements DesignerService {
             for (FixtureModeChannel fixtureModeChannel : entry.getKey().getMode().getChannels()) {
                 logger.trace("Process channel " + fixtureModeChannel.getName());
 
-                if (fixtureModeChannel.getName() == null || fixtureModeChannel.getName().isEmpty()) {
+                if (isUnusedChannel(fixtureModeChannel)) {
+                    // an unused channel ("null" in the fixture library) still takes its DMX address
+                    channelIndex++;
+                } else if (fixtureModeChannel.getName() == null || fixtureModeChannel.getName().isEmpty()) {
                     // reference a channel through a pixel matrix
 
                     List<CachedFixturePixel> availablePixels = getPixelsInOrder(entry.getKey().getProfile(), fixtureModeChannel.getRepeatFor());
@@ -1363,13 +1380,14 @@ public class DefaultDesignerService implements DesignerService {
         }
 
         pixel.setX(x);
-        pixel.setX(y);
-        pixel.setX(z);
+        pixel.setY(y);
+        pixel.setZ(z);
 
         return pixel;
     }
 
-    private List<CachedFixturePixel> getAllPixelKeys(FixtureProfile profile) {
+    // Package visible for the tests
+    List<CachedFixturePixel> getAllPixelKeys(FixtureProfile profile) {
         List<CachedFixturePixel> result = new ArrayList<>();
         if (profile.getMatrix() == null || profile.getMatrix().getPixelKeys() == null) {
             return result;
@@ -1402,8 +1420,14 @@ public class DefaultDesignerService implements DesignerService {
 
     // get pixel keys in order for a specific channel repeatFor
     private List<CachedFixturePixel> getPixelsInOrder(FixtureProfile profile, List<String> repeatFor) {
-        List<CachedFixturePixel> allPixelKeys = this.getAllPixelKeys(profile);
         List<CachedFixturePixel> result = new ArrayList<>();
+
+        if (repeatFor == null || repeatFor.isEmpty()) {
+            // a channel of its own, no pixels
+            return result;
+        }
+
+        List<CachedFixturePixel> allPixelKeys = this.getAllPixelKeys(profile);
 
         // could contain different things
 

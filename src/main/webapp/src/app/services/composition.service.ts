@@ -69,7 +69,7 @@ export class CompositionService {
 
   getComposition(compositionName: string): Observable<Composition> {
     // TODO Cache the composition and reload on change
-    return this.http.get("composition?name=" + compositionName).pipe(
+    return this.http.get("composition?name=" + encodeURIComponent(compositionName)).pipe(
       map((response) => {
         return new Composition(response);
       })
@@ -78,12 +78,12 @@ export class CompositionService {
 
   // Load a set on the device
   loadSet(name: string): Observable<Object> {
-    return this.http.post("set/load?name=" + name, undefined);
+    return this.http.post("set/load?name=" + encodeURIComponent(name), undefined);
   }
 
   // Get a set from the device
   getSet(setName: string): Observable<Set> {
-    return this.http.get("set/details?name=" + setName).pipe(
+    return this.http.get("set/details?name=" + encodeURIComponent(setName)).pipe(
       map((response) => {
         return new Set(response);
       })
@@ -95,7 +95,7 @@ export class CompositionService {
   }
 
   deleteComposition(name: string): Observable<Object> {
-    return this.http.post("composition/delete?name=" + name, undefined);
+    return this.http.post("composition/delete?name=" + encodeURIComponent(name), undefined);
   }
 
   saveSet(set: Set): Observable<Object> {
@@ -103,7 +103,7 @@ export class CompositionService {
   }
 
   deleteSet(name: string): Observable<Object> {
-    return this.http.post("set/delete?name=" + name, undefined);
+    return this.http.post("set/delete?name=" + encodeURIComponent(name), undefined);
   }
 
   testPlay(composition: Composition): Observable<TestPlayResponse> {

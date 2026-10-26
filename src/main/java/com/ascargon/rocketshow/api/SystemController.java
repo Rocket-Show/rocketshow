@@ -212,6 +212,8 @@ class SystemController {
 
     @PostMapping("settings")
     public ResponseEntity<Void> saveSettings(@RequestBody Settings settings) throws JAXBException {
+        WlanApPassphrase.check(settings.getWlanApEnable(), settings.getWlanApPassphrase());
+
         // Process API keys
         for (ApiKey apiKey : settings.getApiKeyList()) {
             if (apiKey.getKey() != null && !apiKey.getKey().isEmpty()) {
@@ -287,12 +289,6 @@ class SystemController {
     @GetMapping("build-info")
     public BuildInfo getBuildInfo() {
         return buildInfoService.getBuildInfo();
-    }
-
-    @GetMapping("create-backup")
-    public ResponseEntity<Resource> createBackup() throws Exception {
-        InputStreamResource resource = new InputStreamResource(new FileInputStream(backupService.create()));
-        return ResponseEntity.ok().body(resource);
     }
 
     @PostMapping("restore-backup")
