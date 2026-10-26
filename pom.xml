@@ -13,7 +13,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.2</version>
+        <version>4.1.2</version>
         <relativePath/>
     </parent>
 
@@ -132,17 +132,17 @@
         <dependency>
             <groupId>jakarta.xml.bind</groupId>
             <artifactId>jakarta.xml.bind-api</artifactId>
-            <version>4.0.0</version>
+            <version>4.0.5</version>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jaxb</groupId>
             <artifactId>jaxb-runtime</artifactId>
-            <version>4.0.2</version>
+            <version>4.0.9</version>
         </dependency>
         <dependency>
             <groupId>jakarta.activation</groupId>
             <artifactId>jakarta.activation-api</artifactId>
-            <version>2.1.0</version>
+            <version>2.1.4</version>
         </dependency>
 
         <!-- HTTP client -->
@@ -156,7 +156,7 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.6</version>
+            <version>2.22.0</version>
         </dependency>
 
         <!-- For the OLA client -->
@@ -210,7 +210,7 @@
         <dependency>
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
-            <version>1.5</version>
+            <version>1.6.0</version>
         </dependency>
 
         <!-- Read/write data on serial ports (used for MIDI communication) -->
@@ -225,7 +225,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.30</version>
+            <version>1.18.48</version>
             <scope>provided</scope>
         </dependency>
 
@@ -246,7 +246,7 @@
                     <plugin>
                         <groupId>org.jacoco</groupId>
                         <artifactId>jacoco-maven-plugin</artifactId>
-                        <version>0.8.12</version>
+                        <version>0.8.15</version>
                         <configuration>
                             <excludes>
                                 <!-- Libraries shipped with the app (e.g. the OLA client) -->
