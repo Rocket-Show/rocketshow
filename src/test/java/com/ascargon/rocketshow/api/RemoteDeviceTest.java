@@ -2,6 +2,12 @@ package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.midi.MidiSignal;
 import com.sun.net.httpserver.HttpServer;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +21,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -55,11 +62,13 @@ class RemoteDeviceTest {
             }
 
             if ("name=Hang".equals(query)) {
+                // Until it answers again
                 try {
                     hangingRequestsEnd.await();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
+                exchange.sendResponseHeaders(200, -1);
             } else {
                 requests.add(exchange.getRequestMethod() + " " + exchange.getRequestURI().getRawPath() + (query == null ? "" : "?" + query)
                         + " " + exchange.getRequestHeaders().getFirst(ApiKeyAuthFilter.API_KEY_HEADER_NAME) + (body.isEmpty() ? "" : " " + body));
@@ -200,6 +209,56 @@ class RemoteDeviceTest {
         });
 
         assertNull(requests.poll());
+
+        // Answers again: the waiting requests go out, then there's room again. None is left for the tests after.
+        hangingRequestsEnd.countDown();
+        assertTimeoutPreemptively(Duration.ofSeconds(30), () -> {
+            String request;
+
+            do {
+                remoteDevice.load(true, "Song 1");
+                request = requests.poll();
+            } while (request == null);
+
+            assertEquals("POST /api/transport/load?name=Song+1 api-key-of-unit-2", request);
+        });
+    }
+
+    @Test
+    void logsAUnitWhichDoesNotAnswerOnce() throws Exception {
+        List<String> errors = new CopyOnWriteArrayList<>();
+        AbstractAppender errorCollector = new AbstractAppender("RemoteDeviceTest", null, null, true, Property.EMPTY_ARRAY) {
+            @Override
+            public void append(LogEvent event) {
+                if (event.getLevel().isMoreSpecificThan(Level.ERROR) && event.getLoggerName().equals(RemoteDevice.class.getName())) {
+                    errors.add(event.getMessage().getFormattedMessage());
+                }
+            }
+        };
+        LoggerContext context = (LoggerContext) LogManager.getContext(false);
+        errorCollector.start();
+        context.getConfiguration().getRootLogger().addAppender(errorCollector, null, null);
+        context.updateLoggers();
+
+        try {
+            // E.g. switched off, while MIDI clock is routed to it
+            int port;
+            try (ServerSocket closed = new ServerSocket(0)) {
+                port = closed.getLocalPort();
+            }
+            RemoteDevice remoteDevice = remoteDevice(port);
+
+            for (int i = 0; i < 48; i++) {
+                remoteDevice.sendMidiSignal(new MidiSignal(248, 0, 0, 0));
+            }
+            remoteDevice.load(true, "Song 1");
+
+            assertEquals(1, errors.size(), errors.toString());
+        } finally {
+            context.getConfiguration().getRootLogger().removeAppender(errorCollector.getName());
+            context.updateLoggers();
+            errorCollector.stop();
+        }
     }
 
 }

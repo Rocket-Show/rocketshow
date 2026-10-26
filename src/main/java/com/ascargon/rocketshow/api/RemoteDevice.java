@@ -78,6 +78,11 @@ public class RemoteDevice {
     private static class Sender {
 
         private final AtomicBoolean dropping = new AtomicBoolean();
+
+        // A unit which doesn't answer fails every request, e.g. each MIDI clock. Its failure is logged once, until it
+        // answers again.
+        private final AtomicBoolean failing = new AtomicBoolean();
+
         private final ThreadPoolExecutor executor;
 
         private Sender(String host) {
@@ -112,7 +117,15 @@ public class RemoteDevice {
         httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
     }
 
-    private void executeRequest(String url, Object payload) {
+    private void logFailure(Sender sender, String message, Object... arguments) {
+        if (sender.failing.compareAndSet(false, true)) {
+            logger.error(message + " (until it answers again, further failures are only logged when debugging)", arguments);
+        } else {
+            logger.debug(message, arguments);
+        }
+    }
+
+    private void executeRequest(Sender sender, String url, Object payload) {
         try {
             HttpPost httpPost = new HttpPost(url);
             httpPost.addHeader(ApiKeyAuthFilter.API_KEY_HEADER_NAME, apiKey);
@@ -133,10 +146,12 @@ public class RemoteDevice {
             logger.debug("Response from remote device POST: {}", body);
 
             if (response.getStatusLine().getStatusCode() != 200) {
-                logger.error("Could not executeFromTrigger action on remote device with URL '{}'. Reason: '{}'. Body: {}", url, response.getStatusLine().getReasonPhrase(), body);
+                logFailure(sender, "Could not executeFromTrigger action on remote device with URL '{}'. Reason: '{}'. Body: {}", url, response.getStatusLine().getReasonPhrase(), body);
+            } else if (sender.failing.compareAndSet(true, false)) {
+                logger.info("Unit '{}' answers again", name);
             }
         } catch (Exception e) {
-            logger.error("Could not executeFromTrigger action on remote device '{}' with url '{}'", name, url, e);
+            logFailure(sender, "Could not executeFromTrigger action on remote device '{}' with url '{}'", name, url, e);
         }
     }
 
@@ -147,7 +162,7 @@ public class RemoteDevice {
         Sender sender = senders.computeIfAbsent(String.valueOf(host), Sender::new);
 
         Future<?> request = sender.executor.submit(() -> {
-            executeRequest(url, payload);
+            executeRequest(sender, url, payload);
 
             if (sender.executor.getQueue().isEmpty() && sender.dropping.compareAndSet(true, false)) {
                 logger.info("Unit '{}' caught up with the requests", host);
