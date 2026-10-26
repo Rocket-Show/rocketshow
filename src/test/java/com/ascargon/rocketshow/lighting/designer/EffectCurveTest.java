@@ -194,31 +194,32 @@ class EffectCurveTest {
     void swingsASineAroundItsPosition() {
         EffectCurve curve = curve("sine");
 
+        // over its whole amplitude
         assertEquals(0.5, valueAt(curve, 0), 1e-9);
-        assertEquals(0.75, valueAt(curve, 250), 1e-9);
+        assertEquals(1, valueAt(curve, 250), 1e-9);
         assertEquals(0.5, valueAt(curve, 500), 1e-9);
-        assertEquals(0.25, valueAt(curve, 750), 1e-9);
+        assertEquals(0, valueAt(curve, 750), 1e-9);
         assertEquals(0.5, valueAt(curve, 1000), 1e-9);
     }
 
     @Test
     void shapesTheOtherCurves() {
-        // a square swings over the whole amplitude, the other curves over half of it
+        // every curve swings over its whole amplitude, like the square
         EffectCurve square = curve("square");
         assertEquals(0, valueAt(square, 100), 1e-9);
         assertEquals(1, valueAt(square, 600), 1e-9);
 
         EffectCurve triangle = curve("triangle");
         assertEquals(0.5, valueAt(triangle, 0), 1e-9);
-        assertEquals(0.75, valueAt(triangle, 250), 1e-9);
-        assertEquals(0.25, valueAt(triangle, 750), 1e-9);
+        assertEquals(1, valueAt(triangle, 250), 1e-9);
+        assertEquals(0, valueAt(triangle, 750), 1e-9);
 
         EffectCurve sawtooth = curve("sawtooth");
-        assertEquals(0.25, valueAt(sawtooth, 0), 1e-9);
+        assertEquals(0, valueAt(sawtooth, 0), 1e-9);
         assertEquals(0.5, valueAt(sawtooth, 500), 1e-9);
 
         EffectCurve reverseSawtooth = curve("reverse-sawtooth");
-        assertEquals(0.75, valueAt(reverseSawtooth, 0), 1e-9);
+        assertEquals(1, valueAt(reverseSawtooth, 0), 1e-9);
         assertEquals(0.5, valueAt(reverseSawtooth, 500), 1e-9);
     }
 
@@ -249,7 +250,7 @@ class EffectCurveTest {
         curve.setRunCycles(2);
 
         // the run ends on a cycle border: the value just before it stays
-        assertEquals(0.75, valueAt(curve, 5000), 1e-6);
+        assertEquals(1, valueAt(curve, 5000), 1e-6);
 
         curve.setEndMode("base");
         assertNull(curve.getValueAtMillis(5000, 0, 1, null));
@@ -263,7 +264,7 @@ class EffectCurveTest {
         curve.setPhasingMillis(300);
 
         assertNull(curve.getValueAtMillis(200, 1, 2, null));
-        assertEquals(0.25, curve.getValueAtMillis(300, 1, 2, null), 1e-9);
+        assertEquals(0, curve.getValueAtMillis(300, 1, 2, null), 1e-9);
     }
 
 }

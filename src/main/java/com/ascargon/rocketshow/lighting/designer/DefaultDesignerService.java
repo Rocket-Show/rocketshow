@@ -51,7 +51,7 @@ public class DefaultDesignerService implements DesignerService {
     // the highest project version this player knows. A project written by a newer
     // designer still plays as well as it can, but whatever came after this version is
     // missing from it. Package visible for the test of the designer template.
-    static final int SUPPORTED_PROJECT_VERSION = 7;
+    static final int SUPPORTED_PROJECT_VERSION = 8;
 
     // Live preview
     private boolean playPreview = false; // Is the preview playing a composition?
@@ -1760,6 +1760,7 @@ public class DefaultDesignerService implements DesignerService {
 
         migrateProjectToVersion3(project);
         migrateProjectToVersion7(project);
+        migrateProjectToVersion8(project);
     }
 
     private void migrateProjectToVersion3(Project project) {
@@ -1823,6 +1824,32 @@ public class DefaultDesignerService implements DesignerService {
         project.setVersion(7);
 
         logger.info("Migrated designer project '" + project.getName() + "' to version 7");
+    }
+
+    private void migrateProjectToVersion8(Project project) {
+        if (project.getVersion() >= 8) {
+            return;
+        }
+
+        // every curve swings over its whole amplitude now, like the square did already. the others swung over half
+        // of it -> halve their amplitude, so an older project still looks exactly the same.
+        if (project.getPresets() != null) {
+            for (Preset preset : project.getPresets()) {
+                if (preset.getEffects() == null) {
+                    continue;
+                }
+
+                for (Effect effect : preset.getEffects()) {
+                    if (effect instanceof EffectCurve curve && !"square".equals(curve.getCurveType())) {
+                        curve.setAmplitude(curve.getAmplitude() / 2);
+                    }
+                }
+            }
+        }
+
+        project.setVersion(8);
+
+        logger.info("Migrated designer project '" + project.getName() + "' to version 8");
     }
 
     private int getGlobalFixtureIndex(Project project, PresetFixture presetFixture) {

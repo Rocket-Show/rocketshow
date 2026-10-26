@@ -51,6 +51,10 @@ import static org.mockito.Mockito.when;
  */
 class DesignerProjectCompatibilityTest {
 
+    // The project version the designer of the web app (@rocketshow/designer) writes. Raise it with the version of
+    // dist/designer_template.json, when the web app gets a designer writing a newer version.
+    private static final int WEB_APP_DESIGNER_PROJECT_VERSION = 7;
+
     // A position in a composition of the project
     private record Position(String compositionName, long positionMillis) {
     }
@@ -277,8 +281,10 @@ class DesignerProjectCompatibilityTest {
         List<Position> positions = getScenePositions(project);
         List<Map<String, Integer>> universes = new ArrayList<>();
 
-        // In the current format, a new project is not migrated
-        assertEquals(DefaultDesignerService.SUPPORTED_PROJECT_VERSION, project.getVersion());
+        // In the format of the designer the web app comes with, so a new project is not migrated in it. The engine may
+        // know a newer one already, e.g. until that designer is released: then the engine migrates it like any other.
+        assertEquals(WEB_APP_DESIGNER_PROJECT_VERSION, project.getVersion());
+        assertTrue(WEB_APP_DESIGNER_PROJECT_VERSION <= DefaultDesignerService.SUPPORTED_PROJECT_VERSION);
         assertFalse(positions.isEmpty());
 
         List<String> errors = getErrorsWhilePlaying(template, positions, universes);
@@ -296,7 +302,7 @@ class DesignerProjectCompatibilityTest {
 
         migrate(project);
 
-        assertEquals(7, project.getVersion());
+        assertEquals(DefaultDesignerService.SUPPORTED_PROJECT_VERSION, project.getVersion());
         assertEquals(1, preset.getSteps().size());
         assertEquals(look, preset.getSteps().getFirst().getFixtureCapabilityValues());
     }
@@ -308,8 +314,27 @@ class DesignerProjectCompatibilityTest {
 
         migrate(project);
 
-        assertEquals(7, project.getVersion());
+        assertEquals(DefaultDesignerService.SUPPORTED_PROJECT_VERSION, project.getVersion());
         assertEquals(steps, project.getPresets().getFirst().getSteps());
+    }
+
+    @Test
+    void swingsTheCurvesOfOldProjectsLikeBefore() throws Exception {
+        // Until version 8, the curves except the square swung over half of their amplitude
+        Project project = readProject(getMigrationProject("Template version 7.json"));
+        List<Effect> effects = project.getPresets().getFirst().getEffects();
+        EffectCurve sine = (EffectCurve) effects.getFirst();
+        float sineAmplitude = sine.getAmplitude();
+        EffectCurve square = new EffectCurve();
+        square.setCurveType("square");
+        square.setAmplitude(0.5f);
+        effects.add(square);
+
+        migrate(project);
+
+        assertEquals(8, project.getVersion());
+        assertEquals(sineAmplitude / 2, sine.getAmplitude());
+        assertEquals(0.5f, square.getAmplitude());
     }
 
     @Test
