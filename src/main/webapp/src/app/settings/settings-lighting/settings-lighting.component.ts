@@ -125,7 +125,7 @@ export class SettingsLightingComponent implements OnInit {
       .pipe(
         switchMap(() =>
           forkJoin({
-            settings: this.settingsService.getSettings(true),
+            savedSettings: this.settingsService.getSavedSettings(),
             olaOutputPorts: this.settingsService.getOlaOutputPortList(),
           })
         ),
@@ -134,7 +134,10 @@ export class SettingsLightingComponent implements OnInit {
         })
       )
       .subscribe((response) => {
-        this.settings = response.settings;
+        // Only take over the saved universes (e.g. with new UUIDs). Replacing
+        // the whole settings would discard unsaved changes in the other tabs.
+        this.settings.lightingUniverseList =
+          response.savedSettings.lightingUniverseList;
         this.olaOutputPortList = response.olaOutputPorts;
       });
   }
