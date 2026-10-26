@@ -12,8 +12,8 @@ jobs:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
@@ -24,12 +24,12 @@ jobs:
         run: |
           awk -F, 'NR > 1 { missed += $8; covered += $9 } END { printf "Line coverage of the unit tests: %.1f %%\n", 100 * covered / (covered + missed) }' \
             target/site/jacoco/jacoco.csv >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: target/site/jacoco
           retention-days: 14
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: test-reports
@@ -41,8 +41,8 @@ jobs:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           # Like the Maven build (frontend-maven-plugin in the pom)
           node-version: 24
@@ -60,19 +60,19 @@ jobs:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
           cache: maven
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.npm
           key: npm-${{ hashFiles('src/main/webapp/package-lock.json') }}
       - name: Build the application including the web app
         run: ./mvnw -B package -DskipTests
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: rocketshow-jar
           path: target/rocketshow.jar
@@ -83,15 +83,15 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: rocketshow-jar
           path: ${{ runner.temp }}/unit
@@ -121,7 +121,7 @@ jobs:
       - name: Collect the log of the unit
         if: always()
         run: cp ${{ runner.temp }}/unit/rocketshow.log ${{ runner.temp }}/screenshots/ 2>/dev/null || true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: smoke-test
@@ -135,8 +135,8 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/master')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
@@ -155,7 +155,7 @@ jobs:
       - name: Load the new sample like the next releases
         if: steps.sample.outputs.missing == 'true'
         run: ./mvnw -B test -Dskip.npm -Dskip.installnodenpm -Dtest='CompatibilityTest,DesignerProjectCompatibilityTest,DefaultSettingsServiceTest,ReleaseSampleStartTest,ReleaseSamplesStartTest'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: steps.sample.outputs.missing == 'true'
         with:
           name: release-sample-${{ steps.sample.outputs.release }}
