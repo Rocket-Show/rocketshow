@@ -521,10 +521,18 @@ export class EditorCompositionComponent implements OnInit {
     }, millis);
   }
 
+  private stopPlayUpdate() {
+    if (this.playUpdateSubscription) {
+      this.playUpdateSubscription.unsubscribe();
+      this.playUpdateSubscription = undefined;
+    }
+  }
+
   play() {
     this.compositionService
       .testPlay(this.currentComposition)
       .subscribe((result) => {
+        this.stopPlayUpdate();
         this.testPlayDurationMillis = result.durationMillis;
         this.lastPlayTime = new Date();
         this.lastPlayPositionMillis = 0;
@@ -545,11 +553,14 @@ export class EditorCompositionComponent implements OnInit {
   }
 
   stop() {
+    if (this.stopTimer) {
+      clearTimeout(this.stopTimer);
+      this.stopTimer = undefined;
+    }
+
     this.compositionService.testStop().subscribe(() => {
       this.isTestPlaying = false;
-      if (this.playUpdateSubscription) {
-        this.playUpdateSubscription.unsubscribe;
-      }
+      this.stopPlayUpdate();
     });
   }
 
