@@ -1,9 +1,6 @@
 package com.ascargon.rocketshow.gstreamer;
 
 import com.sun.jna.Pointer;
-import org.freedesktop.gstreamer.Bus;
-import org.freedesktop.gstreamer.Gst;
-import org.freedesktop.gstreamer.Pipeline;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -16,12 +13,9 @@ import java.io.ByteArrayInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Reading the duration and the audio channels of uploaded media, like when saving a composition. Needs GStreamer with
@@ -36,7 +30,8 @@ class DefaultGstDiscovererServiceTest {
 
     @BeforeAll
     static void initGstreamer() {
-        TestGstreamer.assumeInstalled("wavparse", "videotestsrc", "jpegenc", "jpegdec", "avimux", "avidemux");
+        TestGstreamer.assumeInstalled("wavparse", "audiotestsrc", "videotestsrc", "jpegenc", "jpegdec", "avimux", "avidemux",
+                "lamemp3enc", "mpg123audiodec", "vorbisenc", "vorbisdec", "oggmux", "flacenc", "flacdec");
     }
 
     private Path wav(String name, int channels, int millis) throws Exception {
@@ -65,15 +60,23 @@ class DefaultGstDiscovererServiceTest {
     }
 
     @Test
+    void readsTheDurationAndTheChannelsOfCompressedAudio() throws Exception {
+        for (String encoder : List.of("lamemp3enc", "vorbisenc ! oggmux", "flacenc")) {
+            Path file = directory.resolve("song-" + encoder.substring(0, 4));
+            TestGstreamer.encode("audiotestsrc num-buffers=150 samplesperbuffer=480 ! audio/x-raw,rate=48000,channels=2 ! audioconvert ! "
+                    + encoder + " ! filesink location=" + file);
+
+            Pointer song = discovererService.getDiscovererInformation(file.toString());
+            // MP3 adds the delay and padding of the encoder (up to about 2 frames of 1152 samples)
+            assertEquals(1500, discovererService.getDurationMillis(song), encoder.startsWith("lame") ? 100 : 20, encoder);
+            assertEquals(2, discovererService.getChannels(song), encoder);
+        }
+    }
+
+    @Test
     void readsTheDurationOfVideo() throws Exception {
         Path file = directory.resolve("clip.avi");
-        Pipeline pipeline = (Pipeline) Gst.parseLaunch("videotestsrc num-buffers=50 ! video/x-raw,width=64,height=48,framerate=25/1 ! jpegenc ! avimux ! filesink location=" + file);
-        CountDownLatch written = new CountDownLatch(1);
-        pipeline.getBus().connect((Bus.EOS) source -> written.countDown());
-        pipeline.play();
-        assertTrue(written.await(10, TimeUnit.SECONDS));
-        pipeline.stop();
-        pipeline.dispose();
+        TestGstreamer.encode("videotestsrc num-buffers=50 ! video/x-raw,width=64,height=48,framerate=25/1 ! jpegenc ! avimux ! filesink location=" + file);
 
         Pointer video = discovererService.getDiscovererInformation(file.toString());
         assertEquals(2000, discovererService.getDurationMillis(video));

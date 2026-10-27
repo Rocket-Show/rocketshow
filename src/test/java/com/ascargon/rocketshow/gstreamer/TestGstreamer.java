@@ -1,7 +1,12 @@
 package com.ascargon.rocketshow.gstreamer;
 
+import org.freedesktop.gstreamer.Bus;
 import org.freedesktop.gstreamer.ElementFactory;
 import org.freedesktop.gstreamer.Gst;
+import org.freedesktop.gstreamer.Pipeline;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -48,6 +53,18 @@ public class TestGstreamer {
 
             assumeOrRequire(installed, "The GStreamer element " + element + " is not installed");
         }
+    }
+
+    // Runs a pipeline in the syntax of gst-launch until its end, e.g. to encode the media of a test
+    public static void encode(String pipelineDescription) throws Exception {
+        Pipeline pipeline = (Pipeline) Gst.parseLaunch(pipelineDescription);
+        CountDownLatch written = new CountDownLatch(1);
+        pipeline.getBus().connect((Bus.EOS) source -> written.countDown());
+        pipeline.getBus().connect((Bus.ERROR) (source, code, message) -> written.countDown());
+        pipeline.play();
+        assertTrue(written.await(30, TimeUnit.SECONDS), "Could not encode " + pipelineDescription);
+        pipeline.stop();
+        pipeline.dispose();
     }
 
 }
