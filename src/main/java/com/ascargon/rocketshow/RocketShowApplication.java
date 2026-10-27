@@ -63,11 +63,10 @@ public class RocketShowApplication {
         // Start the designer preview, if necessary
         context.getBean(DesignerService.class);
 
-        // Update the fixture profiles, if possible
-        // TODO only update each week/month whatever to reduce traffic
+        // Update the fixture profiles once a week, if possible
         FixtureService fixtureService = context.getBean(FixtureService.class);
         try {
-            fixtureService.updateProfiles();
+            fixtureService.updateProfilesIfOutdated();
         } catch (Exception e) {
             // do nothing. maybe we're not connected to the internet. the user
             // is able to update the profiles manually from the webapp.

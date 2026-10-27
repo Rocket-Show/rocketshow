@@ -15,6 +15,7 @@ import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -32,6 +33,10 @@ public class DefaultFixtureService implements FixtureService {
     private final FileFilterService fileFilterService;
 
     private final String MANUFACTURERS_FILE_NAME = "manufacturers.json";
+
+    // How often the library is updated at the start: it changes rarely, and each update rewrites about 600 files on the
+    // SD card and holds up the start. The web app updates it on demand.
+    private final static Duration UPDATE_INTERVAL = Duration.ofDays(7);
 
     private List<SearchFixtureTemplate> searchFixtureTemplates;
 
@@ -210,6 +215,18 @@ public class DefaultFixtureService implements FixtureService {
     }
 
     @Override
+    public void updateProfilesIfOutdated() throws IOException {
+        File manufacturersFile = new File(new File(basePath).getAbsoluteFile(), MANUFACTURERS_FILE_NAME);
+
+        if (manufacturersFile.isFile() && System.currentTimeMillis() - manufacturersFile.lastModified() < UPDATE_INTERVAL.toMillis()) {
+            logger.info("The fixture library is up to date");
+            return;
+        }
+
+        updateProfiles();
+    }
+
+    @Override
     public void updateProfiles() throws IOException {
         // Download the current profile set, if an internet connection is available. The library is replaced, once
         // the new one is complete: a download breaking off (e.g. on a stage network) must not leave the unit without
@@ -248,6 +265,9 @@ public class DefaultFixtureService implements FixtureService {
             }
             Files.move(downloadDirectory.toPath(), libraryDirectory.toPath());
             FileUtils.deleteDirectory(oldDirectory);
+
+            // The time of the update, for the next start
+            new File(libraryDirectory, MANUFACTURERS_FILE_NAME).setLastModified(System.currentTimeMillis());
         } finally {
             Files.deleteIfExists(downloadFile.toPath());
             FileUtils.deleteDirectory(downloadDirectory);

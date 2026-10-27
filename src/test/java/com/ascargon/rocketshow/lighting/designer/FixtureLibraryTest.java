@@ -23,10 +23,12 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -208,6 +210,39 @@ class FixtureLibraryTest {
         try (Stream<Path> paths = Files.list(directory)) {
             return paths.map(path -> path.getFileName().toString()).sorted().toList();
         }
+    }
+
+    @Test
+    void updatesTheLibraryAtTheStartOnceAWeek() throws Exception {
+        AtomicInteger downloads = new AtomicInteger();
+        byte[] newLibrary = zip(NEW_LIBRARY);
+        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/designer/downloads/fixtures.zip", exchange -> {
+            downloads.incrementAndGet();
+            exchange.sendResponseHeaders(200, newLibrary.length);
+            exchange.getResponseBody().write(newLibrary);
+            exchange.close();
+        });
+        server.start();
+        servers.add(server);
+        fixtureService.libraryUrl = "http://127.0.0.1:" + server.getAddress().getPort() + "/designer/downloads/fixtures.zip";
+
+        // Last updated 8 days ago
+        File manufacturers = library.resolve("manufacturers.json").toFile();
+        assertTrue(manufacturers.setLastModified(System.currentTimeMillis() - Duration.ofDays(8).toMillis()));
+        fixtureService.updateProfilesIfOutdated();
+        assertEquals(1, downloads.get());
+        assertEquals(List.of("acme/par"), fixtureService.searchFixtures(null, null, null, null).stream().map(SearchFixtureTemplate::getUuid).toList());
+
+        // Just updated: kept at the next starts
+        fixtureService.updateProfilesIfOutdated();
+        assertEquals(1, downloads.get());
+
+        // Missing, e.g. a new unit
+        FileUtils.deleteDirectory(library.toFile());
+        fixtureService.updateProfilesIfOutdated();
+        assertEquals(2, downloads.get());
+        assertTrue(library.resolve("manufacturers.json").toFile().isFile());
     }
 
     @Test
