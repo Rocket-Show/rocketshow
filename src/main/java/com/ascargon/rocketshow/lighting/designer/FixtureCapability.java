@@ -86,7 +86,8 @@ public class FixtureCapability {
     private FixtureCapabilityColor color;
     private List<Integer> dmxRange;
     private Object wheel;
-    private Integer slotNumber;
+    // e.g. 2.5 for the split between the slots 2 and 3
+    private Double slotNumber;
     private String brightness;
     private String brightnessStart;
     private String brightnessEnd;

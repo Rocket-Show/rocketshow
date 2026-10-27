@@ -16,9 +16,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * The pixels of a fixture matrix and its pixel groups. These mirror FixtureService and
- * FixturePixelGroupResolveService in the Rocket Show Designer, which read the pixel keys as
- * [x][y][z] and count the positions from 0.
+ * The pixels of a fixture matrix and its pixel groups, like the Open Fixture Library defines them: the pixel keys are
+ * given by Z, Y and X, the positions count from 1. These mirror FixtureService and FixturePixelGroupResolveService in
+ * the Rocket Show Designer.
  */
 class FixturePixelGroupTest {
 
@@ -32,14 +32,14 @@ class FixturePixelGroupTest {
                 ],
                 "pixelGroups": {
                   "All": "all",
-                  "Corners": ["A1", "D2"],
-                  "Second row": {"y": ["=1"]},
-                  "Odd": {"z": ["odd"]},
-                  "Even": {"z": ["even"]},
-                  "First layer of B": {"x": ["<=0"], "name": ["^B"]},
-                  "Second layer": {"x": [">=1"]},
-                  "Every second": {"z": ["2n+1"]},
-                  "Plain number": {"y": ["0"], "x": ["1"]}
+                  "Corners": ["D2", "A1"],
+                  "Second row": {"y": ["=2"]},
+                  "Odd": {"x": ["odd"]},
+                  "Even": {"x": ["even"]},
+                  "First layer of B": {"z": ["<=1"], "name": ["^B"]},
+                  "Second layer": {"z": [">=2"]},
+                  "Every second": {"x": ["2n"]},
+                  "Plain number": {"y": ["1"], "z": ["2"]}
                 }
               }
             }
@@ -68,23 +68,79 @@ class FixturePixelGroupTest {
                 .toList();
     }
 
+    private static FixtureProfile profile(String matrix) {
+        return new ObjectMapper().readValue("{\"matrix\": " + matrix + "}", FixtureProfile.class);
+    }
+
+    private List<String> keys(FixtureProfile profile, String... repeatFor) {
+        return designerService.getPixelsInOrder(profile, List.of(repeatFor)).stream().map(CachedFixturePixel::getKey).toList();
+    }
+
     @Test
     void placesEachPixelAtItsPosition() {
-        assertEquals(List.of("A1 0/0/0", "A2 0/0/1", "B1 0/1/0", "B2 0/1/1", "C1 1/0/0", "D1 1/1/0", "D2 1/1/1"),
+        assertEquals(List.of("A1 1/1/1", "A2 2/1/1", "B1 1/2/1", "B2 2/2/1", "C1 1/1/2", "D1 1/2/2", "D2 2/2/2"),
                 designerService.getAllPixelKeys(profile).stream().map(FixturePixelGroupTest::describe).toList());
     }
 
     @Test
+    void namesThePixelsOfAPixelCountLikeTheLibrary() {
+        assertEquals(List.of("1 1/1/1", "2 2/1/1", "3 3/1/1"),
+                designerService.getAllPixelKeys(profile("{\"pixelCount\": [3, 1, 1]}")).stream().map(FixturePixelGroupTest::describe).toList());
+        assertEquals(List.of("1", "2"), keys(profile("{\"pixelCount\": [1, 2, 1]}"), "eachPixelXYZ"));
+        assertEquals(List.of("(1, 1) 1/1/1", "(2, 1) 2/1/1", "(1, 2) 1/2/1", "(2, 2) 2/2/1"),
+                designerService.getAllPixelKeys(profile("{\"pixelCount\": [2, 2, 1]}")).stream().map(FixturePixelGroupTest::describe).toList());
+        // X and Z
+        assertEquals(List.of("(1, 1)", "(2, 1)", "(1, 2)", "(2, 2)"), keys(profile("{\"pixelCount\": [2, 1, 2]}"), "eachPixelXYZ"));
+        assertEquals(List.of("(1, 1, 1)", "(2, 1, 1)", "(1, 2, 1)", "(2, 2, 1)", "(1, 1, 2)", "(2, 1, 2)", "(1, 2, 2)", "(2, 2, 2)"),
+                keys(profile("{\"pixelCount\": [2, 2, 2]}"), "eachPixelXYZ"));
+    }
+
+    @Test
+    void ordersThePixelsByTheirAxes() {
+        // The first axis changes fastest
+        assertEquals(List.of("A1", "A2", "B1", "B2", "C1", "D1", "D2"), keys(profile, "eachPixelXYZ"));
+        assertEquals(List.of("A1", "B1", "A2", "B2", "C1", "D1", "D2"), keys(profile, "eachPixelYXZ"));
+        assertEquals(List.of("A1", "C1", "B1", "D1", "A2", "B2", "D2"), keys(profile, "eachPixelZYX"));
+        assertEquals(List.of("A1", "C1", "A2", "B1", "D1", "B2", "D2"), keys(profile, "eachPixelZXY"));
+        assertEquals(List.of("A1", "A2", "C1", "B1", "B2", "D1", "D2"), keys(profile, "eachPixelXZY"));
+        assertEquals(List.of("A1", "B1", "C1", "D1", "A2", "B2", "D2"), keys(profile, "eachPixelYZX"));
+
+        FixtureProfile grid = profile("{\"pixelCount\": [3, 2, 1]}");
+        assertEquals(List.of("(1, 1)", "(1, 2)", "(2, 1)", "(2, 2)", "(3, 1)", "(3, 2)"), keys(grid, "eachPixelYXZ"));
+    }
+
+    @Test
+    void ordersThePixelKeysByTheirNumbers() {
+        // 2 before 10, like the fixture library
+        FixtureProfile bar = profile("{\"pixelKeys\": [[[\"10\", \"2\", \"1\", \"Spot\", \"11\"]]]}");
+
+        assertEquals(List.of("1", "2", "10", "11", "Spot"), keys(bar, "eachPixelABC"));
+    }
+
+    @Test
+    void repeatsChannelsForPixelGroupsAsAWhole() {
+        // E.g. "Red Corners" controls both corners
+        assertEquals(List.of("Corners", "Second row"), keys(profile, "Corners", "Second row"));
+        assertEquals(List.of("All", "Corners", "Second row", "Odd", "Even", "First layer of B", "Second layer", "Every second", "Plain number"),
+                keys(profile, "eachPixelGroup"));
+        // Pixels and groups mixed, also a single one
+        assertEquals(List.of("D2", "Corners"), keys(profile, "D2", "Corners"));
+        assertEquals(List.of("B1"), keys(profile, "B1"));
+        assertEquals(List.of(), keys(profile, "No such pixel"));
+    }
+
+    @Test
     void resolvesGroupsByKeys() {
+        // All alphanumerically, listed keys as listed
         assertEquals(List.of("A1", "A2", "B1", "B2", "C1", "D1", "D2"), group("All"));
-        assertEquals(List.of("A1", "D2"), group("Corners"));
+        assertEquals(List.of("D2", "A1"), group("Corners"));
     }
 
     @Test
     void resolvesGroupsByPosition() {
         assertEquals(List.of("B1", "B2", "D1", "D2"), group("Second row"));
-        assertEquals(List.of("A2", "B2", "D2"), group("Odd"));
-        assertEquals(List.of("A1", "B1", "C1", "D1"), group("Even"));
+        assertEquals(List.of("A1", "B1", "C1", "D1"), group("Odd"));
+        assertEquals(List.of("A2", "B2", "D2"), group("Even"));
         assertEquals(List.of("C1", "D1", "D2"), group("Second layer"));
         assertEquals(List.of("A2", "B2", "D2"), group("Every second"));
         assertEquals(List.of("C1"), group("Plain number"));

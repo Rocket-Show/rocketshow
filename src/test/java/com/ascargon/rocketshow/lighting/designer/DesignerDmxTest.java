@@ -219,7 +219,8 @@ class DesignerDmxTest {
                 ]}
                 """);
         ((ObjectNode) project.get("fixtureProfiles").get(0).get("availableChannels")).set("Dimmer", dimmer);
-        assertEquals(71, play(project).get(FRONT).get(1));
+        // Half of the brightness: half way from dark (1 %) to bright
+        assertEquals(70, play(project).get(FRONT).get(1));
     }
 
     @Test
@@ -403,10 +404,30 @@ class DesignerDmxTest {
 
         Map<Integer, Integer> front = play(project).get(FRONT);
 
-        // Half way between dark and bright, not in the strobe range. Off is the start of the range (dark), like in
-        // the designer, which also lets the later capability win.
-        assertEquals(71, front.get(1));
-        assertEquals(8, front.get(11));
+        // Half of the brightness: half way from dark (1 %) to bright, not in the strobe range. Off is the capability
+        // giving off.
+        assertEquals(70, front.get(1));
+        assertEquals(3, front.get(11));
+    }
+
+    @Test
+    void setsTheBrightnessGivenInLumens() throws Exception {
+        ObjectNode project = project();
+        ObjectNode dimmer = (ObjectNode) objectMapper.readTree("""
+                {"fineChannelAliases": [], "capabilities": [
+                  {"dmxRange": [0, 127], "type": "Intensity", "brightnessStart": "0lm", "brightnessEnd": "500lm"},
+                  {"dmxRange": [128, 255], "type": "Intensity", "brightnessStart": "500lm", "brightnessEnd": "1000lm"}
+                ]}
+                """);
+        ((ObjectNode) project.get("fixtureProfiles").get(0).get("availableChannels")).set("Dimmer", dimmer);
+        addPreset(project, "Quarter", List.of("par-1"), List.of(capability(project, "Intensity", 0.25)));
+        addPreset(project, "Three quarters", List.of("par-2"), List.of(capability(project, "Intensity", 0.75)));
+
+        Map<Integer, Integer> front = play(project).get(FRONT);
+
+        // Compared to the brightest capability (1000 lm)
+        assertEquals(63, front.get(1));
+        assertEquals(191, front.get(11));
     }
 
 }

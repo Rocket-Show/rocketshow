@@ -645,30 +645,31 @@ public class DefaultDesignerService implements DesignerService {
         return profile.getWheels().getWheels().get(wheelName);
     }
 
-    private List<FixtureWheelSlot> getWheelSlots(FixtureWheel wheel, int slotNumber) {
-        // return one slot or two slots, if they are mixed (e.g. slot number 2.5 returns the slots 2 and 3)
+    // The slot of a wheel by its number, counted from 1 and around the wheel like in the fixture library (e.g. 9 is the
+    // first slot of a wheel with 8 slots, 0 the last)
+    private static FixtureWheelSlot getWheelSlot(FixtureWheel wheel, int slotNumber) {
+        int slotCount = wheel.getSlots().size();
+        return wheel.getSlots().get(Math.floorMod(slotNumber - 1, slotCount));
+    }
+
+    private List<FixtureWheelSlot> getWheelSlots(FixtureWheel wheel, double slotNumber) {
+        // return one slot or two slots, if they are split (e.g. slot number 2.5 returns the slots 2 and 3)
         List<FixtureWheelSlot> slots = new ArrayList<>();
 
-        if (wheel == null) {
+        if (wheel == null || wheel.getSlots() == null || wheel.getSlots().isEmpty()) {
             return slots;
         }
 
-        if (slotNumber - (double) slotNumber > 0) {
-            // two slots are set
-            int number = (int) ((double) slotNumber);
-            slots.add(wheel.getSlots().get(number - 1));
-            if (number >= 0 && number < wheel.getSlots().size()) {
-                slots.add(wheel.getSlots().get(number));
-            }
-        } else {
-            // only one slot is set
-            slots.add(wheel.getSlots().get(slotNumber - 1));
+        slots.add(getWheelSlot(wheel, (int) Math.floor(slotNumber)));
+
+        if (slotNumber != Math.floor(slotNumber)) {
+            slots.add(getWheelSlot(wheel, (int) Math.ceil(slotNumber)));
         }
 
         return slots;
     }
 
-    private List<String> getWheelSlotColors(FixtureWheel wheel, int slotNumber) {
+    private List<String> getWheelSlotColors(FixtureWheel wheel, double slotNumber) {
         List<String> colors = new ArrayList<>();
         List<FixtureWheelSlot> wheelSlots = getWheelSlots(wheel, slotNumber);
 
@@ -704,7 +705,7 @@ public class DefaultDesignerService implements DesignerService {
         return new Color(r, g, b);
     }
 
-    private Color getMixedWheelSlotColor(FixtureWheel wheel, Integer slotNumber) {
+    private Color getMixedWheelSlotColor(FixtureWheel wheel, double slotNumber) {
         List<String> colors = getWheelSlotColors(wheel, slotNumber);
         List<Color> colorsRgb = new ArrayList<>();
 
@@ -898,6 +899,146 @@ public class DefaultDesignerService implements DesignerService {
         return intensityPercentageScene * intensityPercentagePreset;
     }
 
+    private static boolean isBrightness(FixtureCapabilityValue capabilityValue) {
+        return (capabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Intensity || capabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity)
+                && capabilityValue.getValuePercentage() != null;
+    }
+
+    private static Double parseBrightnessNumber(String brightness, String unit) {
+        try {
+            return Double.parseDouble(brightness.substring(0, brightness.length() - unit.length()).trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    // How bright a capability lights, from 0 to 1, like the fixture library gives it: "off", "dark", "bright", in
+    // percent or in lumens (compared to the brightest capability of the channel)
+    private static Double getBrightness(String brightness, double maxLumens) {
+        if (brightness == null) {
+            return null;
+        }
+
+        return switch (brightness) {
+            case "off" -> 0d;
+            case "dark" -> 0.01;
+            case "bright" -> 1d;
+            default -> {
+                if (brightness.endsWith("%")) {
+                    Double percent = parseBrightnessNumber(brightness, "%");
+                    yield percent == null ? null : percent / 100;
+                }
+                if (brightness.endsWith("lm") && maxLumens > 0) {
+                    Double lumens = parseBrightnessNumber(brightness, "lm");
+                    yield lumens == null ? null : lumens / maxLumens;
+                }
+                yield null;
+            }
+        };
+    }
+
+    private static double getMaxLumens(List<CachedFixtureCapability> capabilities) {
+        double maxLumens = 0;
+
+        for (CachedFixtureCapability channelCapability : capabilities) {
+            FixtureCapability capability = channelCapability.getCapability();
+
+            for (String brightness : new String[]{capability.getBrightness(), capability.getBrightnessStart(), capability.getBrightnessEnd()}) {
+                if (brightness != null && brightness.endsWith("lm")) {
+                    Double lumens = parseBrightnessNumber(brightness, "lm");
+                    if (lumens != null) {
+                        maxLumens = Math.max(maxLumens, lumens);
+                    }
+                }
+            }
+        }
+
+        return maxLumens;
+    }
+
+    // The brightness at the start and at the end of a capability: from off to bright, if not given
+    private static double[] getBrightnessRange(FixtureCapability capability, double maxLumens) {
+        Double start;
+        Double end;
+
+        if (capability.getBrightness() != null) {
+            start = getBrightness(capability.getBrightness(), maxLumens);
+            end = start;
+        } else {
+            start = getBrightness(capability.getBrightnessStart(), maxLumens);
+            end = getBrightness(capability.getBrightnessEnd(), maxLumens);
+        }
+
+        return new double[]{start == null ? 0 : start, end == null ? 1 : end};
+    }
+
+    // Package visible for the tests
+    // The value of a channel lighting with the passed brightness (0 to 1). A channel with more capabilities (e.g. a
+    // dimmer sharing it with a strobe) uses the capability giving the brightness, or else the closest one (the
+    // brighter one, if two are as close).
+    Double getBrightnessValue(CachedFixtureChannel channel, List<CachedFixtureCapability> brightnessCapabilities, double brightness) {
+        if (brightnessCapabilities.isEmpty()) {
+            return null;
+        }
+
+        double maxLumens = getMaxLumens(channel.getCapabilities());
+
+        if (channel.getCapabilities().size() == 1) {
+            // the whole channel, maybe from bright to off
+            double[] range = getBrightnessRange(brightnessCapabilities.getFirst().getCapability(), maxLumens);
+            return range[0] > range[1] ? channel.getMaxValue() * (1 - brightness) : channel.getMaxValue() * brightness;
+        }
+
+        CachedFixtureCapability best = null;
+        double bestDistance = Double.MAX_VALUE;
+        double bestBrightness = 0;
+        boolean bestIsRange = false;
+
+        for (CachedFixtureCapability channelCapability : brightnessCapabilities) {
+            double[] range = getBrightnessRange(channelCapability.getCapability(), maxLumens);
+            double low = Math.min(range[0], range[1]);
+            double high = Math.max(range[0], range[1]);
+            double reached = Math.max(low, Math.min(high, brightness));
+            double distance = Math.abs(reached - brightness);
+            boolean isRange = low < high;
+
+            boolean better;
+            if (best == null || distance < bestDistance - 1e-9) {
+                better = true;
+            } else if (distance > bestDistance + 1e-9) {
+                better = false;
+            } else if (distance == 0) {
+                // both give it: a range rather than a single brightness, else the first one
+                better = isRange && !bestIsRange;
+            } else {
+                // as close: the brighter one
+                better = reached > bestBrightness;
+            }
+
+            if (better) {
+                best = channelCapability;
+                bestDistance = distance;
+                bestBrightness = reached;
+                bestIsRange = isRange;
+            }
+        }
+
+        FixtureCapability capability = best.getCapability();
+        List<Integer> dmxRange = capability.getDmxRange();
+
+        if (dmxRange == null || dmxRange.size() < 2) {
+            return null;
+        }
+
+        double[] range = getBrightnessRange(capability, maxLumens);
+
+        if (range[0] == range[1]) {
+            return (double) best.getCenterValue();
+        }
+
+        return dmxRange.get(0) + (dmxRange.get(1) - dmxRange.get(0)) * (bestBrightness - range[0]) / (range[1] - range[0]);
+    }
+
     private void mixCapabilityValues(PresetStepState state, CachedFixture cachedFixture, List<FixtureChannelValue> values, double intensityPercentage, Preset preset) {
         boolean hasColor = false;
 
@@ -905,52 +1046,32 @@ public class DefaultDesignerService implements DesignerService {
         for (FixtureCapabilityValue presetCapabilityValue : state.getFixtureCapabilityValues()) {
             for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
                 if (cachedChannel.getChannel() != null) {
+                    if (isBrightness(presetCapabilityValue)) {
+                        // intensity and colorIntensity (dimmer and color): the capabilities of the channel giving it
+                        List<CachedFixtureCapability> brightnessCapabilities = cachedChannel.getCapabilities().stream()
+                                .filter(channelCapability -> capabilitiesMatch(presetCapabilityValue.getType(), channelCapability.getCapability().getType(), presetCapabilityValue.getColor(), channelCapability.getCapability().getColor(), presetCapabilityValue.getWheel(), channelCapability.getWheelName(), presetCapabilityValue.getProfileUuid(), cachedFixture.getProfile().getUuid()))
+                                .toList();
+                        Double value = getBrightnessValue(cachedChannel, brightnessCapabilities, presetCapabilityValue.getValuePercentage());
+
+                        if (value != null) {
+                            FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
+                            fixtureChannelValue.setChannelName(cachedChannel.getName());
+                            fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
+                            fixtureChannelValue.setValue(value);
+                            this.mixChannelValue(values, fixtureChannelValue, intensityPercentage, 0);
+
+                            if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity) {
+                                hasColor = true;
+                            }
+                        }
+                    }
+
                     for (CachedFixtureCapability channelCapability : cachedChannel.getCapabilities()) {
                         if (capabilitiesMatch(presetCapabilityValue.getType(), channelCapability.getCapability().getType(), presetCapabilityValue.getColor(), channelCapability.getCapability().getColor(), presetCapabilityValue.getWheel(), channelCapability.getWheelName(), presetCapabilityValue.getProfileUuid(), cachedFixture.getProfile().getUuid())) {
                             // the capabilities match -> apply the value, if possible
-                            if ((presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Intensity || presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity) && presetCapabilityValue.getValuePercentage() != null) {
-
-                                // intensity and colorIntensity (dimmer and color)
-                                double valuePercentage = presetCapabilityValue.getValuePercentage();
-                                int defaultValue = 0;
-
-                                // brightness property
-                                if (cachedChannel.getCapabilities().size() == 1) {
-                                    // the only capability in this channel
-                                    FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
-                                    fixtureChannelValue.setChannelName(cachedChannel.getName());
-                                    fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
-                                    fixtureChannelValue.setValue(cachedChannel.getMaxValue() * valuePercentage);
-                                    this.mixChannelValue(values, fixtureChannelValue, intensityPercentage, defaultValue);
-
-                                    if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity) {
-                                        hasColor = true;
-                                    }
-                                } else {
-                                    // more than one capability in the channel
-                                    if ("off".equals(channelCapability.getCapability().getBrightness()) && valuePercentage == 0) {
-                                        FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
-                                        fixtureChannelValue.setChannelName(cachedChannel.getName());
-                                        fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
-                                        fixtureChannelValue.setValue(channelCapability.getCenterValue());
-                                        this.mixChannelValue(values, fixtureChannelValue, intensityPercentage, defaultValue);
-
-                                        if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity) {
-                                            hasColor = true;
-                                        }
-                                    } else if (("dark".equals(channelCapability.getCapability().getBrightnessStart()) || "off".equals(channelCapability.getCapability().getBrightnessStart())) && "bright".equals(channelCapability.getCapability().getBrightnessEnd())) {
-                                        double value = (channelCapability.getCapability().getDmxRange().get(1) - channelCapability.getCapability().getDmxRange().get(0)) * valuePercentage + channelCapability.getCapability().getDmxRange().get(0);
-                                        FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
-                                        fixtureChannelValue.setChannelName(cachedChannel.getName());
-                                        fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
-                                        fixtureChannelValue.setValue(value);
-                                        this.mixChannelValue(values, fixtureChannelValue, intensityPercentage, defaultValue);
-
-                                        if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity) {
-                                            hasColor = true;
-                                        }
-                                    }
-                                }
+                            if (isBrightness(presetCapabilityValue)) {
+                                // handled for the whole channel above
+                                continue;
                             } else if ((presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Pan || presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Tilt) && presetCapabilityValue.getValuePercentage() != null) {
                                 // a preset which mirrors this axis points its fixtures at the mirrored position
                                 double valuePercentage = preset.getMirroredValuePercentage(presetCapabilityValue.getType(), presetCapabilityValue.getValuePercentage());
@@ -960,7 +1081,7 @@ public class DefaultDesignerService implements DesignerService {
                                 fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
                                 fixtureChannelValue.setValue(cachedChannel.getMaxValue() * valuePercentage);
                                 this.mixChannelValue(values, fixtureChannelValue, 1);
-                            } else if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.WheelSlot && channelCapability.getCapability().getSlotNumber().equals(presetCapabilityValue.getSlotNumber())) {
+                            } else if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.WheelSlot && Objects.equals(channelCapability.getCapability().getSlotNumber(), presetCapabilityValue.getSlotNumber())) {
                                 // wheel slot (color, gobo, etc.)
                                 FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
                                 fixtureChannelValue.setChannelName(cachedChannel.getName());
@@ -1236,13 +1357,16 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     // The master dimmer of the project dims the brightness, like in the preview of the designer: a value giving the
-    // brightness is scaled within the range of its capability. Colors aren't dimmed, like in the preview.
+    // brightness is scaled within the range of its capability (also from bright to off). Colors aren't dimmed, like in
+    // the preview.
     private double applyMasterDimmer(CachedFixtureChannel channel, double value) {
         double masterDimmer = project == null ? 1 : project.getMasterDimmerValue();
 
         if (masterDimmer >= 1 || channel.getCapabilities() == null) {
             return value;
         }
+
+        double maxLumens = getMaxLumens(channel.getCapabilities());
 
         for (CachedFixtureCapability channelCapability : channel.getCapabilities()) {
             FixtureCapability capability = channelCapability.getCapability();
@@ -1252,15 +1376,24 @@ public class DefaultDesignerService implements DesignerService {
             }
 
             List<Integer> dmxRange = capability.getDmxRange();
+            // the whole channel or the range of the capability
+            double low = dmxRange == null || dmxRange.size() < 2 ? 0 : dmxRange.get(0);
+            double high = dmxRange == null || dmxRange.size() < 2 ? channel.getMaxValue() : dmxRange.get(1);
 
-            if (dmxRange == null || dmxRange.size() < 2) {
-                // the brightness over the whole channel
-                return value * masterDimmer;
+            if (value < low || value > high) {
+                continue;
             }
 
-            if (value >= dmxRange.get(0) && value <= dmxRange.get(1)) {
-                return dmxRange.get(0) + (value - dmxRange.get(0)) * masterDimmer;
+            double[] range = getBrightnessRange(capability, maxLumens);
+
+            if (range[0] == range[1] || high == low) {
+                // a single brightness can't be dimmed
+                return value;
             }
+
+            double brightness = range[0] + (range[1] - range[0]) * (value - low) / (high - low);
+            double dimmedPosition = (brightness * masterDimmer - range[0]) / (range[1] - range[0]);
+            return low + (high - low) * Math.max(0, Math.min(1, dimmedPosition));
         }
 
         return value;
@@ -1440,221 +1573,138 @@ public class DefaultDesignerService implements DesignerService {
         channels.add(cachedFixtureChannel);
     }
 
-    private int alphanumericSort(CachedFixturePixel p1, CachedFixturePixel p2) {
-        return p1.getKey().compareTo(p2.getKey());
-    }
-
-    private CachedFixturePixel createPixel(String key, int x, int y, int z, FixtureProfile profile) {
+    private CachedFixturePixel createPixel(String key, int x, int y, int z) {
         CachedFixturePixel pixel = new CachedFixturePixel();
-
-        if (key == null) {
-            // no key available. generate a unique one based on the dimensions
-            pixel.setKey("Pixel " + (x + 1) + '-' + (y + 1) + '-' + (z + 1));
-        } else {
-            pixel.setKey(key);
-        }
-
+        pixel.setKey(key);
         pixel.setX(x);
         pixel.setY(y);
         pixel.setZ(z);
-
         return pixel;
     }
 
+    // The key the fixture library gives a pixel of a matrix defined by its pixel count, e.g. "3" in a row of pixels,
+    // "(2, 3)" on a plane or "(1, 2, 3)" in a cube. Like the library: on a plane, the first number is X (or else Y)
+    // and the last Y (or else Z).
+    private static String getDefaultPixelKey(List<Integer> pixelCount, int x, int y, int z) {
+        boolean xDefined = pixelCount.get(0) > 1;
+        boolean yDefined = pixelCount.get(1) > 1;
+        boolean zDefined = pixelCount.get(2) > 1;
+        int definedAxes = (xDefined ? 1 : 0) + (yDefined ? 1 : 0) + (zDefined ? 1 : 0);
+
+        return switch (definedAxes) {
+            case 2 -> "(" + (xDefined ? x : y) + ", " + (yDefined ? y : z) + ")";
+            case 3 -> "(" + x + ", " + y + ", " + z + ")";
+            default -> String.valueOf(Math.max(x, Math.max(y, z)));
+        };
+    }
+
     // Package visible for the tests
+    // All pixels of the matrix at their positions, counted from 1 like in the fixture library. The library gives the
+    // pixel keys by Z, Y and X, so the pixels come layer by layer and row by row: X changes fastest.
     List<CachedFixturePixel> getAllPixelKeys(FixtureProfile profile) {
         List<CachedFixturePixel> result = new ArrayList<>();
-        if (profile.getMatrix() == null || profile.getMatrix().getPixelKeys() == null) {
+        FixtureMatrix matrix = profile.getMatrix();
+
+        if (matrix == null) {
             return result;
         }
-        for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
-            var pixelKeyX = profile.getMatrix().getPixelKeys().get(x);
-            for (int y = 0; y < pixelKeyX.size(); y++) {
-                var pixelKeyY = pixelKeyX.get(y);
-                for (int z = 0; z < pixelKeyY.size(); z++) {
-                    var pixelKey = pixelKeyY.get(z);
-                    if (pixelKey != null) {
-                        result.add(createPixel(pixelKey, x, y, z, profile));
+
+        if (matrix.getPixelKeys() != null) {
+            for (int z = 0; z < matrix.getPixelKeys().size(); z++) {
+                List<List<String>> layer = matrix.getPixelKeys().get(z);
+
+                for (int y = 0; y < layer.size(); y++) {
+                    List<String> row = layer.get(y);
+
+                    for (int x = 0; x < row.size(); x++) {
+                        if (row.get(x) != null) {
+                            result.add(createPixel(row.get(x), x + 1, y + 1, z + 1));
+                        }
+                    }
+                }
+            }
+        } else if (matrix.getPixelCount() != null && matrix.getPixelCount().size() == 3) {
+            List<Integer> pixelCount = matrix.getPixelCount();
+
+            for (int z = 1; z <= pixelCount.get(2); z++) {
+                for (int y = 1; y <= pixelCount.get(1); y++) {
+                    for (int x = 1; x <= pixelCount.get(0); x++) {
+                        result.add(createPixel(getDefaultPixelKey(pixelCount, x, y, z), x, y, z));
                     }
                 }
             }
         }
+
         return result;
     }
 
-    private List<CachedFixturePixel> getAllPixelsInGroups(FixtureProfile profile, List<CachedFixturePixel> allPixelKeys) {
-        List<CachedFixturePixel> result = new ArrayList<>();
+    private static int getPosition(CachedFixturePixel pixel, char axis) {
+        return switch (axis) {
+            case 'X' -> pixel.getX();
+            case 'Y' -> pixel.getY();
+            default -> pixel.getZ();
+        };
+    }
+
+    // The pixels in the order of the passed axes, e.g. "YXZ": Y changes fastest, Z slowest
+    private List<CachedFixturePixel> getPixelsByAxes(List<CachedFixturePixel> pixels, String axes) {
+        List<CachedFixturePixel> result = new ArrayList<>(pixels);
+        result.sort(Comparator.<CachedFixturePixel>comparingInt(pixel -> getPosition(pixel, axes.charAt(2)))
+                .thenComparingInt(pixel -> getPosition(pixel, axes.charAt(1)))
+                .thenComparingInt(pixel -> getPosition(pixel, axes.charAt(0))));
+        return result;
+    }
+
+    private List<String> getPixelGroupNames(FixtureProfile profile) {
         if (profile.getMatrix() == null || profile.getMatrix().getPixelGroups() == null) {
-            return result;
+            return List.of();
         }
-        for (FixtureMatrixPixelGroup fixtureMatrixPixelGroup : profile.getMatrix().getPixelGroups()) {
-            result.addAll(fixturePixelGroupResolveService.resolveGroupPixels(fixtureMatrixPixelGroup, allPixelKeys));
-        }
-        return result;
+
+        return profile.getMatrix().getPixelGroups().stream().map(FixtureMatrixPixelGroup::getName).toList();
     }
 
-    // get pixel keys in order for a specific channel repeatFor
-    private List<CachedFixturePixel> getPixelsInOrder(FixtureProfile profile, List<String> repeatFor) {
+    // Package visible for the tests
+    // The pixels a channel of the mode is repeated for, in the order of their channels. A pixel group counts as one:
+    // its channels (e.g. "Red Inner ring") control all of its pixels at once.
+    List<CachedFixturePixel> getPixelsInOrder(FixtureProfile profile, List<String> repeatFor) {
         List<CachedFixturePixel> result = new ArrayList<>();
 
-        if (repeatFor == null || repeatFor.isEmpty()) {
+        if (repeatFor == null || repeatFor.isEmpty() || profile.getMatrix() == null) {
             // a channel of its own, no pixels
             return result;
         }
 
-        List<CachedFixturePixel> allPixelKeys = this.getAllPixelKeys(profile);
+        List<CachedFixturePixel> allPixels = getAllPixelKeys(profile);
+        List<String> groupNames = getPixelGroupNames(profile);
 
-        // could contain different things
+        if (repeatFor.size() == 1 && repeatFor.getFirst().startsWith("eachPixel")) {
+            String order = repeatFor.getFirst().substring("eachPixel".length());
 
-        if (repeatFor.size() > 1) {
-            // an array of pixel keys or groups
-            for (String entry : repeatFor) {
-                result.addAll(this.fixturePixelGroupResolveService.getPixelsForKeyOrGroup(profile.getMatrix(), allPixelKeys, entry));
+            if (order.equals("ABC")) {
+                // the pixel keys in alphanumerical order
+                result.addAll(allPixels);
+                result.sort((pixel1, pixel2) -> DefaultFixturePixelGroupResolveService.compareKeys(pixel1.getKey(), pixel2.getKey()));
+            } else if (order.equals("Group")) {
+                // the pixel groups in the order of the profile
+                for (String groupName : groupNames) {
+                    result.add(createPixel(groupName, 0, 0, 0));
+                }
+            } else if (order.length() == 3 && order.contains("X") && order.contains("Y") && order.contains("Z")) {
+                // by position, e.g. eachPixelXYZ
+                result.addAll(getPixelsByAxes(allPixels, order));
             }
-        } else if (repeatFor.isEmpty()) {
+
             return result;
-        } else if (repeatFor.get(0).equals("eachPixelABC")) {
-            // Gets computed into an alphanumerically sorted list of all pixelKeys
-            if (profile.getMatrix().getPixelKeys() != null) {
-                result.addAll(allPixelKeys);
-                result.sort(this::alphanumericSort);
-            } else if (profile.getMatrix().getPixelCount().size() == 3) {
-                for (int x = 0; x < profile.getMatrix().getPixelCount().get(0); x++) {
-                    for (int y = 0; y < profile.getMatrix().getPixelCount().get(1); y++) {
-                        for (int z = 0; z < profile.getMatrix().getPixelCount().get(2); z++) {
-                            result.add(createPixel(null, x, y, z, profile));
-                        }
-                    }
-                }
-            }
-        } else if (repeatFor.get(0).equals("eachPixelGroup")) {
-            // Gets computed into an array of all pixel group keys, ordered by appearance in the JSON file
-            result.addAll(getAllPixelsInGroups(profile, allPixelKeys));
-        } else if (repeatFor.get(0).equals("eachPixelXYZ")) {
-            if (profile.getMatrix().getPixelKeys() != null) {
-                for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
-                    for (int y = 0; y < profile.getMatrix().getPixelKeys().get(x).size(); y++) {
-                        for (int z = 0; z < profile.getMatrix().getPixelKeys().get(x).get(y).size(); z++) {
-                            String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
-                            if (pixel != null) {
-                                result.add(createPixel(pixel, x, y, z, profile));
-                            }
-                        }
-                    }
-                }
-            } else if (profile.getMatrix().getPixelCount().size() == 3) {
-                for (int x = 0; x < profile.getMatrix().getPixelCount().get(0); x++) {
-                    for (int y = 0; y < profile.getMatrix().getPixelCount().get(1); y++) {
-                        for (int z = 0; z < profile.getMatrix().getPixelCount().get(2); z++) {
-                            result.add(createPixel(null, x, y, z, profile));
-                        }
-                    }
-                }
-            }
-        } else if (repeatFor.get(0).equals("eachPixelXZY")) {
-            if (profile.getMatrix().getPixelKeys() != null) {
-                for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
-                    for (int z = 0; z < profile.getMatrix().getPixelKeys().get(x).get(0).size(); z++) {
-                        for (int y = 0; y < profile.getMatrix().getPixelKeys().get(x).size(); y++) {
-                            String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
-                            if (pixel != null) {
-                                result.add(createPixel(pixel, x, y, z, profile));
-                            }
-                        }
-                    }
-                }
-            } else if (profile.getMatrix().getPixelCount().size() == 3) {
-                for (int x = 0; x < profile.getMatrix().getPixelCount().get(0); x++) {
-                    for (int z = 0; z < profile.getMatrix().getPixelCount().get(2); z++) {
-                        for (int y = 0; y < profile.getMatrix().getPixelCount().get(1); y++) {
-                            result.add(createPixel(null, x, y, z, profile));
-                        }
-                    }
-                }
-            }
-        } else if (repeatFor.get(0).equals("eachPixelYXZ")) {
-            if (profile.getMatrix().getPixelKeys() != null) {
-                for (int y = 0; y < profile.getMatrix().getPixelKeys().get(0).size(); y++) {
-                    for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
-                        for (int z = 0; z < profile.getMatrix().getPixelKeys().get(x).get(y).size(); z++) {
-                            String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
-                            if (pixel != null) {
-                                result.add(createPixel(pixel, x, y, z, profile));
-                            }
-                        }
-                    }
-                }
-            } else if (profile.getMatrix().getPixelCount().size() == 3) {
-                for (int y = 0; y < profile.getMatrix().getPixelCount().get(1); y++) {
-                    for (int x = 0; x < profile.getMatrix().getPixelCount().get(0); x++) {
-                        for (int z = 0; z < profile.getMatrix().getPixelCount().get(2); z++) {
-                            result.add(createPixel(null, x, y, z, profile));
-                        }
-                    }
-                }
-            }
-        } else if (repeatFor.get(0).equals("eachPixelYZX")) {
-            if (profile.getMatrix().getPixelKeys() != null) {
-                for (int y = 0; y < profile.getMatrix().getPixelKeys().get(0).size(); y++) {
-                    for (int z = 0; z < profile.getMatrix().getPixelKeys().get(0).get(y).size(); z++) {
-                        for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
-                            String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
-                            if (pixel != null) {
-                                result.add(createPixel(pixel, x, y, z, profile));
-                            }
-                        }
-                    }
-                }
-            } else if (profile.getMatrix().getPixelCount().size() == 3) {
-                for (int y = 0; y < profile.getMatrix().getPixelCount().get(1); y++) {
-                    for (int z = 0; z < profile.getMatrix().getPixelCount().get(2); z++) {
-                        for (int x = 0; x < profile.getMatrix().getPixelCount().get(0); x++) {
-                            result.add(createPixel(null, x, y, z, profile));
-                        }
-                    }
-                }
-            }
-        } else if (repeatFor.get(0).equals("eachPixelZXY")) {
-            if (profile.getMatrix().getPixelKeys() != null) {
-                for (int z = 0; z < profile.getMatrix().getPixelKeys().get(0).get(0).size(); z++) {
-                    for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
-                        for (int y = 0; y < profile.getMatrix().getPixelKeys().get(x).size(); y++) {
-                            String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
-                            if (pixel != null) {
-                                result.add(createPixel(pixel, x, y, z, profile));
-                            }
-                        }
-                    }
-                }
-            } else if (profile.getMatrix().getPixelCount().size() == 3) {
-                for (int z = 0; z < profile.getMatrix().getPixelCount().get(2); z++) {
-                    for (int x = 0; x < profile.getMatrix().getPixelCount().get(0); x++) {
-                        for (int y = 0; y < profile.getMatrix().getPixelCount().get(1); y++) {
-                            result.add(createPixel(null, x, y, z, profile));
-                        }
-                    }
-                }
-            }
-        } else if (repeatFor.get(0).equals("eachPixelZYX")) {
-            if (profile.getMatrix().getPixelKeys() != null) {
-                for (int z = 0; z < profile.getMatrix().getPixelKeys().get(0).get(0).size(); z++) {
-                    for (int y = 0; y < profile.getMatrix().getPixelKeys().get(0).size(); y++) {
-                        for (int x = 0; x < profile.getMatrix().getPixelKeys().size(); x++) {
-                            String pixel = profile.getMatrix().getPixelKeys().get(x).get(y).get(z);
-                            if (pixel != null) {
-                                result.add(createPixel(pixel, x, y, z, profile));
-                            }
-                        }
-                    }
-                }
-            } else if (profile.getMatrix().getPixelCount().size() == 3) {
-                for (int z = 0; z < profile.getMatrix().getPixelCount().get(2); z++) {
-                    for (int y = 0; y < profile.getMatrix().getPixelCount().get(1); y++) {
-                        for (int x = 0; x < profile.getMatrix().getPixelCount().get(0); x++) {
-                            result.add(createPixel(null, x, y, z, profile));
-                        }
-                    }
-                }
+        }
+
+        // pixel keys and pixel groups
+        for (String entry : repeatFor) {
+            CachedFixturePixel pixel = allPixels.stream().filter(p -> p.getKey().equals(entry)).findFirst().orElse(null);
+
+            if (pixel != null) {
+                result.add(pixel);
+            } else if (groupNames.contains(entry)) {
+                result.add(createPixel(entry, 0, 0, 0));
             }
         }
 
@@ -1663,8 +1713,11 @@ public class DefaultDesignerService implements DesignerService {
 
     private List<CachedFixtureChannel> getCachedChannels(FixtureProfile profile, FixtureMode mode, String pixelKey) {
         List<CachedFixtureChannel> channels = new ArrayList<>();
-        List<CachedFixturePixel> allPixelKeys = getAllPixelKeys(profile);
-        List<CachedFixturePixel> allPixelsInGroups = this.getAllPixelsInGroups(profile, allPixelKeys);
+
+        // the pixels and the pixel groups, which the template channels can be named after (e.g. "Red Master")
+        List<String> pixelKeysAndGroups = new ArrayList<>();
+        getAllPixelKeys(profile).forEach(pixel -> pixelKeysAndGroups.add(pixel.getKey()));
+        pixelKeysAndGroups.addAll(getPixelGroupNames(profile));
 
         if (mode == null) {
             return channels;
@@ -1687,15 +1740,11 @@ public class DefaultDesignerService implements DesignerService {
                 // check the template channels, if not found in the available channels
                 if (!channelFound) {
                     for (Map.Entry<String, FixtureChannel> entry : profile.getTemplateChannels().getTemplateChannels().entrySet()) {
-                        List<CachedFixturePixel> existingPixelKeys = new ArrayList<>();
-                        existingPixelKeys.addAll(allPixelKeys);
-                        existingPixelKeys.addAll(allPixelsInGroups);
-
-                        for (CachedFixturePixel existingPixelKey : existingPixelKeys) {
-                            String channelName = this.getChannelNameWithPixelKey(entry.getKey(), existingPixelKey.getKey());
+                        for (String existingPixelKey : pixelKeysAndGroups) {
+                            String channelName = this.getChannelNameWithPixelKey(entry.getKey(), existingPixelKey);
 
                             if (channel.getName().equals(channelName)) {
-                                this.addCachedChannel(channels, entry.getValue(), channelName, existingPixelKey.getKey(), profile);
+                                this.addCachedChannel(channels, entry.getValue(), channelName, existingPixelKey, profile);
                             }
                         }
                     }
