@@ -41,6 +41,12 @@ class CompositionPlayerTest {
 
     @BeforeEach
     void setUp() throws Exception {
+        // Like the player service, when nothing follows the composition (no set to continue)
+        doAnswer(invocation -> {
+            invocation.getArgument(0, CompositionPlayer.class).stop();
+            return null;
+        }).when(playerService).compositionPlayerFinishedPlaying(any());
+
         CapabilitiesService capabilitiesService = mock(CapabilitiesService.class);
         when(capabilitiesService.getCapabilities()).thenReturn(new Capabilities());
 

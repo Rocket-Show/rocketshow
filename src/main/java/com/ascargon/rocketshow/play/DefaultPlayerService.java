@@ -501,6 +501,13 @@ public class DefaultPlayerService implements PlayerService {
             return;
         }
 
+        // Only the current composition continues the set. The default composition or a composition played to test it
+        // just stops at its end.
+        if (compositionPlayer != currentCompositionPlayer) {
+            compositionPlayer.stop();
+            return;
+        }
+
         if (sessionService.getSession().isAutoSelectNextComposition()
                 && setService.getCurrentSet() != null
                 && setService.getCurrentSet().getSetCompositionList() != null
@@ -527,6 +534,11 @@ public class DefaultPlayerService implements PlayerService {
 
     public long getPositionMillis() {
         return currentCompositionPlayer.getPositionMillis();
+    }
+
+    // Package visible for the tests
+    CompositionPlayer getCurrentCompositionPlayer() {
+        return currentCompositionPlayer;
     }
 
     public void setComposition(Composition composition, boolean playDefaultCompositionWhenStoppingComposition,

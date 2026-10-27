@@ -301,12 +301,9 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
         }
 
         try {
-            // A sample always reports its end, so the player service lets it go
-            if (isSample || (compositionPipeline != null && compositionPipeline.hasMedia())) {
-                playerService.compositionPlayerFinishedPlaying(this);
-            } else {
-                stop();
-            }
+            // The player service decides what follows, also for a composition without files (e.g. only lighting): the
+            // next composition of a set, or just stopping (e.g. a sample)
+            playerService.compositionPlayerFinishedPlaying(this);
         } catch (Exception e) {
             logger.error("Could not finish the composition at its end", e);
         }
