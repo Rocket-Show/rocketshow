@@ -42,10 +42,6 @@ CI (`.github/workflows/ci.yml`) runs on every push and on pull requests from for
 - **Release sample:** on `master` (releases are built from it) and when started by hand, generates the sample files of
   the version in the pom if they are missing (see [Files of earlier releases](#files-of-earlier-releases)).
 
-Dependabot (`.github/dependabot.yml`) proposes updates of Maven, npm and the GitHub actions once a month, one grouped
-pull request per ecosystem, so each update goes through CI. Security updates come as soon as they are known, once the
-Dependabot alerts and security updates are enabled in the settings of the repository.
-
 The unit tests live in `src/test/java`:
 
 - Update state machine across reboots (`DefaultUpdateServiceTest`) and reading RAUC, also why an installation failed
@@ -262,7 +258,7 @@ The designer migrations are tested with a project in version 2 and the same proj
 - [x] Compositions and sets: storing, durations, keeping the sets up to date.
 - [x] Parsing the output of the system: RAUC, disk space, LAN, device information, command output while debugging.
 - [x] The player's set logic: next, previous, empty and deleted sets, auto select.
-- [x] Coverage (JaCoCo) in CI, Dependabot, web app smoke test against the built jar.
+- [x] Coverage (JaCoCo) in CI, web app smoke test against the built jar.
   - [x] Start the app with the samples of every release, not only the latest.
   - [x] More flows in the smoke test: sets, the designer, uploading media. Backups are SPARK only, see the rig.
   - [x] A minimum coverage for the whole app (raised to 70 % and 55 % with the second round of tests).
