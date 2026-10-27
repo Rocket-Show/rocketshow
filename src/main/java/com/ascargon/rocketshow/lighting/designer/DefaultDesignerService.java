@@ -25,6 +25,9 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -53,7 +56,7 @@ public class DefaultDesignerService implements DesignerService {
     // the highest project version this player knows. A project written by a newer
     // designer still plays as well as it can, but whatever came after this version is
     // missing from it. Package visible for the test of the designer template.
-    static final int SUPPORTED_PROJECT_VERSION = 8;
+    static final int SUPPORTED_PROJECT_VERSION = 9;
 
     // Live preview
     private boolean playPreview = false; // Is the preview playing a composition?
@@ -1885,6 +1888,7 @@ public class DefaultDesignerService implements DesignerService {
         migrateProjectToVersion3(project);
         migrateProjectToVersion7(project);
         migrateProjectToVersion8(project);
+        migrateProjectToVersion9(project);
     }
 
     private void migrateProjectToVersion3(Project project) {
@@ -1974,6 +1978,115 @@ public class DefaultDesignerService implements DesignerService {
         project.setVersion(8);
 
         logger.info("Migrated designer project '" + project.getName() + "' to version 8");
+    }
+
+    private static final Pattern LEGACY_PIXEL_KEY = Pattern.compile("Pixel (\\d+)-(\\d+)-(\\d+)");
+
+    // The pixel keys of the passed text renamed like the fixture library names them (e.g. "Red Pixel 3-1-1" becomes
+    // "Red 3")
+    private static String renameLegacyPixelKeys(String text, List<Integer> pixelCount, boolean whole) {
+        Matcher matcher = LEGACY_PIXEL_KEY.matcher(text);
+        StringBuilder result = new StringBuilder();
+
+        while (whole ? matcher.matches() : matcher.find()) {
+            int x = Integer.parseInt(matcher.group(1));
+            int y = Integer.parseInt(matcher.group(2));
+            int z = Integer.parseInt(matcher.group(3));
+            boolean inMatrix = x >= 1 && x <= pixelCount.get(0) && y >= 1 && y <= pixelCount.get(1) && z >= 1 && z <= pixelCount.get(2);
+
+            matcher.appendReplacement(result, Matcher.quoteReplacement(inMatrix ? getDefaultPixelKey(pixelCount, x, y, z) : matcher.group()));
+
+            if (whole) {
+                break;
+            }
+        }
+
+        matcher.appendTail(result);
+        return result.toString();
+    }
+
+    private void migrateProjectToVersion9(Project project) {
+        if (project.getVersion() >= 9) {
+            return;
+        }
+
+        // the pixels of a matrix given by its pixel count are named like in the fixture library now (e.g. "3" or
+        // "(2, 3)" instead of "Pixel 3-1-1") -> rename them in the presets and effects, so they still light the same
+        // pixels
+        Map<String, List<Integer>> pixelCountByProfile = new HashMap<>();
+        Map<String, List<Integer>> pixelCountByFixture = new HashMap<>();
+
+        if (project.getFixtureProfiles() != null) {
+            for (FixtureProfile profile : project.getFixtureProfiles()) {
+                FixtureMatrix matrix = profile.getMatrix();
+
+                if (matrix != null && matrix.getPixelKeys() == null && matrix.getPixelCount() != null && matrix.getPixelCount().size() == 3) {
+                    pixelCountByProfile.put(profile.getUuid(), matrix.getPixelCount());
+                }
+            }
+        }
+
+        if (project.getFixtures() != null) {
+            for (Fixture fixture : project.getFixtures()) {
+                if (pixelCountByProfile.containsKey(fixture.getProfileUuid())) {
+                    pixelCountByFixture.put(fixture.getUuid(), pixelCountByProfile.get(fixture.getProfileUuid()));
+                }
+            }
+        }
+
+        List<List<PresetFixture>> presetFixtureLists = new ArrayList<>();
+        if (project.getPresetFixtures() != null) {
+            presetFixtureLists.add(project.getPresetFixtures());
+        }
+        if (project.getPresets() != null) {
+            project.getPresets().forEach(preset -> presetFixtureLists.add(preset.getFixtures()));
+        }
+
+        for (List<PresetFixture> presetFixtures : presetFixtureLists) {
+            for (PresetFixture presetFixture : presetFixtures) {
+                List<Integer> pixelCount = pixelCountByFixture.get(presetFixture.getFixtureUuid());
+
+                if (presetFixture.getPixelKey() != null && pixelCount != null) {
+                    presetFixture.setPixelKey(renameLegacyPixelKeys(presetFixture.getPixelKey(), pixelCount, true));
+                }
+            }
+        }
+
+        if (project.getPresets() != null) {
+            for (Preset preset : project.getPresets()) {
+                for (PresetStep step : preset.getSteps()) {
+                    for (FixtureChannelValue channelValue : step.getFixtureChannelValues()) {
+                        List<Integer> pixelCount = pixelCountByProfile.get(channelValue.getProfileUuid());
+
+                        if (channelValue.getChannelName() != null && pixelCount != null) {
+                            channelValue.setChannelName(renameLegacyPixelKeys(channelValue.getChannelName(), pixelCount, false));
+                        }
+                    }
+                }
+
+                if (preset.getEffects() == null) {
+                    continue;
+                }
+
+                for (Effect effect : preset.getEffects()) {
+                    if (effect instanceof EffectCurve curve && curve.getChannels() != null) {
+                        for (EffectCurveProfileChannels profileChannels : curve.getChannels()) {
+                            List<Integer> pixelCount = pixelCountByProfile.get(profileChannels.getProfileUuid());
+
+                            if (pixelCount != null && profileChannels.getChannels() != null) {
+                                profileChannels.setChannels(profileChannels.getChannels().stream()
+                                        .map(channel -> renameLegacyPixelKeys(channel, pixelCount, false))
+                                        .collect(Collectors.toList()));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        project.setVersion(9);
+
+        logger.info("Migrated designer project '" + project.getName() + "' to version 9");
     }
 
     private int getGlobalFixtureIndex(Project project, PresetFixture presetFixture) {

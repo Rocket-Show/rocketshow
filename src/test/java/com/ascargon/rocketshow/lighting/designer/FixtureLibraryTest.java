@@ -376,6 +376,22 @@ class FixtureLibraryTest {
     }
 
     @Test
+    void lightsThePixelsOfAnOlderProject() throws Exception {
+        // Until version 9, the pixels of a pixel count were named "Pixel 10-1-1" and so on
+        ObjectNode project = (ObjectNode) objectMapper.readTree(project("chauvet-dj/colorband-pix", "36ch", List.of("Pixel 10-1-1"), RED));
+        ((ArrayNode) project.get("presets").get(0).get("steps").get(0).get("fixtureChannelValues")).addObject()
+                .put("channelName", "Blue Pixel 10-1-1").put("profileUuid", "chauvet-dj/colorband-pix").put("value", 255);
+
+        Map<Integer, Integer> universe = new DesignerTestEngine().play(directory, project.toString(), "Song", 5000, List.of("universe")).get("universe");
+
+        // Red and blue of pixel 10
+        assertEquals(255, universe.get(28));
+        assertEquals(0, universe.getOrDefault(29, 0));
+        assertEquals(255, universe.get(30));
+        assertTrue(lastAddress(universe) <= 36, "Sent up to address " + lastAddress(universe));
+    }
+
+    @Test
     void setsTheBrightnessOfAChannelSharedWithTheStrobe() throws Exception {
         // Dimmer: nothing, strobe from 1, nothing at 128, the brightness from 129 to 255 (not given, so off to bright)
         assertEquals(255, play("ibiza-light/ls-005led", "4ch", List.of(), intensity(1)).get(1));

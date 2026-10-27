@@ -349,7 +349,7 @@ class DesignerProjectCompatibilityTest {
 
         migrate(project);
 
-        assertEquals(8, project.getVersion());
+        assertEquals(DefaultDesignerService.SUPPORTED_PROJECT_VERSION, project.getVersion());
         assertEquals(sineAmplitude / 2, sine.getAmplitude());
         assertEquals(0.5f, square.getAmplitude());
     }
