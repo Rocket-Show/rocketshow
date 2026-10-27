@@ -31,6 +31,9 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultRaspberryGpioInService.class);
 
+    // Held low for 3 seconds, it resets a ready to use unit to the factory settings
+    private final static int RESET_BUTTON_PIN = 17;
+
     private final SettingsService settingsService;
     private final ActionExecutionService actionExecutionService;
     private final Pi4jService pi4jService;
@@ -41,6 +44,7 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
     private Context pi4j = null;
     private DigitalInput resetButton;
     private final List<DigitalInput> digitalInputList = new ArrayList<>();
+    private volatile boolean triggersSuspended = false;
 
     ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     AtomicBoolean resetScheduled = new AtomicBoolean(false);
@@ -107,7 +111,7 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
             DigitalInputConfigBuilder buttonConfig = DigitalInput.newConfigBuilder(pi4j)
                     .id("io_" + UUID.randomUUID())
                     .name("Reset button")
-                    .address(17)
+                    .address(RESET_BUTTON_PIN)
                     .pull(PullResistance.PULL_UP)
                     .debounce(3000L);
             DigitalInput digitalInput = pi4j.create(buttonConfig);
@@ -161,6 +165,11 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
         DigitalInput digitalInput = pi4j.create(buttonConfig);
         digitalInput.addListener(event -> {
             if (event.state() == DigitalState.LOW) {
+                if (triggersSuspended) {
+                    logger.debug("Input low from GPIO BCM " + event.source().address() + " ID ignored, the triggers are suspended");
+                    return;
+                }
+
                 logger.debug("Input low from GPIO BCM " + event.source().address() + " ID recognized");
                 try {
                     actionExecutionService.executeFromTrigger(actionTriggerRaspberryGpio);
@@ -180,7 +189,7 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
         try {
             initializeResetButton();
         } catch (Exception e) {
-            logger.error("Could not initialize the reset button on GPIO BCM 17 ID", e);
+            logger.error("Could not initialize the reset button on GPIO BCM " + RESET_BUTTON_PIN + " ID", e);
         }
 
         // Add a button for each configured control
@@ -191,6 +200,20 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
                 logger.error("Could not initialize GPIO BCM " + actionTriggerRaspberryGpio.getPinId() + " ID", e);
             }
         }
+    }
+
+    @Override
+    public List<Integer> getReservedPins() {
+        if (deviceInformationService.getDeviceInformation().isAvailable()) {
+            return List.of(RESET_BUTTON_PIN);
+        }
+
+        return List.of();
+    }
+
+    @Override
+    public void setTriggersSuspended(boolean suspended) {
+        triggersSuspended = suspended;
     }
 
 }

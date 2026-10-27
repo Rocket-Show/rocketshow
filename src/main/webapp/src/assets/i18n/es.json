@@ -379,6 +379,34 @@
       "restore-done": "La copia de seguridad ha sido restaurada.",
       "wait-restore": "Se está restaurando la copia de seguridad..."
     },
+    "self-test": {
+      "title": "Autoprueba",
+      "help": "Comprueba el hardware del dispositivo: cada tarjeta de sonido de los ajustes de audio, la pantalla, los dispositivos MIDI (con un cable de la salida MIDI a la entrada MIDI), las salidas GPIO y los universos DMX. Comprueba todo hasta los controladores, no lo que sale por los conectores.",
+      "run": "Iniciar autoprueba",
+      "warning": "Durante hasta medio minuto, la autoprueba reproduce un tono de prueba en cada tarjeta de sonido y una imagen de prueba en la pantalla, envía notas MIDI y cambios de programa al dispositivo de salida MIDI, conmuta las salidas GPIO y envía DMX a cada universo. Baja los altavoces y desconecta los dispositivos que no deben verse afectados. ¿Iniciar la autoprueba ahora?",
+      "wait": "La autoprueba está en curso...",
+      "result-PASSED": "Superada. Las comprobaciones del hardware que el dispositivo no tiene se omiten.",
+      "result-FAILED": "No superada",
+      "check": "Comprobación",
+      "result": "Resultado",
+      "details": "Detalles",
+      "result-enum": {
+        "PASSED": "Superada",
+        "FAILED": "No superada",
+        "SKIPPED": "Omitida"
+      },
+      "check-enum": {
+        "health": "Estado",
+        "storage": "Almacenamiento",
+        "audio": "Audio",
+        "video": "Vídeo",
+        "midi-out": "Salida MIDI",
+        "midi-loopback": "Bucle MIDI",
+        "gpio-out": "Salidas GPIO",
+        "gpio-loopback": "Bucle GPIO",
+        "dmx": "DMX"
+      }
+    },
     "external-control": {
       "title": "Control externo",
       "bcm-pin-id": "ID de pin BCM",

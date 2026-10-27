@@ -7,6 +7,7 @@ import javax.sound.midi.Transmitter;
 import javax.sound.midi.spi.MidiDeviceProvider;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.UnaryOperator;
 
 /**
  * A MIDI interface (e.g. connected by USB) for the tests, offered to Java like the system's MIDI devices
@@ -39,6 +40,10 @@ public class TestMidiDeviceProvider extends MidiDeviceProvider {
         public final List<MidiMessage> received = new CopyOnWriteArrayList<>();
         private final List<Receiver> listeners = new CopyOnWriteArrayList<>();
 
+        // A cable from the MIDI out back to the MIDI in: what comes back of a message sent (null for nothing). No
+        // cable, if null.
+        public volatile UnaryOperator<MidiMessage> loopbackCable;
+
         // Like the MIDI devices of Java, the device keeps every receiver it handed out until it is closed
         private final List<Receiver> receivers = new CopyOnWriteArrayList<>();
 
@@ -57,6 +62,7 @@ public class TestMidiDeviceProvider extends MidiDeviceProvider {
         public void reset() {
             close();
             received.clear();
+            loopbackCable = null;
         }
 
         @Override
@@ -102,6 +108,14 @@ public class TestMidiDeviceProvider extends MidiDeviceProvider {
                 @Override
                 public void send(MidiMessage message, long timeStamp) {
                     received.add(message);
+
+                    UnaryOperator<MidiMessage> cable = loopbackCable;
+                    if (cable != null) {
+                        MidiMessage back = cable.apply(message);
+                        if (back != null) {
+                            play(back);
+                        }
+                    }
                 }
 
                 @Override

@@ -380,6 +380,34 @@
       "restore-done": "Das Backup wurde wieder hergestellt.",
       "wait-restore": "Das Backup wird wieder hergestellt..."
     },
+    "self-test": {
+      "title": "Selbsttest",
+      "help": "Prüft die Hardware des Geräts: jede Soundkarte der Audioeinstellungen, den Bildschirm, die MIDI-Geräte (mit einem Kabel vom MIDI-Ausgang zum MIDI-Eingang), die GPIO-Ausgänge und die DMX-Universen. Er prüft alles bis zu den Treibern, nicht was an den Anschlüssen herauskommt.",
+      "run": "Selbsttest starten",
+      "warning": "Der Selbsttest spielt bis zu einer halben Minute lang einen Testton auf jeder Soundkarte und ein Testbild auf dem Bildschirm, sendet MIDI-Noten und Programmwechsel an das MIDI-Ausgabegerät, schaltet die GPIO-Ausgänge und sendet DMX an jedes Universum. Drehe die Lautsprecher leise und trenne die Geräte, die nicht betroffen sein dürfen. Selbsttest jetzt starten?",
+      "wait": "Der Selbsttest läuft...",
+      "result-PASSED": "Bestanden. Prüfungen von Hardware, die das Gerät nicht hat, werden übersprungen.",
+      "result-FAILED": "Nicht bestanden",
+      "check": "Prüfung",
+      "result": "Ergebnis",
+      "details": "Details",
+      "result-enum": {
+        "PASSED": "Bestanden",
+        "FAILED": "Nicht bestanden",
+        "SKIPPED": "Übersprungen"
+      },
+      "check-enum": {
+        "health": "Zustand",
+        "storage": "Speicher",
+        "audio": "Audio",
+        "video": "Video",
+        "midi-out": "MIDI-Ausgang",
+        "midi-loopback": "MIDI-Schleife",
+        "gpio-out": "GPIO-Ausgänge",
+        "gpio-loopback": "GPIO-Schleife",
+        "dmx": "DMX"
+      }
+    },
     "external-control": {
       "title": "Externe Steuerung",
       "bcm-pin-id": "BCM Pin ID",

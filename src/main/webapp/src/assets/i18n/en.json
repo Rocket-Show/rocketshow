@@ -380,6 +380,34 @@
       "restore-done": "The backup has been restored.",
       "wait-restore": "The backup is being restored..."
     },
+    "self-test": {
+      "title": "Self-test",
+      "help": "Checks the hardware of the device: every sound card of the audio settings, the screen, the MIDI devices (with a loopback cable from the MIDI out to the MIDI in), the GPIO outputs and the DMX universes. It proves everything up to the drivers, not what comes out of the connectors.",
+      "run": "Run self-test",
+      "warning": "For up to half a minute, the self-test plays a test tone on every sound card and a test picture on the screen, sends MIDI notes and program changes to the MIDI out device, switches the GPIO outputs and sends DMX to every universe. Turn down the speakers and disconnect the devices which must not be affected. Run the self-test now?",
+      "wait": "The self-test is running...",
+      "result-PASSED": "Passed. Checks of hardware the device doesn't have are skipped.",
+      "result-FAILED": "Failed",
+      "check": "Check",
+      "result": "Result",
+      "details": "Details",
+      "result-enum": {
+        "PASSED": "Passed",
+        "FAILED": "Failed",
+        "SKIPPED": "Skipped"
+      },
+      "check-enum": {
+        "health": "Health",
+        "storage": "Storage",
+        "audio": "Audio",
+        "video": "Video",
+        "midi-out": "MIDI out",
+        "midi-loopback": "MIDI loopback",
+        "gpio-out": "GPIO outputs",
+        "gpio-loopback": "GPIO loopback",
+        "dmx": "DMX"
+      }
+    },
     "external-control": {
       "title": "External control",
       "bcm-pin-id": "BCM Pin ID",

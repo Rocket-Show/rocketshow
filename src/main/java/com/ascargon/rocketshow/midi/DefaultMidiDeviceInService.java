@@ -13,6 +13,7 @@ import jakarta.annotation.PreDestroy;
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.MidiUnavailableException;
+import javax.sound.midi.Receiver;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
@@ -207,6 +208,16 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
     @Override
     public javax.sound.midi.MidiDevice getMidiDevice() {
         return midiDevice;
+    }
+
+    @Override
+    public boolean isConnected() {
+        return midiDevice != null || midiSerialDevice != null;
+    }
+
+    @Override
+    public void divert(Receiver receiver) {
+        midiInDeviceReceiver.divert(receiver);
     }
 
 }

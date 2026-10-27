@@ -20,6 +20,8 @@ Planned layout of this folder:
 ```
 testing/
   README.md     this file
+  smoke/        smoke test of the web app
+  selftest/     runs the self-test of a unit (section 2)
   rig/          controller harness (TODO)
   profiles/     example rig files (TODO)
   media/        test compositions, videos and designer projects for the rig (TODO)
@@ -35,7 +37,7 @@ CI (`.github/workflows/ci.yml`) runs on every push and on pull requests from for
   plugins installed, so the tests playing real media run (CI requires them, elsewhere they are skipped without
   GStreamer). The summary of the run shows the line coverage, the full JaCoCo report is kept as an artifact
   (`coverage-report`), and so are the reports of failed tests. The run fails when the tests cover less than 72 % of
-  the lines or 58 % of the branches (today 82 % and 70 %), or when a package drops below its own minimum (the
+  the lines or 58 % of the branches (today 83 % and 72 %), or when a package drops below its own minimum (the
   `coverage` profile in `pom.xml`: every package 45 % of its lines, the well tested ones 60 % or 70 %).
 - **Web app unit tests:** the unit tests of the web app in headless Chrome (see [below](#web-app-unit-tests)).
 - **Build with web app:** `./mvnw -B package -DskipTests`. The built `rocketshow.jar` is kept as a build artifact for
@@ -112,7 +114,7 @@ The unit tests live in `src/test/java`:
 - Lighting designer: presets (`PresetMirrorTest`, `PresetIntensityTest`, `PresetStepsTest`), effect curves and fades
   (`EffectCurveTest`, `TransitionCurveTest`, mirroring the specs of the designer), pixels and pixel groups of fixture
   matrices (`FixturePixelGroupTest`), the DMX values a project sends with the master dimmer and the live preview of
-  presets, scenes and the timeline (`DesignerDmxTest`)
+  presets, scenes and the timeline (`DesignerDmxTest`), nothing sent once stopped (`DesignerSendTimerTest`)
 - Fixture library: searching and reading it like the designer, updating it from rocketshow.net once a week, every mode
   of a few real profiles played by the engine (`FixtureLibraryTest`, profiles in `src/test/resources/fixtures/`)
 - GPIO buttons, the reset button and outputs, on the simulated pins of the Pi4J mock plugin (`GpioTest`)
@@ -125,6 +127,9 @@ The unit tests live in `src/test/java`:
 - Health service (`DefaultHealthServiceTest`), the watchdog of the ready to use units (`DefaultWatchdogServiceTest`) and
   EEPROM version parsing (`DefaultEepromServiceTest`)
 - Zipping the logs for the download (`DefaultZipServiceTest`)
+- The device self-test ([section 2](#2-device-self-test)): what it refuses, skips, expects and restores
+  (`DefaultSelfTestServiceTest`), every check on simulated hardware (`AudioVideoSelfTestTest`, `MidiSelfTestTest`,
+  `GpioSelfTestTest`, `DmxSelfTestTest`, `HealthAndStorageSelfTestTest`), the endpoint (`SelfTestApiTest`)
 - Spring context start (`RocketShowApplicationTests`)
 
 Run them locally without the web app build, with or without the coverage report (`target/site/jacoco`):
@@ -134,10 +139,10 @@ Run them locally without the web app build, with or without the coverage report 
 ./mvnw test -Pcoverage -Dskip.npm -Dskip.installnodenpm
 ```
 
-All 527 tests pass without any hardware attached, in a few minutes. The 38 tests playing real media need GStreamer
+All 593 tests pass without any hardware attached, in a few minutes. The 47 tests playing real media need GStreamer
 with the base, good and bad plugins (e.g. `apt install gstreamer1.0-plugins-base gstreamer1.0-plugins-good
 gstreamer1.0-plugins-bad`) and are skipped without it. One backup test needs an unreadable file, so it is skipped when
-running as root (root can read every file). It runs in CI. The tests cover 82 % of the lines and 70 % of the branches
+running as root (root can read every file). It runs in CI. The tests cover 83 % of the lines and 72 % of the branches
 with GStreamer, 76 % and 65 % without, not counting the libraries shipped with the app (e.g. the OLA client).
 
 The tests play the GStreamer pipelines with capture sinks instead of the devices, which tell the positions of their
@@ -152,7 +157,8 @@ unit: the initial setup (refusing an access point password which would leave it 
 creating a composition and a set, opening the composition again, deleting the media file, renaming the composition
 (the set keeps it), selecting the composition to play, opening the designer, renaming the unit in the settings, each
 checked after a reload. The names contain
-symbols which have a meaning in URLs (`&`, `#`, `+`, `%`). Any uncaught error of the web app, API call failing with a
+symbols which have a meaning in URLs (`&`, `#`, `+`, `%`). At the end, it runs the self-test, which passes on a new
+unit without hardware. Any uncaught error of the web app, API call failing with a
 server error or error message of the web app fails
 the test. CI runs it against the jar of the build job, with the designer template next to it like on a unit, and keeps
 the screenshots of every step and the log of the unit (artifact `smoke-test`). Backups are only offered on SPARK units,
@@ -173,7 +179,8 @@ Chrome: names with symbols encoded in the requests to the API (`encoded-names.sp
 the setup (`intro.component.spec.ts`), the links to the SPARK page and logging in again after a 401 or 403, the
 settings form loading and saving the settings (MIDI devices, the first audio bus, defaults, settings of later releases,
 the passphrase of the access point, `settings.component.spec.ts`), the composition editor saving, renaming,
-overwriting and deleting compositions, muted files and test plays (`editor-composition.component.spec.ts`). The
+overwriting and deleting compositions, muted files and test plays (`editor-composition.component.spec.ts`), running the
+self-test after its warning and showing its checks (`settings-system.component.spec.ts`). The
 generated specs of every component and service only checked that it could be created, and none of them compiled
 anymore, so they were removed. New specs test behaviour, not that a component exists.
 
@@ -327,19 +334,19 @@ The designer migrations are tested with a project in version 2 and the same proj
 ## 2. Device self-test
 
 A unit checks its own hardware, with nothing attached except optional loopback cables. It runs through
-`POST /api/system/test`, which calls `HealthService.testSystem()`. Today that method is an empty stub
-(`src/main/java/com/ascargon/rocketshow/health/DefaultHealthService.java`).
+`POST /api/system/test` (`SelfTestService` in the package `selftest`, one step per kind of hardware), from the system
+settings of the web app or with `testing/selftest/selftest.py`.
 
 ### Where it is used
 
 - **At the factory, during provisioning.** The endpoint is reachable without login as long as the initial setup is not
-  completed (`SecurityConfig.java:72`), like the device information and update endpoints. Sequence: flash the image,
-  store the device information, run the self-test on a fixture with loopback cables, keep the result with the serial
-  number, ship.
+  completed (`SecurityConfig.java:72`), like the device information and update endpoints. See
+  [Factory provisioning](#factory-provisioning).
 - **As the first stage of every rig run.** A unit that fails its self-test is not tested further, so rig failures
   point at real problems instead of a loose cable.
-- **On demand by an admin**, e.g. when helping a user. It plays test tones and switches outputs, so it never runs by
-  itself: not at boot, not after an update.
+- **On demand by an admin**, e.g. when helping a user: "Self-test" in the system settings shows the result of every
+  check. It plays test tones and switches outputs, so it shows a warning first and never runs by itself: not at boot,
+  not after an update.
 
 ### What it proves and what it does not
 
@@ -350,39 +357,52 @@ or a factory fixture.
 
 It does not use the default composition or any user files: a factory unit has no user content, and a user's default
 composition can be anything. All signals are generated (GStreamer `audiotestsrc` and `videotestsrc`, fixed MIDI and DMX
-patterns), so the result does not depend on media files.
+patterns), so the result does not depend on media files. It checks the devices of the settings (sound cards of the
+audio buses, MIDI devices, GPIO outputs, DMX universes): what the unit uses in a show.
 
 ### Flow
 
-1. Refuse with `409 Conflict` while a composition other than the default composition is playing. The self-test never
-   interrupts a show.
+1. Refuse with `409 Conflict` while a composition plays (also paused or loaded, a sample or a test play of the
+   editor), but not the default composition, and while another self-test runs. The self-test never interrupts a show.
+   Refuse with `400 Bad Request` a request naming a check which doesn't exist or a GPIO loopback it can't run safely,
+   before anything runs.
 2. Stop the default composition.
-3. Suspend MIDI triggers, GPIO triggers and MIDI forwarding to remote devices, so test signals cannot start
-   compositions or actions, here or on other units.
+3. Suspend what the test signals could set off: the MIDI input goes only to the self-test (no MIDI triggers, no
+   routings to the MIDI out, DMX or other units), the GPIO triggers don't fire (the reset button still works). Remember
+   the states of the GPIO outputs.
 4. Run the checks below. A check only runs if the unit has the hardware ([section 5](#5-hardware-features)). Otherwise
-   it is `SKIPPED` with the reason.
-5. Restore, even if a check failed or threw: stop the test pipelines, set the test GPIO outputs low, send MIDI "all
-   notes off", zero the test DMX values, resume the triggers, restart the default composition.
-6. Write every check to the log (so it shows up in the downloaded logs) and return the result.
+   it is `SKIPPED` with the reason. As soon as a composition starts meanwhile (from the web app, the scheduler or a
+   main unit), the checks stop: the one running and the ones left are `SKIPPED` ("Stopped, because a composition
+   started"), so a show never plays with test tones. A check which throws is `FAILED` with the error, the others still
+   run.
+5. Restore, even if a check failed or threw: stop the test pipelines, send MIDI "all notes off" (controller 123 on
+   every channel), put the GPIO outputs back to their states before, release the loopback pins, send the unit's own
+   DMX values again, resume the triggers and the MIDI input, play the default composition again (unless a composition
+   started meanwhile).
+6. Write every check to the log (a warning for a failed one, so it shows up in the downloaded logs) and return the
+   result.
 
-The call is synchronous and takes less than a minute.
+The call is synchronous and takes up to about 15 seconds with every kind of hardware, plus 3 for each further sound
+card.
 
 ### Checks
 
 | Check | What it does | Passes when |
 |---|---|---|
 | `health` | Reads the health status | Severity is `OK` or `DEGRADED`. The reasons go into the details. |
-| `storage` | Writes, reads back and deletes a 1 MB test file in the data directory | The content matches |
-| `audio` | Plays a test tone on every channel of every audio output for 3 seconds, through the same sink as a composition. Measures with the pipeline's `level` element. | The pipeline reaches `PLAYING`, no error on the bus, every channel shows the tone's level (±3 dB) |
-| `video` | If a display is connected: plays `videotestsrc` on the video output for 3 seconds | The pipeline reaches `PLAYING`, no error on the bus |
-| `midi-out` | Sends a fixed burst of 200 messages (note on/off, program change, control change) on every MIDI out device | Sending succeeds |
-| `midi-loopback` | Listens on every MIDI in device during each burst | Every message arrives once, in order, unchanged. Reports which out device arrived on which in device. |
-| `gpio-out` | Switches the GPIO outputs configured in the settings high and low once per second for 5 seconds (visible on a fixture LED). On a unit without GPIO settings (factory): every user pin. Never touches reserved pins or pins configured as inputs. | The state read back matches |
-| `gpio-loopback` | For each output → input pair given in the request: switches the output, reads the input. Pairs with a reserved pin are refused. | The input follows the output |
-| `dmx` | Sends a ramp on every patched output port for 3 seconds, then zero | `olad` is running, the ports are patched, no error from OLA |
+| `storage` | Writes 1 MB to a hidden file in the data directory, onto the storage (not only into the cache), reads it back and deletes it | The content matches |
+| `audio` | For each sound card of the audio settings (all the buses on it): a 440 Hz sine at -20 dBFS on every channel for 3 seconds, mixed like the audio files of a composition (mix matrix) into the output of a composition: mixer, the rate and channels of the settings, `level`, volume and the sink on the ALSA device of the buses (`rs_<card>`). Measured with the `level` element before the sink, once a second. | The pipeline reaches `PLAYING`, no error on the bus, every channel in every measurement at -20 dBFS ±3 dB |
+| `video` | If a display is connected (the HDMI status of the kernel reads `connected`): `videotestsrc` on the sink of the videos of a composition (`kmssink`, on the Raspberry Pi 3 the one `playbin` picks) for 3 seconds | The pipeline reaches `PLAYING`, no error on the bus |
+| `midi-out` | Sends a burst of 200 messages on the MIDI out device of the settings, one each 2 ms: note on, control change (the undefined controllers 20 to 31), program change and note off, on every channel, with data bytes across their whole range | Sending succeeds |
+| `midi-loopback` | Listens on the MIDI in device of the settings during the burst and up to a second after it. Real-time messages (e.g. active sensing an interface sends by itself) don't count. | Every message arrives once, in order, unchanged. The target tells which out device arrived on which in device. |
+| `gpio-out` | Switches the GPIO outputs of the settings high and low once per second for 5 seconds (visible on a fixture LED), then back to their states before. Never touches reserved pins or the pins of GPIO triggers, which may be wired to a button. | The state read back matches |
+| `gpio-loopback` | For each output → input pair of the request: the input with a pull-down resistor, the output switched high and low 3 times. An output of the settings switches like by an action, other pins are set up for the self-test only and released afterwards. Pairs with a reserved pin, the pin of a GPIO trigger or an output of the settings as input are refused. | The input follows the output |
+| `dmx` | For each universe of the settings with an output port: a ramp from 0 to 255 on all 512 channels for 3 seconds (25 frames a second), then zero, straight to OLA | `olad` is running and connected, the port is patched in OLA, OLA takes every frame |
 
-A loopback that receives nothing is `SKIPPED` ("no loopback cable"), unless the request expects it. Then it is
-`FAILED`. This way the same test runs on a fixture with cables and on a unit without them.
+A loopback that receives nothing is `SKIPPED` ("no loopback cable"), and so is every check without its hardware (no
+sound card in the audio settings, no display, no MIDI device, GPIO disabled, no universe with an output port). A
+check named in `expect` fails instead ("Expected, but skipped: ..."). This way the same test runs on a fixture with
+cables and on a unit without them.
 
 ### Request and result
 
@@ -396,38 +416,96 @@ Content-Type: application/json
 }
 ```
 
-Both fields are optional. An empty request runs all checks the unit has hardware for and skips loopbacks that receive
-nothing.
+Both fields and the body are optional. An empty request runs all checks the unit has hardware for and skips loopbacks
+that receive nothing.
 
 ```json
 {
   "result": "FAILED",
-  "startedAt": "2026-10-24T15:37:06Z",
-  "durationMillis": 21400,
-  "softwareVersion": "3.0.0",
+  "startedAt": "2026-10-27T15:37:06Z",
+  "durationMillis": 18400,
+  "softwareVersion": "3.1.0",
   "serial": "…",
   "checks": [
     { "name": "health", "result": "PASSED", "details": "DEGRADED: EEPROM version date … is older than …" },
-    { "name": "audio", "target": "8 channels", "result": "PASSED", "details": "-12.1 to -12.4 dBFS" },
+    { "name": "audio", "target": "USB Audio, 8 channels", "result": "PASSED", "details": "-20.0 to -20.1 dBFS on every channel" },
     { "name": "video", "result": "SKIPPED", "details": "No display connected" },
-    { "name": "midi-loopback", "target": "MIDI out 1 → MIDI in 1", "result": "FAILED", "details": "196 of 200 messages received" }
+    { "name": "midi-out", "target": "USB MIDI Interface", "result": "PASSED", "details": "200 messages sent" },
+    { "name": "midi-loopback", "target": "MIDI out USB MIDI Interface → MIDI in USB MIDI Interface", "result": "FAILED", "details": "196 of 200 messages received" },
+    { "name": "gpio-loopback", "target": "GPIO 22 → GPIO 27", "result": "PASSED", "details": "The input followed the output 3 times" }
   ]
 }
 ```
 
 `result` is `FAILED` if any check failed, otherwise `PASSED`. Skipped checks do not fail the run.
 
+### Running it on a unit
+
+- **Web app:** Settings → System → Self-test (admins), after a warning about the test tones and the outputs it
+  switches.
+- **Script:** `testing/selftest/selftest.py` prints the checks, keeps the result as JSON named by the serial number and
+  exits with 0 when the self-test passed, 1 when a check failed and 2 when the unit refused it or can't be reached. It
+  only needs Python 3, e.g. on a Raspberry Pi as the factory station:
+
+  ```shell
+  testing/selftest/selftest.py http://rocketshow.local --password "$ADMIN_PASSWORD"
+  testing/selftest/selftest.py http://192.168.1.50 --expect midi-loopback gpio-loopback --gpio-loopback 22:27 --output results/
+  ```
+
+- **curl**, before the initial setup: `curl -X POST http://rocketshow.local/api/system/test`.
+
+The unit tests run every check on simulated hardware: the orchestration with steps of the tests
+(`DefaultSelfTestServiceTest`), the audio and video through real GStreamer pipelines with sinks capturing what the
+sound cards and the screen would get (`AudioVideoSelfTestTest`), the MIDI on the simulated MIDI interface with a
+loopback cable which can lose or change messages (`MidiSelfTestTest`), the GPIO on the pins of the Pi4J mock plugin
+wired to each other (`GpioSelfTestTest`), the DMX with OLA mocked (`DmxSelfTestTest`), health and storage
+(`HealthAndStorageSelfTestTest`) and the endpoint on the app of the tests (`SelfTestApiTest`). The web app smoke test
+runs it from the settings of a new unit.
+
+### Factory provisioning
+
+1. Flash the image and boot the unit.
+2. Wait for `GET /api/system/health`.
+3. Store the device information (serial number, model, hardware revision, SKU, country):
+   `POST /api/system/device-information`.
+4. Connect the fixture: a MIDI cable from the MIDI out to the MIDI in, GPIO loopback cables with a ~1 kΩ series
+   resistor, a display.
+5. Run the self-test with what the fixture provides, e.g.
+   `selftest.py http://<unit> --expect storage midi-loopback gpio-loopback video --gpio-loopback 22:27 --output results/`.
+   Before the initial setup, no password is needed.
+6. Keep the result with the serial number (the file of `--output`). Ship only units which passed.
+
+A unit fresh from the factory has no settings yet, so it only checks the devices it finds by itself: a USB MIDI
+interface becomes the MIDI device of new settings (serial ports don't), the GPIO loopbacks of the request, a display,
+health and storage. The sound cards, MIDI ports and user pins of a model which aren't in new settings need the
+hardware description ([section 5](#5-hardware-features), see the TODO below).
+
 ### TODO
 
-- [ ] Result model (`SelfTestResult`, `SelfTestCheck`) returned by `POST /api/system/test`, `409` while playing.
-- [ ] Suspend and resume MIDI triggers, GPIO triggers and MIDI forwarding to remote devices.
-- [ ] Checks: `health`, `storage`, `audio`, `video`, `midi-out`, `midi-loopback`, `gpio-out`, `gpio-loopback`, `dmx`.
-- [ ] Restore step that always runs, also after an exception.
-- [ ] Unit tests for the orchestration with mocked services: skip logic, `expect`, `409`, restore after a failing
-  check.
-- [ ] Web app: "Run self-test" for admins in the system settings, with a warning that it plays test tones and switches
+- [x] Result model (`SelfTestResult`, `SelfTestCheck`) returned by `POST /api/system/test`, `409` while playing.
+- [x] Suspend and resume MIDI triggers, GPIO triggers and MIDI forwarding to remote devices (the MIDI input goes only
+  to the self-test, `MidiDeviceInService.divert`).
+- [x] Checks: `health`, `storage`, `audio`, `video`, `midi-out`, `midi-loopback`, `gpio-out`, `gpio-loopback`, `dmx`.
+- [x] Restore step that always runs, also after an exception.
+- [x] Unit tests for the orchestration with mocked services: skip logic, `expect`, `409`, restore after a failing
+  check. And every check on simulated hardware (see above).
+- [x] Web app: "Run self-test" for admins in the system settings, with a warning that it plays test tones and switches
   outputs, showing the result table.
-- [ ] Document the factory provisioning sequence.
+- [x] Document the factory provisioning sequence. A script for the factory station and the rig
+  (`testing/selftest/selftest.py`).
+- [x] Stop the checks as soon as a composition starts during the self-test.
+- [ ] Run it on real hardware, once per model and revision and on the community edition (a Raspberry Pi 4 and 5 with a
+  USB sound card and a USB MIDI interface), with loopback cables, and note what each check reported here:
+  - [ ] `audio` on every sound card in use, also with more than 8 channels (see the rig TODO), and with the sound
+    cards kept open with silence on Raspberry Pi OS: the test pipeline shares the device through `dmix`.
+  - [ ] `video` on `kmssink` with a display connected, and on a Raspberry Pi 3 (`autovideosink`). The HDMI status is
+    read from `/sys/class/drm/card1-HDMI-A-1/status`, which may be named otherwise on other models.
+  - [ ] `midi-loopback` on the DIN ports (serial) and on a USB MIDI interface: no message lost at one per 2 ms.
+  - [ ] `gpio-out` and `gpio-loopback` on the GPIO chip of each model (Pi4J with gpiod), the read back state.
+  - [ ] `dmx` with an OLA output port patched: the ramp on a DMX receiver.
+  - [ ] The duration: well under a minute.
+- [ ] Factory units without settings: check the sound cards, MIDI ports and user pins of the hardware description
+  when the settings name none ([section 5](#5-hardware-features)).
 
 ## 3. Hardware-in-the-loop rig
 
@@ -471,7 +549,8 @@ and measures what physically comes out of them. Almost everything a test needs i
 - [ ] Harness in `testing/rig/`. Proposed: Python with pytest (numpy for the audio analysis, WebSocket client, runs
   on a laptop or a Pi).
 - [ ] REST and WebSocket client with API key support.
-- [ ] Run the self-test ([section 2](#2-device-self-test)) on every unit as the first stage.
+- [ ] Run the self-test ([section 2](#2-device-self-test)) on every unit as the first stage (`selftest.py` exits with 1
+  when a check failed).
 - [ ] Test media in `testing/media/`: sine per channel, click track, flash plus beep video, DMX designer project with
   known values.
 - [ ] MIDI loopback tests (both directions, note on, program change, MIDI triggered actions, MIDI timecode).
@@ -558,7 +637,7 @@ description on the unit itself, never from the harness.
 | Audio outputs and channel count | Discovered: `GET /api/audio/devices`, `GET /api/audio/max-channels` |
 | MIDI in and out devices | Discovered: `GET /api/midi/in-devices`, `GET /api/midi/out-devices` |
 | DMX and Art-Net output ports | Discovered: `GET /api/lighting/ola-output-ports` |
-| Display connected | Discovered: `HdmiService.isConnected()` (not exposed through the API yet) |
+| Display connected | Discovered: `HdmiService.isDisplayConnected()`, used by the self-test (not exposed through the API yet) |
 | A/B updates with rollback | Discovered: `raucSlot` is set in `GET /api/system/health` |
 | Watchdog, read-only root file system | Hardware description |
 | GPIO pins free for users and tests | Hardware description |
@@ -586,7 +665,8 @@ only. Its GPIO pins for the rig come from the rig file.
 endpoint today and could become this.
 
 The app itself should use the same description. Today its hardware specifics are hard-coded behind
-`DeviceInformation.isAvailable()`: the reset button is always GPIO 17 (`DefaultRaspberryGpioInService.java:69-75`), and
+`DeviceInformation.isAvailable()`: the reset button is always GPIO 17 (`DefaultRaspberryGpioInService.RESET_BUTTON_PIN`,
+which the self-test gets from `getReservedPins()`), and
 the watchdog, the read-only file system and the A/B updates are switched on for every provisioned unit. A model with a
 different reset pin would need a code change.
 

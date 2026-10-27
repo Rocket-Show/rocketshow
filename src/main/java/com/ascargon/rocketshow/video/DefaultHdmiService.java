@@ -27,4 +27,15 @@ public class DefaultHdmiService implements HdmiService {
             return true;
         }
     }
+
+    @Override
+    public boolean isDisplayConnected() {
+        try {
+            return "connected".equalsIgnoreCase(Files.readString(HDMI_STATUS_PATH).trim());
+        } catch (Exception e) {
+            logger.debug("Could not read HDMI status from {}", HDMI_STATUS_PATH, e);
+            return false;
+        }
+    }
+
 }

@@ -411,7 +411,8 @@ public class DefaultPlayerService implements PlayerService {
         playDefaultComposition();
     }
 
-    private synchronized void stopDefaultComposition() throws Exception {
+    @Override
+    public synchronized void stopDefaultComposition() throws Exception {
         if (defaultCompositionPlayer.getComposition() == null) {
             return;
         }
@@ -420,6 +421,18 @@ public class DefaultPlayerService implements PlayerService {
 
         defaultCompositionPlayer.stop();
         defaultCompositionPlayer.setComposition(null);
+    }
+
+    @Override
+    public synchronized void resumeDefaultComposition() throws Exception {
+        refreshDefaultComposition();
+    }
+
+    @Override
+    public boolean isPlayingComposition() {
+        return currentCompositionPlayer.getPlayState() != CompositionPlayer.PlayState.STOPPED
+                || testCompositionPlayer.getPlayState() != CompositionPlayer.PlayState.STOPPED
+                || !sampleCompositionPlayerList.isEmpty();
     }
 
     public CompositionPlayer.PlayState getPlayState() {

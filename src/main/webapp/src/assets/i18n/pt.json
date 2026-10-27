@@ -379,6 +379,34 @@
       "restore-done": "A cópia de segurança foi restaurada.",
       "wait-restore": "A cópia de segurança está a ser restaurada..."
     },
+    "self-test": {
+      "title": "Autoteste",
+      "help": "Verifica o hardware do dispositivo: cada placa de som das definições de áudio, o ecrã, os dispositivos MIDI (com um cabo da saída MIDI para a entrada MIDI), as saídas GPIO e os universos DMX. Verifica tudo até aos controladores, não o que sai dos conectores.",
+      "run": "Iniciar autoteste",
+      "warning": "Durante até meio minuto, o autoteste reproduz um tom de teste em cada placa de som e uma imagem de teste no ecrã, envia notas MIDI e mudanças de programa para o dispositivo de saída MIDI, comuta as saídas GPIO e envia DMX para cada universo. Baixe os altifalantes e desligue os dispositivos que não devem ser afetados. Iniciar o autoteste agora?",
+      "wait": "O autoteste está a decorrer...",
+      "result-PASSED": "Aprovado. As verificações de hardware que o dispositivo não tem são ignoradas.",
+      "result-FAILED": "Reprovado",
+      "check": "Verificação",
+      "result": "Resultado",
+      "details": "Detalhes",
+      "result-enum": {
+        "PASSED": "Aprovado",
+        "FAILED": "Reprovado",
+        "SKIPPED": "Ignorado"
+      },
+      "check-enum": {
+        "health": "Estado",
+        "storage": "Armazenamento",
+        "audio": "Áudio",
+        "video": "Vídeo",
+        "midi-out": "Saída MIDI",
+        "midi-loopback": "Loop MIDI",
+        "gpio-out": "Saídas GPIO",
+        "gpio-loopback": "Loop GPIO",
+        "dmx": "DMX"
+      }
+    },
     "external-control": {
       "title": "Controlo externo",
       "bcm-pin-id": "ID de pino BCM",

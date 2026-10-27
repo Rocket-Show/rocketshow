@@ -379,6 +379,34 @@
       "restore-done": "La sauvegarde a été restaurée.",
       "wait-restore": "La sauvegarde est en cours de restauration..."
     },
+    "self-test": {
+      "title": "Autotest",
+      "help": "Vérifie le matériel de l'appareil : chaque carte son des réglages audio, l'écran, les appareils MIDI (avec un câble de la sortie MIDI à l'entrée MIDI), les sorties GPIO et les univers DMX. Il vérifie tout jusqu'aux pilotes, pas ce qui sort des connecteurs.",
+      "run": "Lancer l'autotest",
+      "warning": "Pendant jusqu'à une demi-minute, l'autotest joue un son de test sur chaque carte son et une image de test sur l'écran, envoie des notes MIDI et des changements de programme à l'appareil de sortie MIDI, commute les sorties GPIO et envoie du DMX à chaque univers. Baissez les haut-parleurs et débranchez les appareils qui ne doivent pas être affectés. Lancer l'autotest maintenant ?",
+      "wait": "L'autotest est en cours...",
+      "result-PASSED": "Réussi. Les vérifications du matériel que l'appareil n'a pas sont ignorées.",
+      "result-FAILED": "Échoué",
+      "check": "Vérification",
+      "result": "Résultat",
+      "details": "Détails",
+      "result-enum": {
+        "PASSED": "Réussi",
+        "FAILED": "Échoué",
+        "SKIPPED": "Ignoré"
+      },
+      "check-enum": {
+        "health": "État",
+        "storage": "Stockage",
+        "audio": "Audio",
+        "video": "Vidéo",
+        "midi-out": "Sortie MIDI",
+        "midi-loopback": "Boucle MIDI",
+        "gpio-out": "Sorties GPIO",
+        "gpio-loopback": "Boucle GPIO",
+        "dmx": "DMX"
+      }
+    },
     "external-control": {
       "title": "Contrôle externe",
       "bcm-pin-id": "ID de broche BCM",

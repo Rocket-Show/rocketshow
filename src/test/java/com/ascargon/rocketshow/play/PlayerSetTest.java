@@ -30,7 +30,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.never;
@@ -306,6 +308,34 @@ class PlayerSetTest {
         playerService.stop(false);
     }
 
+
+    @Test
+    void stopsAndResumesTheDefaultCompositionForTheSelfTest() throws Exception {
+        saveCompositionWithoutFiles("Ambient", 600_000);
+        settingsService.getSettings().setDefaultComposition("Ambient");
+        playerService = start();
+
+        // The default composition plays between the shows
+        assertFalse(playerService.isPlayingComposition());
+
+        playerService.stopDefaultComposition();
+        clearInvocations(designerService);
+        playerService.resumeDefaultComposition();
+        verify(designerService, atLeastOnce()).getProjectByCompositionName("Ambient");
+
+        // Not while a composition plays
+        saveCompositionWithoutFiles("C", 600_000);
+        playerService.loadSetAndComposition("Show");
+        playerService.play();
+        assertTrue(playerService.isPlayingComposition());
+
+        clearInvocations(designerService);
+        playerService.resumeDefaultComposition();
+        verify(designerService, never()).getProjectByCompositionName("Ambient");
+
+        playerService.stop(false);
+        assertFalse(playerService.isPlayingComposition());
+    }
 
     // A composition without files, e.g. only lighting, which ends with its last action
     private void saveCompositionWithoutFiles(String name, long lastActionMillis) throws Exception {

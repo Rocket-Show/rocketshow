@@ -161,21 +161,24 @@ public class DefaultMidiDeviceOutService implements MidiDeviceOutService {
             return;
         }
 
+        try {
+            sendMessageChecked(message);
+        } catch (Exception e) {
+            logger.error("Could not send MIDI signal to the MIDI out device", e);
+        }
+    }
+
+    @Override
+    public void sendMessageChecked(MidiMessage message) throws Exception {
         if (midiDevice != null) {
-            try {
-                receiver.send(message, -1);
-            } catch (Exception e) {
-                logger.error("Could not send MIDI signal to out device receiver " + midiDevice.getDeviceInfo().getName(), e);
-            }
+            receiver.send(message, -1);
         } else if (midiSerialDevice != null) {
-            try {
-                byte[] data = message.getMessage();
-                OutputStream output = midiSerialDevice.getOutputStream();
-                output.write(data);
-                output.flush();
-            } catch (Exception e) {
-                logger.error("Could not send MIDI signal to serial out device receiver", e);
-            }
+            byte[] data = message.getMessage();
+            OutputStream output = midiSerialDevice.getOutputStream();
+            output.write(data);
+            output.flush();
+        } else {
+            throw new IllegalStateException("No MIDI out device connected");
         }
     }
 
