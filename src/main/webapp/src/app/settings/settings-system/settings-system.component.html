@@ -129,56 +129,6 @@
 </div>
 }
 
-<div class="form-group row">
-  <div class="col-lg-3 col-form-label">
-    {{ "settings.self-test.title" | translate }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
-      [popover]="'settings.self-test.help' | translate" triggers="mouseenter:mouseleave" container="body"
-      placement="right" aria-hidden="true"></i>
-  </div>
-  <div class="col-lg-9">
-    <a href="#" (click)="runSelfTest(); (false)" class="btn btn-primary btn-sm" id="runSelfTest">
-      <i class="fa fa-check-square-o fa-fw" aria-hidden="true"></i>
-      {{ "settings.self-test.run" | translate }}</a>
-
-    @if (selfTestResult) {
-    <div class="mt-3" id="selfTestResult">
-      <div [class.text-success]="selfTestResult.result == 'PASSED'" [class.text-danger]="selfTestResult.result == 'FAILED'">
-        <strong>{{ ("settings.self-test.result-" + selfTestResult.result) | translate }}</strong>
-      </div>
-      <div class="table-responsive">
-        <table class="table table-sm mt-2">
-          <thead>
-            <tr>
-              <th>{{ "settings.self-test.check" | translate }}</th>
-              <th>{{ "settings.self-test.result" | translate }}</th>
-              <th>{{ "settings.self-test.details" | translate }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (check of selfTestResult.checks; track $index) {
-            <tr>
-              <td>
-                {{ ("settings.self-test.check-enum." + check.name) | translate }}
-                @if (check.target) {
-                <br /><small class="text-muted">{{ check.target }}</small>
-                }
-              </td>
-              <td>
-                <span class="badge" [class.badge-success]="check.result == 'PASSED'"
-                  [class.badge-danger]="check.result == 'FAILED'" [class.badge-secondary]="check.result == 'SKIPPED'">{{
-                  ("settings.self-test.result-enum." + check.result) | translate }}</span>
-              </td>
-              <td><small>{{ check.details }}</small></td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-    }
-  </div>
-</div>
-
 <app-spark-hint placement="settings-system" text="spark.hint.system"></app-spark-hint>
 
 <div class="form-group row">

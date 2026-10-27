@@ -8,11 +8,10 @@ import org.freedesktop.gstreamer.Bus;
 import org.freedesktop.gstreamer.Caps;
 import org.freedesktop.gstreamer.Element;
 import org.freedesktop.gstreamer.ElementFactory;
-import org.freedesktop.gstreamer.FlowReturn;
 import org.freedesktop.gstreamer.Pad;
+import org.freedesktop.gstreamer.PadProbeReturn;
 import org.freedesktop.gstreamer.Pipeline;
 import org.freedesktop.gstreamer.State;
-import org.freedesktop.gstreamer.elements.AppSink;
 import org.freedesktop.gstreamer.elements.URIDecodeBin;
 import org.springframework.stereotype.Service;
 
@@ -121,7 +120,7 @@ class VideoSelfTest implements SelfTestStep {
             Pipeline pipeline = buildPipeline(sink);
 
             Bus bus = pipeline.getBus();
-            bus.connect((Bus.ERROR) (source, code, message) -> {
+            SelfTestPipelineErrors.onError(bus, message -> {
                 error.compareAndSet(null, message);
                 playing.countDown();
             });
@@ -179,9 +178,11 @@ class VideoSelfTest implements SelfTestStep {
         }
     }
 
-    // Like the video files of a composition: by uridecodebin, which picks the decoder with the highest rank
+    // Like the video files of a composition: by uridecodebin, which picks the decoder with the highest rank. Into
+    // fakevideosink, which offers the video meta like kmssink: hardware decoders handing over DMABuf (e.g.
+    // v4l2slh265dec of a Raspberry Pi) refuse a sink without it ("not-negotiated").
     private SelfTestCheck decode() throws Exception {
-        for (String element : List.of("uridecodebin", "appsink")) {
+        for (String element : List.of("uridecodebin", "fakevideosink")) {
             if (!isInstalled(element)) {
                 return SelfTestCheck.skipped(VIDEO_DECODER, null, "The GStreamer element " + element + " is not installed");
             }
@@ -208,13 +209,11 @@ class VideoSelfTest implements SelfTestStep {
                 uriDecodeBin.set("uri", video.toUri().toString());
                 pipeline.add(uriDecodeBin);
 
-                AppSink sink = (AppSink) ElementFactory.make("appsink", "selftest_decodedsink");
-                sink.set("emit-signals", true);
+                Element sink = ElementFactory.make("fakevideosink", "selftest_decodedsink");
                 sink.set("sync", false);
-                sink.connect((AppSink.NEW_SAMPLE) element -> {
-                    element.pullSample().dispose();
+                sink.getStaticPad("sink").addDataProbe((pad, buffer) -> {
                     frames.incrementAndGet();
-                    return FlowReturn.OK;
+                    return PadProbeReturn.OK;
                 });
                 pipeline.add(sink);
 
@@ -226,7 +225,7 @@ class VideoSelfTest implements SelfTestStep {
                 });
 
                 Bus bus = pipeline.getBus();
-                bus.connect((Bus.ERROR) (source, code, message) -> {
+                SelfTestPipelineErrors.onError(bus, message -> {
                     error.compareAndSet(null, message);
                     done.countDown();
                 });

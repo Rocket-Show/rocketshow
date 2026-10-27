@@ -34,9 +34,11 @@ class SystemSelfTest implements SelfTestStep {
     static final String READ_ONLY_ROOT = "read-only-root";
     static final String CLOCK = "clock";
 
-    // A slot in "rauc status", e.g. "x [rootfs.0] (/dev/mmcblk0p2, ext4, inactive)" or, of older releases of RAUC,
-    // "  rootfs.0: class=rootfs, device=/dev/mmcblk0p2"
-    private static final Pattern SLOT_PATTERN = Pattern.compile("^\\s*(?:[ox*]\\s+)?\\[?(rootfs\\.\\d+)]?[:\\s(]");
+    // A slot in "rauc status" without its colors, e.g. "x [rootfs.0] (/dev/mmcblk0p2, ext4, inactive)", where the locale
+    // supports UTF-8 "⏺ [rootfs.0] (...)", or, of older releases of RAUC, "  rootfs.0: class=rootfs, device=/dev/mmcblk0p2"
+    private static final Pattern SLOT_PATTERN = Pattern.compile("^\\s*(?:\\S\\s+)?\\[?(rootfs\\.\\d+)]?[:\\s(]");
+    // RAUC colors the slots and their boot status, also when not printing to a terminal
+    private static final Pattern COLOR_PATTERN = Pattern.compile("\u001B\\[[0-9;]*m");
     private static final Pattern BOOT_STATUS_PATTERN = Pattern.compile("boot status[:=]\\s*(\\w+)");
 
     // How far the real-time clock may be off from the system's clock
@@ -75,11 +77,18 @@ class SystemSelfTest implements SelfTestStep {
     }
 
     private SelfTestCheck checkUpdates() {
+        String raucStatus;
         try {
-            return evaluateRaucStatus(raucService.getStatus());
+            raucStatus = raucService.getStatus();
         } catch (Exception e) {
             return SelfTestCheck.failed(UPDATES, null, "Could not run rauc status: " + e.getMessage());
         }
+
+        SelfTestCheck check = evaluateRaucStatus(raucStatus);
+        if (check.getResult() != SelfTestOutcome.PASSED) {
+            logger.warn("Output of rauc status:\n{}", raucStatus);
+        }
+        return check;
     }
 
     // Two slots to update into, and the slot running marked good
@@ -87,7 +96,7 @@ class SystemSelfTest implements SelfTestStep {
         Map<String, String> bootStatuses = new LinkedHashMap<>();
         String slot = null;
 
-        for (String line : raucStatus.split("\\R")) {
+        for (String line : COLOR_PATTERN.matcher(raucStatus).replaceAll("").split("\\R")) {
             Matcher slotMatcher = SLOT_PATTERN.matcher(line);
             if (slotMatcher.find()) {
                 slot = slotMatcher.group(1);
@@ -104,7 +113,8 @@ class SystemSelfTest implements SelfTestStep {
         String slots = bootStatuses.entrySet().stream().map(entry -> entry.getKey() + " " + entry.getValue()).collect(Collectors.joining(", "));
 
         if (bootStatuses.size() < 2) {
-            String output = raucStatus.strip().lines().findFirst().orElse("");
+            // Without a status, the output is rather an error of RAUC. The whole output goes into the log.
+            String output = raucStatus.contains("===") ? "none" : raucStatus.strip().lines().findFirst().orElse("none");
             return SelfTestCheck.failed(UPDATES, bootedSlot, "Not 2 slots to update into: " + (slots.isEmpty() ? output : slots));
         }
 

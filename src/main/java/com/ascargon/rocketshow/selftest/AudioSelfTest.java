@@ -156,7 +156,7 @@ class AudioSelfTest implements SelfTestStep {
             Pipeline pipeline = buildPipeline(audioDevice, channels, ofTheSettings);
 
             Bus bus = pipeline.getBus();
-            bus.connect((Bus.ERROR) (source, code, message) -> {
+            SelfTestPipelineErrors.onError(bus, message -> {
                 error.compareAndSet(null, message);
                 playing.countDown();
             });
@@ -367,7 +367,7 @@ class AudioSelfTest implements SelfTestStep {
         formatFilter.link(sink);
 
         Bus bus = loopbackPipeline.getBus();
-        bus.connect((Bus.ERROR) (errorSource, code, message) -> {
+        SelfTestPipelineErrors.onError(bus, message -> {
             recording.error.compareAndSet(null, message);
             recordingStarted.countDown();
         });

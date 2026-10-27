@@ -9,7 +9,7 @@ import { SettingsService } from "../../services/settings.service";
 import { CompositionService } from "../../services/composition.service";
 import { Composition } from "../../models/composition";
 import { Version } from "../../models/version";
-import { catchError, filter, finalize, map, switchMap } from "rxjs/operators";
+import { catchError, finalize, map, switchMap } from "rxjs/operators";
 import { OperatingSystemInformation } from "../../models/operating-system-information";
 import { OperatingSystemInformationService } from "../../services/operating-system-information.service";
 import { DeviceInformation } from "../../models/device-information";
@@ -19,7 +19,6 @@ import { BackupRestoreDialogComponent } from "../backup-restore-dialog/backup-re
 import { saveAs } from "file-saver/FileSaver";
 import { WaitDialogService } from "../../services/wait-dialog.service";
 import { ToastGeneralErrorService } from "../../services/toast-general-error.service";
-import { SelfTestResult } from "../../models/self-test-result";
 
 @Component({
     selector: "app-settings-system",
@@ -39,7 +38,6 @@ export class SettingsSystemComponent implements OnInit, OnDestroy {
   showAvailableUpdateMessage: boolean = false;
   operatingSystemInformation: OperatingSystemInformation;
   deviceInformation: DeviceInformation;
-  selfTestResult: SelfTestResult;
 
   constructor(
     public settingsService: SettingsService,
@@ -198,32 +196,5 @@ export class SettingsSystemComponent implements OnInit, OnDestroy {
       ignoreBackdropClick: true,
       class: "",
     });
-  }
-
-  // Plays test tones and switches outputs, so only after a warning
-  runSelfTest() {
-    this.warningDialogService
-      .show("settings.self-test.warning")
-      .pipe(
-        filter((result) => result),
-        switchMap(() => {
-          this.selfTestResult = undefined;
-          this.waitDialogService.show("settings.self-test.wait");
-
-          return this.http.post("system/test", {}).pipe(
-            finalize(() => {
-              this.waitDialogService.hide();
-            }),
-            catchError((error) => {
-              // E.g. a composition plays
-              this.toastGeneralErrorService.show(error);
-              return EMPTY;
-            })
-          );
-        })
-      )
-      .subscribe((result) => {
-        this.selfTestResult = new SelfTestResult(result);
-      });
   }
 }

@@ -3,17 +3,17 @@ import { HttpClient, provideHttpClient } from "@angular/common/http";
 import { HttpTestingController, provideHttpClientTesting } from "@angular/common/http/testing";
 import { of } from "rxjs";
 
-import { SettingsSystemComponent } from "./settings-system.component";
+import { SettingsAdvancedComponent } from "./settings-advanced.component";
 
 /**
- * The system settings: running the self-test of the unit, which plays test tones and switches outputs.
+ * The advanced settings: running the self-test of the unit, which plays test tones and switches outputs.
  */
-describe("System settings", () => {
+describe("Advanced settings", () => {
   let http: HttpTestingController;
   let warningDialogService: jasmine.SpyObj<any>;
   let waitDialogService: jasmine.SpyObj<any>;
   let toastGeneralErrorService: jasmine.SpyObj<any>;
-  let system: SettingsSystemComponent;
+  let advanced: SettingsAdvancedComponent;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -27,8 +27,8 @@ describe("System settings", () => {
     const operatingSystemInformationService = { getOperatingSystemInformation: () => of({}) };
     const deviceInformationService = { getDeviceInformation: () => of({ available: false }) };
 
-    system = new SettingsSystemComponent(undefined, warningDialogService, TestBed.inject(HttpClient), undefined, undefined,
-      undefined, operatingSystemInformationService as any, deviceInformationService as any, waitDialogService,
+    advanced = new SettingsAdvancedComponent(undefined, warningDialogService, waitDialogService, TestBed.inject(HttpClient),
+      undefined, operatingSystemInformationService as any, deviceInformationService as any, undefined,
       toastGeneralErrorService);
   });
 
@@ -39,17 +39,17 @@ describe("System settings", () => {
   it("runs the self-test only after the warning", () => {
     warningDialogService.show.and.returnValue(of(false));
 
-    system.runSelfTest();
+    advanced.runSelfTest();
 
     expect(warningDialogService.show).toHaveBeenCalledWith("settings.self-test.warning");
     http.expectNone("system/test");
-    expect(system.selfTestResult).toBeUndefined();
+    expect(advanced.selfTestResult).toBeUndefined();
   });
 
   it("shows the checks of the unit", () => {
     warningDialogService.show.and.returnValue(of(true));
 
-    system.runSelfTest();
+    advanced.runSelfTest();
 
     expect(waitDialogService.show).toHaveBeenCalledWith("settings.self-test.wait");
     const request = http.expectOne("system/test");
@@ -64,20 +64,20 @@ describe("System settings", () => {
     });
 
     expect(waitDialogService.hide).toHaveBeenCalled();
-    expect(system.selfTestResult.result).toBe("FAILED");
-    expect(system.selfTestResult.checks.map((check) => check.name)).toEqual(["audio", "midi-loopback"]);
-    expect(system.selfTestResult.checks[0].target).toBe("USB Audio, 2 channels");
-    expect(system.selfTestResult.checks[1].details).toBe("196 of 200 messages received");
+    expect(advanced.selfTestResult.result).toBe("FAILED");
+    expect(advanced.selfTestResult.checks.map((check) => check.name)).toEqual(["audio", "midi-loopback"]);
+    expect(advanced.selfTestResult.checks[0].target).toBe("USB Audio, 2 channels");
+    expect(advanced.selfTestResult.checks[1].details).toBe("196 of 200 messages received");
   });
 
   it("tells why the unit refused, e.g. while a composition plays", () => {
     warningDialogService.show.and.returnValue(of(true));
 
-    system.runSelfTest();
+    advanced.runSelfTest();
     http.expectOne("system/test").flush({ message: "A composition is playing" }, { status: 409, statusText: "Conflict" });
 
     expect(toastGeneralErrorService.show).toHaveBeenCalled();
     expect(waitDialogService.hide).toHaveBeenCalled();
-    expect(system.selfTestResult).toBeUndefined();
+    expect(advanced.selfTestResult).toBeUndefined();
   });
 });

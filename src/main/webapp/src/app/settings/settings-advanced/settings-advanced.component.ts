@@ -10,9 +10,11 @@ import { OperatingSystemInformation } from "../../models/operating-system-inform
 import { OperatingSystemInformationService } from "../../services/operating-system-information.service";
 import { DeviceInformation } from "../../models/device-information";
 import { DeviceInformationService } from "../../services/device-information.service";
-import { finalize, map } from "rxjs/operators";
-import { Subscription } from "rxjs";
+import { catchError, filter, finalize, map, switchMap } from "rxjs/operators";
+import { EMPTY, Subscription } from "rxjs";
 import { AuthService } from "../../services/auth.service";
+import { ToastGeneralErrorService } from "../../services/toast-general-error.service";
+import { SelfTestResult } from "../../models/self-test-result";
 
 @Component({
     selector: "app-settings-advanced",
@@ -29,6 +31,7 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
   downloadLogsLoading: boolean = false;
   operatingSystemInformation: OperatingSystemInformation;
   deviceInformation: DeviceInformation;
+  selfTestResult: SelfTestResult;
 
   loggingLevelList: string[] = [];
 
@@ -40,7 +43,8 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
     private infoDialogService: InfoDialogService,
     private operatingSystemInformationService: OperatingSystemInformationService,
     private deviceInformationService: DeviceInformationService,
-    private authService: AuthService
+    private authService: AuthService,
+    private toastGeneralErrorService: ToastGeneralErrorService
   ) {
     this.loggingLevelList.push("INFO");
     this.loggingLevelList.push("DEBUG");
@@ -153,6 +157,33 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
         this.infoDialogService
           .show("settings.maintenance-mode-enabled", { password: password })
           .subscribe();
+      });
+  }
+
+  // Plays test tones and switches outputs, so only after a warning
+  runSelfTest() {
+    this.warningDialogService
+      .show("settings.self-test.warning")
+      .pipe(
+        filter((result) => result),
+        switchMap(() => {
+          this.selfTestResult = undefined;
+          this.waitDialogService.show("settings.self-test.wait");
+
+          return this.http.post("system/test", {}).pipe(
+            finalize(() => {
+              this.waitDialogService.hide();
+            }),
+            catchError((error) => {
+              // E.g. a composition plays
+              this.toastGeneralErrorService.show(error);
+              return EMPTY;
+            })
+          );
+        })
+      )
+      .subscribe((result) => {
+        this.selfTestResult = new SelfTestResult(result);
       });
   }
 }
