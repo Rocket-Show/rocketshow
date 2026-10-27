@@ -70,7 +70,10 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
     }
 
     private synchronized void initialize() {
-        if (!settingsService.getSettings().getEnableRaspberryGpio()) {
+        boolean enableRaspberryGpio = Boolean.TRUE.equals(settingsService.getSettings().getEnableRaspberryGpio());
+
+        // The reset button of a ready to use unit works without GPIO in the settings, which is for the triggers
+        if (!enableRaspberryGpio && !deviceInformationService.getDeviceInformation().isAvailable()) {
             return;
         }
 
@@ -85,8 +88,17 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
             }
         }
 
+        // One pin, which can't be used, must not break the others
+        try {
+            initializeResetButton();
+        } catch (Exception e) {
+            logger.error("Could not initialize the reset button on GPIO BCM " + RESET_BUTTON_PIN + " ID", e);
+        }
+
         // Currently not working on the Pi CM5. See https://github.com/Pi4J/pi4j-example-minimal/issues/13
-        initializeInput();
+        if (enableRaspberryGpio) {
+            initializeTriggers();
+        }
     }
 
     @EventListener
@@ -182,15 +194,8 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
         digitalInputList.add(digitalInput);
     }
 
-    private void initializeInput() {
+    private void initializeTriggers() {
         logger.info("Initialize GPIO listener...");
-
-        // One pin, which can't be used, must not break the others
-        try {
-            initializeResetButton();
-        } catch (Exception e) {
-            logger.error("Could not initialize the reset button on GPIO BCM " + RESET_BUTTON_PIN + " ID", e);
-        }
 
         // Add a button for each configured control
         for (ActionTriggerRaspberryGpio actionTriggerRaspberryGpio : settingsService.getSettings().getActionTriggerRaspberryGpioList()) {

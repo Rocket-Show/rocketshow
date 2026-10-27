@@ -167,11 +167,7 @@ class GpioSelfTest implements SelfTestStep {
         Boolean pressed = raspberryGpioInService.isResetButtonPressed();
 
         if (pressed == null) {
-            if (!Boolean.TRUE.equals(settingsService.getSettings().getEnableRaspberryGpio())) {
-                context.report(SelfTestCheck.skipped(RESET_BUTTON, target, "GPIO is disabled in the settings, which disables the reset button as well"));
-            } else {
-                context.report(SelfTestCheck.failed(RESET_BUTTON, target, "The reset button could not be set up"));
-            }
+            context.report(SelfTestCheck.failed(RESET_BUTTON, target, "The reset button could not be set up"));
         } else if (pressed) {
             context.report(SelfTestCheck.failed(RESET_BUTTON, target, "Pressed: stuck, or someone holds it"));
         } else {

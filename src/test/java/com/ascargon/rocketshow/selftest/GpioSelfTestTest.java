@@ -326,17 +326,24 @@ class GpioSelfTestTest {
     }
 
     @Test
-    void theResetButtonIsSkippedWithoutOne() throws Exception {
+    void theResetButtonIsSkippedOnTheCommunityEdition() throws Exception {
         startUnit();
-        assertEquals("Only ready to use units have a reset button", check(runSelfTest(new SelfTestRequest()), GpioSelfTest.RESET_BUTTON).getDetails());
 
-        // Disabling GPIO disables the reset button as well
+        SelfTestCheck check = check(runSelfTest(new SelfTestRequest()), GpioSelfTest.RESET_BUTTON);
+        assertEquals(SelfTestOutcome.SKIPPED, check.getResult());
+        assertEquals("Only ready to use units have a reset button", check.getDetails());
+    }
+
+    @Test
+    void theResetButtonWorksWithGpioDisabled() throws Exception {
         deviceInformation.setAvailable(true);
         settings.setEnableRaspberryGpio(false);
         startUnit();
+
+        input(17).orElseThrow().mockState(DigitalState.HIGH);
         SelfTestCheck check = check(runSelfTest(new SelfTestRequest()), GpioSelfTest.RESET_BUTTON);
-        assertEquals(SelfTestOutcome.SKIPPED, check.getResult());
-        assertEquals("GPIO is disabled in the settings, which disables the reset button as well", check.getDetails());
+        assertEquals(SelfTestOutcome.PASSED, check.getResult());
+        assertEquals("Released", check.getDetails());
     }
 
 }

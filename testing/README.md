@@ -140,7 +140,7 @@ Run them locally without the web app build, with or without the coverage report 
 ./mvnw test -Pcoverage -Dskip.npm -Dskip.installnodenpm
 ```
 
-All 631 tests pass without any hardware attached, in a few minutes. The 54 tests playing real media need GStreamer
+All 633 tests pass without any hardware attached, in a few minutes. The 54 tests playing real media need GStreamer
 with the base, good and bad plugins (e.g. `apt install gstreamer1.0-plugins-base gstreamer1.0-plugins-good
 gstreamer1.0-plugins-bad`) and are skipped without it. One backup test needs an unreadable file, so it is skipped when
 running as root (root can read every file). It runs in CI. The tests cover 83 % of the lines and 72 % of the branches
@@ -1031,6 +1031,9 @@ Found by reading the code and by the tests. Each one gets a unit test or rig tes
   the second graphics card (`card1-HDMI-A-1`) counted, so a display on the other output of a Raspberry Pi 4 or 5, or
   on a model numbering its graphics card otherwise, left the videos of compositions out. Any HDMI output counts now
   (`DefaultHdmiServiceTest`, found while writing the video check of the self-test).
+- [x] **Disabling GPIO in the settings disabled the reset button.** The reset button of ready to use units was only
+  listened to with GPIO enabled. GPIO in the settings is for the triggers and outputs now, the reset button always
+  works (`GpioTest`, found by the reset button check of the self-test).
 
 ### Accepted
 
@@ -1050,6 +1053,5 @@ Found by reading the code and by the tests. Each one gets a unit test or rig tes
 
 ### Open
 
-- **Disabling GPIO in the settings disables the reset button as well.** The reset button of ready to use units is
-  only listened to with GPIO enabled. The self-test reports it (`reset-button`).
+None known.
 
