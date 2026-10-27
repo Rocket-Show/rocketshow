@@ -98,6 +98,32 @@ class GstreamerPlayerTest {
     }
 
     @Test
+    void pausesAndSeeksTheLoopingFilesWithTheComposition() throws Exception {
+        AudioCompositionFile click = unit.wav("click.wav", 300, 0.5, 0.5, unit.monitor);
+        click.setLoop(true);
+        player.setComposition(composition(2500, unit.wav("song.wav", 2500, 0.5, 0.5, unit.front), click));
+        player.play();
+        Thread.sleep(500);
+
+        player.pause();
+        long clickedWhenPaused = unit.card(2).millis();
+        Thread.sleep(500);
+        // Only what was queued for the card
+        assertTrue(unit.card(2).millis() - clickedWhenPaused < 200, "Clicked on while paused");
+
+        player.play();
+        Thread.sleep(300);
+        assertTrue(unit.card(2).millis() > clickedWhenPaused + 100, "Didn't click again");
+
+        // Near the end, the click keeps going until the composition ends
+        player.seek(2000);
+        long start = System.currentTimeMillis();
+        assertTrue(waitFor(() -> unit.finished.get() == 1, 5000), "The composition didn't end");
+        long playedMillis = System.currentTimeMillis() - start;
+        assertTrue(playedMillis >= 400 && playedMillis < 1500, "Ended after " + playedMillis + " ms");
+    }
+
+    @Test
     void loopsTheComposition() throws Exception {
         Composition composition = composition(500, unit.wav("song.wav", 500, 0.5, 0.5, unit.front));
         composition.setLoop(true);
