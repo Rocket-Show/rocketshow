@@ -78,13 +78,13 @@
   "raspberryGpioOutputPinBcmList": [22],
   "actionTriggerRaspberryGpioList": [
     {
-      "pinId": 17,
+      "pinId": 23,
       "actionList": [
         { "actionTransport": { "type": "TRANSPORT", "transportActionType": "TOGGLE_PLAY", "executeLocally": true, "remoteDeviceList": [] } }
       ]
     },
     {
-      "pinId": 27,
+      "pinId": 25,
       "actionList": [
         { "actionTransport": { "type": "TRANSPORT", "transportActionType": "SELECT_COMPOSITION_BY_NAME_AND_PLAY", "compositionName": "Fireworks (Encore)", "executeLocally": true, "remoteDeviceList": [] } }
       ]
