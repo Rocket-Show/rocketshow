@@ -223,10 +223,13 @@ public class CompositionPipelineBuilder {
         return compositionPipeline;
     }
 
+    // The tick GStreamer's midiparse sends every 10 milliseconds, which is no part of the file
+    private final static int MIDI_PARSE_TICK = 0xF9;
+
     private void processMidiBuffer(ByteBuffer byteBuffer, MidiRouter midiRouter, MidiMessageParser midiMessageParser) {
         try {
             Optional<MidiMessage> maybeMessage = midiMessageParser.offerByteBuffer(byteBuffer);
-            maybeMessage.ifPresent(midiMessage -> {
+            maybeMessage.filter(midiMessage -> midiMessage.getStatus() != MIDI_PARSE_TICK).ifPresent(midiMessage -> {
                 try {
                     midiRouter.sendSignal(midiMessage, MidiSource.MIDI_FILE);
                 } catch (InvalidMidiDataException e) {
@@ -242,7 +245,8 @@ public class CompositionPipelineBuilder {
         }
     }
 
-    private Element getGstVideoSink() {
+    // Package visible for the tests, which watch the video instead of a screen
+    Element getGstVideoSink() {
         if (OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
             return ElementFactory.make("osxvideosink", "osxvideosink");
         }
@@ -374,18 +378,9 @@ public class CompositionPipelineBuilder {
 
         MidiMessageParser midiMessageParser = ctx.getMidiMessageParser();
 
-        // Sometimes preroll and sometimes new-sample events get fired. We have
-        // to process both.
+        // Only the played samples: the prerolled one (e.g. when loading or seeking) is played as well, once playing
         midiSink.connect((AppSink.NEW_SAMPLE) element -> {
             Sample sample = element.pullSample();
-            Buffer buffer = sample.getBuffer();
-            processMidiBuffer(buffer.map(false), midiRouter, midiMessageParser);
-            buffer.unmap();
-            sample.dispose();
-            return FlowReturn.OK;
-        });
-        midiSink.connect((AppSink.NEW_PREROLL) element -> {
-            Sample sample = element.pullPreroll();
             Buffer buffer = sample.getBuffer();
             processMidiBuffer(buffer.map(false), midiRouter, midiMessageParser);
             buffer.unmap();
