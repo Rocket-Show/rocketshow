@@ -42,7 +42,7 @@
     "wifi-ap-activated": "Activated",
     "wifi-ap-deactivated": "Deactivated (recommended)",
     "wifi-ap-same-pw": "Use device password",
-    "wifi-ap-same-pw-warning": "Using the same passwort reduces security.",
+    "wifi-ap-same-pw-warning": "Using the same password reduces security.",
     "step-5-title": "Secure Connection",
     "tls-enabled": "Activated (recommended)",
     "tls-disabled": "Deactivated",
@@ -63,7 +63,7 @@
   },
   "play": {
     "help": {
-      "auto-select-next": "When enabled, the next composition is automatically selected and played as soon as the current one finishes — useful for playing through a whole set hands-free.",
+      "auto-select-next": "When enabled, the next composition of the set is selected as soon as the current one finishes. It starts playing right away if the composition that finished is marked in the set to start the next one automatically.",
       "switch-to-grid": "Switch to the cue grid, where every composition is a large button you can trigger directly.",
       "switch-to-setlist": "Switch to the setlist view with transport controls and a scrolling composition list.",
       "activity-midi-in": "Blinks when MIDI data is received.",
@@ -192,7 +192,7 @@
       "lan-ip": "By default the device obtains its IP address automatically (DHCP). Enable manual configuration to assign a fixed IP address.",
       "remote-devices": "Other RocketShow devices that this device can control and keep in sync during a show.",
       "remote-device-api-key": "An API key generated on the remote device (under Security) that authorizes this device to control it.",
-      "remote-device-synchronize": "Keep the compositions and media on the remote device in sync with this device.",
+      "remote-device-synchronize": "The remote device follows this one: when a composition is selected, played, paused or stopped here, it does the same with its composition of the same name, and it reboots and shuts down along with this device. Files are not copied.",
       "instruments": "Define the instruments used in your band. Leadsheets can be assigned per instrument, and each device can choose which instrument it shows.",
       "personal-instrument": "The instrument used on this device. It determines which leadsheets and parts are shown here.",
       "api-keys": "API keys let external systems and other RocketShow devices access this device without a password."
@@ -382,7 +382,8 @@
     },
     "external-control": {
       "title": "External control",
-      "bcm-pin-id": "BCM Pin ID"
+      "bcm-pin-id": "BCM Pin ID",
+      "input": "Input"
     },
     "scheduler": {
       "title": "Scheduler",
@@ -490,6 +491,7 @@
       "velocity": "Velocity"
     },
     "transport": {
+      "type": "Command",
       "composition-name": "Composition name",
       "type-enum": {
         "PLAY": "Play",
@@ -517,6 +519,7 @@
     },
     "raspberry-gpio": {
       "pin": "Pin",
+      "output": "Output",
       "status": "Status",
       "high": "High"
     }

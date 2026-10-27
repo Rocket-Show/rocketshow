@@ -10,6 +10,10 @@ import { Component, OnInit, Input } from '@angular/core';
 export class MidiMappingComponent implements OnInit {
   @Input() midiMapping: MidiMapping;
 
+  // Labels above the fields, for narrow places like the routing dialog, where a
+  // label beside its field broke mid-word
+  @Input() stacked = false;
+
   constructor() { }
 
   ngOnInit() {

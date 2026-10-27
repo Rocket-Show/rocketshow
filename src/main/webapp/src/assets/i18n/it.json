@@ -63,7 +63,7 @@
   },
   "play": {
     "help": {
-      "auto-select-next": "Quando è attivo, la composizione successiva viene selezionata e riprodotta automaticamente non appena quella corrente termina, utile per riprodurre un intero set senza interventi.",
+      "auto-select-next": "Quando è attivo, la composizione successiva del set viene selezionata non appena quella corrente termina. Parte subito se la composizione terminata è contrassegnata nel set per avviare automaticamente la successiva.",
       "switch-to-grid": "Passa alla griglia dei cue, dove ogni composizione è un grande pulsante che puoi attivare direttamente.",
       "switch-to-setlist": "Passa alla vista setlist con i controlli di riproduzione e un elenco di composizioni scorrevole.",
       "activity-midi-in": "Lampeggia quando vengono ricevuti dati MIDI.",
@@ -192,7 +192,7 @@
       "lan-ip": "Per impostazione predefinita il dispositivo ottiene l'indirizzo IP automaticamente (DHCP). Attiva la configurazione manuale per assegnare un indirizzo IP fisso.",
       "remote-devices": "Altri dispositivi RocketShow che questo dispositivo può controllare e mantenere sincronizzati durante uno spettacolo.",
       "remote-device-api-key": "Una chiave API generata sul dispositivo remoto (in Sicurezza) che autorizza questo dispositivo a controllarlo.",
-      "remote-device-synchronize": "Mantiene le composizioni e i media del dispositivo remoto sincronizzati con questo dispositivo.",
+      "remote-device-synchronize": "Il dispositivo remoto segue questo: quando qui una composizione viene selezionata, riprodotta, messa in pausa o fermata, fa lo stesso con la sua composizione con lo stesso nome, e si riavvia e si spegne insieme a questo dispositivo. I file non vengono copiati.",
       "instruments": "Definisci gli strumenti usati nella tua band. I leadsheet possono essere assegnati per strumento e ogni dispositivo può scegliere quale strumento mostrare.",
       "personal-instrument": "Lo strumento usato su questo dispositivo. Determina quali leadsheet e parti vengono mostrati qui.",
       "api-keys": "Le chiavi API consentono a sistemi esterni e ad altri dispositivi RocketShow di accedere a questo dispositivo senza password."
@@ -381,7 +381,8 @@
     },
     "external-control": {
       "title": "Controllo esterno",
-      "bcm-pin-id": "ID pin BCM"
+      "bcm-pin-id": "ID pin BCM",
+      "input": "Ingresso"
     },
     "scheduler": {
       "title": "Pianificazione",
@@ -480,6 +481,7 @@
       "velocity": "Velocity"
     },
     "transport": {
+      "type": "Comando",
       "composition-name": "Nome composizione",
       "type-enum": {
         "PLAY": "Riproduci",
@@ -507,6 +509,7 @@
     },
     "raspberry-gpio": {
       "pin": "Pin",
+      "output": "Uscita",
       "status": "Stato",
       "high": "Alto"
     }
