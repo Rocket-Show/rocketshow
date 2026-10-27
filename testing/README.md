@@ -35,7 +35,7 @@ CI (`.github/workflows/ci.yml`) runs on every push and on pull requests from for
   plugins installed, so the tests playing real media run (CI requires them, elsewhere they are skipped without
   GStreamer). The summary of the run shows the line coverage, the full JaCoCo report is kept as an artifact
   (`coverage-report`), and so are the reports of failed tests. The run fails when the tests cover less than 72 % of
-  the lines or 58 % of the branches (today 79 % and 66 %), or when a package drops below its own minimum (the
+  the lines or 58 % of the branches (today 82 % and 70 %), or when a package drops below its own minimum (the
   `coverage` profile in `pom.xml`: every package 45 % of its lines, the well tested ones 60 % or 70 %).
 - **Web app unit tests:** the unit tests of the web app in headless Chrome (see [below](#web-app-unit-tests)).
 - **Build with web app:** `./mvnw -B package -DskipTests`. The built `rocketshow.jar` is kept as a build artifact for
@@ -88,7 +88,9 @@ The unit tests live in `src/test/java`:
   its routings, files which don't play on the unit (no sound card for their bus, no screen), the audio monitor, files
   GStreamer can't play (`GstreamerPipelineTest`), pausing, seeking, looping the composition, actions after the media,
   H.265 videos (which can't be paused or seeked) and stopping while they start again (`GstreamerPlayerTest`, setup in
-  `GstreamerTestUnit`), reading the duration and the channels of uploaded media (`DefaultGstDiscovererServiceTest`)
+  `GstreamerTestUnit`), reading the duration and the channels of uploaded media (`DefaultGstDiscovererServiceTest`),
+  keeping the sound cards of a Raspberry Pi open with silence and opening the cards of changed audio settings instead
+  (`AudioDeviceKeepOpenTest`)
 - MIDI devices on a simulated MIDI system of Java: which devices are offered, sending, receiving, finding a device by
   its name and connecting it again (`MidiDevicesTest`)
 - Actions of triggers: HTTP requests to other systems, lighting, selecting compositions
@@ -132,11 +134,11 @@ Run them locally without the web app build, with or without the coverage report 
 ./mvnw test -Pcoverage -Dskip.npm -Dskip.installnodenpm
 ```
 
-All 496 tests pass without any hardware attached, in a few minutes. The 34 tests playing real media need GStreamer
+All 527 tests pass without any hardware attached, in a few minutes. The 38 tests playing real media need GStreamer
 with the base, good and bad plugins (e.g. `apt install gstreamer1.0-plugins-base gstreamer1.0-plugins-good
 gstreamer1.0-plugins-bad`) and are skipped without it. One backup test needs an unreadable file, so it is skipped when
-running as root (root can read every file). It runs in CI. The tests cover 80 % of the lines and 66 % of the branches
-with GStreamer, 75 % and 62 % without, not counting the libraries shipped with the app (e.g. the OLA client).
+running as root (root can read every file). It runs in CI. The tests cover 82 % of the lines and 70 % of the branches
+with GStreamer, 76 % and 65 % without, not counting the libraries shipped with the app (e.g. the OLA client).
 
 The tests play the GStreamer pipelines with capture sinks instead of the devices, which tell the positions of their
 channels like ALSA (front and rear for four channels). The devices themselves belong to the hardware rig
