@@ -207,6 +207,11 @@ try {
     await page.locator('lib-designer').waitFor();
     // Give the designer time to load its project and the fixture library
     await page.waitForTimeout(3000);
+
+    // A new project starts with the designer template, which is in the version of the designer
+    if (await page.getByText('The project has been upgraded').isVisible()) {
+      throw new Error('The designer migrated the designer template: raise dist/designer_template.json to its version');
+    }
   });
 
   await step('Rename the unit in the settings', async () => {
