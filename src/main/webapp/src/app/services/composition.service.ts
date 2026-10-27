@@ -16,6 +16,12 @@ export class CompositionService {
   // Fires, when compositions have changed (new ones, deleted)
   compositionsChanged: Subject<void> = new Subject<void>();
 
+  // Fires, when a composition has been renamed: the sets on the device contain it under its new name
+  compositionRenamed: Subject<{ previousName: string; name: string }> = new Subject<{ previousName: string; name: string }>();
+
+  // Fires, when a composition has been deleted: the sets on the device don't contain it anymore
+  compositionDeleted: Subject<string> = new Subject<string>();
+
   constructor(private http: HttpClient) {}
 
   getCurrentSet(clearCache: boolean = false): Observable<Set> {

@@ -168,14 +168,15 @@ BASE_URL=http://localhost:8080 node smoke.mjs
 
 ### Web app unit tests
 
-The web app in `src/main/webapp` has its own unit tests (Karma and Jasmine, `*.spec.ts`), run by CI in headless
-Chrome: names with symbols encoded in the requests to the API (`encoded-names.spec.ts`), the access point password of
-the setup (`intro.component.spec.ts`), the links to the SPARK page and logging in again after a 401 or 403, the
-settings form loading and saving the settings (MIDI devices, the first audio bus, defaults, settings of later releases,
-the passphrase of the access point, `settings.component.spec.ts`), the composition editor saving, renaming,
-overwriting and deleting compositions, muted files and test plays (`editor-composition.component.spec.ts`). The
-generated specs of every component and service only checked that it could be created, and none of them compiled
-anymore, so they were removed. New specs test behaviour, not that a component exists.
+The web app in `src/main/webapp` has its own unit tests (Karma and Jasmine, `*.spec.ts`), run by CI in headless Chrome:
+names with symbols encoded in the requests to the API (`encoded-names.spec.ts`), the access point password of the setup
+(`intro.component.spec.ts`), the links to the SPARK page and logging in again after a 401 or 403, the settings form
+loading and saving the settings (MIDI devices, the first audio bus, defaults, settings of later releases, the passphrase
+of the access point, `settings.component.spec.ts`), the composition editor saving, renaming, overwriting and deleting
+compositions, muted files and test plays (`editor-composition.component.spec.ts`), the set editor keeping a set open in
+it like on the unit, when a composition is renamed or deleted in the composition editor
+(`editor-set.component.spec.ts`). The generated specs of every component and service only checked that it could be
+created, and none of them compiled anymore, so they were removed. New specs test behaviour, not that a component exists.
 
 Run them locally (`CHROME_BIN` if Karma doesn't find Chrome or Chromium by itself):
 
@@ -299,7 +300,7 @@ The designer migrations are tested with a project in version 2 and the same proj
 - [x] Patching the universes in OLA, the live preview of the designer, applying the system settings.
 - [x] The unit tests of the web app, in CI.
 - [x] Changes during a show: saving compositions, audio settings, MIDI to other units in order.
-  - [x] Specs for the settings form and the composition editor.
+  - [x] Specs for the settings form, the composition editor and the set editor.
 - [x] The web app comes with the designer writing project version 9 (1.75.0), the template is in version 9 and sends
   the same light as before (`DesignerProjectCompatibilityTest`). The smoke test fails when the designer migrates the
   template.
@@ -857,6 +858,10 @@ Found by reading the code and by the tests. Each one gets a unit test or rig tes
   now: in the sets, the designer projects, the actions selecting it in other compositions, the default and the
   scheduled compositions, the MIDI and GPIO triggers and the MIDI controls. A composition playing plays on under its
   new name, and its files aren't analyzed again (`RenameCompositionTest`, the smoke test).
+- [x] **A set open in the editor kept a renamed composition under its old name,** until the page was loaded again. Saved
+  like this, the set lost the composition, because the unit removes the compositions which don't exist anymore. The set
+  editor renames it in the open set now, and removes a deleted one, keeping the unsaved changes of the set
+  (`editor-set.component.spec.ts`).
 - [x] **Compositions without files didn't continue in a set.** A composition with only lighting or actions didn't
   select or start the next composition of the set at its end. It does now like any composition, and a default
   composition ending doesn't move the set (`PlayerSetTest`).
