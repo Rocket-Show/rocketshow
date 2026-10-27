@@ -374,8 +374,15 @@ public class DefaultLightingService implements LightingService {
                 || Objects.equals(lightingUniverse.getUuid(), defaultLightingUniverse.getUuid()));
     }
 
+    private boolean isConfiguredLightingUniverse(String uuid) {
+        return getLightingUniverses().stream().anyMatch(lightingUniverse -> Objects.equals(lightingUniverse.getUuid(), uuid));
+    }
+
     private boolean lightingUniverseMatchesMapping(LightingUniverseState lightingUniverseState, LightingUniverse lightingUniverse, boolean onlyOneMapping) {
-        if (lightingUniverseState.getMappingUuid() != null && !lightingUniverseState.getMappingUuid().isBlank()) {
+        // A mapping to a universe which was removed from the settings (e.g. still used by the fixtures of a designer
+        // project) counts as no mapping, instead of sending to no universe at all
+        if (lightingUniverseState.getMappingUuid() != null && !lightingUniverseState.getMappingUuid().isBlank()
+                && isConfiguredLightingUniverse(lightingUniverseState.getMappingUuid())) {
             return Objects.equals(lightingUniverseState.getMappingUuid(), lightingUniverse.getUuid());
         }
 

@@ -130,6 +130,25 @@ class DefaultLightingServiceTest {
     }
 
     @Test
+    void sendsTheUniverseOfARemovedMappingLikeOneWithout() {
+        LightingUniverse stage = universe("Stage");
+        LightingUniverse front = universe("Front");
+        settings.getLightingUniverseList().add(stage);
+
+        // E.g. the fixtures of a designer project still on the universe "Front", which was removed from the settings
+        LightingUniverseState removed = state(null, front.getUuid(), 0, 10);
+
+        // The only universe gets everything
+        assertEquals(10, lightingService.mixLightingUniverses(List.of(removed), stage, true)[0]);
+
+        // Of several universes, the first one
+        LightingUniverse back = universe("Back");
+        settings.getLightingUniverseList().add(back);
+        assertEquals(10, lightingService.mixLightingUniverses(List.of(removed), stage, false)[0]);
+        assertEquals(0, lightingService.mixLightingUniverses(List.of(removed), back, false)[0]);
+    }
+
+    @Test
     void holdsTheValuesOfALightingAction() throws Exception {
         LightingUniverse stage = universe("Stage");
         settings.getLightingUniverseList().add(stage);
