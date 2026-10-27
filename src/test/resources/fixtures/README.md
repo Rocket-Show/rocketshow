@@ -11,3 +11,8 @@ license). Each one stands for something the designer engine has to handle:
 | `adb/alc4` | Pixel matrix with a pixel group. |
 | `etc/source-four-led-series-2-daylight-hd` | Unused channels (`null`) inside the modes. |
 | `elation/uni-bar` | A simple RGB bar. |
+| `chauvet-dj/colorband-pix` | Pixels given by their count (keys "1" to "12"), channels repeated for pixel groups (halves, thirds, quarters), channels named after the group of all pixels. |
+| `ibiza-light/ls-005led` | A dimmer sharing its channel with a strobe, its brightness not given. |
+| `varytec/easy-move-xs-hp-wash-7x8w-rgbw` | A dimmer sharing its channel with a strobe, its brightness in percent. |
+| `panasonic/pt-rz120` | A dimmer going from bright to off. |
+| `hong-yi/hy-g60` | Split colors of a color wheel (slot 1.5). |
