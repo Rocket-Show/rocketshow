@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -80,6 +81,19 @@ class FixtureLibraryTest {
     // A project with one fixture of the profile in the passed mode and a preset lighting it red, pointing it to the
     // middle
     private String project(String profileUuid, String modeShortName) throws Exception {
+        return project(profileUuid, modeShortName, List.of(), values -> {
+            values.addObject().put("type", "Intensity").put("valuePercentage", 1.0);
+            values.addObject().put("type", "ColorIntensity").put("color", "Red").put("valuePercentage", 1.0);
+            values.addObject().put("type", "ColorIntensity").put("color", "Green").put("valuePercentage", 0.0);
+            values.addObject().put("type", "ColorIntensity").put("color", "Blue").put("valuePercentage", 0.0);
+            values.addObject().put("type", "Pan").put("valuePercentage", 0.5);
+            values.addObject().put("type", "Tilt").put("valuePercentage", 0.5);
+        });
+    }
+
+    // A project with one fixture of the profile in the passed mode and a preset of the fixture, or of the passed pixels
+    // of it, with the passed capability values
+    private String project(String profileUuid, String modeShortName, List<String> pixelKeys, Consumer<ArrayNode> capabilityValues) throws Exception {
         ObjectNode profile = (ObjectNode) objectMapper.readTree(library.resolve(profileUuid + ".json").toFile());
         profile.put("uuid", profileUuid);
 
@@ -95,23 +109,25 @@ class FixtureLibraryTest {
         fixture.put("modeShortName", modeShortName);
         fixture.put("dmxUniverseUuid", "universe");
         fixture.put("dmxFirstChannel", 0);
-        project.putArray("presetFixtures").addObject().put("fixtureUuid", "fixture");
 
         ObjectNode preset = project.putArray("presets").addObject();
         preset.put("uuid", "preset");
         preset.put("name", "Preset");
-        preset.putArray("fixtures").addObject().put("fixtureUuid", "fixture");
+
+        // In the order of the project and of the preset
+        for (ArrayNode presetFixtures : List.of(project.putArray("presetFixtures"), preset.putArray("fixtures"))) {
+            if (pixelKeys.isEmpty()) {
+                presetFixtures.addObject().put("fixtureUuid", "fixture");
+            }
+            for (String pixelKey : pixelKeys) {
+                presetFixtures.addObject().put("fixtureUuid", "fixture").put("pixelKey", pixelKey);
+            }
+        }
         preset.putArray("effects");
         ObjectNode step = preset.putArray("steps").addObject();
         step.put("uuid", "step");
         step.put("startMillis", 0);
-        ArrayNode values = step.putArray("fixtureCapabilityValues");
-        values.addObject().put("type", "Intensity").put("valuePercentage", 1.0);
-        values.addObject().put("type", "ColorIntensity").put("color", "Red").put("valuePercentage", 1.0);
-        values.addObject().put("type", "ColorIntensity").put("color", "Green").put("valuePercentage", 0.0);
-        values.addObject().put("type", "ColorIntensity").put("color", "Blue").put("valuePercentage", 0.0);
-        values.addObject().put("type", "Pan").put("valuePercentage", 0.5);
-        values.addObject().put("type", "Tilt").put("valuePercentage", 0.5);
+        capabilityValues.accept(step.putArray("fixtureCapabilityValues"));
         step.putArray("fixtureChannelValues");
         step.putArray("effectAmounts");
 
@@ -315,6 +331,93 @@ class FixtureLibraryTest {
         assertEquals(255, universe.get(4));
         assertEquals(255, universe.get(9));
         assertTrue(universe.getOrDefault(8, 0) < 255, "Plus 7 Control at " + universe.get(8));
+    }
+
+    // The DMX values the fixture sends from address 1
+    private Map<Integer, Integer> play(String profileUuid, String modeShortName, List<String> pixelKeys, Consumer<ArrayNode> capabilityValues) throws Exception {
+        return new DesignerTestEngine().play(directory, project(profileUuid, modeShortName, pixelKeys, capabilityValues), "Song", 5000, List.of("universe"))
+                .getOrDefault("universe", Map.of());
+    }
+
+    private static Consumer<ArrayNode> intensity(double valuePercentage) {
+        return values -> values.addObject().put("type", "Intensity").put("valuePercentage", valuePercentage);
+    }
+
+    private static final Consumer<ArrayNode> RED = values -> values.addObject().put("type", "ColorIntensity").put("color", "Red").put("valuePercentage", 1.0);
+
+    private static int lastAddress(Map<Integer, Integer> universe) {
+        return universe.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
+    }
+
+    @Test
+    void controlsAPixelGroupWithItsChannels() throws Exception {
+        // Red, green and blue of the first half of the bar, then of the second half
+        Map<Integer, Integer> universe = play("chauvet-dj/colorband-pix", "6ch", List.of("2/2"), RED);
+
+        assertEquals(255, universe.get(4));
+        assertEquals(0, universe.getOrDefault(1, 0));
+        assertTrue(lastAddress(universe) <= 6, "Sent up to address " + lastAddress(universe));
+    }
+
+    @Test
+    void findsTheChannelsNamedAfterAPixelGroup() throws Exception {
+        // "Red Master", "Green Master" and "Blue Master" of the group of all pixels
+        assertEquals(255, play("chauvet-dj/colorband-pix", "3ch", List.of(), RED).get(1));
+    }
+
+    @Test
+    void ordersPixelsByTheirNumbers() throws Exception {
+        // Pixel 10 after pixel 9, not after pixel 1
+        Map<Integer, Integer> universe = play("chauvet-dj/colorband-pix", "36ch", List.of("10"), RED);
+
+        assertEquals(255, universe.get(28));
+        assertEquals(0, universe.getOrDefault(4, 0));
+        assertTrue(lastAddress(universe) <= 36, "Sent up to address " + lastAddress(universe));
+    }
+
+    @Test
+    void lightsThePixelsOfAnOlderProject() throws Exception {
+        // Until version 9, the pixels of a pixel count were named "Pixel 10-1-1" and so on
+        ObjectNode project = (ObjectNode) objectMapper.readTree(project("chauvet-dj/colorband-pix", "36ch", List.of("Pixel 10-1-1"), RED));
+        ((ArrayNode) project.get("presets").get(0).get("steps").get(0).get("fixtureChannelValues")).addObject()
+                .put("channelName", "Blue Pixel 10-1-1").put("profileUuid", "chauvet-dj/colorband-pix").put("value", 255);
+
+        Map<Integer, Integer> universe = new DesignerTestEngine().play(directory, project.toString(), "Song", 5000, List.of("universe")).get("universe");
+
+        // Red and blue of pixel 10
+        assertEquals(255, universe.get(28));
+        assertEquals(0, universe.getOrDefault(29, 0));
+        assertEquals(255, universe.get(30));
+        assertTrue(lastAddress(universe) <= 36, "Sent up to address " + lastAddress(universe));
+    }
+
+    @Test
+    void setsTheBrightnessOfAChannelSharedWithTheStrobe() throws Exception {
+        // Dimmer: nothing, strobe from 1, nothing at 128, the brightness from 129 to 255 (not given, so off to bright)
+        assertEquals(255, play("ibiza-light/ls-005led", "4ch", List.of(), intensity(1)).get(1));
+        assertEquals(192, play("ibiza-light/ls-005led", "4ch", List.of(), intensity(0.5)).get(1));
+
+        // Dimmer & Strobe: closed until 7, from 0 % to 100 % between 8 and 134, then strobe and open
+        assertEquals(134, play("varytec/easy-move-xs-hp-wash-7x8w-rgbw", "8ch", List.of(), intensity(1)).get(3));
+        assertEquals(71, play("varytec/easy-move-xs-hp-wash-7x8w-rgbw", "8ch", List.of(), intensity(0.5)).get(3));
+    }
+
+    @Test
+    void dimsAnInvertedDimmer() throws Exception {
+        // Light Output: bright at 0, off at 255
+        assertEquals(0, play("panasonic/pt-rz120", "1", List.of(), intensity(1)).get(6));
+        assertEquals(191, play("panasonic/pt-rz120", "1", List.of(), intensity(0.25)).get(6));
+        assertEquals(255, play("panasonic/pt-rz120", "1", List.of(), intensity(0)).get(6));
+    }
+
+    @Test
+    void sendsASplitColorOfTheWheel() throws Exception {
+        // Color Wheel: Open from 0, half open and half red from 11, red from 22
+        Consumer<ArrayNode> split = values -> values.addObject().put("type", "WheelSlot").put("wheel", "Color Wheel").put("slotNumber", 1.5);
+        Consumer<ArrayNode> red = values -> values.addObject().put("type", "WheelSlot").put("wheel", "Color Wheel").put("slotNumber", 2);
+
+        assertEquals(16, play("hong-yi/hy-g60", "11ch", List.of(), split).get(5));
+        assertEquals(27, play("hong-yi/hy-g60", "11ch", List.of(), red).get(5));
     }
 
 }

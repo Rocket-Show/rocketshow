@@ -251,7 +251,7 @@ class PresetStepsTest {
         FixtureCapabilityValue capabilityValue = new FixtureCapabilityValue();
         capabilityValue.setType(FixtureCapability.FixtureCapabilityType.WheelSlot);
         capabilityValue.setWheel("Color Wheel");
-        capabilityValue.setSlotNumber(slotNumber);
+        capabilityValue.setSlotNumber((double) slotNumber);
 
         return capabilityValue;
     }
@@ -266,8 +266,8 @@ class PresetStepsTest {
 
         Preset sequence = preset(from, to);
 
-        assertEquals(1, (int) PresetSteps.getStateAtMillis(sequence, 1000).getFixtureCapabilityValues().get(0).getSlotNumber());
-        assertEquals(4, (int) PresetSteps.getStateAtMillis(sequence, 1500).getFixtureCapabilityValues().get(0).getSlotNumber());
+        assertEquals(1, PresetSteps.getStateAtMillis(sequence, 1000).getFixtureCapabilityValues().get(0).getSlotNumber());
+        assertEquals(4, PresetSteps.getStateAtMillis(sequence, 1500).getFixtureCapabilityValues().get(0).getSlotNumber());
     }
 
     @Test
@@ -281,8 +281,8 @@ class PresetStepsTest {
 
         Preset sequence = preset(from, to);
 
-        assertEquals(1, (int) PresetSteps.getStateAtMillis(sequence, 1500).getFixtureCapabilityValues().get(0).getSlotNumber());
-        assertEquals(4, (int) PresetSteps.getStateAtMillis(sequence, 2000).getFixtureCapabilityValues().get(0).getSlotNumber());
+        assertEquals(1, PresetSteps.getStateAtMillis(sequence, 1500).getFixtureCapabilityValues().get(0).getSlotNumber());
+        assertEquals(4, PresetSteps.getStateAtMillis(sequence, 2000).getFixtureCapabilityValues().get(0).getSlotNumber());
     }
 
     @Test

@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -94,7 +95,44 @@ public class DefaultFixturePixelGroupResolveService implements FixturePixelGroup
         return null;
     }
 
+    // Pixel keys like the fixture library sorts them: numbers by their value (2 before 10), the rest alphabetically
+    static int compareKeys(String key1, String key2) {
+        int index1 = 0;
+        int index2 = 0;
+
+        while (index1 < key1.length() && index2 < key2.length()) {
+            char char1 = key1.charAt(index1);
+            char char2 = key2.charAt(index2);
+
+            if (Character.isDigit(char1) && Character.isDigit(char2)) {
+                int start1 = index1;
+                int start2 = index2;
+                while (index1 < key1.length() && Character.isDigit(key1.charAt(index1))) index1++;
+                while (index2 < key2.length() && Character.isDigit(key2.charAt(index2))) index2++;
+
+                int result = new BigInteger(key1.substring(start1, index1)).compareTo(new BigInteger(key2.substring(start2, index2)));
+                if (result != 0) return result;
+            } else {
+                int result = Character.compare(Character.toLowerCase(char1), Character.toLowerCase(char2));
+                if (result != 0) return result;
+                index1++;
+                index2++;
+            }
+        }
+
+        return Integer.compare(key1.length() - index1, key2.length() - index2);
+    }
+
+    private static List<CachedFixturePixel> sortedByKey(List<CachedFixturePixel> pixels) {
+        List<CachedFixturePixel> result = new ArrayList<>(pixels);
+        result.sort((pixel1, pixel2) -> compareKeys(pixel1.getKey(), pixel2.getKey()));
+        return result;
+    }
+
     // ---------- group resolution ----------
+    // The pixels of a group in the order of the fixture library: the listed keys as listed, all pixels and pixels
+    // constrained by their name alphanumerically, the others by their position (X changes fastest). The passed pixels
+    // come in this order already.
     @Override
     public List<CachedFixturePixel> resolveGroupPixels(
             FixtureMatrixPixelGroup group,
@@ -104,7 +142,7 @@ public class DefaultFixturePixelGroupResolveService implements FixturePixelGroup
 
         // 1) all
         if (group.isAll()) {
-            return new ArrayList<>(allPixels);
+            return sortedByKey(allPixels);
         }
 
         FixtureMatrixPixelGroupConstraints c = group.getConstraints();
@@ -112,14 +150,16 @@ public class DefaultFixturePixelGroupResolveService implements FixturePixelGroup
 
         // 2) explicit keys (if present, treat as the definition)
         if (c.getKeys() != null && !c.getKeys().isEmpty()) {
-            Set<String> wanted = new HashSet<>(c.getKeys());
-            return allPixels.stream()
-                    .filter(p -> wanted.contains(p.getKey()))
-                    .collect(Collectors.toList());
+            List<CachedFixturePixel> result = new ArrayList<>();
+            for (String key : c.getKeys()) {
+                allPixels.stream().filter(p -> key.equals(p.getKey())).findFirst().ifPresent(result::add);
+            }
+            return result;
         }
 
         // 3) constraints by x/y/z/name
-        return allPixels.stream()
+        List<CachedFixturePixel> candidates = c.getName() != null ? sortedByKey(allPixels) : allPixels;
+        return candidates.stream()
                 .filter(p -> matchesAllConstraints(p, c))
                 .collect(Collectors.toList());
     }

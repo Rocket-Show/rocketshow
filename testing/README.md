@@ -300,20 +300,27 @@ The designer migrations are tested with a project in version 2 and the same proj
   - [x] Specs for the settings form and the composition editor.
 - [x] The web app comes with the designer writing project version 8, the template is in version 8 and sends the same
   light as before (`DesignerProjectCompatibilityTest`). The smoke test fails when the designer migrates the template.
+  The app reads version 9 already, which the next designer release writes.
 - [x] The GStreamer pipelines a composition builds, with GStreamer installed in CI and test media and capture sinks
   instead of the devices.
-- [ ] Fixture library gaps, for a later session (see [Known issues](#open)). The app and the designer need the same
-  change each, so both repositories:
-  - [ ] Pixel positions as the Open Fixture Library defines them (`[z][y][x]`, counted from 1).
-  - [ ] Pixel group channels (176 modes of the library stay dark on their pixels).
-  - [ ] Brightness given by a channel with several capabilities in other ways (percent, only "bright", none).
-  - [ ] Split colors of a wheel (e.g. slot 1.5).
-- [ ] The designer repository (Rocket-Show/show-designer), for a later session:
-  - [ ] CI running its specs on every push, like here.
-  - [ ] `ProjectLoadService should be created` fails: the spec provides no `HttpClient`.
-  - [ ] The component specs fail without the translate pipe.
-  - [ ] The whole suite disconnects from Karma after 4 specs. Only the model specs run today:
-    `npx ng test designer --watch=false --include='projects/designer/src/lib/models/**/*.spec.ts'`.
+- [x] Fixture library gaps (see [Known issues](#fixed)), the same change in the app and in the designer. Playing
+  every mode of the whole library once (2664 modes) lights 26236 channels instead of 12298, 127 modes stay dark
+  instead of 687, and none sends past its channels anymore (38 did). The 127 have no dimmer or color (114, e.g. fog,
+  lasers, motors) or only colors the test preset doesn't set (13, e.g. UV or warm white).
+  - [x] Pixel positions as the Open Fixture Library defines them (`[z][y][x]`, counted from 1), the pixel keys of a
+    pixel count named like the library (`FixturePixelGroupTest`, `fixture.service.spec.ts`).
+  - [x] Pixel group channels (`FixtureLibraryTest`).
+  - [x] Brightness given by a channel with several capabilities in other ways (percent, lumens, only "bright", none,
+    from bright to off) (`FixtureLibraryTest`, `DesignerDmxTest`).
+  - [x] Split colors of a wheel (e.g. slot 1.5), slot numbers around the wheel (`FixtureLibraryTest`).
+  - [x] Designer projects are version 9: the pixels of older projects are renamed (`FixtureLibraryTest`,
+    `project-load.service.spec.ts`). The web app needs a designer release with these changes.
+- [x] The designer repository (Rocket-Show/show-designer):
+  - [x] CI running its specs on every push, like here.
+  - [x] `ProjectLoadService should be created` failed: the generated specs without their dependencies are removed.
+  - [x] The component specs failed without the translate pipe: removed with them.
+  - [x] The whole suite disconnected from Karma: the timeline spec drew WaveSurfer into a removed element. All specs
+    run now (`npx ng test designer --watch=false`).
 
 ## 2. Device self-test
 
@@ -883,6 +890,23 @@ Found by reading the code and by the tests. Each one gets a unit test or rig tes
   when loading the composition, and the unit took the default of 1 (`editor-composition.component.spec.ts`).
 - [x] **A stopped test play in the editor kept updating its position,** every 10 milliseconds, piling up with every test
   play (`editor-composition.component.spec.ts`).
+- [x] **Pixel positions differed from the Open Fixture Library.** The app and the designer read `pixelKeys` as
+  `[x][y][z]` and counted from 0, the library defines `[z][y][x]` and counts from 1, so pixel groups by position (e.g.
+  odd pixels, a row) selected other pixels than the library means. The pixels of a pixel count are named like in the
+  library now (e.g. `3`, `(2, 3)`), not `Pixel 3-1-1`: designer projects are version 9, and older ones are renamed when
+  loaded (`FixturePixelGroupTest`, `FixtureLibraryTest`, and in the designer).
+- [x] **Pixel group channels of the fixture library were not supported** by the designer nor the app: 176 modes of
+  the library stayed dark on their pixels. A group's channels (e.g. `Red Inner ring`) control the whole group now; the
+  designer's preview shows the group in the middle of its pixels (`FixtureLibraryTest`).
+- [x] **Brightness given by a channel with several capabilities was often not set.** The app and the designer only set
+  it when its range went from "dark" or "off" to "bright", and dimmers going from bright to off were set the wrong way
+  round. The capability giving the brightness is used now, in percent, lumens or words, or else the closest one
+  (`FixtureLibraryTest`, `DesignerDmxTest`).
+- [x] **Split colors of a wheel were sent as the slot before them.** The library gives colors between two slots as e.g.
+  slot 1.5, the app cut off the fraction. Slot numbers past the last slot count around the wheel now, like in the
+  library (`FixtureLibraryTest`).
+- [x] **The designer lost the channels of a curve when loading a project.** It read the channel names as `0`, `1`, ...
+  so a project saved again sent the curve nowhere (`project-load.service.spec.ts`).
 
 ### Accepted
 
@@ -902,16 +926,5 @@ Found by reading the code and by the tests. Each one gets a unit test or rig tes
 
 ### Open
 
-The gaps of the fixture library support, planned for a later session (see the [TODO](#todo)):
-
-- [ ] **Pixel positions differ from the Open Fixture Library.** The app and the designer read `pixelKeys` as
-  `[x][y][z]` and count from 0, the library defines `[z][y][x]` and counts from 1. Pixel groups by position (e.g. odd
-  pixels, a row) of library fixtures select other pixels than the library means. Both projects need the same change.
-- [ ] **Pixel group channels of the fixture library are not supported** by the designer nor the app: 176 modes of
-  the library stay dark on their pixels. Found by playing every mode of the whole library once.
-- [ ] **Brightness given by a channel with several capabilities is often not set.** The app and the designer only set
-  it when its range goes from "dark" or "off" to "bright" (`DesignerDmxTest`). 36 channels of the library give it
-  differently (in percent, only "bright", or not at all), and 6 modes stay dark because of it.
-- [ ] **Split colors of a wheel are sent as the slot before them.** The library gives colors between two slots as
-  e.g. slot 1.5, the app cuts off the fraction.
+None known.
 
