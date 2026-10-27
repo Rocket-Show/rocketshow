@@ -36,8 +36,10 @@ class StorageSelfTest implements SelfTestStep {
     static final double MIN_WRITE_MB_PER_SECOND = 2;
     static final double MIN_READ_MB_PER_SECOND = 10;
 
-    // Errors of the SD card, a USB drive or their file systems
-    private static final Pattern STORAGE_ERROR_PATTERN = Pattern.compile("(?i)(\\bmmc\\d|\\bmmcblk\\d|\\bnvme\\d|\\bsd[a-z]\\b|\\bsd[a-z]\\d|ext4-fs|f2fs|i/o error)");
+    // Errors of the SD card, a USB drive or their file systems. The kernel logs other messages of them as errors as
+    // well, e.g. "EXT4-fs: Mount option(s) incompatible with ext3".
+    private static final Pattern STORAGE_PATTERN = Pattern.compile("(?i)(\\bmmc\\d|\\bmmcblk\\d|\\bnvme\\d|\\bsd[a-z]\\b|\\bsd[a-z]\\d|ext4-fs|f2fs|i/o error)");
+    private static final Pattern ERROR_PATTERN = Pattern.compile("(?i)(error|timeout|timed out|fail|corrupt)");
 
     private final SettingsService settingsService;
     private final SelfTestSystem system;
@@ -94,7 +96,7 @@ class StorageSelfTest implements SelfTestStep {
         } else if (errors.isEmpty()) {
             context.report(SelfTestCheck.passed(STORAGE, directory.toString(), speeds + ", no errors in the kernel log"));
         } else {
-            context.report(SelfTestCheck.failed(STORAGE, directory.toString(), errors.size() + " errors of the storage in the kernel log, e.g. " + errors.getFirst()));
+            context.report(SelfTestCheck.failed(STORAGE, directory.toString(), speeds + ", " + errors.size() + " errors of the storage in the kernel log, e.g. " + errors.getFirst()));
         }
     }
 
@@ -199,7 +201,10 @@ class StorageSelfTest implements SelfTestStep {
 
     // Package visible for the tests
     static List<String> getStorageErrors(String kernelLog) {
-        return kernelLog.lines().filter(line -> STORAGE_ERROR_PATTERN.matcher(line).find()).map(String::strip).toList();
+        return kernelLog.lines()
+                .filter(line -> STORAGE_PATTERN.matcher(line).find() && ERROR_PATTERN.matcher(line).find())
+                .map(String::strip)
+                .toList();
     }
 
 }

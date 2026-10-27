@@ -109,7 +109,7 @@ class HealthAndStorageSelfTestTest {
         SelfTestCheck check = storage(directory, system);
 
         assertEquals(SelfTestOutcome.FAILED, check.getResult());
-        assertEquals("2 errors of the storage in the kernel log, e.g. mmc0: Timeout waiting for hardware interrupt.", check.getDetails());
+        assertTrue(check.getDetails().matches("16 MB written at .*, 2 errors of the storage in the kernel log, e.g. mmc0: Timeout waiting for hardware interrupt\\."), check.getDetails());
     }
 
     @Test
@@ -126,6 +126,7 @@ class HealthAndStorageSelfTestTest {
                 StorageSelfTest.getStorageErrors("""
                         mmc1: error -110 whilst initialising SD card
                         sdhci-iproc fe340000.mmc: unknown error
+                        EXT4-fs: Mount option(s) incompatible with ext3
                         Buffer I/O error on dev sda1, logical block 0
                         brcmfmac: brcmf_c_preinit_dcmds: Firmware: error
                         blk_update_request: I/O error, dev sdb, sector 2048
