@@ -180,6 +180,7 @@ export class EditorCompositionComponent implements OnInit {
 
   private saveApi(composition: Composition, previousName?: string) {
     this.savingComposition = true;
+    const name = composition.name;
 
     this.compositionService
       .saveComposition(composition, previousName)
@@ -188,6 +189,9 @@ export class EditorCompositionComponent implements OnInit {
           this.loadCompositions();
           this.copyInitialComposition();
 
+          if (previousName) {
+            this.compositionService.compositionRenamed.next({ previousName: previousName, name: name });
+          }
           this.compositionService.compositionsChanged.next();
 
           this.translateService
@@ -268,13 +272,16 @@ export class EditorCompositionComponent implements OnInit {
       .pipe(
         map((result) => {
           if (result) {
+            const name = this.initialComposition.name;
+
             this.compositionService
-              .deleteComposition(this.initialComposition.name)
+              .deleteComposition(name)
               .pipe(
                 map(() => {
                   this.unselect();
                   this.loadCompositions();
 
+                  this.compositionService.compositionDeleted.next(name);
                   this.compositionService.compositionsChanged.next();
 
                   this.translateService

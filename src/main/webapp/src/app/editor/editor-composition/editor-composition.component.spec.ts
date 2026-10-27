@@ -17,6 +17,8 @@ describe("Composition editor", () => {
     compositionService = jasmine.createSpyObj("CompositionService",
       ["getCompositions", "getComposition", "saveComposition", "deleteComposition", "testPlay", "testStop", "testSeek"]);
     compositionService.compositionsChanged = new Subject<void>();
+    compositionService.compositionRenamed = new Subject<{ previousName: string; name: string }>();
+    compositionService.compositionDeleted = new Subject<string>();
     compositionService.getCompositions.and.returnValue(of([new Composition({ name: "Intro" }), new Composition({ name: "Rock & Roll" })]));
     compositionService.getComposition.and.callFake((name: string) => of(new Composition({ name: name, fileList: [] })));
     compositionService.saveComposition.and.returnValue(of({}));
@@ -61,6 +63,8 @@ describe("Composition editor", () => {
   });
 
   it("renames a composition, so the sets and the settings using it keep it", () => {
+    const renamed = [];
+    compositionService.compositionRenamed.subscribe((composition) => renamed.push(composition));
     editor.selectComposition(new Composition({ name: "Intro" }));
     editor.currentComposition.name = "Opening";
 
@@ -68,6 +72,18 @@ describe("Composition editor", () => {
 
     expect(savedWithPreviousName()).toBe("Intro");
     expect(warningDialogService.show).not.toHaveBeenCalled();
+    // For the set editor
+    expect(renamed).toEqual([{ previousName: "Intro", name: "Opening" }]);
+  });
+
+  it("renames no composition saved under its name", () => {
+    const renamed = [];
+    compositionService.compositionRenamed.subscribe((composition) => renamed.push(composition));
+    editor.selectComposition(new Composition({ name: "Intro" }));
+
+    editor.save(editor.currentComposition);
+
+    expect(renamed).toEqual([]);
   });
 
   it("asks before overwriting another composition", () => {
@@ -114,6 +130,8 @@ describe("Composition editor", () => {
   });
 
   it("deletes the composition under its saved name", () => {
+    const deleted = [];
+    compositionService.compositionDeleted.subscribe((name) => deleted.push(name));
     editor.selectComposition(new Composition({ name: "Intro" }));
     // Renamed, but not saved
     editor.currentComposition.name = "Opening";
@@ -123,6 +141,7 @@ describe("Composition editor", () => {
 
     expect(compositionService.deleteComposition).toHaveBeenCalledWith("Intro");
     expect(editor.currentComposition).toBeUndefined();
+    expect(deleted).toEqual(["Intro"]);
   });
 
   it("finds compositions regardless of the case", () => {

@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.settings.ApiKey;
+import com.ascargon.rocketshow.settings.Settings;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
@@ -8,6 +9,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -94,6 +97,36 @@ class SaveSettingsTest extends ApiTest {
         saveSettings(admin, settings);
 
         assertEquals(adminPasswordHash, settingsService.getSettings().getAdminPasswordHash());
+    }
+
+    // Under the names the web app uses for them: fields the unit doesn't know are ignored
+    @Test
+    void keepsTheOtherUnitsOfActionsAndMidiRoutings() throws Exception {
+        MockHttpSession admin = loginAsAdmin();
+
+        try {
+            ObjectNode settings = loadSettings(admin);
+            ObjectNode action = settings.putArray("actionTriggerMidiList").addObject().putObject("actionTriggerMidiNoteOn")
+                    .putArray("actionList").addObject().putObject("actionTransport");
+            action.put("transportActionType", "PLAY");
+            action.putArray("remoteDeviceNames").add("Unit B");
+            ObjectNode midiRouting = settings.putArray("remoteMidiRoutingList").addObject();
+            midiRouting.put("midiDestination", "REMOTE");
+            midiRouting.putArray("remoteDeviceNameList").add("Unit B");
+            saveSettings(admin, settings);
+
+            Settings saved = settingsService.getSettings();
+            assertEquals(List.of("Unit B"), saved.getActionTriggerMidiList().getFirst().getActionList().getFirst().getRemoteDeviceNames());
+            assertEquals(List.of("Unit B"), saved.getRemoteMidiRoutingList().getFirst().getRemoteDeviceNameList());
+
+            ObjectNode loaded = loadSettings(admin);
+            assertEquals("Unit B", loaded.get("actionTriggerMidiList").get(0).get("actionTriggerMidiNoteOn").get("actionList").get(0)
+                    .get("actionTransport").get("remoteDeviceNames").get(0).stringValue());
+            assertEquals("Unit B", loaded.get("remoteMidiRoutingList").get(0).get("remoteDeviceNameList").get(0).stringValue());
+        } finally {
+            settingsService.getSettings().getActionTriggerMidiList().clear();
+            settingsService.getSettings().getRemoteMidiRoutingList().clear();
+        }
     }
 
     @Test

@@ -1,6 +1,7 @@
 export class Action {
   compositionName: string;
-  remoteDeviceList: string[] = [];
+  // Named like in the API of the unit
+  remoteDeviceNames: string[] = [];
   executeLocally: boolean = true;
   type: string;
 
@@ -11,9 +12,9 @@ export class Action {
 
     this.compositionName = data.compositionName;
 
-    if (data.remoteDeviceList) {
-      for (let remoteDevice of data.remoteDeviceList) {
-        this.remoteDeviceList.push(remoteDevice);
+    if (data.remoteDeviceNames) {
+      for (let remoteDevice of data.remoteDeviceNames) {
+        this.remoteDeviceNames.push(remoteDevice);
       }
     }
 
