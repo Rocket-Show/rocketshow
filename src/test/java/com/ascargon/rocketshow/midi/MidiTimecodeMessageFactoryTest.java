@@ -14,8 +14,9 @@ class MidiTimecodeMessageFactoryTest {
     void createQuarterFrameMessageEncodesMessageTypeAndNibble() throws Exception {
         ShortMessage message = MidiTimecodeMessageFactory.createQuarterFrameMessage(1_234, MidiTimecodeFrameRate.FPS_30, 0);
 
+        // Frame 7 of the second 1, without the 2 frames the receiver adds
         assertEquals(0xF1, message.getStatus());
-        assertEquals(0x09, message.getData1());
+        assertEquals(0x07, message.getData1());
     }
 
     @Test

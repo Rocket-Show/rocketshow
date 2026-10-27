@@ -18,6 +18,7 @@ const deviceName = 'Smoke test unit';
 const renamedDeviceName = 'Renamed smoke test unit';
 // Names with characters, which have to be encoded in a URL
 const compositionName = 'Smoke test & composition #1 + 50%';
+const renamedCompositionName = 'Renamed smoke test & composition #1 + 50%';
 const setName = 'Smoke test set & more #2';
 const mediaFileName = 'smoke test click #1 + 2.wav';
 
@@ -182,6 +183,22 @@ try {
     await waitUntil(async () => (await name.inputValue()) === setName, `the set "${setName}" to open`);
   });
 
+  await step('Rename the composition of the set', async () => {
+    await page.locator('#compositions-tab').click();
+    await page.locator('#compositions .list-group-item', { hasText: compositionName }).first().click();
+    const name = page.locator('#compositionName');
+    await waitUntil(async () => (await name.inputValue()) === compositionName, `the composition "${compositionName}" to open`);
+    await name.fill(renamedCompositionName);
+    await page.getByRole('button', { name: 'Save' }).first().click();
+    await expectMessage('The composition has been saved.');
+
+    // The set holds it under its new name, also after a reload
+    await page.reload();
+    await page.locator('#sets-tab').click();
+    await page.locator('#sets .list-group-item', { hasText: setName }).first().click();
+    await page.locator('#sets .list-group-item', { has: page.locator('.list-sort-handle'), hasText: renamedCompositionName }).first().waitFor();
+  });
+
   await step('Delete the media file', async () => {
     await page.locator('#media-tab').click();
     await page.locator('#media .list-group-item', { hasText: mediaFileName }).locator('.text-danger').click();
@@ -198,8 +215,8 @@ try {
 
   await step('Select the composition to play', async () => {
     await page.goto(`${baseUrl}/#/play`);
-    await page.locator('.list-group-item:visible', { hasText: compositionName }).first().click();
-    await waitUntil(async () => (await state()).currentCompositionName === compositionName, `the composition "${compositionName}" to be selected`);
+    await page.locator('.list-group-item:visible', { hasText: renamedCompositionName }).first().click();
+    await waitUntil(async () => (await state()).currentCompositionName === renamedCompositionName, `the composition "${renamedCompositionName}" to be selected`);
   });
 
   await step('Open the designer', async () => {

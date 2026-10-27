@@ -16,7 +16,9 @@ class MidiTimecodeMessageFactory {
     }
 
     static ShortMessage createQuarterFrameMessage(long positionMillis, MidiTimecodeFrameRate frameRate, int messageType) throws InvalidMidiDataException {
-        TimecodePosition position = getTimecodePosition(positionMillis, frameRate, 2);
+        // The time of the frame when the first quarter frame is sent. Receivers add the 2 frames the 8 quarter frames
+        // take themselves, like the MIDI timecode specification says.
+        TimecodePosition position = getTimecodePosition(positionMillis, frameRate);
 
         int value = switch (messageType) {
             case 0 -> position.frame() & 0x0F;
@@ -36,7 +38,7 @@ class MidiTimecodeMessageFactory {
     }
 
     static SysexMessage createFullFrameMessage(long positionMillis, MidiTimecodeFrameRate frameRate) throws InvalidMidiDataException {
-        TimecodePosition position = getTimecodePosition(positionMillis, frameRate, 0);
+        TimecodePosition position = getTimecodePosition(positionMillis, frameRate);
         byte[] data = new byte[]{
                 (byte) SysexMessage.SYSTEM_EXCLUSIVE,
                 (byte) FULL_FRAME_UNIVERSAL_REALTIME_SYSEX,
@@ -55,8 +57,8 @@ class MidiTimecodeMessageFactory {
         return message;
     }
 
-    private static TimecodePosition getTimecodePosition(long positionMillis, MidiTimecodeFrameRate frameRate, int frameOffset) {
-        long frameNumber = Math.max(0, Math.round(positionMillis * frameRate.getFramesPerSecond() / 1000.0)) + frameOffset;
+    private static TimecodePosition getTimecodePosition(long positionMillis, MidiTimecodeFrameRate frameRate) {
+        long frameNumber = Math.max(0, Math.round(positionMillis * frameRate.getFramesPerSecond() / 1000.0));
 
         if (frameRate.isDropFrame()) {
             frameNumber = convertToDropFrameNumber(frameNumber);

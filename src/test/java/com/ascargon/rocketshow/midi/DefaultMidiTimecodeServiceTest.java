@@ -130,7 +130,8 @@ class DefaultMidiTimecodeServiceTest {
         assertTrue(sent.size() > count + 10);
     }
 
-    // The timecodes a receiver puts together from the quarter frames: 8 of them make one, which takes 2 frames
+    // The timecodes a receiver puts together from the quarter frames: 8 of them make one, the time when the first one
+    // was sent (the receiver adds the 2 frames they take)
     @Test
     void sendsNoJumpsOnANewSecond() throws Exception {
         List<String> jumps = new ArrayList<>();
@@ -156,11 +157,10 @@ class DefaultMidiTimecodeServiceTest {
                 int second = pieces[2] | (pieces[3] << 4);
                 long frames = second * 25L + frame;
 
-                // A position while the 8 quarter frames were sent, at most a frame earlier or later, plus the 2 frames
-                // they take
+                // The position when the first of the 8 quarter frames was sent, at most a frame earlier or later
                 long firstMillis = startMillis + (quarterFrames.get(i).nanos() - startNanos) / 1_000_000;
                 long lastMillis = startMillis + (quarterFrames.get(i + 7).nanos() - startNanos) / 1_000_000;
-                if (frames < firstMillis / 40 - 1 || frames > lastMillis / 40 + 3) {
+                if (frames < firstMillis / 40 - 1 || frames > firstMillis / 40 + 1) {
                     jumps.add(String.format("%02d:%02d at %d to %d ms", second, frame, firstMillis, lastMillis));
                 }
             }

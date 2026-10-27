@@ -5,6 +5,7 @@ import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.gstreamer.GstDiscovererService;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
+import com.ascargon.rocketshow.util.ActionTrigger;
 import com.ascargon.rocketshow.util.AtomicFile;
 import com.ascargon.rocketshow.util.FileNames;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
@@ -248,7 +249,11 @@ public class DefaultCompositionService implements CompositionService {
 
     @Override
     public void analyzeComposition(Composition composition) throws Exception {
-        Composition savedComposition = getComposition(composition.getName());
+        analyzeComposition(composition, getComposition(composition.getName()));
+    }
+
+    // The files of the saved composition, which didn't change, aren't analyzed again
+    private void analyzeComposition(Composition composition, Composition savedComposition) throws Exception {
 
         // Set additional information for each file
         for (CompositionFile compositionFile : composition.getCompositionFileList()) {
@@ -314,7 +319,11 @@ public class DefaultCompositionService implements CompositionService {
 
     @Override
     public synchronized void saveComposition(Composition composition) throws Exception {
-        analyzeComposition(composition);
+        saveComposition(composition, getComposition(composition.getName()));
+    }
+
+    private void saveComposition(Composition composition, Composition savedComposition) throws Exception {
+        analyzeComposition(composition, savedComposition);
 
         // Save the composition in XML
         String directory = settingsService.getSettings().getBasePath() + File.separator + COMPOSITIONS_PATH;
@@ -421,6 +430,47 @@ public class DefaultCompositionService implements CompositionService {
         updateSets();
 
         logger.info("Composition '" + name + "' deleted");
+    }
+
+    // Saves the composition under its new name and moves the references to its previous name along: in the sets and
+    // in the actions of the compositions selecting or playing it. Its files are analyzed like before the rename.
+    @Override
+    public synchronized void renameComposition(String previousName, Composition composition) throws Exception {
+        Composition previousComposition = getComposition(FileNames.check(previousName));
+
+        if (previousComposition == null) {
+            throw new Exception("Composition '" + previousName + "' not found");
+        }
+
+        saveComposition(composition, previousComposition);
+
+        for (Composition otherComposition : new ArrayList<>(compositionCache)) {
+            if (!otherComposition.getName().equals(previousName)
+                    && ActionTrigger.renameComposition(otherComposition.getActionTriggerList(), previousName, composition.getName())) {
+
+                saveComposition(otherComposition);
+            }
+        }
+
+        for (Set set : new ArrayList<>(getAllSets())) {
+            Set loadedSet = loadSet(set.getName());
+            boolean renamed = false;
+
+            for (SetComposition setComposition : loadedSet.getSetCompositionList()) {
+                if (previousName.equals(setComposition.getName())) {
+                    setComposition.setName(composition.getName());
+                    renamed = true;
+                }
+            }
+
+            if (renamed) {
+                saveSet(loadedSet);
+            }
+        }
+
+        deleteComposition(previousName);
+
+        logger.info("Composition '" + previousName + "' renamed to '" + composition.getName() + "'");
     }
 
     @Override

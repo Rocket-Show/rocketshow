@@ -20,6 +20,9 @@ public interface DesignerService {
 
     void saveProject(String project) throws IOException;
 
+
+    void renameComposition(String previousName, String name) throws IOException;
+
     void load(CompositionPlayer compositionPlayer, Project project, Pipeline pipeline);
 
     void play();

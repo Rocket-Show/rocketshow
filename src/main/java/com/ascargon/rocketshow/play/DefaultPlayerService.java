@@ -215,9 +215,9 @@ public class DefaultPlayerService implements PlayerService {
 
             logger.debug("Wait for all devices to be loaded...");
 
-            // Wait for the compositions on all devices to be loaded
+            // Wait for the compositions on all devices to be loaded. Each load waits at most RemoteDevice.MAX_WAIT_MILLIS.
             playExecutor.shutdown();
-            if (!playExecutor.awaitTermination(60, TimeUnit.SECONDS)) {
+            if (!playExecutor.awaitTermination(RemoteDevice.MAX_WAIT_MILLIS + 1000, TimeUnit.MILLISECONDS)) {
                 logger.error("Timeout while waiting for the compositions to load on remote devices");
             }
         }
@@ -501,6 +501,13 @@ public class DefaultPlayerService implements PlayerService {
             return;
         }
 
+        // Only the current composition continues the set. The default composition or a composition played to test it
+        // just stops at its end.
+        if (compositionPlayer != currentCompositionPlayer) {
+            compositionPlayer.stop();
+            return;
+        }
+
         if (sessionService.getSession().isAutoSelectNextComposition()
                 && setService.getCurrentSet() != null
                 && setService.getCurrentSet().getSetCompositionList() != null
@@ -527,6 +534,11 @@ public class DefaultPlayerService implements PlayerService {
 
     public long getPositionMillis() {
         return currentCompositionPlayer.getPositionMillis();
+    }
+
+    // Package visible for the tests
+    CompositionPlayer getCurrentCompositionPlayer() {
+        return currentCompositionPlayer;
     }
 
     public void setComposition(Composition composition, boolean playDefaultCompositionWhenStoppingComposition,
@@ -570,6 +582,18 @@ public class DefaultPlayerService implements PlayerService {
         }
 
         notificationService.notifyClients(this, setService);
+    }
+
+    // A composition was renamed: one playing or selected stays so under its new name
+    @Override
+    public synchronized void compositionRenamed(String previousName, String name) throws Exception {
+        Composition composition = currentCompositionPlayer.getComposition();
+
+        if (composition != null && previousName.equals(composition.getName())) {
+            composition.setName(name);
+        }
+
+        compositionsChanged();
     }
 
     // The current composition was deleted: select the one which took its place in the set, or the first one

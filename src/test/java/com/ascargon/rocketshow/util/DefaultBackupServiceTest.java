@@ -2,6 +2,9 @@ package com.ascargon.rocketshow.util;
 
 import com.ascargon.rocketshow.settings.Settings;
 import com.ascargon.rocketshow.settings.SettingsService;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
@@ -11,17 +14,24 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
@@ -31,7 +41,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-// Backups are created and restored with bash and tar
+// Backups are created with tar
 @EnabledOnOs({OS.LINUX, OS.MAC})
 class DefaultBackupServiceTest {
 
@@ -111,6 +121,109 @@ class DefaultBackupServiceTest {
         assertEquals("<composition/>", read("compositions/Song.xml"));
         assertFalse(Files.exists(basePath.resolve("compositions/New.xml")));
         assertEquals("audio", read("media/audio/song.wav"));
+        assertFalse(Files.exists(basePath.resolve(".restore")));
+    }
+
+    @Test
+    void restoresNamesOfAnyLengthAndTheFilePermissions() throws Exception {
+        writeData();
+        String longName = "compositions/A very long name & more " + "x".repeat(150) + ".xml";
+        write(longName, "<composition>long</composition>");
+        // Only when Java may use such file names here (e.g. not without a language set)
+        String unicodeName = "compositions/Ünïcode ♫.xml";
+        boolean unicode = Charset.forName(System.getProperty("sun.jnu.encoding")).newEncoder().canEncode(unicodeName);
+        if (unicode) {
+            write(unicodeName, "<composition>unicode</composition>");
+        }
+        write("media/video/script.sh", "#!/bin/sh");
+        Files.setPosixFilePermissions(basePath.resolve("media/video/script.sh"), PosixFilePermissions.fromString("rwxr-x---"));
+        byte[] backup = createBackup();
+
+        Files.delete(basePath.resolve(longName));
+        if (unicode) {
+            Files.delete(basePath.resolve(unicodeName));
+        }
+        Files.setPosixFilePermissions(basePath.resolve("media/video/script.sh"), PosixFilePermissions.fromString("rw-------"));
+
+        upload(backup);
+        backupService.restoreFinish();
+
+        assertTrue(rebooted.await(30, TimeUnit.SECONDS));
+        assertEquals("<composition>long</composition>", read(longName));
+        if (unicode) {
+            assertEquals("<composition>unicode</composition>", read(unicodeName));
+        }
+        assertEquals("rwxr-x---", PosixFilePermissions.toString(Files.getPosixFilePermissions(basePath.resolve("media/video/script.sh"))));
+    }
+
+    private void writeLarge(String path, byte content) throws Exception {
+        Path file = basePath.resolve(path);
+        Files.createDirectories(file.getParent());
+        byte[] bytes = new byte[2 * 1024 * 1024];
+        Arrays.fill(bytes, content);
+        Files.write(file, bytes);
+    }
+
+    private Object fileKey(String path) throws Exception {
+        return Files.readAttributes(basePath.resolve(path), BasicFileAttributes.class).fileKey();
+    }
+
+    @Test
+    void keepsTheFilesTheBackupHoldsUnchanged() throws Exception {
+        // E.g. videos, which take most of the room: restoring over the same data doesn't need room for them twice
+        writeData();
+        writeLarge("media/video/unchanged.mp4", (byte) 1);
+        writeLarge("media/video/changed.mp4", (byte) 2);
+        writeLarge("media/video/touched.mp4", (byte) 3);
+        FileTime backupTime = Files.getLastModifiedTime(basePath.resolve("media/video/changed.mp4"));
+        byte[] backup = createBackup();
+
+        // Changed after the backup: with another size or at another time
+        Object unchanged = fileKey("media/video/unchanged.mp4");
+        Object changed = fileKey("media/video/changed.mp4");
+        Files.write(basePath.resolve("media/video/changed.mp4"), new byte[]{2}, StandardOpenOption.APPEND);
+        writeLarge("media/video/touched.mp4", (byte) 4);
+        Files.setLastModifiedTime(basePath.resolve("media/video/touched.mp4"), FileTime.fromMillis(backupTime.toMillis() + 10_000));
+
+        upload(backup);
+        backupService.restoreFinish();
+
+        assertTrue(rebooted.await(30, TimeUnit.SECONDS));
+        assertEquals(unchanged, fileKey("media/video/unchanged.mp4"));
+        assertNotEquals(changed, fileKey("media/video/changed.mp4"));
+
+        byte[] expected = new byte[2 * 1024 * 1024];
+        Arrays.fill(expected, (byte) 2);
+        assertArrayEquals(expected, Files.readAllBytes(basePath.resolve("media/video/changed.mp4")));
+        Arrays.fill(expected, (byte) 3);
+        assertArrayEquals(expected, Files.readAllBytes(basePath.resolve("media/video/touched.mp4")));
+
+        // The time is kept, so the files aren't analyzed again
+        assertEquals(backupTime.toMillis() / 1000, Files.getLastModifiedTime(basePath.resolve("media/video/changed.mp4")).toMillis() / 1000);
+    }
+
+    @Test
+    void refusesABackupWithFilesOutsideOfItsFolder() throws Exception {
+        writeData();
+        String outside = "outside-" + basePath.getFileName() + ".txt";
+
+        ByteArrayOutputStream backup = new ByteArrayOutputStream();
+        try (TarArchiveOutputStream tar = new TarArchiveOutputStream(new GzipCompressorOutputStream(backup))) {
+            byte[] content = "evil".getBytes(StandardCharsets.UTF_8);
+            TarArchiveEntry entry = new TarArchiveEntry("compositions/../../" + outside, true);
+            entry.setSize(content.length);
+            tar.putArchiveEntry(entry);
+            tar.write(content);
+            tar.closeArchiveEntry();
+        }
+
+        assertThrows(Exception.class, () -> {
+            upload(backup.toByteArray());
+            backupService.restoreFinish();
+        });
+        verify(rebootService, never()).reboot();
+        assertFalse(Files.exists(basePath.resolveSibling(outside)));
+        assertEquals("<composition/>", read("compositions/Song.xml"));
         assertFalse(Files.exists(basePath.resolve(".restore")));
     }
 

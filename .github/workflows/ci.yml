@@ -18,8 +18,15 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: maven
+      - name: Install GStreamer
+        # For the tests playing real media, with sinks capturing what the sound cards and the screen would get
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad
       - name: Run the unit tests
         run: ./mvnw -B test -Pcoverage -Dskip.npm -Dskip.installnodenpm
+        env:
+          GSTREAMER_TESTS_REQUIRED: true
       - name: Summarize the coverage
         run: |
           awk -F, 'NR > 1 { missed += $8; covered += $9 } END { printf "Line coverage of the unit tests: %.1f %%\n", 100 * covered / (covered + missed) }' \

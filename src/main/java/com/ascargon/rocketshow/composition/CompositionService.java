@@ -34,6 +34,8 @@ public interface CompositionService {
 
     void deleteComposition(String name) throws Exception;
 
+    void renameComposition(String previousName, Composition composition) throws Exception;
+
     void deleteSet(String name);
 
     int getCompositionIndex(String compositionName);

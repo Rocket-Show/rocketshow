@@ -12,7 +12,9 @@ import org.freedesktop.gstreamer.Pipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.io.File;
 import java.io.IOException;
@@ -205,6 +207,38 @@ public class DefaultDesignerService implements DesignerService {
         projects.add(projectObject);
 
         logger.info("Designer project '" + projectName + "' saved");
+    }
+
+    // A composition was renamed: the projects playing along with it keep it under its new name. The files are changed
+    // as JSON, so the parts of the projects the app doesn't read stay as they are.
+    @Override
+    public synchronized void renameComposition(String previousName, String name) throws IOException {
+        String designerPath = settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getDesignerPath();
+        ObjectMapper mapper = new ObjectMapper();
+
+        for (Project project : new ArrayList<>(projects)) {
+            File file = new File(designerPath + File.separator + FileNames.check(project.getName()) + ".json");
+
+            if (!file.exists()) {
+                continue;
+            }
+
+            JsonNode projectNode = mapper.readTree(file);
+            boolean renamed = false;
+
+            for (JsonNode compositionNode : projectNode.path("compositions")) {
+                if (compositionNode instanceof ObjectNode compositionObject && compositionNode.path("name").isString()
+                        && previousName.equals(compositionNode.path("name").stringValue())) {
+
+                    compositionObject.put("name", name);
+                    renamed = true;
+                }
+            }
+
+            if (renamed) {
+                saveProject(mapper.writeValueAsString(projectNode));
+            }
+        }
     }
 
     private Fixture getFixtureByUuid(Project project, String uuid) {
@@ -1190,11 +1224,43 @@ public class DefaultDesignerService implements DesignerService {
         // match this mode channel with the value of its coarse channel
         for (FixtureChannelValue channelValue : fixtureChannelValues) {
             if (channel.getName().equals(channelValue.getChannelName())) {
-                int dmxValue = (int) Math.floor(channelValue.getValue() / Math.pow(256, channel.getChannel().getFineChannelAliases().size() - (fineIndex + 1))) % 256;
+                double value = applyMasterDimmer(channel, channelValue.getValue());
+                int dmxValue = (int) Math.floor(value / Math.pow(256, channel.getChannel().getFineChannelAliases().size() - (fineIndex + 1))) % 256;
                 universe.put(channelIndex, dmxValue);
                 break;
             }
         }
+    }
+
+    // The master dimmer of the project dims the brightness, like in the preview of the designer: a value giving the
+    // brightness is scaled within the range of its capability. Colors aren't dimmed, like in the preview.
+    private double applyMasterDimmer(CachedFixtureChannel channel, double value) {
+        double masterDimmer = project == null ? 1 : project.getMasterDimmerValue();
+
+        if (masterDimmer >= 1 || channel.getCapabilities() == null) {
+            return value;
+        }
+
+        for (CachedFixtureCapability channelCapability : channel.getCapabilities()) {
+            FixtureCapability capability = channelCapability.getCapability();
+
+            if (capability.getType() != FixtureCapability.FixtureCapabilityType.Intensity) {
+                continue;
+            }
+
+            List<Integer> dmxRange = capability.getDmxRange();
+
+            if (dmxRange == null || dmxRange.size() < 2) {
+                // the brightness over the whole channel
+                return value * masterDimmer;
+            }
+
+            if (value >= dmxRange.get(0) && value <= dmxRange.get(1)) {
+                return dmxRange.get(0) + (value - dmxRange.get(0)) * masterDimmer;
+            }
+        }
+
+        return value;
     }
 
     private boolean isUnusedChannel(FixtureModeChannel fixtureModeChannel) {
@@ -1275,7 +1341,6 @@ public class DefaultDesignerService implements DesignerService {
             List<PresetRegionScene> presets = getPresets(timeMillis);
             Map<CachedFixture, List<FixtureChannelValue>> calculatedFixtures = getChannelValues(timeMillis, presets);
 
-            // TODO make the dimmer value adjustable and fall back to the project settings
             setUniverseValues(calculatedFixtures);
         } catch (Exception e) {
             logger.error("Could not calculate the universe", e);

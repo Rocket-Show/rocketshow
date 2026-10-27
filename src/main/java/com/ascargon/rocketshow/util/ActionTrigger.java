@@ -33,4 +33,21 @@ public abstract class ActionTrigger {
         return actionList;
     }
 
+    // A composition was renamed: the actions selecting or playing it by its name get the new name. Returns, whether one
+    // did.
+    public static boolean renameComposition(List<? extends ActionTrigger> actionTriggers, String previousName, String name) {
+        boolean renamed = false;
+
+        for (ActionTrigger actionTrigger : actionTriggers) {
+            for (Action action : actionTrigger.getActionList()) {
+                if (action instanceof ActionTransport actionTransport && previousName.equals(actionTransport.getCompositionName())) {
+                    actionTransport.setCompositionName(name);
+                    renamed = true;
+                }
+            }
+        }
+
+        return renamed;
+    }
+
 }

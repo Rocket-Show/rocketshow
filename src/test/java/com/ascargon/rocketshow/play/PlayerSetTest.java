@@ -216,11 +216,11 @@ class PlayerSetTest {
         playerService.loadSetAndComposition("Show");
 
         session.setAutoSelectNextComposition(false);
-        playerService.compositionPlayerFinishedPlaying(new CompositionPlayer(playerService));
+        playerService.compositionPlayerFinishedPlaying(playerService.getCurrentCompositionPlayer());
         assertEquals("C", playerService.getCompositionName());
 
         session.setAutoSelectNextComposition(true);
-        playerService.compositionPlayerFinishedPlaying(new CompositionPlayer(playerService));
+        playerService.compositionPlayerFinishedPlaying(playerService.getCurrentCompositionPlayer());
         assertEquals("A", playerService.getCompositionName());
         assertEquals(1, setService.getCurrentCompositionIndex());
     }
@@ -251,7 +251,7 @@ class PlayerSetTest {
         clearInvocations(designerService);
 
         // C reached its end
-        playerService.compositionPlayerFinishedPlaying(new CompositionPlayer(playerService));
+        playerService.compositionPlayerFinishedPlaying(playerService.getCurrentCompositionPlayer());
 
         assertEquals("A", playerService.getCompositionName());
         assertEquals(CompositionPlayer.PlayState.PLAYING, playerService.getPlayState());
@@ -276,7 +276,7 @@ class PlayerSetTest {
         playerService.play();
 
         // C reached its end, the next composition gets selected
-        playerService.compositionPlayerFinishedPlaying(new CompositionPlayer(playerService));
+        playerService.compositionPlayerFinishedPlaying(playerService.getCurrentCompositionPlayer());
         assertEquals("A", playerService.getCompositionName());
 
         playerService.stop();
@@ -304,6 +304,70 @@ class PlayerSetTest {
 
         verify(designerService, atLeastOnce()).getProjectByCompositionName("Ambient");
         playerService.stop(false);
+    }
+
+
+    // A composition without files, e.g. only lighting, which ends with its last action
+    private void saveCompositionWithoutFiles(String name, long lastActionMillis) throws Exception {
+        Composition composition = new Composition();
+        composition.setName(name);
+        ActionTriggerComposition lastAction = new ActionTriggerComposition();
+        lastAction.setPositionMillis(lastActionMillis);
+        composition.getActionTriggerList().add(lastAction);
+        compositionService.saveComposition(composition);
+    }
+
+    private void waitFor(String compositionName, CompositionPlayer.PlayState playState) throws InterruptedException {
+        for (int i = 0; i < 100 && !(compositionName.equals(playerService.getCompositionName()) && playState == playerService.getPlayState()); i++) {
+            Thread.sleep(50);
+        }
+
+        assertEquals(compositionName, playerService.getCompositionName());
+        assertEquals(playState, playerService.getPlayState());
+    }
+
+    @Test
+    void selectsTheNextCompositionWhenOneWithoutFilesEnds() throws Exception {
+        saveCompositionWithoutFiles("C", 100);
+        session.setAutoSelectNextComposition(true);
+        playerService.loadSetAndComposition("Show");
+
+        playerService.play();
+
+        waitFor("A", CompositionPlayer.PlayState.STOPPED);
+        assertEquals(1, setService.getCurrentCompositionIndex());
+    }
+
+    @Test
+    void startsTheNextCompositionWithoutFiles() throws Exception {
+        saveCompositionWithoutFiles("C", 100);
+        saveCompositionWithoutFiles("A", 600_000);
+        Set show = set("Auto", "C", "A");
+        show.getSetCompositionList().getFirst().setAutoStartNextComposition(true);
+        compositionService.saveSet(show);
+        session.setAutoSelectNextComposition(true);
+        playerService.loadSetAndComposition("Auto");
+
+        playerService.play();
+
+        waitFor("A", CompositionPlayer.PlayState.PLAYING);
+        playerService.stop();
+    }
+
+    @Test
+    void keepsTheSetWhenTheDefaultCompositionEnds() throws Exception {
+        // A default composition which doesn't loop
+        saveCompositionWithoutFiles("Ambient", 100);
+        settingsService.getSettings().setDefaultComposition("Ambient");
+        session.setAutoSelectNextComposition(true);
+        session.setCurrentSetName("Show");
+
+        playerService = start();
+        Thread.sleep(500);
+
+        assertEquals("C", playerService.getCompositionName());
+        assertEquals(0, setService.getCurrentCompositionIndex());
+        assertEquals(CompositionPlayer.PlayState.STOPPED, playerService.getPlayState());
     }
 
 }
