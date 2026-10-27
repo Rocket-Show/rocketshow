@@ -298,9 +298,9 @@ The designer migrations are tested with a project in version 2 and the same proj
 - [x] The unit tests of the web app, in CI.
 - [x] Changes during a show: saving compositions, audio settings, MIDI to other units in order.
   - [x] Specs for the settings form and the composition editor.
-- [x] The web app comes with the designer writing project version 8, the template is in version 8 and sends the same
-  light as before (`DesignerProjectCompatibilityTest`). The smoke test fails when the designer migrates the template.
-  The app reads version 9 already, which the next designer release writes.
+- [x] The web app comes with the designer writing project version 9 (1.75.0), the template is in version 9 and sends
+  the same light as before (`DesignerProjectCompatibilityTest`). The smoke test fails when the designer migrates the
+  template.
 - [x] The GStreamer pipelines a composition builds, with GStreamer installed in CI and test media and capture sinks
   instead of the devices.
 - [x] Fixture library gaps (see [Known issues](#fixed)), the same change in the app and in the designer. Playing
