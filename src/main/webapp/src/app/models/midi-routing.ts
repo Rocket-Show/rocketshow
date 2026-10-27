@@ -4,7 +4,8 @@ export class MidiRouting {
     midiDestination: string;
     midiMapping: MidiMapping = new MidiMapping();
     universeUuid: string = "";
-    remoteDeviceList: string[] = [];
+    // Named like in the API of the unit
+    remoteDeviceNameList: string[] = [];
 
     constructor(data?: any) {
         if(!data) {
@@ -15,9 +16,9 @@ export class MidiRouting {
         this.midiMapping = new MidiMapping(data.midiMapping);
         this.universeUuid = data.universeUuid || "";
 
-        if(data.remoteDeviceList) {
-            for(let remoteDevice of data.remoteDeviceList) {
-                this.remoteDeviceList.push(remoteDevice);
+        if(data.remoteDeviceNameList) {
+            for(let remoteDevice of data.remoteDeviceNameList) {
+                this.remoteDeviceNameList.push(remoteDevice);
             }
         }
     }

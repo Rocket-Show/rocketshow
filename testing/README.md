@@ -63,11 +63,11 @@ The unit tests live in `src/test/java`:
 - The whole app started with each release sample, where every setting is set and every list filled
   (`ReleaseSamplesStartTest`, the API with the latest one in `ReleaseSampleStartTest`)
 - The API through its security rules, like the web app and other units call it: what needs a login, an API key or the
-  admin, the initial setup, the login throttle, saving the settings like the web app does (`ApiSecurityTest`,
-  `SaveSettingsTest`, `LoginThrottleServiceTest`), logging in, the passwords of the admin and the access point, the
-  answers to requests it can't fulfill (`AuthApiTest`, `ApiErrorsTest`), the states sent to the web app
-  (`DefaultNotificationServiceTest`), selecting and playing compositions with symbols in their name, positions outside
-  the set (`TransportApiTest`)
+  admin, the initial setup, the login throttle, saving the settings like the web app does, with the names it gives the
+  other units of actions and MIDI routings (`ApiSecurityTest`, `SaveSettingsTest`, `LoginThrottleServiceTest`), logging
+  in, the passwords of the admin and the access point, the answers to requests it can't fulfill (`AuthApiTest`,
+  `ApiErrorsTest`), the states sent to the web app (`DefaultNotificationServiceTest`), selecting and playing
+  compositions with symbols in their name, positions outside the set (`TransportApiTest`)
 - The monitors of the web app: the latest DMX values and audio levels by bus, MIDI routed while the monitor sends
   (`ActivityMonitorsTest`)
 - File names from the web app can't leave their folder (`FileNamesTest`, `FileNameCheckTest`)
@@ -134,7 +134,7 @@ Run them locally without the web app build, with or without the coverage report 
 ./mvnw test -Pcoverage -Dskip.npm -Dskip.installnodenpm
 ```
 
-All 527 tests pass without any hardware attached, in a few minutes. The 38 tests playing real media need GStreamer
+All 528 tests pass without any hardware attached, in a few minutes. The 38 tests playing real media need GStreamer
 with the base, good and bad plugins (e.g. `apt install gstreamer1.0-plugins-base gstreamer1.0-plugins-good
 gstreamer1.0-plugins-bad`) and are skipped without it. One backup test needs an unreadable file, so it is skipped when
 running as root (root can read every file). It runs in CI. The tests cover 82 % of the lines and 70 % of the branches
@@ -175,9 +175,10 @@ loading and saving the settings (MIDI devices, the first audio bus, defaults, se
 of the access point, `settings.component.spec.ts`), the composition editor saving, renaming, overwriting and deleting
 compositions, muted files and test plays (`editor-composition.component.spec.ts`), the set editor keeping a set open in
 it like on the unit, when a composition is renamed or deleted in the composition editor
-(`editor-set.component.spec.ts`), the actions of every type keeping their type when saved and loaded again
-(`action-trigger.spec.ts`). The generated specs of every component and service only checked that it could be created,
-and none of them compiled anymore, so they were removed. New specs test behaviour, not that a component exists.
+(`editor-set.component.spec.ts`), the actions of every type keeping their type and the other units executing them when
+saved and loaded again (`action-trigger.spec.ts`), the other units of MIDI routings (`midi-routing.spec.ts`). The
+generated specs of every component and service only checked that it could be created, and none of them compiled anymore,
+so they were removed. New specs test behaviour, not that a component exists.
 
 Run them locally (`CHROME_BIN` if Karma doesn't find Chrome or Chromium by itself):
 
@@ -899,6 +900,11 @@ Found by reading the code and by the tests. Each one gets a unit test or rig tes
 - [x] **A NULL action lost its type when loaded.** The web app read it from a field which doesn't exist, so the action
   showed no type in the editor and an unknown one in the overview, and lost whether it's executed locally
   (`action-trigger.spec.ts`).
+- [x] **The other units of actions and MIDI routings were lost when saved.** The web app sent them as
+  `remoteDeviceList`, which the unit ignores, and read them from it, which the unit doesn't send: actions and MIDI
+  routings to other units, in compositions and in the settings, reached no other unit after saving them in the web app.
+  The web app uses the names of the unit's API now, `remoteDeviceNames` and `remoteDeviceNameList`
+  (`action-trigger.spec.ts`, `midi-routing.spec.ts`, `SaveSettingsTest`).
 - [x] **A stopped test play in the editor kept updating its position,** every 10 milliseconds, piling up with every test
   play (`editor-composition.component.spec.ts`).
 - [x] **Pixel positions differed from the Open Fixture Library.** The app and the designer read `pixelKeys` as

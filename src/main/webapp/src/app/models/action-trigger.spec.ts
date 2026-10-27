@@ -9,7 +9,7 @@ import { ActionTransport } from "./action-transport";
 import { ActionTriggerComposition } from "./action-trigger-composition";
 
 /**
- * The actions of a trigger, saved and loaded again: each one keeps its type.
+ * The actions of a trigger, saved and loaded again: each one keeps its type and the other units executing it.
  */
 describe("Actions of a trigger", () => {
   const actionClasses: { [type: string]: new (data?: any) => Action } = {
@@ -44,6 +44,7 @@ describe("Actions of a trigger", () => {
       const trigger = new ActionTriggerComposition();
       const action = newAction(type);
       action.executeLocally = false;
+      action.remoteDeviceNames.push("Unit B");
       trigger.actionList.push(action);
 
       const loaded = saveAndLoad(trigger).actionList[0];
@@ -51,16 +52,29 @@ describe("Actions of a trigger", () => {
       expect(loaded).toBeInstanceOf(actionClasses[type]);
       expect(loaded.type).toBe(type);
       expect(loaded.executeLocally).toBeFalse();
+      expect(loaded.remoteDeviceNames).toEqual(["Unit B"]);
     });
   }
 
   it("loads a NULL action as the unit sends it", () => {
     const trigger = new ActionTriggerComposition({
       positionMillis: 1000,
-      actionList: [{ actionNull: { remoteDeviceNames: [], executeLocally: true, type: "NULL" } }],
+      actionList: [{ actionNull: { remoteDeviceNames: ["Unit B"], executeLocally: true, type: "NULL" } }],
     });
 
     expect(trigger.actionList[0]).toBeInstanceOf(ActionNull);
     expect(trigger.actionList[0].type).toBe("NULL");
+    expect(trigger.actionList[0].remoteDeviceNames).toEqual(["Unit B"]);
+  });
+
+  // The unit ignores fields it doesn't know
+  it("sends the other units executing an action under the name the unit reads", () => {
+    const action = newAction("TRANSPORT");
+    action.remoteDeviceNames.push("Unit B");
+
+    const saved = JSON.parse(JSON.stringify(action)).actionTransport;
+
+    expect(saved.remoteDeviceNames).toEqual(["Unit B"]);
+    expect(saved.remoteDeviceList).toBeUndefined();
   });
 });
