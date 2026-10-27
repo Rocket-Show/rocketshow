@@ -169,6 +169,13 @@ public class CompositionPipelineBuilder {
         for (CompositionFile compositionFile : activeFileList) {
             boolean isSlave = compositionFile.isLoop()
                     && (hasActionTrailingTail || compositionFile.getDurationMillis() < longestSourceMillis);
+
+            // Only the files which play on this unit, but they loop like on the others. Without its sound card or a
+            // screen, a file would leave an empty master pipeline, which never ends.
+            if (!playsOnThisUnit(compositionFile, hasVideo)) {
+                continue;
+            }
+
             if (isSlave) {
                 slaveFileList.add(compositionFile);
             } else {
@@ -208,14 +215,6 @@ public class CompositionPipelineBuilder {
         // Build a slave pipeline for each looping source. They are started later (clock-synced to the
         // master if there is one, otherwise free-running on the wall-clock timeline).
         for (CompositionFile compositionFile : slaveFileList) {
-            if (compositionFile instanceof AudioCompositionFile && getAudioDeviceList(List.of(compositionFile)).isEmpty()) {
-                // No audio device configured -> no output, skip
-                continue;
-            }
-            if (compositionFile instanceof VideoCompositionFile && !hasVideo) {
-                // No HDMI device connected -> video won't play, skip
-                continue;
-            }
             int index = composition.getCompositionFileList().indexOf(compositionFile);
             compositionPipeline.addSlave(compositionFile, index);
         }
@@ -578,6 +577,23 @@ public class CompositionPipelineBuilder {
         }
 
         return audioMixerList;
+    }
+
+    // MIDI always plays, audio needs the sound card of its bus, video a screen
+    private boolean playsOnThisUnit(CompositionFile compositionFile, boolean hasVideo) {
+        if (compositionFile instanceof MidiCompositionFile) {
+            return true;
+        }
+
+        if (compositionFile instanceof AudioCompositionFile) {
+            return capabilitiesService.getCapabilities().isGstreamer() && !getAudioDeviceList(List.of(compositionFile)).isEmpty();
+        }
+
+        if (compositionFile instanceof VideoCompositionFile) {
+            return hasVideo;
+        }
+
+        return false;
     }
 
     private boolean hasVideo(Composition composition) {

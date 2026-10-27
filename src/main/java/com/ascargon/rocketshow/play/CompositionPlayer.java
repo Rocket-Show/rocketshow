@@ -54,7 +54,10 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
     private final CompositionPipelineBuilder compositionPipelineBuilder;
 
     private Composition composition;
-    private PlayState playState = PlayState.STOPPED;
+    private volatile PlayState playState = PlayState.STOPPED;
+
+    // Held while the pipeline is replaced or stopped, e.g. an H.265 composition starting again while it's stopped
+    private final Object pipelineLock = new Object();
     private boolean firstPlayDone = false; // Has the pipeline played at least once?
     // True once the master pipeline reached EOS but the composition is still running to let trailing
     // actions (placed after the longest source) fire. Position then advances on the wall clock.
@@ -229,9 +232,11 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
     }
 
     private void stopPipeline() {
-        if (compositionPipeline != null) {
-            compositionPipeline.stop();
-            compositionPipeline = null;
+        synchronized (pipelineLock) {
+            if (compositionPipeline != null) {
+                compositionPipeline.stop();
+                compositionPipeline = null;
+            }
         }
     }
 
@@ -330,21 +335,28 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
     }
 
     private void recreateMasterAndRestart() {
-        try {
-            stopPipeline();
-            firstPlayDone = false;
-            masterEosReached = false;
-            compositionPipeline = compositionPipelineBuilder.build(composition, isSample, this, scheduler);
-            if (compositionPipeline.hasMaster()) {
-                compositionPipeline.prerollMaster();
-                compositionPipeline.detectMasterH265();
-                compositionPipeline.playMaster();
+        synchronized (pipelineLock) {
+            // Stopped meanwhile: nothing plays on
+            if (playState != PlayState.PLAYING) {
+                return;
             }
-            compositionPipeline.startSlaves(0);
-            lastPlayTimeMillis = System.currentTimeMillis();
-            calculateRemainingActionTriggerList(0);
-        } catch (Exception e) {
-            logger.error("Could not recreate the H.265 pipeline to loop the composition", e);
+
+            try {
+                stopPipeline();
+                firstPlayDone = false;
+                masterEosReached = false;
+                compositionPipeline = compositionPipelineBuilder.build(composition, isSample, this, scheduler);
+                if (compositionPipeline.hasMaster()) {
+                    compositionPipeline.prerollMaster();
+                    compositionPipeline.detectMasterH265();
+                    compositionPipeline.playMaster();
+                }
+                compositionPipeline.startSlaves(0);
+                lastPlayTimeMillis = System.currentTimeMillis();
+                calculateRemainingActionTriggerList(0);
+            } catch (Exception e) {
+                logger.error("Could not recreate the H.265 pipeline to loop the composition", e);
+            }
         }
     }
 

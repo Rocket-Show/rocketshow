@@ -60,6 +60,12 @@ class CompositionPipeline {
     // True when a hardware H.265 decoder is in use in the master pipeline
     private boolean masterHasH265 = false;
 
+    // Set when stopped: a slave starting again (H.265) doesn't build a new pipeline afterwards
+    private volatile boolean stopped = false;
+
+    // Held while a slave is built again (H.265) and while stopping, so they never use the same pipeline at once
+    private final Object rebuildLock = new Object();
+
     CompositionPipeline(CompositionPipelineBuilder builder, Composition composition, Pipeline masterPipeline,
                         Executor recreateExecutor, MidiMapping midiMapping, MidiMessageParser midiMessageParser) {
         this.builder = builder;
@@ -211,6 +217,14 @@ class CompositionPipeline {
     // Avoid audio artifacts: mute the master and all slaves, then tear everything down (master,
     // slaves and MIDI routers).
     void stop() {
+        stopped = true;
+
+        synchronized (rebuildLock) {
+            stopPipelines();
+        }
+    }
+
+    private void stopPipelines() {
         if (masterPipeline != null || !slavePipelineList.isEmpty()) {
             setMasterVolume(0.0);
             for (SlavePipeline slavePipeline : slavePipelineList) {
@@ -353,7 +367,7 @@ class CompositionPipeline {
         // The slave reached its own end -> loop straight back to the start (it stays phase-aligned
         // because it has been playing at the shared clock rate).
         void loop() {
-            if (slavePipeline == null) {
+            if (stopped || slavePipeline == null) {
                 return;
             }
             if (hasH265) {
@@ -367,7 +381,7 @@ class CompositionPipeline {
 
         // The master was seeked/looped -> jump to the in-loop position matching its new position.
         void rephaseTo(long masterPositionMillis) {
-            if (slavePipeline == null) {
+            if (stopped || slavePipeline == null) {
                 return;
             }
             if (hasH265) {
@@ -379,12 +393,19 @@ class CompositionPipeline {
         }
 
         private void recreate(long masterPositionMillis) {
-            try {
-                stop();
-                build();
-                startSyncedToMaster(masterPositionMillis);
-            } catch (Exception e) {
-                logger.error("Could not recreate slave pipeline for " + compositionFile.getName(), e);
+            synchronized (rebuildLock) {
+                // Stopped meanwhile: nothing plays on
+                if (stopped) {
+                    return;
+                }
+
+                try {
+                    stop();
+                    build();
+                    startSyncedToMaster(masterPositionMillis);
+                } catch (Exception e) {
+                    logger.error("Could not recreate slave pipeline for " + compositionFile.getName(), e);
+                }
             }
         }
 
