@@ -20,7 +20,7 @@ export class ActionTrigger {
         let actionObject: Action;
 
         if (action.actionNull) {
-          actionObject = new ActionNull(action.nullAction);
+          actionObject = new ActionNull(action.actionNull);
         } else if (action.actionSystem) {
           actionObject = new ActionSystem(action.actionSystem);
         } else if (action.actionTransport) {

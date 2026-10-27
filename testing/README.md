@@ -175,8 +175,9 @@ loading and saving the settings (MIDI devices, the first audio bus, defaults, se
 of the access point, `settings.component.spec.ts`), the composition editor saving, renaming, overwriting and deleting
 compositions, muted files and test plays (`editor-composition.component.spec.ts`), the set editor keeping a set open in
 it like on the unit, when a composition is renamed or deleted in the composition editor
-(`editor-set.component.spec.ts`). The generated specs of every component and service only checked that it could be
-created, and none of them compiled anymore, so they were removed. New specs test behaviour, not that a component exists.
+(`editor-set.component.spec.ts`), the actions of every type keeping their type when saved and loaded again
+(`action-trigger.spec.ts`). The generated specs of every component and service only checked that it could be created,
+and none of them compiled anymore, so they were removed. New specs test behaviour, not that a component exists.
 
 Run them locally (`CHROME_BIN` if Karma doesn't find Chrome or Chromium by itself):
 
@@ -895,6 +896,9 @@ Found by reading the code and by the tests. Each one gets a unit test or rig tes
   running at the moment, which then calculated a universe of a project already closed (`DesignerSendTimerTest`).
 - [x] **A muted audio file played at full volume after saving its composition again.** The web app lost the volume 0
   when loading the composition, and the unit took the default of 1 (`editor-composition.component.spec.ts`).
+- [x] **A NULL action lost its type when loaded.** The web app read it from a field which doesn't exist, so the action
+  showed no type in the editor and an unknown one in the overview, and lost whether it's executed locally
+  (`action-trigger.spec.ts`).
 - [x] **A stopped test play in the editor kept updating its position,** every 10 milliseconds, piling up with every test
   play (`editor-composition.component.spec.ts`).
 - [x] **Pixel positions differed from the Open Fixture Library.** The app and the designer read `pixelKeys` as
