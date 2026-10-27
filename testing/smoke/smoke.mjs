@@ -248,7 +248,8 @@ try {
     }
   });
 
-  await step('Run the self-test', async () => {
+  await step('Run the self-test in the advanced settings', async () => {
+    await page.locator('a.nav-link[href="#advanced"]').click();
     await page.locator('#runSelfTest').click();
     // After the warning about the test tones and the outputs it switches
     await page.locator('app-warning-dialog').getByRole('button', { name: 'OK' }).click();

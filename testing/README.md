@@ -158,8 +158,8 @@ unit: the initial setup (refusing an access point password which would leave it 
 creating a composition and a set, opening the composition again, deleting the media file, renaming the composition
 (the set keeps it), selecting the composition to play, opening the designer, renaming the unit in the settings, each
 checked after a reload. The names contain
-symbols which have a meaning in URLs (`&`, `#`, `+`, `%`). At the end, it runs the self-test, which shows a result for
-every check (some depend on the machine running the unit, e.g. its clock). Any uncaught error of the web app, API call failing with a
+symbols which have a meaning in URLs (`&`, `#`, `+`, `%`). At the end, it runs the self-test in the advanced settings, which shows a result
+for every check (some depend on the machine running the unit, e.g. its clock). Any uncaught error of the web app, API call failing with a
 server error or error message of the web app fails
 the test. CI runs it against the jar of the build job, with the designer template next to it like on a unit, and keeps
 the screenshots of every step and the log of the unit (artifact `smoke-test`). Backups are only offered on SPARK units,
@@ -184,7 +184,7 @@ compositions, muted files and test plays (`editor-composition.component.spec.ts`
 it like on the unit, when a composition is renamed or deleted in the composition editor
 (`editor-set.component.spec.ts`), the actions of every type keeping their type and the other units executing them when
 saved and loaded again (`action-trigger.spec.ts`), the other units of MIDI routings (`midi-routing.spec.ts`), running
-the self-test after its warning and showing its checks (`settings-system.component.spec.ts`). The generated specs of
+the self-test after its warning and showing its checks (`settings-advanced.component.spec.ts`). The generated specs of
 every component and service only checked that it could be created, and none of them compiled anymore, so they were
 removed. New specs test behaviour, not that a component exists.
 
@@ -348,7 +348,7 @@ settings of the web app or with `testing/selftest/selftest.py`.
   [Factory provisioning](#factory-provisioning).
 - **As the first stage of every rig run.** A unit that fails its self-test is not tested further, so rig failures
   point at real problems instead of a loose cable.
-- **On demand by an admin**, e.g. when helping a user: "Self-test" in the system settings shows the result of every
+- **On demand by an admin**, e.g. when helping a user: "Self-test" in the advanced settings shows the result of every
   check. It plays test tones and switches outputs, so it shows a warning first and never runs by itself: not at boot,
   not after an update.
 
@@ -463,7 +463,7 @@ that receive nothing.
 
 ### Running it on a unit
 
-- **Web app:** Settings → System → Self-test (admins), after a warning about the test tones and the outputs it
+- **Web app:** Settings → Advanced → Self-test (admins), after a warning about the test tones and the outputs it
   switches.
 - **Script:** `testing/selftest/selftest.py` prints the checks, keeps the result as JSON named by the serial number and
   exits with 0 when the self-test passed, 1 when a check failed and 2 when the unit refused it or can't be reached. It
@@ -515,7 +515,7 @@ a model need the hardware description ([section 5](#5-hardware-features), see th
 - [x] Restore step that always runs, also after an exception.
 - [x] Unit tests for the orchestration with mocked services: skip logic, `expect`, `409`, restore after a failing
   check. And every check on simulated hardware (see above).
-- [x] Web app: "Run self-test" for admins in the system settings, with a warning that it plays test tones and switches
+- [x] Web app: "Run self-test" for admins in the advanced settings, with a warning that it plays test tones and switches
   outputs, showing the result table.
 - [x] Document the factory provisioning sequence. A script for the factory station and the rig
   (`testing/selftest/selftest.py`).
