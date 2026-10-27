@@ -69,6 +69,9 @@ public class DefaultDesignerService implements DesignerService {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
     private ScheduledFuture<?> universeSenderHandle;
 
+    // Held while the timer sends a universe, so stopping the timer waits for a send running at the moment
+    private final Object universeSendLock = new Object();
+
     private List<CachedFixture> cachedFixtures;
 
     private long lastPlayTimeMillis;
@@ -1368,11 +1371,13 @@ public class DefaultDesignerService implements DesignerService {
         lastPlayTimeMillis = System.currentTimeMillis();
 
         final Runnable universeSender = () -> {
-            try {
-                calculateUniverse(getCurrentPositionMillis());
-                lightingService.sendExternalSync(settingsService.getSettings().getEnableMonitor());
-            } catch (Exception e) {
-                logger.error("Could not send universe", e);
+            synchronized (universeSendLock) {
+                try {
+                    calculateUniverse(getCurrentPositionMillis());
+                    lightingService.sendExternalSync(settingsService.getSettings().getEnableMonitor());
+                } catch (Exception e) {
+                    logger.error("Could not send universe", e);
+                }
             }
         };
 
@@ -1389,8 +1394,13 @@ public class DefaultDesignerService implements DesignerService {
             return;
         }
 
-        universeSenderHandle.cancel(true);
+        universeSenderHandle.cancel(false);
         universeSenderHandle = null;
+
+        // A send running at the moment finishes first, e.g. before closing removes the universes it sends
+        synchronized (universeSendLock) {
+            logger.debug("Universe send timer stopped");
+        }
     }
 
     private FixtureWheel getColorWheelByChannel(CachedFixtureChannel channel, FixtureProfile profile) {

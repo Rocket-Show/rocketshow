@@ -51,7 +51,8 @@ class DesignerTestEngine {
 
         @Override
         public void append(LogEvent event) {
-            if (event.getLevel().isMoreSpecificThan(Level.ERROR)) {
+            // Only the lighting: other tests leave apps running, e.g. trying to open the MIDI devices of their settings
+            if (event.getLevel().isMoreSpecificThan(Level.ERROR) && event.getLoggerName().startsWith("com.ascargon.rocketshow.lighting")) {
                 errors.add(event.getMessage().getFormattedMessage() + (event.getThrown() == null ? "" : ": " + event.getThrown()));
             }
         }
