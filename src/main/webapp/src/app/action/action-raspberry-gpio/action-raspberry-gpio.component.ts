@@ -18,14 +18,18 @@ export class ActionRaspberryGpioComponent {
   uuid: string;
   pinList: RaspberryPiPin[] = [];
 
+  // SPARK offers its outputs by number, not by BCM pin
+  spark: boolean;
+
   constructor(
     private uuidService: UuidService,
     private settingsService: SettingsService,
     private deviceInformationService: DeviceInformationService,
   ) {
     this.uuid = this.uuidService.getUuid();
+    this.spark = this.deviceInformationService.deviceInformation.available;
 
-    if (this.deviceInformationService.deviceInformation.available) {
+    if (this.spark) {
       // Ready to use version
       this.pinList.push(new RaspberryPiPin(24, "1"));
       this.pinList.push(new RaspberryPiPin(5, "2"));

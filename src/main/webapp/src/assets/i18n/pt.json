@@ -63,7 +63,7 @@
   },
   "play": {
     "help": {
-      "auto-select-next": "Quando ativado, a composição seguinte é selecionada e reproduzida automaticamente assim que a atual termina, útil para reproduzir um set completo sem intervenção.",
+      "auto-select-next": "Quando ativado, a composição seguinte do set é selecionada assim que a atual termina. Começa a tocar de imediato se a composição que terminou estiver marcada no set para iniciar a seguinte automaticamente.",
       "switch-to-grid": "Muda para a grelha de cues, onde cada composição é um botão grande que pode acionar diretamente.",
       "switch-to-setlist": "Muda para a vista de setlist com os controlos de reprodução e uma lista de composições deslizável.",
       "activity-midi-in": "Pisca quando são recebidos dados MIDI.",
@@ -192,7 +192,7 @@
       "lan-ip": "Por predefinição, o dispositivo obtém o endereço IP automaticamente (DHCP). Ative a configuração manual para atribuir um endereço IP fixo.",
       "remote-devices": "Outros dispositivos RocketShow que este dispositivo pode controlar e manter sincronizados durante um espetáculo.",
       "remote-device-api-key": "Uma chave de API gerada no dispositivo remoto (em Segurança) que autoriza este dispositivo a controlá-lo.",
-      "remote-device-synchronize": "Mantém as composições e os ficheiros multimédia do dispositivo remoto sincronizados com este dispositivo.",
+      "remote-device-synchronize": "O dispositivo remoto segue este: quando aqui uma composição é selecionada, reproduzida, pausada ou parada, faz o mesmo com a sua composição com o mesmo nome, e reinicia e desliga-se juntamente com este dispositivo. Os ficheiros não são copiados.",
       "instruments": "Defina os instrumentos usados na sua banda. Os leadsheets podem ser atribuídos por instrumento e cada dispositivo pode escolher que instrumento mostra.",
       "personal-instrument": "O instrumento usado neste dispositivo. Determina que leadsheets e partes são mostrados aqui.",
       "api-keys": "As chaves de API permitem que sistemas externos e outros dispositivos RocketShow acedam a este dispositivo sem palavra-passe."
@@ -381,7 +381,8 @@
     },
     "external-control": {
       "title": "Controlo externo",
-      "bcm-pin-id": "ID de pino BCM"
+      "bcm-pin-id": "ID de pino BCM",
+      "input": "Entrada"
     },
     "scheduler": {
       "title": "Agendamento",
@@ -480,6 +481,7 @@
       "velocity": "Velocidade"
     },
     "transport": {
+      "type": "Comando",
       "composition-name": "Nome da composição",
       "type-enum": {
         "PLAY": "Reproduzir",
@@ -507,6 +509,7 @@
     },
     "raspberry-gpio": {
       "pin": "Pino",
+      "output": "Saída",
       "status": "Estado",
       "high": "Alto"
     }

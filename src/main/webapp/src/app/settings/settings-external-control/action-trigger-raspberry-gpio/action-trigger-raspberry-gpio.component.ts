@@ -16,8 +16,13 @@ export class ActionTriggerRaspberryGpioComponent {
 
   pinList: RaspberryPiPin[] = [];
 
+  // SPARK offers its inputs by number, not by BCM pin
+  spark: boolean;
+
   constructor(private settingsService: SettingsService, private deviceInformationService: DeviceInformationService) {
-    if (this.deviceInformationService.deviceInformation.available) {
+    this.spark = this.deviceInformationService.deviceInformation.available;
+
+    if (this.spark) {
       // ready to use version
       this.pinList.push(new RaspberryPiPin(23, "1"));
       this.pinList.push(new RaspberryPiPin(25, "2"));

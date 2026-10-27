@@ -63,7 +63,7 @@
   },
   "play": {
     "help": {
-      "auto-select-next": "启用后，当前作品播放结束后会自动选择并播放下一个作品，便于免操作地播放整个集合。",
+      "auto-select-next": "启用后，当前作品结束时会自动选择集合中的下一个作品。如果结束的作品在集合中标记为自动开始下一个，则下一个作品会立即开始播放。",
       "switch-to-grid": "切换到 Cue 网格视图，每个作品都是一个可直接触发的大按钮。",
       "switch-to-setlist": "切换到 setlist 列表视图，包含播放控制和可滚动的作品列表。",
       "activity-midi-in": "接收到 MIDI 数据时闪烁。",
@@ -192,7 +192,7 @@
       "lan-ip": "默认情况下，设备会自动获取 IP 地址（DHCP）。启用手动配置可指定固定 IP 地址。",
       "remote-devices": "此设备可在演出期间控制并保持同步的其他 RocketShow 设备。",
       "remote-device-api-key": "在远程设备上（在\"安全\"中）生成的 API 密钥，用于授权此设备对其进行控制。",
-      "remote-device-synchronize": "使远程设备上的作品和媒体与此设备保持同步。",
+      "remote-device-synchronize": "远程设备跟随本设备：在此选择、播放、暂停或停止作品时，它会对其同名作品执行相同操作，并随本设备一起重启和关机。文件不会被复制。",
       "instruments": "定义乐队使用的乐器。主奏谱可按乐器分配，每台设备都可以选择显示哪种乐器。",
       "personal-instrument": "此设备使用的乐器。它决定此处显示哪些主奏谱和分谱。",
       "api-keys": "API 密钥允许外部系统和其他 RocketShow 设备无需密码即可访问此设备。"
@@ -381,7 +381,8 @@
     },
     "external-control": {
       "title": "外部控制",
-      "bcm-pin-id": "BCM引脚ID"
+      "bcm-pin-id": "BCM引脚ID",
+      "input": "输入"
     },
     "scheduler": {
       "title": "定时启动",
@@ -480,6 +481,7 @@
       "velocity": "力度"
     },
     "transport": {
+      "type": "命令",
       "composition-name": "作品名称",
       "type-enum": {
         "PLAY": "播放",
@@ -507,6 +509,7 @@
     },
     "raspberry-gpio": {
       "pin": "引脚",
+      "output": "输出",
       "status": "状态",
       "high": "高"
     }

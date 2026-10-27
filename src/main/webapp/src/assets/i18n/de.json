@@ -6,8 +6,8 @@
     "nav-next": "Weiter",
     "nav-back": "Zurück",
     "midi": "MIDI",
-    "midi-in": "MIDI Eingang",
-    "midi-out": "MIDI Ausgang",
+    "midi-in": "MIDI-Eingang",
+    "midi-out": "MIDI-Ausgang",
     "delete": "Löschen",
     "discard": "Verwerfen",
     "set": "Set",
@@ -20,7 +20,7 @@
     "info": "Hinweis",
     "default-set": "Alle Kompositionen",
     "lead-sheet-close": "Schliessen",
-    "enable-tls-info": "Ihr Browser zeigt möglicherweise eine Warnung, da das Gerät ein eigenes Zertifikat verwendet. Sie können sicher fortfahren, indem Sie auf „Erweitert“ → „Weiter“ (oder ähnlich) klicken. Diese Bestätigung ist nur einmal erforderlich."
+    "enable-tls-info": "Dein Browser zeigt möglicherweise eine Warnung, da das Gerät ein eigenes Zertifikat verwendet. Du kannst sicher fortfahren, indem du auf „Erweitert“ → „Weiter“ (oder ähnlich) klickst. Diese Bestätigung ist nur einmal erforderlich."
   },
   "loading": {
     "title": "Laden...",
@@ -46,7 +46,7 @@
     "step-5-title": "Sichere Verbindung",
     "tls-enabled": "Aktiviert (empfohlen)",
     "tls-disabled": "Deaktiviert",
-    "suggest-enable-tls": "Für mehr Sicherheit aktivieren Sie bitte TLS (verschlüsselte Verbindung)"
+    "suggest-enable-tls": "Für mehr Sicherheit aktiviere bitte TLS (verschlüsselte Verbindung)"
   },
   "login": {
     "title": "Login",
@@ -63,7 +63,7 @@
   },
   "play": {
     "help": {
-      "auto-select-next": "Wenn aktiviert, wird die nächste Komposition automatisch ausgewählt und abgespielt, sobald die aktuelle endet – praktisch, um ein ganzes Set freihändig durchzuspielen.",
+      "auto-select-next": "Wenn aktiviert, wird die nächste Komposition des Sets ausgewählt, sobald die aktuelle endet. Sie startet sofort, wenn die beendete Komposition im Set so markiert ist, dass sie die nächste automatisch startet.",
       "switch-to-grid": "Wechsle zum Cue-Raster, in dem jede Komposition eine grosse Schaltfläche ist, die du direkt auslösen kannst.",
       "switch-to-setlist": "Wechsle zur Setlisten-Ansicht mit Transportsteuerung und scrollbarer Kompositionsliste.",
       "activity-midi-in": "Blinkt, wenn MIDI-Daten empfangen werden.",
@@ -85,8 +85,8 @@
     "search-files": "Suche...",
     "select-composition": "Wähle eine bestehende Komposition aus oder erstelle eine neue.",
     "select-set": "Wähle ein bestehendes Set aus oder erstelle ein neues.",
-    "composition-name": "Komposition Name",
-    "set-name": "Set Name",
+    "composition-name": "Name der Komposition",
+    "set-name": "Name des Sets",
     "default-composition-name": "Meine neue Komposition",
     "default-set-name": "Mein neues Set",
     "notes": "Notizen",
@@ -98,7 +98,7 @@
     "offset-millis": "Verzögerung in Millisekunden",
     "offset-placeholder": "Verzögerung in Millisekunden",
     "loop": "Wiederholen",
-    "routing": "MIDI Ausgabe",
+    "routing": "MIDI-Ausgabe",
     "add-routing": "Ausgabe hinzufügen",
     "edit-file": "Datei bearbeiten",
     "file": "Mediendatei",
@@ -156,11 +156,11 @@
   },
   "routing": {
     "title": "Ausgabe",
-    "description": "Stelle ein, wo und wie diese MIDI Datei ausgegeben werden soll.",
+    "description": "Stelle ein, wo und wie diese MIDI-Datei ausgegeben werden soll.",
     "type": "Ausgabe",
     "midi-transformation": "MIDI Transformation",
-    "channel-offset": "Kanal Versatz",
-    "note-offset": "Noten Versatz",
+    "channel-offset": "Kanalversatz",
+    "note-offset": "Notenversatz",
     "lighting-mapping": "Lichtsteuerungs-Mapping",
     "lighting-universe": "Universum",
     "lighting-mapping-type": "Art",
@@ -192,7 +192,7 @@
       "lan-ip": "Standardmässig bezieht das Gerät seine IP-Adresse automatisch (DHCP). Aktiviere die manuelle Konfiguration, um eine feste IP-Adresse zuzuweisen.",
       "remote-devices": "Andere RocketShow-Geräte, die dieses Gerät steuern und während einer Show synchron halten kann.",
       "remote-device-api-key": "Ein auf dem Remote-Gerät (unter Sicherheit) erzeugter API-Schlüssel, der dieses Gerät zur Steuerung berechtigt.",
-      "remote-device-synchronize": "Hält die Kompositionen und Medien auf dem Remote-Gerät mit diesem Gerät synchron.",
+      "remote-device-synchronize": "Das Remote-Gerät folgt diesem Gerät: Wird hier eine Komposition ausgewählt, abgespielt, pausiert oder gestoppt, macht es dasselbe mit seiner gleichnamigen Komposition, und es startet neu und fährt herunter, wenn dieses Gerät es tut. Dateien werden nicht kopiert.",
       "instruments": "Lege die in deiner Band verwendeten Instrumente fest. Leadsheets können pro Instrument zugewiesen werden, und jedes Gerät kann wählen, welches Instrument es anzeigt.",
       "personal-instrument": "Das auf diesem Gerät verwendete Instrument. Es bestimmt, welche Leadsheets und Stimmen hier angezeigt werden.",
       "api-keys": "API-Schlüssel ermöglichen externen Systemen und anderen RocketShow-Geräten den Zugriff auf dieses Gerät ohne Passwort."
@@ -272,8 +272,8 @@
     "midi-control-note-in": "Eingangsnote",
     "midi-control-program": "Programm",
     "midi-control-type-enum": {
-      "NOTE_ON": "Note ein",
-      "PROGRAM_CHANGE": "Programm Änderung"
+      "NOTE_ON": "Note an",
+      "PROGRAM_CHANGE": "Programmwechsel"
     },
     "no-midi-devices": "No MIDI devices available",
     "version": "Aktuelle Version",
@@ -299,10 +299,10 @@
     "default-composition": "Standard-Komposition",
     "no-default-composition": "Keine",
     "audio-buses": "Audio Busse",
-    "audio-bus": "Audio Bus",
-    "audio-bus-add": "Audio Bus hinzufügen",
+    "audio-bus": "Audiobus",
+    "audio-bus-add": "Audiobus hinzufügen",
     "audio-bus-name": "Name",
-    "audio-bus-name-placeholder": "Mein Audio Bus",
+    "audio-bus-name-placeholder": "Mein Audiobus",
     "audio-bus-channels": "Kanäle",
     "audio-bus-mono": "Mono",
     "audio-bus-stereo": "Stereo",
@@ -313,9 +313,9 @@
     "no-composition": "Keine",
     "no-instrument": "Keines",
     "audio-output": "Ausgang",
-    "audio-device": "Audio Gerät",
+    "audio-device": "Audiogerät",
     "no-audio-device": "Keines",
-    "no-audio-devices": "Keine Audio Geräte verfügbar",
+    "no-audio-devices": "Keine Audiogeräte verfügbar",
     "logging-level": "Logging Level",
     "lighting-send-delay": "Gruppierungs-Verzögerung in Millisekunden",
     "lighting-ola-plugins": "Plugins",
@@ -327,8 +327,8 @@
     "lighting-ola-output-port": "OLA Ausgangsport",
     "lighting-ola-output-port-none": "- Keiner -",
     "global-play-offset": "Globale Abspiel-Verzögerung in Millisekunden",
-    "device-in-midi-routing": "MIDI Gerät Ausgabe",
-    "remote-midi-routing": "Netzwerk MIDI Ausgang",
+    "device-in-midi-routing": "MIDI-Geräte-Routing",
+    "remote-midi-routing": "MIDI-Routing von entfernten Geräten",
     "global-midi-mapping": "Globale MIDI Transformation",
     "audio-sample-rate": "Sample Rate",
     "alsa-period-size": "ALSA Perioden-Grösse",
@@ -349,7 +349,7 @@
     "toast-discard-success": "Die Einstellungen wurden verworfen.",
     "toast-general-error-title": "Fehler",
     "toast-general-error": "Ein Fehler ist aufgetreten. Bitte versuche es erneut oder wende dich an den Support.",
-    "error-max-audio-channels-exceeded": "Die aktuelle Konfiguration ist ungültig: Das ausgewählte Audio Gerät unterstützt maximal {{ max }} Kanäle, es wurden aber {{ current }} eingestellt. Bitte reduziere die Anzahl Kanäle.",
+    "error-max-audio-channels-exceeded": "Die aktuelle Konfiguration ist ungültig: Das ausgewählte Audiogerät unterstützt maximal {{ max }} Kanäle, es wurden aber {{ current }} eingestellt. Bitte reduziere die Anzahl Kanäle.",
     "monitoring": "Monitoring",
     "monitoring-enable": "Aktivieren",
     "update-test-branch": "Test-Kanal (möglicherweise instabil)",
@@ -357,7 +357,7 @@
     "designer-live-preview": "Designer live preview",
     "designer-live-preview-enable": "Aktivieren",
     "midi-destination-enum": {
-      "OUT_DEVICE": "MIDI Geräte Ausgang",
+      "OUT_DEVICE": "MIDI-Geräteausgang",
       "LIGHTING": "Lichtsteuerung",
       "REMOTE": "Entfernte Geräte"
     },
@@ -365,7 +365,7 @@
       "DEFAULT": "Standard",
       "HEADPHONES": "Kopfhörerbuchse",
       "HDMI": "HDMI Ausgang",
-      "DEVICE": "Audio Gerät (ALSA)"
+      "DEVICE": "Audiogerät (ALSA)"
     },
     "logging-level-enum": {
       "INFO": "Info (Standard)",
@@ -382,7 +382,8 @@
     },
     "external-control": {
       "title": "Externe Steuerung",
-      "bcm-pin-id": "BCM Pin ID"
+      "bcm-pin-id": "BCM Pin ID",
+      "input": "Eingang"
     },
     "scheduler": {
       "title": "Zeitplan",
@@ -481,6 +482,7 @@
       "velocity": "Anschlagsstärke"
     },
     "transport": {
+      "type": "Befehl",
       "composition-name": "Kompositionsname",
       "type-enum": {
         "PLAY": "Abspielen",
@@ -508,6 +510,7 @@
     },
     "raspberry-gpio": {
       "pin": "Pin",
+      "output": "Ausgang",
       "status": "Status",
       "high": "High"
     }
