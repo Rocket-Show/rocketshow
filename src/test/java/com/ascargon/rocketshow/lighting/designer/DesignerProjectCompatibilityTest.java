@@ -53,7 +53,7 @@ class DesignerProjectCompatibilityTest {
 
     // The project version the designer of the web app (@rocketshow/designer) writes. Raise it with the version of
     // dist/designer_template.json, when the web app gets a designer writing a newer version.
-    private static final int WEB_APP_DESIGNER_PROJECT_VERSION = 8;
+    private static final int WEB_APP_DESIGNER_PROJECT_VERSION = 9;
 
     // A position in a composition of the project
     private record Position(String compositionName, long positionMillis) {
@@ -297,7 +297,8 @@ class DesignerProjectCompatibilityTest {
     @Test
     void sendsTheSameLightWithTheTemplateOfTheVersionBefore() throws Exception {
         // The template was raised to version 8 by hand, like the engine migrates a project of version 7 (the copy in
-        // src/test/resources/designer). Both send the same light, also while the curves of the template move.
+        // src/test/resources/designer), and to version 9 (it has no pixels to rename). Both send the same light, also
+        // while the curves of the template move.
         Path template = Path.of("dist", "designer_template.json");
         List<Position> positions = new ArrayList<>();
 
