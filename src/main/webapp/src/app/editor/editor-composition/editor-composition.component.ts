@@ -178,11 +178,11 @@ export class EditorCompositionComponent implements OnInit {
     this.copyInitialComposition();
   }
 
-  private saveApi(composition: Composition) {
+  private saveApi(composition: Composition, previousName?: string) {
     this.savingComposition = true;
 
     this.compositionService
-      .saveComposition(composition)
+      .saveComposition(composition, previousName)
       .pipe(
         map(() => {
           this.loadCompositions();
@@ -248,24 +248,14 @@ export class EditorCompositionComponent implements OnInit {
   }
 
   private performSave(composition: Composition) {
-    // Delete the old composition, if the name changed
+    // Rename the composition, if the name changed: the sets, designer projects and settings using it keep it
     if (
       this.initialComposition &&
       this.initialComposition.name &&
       this.initialComposition.name != composition.name &&
       this.initialComposition.name.length > 0
     ) {
-      this.compositionService
-        .deleteComposition(this.initialComposition.name)
-        .pipe(
-          map(() => {
-            this.saveApi(composition);
-          }),
-          catchError((err) => {
-            return this.toastGeneralErrorService.show(err);
-          })
-        )
-        .subscribe();
+      this.saveApi(composition, this.initialComposition.name);
     } else {
       this.saveApi(composition);
     }

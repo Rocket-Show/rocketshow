@@ -90,8 +90,10 @@ export class CompositionService {
     );
   }
 
-  saveComposition(composition: Composition): Observable<Object> {
-    return this.http.post("composition", JSON.stringify(composition));
+  // Renames the composition from its previous name, if given: the sets, designer projects and settings keep it
+  saveComposition(composition: Composition, previousName?: string): Observable<Object> {
+    const query = previousName ? "?previousName=" + encodeURIComponent(previousName) : "";
+    return this.http.post("composition" + query, JSON.stringify(composition));
   }
 
   deleteComposition(name: string): Observable<Object> {

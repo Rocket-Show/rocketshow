@@ -12,7 +12,9 @@ import org.freedesktop.gstreamer.Pipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.io.File;
 import java.io.IOException;
@@ -205,6 +207,38 @@ public class DefaultDesignerService implements DesignerService {
         projects.add(projectObject);
 
         logger.info("Designer project '" + projectName + "' saved");
+    }
+
+    // A composition was renamed: the projects playing along with it keep it under its new name. The files are changed
+    // as JSON, so the parts of the projects the app doesn't read stay as they are.
+    @Override
+    public synchronized void renameComposition(String previousName, String name) throws IOException {
+        String designerPath = settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getDesignerPath();
+        ObjectMapper mapper = new ObjectMapper();
+
+        for (Project project : new ArrayList<>(projects)) {
+            File file = new File(designerPath + File.separator + FileNames.check(project.getName()) + ".json");
+
+            if (!file.exists()) {
+                continue;
+            }
+
+            JsonNode projectNode = mapper.readTree(file);
+            boolean renamed = false;
+
+            for (JsonNode compositionNode : projectNode.path("compositions")) {
+                if (compositionNode instanceof ObjectNode compositionObject && compositionNode.path("name").isString()
+                        && previousName.equals(compositionNode.path("name").stringValue())) {
+
+                    compositionObject.put("name", name);
+                    renamed = true;
+                }
+            }
+
+            if (renamed) {
+                saveProject(mapper.writeValueAsString(projectNode));
+            }
+        }
     }
 
     private Fixture getFixtureByUuid(Project project, String uuid) {

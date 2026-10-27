@@ -60,6 +60,18 @@ describe("Names in requests", () => {
     http.expectOne("set/delete?name=" + encoded).flush(null);
   });
 
+  it("renames a composition with its previous name, instead of deleting it", () => {
+    const compositionService = TestBed.inject(CompositionService);
+
+    compositionService.saveComposition({ name: "Opening" } as any, name).subscribe();
+    const rename = http.expectOne("composition?previousName=" + encoded);
+    expect(rename.request.method).toBe("POST");
+    rename.flush(null);
+
+    compositionService.saveComposition({ name: "Opening" } as any).subscribe();
+    http.expectOne("composition").flush(null);
+  });
+
   it("encodes the name of the composition to select", () => {
     TestBed.inject(TransportService).setCompositionName(name).subscribe();
 

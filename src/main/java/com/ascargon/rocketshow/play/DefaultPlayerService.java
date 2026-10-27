@@ -584,6 +584,18 @@ public class DefaultPlayerService implements PlayerService {
         notificationService.notifyClients(this, setService);
     }
 
+    // A composition was renamed: one playing or selected stays so under its new name
+    @Override
+    public synchronized void compositionRenamed(String previousName, String name) throws Exception {
+        Composition composition = currentCompositionPlayer.getComposition();
+
+        if (composition != null && previousName.equals(composition.getName())) {
+            composition.setName(name);
+        }
+
+        compositionsChanged();
+    }
+
     // The current composition was deleted: select the one which took its place in the set, or the first one
     private void selectInsteadOfDeleted() throws Exception {
         Set currentSet = setService.getCurrentSet();

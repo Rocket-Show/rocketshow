@@ -80,7 +80,7 @@ class ChangeCompositionsWhilePlayingTest {
         playerService = new DefaultPlayerService(mock(NotificationService.class), settingsService, compositionService, setService, sessionService,
                 mock(LightingService.class), mock(DesignerService.class), mock(MidiTimecodeService.class), mock(ActionExecutionService.class),
                 capabilitiesService, mock(CompositionPipelineBuilder.class), mock(RaspberryGpioOutService.class), mock(GstreamerInitService.class));
-        compositionController = new CompositionController(mock(ControllerService.class), compositionService, playerService);
+        compositionController = new CompositionController(mock(ControllerService.class), compositionService, playerService, mock(DesignerService.class), settingsService);
     }
 
     @AfterEach
@@ -116,7 +116,7 @@ class ChangeCompositionsWhilePlayingTest {
         playerService.loadSetAndComposition("Show");
         playerService.play();
 
-        compositionController.save(composition("A", 300_000));
+        compositionController.save(composition("A", 300_000), null);
 
         assertEquals(CompositionPlayer.PlayState.PLAYING, playerService.getPlayState());
         assertEquals("C", playerService.getCompositionName());
@@ -132,7 +132,7 @@ class ChangeCompositionsWhilePlayingTest {
         playerService.loadSetAndComposition("Show");
         playerService.setNextComposition();
 
-        compositionController.save(composition("D", 300_000));
+        compositionController.save(composition("D", 300_000), null);
 
         assertEquals("A", playerService.getCompositionName());
         assertEquals(1, setService.getCurrentCompositionIndex());
@@ -144,7 +144,7 @@ class ChangeCompositionsWhilePlayingTest {
         playerService.loadSetAndComposition("Show");
         playerService.play();
 
-        compositionController.save(composition("C", 300_000));
+        compositionController.save(composition("C", 300_000), null);
 
         // Plays on as it was
         assertEquals(CompositionPlayer.PlayState.PLAYING, playerService.getPlayState());
@@ -158,7 +158,7 @@ class ChangeCompositionsWhilePlayingTest {
     void takesTheSavedCompositionAtOnceWhileStopped() throws Exception {
         playerService.loadSetAndComposition("Show");
 
-        compositionController.save(composition("C", 300_000));
+        compositionController.save(composition("C", 300_000), null);
 
         assertEquals("C", playerService.getCompositionName());
         assertEquals(300_000, playerService.getCompositionDurationMillis());
@@ -224,7 +224,7 @@ class ChangeCompositionsWhilePlayingTest {
         assertNull(playerService.getCompositionName());
 
         // Nothing selected
-        compositionController.save(composition("E", 600_000));
+        compositionController.save(composition("E", 600_000), null);
         compositionController.delete("E");
         assertNull(playerService.getCompositionName());
     }
@@ -242,19 +242,19 @@ class ChangeCompositionsWhilePlayingTest {
         audioCompositionFile.setName("song.wav");
         song.getCompositionFileList().add(audioCompositionFile);
 
-        compositionController.save(song);
+        compositionController.save(song, null);
         verify(gstDiscovererService, times(1)).getDiscovererInformation(anyString());
         assertEquals(90_000, compositionService.getComposition("Song").getDurationMillis());
 
         // E.g. a changed lighting action: the file isn't analyzed again during the show
-        compositionController.save(song);
+        compositionController.save(song, null);
         verify(gstDiscovererService, times(1)).getDiscovererInformation(anyString());
         assertEquals(90_000, compositionService.getComposition("Song").getDurationMillis());
 
         // Uploaded again
         audioFile.setLastModified(System.currentTimeMillis() + 10_000);
         when(gstDiscovererService.getDurationMillis(any())).thenReturn(120_000L);
-        compositionController.save(song);
+        compositionController.save(song, null);
         verify(gstDiscovererService, times(2)).getDiscovererInformation(anyString());
         assertEquals(120_000, compositionService.getComposition("Song").getDurationMillis());
     }

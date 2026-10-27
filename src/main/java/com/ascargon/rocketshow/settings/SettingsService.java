@@ -24,4 +24,6 @@ public interface SettingsService {
 
     void save() throws JAXBException;
 
+    void renameComposition(String previousName, String name) throws JAXBException;
+
 }

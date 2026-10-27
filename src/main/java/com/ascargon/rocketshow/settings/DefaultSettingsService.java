@@ -384,6 +384,39 @@ public class DefaultSettingsService implements SettingsService {
         return "";
     }
 
+    // A composition was renamed: the default composition, the scheduled compositions and the actions of the triggers
+    // selecting or playing it get its new name
+    @Override
+    public synchronized void renameComposition(String previousName, String name) throws JAXBException {
+        boolean renamed = false;
+
+        if (previousName.equals(settings.getDefaultComposition())) {
+            settings.setDefaultComposition(name);
+            renamed = true;
+        }
+
+        for (ScheduledComposition scheduledComposition : settings.getScheduledCompositionList()) {
+            if (previousName.equals(scheduledComposition.getCompositionName())) {
+                scheduledComposition.setCompositionName(name);
+                renamed = true;
+            }
+        }
+
+        renamed |= ActionTrigger.renameComposition(settings.getActionTriggerMidiList(), previousName, name);
+        renamed |= ActionTrigger.renameComposition(settings.getActionTriggerRaspberryGpioList(), previousName, name);
+
+        for (MidiControl midiControl : settings.getMidiControlList()) {
+            if (previousName.equals(midiControl.getCompositionName())) {
+                midiControl.setCompositionName(name);
+                renamed = true;
+            }
+        }
+
+        if (renamed) {
+            save();
+        }
+    }
+
     @Override
     public void save() throws JAXBException {
         File file = new File(directory, FILE_NAME + ".xml");
