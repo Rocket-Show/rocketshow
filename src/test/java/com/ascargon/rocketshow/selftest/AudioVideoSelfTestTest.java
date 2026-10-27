@@ -76,7 +76,8 @@ class AudioVideoSelfTestTest {
     @BeforeEach
     void setUp() {
         TestGstreamer.assumeInstalled("audiotestsrc", "audioconvert", "audioresample", "audiomixer", "level", "volume",
-                "appsink", "appsrc", "videotestsrc", "videoconvert", "filesink", "uridecodebin", "qtdemux", "h265parse", "libde265dec");
+                "appsink", "appsrc", "videotestsrc", "videoconvert", "filesink", "uridecodebin", "qtdemux", "h265parse", "libde265dec",
+                "fakevideosink");
 
         settings.setAudioRate(RATE);
         when(settingsService.getSettings()).thenReturn(settings);

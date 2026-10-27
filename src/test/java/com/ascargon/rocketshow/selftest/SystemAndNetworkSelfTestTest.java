@@ -86,28 +86,30 @@ class SystemAndNetworkSelfTestTest {
         check(context, SystemSelfTest.CLOCK);
     }
 
-    // What "rauc status" prints: colored also when not printing to a terminal, and the activated slot marked with "⏺"
-    // and the others with "○" where the locale supports UTF-8, otherwise "x" and "o"
+    // What "rauc status" prints on a Rocket Show SPARK: colored also when not printing to a terminal, and the activated
+    // slot marked with "⏺" and the others with "○" where the locale supports UTF-8, otherwise "x" and "o"
     private static String raucStatus(String bootedSlotMark, String otherSlotMark, String bootedSlotStatus, String otherSlotStatus) {
         return """
                 === System Info ===
-                Compatible:     rocketshow-spark
-                Variant:       \s
-                System Version: 2.5.0
-                Booted from:    rootfs.1 (B)
+                Compatible:  spark1
+                Variant:    \s
+                Booted from: rootfs.1 (ROOTFS-B)
 
                 === Bootloader ===
-                Activated: rootfs.1 (B)
+                Activated: rootfs.1 (ROOTFS-B)
 
                 === Slot States ===
-                %s \u001B[32m\u001B[32m\u001B[1m[rootfs.1]\u001B[0m (/dev/mmcblk0p3, ext4, \u001B[1mbooted\u001B[0m)
-                      bootname: \u001B[34mB\u001B[0m
+                %s \u001B[32m\u001B[32m\u001B[1m[rootfs.1]\u001B[0m (/dev/mmcblk0p5, ext4, \u001B[1mbooted\u001B[0m)
+                      bootname: \u001B[34mROOTFS-B\u001B[0m
                       mounted: /
                       boot status: %s%s\u001B[0m
+                    \u001B[32m\u001B[1m[bootfs.1]\u001B[0m (/dev/mmcblk0p4, vfat, active\u001B[0m)
+                      mounted: /boot/firmware
 
-                %s \u001B[1m[rootfs.0]\u001B[0m (/dev/mmcblk0p2, ext4, inactive\u001B[0m)
-                      bootname: \u001B[34mA\u001B[0m
+                %s \u001B[1m[rootfs.0]\u001B[0m (/dev/mmcblk0p3, ext4, inactive\u001B[0m)
+                      bootname: \u001B[34mROOTFS-A\u001B[0m
                       boot status: %s%s\u001B[0m
+                    \u001B[1m[bootfs.0]\u001B[0m (/dev/mmcblk0p2, vfat, inactive\u001B[0m)
 
                 """.formatted(bootedSlotMark, color(bootedSlotStatus), bootedSlotStatus, otherSlotMark, color(otherSlotStatus), otherSlotStatus);
     }
@@ -148,6 +150,29 @@ class SystemAndNetworkSelfTestTest {
     @Test
     void failsWithoutTwoSlotsOrWithTheSlotRunningMarkedBad() throws Exception {
         assertCheck(SelfTestOutcome.FAILED, "rootfs.1", "The slot running is marked bad: rootfs.1 bad, rootfs.0 good", SystemSelfTest.evaluateRaucStatus(raucStatus("bad", "good")));
+        // As copied from the terminal of the first unit checked, without the colors
+        assertCheck(SelfTestOutcome.FAILED, "rootfs.1", "The slot running is marked bad: rootfs.1 bad, rootfs.0 bad", SystemSelfTest.evaluateRaucStatus("""
+                === System Info ===
+                Compatible:  spark1
+                Variant:    \s
+                Booted from: rootfs.1 (ROOTFS-B)
+
+                === Bootloader ===
+                Activated: rootfs.1 (ROOTFS-B)
+
+                === Slot States ===
+                ⏺ [rootfs.1] (/dev/mmcblk0p5, ext4, booted)
+                      bootname: ROOTFS-B
+                      mounted: /
+                      boot status: bad
+                    [bootfs.1] (/dev/mmcblk0p4, vfat, active)
+                      mounted: /boot/firmware
+
+                ○ [rootfs.0] (/dev/mmcblk0p3, ext4, inactive)
+                      bootname: ROOTFS-A
+                      boot status: bad
+                    [bootfs.0] (/dev/mmcblk0p2, vfat, inactive)
+                """));
         assertCheck(SelfTestOutcome.FAILED, null, "Not 2 slots to update into: rauc: Failed to obtain status", SystemSelfTest.evaluateRaucStatus("rauc: Failed to obtain status\n"));
         // The whole output goes into the log
         assertCheck(SelfTestOutcome.FAILED, "rootfs.0", "Not 2 slots to update into: none", SystemSelfTest.evaluateRaucStatus("""
