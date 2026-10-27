@@ -280,10 +280,8 @@ The designer migrations are tested with a project in version 2 and the same proj
 - [x] The unit tests of the web app, in CI.
 - [x] Changes during a show: saving compositions, audio settings, MIDI to other units in order.
   - [ ] More specs for the parts of the web app with logic, e.g. the settings forms and the composition editor.
-- [ ] When the web app gets the designer writing project version 8 (`@rocketshow/designer`), raise
-  `dist/designer_template.json` to version 8 (halving the amplitude of its sine) and
-  `WEB_APP_DESIGNER_PROJECT_VERSION` in `DesignerProjectCompatibilityTest`. Until then the app migrates the template
-  like any older project, with the same light.
+- [x] The web app comes with the designer writing project version 8, the template is in version 8 and sends the same
+  light as before (`DesignerProjectCompatibilityTest`). The smoke test fails when the designer migrates the template.
 - [ ] The GStreamer pipelines a composition builds, with GStreamer installed in CI and test sources and sinks instead
   of the devices.
 
