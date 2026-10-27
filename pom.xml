@@ -273,8 +273,9 @@
                                     <goal>report</goal>
                                 </goals>
                             </execution>
-                            <!-- Fail when the coverage drops clearly below what the tests reach today (65 % of the
-                                 lines, 51 % of the branches) -->
+                            <!-- Fail when the coverage drops clearly below what the tests reach today, also without
+                                 GStreamer (e.g. locally): 74 % of the lines and 61 % of the branches of the whole
+                                 app, 79 % and 65 % with GStreamer (in CI) -->
                             <execution>
                                 <id>check</id>
                                 <phase>test</phase>
@@ -289,12 +290,86 @@
                                                 <limit>
                                                     <counter>LINE</counter>
                                                     <value>COVEREDRATIO</value>
+                                                    <minimum>0.72</minimum>
+                                                </limit>
+                                                <limit>
+                                                    <counter>BRANCH</counter>
+                                                    <value>COVEREDRATIO</value>
+                                                    <minimum>0.58</minimum>
+                                                </limit>
+                                            </limits>
+                                        </rule>
+                                        <!-- Every package, also new ones. Not the start of the app, the GStreamer
+                                             bindings and the few lines about HDMI and images, which need real
+                                             devices or GStreamer. The player reaches 51 % of its lines without
+                                             GStreamer, 84 % with. -->
+                                        <rule>
+                                            <element>PACKAGE</element>
+                                            <excludes>
+                                                <exclude>com.ascargon.rocketshow</exclude>
+                                                <exclude>com.ascargon.rocketshow.gstreamer</exclude>
+                                                <exclude>com.ascargon.rocketshow.video</exclude>
+                                                <exclude>com.ascargon.rocketshow.image</exclude>
+                                            </excludes>
+                                            <limits>
+                                                <limit>
+                                                    <counter>LINE</counter>
+                                                    <value>COVEREDRATIO</value>
+                                                    <minimum>0.45</minimum>
+                                                </limit>
+                                                <limit>
+                                                    <counter>BRANCH</counter>
+                                                    <value>COVEREDRATIO</value>
+                                                    <minimum>0.40</minimum>
+                                                </limit>
+                                            </limits>
+                                        </rule>
+                                        <!-- Between 63 % and 70 % of the lines today -->
+                                        <rule>
+                                            <element>PACKAGE</element>
+                                            <includes>
+                                                <include>com.ascargon.rocketshow.audio</include>
+                                                <include>com.ascargon.rocketshow.lighting</include>
+                                                <include>com.ascargon.rocketshow.update</include>
+                                                <include>com.ascargon.rocketshow.util</include>
+                                            </includes>
+                                            <limits>
+                                                <limit>
+                                                    <counter>LINE</counter>
+                                                    <value>COVEREDRATIO</value>
+                                                    <minimum>0.60</minimum>
+                                                </limit>
+                                                <limit>
+                                                    <counter>BRANCH</counter>
+                                                    <value>COVEREDRATIO</value>
+                                                    <minimum>0.45</minimum>
+                                                </limit>
+                                            </limits>
+                                        </rule>
+                                        <!-- 74 % of the lines and more today -->
+                                        <rule>
+                                            <element>PACKAGE</element>
+                                            <includes>
+                                                <include>com.ascargon.rocketshow.api</include>
+                                                <include>com.ascargon.rocketshow.composition</include>
+                                                <include>com.ascargon.rocketshow.health</include>
+                                                <include>com.ascargon.rocketshow.lighting.designer</include>
+                                                <include>com.ascargon.rocketshow.midi</include>
+                                                <include>com.ascargon.rocketshow.raspberry</include>
+                                                <include>com.ascargon.rocketshow.scheduler</include>
+                                                <include>com.ascargon.rocketshow.session</include>
+                                                <include>com.ascargon.rocketshow.settings</include>
+                                            </includes>
+                                            <limits>
+                                                <limit>
+                                                    <counter>LINE</counter>
+                                                    <value>COVEREDRATIO</value>
                                                     <minimum>0.70</minimum>
                                                 </limit>
                                                 <limit>
                                                     <counter>BRANCH</counter>
                                                     <value>COVEREDRATIO</value>
-                                                    <minimum>0.55</minimum>
+                                                    <minimum>0.50</minimum>
                                                 </limit>
                                             </limits>
                                         </rule>
