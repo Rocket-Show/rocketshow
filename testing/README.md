@@ -140,7 +140,7 @@ Run them locally without the web app build, with or without the coverage report 
 ./mvnw test -Pcoverage -Dskip.npm -Dskip.installnodenpm
 ```
 
-All 634 tests pass without any hardware attached, in a few minutes. The 54 tests playing real media need GStreamer
+All 636 tests pass without any hardware attached, in a few minutes. The 55 tests playing real media need GStreamer
 with the base, good and bad plugins (e.g. `apt install gstreamer1.0-plugins-base gstreamer1.0-plugins-good
 gstreamer1.0-plugins-bad`) and are skipped without it. One backup test needs an unreadable file, so it is skipped when
 running as root (root can read every file). It runs in CI. The tests cover 83 % of the lines and 72 % of the branches
@@ -461,6 +461,10 @@ that receive nothing.
 
 `result` is `FAILED` if any check failed, otherwise `PASSED`. Skipped checks do not fail the run.
 
+The log of the unit (Settings → Advanced → Download logs) has every check and what the details leave out: the whole
+debug info of GStreamer errors (the details name the element which failed and the reason, e.g. `qtdemux0: Internal data
+stream error. (streaming stopped, reason not-negotiated (-4))`) and the output of `rauc status` when `updates` fails.
+
 ### Running it on a unit
 
 - **Web app:** Settings → Advanced → Self-test (admins), after a warning about the test tones and the outputs it
@@ -535,12 +539,14 @@ a model need the hardware description ([section 5](#5-hardware-features), see th
   - [ ] `audio-loopback` on a sound card with inputs: the levels of a cable from line out to line in, and the latency of
     the input (the analysis allows about 1.5 s).
   - [ ] `video` on `kmssink` with a display connected (the name and mode from the EDID), and on a Raspberry Pi 3
-    (`autovideosink`). `video-decoder`: the hardware decoder of a Raspberry Pi 4 and 5 picked by `uridecodebin`.
+    (`autovideosink`). `video-decoder`: the hardware decoder of a Raspberry Pi 4 and 5 picked by `uridecodebin` (the
+    first ready to use unit failed with "Internal data stream error.", now the details tell the element and why).
   - [ ] `midi-loopback` on the DIN ports (serial) and on a USB MIDI interface: no message lost at one per 2 ms.
   - [ ] `gpio-out`, `gpio-loopback` and `reset-button` on the GPIO chip of each model (Pi4J with gpiod).
   - [ ] `dmx-interface` and `dmx` with an OLA output port patched: the ramp on a DMX receiver.
   - [ ] `updates`, `watchdog` and `read-only-root` on a ready to use unit: the output of its `rauc status`, the service
-    of the app with `WatchdogSec`.
+    of the app with `WatchdogSec`. Found on the first unit: RAUC colors its status also when not printing to a
+    terminal and marks the slots with ⏺ and ○ where the locale supports UTF-8, so `updates` found no slot.
   - [ ] `power`: the app may run `vcgencmd` (the user of the app needs the group `video`). `storage`: the speeds of the
     SD cards in use against the minimums, whether the app may read the kernel log.
   - [ ] The duration: well under a minute.

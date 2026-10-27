@@ -121,7 +121,7 @@ class VideoSelfTest implements SelfTestStep {
             Pipeline pipeline = buildPipeline(sink);
 
             Bus bus = pipeline.getBus();
-            bus.connect((Bus.ERROR) (source, code, message) -> {
+            SelfTestPipelineErrors.onError(bus, message -> {
                 error.compareAndSet(null, message);
                 playing.countDown();
             });
@@ -226,7 +226,7 @@ class VideoSelfTest implements SelfTestStep {
                 });
 
                 Bus bus = pipeline.getBus();
-                bus.connect((Bus.ERROR) (source, code, message) -> {
+                SelfTestPipelineErrors.onError(bus, message -> {
                     error.compareAndSet(null, message);
                     done.countDown();
                 });

@@ -46,6 +46,7 @@ class SystemAndNetworkSelfTestTest {
         system = new TestSelfTestSystem(root);
         deviceInformation.setAvailable(true);
         when(deviceInformationService.getDeviceInformation()).thenReturn(deviceInformation);
+        when(raucService.getStatus()).thenReturn(raucStatus("good", "good"));
         when(versionService.getCurrentVersionInfo()).thenReturn(versionInfo);
         when(settingsService.getSettings()).thenReturn(settings);
     }
@@ -85,26 +86,47 @@ class SystemAndNetworkSelfTestTest {
         check(context, SystemSelfTest.CLOCK);
     }
 
-    private static final String RAUC_STATUS = """
-            === System Info ===
-            Compatible:  rocketshow-spark
-            Booted from: rootfs.1 (B)
+    // What "rauc status" prints: colored also when not printing to a terminal, and the activated slot marked with "⏺"
+    // and the others with "○" where the locale supports UTF-8, otherwise "x" and "o"
+    private static String raucStatus(String bootedSlotMark, String otherSlotMark, String bootedSlotStatus, String otherSlotStatus) {
+        return """
+                === System Info ===
+                Compatible:     rocketshow-spark
+                Variant:       \s
+                System Version: 2.5.0
+                Booted from:    rootfs.1 (B)
 
-            === Slot States ===
-            o [rootfs.1] (/dev/mmcblk0p3, ext4, booted)
-                  bootname: B
-                  boot status: %s
+                === Bootloader ===
+                Activated: rootfs.1 (B)
 
-            x [rootfs.0] (/dev/mmcblk0p2, ext4, inactive)
-                  bootname: A
-                  boot status: %s
-            """;
+                === Slot States ===
+                %s \u001B[32m\u001B[32m\u001B[1m[rootfs.1]\u001B[0m (/dev/mmcblk0p3, ext4, \u001B[1mbooted\u001B[0m)
+                      bootname: \u001B[34mB\u001B[0m
+                      mounted: /
+                      boot status: %s%s\u001B[0m
+
+                %s \u001B[1m[rootfs.0]\u001B[0m (/dev/mmcblk0p2, ext4, inactive\u001B[0m)
+                      bootname: \u001B[34mA\u001B[0m
+                      boot status: %s%s\u001B[0m
+
+                """.formatted(bootedSlotMark, color(bootedSlotStatus), bootedSlotStatus, otherSlotMark, color(otherSlotStatus), otherSlotStatus);
+    }
+
+    private static String raucStatus(String bootedSlotStatus, String otherSlotStatus) {
+        return raucStatus("⏺", "○", bootedSlotStatus, otherSlotStatus);
+    }
+
+    private static String color(String bootStatus) {
+        return "good".equals(bootStatus) ? "\u001B[32m" : "\u001B[31m";
+    }
 
     @Test
     void updatesIntoTheOtherSlot() {
-        assertCheck(SelfTestOutcome.PASSED, "rootfs.1", "rootfs.1 good, rootfs.0 good", SystemSelfTest.evaluateRaucStatus(RAUC_STATUS.formatted("good", "good")));
+        assertCheck(SelfTestOutcome.PASSED, "rootfs.1", "rootfs.1 good, rootfs.0 good", SystemSelfTest.evaluateRaucStatus(raucStatus("good", "good")));
         // A failed update marks the other slot bad, the next one installs into it again
-        assertCheck(SelfTestOutcome.PASSED, "rootfs.1", "rootfs.1 good, rootfs.0 bad", SystemSelfTest.evaluateRaucStatus(RAUC_STATUS.formatted("good", "bad")));
+        assertCheck(SelfTestOutcome.PASSED, "rootfs.1", "rootfs.1 good, rootfs.0 bad", SystemSelfTest.evaluateRaucStatus(raucStatus("good", "bad")));
+        // Where the locale doesn't support UTF-8
+        assertCheck(SelfTestOutcome.PASSED, "rootfs.1", "rootfs.1 good, rootfs.0 good", SystemSelfTest.evaluateRaucStatus(raucStatus("\u001B[1mx\u001B[0m", "o", "good", "good")));
     }
 
     @Test
@@ -125,8 +147,15 @@ class SystemAndNetworkSelfTestTest {
 
     @Test
     void failsWithoutTwoSlotsOrWithTheSlotRunningMarkedBad() throws Exception {
-        assertCheck(SelfTestOutcome.FAILED, "rootfs.1", "The slot running is marked bad: rootfs.1 bad, rootfs.0 good", SystemSelfTest.evaluateRaucStatus(RAUC_STATUS.formatted("bad", "good")));
+        assertCheck(SelfTestOutcome.FAILED, "rootfs.1", "The slot running is marked bad: rootfs.1 bad, rootfs.0 good", SystemSelfTest.evaluateRaucStatus(raucStatus("bad", "good")));
         assertCheck(SelfTestOutcome.FAILED, null, "Not 2 slots to update into: rauc: Failed to obtain status", SystemSelfTest.evaluateRaucStatus("rauc: Failed to obtain status\n"));
+        // The whole output goes into the log
+        assertCheck(SelfTestOutcome.FAILED, "rootfs.0", "Not 2 slots to update into: none", SystemSelfTest.evaluateRaucStatus("""
+                === System Info ===
+                Booted from:    rootfs.0 (A)
+
+                === Slot States ===
+                """));
 
         when(raucService.getStatus()).thenThrow(new IOException("Cannot run program \"rauc\""));
         assertCheck(SelfTestOutcome.FAILED, null, "Could not run rauc status: Cannot run program \"rauc\"", check(run(systemSelfTest()), SystemSelfTest.UPDATES));
