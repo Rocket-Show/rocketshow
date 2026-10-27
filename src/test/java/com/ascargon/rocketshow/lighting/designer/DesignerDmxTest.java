@@ -200,6 +200,29 @@ class DesignerDmxTest {
     }
 
     @Test
+    void dimsTheBrightnessWithTheMasterDimmer() throws Exception {
+        ObjectNode project = project();
+        project.put("masterDimmerValue", 0.5);
+        ObjectNode red = capability(project, "ColorIntensity", 1.0);
+        red.put("color", "Red");
+        addPreset(project, "Red", List.of("par-1"), List.of(capability(project, "Intensity", 1.0), red));
+
+        // Half the brightness, the color stays like in the preview of the designer
+        assertEquals(List.of(127, 255), addresses(play(project).get(FRONT), 1, 2));
+
+        // A dimmer sharing its channel with other functions is dimmed within its range (8 to 134), not into the strobe
+        ObjectNode dimmer = (ObjectNode) objectMapper.readTree("""
+                {"fineChannelAliases": [], "capabilities": [
+                  {"dmxRange": [0, 7], "type": "Intensity", "brightness": "off"},
+                  {"dmxRange": [8, 134], "type": "Intensity", "brightnessStart": "dark", "brightnessEnd": "bright"},
+                  {"dmxRange": [135, 255], "type": "ShutterStrobe", "shutterEffect": "Strobe"}
+                ]}
+                """);
+        ((ObjectNode) project.get("fixtureProfiles").get(0).get("availableChannels")).set("Dimmer", dimmer);
+        assertEquals(71, play(project).get(FRONT).get(1));
+    }
+
+    @Test
     void pointsAMovingHeadWithFineChannels() throws Exception {
         ObjectNode project = project();
         addPreset(project, "Position", List.of("head"), List.of(capability(project, "Pan", 1.0), capability(project, "Tilt", 0.25), capability(project, "Intensity", 1.0)));

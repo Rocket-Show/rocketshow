@@ -1190,11 +1190,43 @@ public class DefaultDesignerService implements DesignerService {
         // match this mode channel with the value of its coarse channel
         for (FixtureChannelValue channelValue : fixtureChannelValues) {
             if (channel.getName().equals(channelValue.getChannelName())) {
-                int dmxValue = (int) Math.floor(channelValue.getValue() / Math.pow(256, channel.getChannel().getFineChannelAliases().size() - (fineIndex + 1))) % 256;
+                double value = applyMasterDimmer(channel, channelValue.getValue());
+                int dmxValue = (int) Math.floor(value / Math.pow(256, channel.getChannel().getFineChannelAliases().size() - (fineIndex + 1))) % 256;
                 universe.put(channelIndex, dmxValue);
                 break;
             }
         }
+    }
+
+    // The master dimmer of the project dims the brightness, like in the preview of the designer: a value giving the
+    // brightness is scaled within the range of its capability. Colors aren't dimmed, like in the preview.
+    private double applyMasterDimmer(CachedFixtureChannel channel, double value) {
+        double masterDimmer = project == null ? 1 : project.getMasterDimmerValue();
+
+        if (masterDimmer >= 1 || channel.getCapabilities() == null) {
+            return value;
+        }
+
+        for (CachedFixtureCapability channelCapability : channel.getCapabilities()) {
+            FixtureCapability capability = channelCapability.getCapability();
+
+            if (capability.getType() != FixtureCapability.FixtureCapabilityType.Intensity) {
+                continue;
+            }
+
+            List<Integer> dmxRange = capability.getDmxRange();
+
+            if (dmxRange == null || dmxRange.size() < 2) {
+                // the brightness over the whole channel
+                return value * masterDimmer;
+            }
+
+            if (value >= dmxRange.get(0) && value <= dmxRange.get(1)) {
+                return dmxRange.get(0) + (value - dmxRange.get(0)) * masterDimmer;
+            }
+        }
+
+        return value;
     }
 
     private boolean isUnusedChannel(FixtureModeChannel fixtureModeChannel) {
@@ -1275,7 +1307,6 @@ public class DefaultDesignerService implements DesignerService {
             List<PresetRegionScene> presets = getPresets(timeMillis);
             Map<CachedFixture, List<FixtureChannelValue>> calculatedFixtures = getChannelValues(timeMillis, presets);
 
-            // TODO make the dimmer value adjustable and fall back to the project settings
             setUniverseValues(calculatedFixtures);
         } catch (Exception e) {
             logger.error("Could not calculate the universe", e);
