@@ -129,7 +129,8 @@ The unit tests live in `src/test/java`:
 - Zipping the logs for the download (`DefaultZipServiceTest`)
 - The device self-test ([section 2](#2-device-self-test)): what it refuses, skips, expects and restores
   (`DefaultSelfTestServiceTest`), every check on simulated hardware (`AudioVideoSelfTestTest`, `MidiSelfTestTest`,
-  `GpioSelfTestTest`, `DmxSelfTestTest`, `HealthAndStorageSelfTestTest`), the endpoint (`SelfTestApiTest`)
+  `GpioSelfTestTest`, `DmxSelfTestTest`, `HealthAndStorageSelfTestTest`, `SystemAndNetworkSelfTestTest`), the endpoint
+  (`SelfTestApiTest`), the displays connected to any HDMI output with their name and mode (`DefaultHdmiServiceTest`)
 - Spring context start (`RocketShowApplicationTests`)
 
 Run them locally without the web app build, with or without the coverage report (`target/site/jacoco`):
@@ -139,11 +140,11 @@ Run them locally without the web app build, with or without the coverage report 
 ./mvnw test -Pcoverage -Dskip.npm -Dskip.installnodenpm
 ```
 
-All 593 tests pass without any hardware attached, in a few minutes. The 47 tests playing real media need GStreamer
+All 631 tests pass without any hardware attached, in a few minutes. The 54 tests playing real media need GStreamer
 with the base, good and bad plugins (e.g. `apt install gstreamer1.0-plugins-base gstreamer1.0-plugins-good
 gstreamer1.0-plugins-bad`) and are skipped without it. One backup test needs an unreadable file, so it is skipped when
 running as root (root can read every file). It runs in CI. The tests cover 83 % of the lines and 72 % of the branches
-with GStreamer, 76 % and 66 % without, not counting the libraries shipped with the app (e.g. the OLA client).
+with GStreamer, 75 % and 65 % without, not counting the libraries shipped with the app (e.g. the OLA client).
 
 The tests play the GStreamer pipelines with capture sinks instead of the devices, which tell the positions of their
 channels like ALSA (front and rear for four channels). The devices themselves belong to the hardware rig
@@ -357,8 +358,9 @@ or a factory fixture.
 
 It does not use the default composition or any user files: a factory unit has no user content, and a user's default
 composition can be anything. All signals are generated (GStreamer `audiotestsrc` and `videotestsrc`, fixed MIDI and DMX
-patterns), so the result does not depend on media files. It checks the devices of the settings (sound cards of the
-audio buses, MIDI devices, GPIO outputs, DMX universes): what the unit uses in a show.
+patterns, a short H.265 video in the app), so the result does not depend on media files. It checks the devices of the
+settings (sound cards of the audio buses, MIDI devices, GPIO outputs, DMX universes): what the unit uses in a show. A
+unit without sound cards in its settings (e.g. a new one) checks every sound card with all its channels.
 
 ### Flow
 
@@ -375,34 +377,48 @@ audio buses, MIDI devices, GPIO outputs, DMX universes): what the unit uses in a
    main unit), the checks stop: the one running and the ones left are `SKIPPED` ("Stopped, because a composition
    started"), so a show never plays with test tones. A check which throws is `FAILED` with the error, the others still
    run.
-5. Restore, even if a check failed or threw: stop the test pipelines, send MIDI "all notes off" (controller 123 on
+5. Restore, even if a check failed or threw: stop the test pipelines and recordings, send MIDI "all notes off" (controller 123 on
    every channel), put the GPIO outputs back to their states before, release the loopback pins, send the unit's own
    DMX values again, resume the triggers and the MIDI input, play the default composition again (unless a composition
    started meanwhile).
 6. Write every check to the log (a warning for a failed one, so it shows up in the downloaded logs) and return the
    result.
 
-The call is synchronous and takes up to about 15 seconds with every kind of hardware, plus 3 for each further sound
+The call is synchronous and takes up to about 20 seconds with every kind of hardware, plus 3 for each further sound
 card.
 
 ### Checks
 
+In this order. The power comes last, after the others loaded the unit.
+
 | Check | What it does | Passes when |
 |---|---|---|
 | `health` | Reads the health status | Severity is `OK` or `DEGRADED`. The reasons go into the details. |
-| `storage` | Writes 1 MB to a hidden file in the data directory, onto the storage (not only into the cache), reads it back and deletes it | The content matches |
-| `audio` | For each sound card of the audio settings (all the buses on it): a 440 Hz sine at -20 dBFS on every channel for 3 seconds, mixed like the audio files of a composition (mix matrix) into the output of a composition: mixer, the rate and channels of the settings, `level`, volume and the sink on the ALSA device of the buses (`rs_<card>`). Measured with the `level` element before the sink, once a second. | The pipeline reaches `PLAYING`, no error on the bus, every channel in every measurement at -20 dBFS ±3 dB |
-| `video` | If a display is connected (the HDMI status of the kernel reads `connected`): `videotestsrc` on the sink of the videos of a composition (`kmssink`, on the Raspberry Pi 3 the one `playbin` picks) for 3 seconds | The pipeline reaches `PLAYING`, no error on the bus |
+| `storage` | Writes 16 MB to a hidden file in the data directory, onto the storage (not only into the cache), reads it back past the cache where the file system allows it, deletes it. Looks for errors of the SD card, USB drives and their file systems in the kernel log (`dmesg`, or the journal). | The content matches, at least 2 MB/s writing and 10 MB/s reading, no errors of the storage in the kernel log |
+| `updates` | Ready to use units: reads `rauc status` | Two slots, the slot running not marked bad. The slots and their boot status go into the details. |
+| `watchdog` | Ready to use units: the watchdog of systemd (`WATCHDOG_USEC` of the service) and of the hardware (`RuntimeWatchdogUSec`) | systemd watches the app |
+| `read-only-root` | Ready to use units: the mount of `/` in `/proc/mounts` | `/` is read-only |
+| `clock` | Whether a time server synchronized the clock (`timedatectl`), the real-time clock (`/sys/class/rtc/rtc0`) | Not before the date of the software, a real-time clock within 60 s of the system's clock |
+| `lan` | Each wired network interface: link, speed, address | Skipped without link |
+| `access-point` | If enabled in the settings: the wireless interface and `hostapd` | `hostapd` is active |
+| `audio` | For each sound card of the audio settings (all the buses on it), or of a unit without them every sound card ALSA offers (its own device, with all the channels it offers): a sine at -20 dBFS on every channel for 3 seconds, each channel at its own frequency (400 Hz, 550 Hz, 700 Hz, ...), mixed like the audio files of a composition (mix matrix) into the output of a composition: mixer, the rate and channels of the settings, `level`, volume and the sink on the ALSA device of the buses (`rs_<card>`). Measured with the `level` element before the sink, once a second. | The pipeline reaches `PLAYING`, no error on the bus, every channel in every measurement at -20 dBFS ±3 dB |
+| `audio-loopback` | If the sound card has inputs: records them while the sines play (with a cable from the outputs to the inputs) and measures the frequency of each output on each input over one second (Goertzel) | Each input hears the output of the same channel at -60 dBFS or louder, and the others at least 20 dB less. Tells swapped channels, crosstalk and silent inputs. |
+| `video` | If a display is connected (any HDMI connector the kernel reports as `connected`): `videotestsrc` on the sink of the videos of a composition (`kmssink`, on the Raspberry Pi 3 the one `playbin` picks) for 3 seconds. The connector, the name of the display (EDID) and its preferred mode go into the target. | The pipeline reaches `PLAYING`, no error on the bus |
+| `video-decoder` | Decodes a video of 10 frames of H.265 in the app with `uridecodebin`, like the videos of a composition, also without display | Every frame decoded. The decoder (hardware or software) goes into the target. Skipped without H.265 decoder (e.g. a Raspberry Pi 3). |
 | `midi-out` | Sends a burst of 200 messages on the MIDI out device of the settings, one each 2 ms: note on, control change (the undefined controllers 20 to 31), program change and note off, on every channel, with data bytes across their whole range | Sending succeeds |
 | `midi-loopback` | Listens on the MIDI in device of the settings during the burst and up to a second after it. Real-time messages (e.g. active sensing an interface sends by itself) don't count. | Every message arrives once, in order, unchanged. The target tells which out device arrived on which in device. |
 | `gpio-out` | Switches the GPIO outputs of the settings high and low once per second for 5 seconds (visible on a fixture LED), then back to their states before. Never touches reserved pins or the pins of GPIO triggers, which may be wired to a button. | The state read back matches |
 | `gpio-loopback` | For each output → input pair of the request: the input with a pull-down resistor, the output switched high and low 3 times. An output of the settings switches like by an action, other pins are set up for the self-test only and released afterwards. Pairs with a reserved pin, the pin of a GPIO trigger or an output of the settings as input are refused. | The input follows the output |
+| `reset-button` | Ready to use units: reads the reset button | Released. A button stuck pressed doesn't work, or resets the unit. |
+| `dmx-interface` | The output ports OLA offers, except its dummy device | Skipped without one: no DMX interface, or its OLA plugin is off in the lighting settings |
 | `dmx` | For each universe of the settings with an output port: a ramp from 0 to 255 on all 512 channels for 3 seconds (25 frames a second), then zero, straight to OLA | `olad` is running and connected, the port is patched in OLA, OLA takes every frame |
+| `power` | Under-voltage and throttling since the start, as the firmware of a Raspberry Pi tells (`vcgencmd get_throttled`). The voltage of the power supply goes into the target, on a Raspberry Pi 5. | No under-voltage, no throttling. A capped CPU frequency or the soft temperature limit go into the details. |
 
 A loopback that receives nothing is `SKIPPED` ("no loopback cable"), and so is every check without its hardware (no
-sound card in the audio settings, no display, no MIDI device, GPIO disabled, no universe with an output port). A
-check named in `expect` fails instead ("Expected, but skipped: ..."). This way the same test runs on a fixture with
-cables and on a unit without them.
+sound card, no input, no display, no H.265 decoder, no MIDI device, GPIO disabled, no OLA output port, no universe with
+an output port, no wired network interface, not a ready to use unit, not a Raspberry Pi). A check named in `expect`
+fails instead ("Expected, but skipped: ..."). This way the same test runs on a fixture with cables and on a unit
+without them.
 
 ### Request and result
 
@@ -429,10 +445,13 @@ that receive nothing.
   "checks": [
     { "name": "health", "result": "PASSED", "details": "DEGRADED: EEPROM version date … is older than …" },
     { "name": "audio", "target": "USB Audio, 8 channels", "result": "PASSED", "details": "-20.0 to -20.1 dBFS on every channel" },
+    { "name": "audio-loopback", "target": "USB Audio, 8 channels", "result": "FAILED", "details": "In 1 hears out 2, In 2 hears out 1" },
     { "name": "video", "result": "SKIPPED", "details": "No display connected" },
+    { "name": "video-decoder", "target": "v4l2slh265dec (hardware)", "result": "PASSED", "details": "10 frames of H.265 decoded" },
     { "name": "midi-out", "target": "USB MIDI Interface", "result": "PASSED", "details": "200 messages sent" },
     { "name": "midi-loopback", "target": "MIDI out USB MIDI Interface → MIDI in USB MIDI Interface", "result": "FAILED", "details": "196 of 200 messages received" },
-    { "name": "gpio-loopback", "target": "GPIO 22 → GPIO 27", "result": "PASSED", "details": "The input followed the output 3 times" }
+    { "name": "gpio-loopback", "target": "GPIO 22 → GPIO 27", "result": "PASSED", "details": "The input followed the output 3 times" },
+    { "name": "power", "target": "5.13 V", "result": "PASSED", "details": "No under-voltage or throttling since the start" }
   ]
 }
 ```
@@ -456,11 +475,14 @@ that receive nothing.
 
 The unit tests run every check on simulated hardware: the orchestration with steps of the tests
 (`DefaultSelfTestServiceTest`), the audio and video through real GStreamer pipelines with sinks capturing what the
-sound cards and the screen would get (`AudioVideoSelfTestTest`), the MIDI on the simulated MIDI interface with a
-loopback cable which can lose or change messages (`MidiSelfTestTest`), the GPIO on the pins of the Pi4J mock plugin
-wired to each other (`GpioSelfTestTest`), the DMX with OLA mocked (`DmxSelfTestTest`), health and storage
-(`HealthAndStorageSelfTestTest`) and the endpoint on the app of the tests (`SelfTestApiTest`). The web app smoke test
-runs it from the settings of a new unit.
+sound cards and the screen would get and a loopback cable playing it back into the inputs, straight, swapped or
+unconnected, and the H.265 video decoded (`AudioVideoSelfTestTest`), the MIDI on the simulated MIDI interface with a
+loopback cable which can lose or change messages (`MidiSelfTestTest`), the GPIO and the reset button on the pins of the
+Pi4J mock plugin wired to each other (`GpioSelfTestTest`), the DMX with OLA mocked (`DmxSelfTestTest`), health and
+storage (`HealthAndStorageSelfTestTest`), updates, watchdog, read-only root, clock, network and power on the files and
+commands of a simulated unit (`SystemAndNetworkSelfTestTest`), the displays on simulated graphics cards
+(`DefaultHdmiServiceTest`) and the endpoint on the app of the tests (`SelfTestApiTest`). The web app smoke test runs it
+from the settings of a new unit.
 
 ### Factory provisioning
 
@@ -470,15 +492,16 @@ runs it from the settings of a new unit.
    `POST /api/system/device-information`.
 4. Connect the fixture: a MIDI cable from the MIDI out to the MIDI in, GPIO loopback cables with a ~1 kΩ series
    resistor, a display.
-5. Run the self-test with what the fixture provides, e.g.
-   `selftest.py http://<unit> --expect storage midi-loopback gpio-loopback video --gpio-loopback 22:27 --output results/`.
-   Before the initial setup, no password is needed.
+5. Run the self-test with what the station checks, after assembling a unit today health, audio and the display:
+   `selftest.py http://<unit> --expect health audio video --output results/`. With a fixture providing loopback
+   cables, expect those as well (e.g. `--expect ... midi-loopback gpio-loopback --gpio-loopback 22:27`). Before the
+   initial setup, no password is needed.
 6. Keep the result with the serial number (the file of `--output`). Ship only units which passed.
 
-A unit fresh from the factory has no settings yet, so it only checks the devices it finds by itself: a USB MIDI
-interface becomes the MIDI device of new settings (serial ports don't), the GPIO loopbacks of the request, a display,
-health and storage. The sound cards, MIDI ports and user pins of a model which aren't in new settings need the
-hardware description ([section 5](#5-hardware-features), see the TODO below).
+A unit fresh from the factory has no settings yet, so it checks the devices it finds by itself: every sound card with
+all its channels, a USB MIDI interface (it becomes the MIDI device of new settings, serial ports don't), a display,
+the GPIO loopbacks of the request, health, storage, clock, network and power. The serial MIDI ports and user pins of
+a model need the hardware description ([section 5](#5-hardware-features), see the TODO below).
 
 ### TODO
 
@@ -494,18 +517,32 @@ hardware description ([section 5](#5-hardware-features), see the TODO below).
 - [x] Document the factory provisioning sequence. A script for the factory station and the rig
   (`testing/selftest/selftest.py`).
 - [x] Stop the checks as soon as a composition starts during the self-test.
+- [x] A unit without sound cards in its settings (e.g. new) checks every sound card with all its channels.
+- [x] Each channel at its own frequency, and a loopback cable from the outputs to the inputs of a sound card: tells
+  silent and swapped channels and crosstalk (`audio-loopback`).
+- [x] The name and the mode of the display, a display on any HDMI connector, decoding H.265 (`video-decoder`).
+- [x] The reset button isn't stuck (`reset-button`).
+- [x] Updates, watchdog and read-only root of ready to use units, the clock, the wired network and the access point,
+  the speed and the kernel log of the storage, the DMX interface, under-voltage and throttling (`power`).
 - [ ] Run it on real hardware, once per model and revision and on the community edition (a Raspberry Pi 4 and 5 with a
   USB sound card and a USB MIDI interface), with loopback cables, and note what each check reported here:
   - [ ] `audio` on every sound card in use, also with more than 8 channels (see the rig TODO), and with the sound
-    cards kept open with silence on Raspberry Pi OS: the test pipeline shares the device through `dmix`.
-  - [ ] `video` on `kmssink` with a display connected, and on a Raspberry Pi 3 (`autovideosink`). The HDMI status is
-    read from `/sys/class/drm/card1-HDMI-A-1/status`, which may be named otherwise on other models.
+    cards kept open with silence on Raspberry Pi OS: the test pipeline shares the device through `dmix`. On a new unit
+    without audio settings: the channels the sound card offers (read from its own ALSA device) and the sine on each.
+  - [ ] `audio-loopback` on a sound card with inputs: the levels of a cable from line out to line in, and the latency of
+    the input (the analysis allows about 1.5 s).
+  - [ ] `video` on `kmssink` with a display connected (the name and mode from the EDID), and on a Raspberry Pi 3
+    (`autovideosink`). `video-decoder`: the hardware decoder of a Raspberry Pi 4 and 5 picked by `uridecodebin`.
   - [ ] `midi-loopback` on the DIN ports (serial) and on a USB MIDI interface: no message lost at one per 2 ms.
-  - [ ] `gpio-out` and `gpio-loopback` on the GPIO chip of each model (Pi4J with gpiod), the read back state.
-  - [ ] `dmx` with an OLA output port patched: the ramp on a DMX receiver.
+  - [ ] `gpio-out`, `gpio-loopback` and `reset-button` on the GPIO chip of each model (Pi4J with gpiod).
+  - [ ] `dmx-interface` and `dmx` with an OLA output port patched: the ramp on a DMX receiver.
+  - [ ] `updates`, `watchdog` and `read-only-root` on a ready to use unit: the output of its `rauc status`, the service
+    of the app with `WatchdogSec`.
+  - [ ] `power`: the app may run `vcgencmd` (the user of the app needs the group `video`). `storage`: the speeds of the
+    SD cards in use against the minimums, whether the app may read the kernel log.
   - [ ] The duration: well under a minute.
-- [ ] Factory units without settings: check the sound cards, MIDI ports and user pins of the hardware description
-  when the settings name none ([section 5](#5-hardware-features)).
+- [ ] Factory units without settings: check the serial MIDI ports and user pins of the hardware description when the
+  settings name none ([section 5](#5-hardware-features)).
 
 ## 3. Hardware-in-the-loop rig
 
@@ -634,10 +671,10 @@ description on the unit itself, never from the harness.
 
 | Feature | Source |
 |---|---|
-| Audio outputs and channel count | Discovered: `GET /api/audio/devices`, `GET /api/audio/max-channels` |
+| Audio outputs and channel count | Discovered: `GET /api/audio/devices`, `GET /api/audio/max-channels` (a stub), the channels a sound card offers in `AudioService.getHardwareChannelCount()` (used by the self-test) |
 | MIDI in and out devices | Discovered: `GET /api/midi/in-devices`, `GET /api/midi/out-devices` |
 | DMX and Art-Net output ports | Discovered: `GET /api/lighting/ola-output-ports` |
-| Display connected | Discovered: `HdmiService.isDisplayConnected()`, used by the self-test (not exposed through the API yet) |
+| Display connected | Discovered: `HdmiService.getConnectedDisplays()` with the name and mode of each display, used by the self-test (not exposed through the API yet) |
 | A/B updates with rollback | Discovered: `raucSlot` is set in `GET /api/system/health` |
 | Watchdog, read-only root file system | Hardware description |
 | GPIO pins free for users and tests | Hardware description |
@@ -990,6 +1027,11 @@ Found by reading the code and by the tests. Each one gets a unit test or rig tes
 - [x] **The designer lost the channels of a curve when loading a project.** It read the channel names as `0`, `1`, ...
   so a project saved again sent the curve nowhere (`project-load.service.spec.ts`).
 
+- [x] **Videos didn't play with the display on the second HDMI output.** Only the status of the first HDMI output of
+  the second graphics card (`card1-HDMI-A-1`) counted, so a display on the other output of a Raspberry Pi 4 or 5, or
+  on a model numbering its graphics card otherwise, left the videos of compositions out. Any HDMI output counts now
+  (`DefaultHdmiServiceTest`, found while writing the video check of the self-test).
+
 ### Accepted
 
 - **2.x compositions lose their audio bus.** They assign audio files to a bus by name (`<outputBus>`), 3.0 only reads
@@ -1008,5 +1050,6 @@ Found by reading the code and by the tests. Each one gets a unit test or rig tes
 
 ### Open
 
-None known.
+- **Disabling GPIO in the settings disables the reset button as well.** The reset button of ready to use units is
+  only listened to with GPIO enabled. The self-test reports it (`reset-button`).
 

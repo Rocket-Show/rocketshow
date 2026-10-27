@@ -43,14 +43,19 @@ public class DefaultSelfTestService implements SelfTestService {
             DeviceInformationService deviceInformationService,
             HealthSelfTest healthSelfTest,
             StorageSelfTest storageSelfTest,
+            SystemSelfTest systemSelfTest,
+            NetworkSelfTest networkSelfTest,
             AudioSelfTest audioSelfTest,
             VideoSelfTest videoSelfTest,
             MidiSelfTest midiSelfTest,
             GpioSelfTest gpioSelfTest,
-            DmxSelfTest dmxSelfTest
+            DmxSelfTest dmxSelfTest,
+            PowerSelfTest powerSelfTest
     ) {
-        this(playerService, versionService, deviceInformationService,
-                List.of(healthSelfTest, storageSelfTest, audioSelfTest, videoSelfTest, midiSelfTest, gpioSelfTest, dmxSelfTest));
+        // The power last, after the others loaded the unit
+        this(playerService, versionService, deviceInformationService, List.of(healthSelfTest, storageSelfTest,
+                systemSelfTest, networkSelfTest, audioSelfTest, videoSelfTest, midiSelfTest, gpioSelfTest, dmxSelfTest,
+                powerSelfTest));
     }
 
     // Package visible for the tests, with steps of their own

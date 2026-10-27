@@ -381,7 +381,7 @@
     },
     "self-test": {
       "title": "Autoprueba",
-      "help": "Comprueba el hardware del dispositivo: cada tarjeta de sonido de los ajustes de audio, la pantalla, los dispositivos MIDI (con un cable de la salida MIDI a la entrada MIDI), las salidas GPIO y los universos DMX. Comprueba todo hasta los controladores, no lo que sale por los conectores.",
+      "help": "Comprueba el hardware del dispositivo: cada tarjeta de sonido (con un cable de sus salidas a sus entradas, también lo que sale de ellas), la pantalla y el decodificador de vídeo, los dispositivos MIDI (con un cable de la salida MIDI a la entrada MIDI), las salidas GPIO y el botón de reinicio, la interfaz y los universos DMX, el almacenamiento, la red, el reloj y la alimentación. Los dispositivos listos para usar también comprueban sus actualizaciones, el watchdog y el sistema de solo lectura.",
       "run": "Iniciar autoprueba",
       "warning": "Durante hasta medio minuto, la autoprueba reproduce un tono de prueba en cada tarjeta de sonido y una imagen de prueba en la pantalla, envía notas MIDI y cambios de programa al dispositivo de salida MIDI, conmuta las salidas GPIO y envía DMX a cada universo. Baja los altavoces y desconecta los dispositivos que no deben verse afectados. ¿Iniciar la autoprueba ahora?",
       "wait": "La autoprueba está en curso...",
@@ -398,13 +398,24 @@
       "check-enum": {
         "health": "Estado",
         "storage": "Almacenamiento",
+        "updates": "Actualizaciones",
+        "watchdog": "Watchdog",
+        "read-only-root": "Sistema de solo lectura",
+        "clock": "Reloj",
+        "lan": "Conexión LAN",
+        "access-point": "Punto de acceso inalámbrico",
         "audio": "Audio",
+        "audio-loopback": "Bucle de audio",
         "video": "Vídeo",
+        "video-decoder": "Decodificador de vídeo",
         "midi-out": "Salida MIDI",
         "midi-loopback": "Bucle MIDI",
         "gpio-out": "Salidas GPIO",
         "gpio-loopback": "Bucle GPIO",
-        "dmx": "DMX"
+        "reset-button": "Botón de reinicio",
+        "dmx-interface": "Interfaz DMX",
+        "dmx": "DMX",
+        "power": "Alimentación"
       }
     },
     "external-control": {

@@ -2,6 +2,7 @@ package com.ascargon.rocketshow.selftest;
 
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.LightingUniverse;
+import com.ascargon.rocketshow.lighting.OlaPort;
 import com.ascargon.rocketshow.lighting.OlaService;
 import com.ascargon.rocketshow.settings.Capabilities;
 import com.ascargon.rocketshow.settings.CapabilitiesService;
@@ -77,6 +78,11 @@ class DmxSelfTestTest {
         return context;
     }
 
+    // The checks of the ramp, without the one of the interface
+    private static List<SelfTestCheck> ramp(SelfTestContext context) {
+        return context.getChecks().stream().filter(check -> check.getName().equals(DmxSelfTest.DMX)).toList();
+    }
+
     @Test
     void sendsARampOnEveryChannelThenZero() throws Exception {
         universe("Stage", 1, "3-O-0");
@@ -84,8 +90,8 @@ class DmxSelfTestTest {
 
         SelfTestContext context = runSelfTest();
 
-        assertEquals(List.of("Stage, OLA universe 1 on port 3-O-0", "Front, OLA universe 2 on port 4-O-0"), context.getChecks().stream().map(SelfTestCheck::getTarget).toList());
-        for (SelfTestCheck check : context.getChecks()) {
+        assertEquals(List.of("Stage, OLA universe 1 on port 3-O-0", "Front, OLA universe 2 on port 4-O-0"), ramp(context).stream().map(SelfTestCheck::getTarget).toList());
+        for (SelfTestCheck check : ramp(context)) {
             assertEquals(SelfTestOutcome.PASSED, check.getResult(), check.getDetails());
             assertEquals("Ramp from 0 to 255 on 512 channels sent in 0.4 s", check.getDetails());
         }
@@ -119,9 +125,9 @@ class DmxSelfTestTest {
 
         SelfTestContext context = runSelfTest();
 
-        assertEquals(SelfTestOutcome.FAILED, context.getChecks().get(0).getResult());
-        assertEquals("Not patched to its output port in OLA", context.getChecks().get(0).getDetails());
-        assertEquals(SelfTestOutcome.PASSED, context.getChecks().get(1).getResult());
+        assertEquals(SelfTestOutcome.FAILED, ramp(context).get(0).getResult());
+        assertEquals("Not patched to its output port in OLA", ramp(context).get(0).getDetails());
+        assertEquals(SelfTestOutcome.PASSED, ramp(context).get(1).getResult());
         assertTrue(!sent.containsKey(1), "Sent to the universe which isn't patched");
     }
 
@@ -130,7 +136,7 @@ class DmxSelfTestTest {
         universe("Stage", 1, "3-O-0");
         doReturn(false).when(lightingService).sendDmx(any(), any());
 
-        SelfTestCheck check = runSelfTest().getChecks().getFirst();
+        SelfTestCheck check = ramp(runSelfTest()).getFirst();
 
         assertEquals(SelfTestOutcome.FAILED, check.getResult());
         assertEquals("OLA did not take the values", check.getDetails());
@@ -141,7 +147,7 @@ class DmxSelfTestTest {
         universe("Stage", 1, "3-O-0");
         when(olaService.getHealthyError()).thenReturn("OLA service is not active: inactive");
 
-        SelfTestCheck check = runSelfTest().getChecks().getFirst();
+        SelfTestCheck check = ramp(runSelfTest()).getFirst();
 
         assertEquals(SelfTestOutcome.FAILED, check.getResult());
         assertEquals("OLA service is not active: inactive", check.getDetails());
@@ -154,7 +160,7 @@ class DmxSelfTestTest {
         universe("Stage", 1, "3-O-0");
         capabilities.setOla(false);
 
-        SelfTestCheck check = runSelfTest().getChecks().getFirst();
+        SelfTestCheck check = ramp(runSelfTest()).getFirst();
 
         assertEquals(SelfTestOutcome.FAILED, check.getResult());
         assertEquals("Not connected to OLA", check.getDetails());
@@ -167,9 +173,9 @@ class DmxSelfTestTest {
 
         SelfTestContext context = runSelfTest();
 
-        assertEquals(1, context.getChecks().size());
-        assertEquals(SelfTestOutcome.SKIPPED, context.getChecks().getFirst().getResult());
-        assertEquals("No DMX universe with an output port in the settings", context.getChecks().getFirst().getDetails());
+        assertEquals(1, ramp(context).size());
+        assertEquals(SelfTestOutcome.SKIPPED, ramp(context).getFirst().getResult());
+        assertEquals("No DMX universe with an output port in the settings", ramp(context).getFirst().getDetails());
         verify(olaService, never()).getHealthyError();
     }
 
@@ -181,10 +187,42 @@ class DmxSelfTestTest {
 
         dmxSelfTest.run(context);
 
-        assertEquals(SelfTestOutcome.SKIPPED, context.getChecks().getFirst().getResult());
+        assertEquals(SelfTestOutcome.SKIPPED, ramp(context).getFirst().getResult());
         List<short[]> universe = sent.get(1);
         assertEquals(0, universe.getLast()[0]);
         assertTrue(universe.stream().allMatch(values -> values[0] < 255), "Flashed");
+    }
+
+    private static OlaPort olaPort(String id, String device) {
+        OlaPort olaPort = new OlaPort();
+        olaPort.setId(id);
+        olaPort.setDevice(device);
+        olaPort.setOutput(true);
+        return olaPort;
+    }
+
+    private SelfTestCheck dmxInterface() throws Exception {
+        return runSelfTest().getChecks().stream().filter(check -> check.getName().equals(DmxSelfTest.DMX_INTERFACE)).findFirst().orElseThrow();
+    }
+
+    @Test
+    void findsTheOutputPortsOfOla() throws Exception {
+        when(lightingService.getOlaOutputPorts()).thenReturn(List.of(olaPort("1-O-0", "Dummy Device"), olaPort("3-O-0", "Enttec Usb Pro Device")));
+
+        SelfTestCheck check = dmxInterface();
+
+        assertEquals(SelfTestOutcome.PASSED, check.getResult());
+        assertEquals("Enttec Usb Pro Device (3-O-0)", check.getDetails());
+    }
+
+    @Test
+    void theInterfaceIsSkippedWithOnlyTheDummyPortOrWithoutOla() throws Exception {
+        when(lightingService.getOlaOutputPorts()).thenReturn(List.of(olaPort("1-O-0", "Dummy Device")));
+        assertEquals("OLA offers no output port: no DMX interface, or its plugin is off in the lighting settings", dmxInterface().getDetails());
+
+        capabilities.setOla(false);
+        assertEquals(SelfTestOutcome.SKIPPED, dmxInterface().getResult());
+        assertEquals("OLA is not available", dmxInterface().getDetails());
     }
 
 }

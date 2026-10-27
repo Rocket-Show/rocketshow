@@ -34,24 +34,7 @@ public class DefaultRaucService implements RaucService {
     @Override
     public String getCurrentSlot() {
         try {
-            ShellManager shellManager = new ShellManager(
-                    new String[]{"rauc", "status"}, false
-            );
-
-            Process process = shellManager.getProcess();
-
-            // Read full output
-            String output;
-            try (InputStream is = process.getInputStream()) {
-                output = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-            }
-
-            process.waitFor();
-            shellManager.close();
-
-            logger.debug("RAUC status: {}", output);
-
-            return getBootedSlot(output);
+            return getBootedSlot(getStatus());
         } catch (Exception e) {
             logger.error("Could not read current RAUC slot", e);
         }
@@ -59,9 +42,30 @@ public class DefaultRaucService implements RaucService {
         return null;
     }
 
-    // The slot the system booted from, e.g. "rootfs.0", read from the output of "rauc status"
-    // Package visible for the tests
-    static String getBootedSlot(String raucStatus) {
+    @Override
+    public String getStatus() throws Exception {
+        ShellManager shellManager = new ShellManager(
+                new String[]{"rauc", "status"}, false
+        );
+
+        Process process = shellManager.getProcess();
+
+        // Read full output
+        String output;
+        try (InputStream is = process.getInputStream()) {
+            output = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+        }
+
+        process.waitFor();
+        shellManager.close();
+
+        logger.debug("RAUC status: {}", output);
+
+        return output;
+    }
+
+    // The slot the system booted from, e.g. "rootfs.0", read from the output of "rauc status". Public for the self-test.
+    public static String getBootedSlot(String raucStatus) {
         for (String line : raucStatus.split("\\R")) {
             line = line.trim();
             if (line.startsWith("Booted from:")) {

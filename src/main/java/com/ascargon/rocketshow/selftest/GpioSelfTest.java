@@ -28,9 +28,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Switches the GPIO outputs of the settings (visible on a LED of a fixture) and checks the loopbacks of the request:
- * an output connected to an input. It never switches a reserved pin (e.g. the reset button) or the pin of a GPIO
- * trigger, which may be wired to a button. The GPIO triggers don't fire during the whole self-test.
+ * Switches the GPIO outputs of the settings (visible on a LED of a fixture), checks the loopbacks of the request (an
+ * output connected to an input) and that the reset button isn't stuck. It never switches a reserved pin (e.g. the
+ * reset button) or the pin of a GPIO trigger, which may be wired to a button. The GPIO triggers don't fire during the
+ * whole self-test.
  */
 @Service
 class GpioSelfTest implements SelfTestStep {
@@ -39,6 +40,7 @@ class GpioSelfTest implements SelfTestStep {
 
     static final String GPIO_OUT = "gpio-out";
     static final String GPIO_LOOPBACK = "gpio-loopback";
+    static final String RESET_BUTTON = "reset-button";
 
     // Once per second, visible on a LED
     private static final int CYCLES = 5;
@@ -66,7 +68,7 @@ class GpioSelfTest implements SelfTestStep {
 
     @Override
     public List<String> getCheckNames() {
-        return List.of(GPIO_OUT, GPIO_LOOPBACK);
+        return List.of(GPIO_OUT, GPIO_LOOPBACK, RESET_BUTTON);
     }
 
     private List<Integer> getTriggerPins() {
@@ -149,6 +151,32 @@ class GpioSelfTest implements SelfTestStep {
     public void run(SelfTestContext context) throws Exception {
         checkOutputs(context);
         checkLoopbacks(context);
+        checkResetButton(context);
+    }
+
+    // A button stuck pressed: it would reset the unit to the factory settings, or not work at all
+    private void checkResetButton(SelfTestContext context) {
+        List<Integer> reservedPins = raspberryGpioInService.getReservedPins();
+
+        if (reservedPins.isEmpty()) {
+            context.report(SelfTestCheck.skipped(RESET_BUTTON, null, "Only ready to use units have a reset button"));
+            return;
+        }
+
+        String target = pins(reservedPins);
+        Boolean pressed = raspberryGpioInService.isResetButtonPressed();
+
+        if (pressed == null) {
+            if (!Boolean.TRUE.equals(settingsService.getSettings().getEnableRaspberryGpio())) {
+                context.report(SelfTestCheck.skipped(RESET_BUTTON, target, "GPIO is disabled in the settings, which disables the reset button as well"));
+            } else {
+                context.report(SelfTestCheck.failed(RESET_BUTTON, target, "The reset button could not be set up"));
+            }
+        } else if (pressed) {
+            context.report(SelfTestCheck.failed(RESET_BUTTON, target, "Pressed: stuck, or someone holds it"));
+        } else {
+            context.report(SelfTestCheck.passed(RESET_BUTTON, target, "Released"));
+        }
     }
 
     private void checkOutputs(SelfTestContext context) throws Exception {

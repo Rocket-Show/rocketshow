@@ -381,7 +381,7 @@
     },
     "self-test": {
       "title": "Autoteste",
-      "help": "Verifica o hardware do dispositivo: cada placa de som das definições de áudio, o ecrã, os dispositivos MIDI (com um cabo da saída MIDI para a entrada MIDI), as saídas GPIO e os universos DMX. Verifica tudo até aos controladores, não o que sai dos conectores.",
+      "help": "Verifica o hardware do dispositivo: cada placa de som (com um cabo das suas saídas para as suas entradas, também o que sai delas), o ecrã e o descodificador de vídeo, os dispositivos MIDI (com um cabo da saída MIDI para a entrada MIDI), as saídas GPIO e o botão de reposição, a interface e os universos DMX, o armazenamento, a rede, o relógio e a alimentação. Os dispositivos prontos a usar também verificam as atualizações, o watchdog e o sistema só de leitura.",
       "run": "Iniciar autoteste",
       "warning": "Durante até meio minuto, o autoteste reproduz um tom de teste em cada placa de som e uma imagem de teste no ecrã, envia notas MIDI e mudanças de programa para o dispositivo de saída MIDI, comuta as saídas GPIO e envia DMX para cada universo. Baixe os altifalantes e desligue os dispositivos que não devem ser afetados. Iniciar o autoteste agora?",
       "wait": "O autoteste está a decorrer...",
@@ -398,13 +398,24 @@
       "check-enum": {
         "health": "Estado",
         "storage": "Armazenamento",
+        "updates": "Atualizações",
+        "watchdog": "Watchdog",
+        "read-only-root": "Sistema só de leitura",
+        "clock": "Relógio",
+        "lan": "Ligação LAN",
+        "access-point": "Ponto de acesso sem fios",
         "audio": "Áudio",
+        "audio-loopback": "Loop de áudio",
         "video": "Vídeo",
+        "video-decoder": "Descodificador de vídeo",
         "midi-out": "Saída MIDI",
         "midi-loopback": "Loop MIDI",
         "gpio-out": "Saídas GPIO",
         "gpio-loopback": "Loop GPIO",
-        "dmx": "DMX"
+        "reset-button": "Botão de reposição",
+        "dmx-interface": "Interface DMX",
+        "dmx": "DMX",
+        "power": "Alimentação"
       }
     },
     "external-control": {

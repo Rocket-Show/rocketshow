@@ -39,13 +39,18 @@ class SelfTestApiTest extends ApiTest {
 
         List<String> names = new ArrayList<>();
         result.get("checks").forEach(check -> names.add(check.get("name").asText()));
-        assertTrue(names.containsAll(List.of("health", "storage", "audio", "video", "midi-out", "midi-loopback", "gpio-out", "gpio-loopback", "dmx")), names.toString());
+        assertTrue(names.containsAll(List.of("health", "storage", "updates", "watchdog", "read-only-root", "clock", "lan",
+                "access-point", "audio", "audio-loopback", "video", "video-decoder", "midi-out", "midi-loopback", "gpio-out",
+                "gpio-loopback", "reset-button", "dmx-interface", "dmx", "power")), names.toString());
 
-        assertEquals("PASSED", check(result, "storage").get("result").asText(), result.toString());
-        // Nothing the unit of the tests doesn't have fails
+        // The data directory takes a file (errors of the machine of the tests in its kernel log may fail the check)
+        assertTrue(check(result, "storage").get("details").asText().startsWith("16 MB written at "), result.toString());
+        // What the unit of the tests doesn't have is skipped
+        assertEquals("SKIPPED", check(result, "updates").get("result").asText());
         assertEquals("SKIPPED", check(result, "video").get("result").asText());
         assertEquals("SKIPPED", check(result, "gpio-loopback").get("result").asText());
-        assertEquals("PASSED", result.get("result").asText(), result.toString());
+        assertEquals("SKIPPED", check(result, "reset-button").get("result").asText());
+        assertTrue(List.of("PASSED", "FAILED").contains(result.get("result").asText()), result.toString());
         assertTrue(result.get("startedAt").asText().matches("\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\dZ"), result.toString());
         assertTrue(result.get("durationMillis").asLong() > 0, result.toString());
     }

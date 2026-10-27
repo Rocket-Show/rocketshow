@@ -308,4 +308,35 @@ class GpioSelfTestTest {
         gpioSelfTest.validate(loopbacks(cable(17, 6)));
     }
 
+    @Test
+    void theResetButtonIsNotStuck() throws Exception {
+        deviceInformation.setAvailable(true);
+        startUnit();
+
+        input(17).orElseThrow().mockState(DigitalState.HIGH);
+        SelfTestCheck released = check(runSelfTest(new SelfTestRequest()), GpioSelfTest.RESET_BUTTON);
+        assertEquals(SelfTestOutcome.PASSED, released.getResult());
+        assertEquals("GPIO 17", released.getTarget());
+        assertEquals("Released", released.getDetails());
+
+        input(17).orElseThrow().mockState(DigitalState.LOW);
+        SelfTestCheck pressed = check(runSelfTest(new SelfTestRequest()), GpioSelfTest.RESET_BUTTON);
+        assertEquals(SelfTestOutcome.FAILED, pressed.getResult());
+        assertEquals("Pressed: stuck, or someone holds it", pressed.getDetails());
+    }
+
+    @Test
+    void theResetButtonIsSkippedWithoutOne() throws Exception {
+        startUnit();
+        assertEquals("Only ready to use units have a reset button", check(runSelfTest(new SelfTestRequest()), GpioSelfTest.RESET_BUTTON).getDetails());
+
+        // Disabling GPIO disables the reset button as well
+        deviceInformation.setAvailable(true);
+        settings.setEnableRaspberryGpio(false);
+        startUnit();
+        SelfTestCheck check = check(runSelfTest(new SelfTestRequest()), GpioSelfTest.RESET_BUTTON);
+        assertEquals(SelfTestOutcome.SKIPPED, check.getResult());
+        assertEquals("GPIO is disabled in the settings, which disables the reset button as well", check.getDetails());
+    }
+
 }

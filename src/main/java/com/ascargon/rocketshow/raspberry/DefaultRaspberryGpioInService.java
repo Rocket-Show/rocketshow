@@ -216,4 +216,14 @@ public class DefaultRaspberryGpioInService implements RaspberryGpioInService {
         triggersSuspended = suspended;
     }
 
+    @Override
+    public synchronized Boolean isResetButtonPressed() {
+        if (resetButton == null) {
+            return null;
+        }
+
+        // Pulled up, pressed connects it to the ground
+        return resetButton.state() == DigitalState.LOW;
+    }
+
 }

@@ -13,4 +13,7 @@ public interface RaspberryGpioInService {
     // Don't execute the GPIO triggers while suspended (e.g. during the self-test). The reset button stays.
     void setTriggersSuspended(boolean suspended);
 
+    // Whether the reset button is pressed now, null if the unit listens to no reset button
+    Boolean isResetButtonPressed();
+
 }

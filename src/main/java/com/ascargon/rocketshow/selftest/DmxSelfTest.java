@@ -2,6 +2,7 @@ package com.ascargon.rocketshow.selftest;
 
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.LightingUniverse;
+import com.ascargon.rocketshow.lighting.OlaPort;
 import com.ascargon.rocketshow.lighting.OlaService;
 import com.ascargon.rocketshow.settings.CapabilitiesService;
 import com.ascargon.rocketshow.settings.SettingsService;
@@ -10,15 +11,19 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
- * Sends a ramp on every channel of every universe of the settings with an output port, then zero. Whether the signal
- * is electrically right needs a DMX receiver.
+ * Looks for the output ports OLA offers, e.g. of a USB DMX interface or a DMX HAT, and sends a ramp on every channel
+ * of every universe of the settings with an output port, then zero. Whether the signal is electrically right needs a
+ * DMX receiver.
  */
 @Service
 class DmxSelfTest implements SelfTestStep {
 
+    static final String DMX_INTERFACE = "dmx-interface";
     static final String DMX = "dmx";
 
     private static final long FRAME_MILLIS = 40;
@@ -43,7 +48,7 @@ class DmxSelfTest implements SelfTestStep {
 
     @Override
     public List<String> getCheckNames() {
-        return List.of(DMX);
+        return List.of(DMX_INTERFACE, DMX);
     }
 
     private static String getTarget(LightingUniverse lightingUniverse) {
@@ -59,6 +64,30 @@ class DmxSelfTest implements SelfTestStep {
 
     @Override
     public void run(SelfTestContext context) throws Exception {
+        context.report(checkInterface());
+        sendRamp(context);
+    }
+
+    // The output ports OLA offers, but not the one of its dummy device
+    private SelfTestCheck checkInterface() {
+        if (!capabilitiesService.getCapabilities().isOla()) {
+            return SelfTestCheck.skipped(DMX_INTERFACE, null, "OLA is not available");
+        }
+
+        List<OlaPort> olaPorts = lightingService.getOlaOutputPorts().stream()
+                .filter(olaPort -> olaPort.getDevice() == null || !olaPort.getDevice().toLowerCase(Locale.ROOT).contains("dummy"))
+                .toList();
+
+        if (olaPorts.isEmpty()) {
+            return SelfTestCheck.skipped(DMX_INTERFACE, null, "OLA offers no output port: no DMX interface, or its plugin is off in the lighting settings");
+        }
+
+        return SelfTestCheck.passed(DMX_INTERFACE, null, olaPorts.stream()
+                .map(olaPort -> olaPort.getDevice() + " (" + olaPort.getId() + ")")
+                .collect(Collectors.joining(", ")));
+    }
+
+    private void sendRamp(SelfTestContext context) throws Exception {
         List<LightingUniverse> lightingUniverses = settingsService.getSettings().getLightingUniverseList().stream()
                 .filter(lightingUniverse -> lightingUniverse.getOlaUniverseId() != null
                         && lightingUniverse.getOlaOutputPortId() != null && !lightingUniverse.getOlaOutputPortId().isBlank())

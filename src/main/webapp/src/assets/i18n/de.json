@@ -382,7 +382,7 @@
     },
     "self-test": {
       "title": "Selbsttest",
-      "help": "Prüft die Hardware des Geräts: jede Soundkarte der Audioeinstellungen, den Bildschirm, die MIDI-Geräte (mit einem Kabel vom MIDI-Ausgang zum MIDI-Eingang), die GPIO-Ausgänge und die DMX-Universen. Er prüft alles bis zu den Treibern, nicht was an den Anschlüssen herauskommt.",
+      "help": "Prüft die Hardware des Geräts: jede Soundkarte (mit einem Kabel von ihren Ausgängen zu ihren Eingängen auch, was herauskommt), den Bildschirm und den Video-Decoder, die MIDI-Geräte (mit einem Kabel vom MIDI-Ausgang zum MIDI-Eingang), die GPIO-Ausgänge und die Reset-Taste, das DMX-Interface und die DMX-Universen, den Speicher, das Netzwerk, die Uhr und die Stromversorgung. Gebrauchsfertige Geräte prüfen auch ihre Updates, den Watchdog und das schreibgeschützte System.",
       "run": "Selbsttest starten",
       "warning": "Der Selbsttest spielt bis zu einer halben Minute lang einen Testton auf jeder Soundkarte und ein Testbild auf dem Bildschirm, sendet MIDI-Noten und Programmwechsel an das MIDI-Ausgabegerät, schaltet die GPIO-Ausgänge und sendet DMX an jedes Universum. Drehe die Lautsprecher leise und trenne die Geräte, die nicht betroffen sein dürfen. Selbsttest jetzt starten?",
       "wait": "Der Selbsttest läuft...",
@@ -399,13 +399,24 @@
       "check-enum": {
         "health": "Zustand",
         "storage": "Speicher",
+        "updates": "Updates",
+        "watchdog": "Watchdog",
+        "read-only-root": "Schreibgeschütztes System",
+        "clock": "Uhr",
+        "lan": "LAN-Verbindung",
+        "access-point": "WLAN Access Point",
         "audio": "Audio",
+        "audio-loopback": "Audio-Schleife",
         "video": "Video",
+        "video-decoder": "Video-Decoder",
         "midi-out": "MIDI-Ausgang",
         "midi-loopback": "MIDI-Schleife",
         "gpio-out": "GPIO-Ausgänge",
         "gpio-loopback": "GPIO-Schleife",
-        "dmx": "DMX"
+        "reset-button": "Reset-Taste",
+        "dmx-interface": "DMX-Interface",
+        "dmx": "DMX",
+        "power": "Stromversorgung"
       }
     },
     "external-control": {
