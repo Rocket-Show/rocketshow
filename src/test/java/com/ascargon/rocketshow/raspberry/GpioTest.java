@@ -239,11 +239,28 @@ class GpioTest {
     }
 
     @Test
-    void usesNoPinsWhenDisabled() throws Exception {
+    void usesOnlyTheResetButtonWhenDisabled() throws Exception {
         settings.setEnableRaspberryGpio(false);
         settings.getActionTriggerRaspberryGpioList().add(trigger(22));
         settings.getRaspberryGpioOutputPinBcmList().add(23);
         deviceInformation.setAvailable(true);
+
+        startInputs();
+        new DefaultRaspberryGpioOutService(settingsService, pi4jService).executeAction(setPin(23, true));
+
+        assertEquals(List.of(17), pi4j.registry().all().values().stream().map(io -> ((MockDigitalInput) io).address().intValue()).toList());
+
+        // GPIO in the settings is for the triggers and outputs, the reset button of a ready to use unit still works
+        release(17);
+        press(17);
+        verify(factoryResetService, timeout(4000)).reset();
+    }
+
+    @Test
+    void usesNoPinsWhenDisabledOnTheCommunityEdition() throws Exception {
+        settings.setEnableRaspberryGpio(false);
+        settings.getActionTriggerRaspberryGpioList().add(trigger(22));
+        settings.getRaspberryGpioOutputPinBcmList().add(23);
 
         startInputs();
         new DefaultRaspberryGpioOutService(settingsService, pi4jService).executeAction(setPin(23, true));

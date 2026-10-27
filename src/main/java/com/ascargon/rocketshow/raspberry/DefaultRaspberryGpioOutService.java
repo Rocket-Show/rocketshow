@@ -81,12 +81,17 @@ public class DefaultRaspberryGpioOutService implements RaspberryGpioOutService {
         }
     }
 
-    private synchronized void setPinState(int bcmPinId, boolean high) {
-        Optional<DigitalOutput> digitalOutputOptional = digitalOutputList.stream().filter(output -> output.getAddress().equals(bcmPinId)).findFirst();
+    private Optional<DigitalOutput> getDigitalOutput(int bcmPinId) {
+        return digitalOutputList.stream().filter(output -> output.getAddress().equals(bcmPinId)).findFirst();
+    }
+
+    @Override
+    public synchronized boolean setPinState(int bcmPinId, boolean high) {
+        Optional<DigitalOutput> digitalOutputOptional = getDigitalOutput(bcmPinId);
 
         if (digitalOutputOptional.isEmpty()) {
             logger.warn("GPIO PIN BCM ID " + bcmPinId + " tried to be set by action, is not configured as output in the settings");
-            return;
+            return false;
         }
 
         if (high) {
@@ -96,6 +101,13 @@ public class DefaultRaspberryGpioOutService implements RaspberryGpioOutService {
             logger.trace("Set GPIO PIN BCM ID " + bcmPinId + " to low");
             digitalOutputOptional.get().low();
         }
+
+        return true;
+    }
+
+    @Override
+    public synchronized Boolean getPinState(int bcmPinId) {
+        return getDigitalOutput(bcmPinId).map(DigitalOutput::isHigh).orElse(null);
     }
 
     @Override

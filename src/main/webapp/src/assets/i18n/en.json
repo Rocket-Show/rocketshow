@@ -380,6 +380,45 @@
       "restore-done": "The backup has been restored.",
       "wait-restore": "The backup is being restored..."
     },
+    "self-test": {
+      "title": "Self-test",
+      "help": "Checks the hardware of the device: every sound card (with a cable from its outputs to its inputs, also what comes out of them), the screen and the video decoder, the MIDI devices (with a loopback cable from the MIDI out to the MIDI in), the GPIO outputs and the reset button, the DMX interface and universes, the storage, the network, the clock and the power supply. Ready to use devices also check their updates, watchdog and read-only system.",
+      "run": "Run self-test",
+      "warning": "For up to half a minute, the self-test plays a test tone on every sound card and a test picture on the screen, sends MIDI notes and program changes to the MIDI out device, switches the GPIO outputs and sends DMX to every universe. Turn down the speakers and disconnect the devices which must not be affected. Run the self-test now?",
+      "wait": "The self-test is running...",
+      "result-PASSED": "Passed. Checks of hardware the device doesn't have are skipped.",
+      "result-FAILED": "Failed",
+      "check": "Check",
+      "result": "Result",
+      "details": "Details",
+      "result-enum": {
+        "PASSED": "Passed",
+        "FAILED": "Failed",
+        "SKIPPED": "Skipped"
+      },
+      "check-enum": {
+        "health": "Health",
+        "storage": "Storage",
+        "updates": "Updates",
+        "watchdog": "Watchdog",
+        "read-only-root": "Read-only system",
+        "clock": "Clock",
+        "lan": "LAN connection",
+        "access-point": "Wireless access point",
+        "audio": "Audio",
+        "audio-loopback": "Audio loopback",
+        "video": "Video",
+        "video-decoder": "Video decoder",
+        "midi-out": "MIDI out",
+        "midi-loopback": "MIDI loopback",
+        "gpio-out": "GPIO outputs",
+        "gpio-loopback": "GPIO loopback",
+        "reset-button": "Reset button",
+        "dmx-interface": "DMX interface",
+        "dmx": "DMX",
+        "power": "Power supply"
+      }
+    },
     "external-control": {
       "title": "External control",
       "bcm-pin-id": "BCM Pin ID",

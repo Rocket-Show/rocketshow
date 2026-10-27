@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
@@ -200,6 +201,31 @@ class OlaSetupTest {
         short[] expected = new short[512];
         expected[0] = 255;
         verify(olaClient).sendDmx(1, expected);
+    }
+
+    @Test
+    void tellsWhetherOlaPatchedAUniverseToItsPort() {
+        LightingUniverse stage = universe(1, "Stage", "3-O-0", "Enttec DMX USB Pro");
+        LightingUniverse back = universe(2, "Back", "3-O-0", "Enttec DMX USB Pro");
+        LightingUniverse front = universe(1, "Front", "4-O-0", "DMX HAT");
+        olaDevice(3, 1);
+
+        // For the self-test
+        assertTrue(lightingService.isPatched(stage));
+        assertFalse(lightingService.isPatched(back));
+        assertFalse(lightingService.isPatched(front));
+    }
+
+    @Test
+    void sendsValuesToAUniverseRightAway() {
+        LightingUniverse stage = universe(1, "Stage", "3-O-0", "Enttec DMX USB Pro");
+        short[] values = new short[512];
+        values[511] = 128;
+        when(olaClient.sendDmx(1, values)).thenReturn(true);
+
+        // For the self-test, without the values of the compositions
+        assertTrue(lightingService.sendDmx(stage, values));
+        assertFalse(lightingService.sendDmx(universe(2, "Back", "3-O-0", null), values));
     }
 
 }

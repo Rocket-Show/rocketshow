@@ -189,11 +189,4 @@ public class DefaultHealthService implements HealthService {
         return healthStatus;
     }
 
-    @Override
-    public void testSystem() {
-        // TODO play the default composition and check for errors
-        // TODO periodically change GPIO output status (e.g. each 3 seconds)
-        // TODO Send MIDI messages, expect the same MIDI messages
-    }
-
 }

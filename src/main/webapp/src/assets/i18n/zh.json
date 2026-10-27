@@ -379,6 +379,45 @@
       "restore-done": "备份已恢复。",
       "wait-restore": "正在恢复备份..."
     },
+    "self-test": {
+      "title": "自检",
+      "help": "检查设备的硬件：每块声卡（使用从其输出到其输入的线缆时，也检查实际输出的声音）、屏幕和视频解码器、MIDI 设备（使用从 MIDI 输出到 MIDI 输入的回环线）、GPIO 输出和复位按钮、DMX 接口和宇宙、存储、网络、时钟和电源。即用型设备还会检查其更新、看门狗和只读系统。",
+      "run": "运行自检",
+      "warning": "在最多半分钟内，自检会在每块声卡上播放测试音并在屏幕上显示测试画面，向 MIDI 输出设备发送 MIDI 音符和音色切换，切换 GPIO 输出，并向每个宇宙发送 DMX。请调低扬声器音量，并断开不应受影响的设备。现在运行自检吗？",
+      "wait": "正在运行自检...",
+      "result-PASSED": "通过。设备没有的硬件的检查已跳过。",
+      "result-FAILED": "未通过",
+      "check": "检查",
+      "result": "结果",
+      "details": "详情",
+      "result-enum": {
+        "PASSED": "通过",
+        "FAILED": "未通过",
+        "SKIPPED": "已跳过"
+      },
+      "check-enum": {
+        "health": "状态",
+        "storage": "存储",
+        "updates": "更新",
+        "watchdog": "看门狗",
+        "read-only-root": "只读系统",
+        "clock": "时钟",
+        "lan": "LAN连接",
+        "access-point": "无线接入点",
+        "audio": "音频",
+        "audio-loopback": "音频回环",
+        "video": "视频",
+        "video-decoder": "视频解码器",
+        "midi-out": "MIDI 输出",
+        "midi-loopback": "MIDI 回环",
+        "gpio-out": "GPIO 输出",
+        "gpio-loopback": "GPIO 回环",
+        "reset-button": "复位按钮",
+        "dmx-interface": "DMX 接口",
+        "dmx": "DMX",
+        "power": "电源"
+      }
+    },
     "external-control": {
       "title": "外部控制",
       "bcm-pin-id": "BCM引脚ID",

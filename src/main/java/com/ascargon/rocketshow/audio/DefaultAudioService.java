@@ -4,7 +4,11 @@ import com.ascargon.rocketshow.settings.Settings;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
+import org.freedesktop.gstreamer.Caps;
+import org.freedesktop.gstreamer.Element;
 import org.freedesktop.gstreamer.ElementFactory;
+import org.freedesktop.gstreamer.State;
+import org.freedesktop.gstreamer.StateChangeReturn;
 import org.freedesktop.gstreamer.elements.BaseSink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,11 +26,17 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class DefaultAudioService implements AudioService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultAudioService.class);
+
+    // The channels in the caps of a sound card, e.g. "channels=(int)[ 1, 8 ]" or "channels=(int){ 2, 6 }"
+    private static final Pattern CHANNELS_PATTERN = Pattern.compile("channels=\\(int\\)(\\[[^]]*]|\\{[^}]*}|\\d+)");
+    private static final Pattern NUMBER_PATTERN = Pattern.compile("\\d+");
 
     private final OperatingSystemInformationService operatingSystemInformationService;
 
@@ -220,6 +230,61 @@ public class DefaultAudioService implements AudioService {
         }
         // Always in the same order, e.g. to write the same .asoundrc for the same settings
         return audioDeviceSet.stream().sorted(Comparator.comparingInt(AudioDevice::getId)).toList();
+    }
+
+    private static String getHardwareDeviceName(AudioDevice audioDevice) {
+        return "hw:CARD=" + audioDevice.getKey();
+    }
+
+    @Override
+    public BaseSink getGstHardwareAudioSink(AudioDevice audioDevice) {
+        BaseSink sink = (BaseSink) ElementFactory.make("alsasink", "hardwaresink_" + getAudioDeviceAlsaName(audioDevice));
+        sink.set("device", getHardwareDeviceName(audioDevice));
+        sink.set("sync", true);
+        return sink;
+    }
+
+    @Override
+    public Element getGstHardwareAudioSource(AudioDevice audioDevice) {
+        Element source = ElementFactory.make("alsasrc", "hardwaresource_" + getAudioDeviceAlsaName(audioDevice));
+        source.set("device", getHardwareDeviceName(audioDevice));
+        return source;
+    }
+
+    @Override
+    public int getHardwareChannelCount(AudioDevice audioDevice, boolean capture) {
+        Element element = capture ? getGstHardwareAudioSource(audioDevice) : getGstHardwareAudioSink(audioDevice);
+
+        try {
+            // Ready opens the sound card, which then tells its formats
+            if (element.setState(State.READY) == StateChangeReturn.FAILURE) {
+                return 0;
+            }
+
+            Caps caps = element.getStaticPad(capture ? "src" : "sink").queryCaps(null);
+            return getMaxChannels(caps.toString());
+        } catch (Exception e) {
+            logger.warn("Could not read the channels of the sound card " + audioDevice.getKey(), e);
+            return 0;
+        } finally {
+            element.setState(State.NULL);
+            element.dispose();
+        }
+    }
+
+    // The most channels in caps. Package visible for the tests.
+    static int getMaxChannels(String caps) {
+        int maxChannels = 0;
+        Matcher matcher = CHANNELS_PATTERN.matcher(caps);
+
+        while (matcher.find()) {
+            Matcher numbers = NUMBER_PATTERN.matcher(matcher.group(1));
+            while (numbers.find()) {
+                maxChannels = Math.max(maxChannels, Integer.parseInt(numbers.group()));
+            }
+        }
+
+        return maxChannels;
     }
 
 }
