@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Requests to other units, e.g. to play a composition on all of them.
@@ -259,6 +260,35 @@ class RemoteDeviceTest {
             context.updateLoggers();
             errorCollector.stop();
         }
+    }
+
+    @Test
+    void waitsForAUnitWhichDoesNotAnswerOnce() throws Exception {
+        RemoteDevice remoteDevice = remoteDevice();
+
+        // The first play waits for it until the read timeout
+        long start = System.nanoTime();
+        remoteDevice.load(true, "Hang");
+        assertTrue(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start) >= READ_TIMEOUT_MILLIS - 50);
+
+        // The next ones don't wait for it
+        start = System.nanoTime();
+        remoteDevice.load(true, "Hang");
+        assertTrue(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start) < READ_TIMEOUT_MILLIS / 2);
+
+        // Until it answers again
+        hangingRequestsEnd.countDown();
+        assertTimeoutPreemptively(Duration.ofSeconds(10), () -> {
+            do {
+                remoteDevice.load(true, "Song 1");
+            } while (!"POST /api/transport/load?name=Song+1 api-key-of-unit-2".equals(requests.poll()));
+        });
+
+        // Waited for again: arrived with the requests before it, when loading returns
+        remoteDevice.load(true, "Song 2");
+        List<String> arrived = new ArrayList<>();
+        requests.drainTo(arrived);
+        assertEquals("POST /api/transport/load?name=Song+2 api-key-of-unit-2", arrived.getLast());
     }
 
 }

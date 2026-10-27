@@ -215,9 +215,9 @@ public class DefaultPlayerService implements PlayerService {
 
             logger.debug("Wait for all devices to be loaded...");
 
-            // Wait for the compositions on all devices to be loaded
+            // Wait for the compositions on all devices to be loaded. Each load waits at most RemoteDevice.MAX_WAIT_MILLIS.
             playExecutor.shutdown();
-            if (!playExecutor.awaitTermination(60, TimeUnit.SECONDS)) {
+            if (!playExecutor.awaitTermination(RemoteDevice.MAX_WAIT_MILLIS + 1000, TimeUnit.MILLISECONDS)) {
                 logger.error("Timeout while waiting for the compositions to load on remote devices");
             }
         }

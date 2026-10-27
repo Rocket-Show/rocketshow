@@ -56,20 +56,22 @@ public class RemoteDevice {
 
     private String apiKey;
 
-    // TODO Add these timeouts to the settings
-    private final static int CONNECT_TIMEOUT_MILLIS = 10000;
+    // The units are on the same network: a unit which takes longer to connect is off
+    private final static int CONNECT_TIMEOUT_MILLIS = 2000;
 
     // A device, which accepts the request but never answers (e.g. it hangs or lost its power in the middle of
     // a request), must not keep the request and its connection forever. Otherwise, all connections to the
     // device are used up and every play waits for the remote devices to load.
-    private final static int READ_TIMEOUT_MILLIS = 30000;
+    private final static int READ_TIMEOUT_MILLIS = 5000;
 
     // A unit which doesn't answer holds up the requests after it, each up to the timeouts. Requests beyond this many
     // waiting are dropped instead of filling the memory, e.g. with MIDI clock.
     private final static int MAX_WAITING_REQUESTS = 1000;
 
-    // How long a caller waits for its request at most, including the requests before it
-    private final static int MAX_WAIT_MILLIS = 60000;
+    // How long a caller waits for its request at most, including the requests before it, e.g. a play for the other
+    // units to load the composition. A unit which doesn't answer delays a play by this much once, until it answers
+    // again.
+    public final static int MAX_WAIT_MILLIS = 5000;
 
     // Sends the requests to a unit one after the other, in the order they were made, so e.g. a note off never arrives
     // before its note on. By host, because saving the settings creates new remote devices.
@@ -170,6 +172,13 @@ public class RemoteDevice {
         });
 
         if (!synchronous) {
+            return;
+        }
+
+        // A unit which didn't answer the last request isn't waited for until it answers again, e.g. a hung unit doesn't
+        // delay each play. Its requests are still sent, in order.
+        if (sender.failing.get()) {
+            logger.debug("Not waiting for unit '{}', which doesn't answer", name);
             return;
         }
 
