@@ -143,7 +143,7 @@ All 593 tests pass without any hardware attached, in a few minutes. The 47 tests
 with the base, good and bad plugins (e.g. `apt install gstreamer1.0-plugins-base gstreamer1.0-plugins-good
 gstreamer1.0-plugins-bad`) and are skipped without it. One backup test needs an unreadable file, so it is skipped when
 running as root (root can read every file). It runs in CI. The tests cover 83 % of the lines and 72 % of the branches
-with GStreamer, 76 % and 65 % without, not counting the libraries shipped with the app (e.g. the OLA client).
+with GStreamer, 76 % and 66 % without, not counting the libraries shipped with the app (e.g. the OLA client).
 
 The tests play the GStreamer pipelines with capture sinks instead of the devices, which tell the positions of their
 channels like ALSA (front and rear for four channels). The devices themselves belong to the hardware rig
