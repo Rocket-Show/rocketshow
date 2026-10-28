@@ -1002,14 +1002,20 @@ button.list-group-item {
   margin: $sd-space-5 !important;
 }
 
-/* The full-screen layers over the app (no connection, lead sheet): opaque, so nothing of the app behind them runs
-   through their message or through a lead sheet with a transparent background */
+/* The full-screen layers over the app (no connection, lead sheet): the app shows a little through them, but not
+   through their message or the lead sheet on them */
 .overlay-backdrop {
   position: fixed;
   top: 0;
   left: 0;
   z-index: 1030;
-  background-color: $sd-bg;
+  background-color: rgba($sd-bg, 0.85);
+}
+
+/* the message's alert is tinted, so it gets a solid surface underneath */
+.overlay-message {
+  background-color: $sd-surface-1;
+  border-radius: $sd-radius;
 }
 
 .modal-backdrop {
