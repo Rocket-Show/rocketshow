@@ -14,6 +14,9 @@ class ScenePlaybackRegion {
     private long startMillis;
     private long endMillis;
 
+    // the track of the composition the scene is played on
+    private String trackUuid;
+
     public String getSceneUuid() {
         return sceneUuid;
     }
@@ -36,6 +39,14 @@ class ScenePlaybackRegion {
 
     public void setEndMillis(long endMillis) {
         this.endMillis = endMillis;
+    }
+
+    public String getTrackUuid() {
+        return trackUuid;
+    }
+
+    public void setTrackUuid(String trackUuid) {
+        this.trackUuid = trackUuid;
     }
 
 }

@@ -2,6 +2,7 @@ package com.ascargon.rocketshow.lighting.designer;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -19,6 +20,9 @@ class Composition {
 
     // the tempo of the composition, which the curves synced to the beat run on
     private double beatsPerMinute = EffectCurve.DEFAULT_BEATS_PER_MINUTE;
+
+    // the lanes of the timeline, the topmost first. Where the clips of two tracks overlap, the one higher up is on top.
+    private List<Track> tracks = new ArrayList<>();
 
     private ScenePlaybackRegion[] scenePlaybackRegions;
 
@@ -60,6 +64,14 @@ class Composition {
 
     public void setBeatsPerMinute(double beatsPerMinute) {
         this.beatsPerMinute = beatsPerMinute;
+    }
+
+    public List<Track> getTracks() {
+        return tracks;
+    }
+
+    public void setTracks(List<Track> tracks) {
+        this.tracks = tracks == null ? new ArrayList<>() : tracks;
     }
 
     public ScenePlaybackRegion[] getScenePlaybackRegions() {

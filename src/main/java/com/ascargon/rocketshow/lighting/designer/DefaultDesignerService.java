@@ -59,7 +59,7 @@ public class DefaultDesignerService implements DesignerService {
     // the highest project version this player knows. A project written by a newer
     // designer still plays as well as it can, but whatever came after this version is
     // missing from it. Package visible for the test of the designer template.
-    static final int SUPPORTED_PROJECT_VERSION = 9;
+    static final int SUPPORTED_PROJECT_VERSION = 10;
 
     // Live preview
     private boolean playPreview = false; // Is the preview playing a composition?
@@ -280,6 +280,37 @@ public class DefaultDesignerService implements DesignerService {
         return null;
     }
 
+    private Scene getSceneByUuid(String sceneUuid) {
+        for (Scene scene : project.getScenes()) {
+            if (scene.getUuid().equals(sceneUuid)) {
+                return scene;
+            }
+        }
+
+        return null;
+    }
+
+    // the clips of a track, in the order they are played
+    static List<ScenePlaybackRegion> getTrackRegions(Composition composition, String trackUuid) {
+        if (composition.getScenePlaybackRegions() == null) {
+            return new ArrayList<>();
+        }
+
+        return Arrays.stream(composition.getScenePlaybackRegions())
+                .filter(region -> trackUuid.equals(region.getTrackUuid()))
+                .sorted(Comparator.comparingLong(ScenePlaybackRegion::getStartMillis))
+                .collect(Collectors.toList());
+    }
+
+    // The tracks the preview of the designer plays: a hidden track is left out, and once a track is soloed only the
+    // soloed ones are played. The show itself always plays every track.
+    static List<Track> getPreviewTracks(Composition composition) {
+        List<Track> shown = composition.getTracks().stream().filter(track -> !track.isHidden()).collect(Collectors.toList());
+        List<Track> soloed = shown.stream().filter(Track::isSolo).collect(Collectors.toList());
+
+        return soloed.isEmpty() ? shown : soloed;
+    }
+
     // all presets of a scene in their layer order: the first one is the topmost layer,
     // overwriting the values of the ones below it
     private List<Preset> getScenePresets(Scene scene) {
@@ -302,31 +333,40 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     private List<PresetRegionScene> getPresetsInTime(long timeMillis) {
-        // Return all presets which should be active during the specified time
+        // Return all presets which should be active during the specified time, the ones at the bottom first: the ones
+        // processed later overwrite them
         List<PresetRegionScene> activePresets = new ArrayList<>();
 
-        for (int sceneIndex = project.getScenes().size() - 1; sceneIndex >= 0; sceneIndex--) {
-            Scene scene = project.getScenes().get(sceneIndex);
+        // The tracks are layered like the presets inside a scene: the topmost one is processed last, so it overwrites
+        // the ones below it. On a track, a clip fading out past its end lies below the one following it. Hiding and
+        // soloing tracks only helps working on the show: the designer previews its project without a composition
+        // player (see DesignerController.preview), the show is played by one and plays all of its tracks.
+        List<Track> tracks = compositionPlayer == null ? getPreviewTracks(composition) : composition.getTracks();
 
-            // the presets are ordered inside their scene: the first one is the topmost
-            // layer -> process it last, so it overwrites the ones below it
-            List<Preset> scenePresets = getScenePresets(scene);
+        for (int trackIndex = tracks.size() - 1; trackIndex >= 0; trackIndex--) {
+            for (ScenePlaybackRegion region : getTrackRegions(composition, tracks.get(trackIndex).getUuid())) {
+                Scene scene = getSceneByUuid(region.getSceneUuid());
 
-            for (ScenePlaybackRegion region : composition.getScenePlaybackRegions()) {
-                if (region.getSceneUuid().equals(scene.getUuid())) {
-                    for (int presetIndex = scenePresets.size() - 1; presetIndex >= 0; presetIndex--) {
-                        Preset preset = scenePresets.get(presetIndex);
+                if (scene == null) {
+                    continue;
+                }
 
-                        long presetStartMillis = preset.getStartMillis() == null ? region.getStartMillis() : region.getStartMillis() + preset.getStartMillis();
-                        long presetEndMillis = preset.getEndMillis() == null ? region.getEndMillis() : region.getStartMillis() + preset.getEndMillis();
+                // the presets are ordered inside their scene: the first one is the topmost
+                // layer -> process it last, so it overwrites the ones below it
+                List<Preset> scenePresets = getScenePresets(scene);
 
-                        // extend the running time, if fading is done outside the boundaries
-                        presetStartMillis -= preset.isFadeInPre() ? preset.getFadeInMillis() : 0;
-                        presetEndMillis += preset.isFadeOutPost() ? preset.getFadeOutMillis() : 0;
+                for (int presetIndex = scenePresets.size() - 1; presetIndex >= 0; presetIndex--) {
+                    Preset preset = scenePresets.get(presetIndex);
 
-                        if (presetStartMillis <= timeMillis && presetEndMillis >= timeMillis) {
-                            activePresets.add(new PresetRegionScene(preset, region, scene));
-                        }
+                    long presetStartMillis = preset.getStartMillis() == null ? region.getStartMillis() : region.getStartMillis() + preset.getStartMillis();
+                    long presetEndMillis = preset.getEndMillis() == null ? region.getEndMillis() : region.getStartMillis() + preset.getEndMillis();
+
+                    // extend the running time, if fading is done outside the boundaries
+                    presetStartMillis -= preset.isFadeInPre() ? preset.getFadeInMillis() : 0;
+                    presetEndMillis += preset.isFadeOutPost() ? preset.getFadeOutMillis() : 0;
+
+                    if (presetStartMillis <= timeMillis && presetEndMillis >= timeMillis) {
+                        activePresets.add(new PresetRegionScene(preset, region, scene));
                     }
                 }
             }
@@ -2099,6 +2139,7 @@ public class DefaultDesignerService implements DesignerService {
         migrateProjectToVersion7(project);
         migrateProjectToVersion8(project);
         migrateProjectToVersion9(project);
+        migrateProjectToVersion10(project);
     }
 
     private void migrateProjectToVersion3(Project project) {
@@ -2297,6 +2338,75 @@ public class DefaultDesignerService implements DesignerService {
         project.setVersion(9);
 
         logger.info("Migrated designer project '" + project.getName() + "' to version 9");
+    }
+
+    // The timeline of a composition has tracks since version 10. Before, all scenes were played on one lane, layered in
+    // the order of the scenes: the first one on top. One track per scene, in that order, plays such a show the same way.
+    private void migrateProjectToVersion10(Project project) {
+        if (project.getVersion() >= 10) {
+            return;
+        }
+
+        if (project.getCompositions() != null && project.getScenes() != null) {
+            for (Composition composition : project.getCompositions()) {
+                assignTracks(composition, project.getScenes());
+            }
+        }
+
+        project.setVersion(10);
+
+        logger.info("Migrated designer project '" + project.getName() + "' to version 10");
+    }
+
+    // Put the clips of a composition which are on none of its tracks onto tracks of their own, one per scene, in the
+    // order of the scenes. The clips of a scene which overlap each other get another track right below the first one
+    // of the scene. A composition without clips keeps having no track. The same as assignTracks of the designer.
+    static void assignTracks(Composition composition, List<Scene> scenes) {
+        if (composition.getScenePlaybackRegions() == null) {
+            return;
+        }
+
+        Set<String> trackUuids = composition.getTracks().stream().map(Track::getUuid).collect(Collectors.toSet());
+        List<ScenePlaybackRegion> unassigned = Arrays.stream(composition.getScenePlaybackRegions())
+                .filter(region -> !trackUuids.contains(region.getTrackUuid()))
+                .collect(Collectors.toList());
+
+        for (Scene scene : scenes) {
+            List<ScenePlaybackRegion> regions = unassigned.stream()
+                    .filter(region -> scene.getUuid().equals(region.getSceneUuid()))
+                    .sorted(Comparator.comparingLong(ScenePlaybackRegion::getStartMillis))
+                    .collect(Collectors.toList());
+            List<Track> sceneTracks = new ArrayList<>();
+
+            for (ScenePlaybackRegion region : regions) {
+                Track track = sceneTracks.stream()
+                        .filter(candidate -> isFreeOnTrack(composition, candidate.getUuid(), region))
+                        .findFirst()
+                        .orElse(null);
+
+                if (track == null) {
+                    track = new Track();
+                    track.setUuid(UUID.randomUUID().toString());
+                    track.setName(sceneTracks.isEmpty() ? scene.getName() : scene.getName() + " " + (sceneTracks.size() + 1));
+                    sceneTracks.add(track);
+                    composition.getTracks().add(track);
+                }
+
+                region.setTrackUuid(track.getUuid());
+            }
+        }
+    }
+
+    // is the time of the passed clip still free on the track? A clip ends where the next one may start.
+    private static boolean isFreeOnTrack(Composition composition, String trackUuid, ScenePlaybackRegion region) {
+        for (ScenePlaybackRegion other : composition.getScenePlaybackRegions()) {
+            if (other != region && trackUuid.equals(other.getTrackUuid())
+                    && other.getEndMillis() > region.getStartMillis() && other.getStartMillis() < region.getEndMillis()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private int getGlobalFixtureIndex(Project project, PresetFixture presetFixture) {
