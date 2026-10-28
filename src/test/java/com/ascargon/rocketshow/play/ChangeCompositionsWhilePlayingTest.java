@@ -69,7 +69,7 @@ class ChangeCompositionsWhilePlayingTest {
         when(gstDiscovererService.getDurationMillis(any())).thenReturn(90_000L);
         when(gstDiscovererService.getChannels(any())).thenReturn(2);
 
-        compositionService = new DefaultCompositionService(settingsService, capabilitiesService, gstDiscovererService);
+        compositionService = new DefaultCompositionService(settingsService, capabilitiesService, gstDiscovererService, mock(DesignerService.class));
 
         for (String name : new String[]{"A", "B", "C", "D"}) {
             compositionService.saveComposition(composition(name, 600_000));

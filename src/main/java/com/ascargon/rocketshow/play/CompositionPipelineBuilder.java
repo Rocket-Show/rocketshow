@@ -101,7 +101,8 @@ public class CompositionPipelineBuilder {
 
     // Build the complete pipeline for the given composition. The returned CompositionPipeline holds
     // the master pipeline (may be absent when every source loops) plus all slave pipelines.
-    public CompositionPipeline build(Composition composition, boolean isSample, MasterEventListener listener, Executor recreateExecutor) throws Exception {
+    // The designer lights of the composition end at designerEndMillis (0 without them)
+    public CompositionPipeline build(Composition composition, long designerEndMillis, boolean isSample, MasterEventListener listener, Executor recreateExecutor) throws Exception {
         boolean hasVideo = hasVideo(composition);
 
         Pipeline masterPipeline = new Pipeline();
@@ -145,8 +146,8 @@ public class CompositionPipelineBuilder {
             }
         }
 
-        // The longest active source, and the latest action trigger. Actions placed after the
-        // longest source extend the timeline past all media into a wall-clock "action-trailing
+        // The longest active source, and the latest action trigger. Actions or designer lights placed
+        // after the longest source extend the timeline past all media into a wall-clock "trailing
         // tail", so the master pipeline no longer has to anchor the end of the composition.
         long longestSourceMillis = 0;
         for (CompositionFile compositionFile : activeFileList) {
@@ -156,11 +157,11 @@ public class CompositionPipelineBuilder {
         for (ActionTriggerComposition actionTrigger : composition.getActionTriggerList()) {
             latestActionMillis = Math.max(latestActionMillis, actionTrigger.getPositionMillis());
         }
-        boolean hasActionTrailingTail = latestActionMillis > longestSourceMillis;
+        boolean hasTrailingTail = Math.max(latestActionMillis, designerEndMillis) > longestSourceMillis;
 
         // A source loops in its own slave pipeline iff it is flagged to loop AND it is not needed in
         // the master as the timeline anchor:
-        //  - with an action-trailing tail the wall clock anchors the end, so every looping source
+        //  - with a trailing tail the wall clock anchors the end, so every looping source
         //    (even the longest) can be a slave; if they all loop there is no master pipeline at all.
         //  - without a tail the master's EOS defines the end, so the longest source(s) must stay in
         //    the master and their loop flag has no effect.
@@ -168,7 +169,7 @@ public class CompositionPipelineBuilder {
         List<CompositionFile> slaveFileList = new ArrayList<>();
         for (CompositionFile compositionFile : activeFileList) {
             boolean isSlave = compositionFile.isLoop()
-                    && (hasActionTrailingTail || compositionFile.getDurationMillis() < longestSourceMillis);
+                    && (hasTrailingTail || compositionFile.getDurationMillis() < longestSourceMillis);
 
             // Only the files which play on this unit, but they loop like on the others. Without its sound card or a
             // screen, a file would leave an empty master pipeline, which never ends.
@@ -184,7 +185,7 @@ public class CompositionPipelineBuilder {
         }
 
         if (masterFileList.isEmpty()) {
-            // Every source loops (in the action-trailing tail) -> there is no master pipeline; the
+            // Every source loops (in the trailing tail) -> there is no master pipeline; the
             // wall clock drives the timeline and the slaves loop on their own clocks.
             masterPipeline.dispose();
             masterPipeline = null;

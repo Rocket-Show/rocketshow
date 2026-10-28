@@ -1,6 +1,8 @@
 package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.RocketShowApplication;
+import com.ascargon.rocketshow.composition.CompositionService;
+import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.lighting.designer.FixtureService;
@@ -30,12 +32,16 @@ public class DesignerController {
     private final FixtureService fixtureService;
     private final DesignerService designerService;
     private final SettingsService settingsService;
+    private final CompositionService compositionService;
+    private final PlayerService playerService;
 
-    public DesignerController(ControllerService controllerService, FixtureService fixtureService, DesignerService designerService, SettingsService settingsService) {
+    public DesignerController(ControllerService controllerService, FixtureService fixtureService, DesignerService designerService, SettingsService settingsService, CompositionService compositionService, PlayerService playerService) {
         this.controllerService = controllerService;
         this.fixtureService = fixtureService;
         this.designerService = designerService;
         this.settingsService = settingsService;
+        this.compositionService = compositionService;
+        this.playerService = playerService;
     }
 
     @ExceptionHandler(Exception.class)
@@ -115,13 +121,21 @@ public class DesignerController {
     }
 
     @PostMapping("project")
-    public void saveProject(@RequestBody String project) throws IOException {
+    public void saveProject(@RequestBody String project) throws Exception {
         designerService.saveProject(project);
+        lightsChanged();
     }
 
     @DeleteMapping("project")
-    public void deleteProject(@RequestParam("name") String name) throws IOException {
+    public void deleteProject(@RequestParam("name") String name) throws Exception {
         designerService.deleteProjectByName(name);
+        lightsChanged();
+    }
+
+    // A composition plays at least as long as its lights: the sets and the composition playing show how long now
+    private void lightsChanged() throws Exception {
+        compositionService.updateSets();
+        playerService.compositionsChanged();
     }
 
     @PostMapping("update-profiles")

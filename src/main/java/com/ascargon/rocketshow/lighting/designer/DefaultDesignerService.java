@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -118,7 +119,8 @@ public class DefaultDesignerService implements DesignerService {
         folder = new File(settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getDesignerPath());
         fileList = folder.listFiles();
 
-        projects = new ArrayList<>();
+        // read while the compositions play (how long they last), changed when a project is saved
+        projects = new CopyOnWriteArrayList<>();
 
         if (fileList != null) {
             for (File file : fileList) {
@@ -151,6 +153,80 @@ public class DefaultDesignerService implements DesignerService {
         }
 
         return null;
+    }
+
+    // Where the lights of the designer composition of that name have gone out (0 without one). The composition plays
+    // at least that long, like the designer plays a composition without an audio file.
+    @Override
+    public long getCompositionEndMillis(String compositionName) {
+        Project project = compositionName == null ? null : getProjectByCompositionName(compositionName);
+
+        if (project == null) {
+            return 0;
+        }
+
+        return getClipsEndMillis(project, getCompositionByName(project, compositionName));
+    }
+
+    // The end of the last clip of the composition, or of a fade running past the end of a clip (of its scene, or of one
+    // of the presets played in it). Worked out like the designer does it.
+    static long getClipsEndMillis(Project project, Composition composition) {
+        long endMillis = 0;
+
+        if (composition == null || composition.getScenePlaybackRegions() == null || project.getScenes() == null) {
+            return endMillis;
+        }
+
+        for (ScenePlaybackRegion region : composition.getScenePlaybackRegions()) {
+            Scene scene = project.getScenes().stream().filter(candidate -> candidate.getUuid().equals(region.getSceneUuid())).findFirst().orElse(null);
+
+            // a clip without its scene is not played
+            if (scene == null) {
+                continue;
+            }
+
+            // the scene ends with its clip, or later when it fades out past it
+            endMillis = Math.max(endMillis, getSceneEndMillis(scene, region));
+
+            if (scene.getPresetUuids() == null || project.getPresets() == null) {
+                continue;
+            }
+
+            for (String presetUuid : scene.getPresetUuids()) {
+                Preset preset = project.getPresets().stream().filter(candidate -> presetUuid.equals(candidate.getUuid())).findFirst().orElse(null);
+
+                if (preset == null) {
+                    continue;
+                }
+
+                endMillis = Math.max(endMillis, getPresetPlayEndMillis(preset, region, scene));
+            }
+        }
+
+        return endMillis;
+    }
+
+    // When the scene of a clip plays: its fades may reach outside the clip
+    static long getSceneStartMillis(Scene scene, ScenePlaybackRegion region) {
+        return scene != null && scene.isFadeInPre() ? region.getStartMillis() - scene.getFadeInMillis() : region.getStartMillis();
+    }
+
+    static long getSceneEndMillis(Scene scene, ScenePlaybackRegion region) {
+        return scene != null && scene.isFadeOutPost() ? region.getEndMillis() + scene.getFadeOutMillis() : region.getEndMillis();
+    }
+
+    // When a preset played in the scene of a clip plays, its own fades outside its times included. A preset without
+    // times of its own plays as long as the scene does, also while the scene fades in or out outside the clip.
+    static long getPresetPlayStartMillis(Preset preset, ScenePlaybackRegion region, Scene scene) {
+        long startMillis = preset.getStartMillis() == null ? getSceneStartMillis(scene, region) : region.getStartMillis() + preset.getStartMillis();
+
+        return startMillis - (preset.isFadeInPre() ? preset.getFadeInMillis() : 0);
+    }
+
+    static long getPresetPlayEndMillis(Preset preset, ScenePlaybackRegion region, Scene scene) {
+        long endMillis = preset.getEndMillis() == null ? getSceneEndMillis(scene, region) : region.getStartMillis() + preset.getEndMillis();
+
+        return endMillis + (preset.isFadeOutPost() ? preset.getFadeOutMillis() : 0);
     }
 
     @Override
@@ -358,14 +434,8 @@ public class DefaultDesignerService implements DesignerService {
                 for (int presetIndex = scenePresets.size() - 1; presetIndex >= 0; presetIndex--) {
                     Preset preset = scenePresets.get(presetIndex);
 
-                    long presetStartMillis = preset.getStartMillis() == null ? region.getStartMillis() : region.getStartMillis() + preset.getStartMillis();
-                    long presetEndMillis = preset.getEndMillis() == null ? region.getEndMillis() : region.getStartMillis() + preset.getEndMillis();
-
-                    // extend the running time, if fading is done outside the boundaries
-                    presetStartMillis -= preset.isFadeInPre() ? preset.getFadeInMillis() : 0;
-                    presetEndMillis += preset.isFadeOutPost() ? preset.getFadeOutMillis() : 0;
-
-                    if (presetStartMillis <= timeMillis && presetEndMillis >= timeMillis) {
+                    // the fades running outside the boundaries (of the preset, or of the scene) included
+                    if (getPresetPlayStartMillis(preset, region, scene) <= timeMillis && getPresetPlayEndMillis(preset, region, scene) >= timeMillis) {
                         activePresets.add(new PresetRegionScene(preset, region, scene));
                     }
                 }
@@ -910,8 +980,8 @@ public class DefaultDesignerService implements DesignerService {
             // Fade out is stronger than fade in (if they overlap)
 
             // Take away intensity for scene fading
-            long sceneStartMillis = preset.getScene().isFadeInPre() ? preset.getRegion().getStartMillis() - preset.getScene().getFadeInMillis() : preset.getRegion().getStartMillis();
-            long sceneEndMillis = preset.getScene().isFadeOutPost() ? preset.getRegion().getEndMillis() + preset.getScene().getFadeOutMillis() : preset.getRegion().getEndMillis();
+            long sceneStartMillis = getSceneStartMillis(preset.getScene(), preset.getRegion());
+            long sceneEndMillis = getSceneEndMillis(preset.getScene(), preset.getRegion());
 
             // the curve maps how far the fade has come to how much of the intensity it has
             // already handed over, which shapes a fade out just as well as a fade in
@@ -925,13 +995,10 @@ public class DefaultDesignerService implements DesignerService {
         }
 
         if (preset.getRegion() != null && preset.getPreset() != null) {
-            // Take away intensity for preset fading
-            long presetStartMillis = preset.getPreset().getStartMillis() == null ? preset.getRegion().getStartMillis() : preset.getRegion().getStartMillis() + preset.getPreset().getStartMillis();
-            long presetEndMillis = preset.getPreset().getEndMillis() == null ? preset.getRegion().getEndMillis() : preset.getRegion().getStartMillis() + preset.getPreset().getEndMillis();
-
-            // extend the running time, if fading is done outside the boundaries
-            presetStartMillis -= preset.getPreset().isFadeInPre() ? preset.getPreset().getFadeInMillis() : 0;
-            presetEndMillis += preset.getPreset().isFadeOutPost() ? preset.getPreset().getFadeOutMillis() : 0;
+            // Take away intensity for preset fading. Without times of its own, the preset plays as long as the scene,
+            // its fades outside the clip included.
+            long presetStartMillis = getPresetPlayStartMillis(preset.getPreset(), preset.getRegion(), preset.getScene());
+            long presetEndMillis = getPresetPlayEndMillis(preset.getPreset(), preset.getRegion(), preset.getScene());
 
             if (timeMillis > presetEndMillis - preset.getPreset().getFadeOutMillis() && timeMillis < presetEndMillis) {
                 // Preset fades out

@@ -82,8 +82,8 @@ class RenameCompositionTest {
         when(gstDiscovererService.getDurationMillis(any())).thenReturn(90_000L);
         when(gstDiscovererService.getChannels(any())).thenReturn(2);
 
-        compositionService = new DefaultCompositionService(settingsService, capabilitiesService, gstDiscovererService);
         designerService = new DefaultDesignerService(settingsService, mock(FileFilterService.class), mock(LightingService.class), new DefaultFixturePixelGroupResolveService());
+        compositionService = new DefaultCompositionService(settingsService, capabilitiesService, gstDiscovererService, designerService);
         playerService = new DefaultPlayerService(mock(NotificationService.class), settingsService, compositionService, setService, sessionService,
                 mock(LightingService.class), designerService, mock(MidiTimecodeService.class), mock(ActionExecutionService.class),
                 capabilitiesService, mock(CompositionPipelineBuilder.class), mock(RaspberryGpioOutService.class), mock(GstreamerInitService.class));
@@ -176,7 +176,7 @@ class RenameCompositionTest {
         compositionController.save(intro("Opening"), "Intro");
 
         // Read again from the files, like after a restart
-        DefaultCompositionService restarted = new DefaultCompositionService(settingsService, capabilitiesService, gstDiscovererService);
+        DefaultCompositionService restarted = new DefaultCompositionService(settingsService, capabilitiesService, gstDiscovererService, designerService);
         assertNull(restarted.getComposition("Intro"));
         assertNotNull(restarted.getComposition("Opening"));
         assertFalse(directory.resolve("compositions/Intro.xml").toFile().exists());

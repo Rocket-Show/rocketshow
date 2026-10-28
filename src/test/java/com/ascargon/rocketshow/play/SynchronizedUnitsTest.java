@@ -70,7 +70,7 @@ class SynchronizedUnitsTest {
         SessionService sessionService = mock(SessionService.class);
         when(sessionService.getSession()).thenReturn(new Session());
 
-        DefaultCompositionService compositionService = new DefaultCompositionService(settingsService, capabilitiesService, mock(GstDiscovererService.class));
+        DefaultCompositionService compositionService = new DefaultCompositionService(settingsService, capabilitiesService, mock(GstDiscovererService.class), mock(DesignerService.class));
         Composition composition = new Composition();
         composition.setName("Song 1 & 2");
         ActionTriggerComposition later = new ActionTriggerComposition();
