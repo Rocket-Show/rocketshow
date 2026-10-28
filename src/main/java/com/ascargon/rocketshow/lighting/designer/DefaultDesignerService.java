@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -80,6 +81,16 @@ public class DefaultDesignerService implements DesignerService {
     private final Object universeSendLock = new Object();
 
     private List<CachedFixture> cachedFixtures;
+
+    private record PresetFixtureKey(String fixtureUuid, String pixelKey) {
+    }
+
+    // the place of each fixture of a preset in its chase (see calculatePresetChase) and the number of its steps
+    private record PresetChase(Map<PresetFixtureKey, Integer> fixtureIndices, int fixtureCount) {
+    }
+
+    // the chases of the presets of the loaded project, by preset (presets don't override equals)
+    private Map<Preset, PresetChase> presetChases = new ConcurrentHashMap<>();
 
     private long lastPlayTimeMillis;
 
@@ -537,20 +548,6 @@ public class DefaultDesignerService implements DesignerService {
         return fixtureUuid1.equals(fixtureUuid2) && ((pixelKey1 == null && pixelKey2 == null) || Objects.equals(pixelKey1, pixelKey2));
     }
 
-    private PresetFixture getPresetFixture(Preset preset, String fixtureUuid, String pixelKey) {
-        for (PresetFixture fixture : preset.getFixtures()) {
-            if (fixtureUuidAndPixelKeyEquals(fixture.getFixtureUuid(), fixtureUuid, fixture.getPixelKey(), pixelKey)) {
-                return fixture;
-            }
-        }
-
-        return null;
-    }
-
-    private boolean isCounted(List<DmxChannelAndPixelKey> counted, DmxChannelAndPixelKey entry) {
-        return counted.stream().anyMatch(item -> item.getDmxChannel() == entry.getDmxChannel() && ((item.getPixelKey() == null && entry.getPixelKey() == null) || Objects.equals(item.getPixelKey(), entry.getPixelKey())) && Objects.equals(item.getDmxUniverseUuid(), entry.getDmxUniverseUuid()));
-    }
-
     private DmxChannelAndPixelKey getDmxChannelAndPixelKey(PresetFixture presetFixture) {
         Fixture fixture = getFixtureByUuid(project, presetFixture.getFixtureUuid());
 
@@ -566,70 +563,65 @@ public class DefaultDesignerService implements DesignerService {
         return dmxChannelAndPixelKey;
     }
 
-    // Get the fixture index inside the passed preset (used for chasing)
-    private Integer getFixtureIndex(Preset preset, String fixtureUuid, String pixelKey) {
-        int index = 0;
-        List<DmxChannelAndPixelKey> countedFirstDmxChannelPixelKey = new ArrayList<>();
+    // The place of each fixture (or pixel) of a preset in its chase and the number of steps of the chase. Fixtures
+    // sharing a DMX universe, address and pixel key are the same lamp and therefore take one step only.
+    private PresetChase calculatePresetChase(Preset preset) {
+        Map<PresetFixtureKey, Integer> fixtureIndices = new HashMap<>();
 
-        if (getPresetFixture(preset, fixtureUuid, pixelKey) == null) {
-            // fixture is not in preset
-            return null;
+        Set<PresetFixtureKey> presetFixtures = new HashSet<>();
+        for (PresetFixture presetFixture : preset.getFixtures()) {
+            presetFixtures.add(new PresetFixtureKey(presetFixture.getFixtureUuid(), presetFixture.getPixelKey()));
         }
 
         // either the global fixture order of the project or the preset's own one defines
         // the order to chase in
         List<PresetFixture> orderedFixtures = preset.isUseGlobalFixtureOrder() ? project.getPresetFixtures() : preset.getFixtures();
+        Set<DmxChannelAndPixelKey> counted = new HashSet<>();
+        int index = 0;
 
         for (PresetFixture orderedFixture : orderedFixtures) {
+            PresetFixtureKey key = new PresetFixtureKey(orderedFixture.getFixtureUuid(), orderedFixture.getPixelKey());
+
             // when using the global order, skip all fixtures which are not in this preset
-            PresetFixture presetFixture = preset.isUseGlobalFixtureOrder()
-                    ? getPresetFixture(preset, orderedFixture.getFixtureUuid(), orderedFixture.getPixelKey())
-                    : orderedFixture;
-
-            if (presetFixture == null) {
+            if (!presetFixtures.contains(key)) {
                 continue;
             }
 
-            if (fixtureUuidAndPixelKeyEquals(presetFixture.getFixtureUuid(), fixtureUuid, presetFixture.getPixelKey(), pixelKey)) {
-                return index;
-            }
-
-            DmxChannelAndPixelKey firstDmxChannelAndFixtureUuid = getDmxChannelAndPixelKey(presetFixture);
-
-            if (firstDmxChannelAndFixtureUuid == null) {
-                continue;
-            }
+            // a fixture listed more than once chases at its first place
+            fixtureIndices.putIfAbsent(key, index);
 
             // don't count fixtures on the same channel as already counted ones
-            if (!isCounted(countedFirstDmxChannelPixelKey, firstDmxChannelAndFixtureUuid)) {
+            DmxChannelAndPixelKey firstDmxChannelAndPixelKey = getDmxChannelAndPixelKey(orderedFixture);
+            if (firstDmxChannelAndPixelKey != null && counted.add(firstDmxChannelAndPixelKey)) {
                 index++;
-                countedFirstDmxChannelPixelKey.add(firstDmxChannelAndFixtureUuid);
             }
         }
 
-        return null;
+        Set<DmxChannelAndPixelKey> lamps = new HashSet<>();
+        for (PresetFixture presetFixture : preset.getFixtures()) {
+            DmxChannelAndPixelKey firstDmxChannelAndPixelKey = getDmxChannelAndPixelKey(presetFixture);
+            if (firstDmxChannelAndPixelKey != null) {
+                lamps.add(firstDmxChannelAndPixelKey);
+            }
+        }
+
+        return new PresetChase(fixtureIndices, lamps.size());
     }
 
-    // the number of chase steps of a preset: fixtures sharing a DMX universe, address
-    // and pixel key are the same lamp and therefore count only once
+    // The chase of a preset doesn't change while its project plays: it's worked out once, instead of for each fixture
+    // on every frame, which took most of the time of a frame with a few dozen fixtures
+    private PresetChase getPresetChase(Preset preset) {
+        return presetChases.computeIfAbsent(preset, this::calculatePresetChase);
+    }
+
+    // Get the fixture index inside the passed preset (used for chasing), null if the fixture is not in the preset
+    private Integer getFixtureIndex(Preset preset, String fixtureUuid, String pixelKey) {
+        return getPresetChase(preset).fixtureIndices().get(new PresetFixtureKey(fixtureUuid, pixelKey));
+    }
+
+    // the number of chase steps of a preset
     private int getPresetFixtureCount(Preset preset) {
-        int count = 0;
-        List<DmxChannelAndPixelKey> countedFirstDmxChannelPixelKey = new ArrayList<>();
-
-        for (PresetFixture presetFixture : preset.getFixtures()) {
-            DmxChannelAndPixelKey firstDmxChannelAndFixtureUuid = getDmxChannelAndPixelKey(presetFixture);
-
-            if (firstDmxChannelAndFixtureUuid == null) {
-                continue;
-            }
-
-            if (!isCounted(countedFirstDmxChannelPixelKey, firstDmxChannelAndFixtureUuid)) {
-                count++;
-                countedFirstDmxChannelPixelKey.add(firstDmxChannelAndFixtureUuid);
-            }
-        }
-
-        return count;
+        return getPresetChase(preset).fixtureCount();
     }
 
     private FixtureProfile getProfileByUuid(String uuid) {
@@ -2101,6 +2093,7 @@ public class DefaultDesignerService implements DesignerService {
         // calculate some frequently used values as a cache to save cpu time
         // afterwards
         cachedFixtures = new ArrayList<>();
+        presetChases = new ConcurrentHashMap<>();
 
         logger.debug("Calculate cached fixtures...");
 
