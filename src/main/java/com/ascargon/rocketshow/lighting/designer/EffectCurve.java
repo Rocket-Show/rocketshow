@@ -18,9 +18,8 @@ public class EffectCurve extends Effect {
 
     private final static Logger logger = LoggerFactory.getLogger(EffectCurve.class);
 
-    // curve types the duty cycle applies to. the sawtooths are the limits of the triangle
-    // (rising over the whole cycle and falling over it), so a width would only turn them
-    // into a triangle again.
+    // curve types the duty cycle applies to. a sawtooth has no peak to narrow or widen the
+    // curve around: it ramps over the whole cycle and jumps back.
     private final static List<String> DUTY_CYCLE_TYPES = List.of("sine", "square", "triangle");
 
     // a cycle border is never hit exactly when the curve is sampled, so the value held
@@ -56,9 +55,11 @@ public class EffectCurve extends Effect {
     private float amplitude = 1;
     private float position = 0.5f;
 
-    // the part of the period the curve is on (square) or rising (sine, triangle), between
-    // 0 and 1. 0.5 is the symmetric curve. a chase shows it as the part of the fixtures
-    // that are on at the same time: 0.1 lights one fixture out of ten.
+    // the part of the period the curve is on (above its position), between 0 and 1. 0.5 is
+    // the plain curve. a sine or a triangle keeps its shape around its peak: a narrower
+    // width runs it faster and rests at its bottom for the rest of the period, a wider one
+    // rests at its top. a chase shows it as the part of the fixtures that are on at the same
+    // time: 0.1 lights one fixture out of ten.
     private float dutyCycle = 0.5f;
 
     // how long the curve keeps running:
@@ -233,21 +234,38 @@ public class EffectCurve extends Effect {
         return Math.max(Math.min(this.dutyCycle, 1), 0);
     }
 
-    // remaps the position inside the cycle, so the curve rises over the duty cycle and
-    // falls over the rest of it. the symmetric 50 % leaves it untouched.
+    // remaps the position inside the cycle of a sine or a triangle, so the curve is on over
+    // the duty cycle. it stays symmetric around its peak: below 50 % it runs faster and
+    // rests at its trough for the rest of the cycle, above it rests at its peak and dips
+    // faster. the plain 50 % leaves it untouched.
     private double warpCyclePosition(double cyclePosition) {
-        // an instant rise or fall would divide by zero, so the curve keeps a trace of both
-        double duty = Math.max(Math.min(this.getClampedDutyCycle(), 0.999), 0.001);
+        double duty = this.getClampedDutyCycle();
 
         if (duty == 0.5) {
             return cyclePosition;
         }
 
-        // measured from the trough of the curve, where it starts to rise
-        double fromTrough = (cyclePosition + 0.25) % 1;
-        double warped = fromTrough < duty ? fromTrough / duty * 0.5 : 0.5 + (fromTrough - duty) / (1 - duty) * 0.5;
+        // never on or never off: the curve rests at its trough or its peak
+        if (duty <= 0) {
+            return 0.75;
+        }
 
-        return (warped + 0.75) % 1;
+        if (duty >= 1) {
+            return 0.25;
+        }
+
+        // both curves are symmetric around their peak at a quarter of the cycle, so only the
+        // distance from it counts: 0 on the peak, 0.5 on the trough
+        double fromPeak = Math.abs((cyclePosition + 0.25) % 1 - 0.5);
+
+        // the plain curve falls from its peak to its trough over half the cycle and crosses
+        // its position halfway. warped, it crosses it at half the duty cycle and falls over
+        // the shorter of the on and off parts, so it neither overshoots its peak nor its
+        // trough and rests at them over the rest.
+        double fall = Math.min(duty, 1 - duty);
+        double warpedFromPeak = Math.max(Math.min(0.25 + (fromPeak - duty / 2) / fall * 0.5, 0.5), 0);
+
+        return 0.25 + warpedFromPeak;
     }
 
     // the value of the curve at a position inside its cycle, between 0 and 1. every curve swings over its whole
