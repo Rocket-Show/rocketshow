@@ -557,4 +557,70 @@ class DesignerDmxTest {
         assertEquals(List.of(127, 255, 0, 0), addresses(front, 1, 4));
     }
 
+    // A red preset for the passed fixtures with a square on their dimmers, chasing over them: each one is half a period
+    // after the one before it, so neighbours in the chase are on and off in turns. 5 seconds into the composition, the
+    // first step of the chase is off and the second one on.
+    private ObjectNode addDimmerChase(ObjectNode project, List<String> fixtureUuids) {
+        project.put("version", 8);
+        addPreset(project, "Chase", fixtureUuids, List.of(color(project, "Red", 1.0)));
+
+        ObjectNode preset = (ObjectNode) project.get("presets").get(0);
+        ObjectNode effect = ((ArrayNode) preset.get("effects")).addObject();
+        effect.put("type", "curve");
+        effect.put("uuid", "dimmer-chase");
+        effect.put("visible", true);
+        effect.put("curveType", "square");
+        effect.putArray("capabilities").addObject().put("type", "Intensity");
+        effect.putArray("channels");
+        effect.put("lengthMillis", 2000);
+        effect.put("phasingMillis", 1000);
+        effect.put("amplitude", 1);
+        effect.put("position", 0.5);
+
+        return preset;
+    }
+
+    // The dimmers of par 1 and par 2
+    private static List<Integer> parDimmers(Map<Integer, Integer> front) {
+        return List.of(front.getOrDefault(1, 0), front.getOrDefault(11, 0));
+    }
+
+    @Test
+    void chasesInTheFixtureOrderOfTheProject() throws Exception {
+        ObjectNode project = project();
+        addDimmerChase(project, List.of("par-2", "par-1"));
+
+        // Par 1 comes first in the project, whatever the order of the preset
+        assertEquals(List.of(0, 255), parDimmers(play(project).get(FRONT)));
+    }
+
+    @Test
+    void chasesInTheFixtureOrderOfThePreset() throws Exception {
+        ObjectNode project = project();
+        ObjectNode preset = addDimmerChase(project, List.of("par-2", "par-1"));
+        preset.put("useGlobalFixtureOrder", false);
+
+        assertEquals(List.of(255, 0), parDimmers(play(project).get(FRONT)));
+    }
+
+    @Test
+    void chasesFixturesOnTheSameAddressInOneStep() throws Exception {
+        ObjectNode project = project();
+
+        // A second par on the address of par 1, right after it in the order of the project: the same lamp
+        ObjectNode twin = ((ArrayNode) project.get("fixtures")).addObject();
+        twin.put("uuid", "par-1-twin");
+        twin.put("name", "Par 1 twin");
+        twin.put("profileUuid", "test/rgb-par");
+        twin.put("modeShortName", "6ch");
+        twin.put("dmxUniverseUuid", FRONT);
+        twin.put("dmxFirstChannel", 0);
+        ((ArrayNode) project.get("presetFixtures")).insertObject(1).put("fixtureUuid", "par-1-twin");
+
+        addDimmerChase(project, List.of("par-1", "par-1-twin", "par-2"));
+
+        // Par 2 is the second step of the chase, not the third one
+        assertEquals(List.of(0, 255), parDimmers(play(project).get(FRONT)));
+    }
+
 }
