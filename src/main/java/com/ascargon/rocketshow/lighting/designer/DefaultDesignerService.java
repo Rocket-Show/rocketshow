@@ -39,6 +39,9 @@ public class DefaultDesignerService implements DesignerService {
     private final String CHANNEL_ORDER_PER_PIXEL = "perPixel";
     private final String CHANNEL_ORDER_PER_CHANNEL = "perChannel";
 
+    // the dimmer a fixture lighting in colors without one gets, see addVirtualDimmers()
+    static final String VIRTUAL_DIMMER_CHANNEL_NAME = "$virtualDimmer";
+
     private final SettingsService settingsService;
     private final FileFilterService fileFilterService;
     private final LightingService lightingService;
@@ -1082,8 +1085,136 @@ public class DefaultDesignerService implements DesignerService {
         return dmxRange.get(0) + (dmxRange.get(1) - dmxRange.get(0)) * (bestBrightness - range[0]) / (range[1] - range[0]);
     }
 
+    private static FixtureChannelValue getChannelValue(List<FixtureChannelValue> values, String channelName, String profileUuid) {
+        for (FixtureChannelValue value : values) {
+            if (value.getChannelName().equals(channelName) && value.getProfileUuid().equals(profileUuid)) {
+                return value;
+            }
+        }
+
+        return null;
+    }
+
+    // the capability of a channel the passed value is in
+    private static CachedFixtureCapability getCapabilityInValue(CachedFixtureChannel channel, double value) {
+        for (CachedFixtureCapability capability : channel.getCapabilities()) {
+            List<Integer> dmxRange = capability.getCapability().getDmxRange();
+
+            if (dmxRange == null || dmxRange.size() < 2 || (value >= dmxRange.get(0) && value <= dmxRange.get(1))) {
+                return capability;
+            }
+        }
+
+        return null;
+    }
+
+    // how bright a dimmer channel lights at the passed value (0 to 1), like the preview of the designer shows it.
+    // Another function sharing the channel (e.g. a strobe) counts as lighting.
+    private static double getBrightnessOfValue(CachedFixtureChannel channel, double value) {
+        CachedFixtureCapability channelCapability = getCapabilityInValue(channel, value);
+
+        if (channelCapability == null) {
+            return 0;
+        }
+
+        FixtureCapability capability = channelCapability.getCapability();
+
+        if (capability.getType() != FixtureCapability.FixtureCapabilityType.Intensity) {
+            return 1;
+        }
+
+        double[] range = getBrightnessRange(capability, getMaxLumens(channel.getCapabilities()));
+        List<Integer> dmxRange = capability.getDmxRange();
+        double position;
+
+        if (dmxRange != null && dmxRange.size() >= 2) {
+            position = dmxRange.get(1).equals(dmxRange.get(0)) ? 0 : (value - dmxRange.get(0)) / (dmxRange.get(1) - dmxRange.get(0));
+        } else {
+            position = value / channel.getMaxValue();
+        }
+
+        return range[0] + (range[1] - range[0]) * position;
+    }
+
+    // how bright the dimmer of a fixture (its own or its virtual one) lights with the passed values, or null for a
+    // fixture without one (e.g. a pixel of a bar with a master dimmer)
+    private static Double getDimmerBrightness(CachedFixture cachedFixture, List<FixtureChannelValue> values) {
+        for (CachedFixtureChannel channel : cachedFixture.getChannels()) {
+            for (CachedFixtureCapability capability : channel.getCapabilities()) {
+                if (capability.getCapability().getType() == FixtureCapability.FixtureCapabilityType.Intensity) {
+                    FixtureChannelValue value = getChannelValue(values, channel.getName(), cachedFixture.getProfile().getUuid());
+                    return value == null ? 0 : getBrightnessOfValue(channel, value.getValue());
+                }
+            }
+        }
+
+        return null;
+    }
+
+    // how bright a preset lets the dimmer of a fixture light: the dimmer it sets (a curve on the dimmer counts as
+    // lighting it), or the one below, if the preset leaves the dimmer alone
+    private static double getPresetDimmerBrightness(PresetStepState state, CachedFixture cachedFixture, Preset preset, double brightnessBelow) {
+        Double brightness = null;
+
+        for (FixtureCapabilityValue capabilityValue : state.getFixtureCapabilityValues()) {
+            if (capabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Intensity && capabilityValue.getValuePercentage() != null
+                    && (capabilityValue.getProfileUuid() == null || capabilityValue.getProfileUuid().equals(cachedFixture.getProfile().getUuid()))) {
+                // a later value overwrites an earlier one, like when they are mixed
+                brightness = capabilityValue.getValuePercentage();
+            }
+        }
+
+        if (brightness != null) {
+            return brightness;
+        }
+
+        for (Effect effect : preset.getEffects()) {
+            if (effect instanceof EffectCurve curve && effect.isVisible() && state.getEffectAmount(effect.getUuid()) > 0
+                    && curve.getCapabilities().stream().anyMatch(capability -> capability.getType() == FixtureCapability.FixtureCapabilityType.Intensity)) {
+                return 1;
+            }
+        }
+
+        return brightnessBelow;
+    }
+
+    // A color of a fading preset on a fixture with a dimmer (its own or a virtual one) doesn't fade on its own: the
+    // dimmer carries the fade, or the fixture would get darker twice. The color blends with the one below instead,
+    // each of them weighted by how bright it lights, so the light is always the blend of the light below and the light
+    // of the preset. A color coming up on a dark fixture is there at once while the dimmer fades it in, and one going
+    // dark keeps its color. A fixture without a dimmer fades its colors, they are all there is to fade.
+    private void mixColorValue(List<FixtureChannelValue> values, FixtureChannelValue channelValue, double intensityPercentage, Double brightnessBelow, double presetBrightness) {
+        double weightBelow = brightnessBelow == null ? 0 : (1 - intensityPercentage) * brightnessBelow;
+        double weight = intensityPercentage * presetBrightness;
+
+        if (brightnessBelow == null || weightBelow + weight <= 0) {
+            mixChannelValue(values, channelValue, intensityPercentage, 0);
+            return;
+        }
+
+        if (weightBelow == 0) {
+            // nothing to blend with (e.g. the preset doesn't fade)
+            mixChannelValue(values, channelValue, 1);
+            return;
+        }
+
+        FixtureChannelValue below = getChannelValue(values, channelValue.getChannelName(), channelValue.getProfileUuid());
+        double valueBelow = below == null ? 0 : below.getValue();
+
+        FixtureChannelValue blendedValue = new FixtureChannelValue();
+        blendedValue.setChannelName(channelValue.getChannelName());
+        blendedValue.setProfileUuid(channelValue.getProfileUuid());
+        blendedValue.setValue((valueBelow * weightBelow + channelValue.getValue() * weight) / (weightBelow + weight));
+        mixChannelValue(values, blendedValue, 1);
+    }
+
     private void mixCapabilityValues(PresetStepState state, CachedFixture cachedFixture, List<FixtureChannelValue> values, double intensityPercentage, Preset preset) {
         boolean hasColor = false;
+
+        // how bright the fixture lights below this preset and how bright the preset lights it, to blend the colors
+        // while the preset fades (see mixColorValue)
+        Double brightnessBelow = getDimmerBrightness(cachedFixture, values);
+        double presetBrightness = brightnessBelow == null ? 0 : getPresetDimmerBrightness(state, cachedFixture, preset, brightnessBelow);
 
         // mix the capability values of the state the preset is in
         for (FixtureCapabilityValue presetCapabilityValue : state.getFixtureCapabilityValues()) {
@@ -1101,10 +1232,12 @@ public class DefaultDesignerService implements DesignerService {
                             fixtureChannelValue.setChannelName(cachedChannel.getName());
                             fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
                             fixtureChannelValue.setValue(value);
-                            this.mixChannelValue(values, fixtureChannelValue, intensityPercentage, 0);
 
                             if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity) {
+                                mixColorValue(values, fixtureChannelValue, intensityPercentage, brightnessBelow, presetBrightness);
                                 hasColor = true;
+                            } else {
+                                this.mixChannelValue(values, fixtureChannelValue, intensityPercentage, 0);
                             }
                         }
                     }
@@ -1376,7 +1509,7 @@ public class DefaultDesignerService implements DesignerService {
         return null;
     }
 
-    private void setUniverseValueForChannel(HashMap<Integer, Integer> universe, int channelIndex, CachedFixture cachedFixture, String templateChannelName, String pixelKey, List<FixtureChannelValue> fixtureChannelValues) {
+    private void setUniverseValueForChannel(HashMap<Integer, Integer> universe, int channelIndex, CachedFixture cachedFixture, String templateChannelName, String pixelKey, List<FixtureChannelValue> fixtureChannelValues, Double colorDimmer) {
         String channelName = getChannelNameWithPixelKey(templateChannelName, pixelKey);
 
         // fine channels are not cached separately -> this returns the coarse channel for them
@@ -1392,6 +1525,11 @@ public class DefaultDesignerService implements DesignerService {
         for (FixtureChannelValue channelValue : fixtureChannelValues) {
             if (channel.getName().equals(channelValue.getChannelName())) {
                 double value = applyMasterDimmer(channel, channelValue.getValue());
+
+                if (colorDimmer != null) {
+                    value = dim(channel, value, FixtureCapability.FixtureCapabilityType.ColorIntensity, colorDimmer);
+                }
+
                 int dmxValue = (int) Math.floor(value / Math.pow(256, channel.getChannel().getFineChannelAliases().size() - (fineIndex + 1))) % 256;
                 universe.put(channelIndex, dmxValue);
                 break;
@@ -1399,13 +1537,35 @@ public class DefaultDesignerService implements DesignerService {
         }
     }
 
+    private double getMasterDimmer() {
+        return project == null ? 1 : project.getMasterDimmerValue();
+    }
+
+    // How much the colors of a fixture with a virtual dimmer are dimmed when they are sent: by the virtual dimmer and
+    // by the master dimmer, which dims any other dimmer as well. Null for a fixture without a virtual dimmer, its
+    // colors are sent as they are.
+    private Double getColorDimmer(CachedFixture cachedFixture, List<FixtureChannelValue> values) {
+        CachedFixtureChannel virtualDimmer = getChannelByName(cachedFixture, VIRTUAL_DIMMER_CHANNEL_NAME);
+
+        if (virtualDimmer == null) {
+            return null;
+        }
+
+        FixtureChannelValue value = getChannelValue(values, VIRTUAL_DIMMER_CHANNEL_NAME, cachedFixture.getProfile().getUuid());
+        return (value == null ? 0 : getBrightnessOfValue(virtualDimmer, value.getValue())) * getMasterDimmer();
+    }
+
     // The master dimmer of the project dims the brightness, like in the preview of the designer: a value giving the
     // brightness is scaled within the range of its capability (also from bright to off). Colors aren't dimmed, like in
-    // the preview.
+    // the preview, unless the fixture has a virtual dimmer (see getColorDimmer).
     private double applyMasterDimmer(CachedFixtureChannel channel, double value) {
-        double masterDimmer = project == null ? 1 : project.getMasterDimmerValue();
+        return dim(channel, value, FixtureCapability.FixtureCapabilityType.Intensity, getMasterDimmer());
+    }
 
-        if (masterDimmer >= 1 || channel.getCapabilities() == null) {
+    // Scale the brightness a value gives through a capability of the passed type (e.g. a dimmer or a color) by the
+    // passed factor, within the range of the capability. Values of other capabilities stay as they are.
+    private double dim(CachedFixtureChannel channel, double value, FixtureCapability.FixtureCapabilityType type, double factor) {
+        if (factor >= 1 || channel.getCapabilities() == null) {
             return value;
         }
 
@@ -1414,7 +1574,7 @@ public class DefaultDesignerService implements DesignerService {
         for (CachedFixtureCapability channelCapability : channel.getCapabilities()) {
             FixtureCapability capability = channelCapability.getCapability();
 
-            if (capability.getType() != FixtureCapability.FixtureCapabilityType.Intensity) {
+            if (capability.getType() != type) {
                 continue;
             }
 
@@ -1435,7 +1595,7 @@ public class DefaultDesignerService implements DesignerService {
             }
 
             double brightness = range[0] + (range[1] - range[0]) * (value - low) / (high - low);
-            double dimmedPosition = (brightness * masterDimmer - range[0]) / (range[1] - range[0]);
+            double dimmedPosition = (brightness * factor - range[0]) / (range[1] - range[0]);
             return low + (high - low) * Math.max(0, Math.min(1, dimmedPosition));
         }
 
@@ -1472,6 +1632,8 @@ public class DefaultDesignerService implements DesignerService {
                 logger.trace("Set universe values for " + entry.getValue().size() + " channels of fixture " + entry.getKey().getFixture().getName());
             }
 
+            Double colorDimmer = getColorDimmer(entry.getKey(), entry.getValue());
+
             // loop over each channel for this fixture
             int channelIndex = entry.getKey().getFixture().getDmxFirstChannel();
 
@@ -1491,7 +1653,7 @@ public class DefaultDesignerService implements DesignerService {
 
                         for (CachedFixturePixel availablePixel : availablePixels) {
                             for (String modeTemplateChannelName : fixtureModeChannel.getTemplateChannels()) {
-                                setUniverseValueForChannel(universe, channelIndex, entry.getKey(), modeTemplateChannelName, availablePixel.getKey(), entry.getValue());
+                                setUniverseValueForChannel(universe, channelIndex, entry.getKey(), modeTemplateChannelName, availablePixel.getKey(), entry.getValue(), colorDimmer);
                                 channelIndex++;
                             }
                         }
@@ -1500,7 +1662,7 @@ public class DefaultDesignerService implements DesignerService {
 
                         for (String modeTemplateChannelName : fixtureModeChannel.getTemplateChannels()) {
                             for (CachedFixturePixel availablePixel : availablePixels) {
-                                setUniverseValueForChannel(universe, channelIndex, entry.getKey(), modeTemplateChannelName, availablePixel.getKey(), entry.getValue());
+                                setUniverseValueForChannel(universe, channelIndex, entry.getKey(), modeTemplateChannelName, availablePixel.getKey(), entry.getValue(), colorDimmer);
                                 channelIndex++;
                             }
                         }
@@ -1508,7 +1670,7 @@ public class DefaultDesignerService implements DesignerService {
                 } else {
                     // direct reference to a channel
 
-                    setUniverseValueForChannel(universe, channelIndex, entry.getKey(), fixtureModeChannel.getName(), null, entry.getValue());
+                    setUniverseValueForChannel(universe, channelIndex, entry.getKey(), fixtureModeChannel.getName(), null, entry.getValue(), colorDimmer);
                     channelIndex++;
                 }
             }
@@ -1876,13 +2038,15 @@ public class DefaultDesignerService implements DesignerService {
         logger.debug("Calculate cached fixtures...");
 
         for (Fixture fixture : project.getFixtures()) {
+            List<CachedFixture> fixtureParts = new ArrayList<>();
+
             if (fixtureHasGeneralChannel(fixture)) {
                 CachedFixture cachedFixture = new CachedFixture();
                 cachedFixture.setFixture(fixture);
                 cachedFixture.setProfile(getProfileByUuid(fixture.getProfileUuid()));
                 cachedFixture.setMode(getModeByFixture(cachedFixture.getProfile(), fixture));
                 cachedFixture.setChannels(getCachedChannels(cachedFixture.getProfile(), cachedFixture.getMode(), null));
-                cachedFixtures.add(cachedFixture);
+                fixtureParts.add(cachedFixture);
             }
 
             List<CachedFixturePixel> pixels = fixtureGetUniquePixels(fixture);
@@ -1894,11 +2058,57 @@ public class DefaultDesignerService implements DesignerService {
                 cachedFixture.setProfile(getProfileByUuid(fixture.getProfileUuid()));
                 cachedFixture.setMode(getModeByFixture(cachedFixture.getProfile(), fixture));
                 cachedFixture.setChannels(getCachedChannels(cachedFixture.getProfile(), cachedFixture.getMode(), pixel.getKey()));
-                cachedFixtures.add(cachedFixture);
+                fixtureParts.add(cachedFixture);
             }
+
+            addVirtualDimmers(fixtureParts);
+            cachedFixtures.addAll(fixtureParts);
         }
 
         logger.debug("Calculated " + cachedFixtures.size() + " fixtures");
+    }
+
+    private static boolean hasCapabilityType(CachedFixture cachedFixture, FixtureCapability.FixtureCapabilityType type) {
+        for (CachedFixtureChannel channel : cachedFixture.getChannels()) {
+            for (CachedFixtureCapability capability : channel.getCapabilities()) {
+                if (capability.getCapability().getType() == type) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    // A fixture lighting in colors without a dimmer (e.g. the ADJ Dotz Par in its 3-channel mode) gets a virtual one,
+    // like in the designer. It is dimmed, faded, chased and dimmed by the master dimmer like any dimmer and scales the
+    // colors when they are sent (see setUniverseValues). It starts at full, so a fixture which is only given a color
+    // lights in it. A fixture with a dimmer in any of its parts (e.g. a pixel bar with a master dimmer) doesn't get
+    // one: that dimmer dims it already.
+    private void addVirtualDimmers(List<CachedFixture> fixtureParts) {
+        for (CachedFixture cachedFixture : fixtureParts) {
+            if (hasCapabilityType(cachedFixture, FixtureCapability.FixtureCapabilityType.Intensity)) {
+                return;
+            }
+        }
+
+        for (CachedFixture cachedFixture : fixtureParts) {
+            if (!hasCapabilityType(cachedFixture, FixtureCapability.FixtureCapabilityType.ColorIntensity)) {
+                continue;
+            }
+
+            FixtureCapability capability = new FixtureCapability();
+            capability.setType(FixtureCapability.FixtureCapabilityType.Intensity);
+
+            FixtureChannel channel = new FixtureChannel();
+            channel.setCapability(capability);
+            // at full (a percentage would come out a little below it)
+            channel.setDefaultValue("255");
+
+            List<CachedFixtureChannel> channels = new ArrayList<>(cachedFixture.getChannels());
+            addCachedChannel(channels, channel, VIRTUAL_DIMMER_CHANNEL_NAME, null, cachedFixture.getProfile());
+            cachedFixture.setChannels(channels);
+        }
     }
 
     // Unregister all universe states of a previous load/preview and forget them. They must not be

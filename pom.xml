@@ -330,6 +330,8 @@
                                             <includes>
                                                 <include>com.ascargon.rocketshow.audio</include>
                                                 <include>com.ascargon.rocketshow.lighting</include>
+                                                <!-- 94 % with GStreamer, the audio and video checks need it -->
+                                                <include>com.ascargon.rocketshow.selftest</include>
                                                 <include>com.ascargon.rocketshow.update</include>
                                                 <include>com.ascargon.rocketshow.util</include>
                                             </includes>

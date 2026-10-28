@@ -929,6 +929,40 @@ public class DefaultLightingService implements LightingService {
         }
     }
 
+    @Override
+    public synchronized boolean isPatched(LightingUniverse lightingUniverse) {
+        if (olaClient == null || lightingUniverse.getOlaUniverseId() == null || lightingUniverse.getOlaOutputPortId() == null) {
+            return false;
+        }
+
+        Ola.DeviceInfoReply deviceInfoReply = olaClient.getDeviceInfo();
+        if (deviceInfoReply == null) {
+            return false;
+        }
+
+        for (Ola.DeviceInfo deviceInfo : deviceInfoReply.getDeviceList()) {
+            for (Ola.PortInfo outputPort : deviceInfo.getOutputPortList()) {
+                String portId = deviceInfo.getDeviceAlias() + "-O-" + outputPort.getPortId();
+                if (portId.equals(lightingUniverse.getOlaOutputPortId()) && outputPort.hasUniverse()
+                        && outputPort.getUniverse() == lightingUniverse.getOlaUniverseId()) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    // Synchronized like sending the mixed universes: OLA's connection breaks, when two threads send at the same time
+    @Override
+    public synchronized boolean sendDmx(LightingUniverse lightingUniverse, short[] values) {
+        if (olaClient == null || lightingUniverse.getOlaUniverseId() == null) {
+            return false;
+        }
+
+        return olaClient.sendDmx(lightingUniverse.getOlaUniverseId(), values);
+    }
+
     private LightingUniverseState getLightingUniverseForAction(String universeUuid) {
         if (!hasLightingUniverse(universeUuid)) {
             logger.warn("Skipping lighting action for unknown universe '{}'", universeUuid);

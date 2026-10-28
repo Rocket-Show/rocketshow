@@ -22,8 +22,9 @@ class DesignerDmxTest {
     private static final String FRONT = "universe-front";
     private static final String BACK = "universe-back";
 
-    // An RGB par with an unused channel, a moving head with 16 bit pan and tilt and a color wheel. Par 1 starts at
-    // DMX address 1 of the front universe, par 2 at address 11, the moving head at address 1 of the back universe.
+    // An RGB par with an unused channel, a moving head with 16 bit pan and tilt and a color wheel and an RGB par without
+    // a dimmer (like the ADJ Dotz Par in its 3-channel mode). Par 1 starts at DMX address 1 of the front universe, par 2
+    // at address 11, the par without dimmer at address 21, the moving head at address 1 of the back universe.
     private static final String PROJECT = """
             {
               "version": 7,
@@ -62,14 +63,25 @@ class DesignerDmxTest {
                     "Color Wheel": {"slots": [{"type": "Open"}, {"type": "Color", "colors": ["#ff0000"]}, {"type": "Color", "colors": ["#0000ff"]}]}
                   },
                   "modes": [{"name": "6-channel", "shortName": "6ch", "channels": ["Pan", "Pan fine", "Tilt", "Tilt fine", "Dimmer", "Color Wheel"]}]
+                },
+                {
+                  "uuid": "test/rgb",
+                  "name": "RGB par without dimmer",
+                  "availableChannels": {
+                    "Red": {"capability": {"type": "ColorIntensity", "color": "Red"}},
+                    "Green": {"capability": {"type": "ColorIntensity", "color": "Green"}},
+                    "Blue": {"capability": {"type": "ColorIntensity", "color": "Blue"}}
+                  },
+                  "modes": [{"name": "3-channel", "shortName": "3ch", "channels": ["Red", "Green", "Blue"]}]
                 }
               ],
               "fixtures": [
                 {"uuid": "par-1", "name": "Par 1", "profileUuid": "test/rgb-par", "modeShortName": "6ch", "dmxUniverseUuid": "universe-front", "dmxFirstChannel": 0},
                 {"uuid": "par-2", "name": "Par 2", "profileUuid": "test/rgb-par", "modeShortName": "6ch", "dmxUniverseUuid": "universe-front", "dmxFirstChannel": 10},
-                {"uuid": "head", "name": "Head", "profileUuid": "test/moving-head", "modeShortName": "6ch", "dmxUniverseUuid": "universe-back", "dmxFirstChannel": 0}
+                {"uuid": "head", "name": "Head", "profileUuid": "test/moving-head", "modeShortName": "6ch", "dmxUniverseUuid": "universe-back", "dmxFirstChannel": 0},
+                {"uuid": "rgb", "name": "RGB", "profileUuid": "test/rgb", "modeShortName": "3ch", "dmxUniverseUuid": "universe-front", "dmxFirstChannel": 20}
               ],
-              "presetFixtures": [{"fixtureUuid": "par-1"}, {"fixtureUuid": "par-2"}, {"fixtureUuid": "head"}],
+              "presetFixtures": [{"fixtureUuid": "par-1"}, {"fixtureUuid": "par-2"}, {"fixtureUuid": "head"}, {"fixtureUuid": "rgb"}],
               "presets": [],
               "scenes": [],
               "compositions": [{"uuid": "song", "name": "Song", "scenePlaybackRegions": []}]
@@ -428,6 +440,121 @@ class DesignerDmxTest {
         // Compared to the brightest capability (1000 lm)
         assertEquals(63, front.get(1));
         assertEquals(191, front.get(11));
+    }
+
+    private static ObjectNode color(ObjectNode values, String color, double valuePercentage) {
+        ObjectNode capability = capability(values, "ColorIntensity", valuePercentage);
+        capability.put("color", color);
+        return capability;
+    }
+
+    // Hold the scene of the passed preset at the passed dimmer
+    private static void dimScene(ObjectNode project, String presetName, double dimmer) {
+        for (var scene : project.get("scenes")) {
+            if (scene.get("uuid").asString().equals(presetName + "-scene")) {
+                ((ObjectNode) scene).put("dimmer", dimmer);
+            }
+        }
+    }
+
+    @Test
+    void lightsAFixtureWithoutDimmerInItsColorAlone() throws Exception {
+        ObjectNode project = project();
+        addPreset(project, "Red", List.of("rgb"), List.of(color(project, "Red", 1.0)));
+
+        assertEquals(List.of(255, 0, 0), addresses(play(project).get(FRONT), 21, 23));
+    }
+
+    @Test
+    void dimsAFixtureWithoutDimmerWithAVirtualOne() throws Exception {
+        ObjectNode project = project();
+        addPreset(project, "Red", List.of("rgb"), List.of(capability(project, "Intensity", 0.5), color(project, "Red", 1.0), color(project, "Blue", 0.4)));
+
+        // Half of red and of 40 % blue
+        assertEquals(List.of(127, 0, 51), addresses(play(project).get(FRONT), 21, 23));
+    }
+
+    @Test
+    void dimsAFixtureWithoutDimmerWithTheMasterDimmer() throws Exception {
+        ObjectNode project = project();
+        project.put("masterDimmerValue", 0.5);
+        addPreset(project, "Red", List.of("rgb"), List.of(color(project, "Red", 1.0)));
+
+        assertEquals(127, play(project).get(FRONT).get(21));
+    }
+
+    @Test
+    void dimsAFixtureWithoutDimmerWithACurveOnTheDimmer() throws Exception {
+        ObjectNode project = project();
+        project.put("version", 8);
+        addPreset(project, "Red", List.of("rgb"), List.of(color(project, "Red", 1.0)));
+
+        // A sine on the dimmer, back in the middle of its swing 5 seconds into the composition
+        ObjectNode effect = ((ArrayNode) project.get("presets").get(0).get("effects")).addObject();
+        effect.put("type", "curve");
+        effect.put("uuid", "dimmer-sine");
+        effect.put("visible", true);
+        effect.put("curveType", "sine");
+        effect.putArray("capabilities").addObject().put("type", "Intensity");
+        effect.putArray("channels");
+        effect.put("lengthMillis", 10000);
+        effect.put("amplitude", 1);
+        effect.put("position", 0.5);
+
+        assertEquals(127, play(project).get(FRONT).get(21));
+    }
+
+    @Test
+    void fadesAFixtureWithADimmerInItsDimmerOnly() throws Exception {
+        ObjectNode project = project();
+        addPreset(project, "Red", List.of("par-1"), List.of(capability(project, "Intensity", 1.0), color(project, "Red", 1.0)));
+        dimScene(project, "Red", 0.3);
+
+        // The dimmer at 30 %, the color stays: the light is at 30 %, not at 30 % of 30 %
+        assertEquals(List.of(76, 255, 0, 0), addresses(play(project).get(FRONT), 1, 4));
+    }
+
+    @Test
+    void fadesAFixtureWithoutDimmerOnce() throws Exception {
+        ObjectNode project = project();
+        addPreset(project, "Red", List.of("rgb"), List.of(capability(project, "Intensity", 1.0), color(project, "Red", 1.0)));
+        dimScene(project, "Red", 0.3);
+
+        assertEquals(76, play(project).get(FRONT).get(21));
+    }
+
+    @Test
+    void blendsTheColorsOfAFadingPresetWithTheOnesBelow() throws Exception {
+        ObjectNode project = project();
+        // the first scene is on top
+        addColorPreset(project, "Blue", 0, 1);
+        addColorPreset(project, "Red", 1, 0);
+        dimScene(project, "Blue", 0.5);
+
+        Map<Integer, Integer> front = preview(project, designerService -> {
+            designerService.setPreviewPreset(false);
+            designerService.setSelectedSceneUuids(List.of("Blue-scene", "Red-scene"));
+        }).get(FRONT);
+
+        // Both light at full: half red, half blue, the dimmer stays at full
+        assertEquals(List.of(255, 127, 0, 127), addresses(front, 1, 4));
+    }
+
+    @Test
+    void keepsTheColorOfAPresetFadingToDark() throws Exception {
+        ObjectNode project = project();
+        // the first scene is on top
+        addPreset(project, "Dark", List.of("par-1"), List.of(capability(project, "Intensity", 0.0), color(project, "Blue", 1.0)));
+        addColorPreset(project, "Red", 1, 0);
+        dimScene(project, "Dark", 0.5);
+
+        Map<Integer, Integer> front = preview(project, designerService -> {
+            designerService.setPreviewPreset(false);
+            designerService.setSelectedSceneUuids(List.of("Dark-scene", "Red-scene"));
+        }).get(FRONT);
+
+        // Half way to dark, still in red
+        assertEquals(List.of(127, 255, 0, 0), addresses(front, 1, 4));
     }
 
 }

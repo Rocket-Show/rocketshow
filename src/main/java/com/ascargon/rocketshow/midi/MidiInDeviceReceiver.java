@@ -22,6 +22,9 @@ class MidiInDeviceReceiver implements Receiver {
 
     private final MidiRouter midiRouter;
 
+    // Gets the input instead of the triggers and the routings, e.g. during the self-test
+    private volatile Receiver divertedReceiver;
+
     MidiInDeviceReceiver(ActionMidiExecutionService actionMidiExecutionService, MidiRouterFactory midiRouterFactory) {
         this.actionMidiExecutionService = actionMidiExecutionService;
 
@@ -31,6 +34,12 @@ class MidiInDeviceReceiver implements Receiver {
     @Override
     public void send(MidiMessage midiMessage, long timeStamp) {
         if (!(midiMessage instanceof ShortMessage shortMessage)) {
+            return;
+        }
+
+        Receiver divertedReceiver = this.divertedReceiver;
+        if (divertedReceiver != null) {
+            divertedReceiver.send(shortMessage, timeStamp);
             return;
         }
 
@@ -47,6 +56,10 @@ class MidiInDeviceReceiver implements Receiver {
         } catch (InvalidMidiDataException e) {
             logger.error("Could not route event from MIDI device", e);
         }
+    }
+
+    void divert(Receiver receiver) {
+        divertedReceiver = receiver;
     }
 
     @Override

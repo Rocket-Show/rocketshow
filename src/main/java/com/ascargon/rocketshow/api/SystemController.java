@@ -11,6 +11,9 @@ import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.midi.MidiDeviceInService;
 import com.ascargon.rocketshow.midi.MidiDeviceOutService;
 import com.ascargon.rocketshow.play.PlayerService;
+import com.ascargon.rocketshow.selftest.SelfTestRequest;
+import com.ascargon.rocketshow.selftest.SelfTestResult;
+import com.ascargon.rocketshow.selftest.SelfTestService;
 import com.ascargon.rocketshow.settings.ApiKey;
 import com.ascargon.rocketshow.settings.Settings;
 import com.ascargon.rocketshow.settings.SettingsService;
@@ -73,6 +76,7 @@ class SystemController {
     private final LightingService lightingService;
     private final LanService lanService;
     private final BuildInfoService buildInfoService;
+    private final SelfTestService selfTestService;
 
     public SystemController(
             ControllerService controllerService,
@@ -100,7 +104,8 @@ class SystemController {
             SshService sshService,
             LightingService lightingService,
             LanService lanService,
-            BuildInfoService buildInfoService
+            BuildInfoService buildInfoService,
+            SelfTestService selfTestService
     ) {
         this.controllerService = controllerService;
         this.stateService = stateService;
@@ -128,6 +133,7 @@ class SystemController {
         this.lightingService = lightingService;
         this.lanService = lanService;
         this.buildInfoService = buildInfoService;
+        this.selfTestService = selfTestService;
     }
 
     private void settingsUpdateSystem() {
@@ -338,10 +344,10 @@ class SystemController {
         return healthService.getHealthStatus();
     }
 
+    // Plays test tones and switches outputs, see testing/README.md. 409 while a composition plays.
     @PostMapping("test")
-    public ResponseEntity<Void> test() {
-        healthService.testSystem();
-        return new ResponseEntity<>(HttpStatus.OK);
+    public SelfTestResult test(@RequestBody(required = false) SelfTestRequest selfTestRequest) throws Exception {
+        return selfTestService.run(selfTestRequest);
     }
 
 }

@@ -296,6 +296,21 @@ public class CompositionPipelineBuilder {
         }
     }
 
+    // The sink videos play on, for the self-test: playbin picks it on the Raspberry Pi 3
+    public Element createVideoSink() {
+        if (isRaspberry3()) {
+            return ElementFactory.make("autovideosink", "autovideosink");
+        }
+        return getGstVideoSink();
+    }
+
+    private boolean isRaspberry3() {
+        OperatingSystemInformation operatingSystemInformation = operatingSystemInformationService.getOperatingSystemInformation();
+        return OperatingSystemInformation.Type.LINUX.equals(operatingSystemInformation.getType())
+                && OperatingSystemInformation.SubType.RASPBERRYOS.equals(operatingSystemInformation.getSubType())
+                && OperatingSystemInformation.RaspberryVersion.MODEL_3.equals(operatingSystemInformation.getRaspberryVersion());
+    }
+
     private void addVideoToPipelineRaspberry3(VideoCompositionFile videoCompositionFile, Pipeline target, int index) {
         PlayBin playBin = (PlayBin) ElementFactory.make("playbin", "playbin" + index);
         playBin.set("uri", "file://" + settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator + settingsService.getSettings().getVideoPath() + File.separator + videoCompositionFile.getName());
@@ -309,12 +324,9 @@ public class CompositionPipelineBuilder {
         // See http://gstreamer-devel.966125.n4.nabble.com/OpenGL-renderer-window-td4686092.html
 
         // add video for raspberry pi 3, if necessary
-        if (OperatingSystemInformation.Type.LINUX.equals(operatingSystemInformationService.getOperatingSystemInformation().getType())) {
-            if (OperatingSystemInformation.SubType.RASPBERRYOS.equals(operatingSystemInformationService.getOperatingSystemInformation().getSubType()) && OperatingSystemInformation.RaspberryVersion.MODEL_3.equals(operatingSystemInformationService.getOperatingSystemInformation().getRaspberryVersion())) {
-
-                addVideoToPipelineRaspberry3(videoCompositionFile, target, index);
-                return;
-            }
+        if (isRaspberry3()) {
+            addVideoToPipelineRaspberry3(videoCompositionFile, target, index);
+            return;
         }
 
         URIDecodeBin videoSource = (URIDecodeBin) ElementFactory.make("uridecodebin", "videouridecodebin" + index);
@@ -512,8 +524,8 @@ public class CompositionPipelineBuilder {
     }
 
     // Build the output chain (mixer -> capsfilter -> [level] -> queue -> volume -> sink) for one
-    // audio device into the given pipeline and return the mixer to link audio sources into.
-    Element buildAudioOutputChain(Pipeline target, AudioDevice audioDevice, boolean provideClock, boolean enableLevel, List<Element> volumeListTarget) {
+    // audio device into the given pipeline and return the mixer to link audio sources into. Public for the self-test.
+    public Element buildAudioOutputChain(Pipeline target, AudioDevice audioDevice, boolean provideClock, boolean enableLevel, List<Element> volumeListTarget) {
         String audioDeviceAlsaName = audioService.getAudioDeviceAlsaName(audioDevice);
 
         Element audioMixer = ElementFactory.make("audiomixer", "audiomixer_" + audioDeviceAlsaName);

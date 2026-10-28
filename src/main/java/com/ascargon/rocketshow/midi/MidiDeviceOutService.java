@@ -20,4 +20,7 @@ public interface MidiDeviceOutService {
     boolean isConnected();
 
     void sendMessage(MidiMessage message);
+
+    // Like sendMessage, but throws when the message can't be sent, e.g. for the self-test
+    void sendMessageChecked(MidiMessage message) throws Exception;
 }

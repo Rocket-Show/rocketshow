@@ -69,4 +69,13 @@ class AudioDevicesTest {
         assertEquals("Device_1_USB", new DefaultAudioService(null).getAudioDeviceAlsaName(audioDevice));
     }
 
+    @Test
+    void readsTheChannelsASoundCardOffers() {
+        // E.g. of a new unit for its self-test, which has no audio settings
+        assertEquals(2, DefaultAudioService.getMaxChannels("audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)[ 44100, 48000 ], channels=(int)2"));
+        assertEquals(8, DefaultAudioService.getMaxChannels("audio/x-raw, format=(string)S32LE, rate=(int)48000, channels=(int)[ 1, 8 ]"));
+        assertEquals(6, DefaultAudioService.getMaxChannels("audio/x-raw, channels=(int){ 2, 6 }; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000033"));
+        assertEquals(0, DefaultAudioService.getMaxChannels("EMPTY"));
+    }
+
 }

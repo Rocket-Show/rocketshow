@@ -1,6 +1,6 @@
 // Smoke test of the web app on a new unit: the initial setup, uploading media, creating a composition and a set,
-// opening the designer and saving the settings, like a user does after unpacking a unit. Run it against a unit
-// started from the built jar:
+// opening the designer, saving the settings and running the self-test, like a user does after unpacking a unit. Run
+// it against a unit started from the built jar:
 //
 //   BASE_URL=http://localhost:8080 node smoke.mjs
 //
@@ -245,6 +245,21 @@ try {
     const value = await deviceNameInput().inputValue();
     if (value !== renamedDeviceName) {
       throw new Error(`The settings show the device name "${value}" instead of "${renamedDeviceName}"`);
+    }
+  });
+
+  await step('Run the self-test in the advanced settings', async () => {
+    await page.locator('a.nav-link[href="#advanced"]').click();
+    await page.locator('#runSelfTest').click();
+    // After the warning about the test tones and the outputs it switches
+    await page.locator('app-warning-dialog').getByRole('button', { name: 'OK' }).click();
+    await page.locator('#selfTestResult').waitFor({ timeout: 60000 });
+
+    // Some checks depend on the machine running the unit (e.g. its clock, network or kernel log), so a check may fail
+    const result = await page.locator('#selfTestResult').innerText();
+    console.log(result);
+    if (!/^(Passed|Failed)/.test(result) || await page.locator('#selfTestResult tbody tr').count() < 20) {
+      throw new Error(`The self-test of the new unit shows no result for every check:\n${result}`);
     }
   });
 
