@@ -1002,6 +1002,16 @@ button.list-group-item {
   margin: $sd-space-5 !important;
 }
 
+/* The full-screen layers over the app (no connection, lead sheet): opaque, so nothing of the app behind them runs
+   through their message or through a lead sheet with a transparent background */
+.overlay-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1030;
+  background-color: $sd-bg;
+}
+
 .modal-backdrop {
   background-color: #05060a;
 
