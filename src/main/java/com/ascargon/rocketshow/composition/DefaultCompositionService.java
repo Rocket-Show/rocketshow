@@ -4,6 +4,7 @@ import com.ascargon.rocketshow.settings.CapabilitiesService;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.gstreamer.GstDiscovererService;
+import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
 import com.ascargon.rocketshow.util.ActionTrigger;
 import com.ascargon.rocketshow.util.AtomicFile;
@@ -43,15 +44,17 @@ public class DefaultCompositionService implements CompositionService {
     private final SettingsService settingsService;
     private final CapabilitiesService capabilitiesService;
     private final GstDiscovererService gstDiscovererService;
+    private final DesignerService designerService;
 
     // All available compositions
     private final List<Composition> compositionCache = new ArrayList<>();
     private final List<Set> compositionSetCache = new ArrayList<>();
 
-    public DefaultCompositionService(SettingsService settingsService, CapabilitiesService capabilitiesService, GstDiscovererService gstDiscovererService) {
+    public DefaultCompositionService(SettingsService settingsService, CapabilitiesService capabilitiesService, GstDiscovererService gstDiscovererService, DesignerService designerService) {
         this.settingsService = settingsService;
         this.capabilitiesService = capabilitiesService;
         this.gstDiscovererService = gstDiscovererService;
+        this.designerService = designerService;
 
         // Initialize the cache
         this.loadAllCompositions();
@@ -140,9 +143,10 @@ public class DefaultCompositionService implements CompositionService {
         return null;
     }
 
-    private void updateSets() throws Exception {
+    @Override
+    public void updateSets() throws Exception {
         // Update all sets (remove deleted files, update playing times),
-        // when a composition has been changed/deleted
+        // when a composition or a designer project has been changed/deleted
 
         List<Set> sets = new ArrayList<>(getAllSets());
 
@@ -373,8 +377,9 @@ public class DefaultCompositionService implements CompositionService {
                     // --> delete it from the set
                     iterator.remove();
                 } else {
-                    // The composition still exists -> update some information
-                    setComposition.setDurationMillis(composition.getDurationMillis());
+                    // The composition still exists -> update some information. It plays as long as its files and
+                    // actions, or as the lights of its designer project, whichever is longer.
+                    setComposition.setDurationMillis(Math.max(composition.getDurationMillis(), designerService.getCompositionEndMillis(composition.getName())));
                 }
             }
         }

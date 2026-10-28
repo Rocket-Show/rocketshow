@@ -64,7 +64,7 @@ class PlayerSetTest {
         when(capabilitiesService.getCapabilities()).thenReturn(new Capabilities());
         when(sessionService.getSession()).thenReturn(session);
 
-        compositionService = new DefaultCompositionService(settingsService, capabilitiesService, mock(GstDiscovererService.class));
+        compositionService = new DefaultCompositionService(settingsService, capabilitiesService, mock(GstDiscovererService.class), designerService);
 
         for (String name : new String[]{"D", "B", "A", "C"}) {
             Composition composition = new Composition();

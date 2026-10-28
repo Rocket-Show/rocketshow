@@ -49,7 +49,7 @@ class SamplePlayTest {
         SessionService sessionService = mock(SessionService.class);
         when(sessionService.getSession()).thenReturn(new Session());
 
-        DefaultCompositionService compositionService = new DefaultCompositionService(TestSettings.inDirectory(directory), capabilitiesService, mock(GstDiscovererService.class));
+        DefaultCompositionService compositionService = new DefaultCompositionService(TestSettings.inDirectory(directory), capabilitiesService, mock(GstDiscovererService.class), mock(DesignerService.class));
 
         // A short composition triggering an action, e.g. a light flash
         Composition composition = new Composition();

@@ -86,6 +86,7 @@ class GstreamerTestUnit {
     final NotificationService notificationService = mock(NotificationService.class);
     final ActivityNotificationAudioService activityNotificationAudioService = mock(ActivityNotificationAudioService.class);
     final ActionExecutionService actionExecutionService = mock(ActionExecutionService.class);
+    final DesignerService designerService = mock(DesignerService.class);
     final MidiRouterFactory midiRouterFactory = mock(MidiRouterFactory.class);
     final MidiRouter midiRouter = mock(MidiRouter.class);
     final HdmiService hdmiService = mock(HdmiService.class);
@@ -163,7 +164,7 @@ class GstreamerTestUnit {
         when(playerService.getCapabilitiesService()).thenReturn(capabilitiesService);
         when(playerService.getSetService()).thenReturn(mock(SetService.class));
         when(playerService.getLightingService()).thenReturn(mock(LightingService.class));
-        when(playerService.getDesignerService()).thenReturn(mock(DesignerService.class));
+        when(playerService.getDesignerService()).thenReturn(designerService);
         when(playerService.getActionExecutionService()).thenReturn(actionExecutionService);
         when(playerService.getMidiTimecodeService()).thenReturn(mock(MidiTimecodeService.class));
         when(playerService.getCompositionPipelineBuilder()).thenReturn(compositionPipelineBuilder);

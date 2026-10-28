@@ -78,7 +78,7 @@ public class CompositionController {
         TestPlayResponse testPlayResponse = new TestPlayResponse();
         compositionService.analyzeComposition(composition);
         playerService.playTestComposition(composition);
-        testPlayResponse.setDurationMillis(composition.getDurationMillis());
+        testPlayResponse.setDurationMillis(playerService.getTestCompositionPlayer().getDurationMillis());
         return testPlayResponse;
     }
 
