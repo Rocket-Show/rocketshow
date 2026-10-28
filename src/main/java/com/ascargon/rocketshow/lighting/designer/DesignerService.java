@@ -14,6 +14,8 @@ public interface DesignerService {
 
     Project getProjectByName(String name);
 
+    long getCompositionEndMillis(String compositionName);
+
     void deleteProjectByName(String name);
 
     List<Project> getAllProjects();

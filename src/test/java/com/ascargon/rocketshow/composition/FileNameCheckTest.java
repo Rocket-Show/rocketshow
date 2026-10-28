@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.composition;
 
 import com.ascargon.rocketshow.gstreamer.GstDiscovererService;
+import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.settings.CapabilitiesService;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.settings.TestSettings;
@@ -53,7 +54,7 @@ class FileNameCheckTest {
     }
 
     private DefaultCompositionService compositionService() {
-        return new DefaultCompositionService(settingsService, mock(CapabilitiesService.class), mock(GstDiscovererService.class));
+        return new DefaultCompositionService(settingsService, mock(CapabilitiesService.class), mock(GstDiscovererService.class), mock(DesignerService.class));
     }
 
     @Test

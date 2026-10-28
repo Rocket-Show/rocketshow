@@ -32,6 +32,8 @@ public interface CompositionService {
 
     void saveSet(Set set) throws Exception;
 
+    void updateSets() throws Exception;
+
     void deleteComposition(String name) throws Exception;
 
     void renameComposition(String previousName, Composition composition) throws Exception;

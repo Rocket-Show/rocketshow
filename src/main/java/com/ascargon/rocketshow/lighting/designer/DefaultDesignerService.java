@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -118,7 +119,8 @@ public class DefaultDesignerService implements DesignerService {
         folder = new File(settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getDesignerPath());
         fileList = folder.listFiles();
 
-        projects = new ArrayList<>();
+        // read while the compositions play (how long they last), changed when a project is saved
+        projects = new CopyOnWriteArrayList<>();
 
         if (fileList != null) {
             for (File file : fileList) {
@@ -151,6 +153,61 @@ public class DefaultDesignerService implements DesignerService {
         }
 
         return null;
+    }
+
+    // Where the lights of the designer composition of that name have gone out (0 without one). The composition plays
+    // at least that long, like the designer plays a composition without an audio file.
+    @Override
+    public long getCompositionEndMillis(String compositionName) {
+        Project project = compositionName == null ? null : getProjectByCompositionName(compositionName);
+
+        if (project == null) {
+            return 0;
+        }
+
+        return getClipsEndMillis(project, getCompositionByName(project, compositionName));
+    }
+
+    // The end of the last clip of the composition, or of a fade running past the end of a clip (of its scene, or of one
+    // of the presets played in it). Worked out like the designer does it.
+    static long getClipsEndMillis(Project project, Composition composition) {
+        long endMillis = 0;
+
+        if (composition == null || composition.getScenePlaybackRegions() == null || project.getScenes() == null) {
+            return endMillis;
+        }
+
+        for (ScenePlaybackRegion region : composition.getScenePlaybackRegions()) {
+            Scene scene = project.getScenes().stream().filter(candidate -> candidate.getUuid().equals(region.getSceneUuid())).findFirst().orElse(null);
+
+            // a clip without its scene is not played
+            if (scene == null) {
+                continue;
+            }
+
+            endMillis = Math.max(endMillis, region.getEndMillis());
+
+            if (scene.isFadeOutPost()) {
+                endMillis = Math.max(endMillis, region.getEndMillis() + scene.getFadeOutMillis());
+            }
+
+            if (scene.getPresetUuids() == null || project.getPresets() == null) {
+                continue;
+            }
+
+            for (String presetUuid : scene.getPresetUuids()) {
+                Preset preset = project.getPresets().stream().filter(candidate -> presetUuid.equals(candidate.getUuid())).findFirst().orElse(null);
+
+                if (preset == null) {
+                    continue;
+                }
+
+                long presetEndMillis = preset.getEndMillis() == null ? region.getEndMillis() : region.getStartMillis() + preset.getEndMillis();
+                endMillis = Math.max(endMillis, presetEndMillis + (preset.isFadeOutPost() ? preset.getFadeOutMillis() : 0));
+            }
+        }
+
+        return endMillis;
     }
 
     @Override

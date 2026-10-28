@@ -4,6 +4,7 @@ import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.composition.ActionTriggerComposition;
 import com.ascargon.rocketshow.composition.Composition;
 import com.ascargon.rocketshow.gstreamer.TestGstreamer;
+import com.ascargon.rocketshow.lighting.designer.Project;
 import com.ascargon.rocketshow.util.ActionTrigger;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
 import org.junit.jupiter.api.AfterEach;
@@ -154,6 +155,34 @@ class GstreamerPlayerTest {
         assertEquals(1, executedAt.size());
         assertTrue(executedAt.getFirst() >= 850 && executedAt.getFirst() < 1400, "Executed after " + executedAt.getFirst() + " ms");
         assertTrue(playedMillis >= 950 && playedMillis < 2000, "Ended after " + playedMillis + " ms");
+    }
+
+    // The designer project playing along with the song has lights until the passed time
+    private void lightsUntil(long endMillis) {
+        when(unit.designerService.getProjectByCompositionName("Song")).thenReturn(new Project());
+        when(unit.designerService.getCompositionEndMillis("Song")).thenReturn(endMillis);
+    }
+
+    @Test
+    void playsTheLightsAfterTheMediaBeforeEnding() throws Exception {
+        // E.g. the lights fade out after the song
+        lightsUntil(1000);
+
+        long playedMillis = unit.playToTheEnd(composition(500, unit.wav("song.wav", 500, 0.5, 0.5, unit.front)));
+
+        assertTrue(playedMillis >= 950 && playedMillis < 2000, "Ended after " + playedMillis + " ms");
+    }
+
+    @Test
+    void loopsAFileAsLongAsTheLightsPlay() throws Exception {
+        AudioCompositionFile click = unit.wav("click.wav", 300, 0.5, 0.5, unit.monitor);
+        click.setLoop(true);
+        lightsUntil(1200);
+
+        long playedMillis = unit.playToTheEnd(composition(300, click));
+
+        assertTrue(playedMillis >= 1150 && playedMillis < 2500, "Ended after " + playedMillis + " ms");
+        assertTrue(unit.card(2).millis() >= 900, "Clicked " + unit.card(2).millis() + " ms");
     }
 
     @Test

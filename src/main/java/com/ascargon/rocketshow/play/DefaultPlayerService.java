@@ -448,11 +448,7 @@ public class DefaultPlayerService implements PlayerService {
     }
 
     public long getCompositionDurationMillis() {
-        if (currentCompositionPlayer.getComposition() == null) {
-            return 0;
-        }
-
-        return currentCompositionPlayer.getComposition().getDurationMillis();
+        return currentCompositionPlayer.getDurationMillis();
     }
 
     @PreDestroy

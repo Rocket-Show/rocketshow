@@ -6,6 +6,7 @@ import com.ascargon.rocketshow.composition.Composition;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
+import com.ascargon.rocketshow.lighting.designer.Project;
 import com.ascargon.rocketshow.midi.MidiTimecodeService;
 import com.ascargon.rocketshow.settings.Capabilities;
 import com.ascargon.rocketshow.settings.CapabilitiesService;
@@ -33,6 +34,7 @@ class CompositionPlayerTest {
 
     private final ActionExecutionService actionExecutionService = mock(ActionExecutionService.class);
     private final DefaultPlayerService playerService = mock(DefaultPlayerService.class);
+    private final DesignerService designerService = mock(DesignerService.class);
 
     // The positions of the executed actions, in the order they were executed
     private final List<Long> executedPositions = new CopyOnWriteArrayList<>();
@@ -54,7 +56,7 @@ class CompositionPlayerTest {
         when(playerService.getCapabilitiesService()).thenReturn(capabilitiesService);
         when(playerService.getSetService()).thenReturn(mock(SetService.class));
         when(playerService.getLightingService()).thenReturn(mock(LightingService.class));
-        when(playerService.getDesignerService()).thenReturn(mock(DesignerService.class));
+        when(playerService.getDesignerService()).thenReturn(designerService);
         when(playerService.getActionExecutionService()).thenReturn(actionExecutionService);
         when(playerService.getMidiTimecodeService()).thenReturn(mock(MidiTimecodeService.class));
         when(playerService.getCompositionPipelineBuilder()).thenReturn(mock(CompositionPipelineBuilder.class));
@@ -249,6 +251,55 @@ class CompositionPlayerTest {
         compositionPlayer.play();
 
         assertEquals(CompositionPlayer.PlayState.STOPPED, compositionPlayer.getPlayState());
+    }
+
+    // The designer project playing along has lights until the passed time
+    private void lightsUntil(String compositionName, long endMillis) {
+        when(designerService.getProjectByCompositionName(compositionName)).thenReturn(new Project());
+        when(designerService.getCompositionEndMillis(compositionName)).thenReturn(endMillis);
+    }
+
+    @Test
+    void playsAsLongAsItsLights() throws Exception {
+        // Neither files nor actions, only lights from the designer
+        Composition composition = new Composition();
+        composition.setName("Lights");
+        lightsUntil("Lights", 600);
+        compositionPlayer.setComposition(composition);
+        long start = System.currentTimeMillis();
+
+        compositionPlayer.play();
+        waitMillis(400);
+        assertEquals(CompositionPlayer.PlayState.PLAYING, compositionPlayer.getPlayState());
+
+        waitForState(CompositionPlayer.PlayState.STOPPED, 3000);
+        long playedMillis = System.currentTimeMillis() - start;
+        assertTrue(playedMillis >= 600 && playedMillis < 1500, "Played " + playedMillis + " ms");
+    }
+
+    @Test
+    void playsTheLightsOutAfterTheLastAction() throws Exception {
+        compositionPlayer.setComposition(composition(0, 200));
+        lightsUntil("Actions", 700);
+        long start = System.currentTimeMillis();
+
+        compositionPlayer.play();
+        waitForState(CompositionPlayer.PlayState.STOPPED, 3000);
+        long playedMillis = System.currentTimeMillis() - start;
+
+        assertEquals(List.of(0L, 200L), executedPositions);
+        assertTrue(playedMillis >= 700, "Played " + playedMillis + " ms");
+    }
+
+    @Test
+    void lastsAsLongAsItsFilesAndActionsOrItsLights() throws Exception {
+        compositionPlayer.setComposition(composition(0, 500));
+
+        lightsUntil("Actions", 200);
+        assertEquals(500, compositionPlayer.getDurationMillis());
+
+        lightsUntil("Actions", 900);
+        assertEquals(900, compositionPlayer.getDurationMillis());
     }
 
     @Test

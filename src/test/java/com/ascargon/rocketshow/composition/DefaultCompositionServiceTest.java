@@ -2,6 +2,7 @@ package com.ascargon.rocketshow.composition;
 
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.gstreamer.GstDiscovererService;
+import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
 import com.ascargon.rocketshow.settings.Capabilities;
 import com.ascargon.rocketshow.settings.CapabilitiesService;
@@ -36,6 +37,7 @@ class DefaultCompositionServiceTest {
 
     private SettingsService settingsService;
     private final CapabilitiesService capabilitiesService = mock(CapabilitiesService.class);
+    private final DesignerService designerService = mock(DesignerService.class);
     private DefaultCompositionService compositionService;
 
     @BeforeEach
@@ -47,7 +49,7 @@ class DefaultCompositionServiceTest {
 
     // Like a restart of the unit: everything is loaded from the files again
     private DefaultCompositionService start() {
-        return new DefaultCompositionService(settingsService, capabilitiesService, mock(GstDiscovererService.class));
+        return new DefaultCompositionService(settingsService, capabilitiesService, mock(GstDiscovererService.class), designerService);
     }
 
     private Composition composition(String name, long... actionTriggerPositionsMillis) {
@@ -99,6 +101,20 @@ class DefaultCompositionServiceTest {
 
         Path midiDirectory = Files.createDirectories(directory.resolve("media/midi"));
         MidiSystem.write(sequence, 1, midiDirectory.resolve(name).toFile());
+    }
+
+    @Test
+    void showsHowLongTheLightsOfTheDesignerPlayInTheSets() throws Exception {
+        compositionService.saveComposition(composition("Song 1", 1000, 90000));
+        compositionService.saveComposition(composition("Lights only"));
+        compositionService.saveSet(set("Show", "Song 1", "Lights only"));
+
+        // A designer project with lights for both is saved
+        when(designerService.getCompositionEndMillis("Song 1")).thenReturn(60000L);
+        when(designerService.getCompositionEndMillis("Lights only")).thenReturn(120000L);
+        compositionService.updateSets();
+
+        assertEquals(List.of("Song 1 90000", "Lights only 120000"), setEntries("Show"));
     }
 
     @Test
