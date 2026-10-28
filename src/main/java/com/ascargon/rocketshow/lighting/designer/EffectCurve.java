@@ -18,10 +18,6 @@ public class EffectCurve extends Effect {
 
     private final static Logger logger = LoggerFactory.getLogger(EffectCurve.class);
 
-    // curve types the duty cycle applies to. a sawtooth has no peak to narrow or widen the
-    // curve around: it ramps over the whole cycle and jumps back.
-    private final static List<String> DUTY_CYCLE_TYPES = List.of("sine", "square", "triangle");
-
     // a cycle border is never hit exactly when the curve is sampled, so the value held
     // after a run is taken just before it
     private final static double CYCLE_EPSILON = 1e-9;
@@ -56,10 +52,11 @@ public class EffectCurve extends Effect {
     private float position = 0.5f;
 
     // the part of the period the curve is on (above its position), between 0 and 1. 0.5 is
-    // the plain curve. a sine or a triangle keeps its shape around its peak: a narrower
-    // width runs it faster and rests at its bottom for the rest of the period, a wider one
-    // rests at its top. a chase shows it as the part of the fixtures that are on at the same
-    // time: 0.1 lights one fixture out of ten.
+    // the plain curve. every curve keeps its shape: a narrower width runs it faster and
+    // rests it at its bottom for the rest of the period, a wider one rests it at its top. a
+    // sine, a triangle and a square stay centered on their peak, a sawtooth keeps its jump.
+    // a chase shows it as the part of the fixtures that are on at the same time: 0.1 lights
+    // one fixture out of ten.
     private float dutyCycle = 0.5f;
 
     // how long the curve keeps running:
@@ -137,11 +134,6 @@ public class EffectCurve extends Effect {
         }
 
         return (double) step * this.phasingMillis;
-    }
-
-    // whether the duty cycle changes anything on the current curve type
-    public boolean hasDutyCycle() {
-        return DUTY_CYCLE_TYPES.contains(this.curveType);
     }
 
     // how long the curve runs, measured from the moment its fixture starts, or null if it
@@ -227,10 +219,6 @@ public class EffectCurve extends Effect {
 
     // the duty cycle, kept inside the range the curves are defined for
     private double getClampedDutyCycle() {
-        if (!this.hasDutyCycle()) {
-            return 0.5;
-        }
-
         return Math.max(Math.min(this.dutyCycle, 1), 0);
     }
 
@@ -268,6 +256,34 @@ public class EffectCurve extends Effect {
         return 0.25 + warpedFromPeak;
     }
 
+    // how far a sawtooth has ramped up at a position inside its cycle, between 0 (its
+    // bottom) and 1 (its top), before it jumps back at the end of the cycle. it keeps the
+    // jump where it is and is on over the duty cycle before it: below 50 % it ramps faster
+    // and rests at its bottom before, above it ramps right after the jump and rests at its
+    // top. the plain 50 % ramps over the whole cycle.
+    private double getRamp(double cyclePosition) {
+        double duty = this.getClampedDutyCycle();
+
+        if (duty == 0.5) {
+            return cyclePosition;
+        }
+
+        // never on or never off: the curve rests at its bottom or its top
+        if (duty <= 0) {
+            return 0;
+        }
+
+        if (duty >= 1) {
+            return 1;
+        }
+
+        // the ramp crosses its middle where the duty cycle begins and takes twice the shorter
+        // of the on and off parts, so it fits into the cycle on both sides of its middle
+        double rampLength = 2 * Math.min(duty, 1 - duty);
+
+        return Math.max(Math.min(0.5 + (cyclePosition - (1 - duty)) / rampLength, 1), 0);
+    }
+
     // the value of the curve at a position inside its cycle, between 0 and 1. every curve swings over its whole
     // amplitude around its position (before project version 8, the curves except the square swung over half of it).
     private double getCurveValue(double cyclePosition) {
@@ -281,9 +297,12 @@ public class EffectCurve extends Effect {
                 value = position + amplitude / 2 * Math.sin(2 * Math.PI * warped);
                 break;
             case "square":
-                // the curve is on over the last part of the cycle, which leaves the default
-                // of 50 % the same square as before there was a duty cycle
-                if (cyclePosition >= 1 - this.getClampedDutyCycle()) {
+                // on while the sine is above its position: over the duty cycle, centered on
+                // the peak of the sine at a quarter of the cycle
+                double duty = this.getClampedDutyCycle();
+                double fromOn = ((cyclePosition - 0.25 + duty / 2) % 1 + 1) % 1;
+
+                if (fromOn < duty) {
                     value = position + amplitude / 2;
                 } else {
                     value = position - amplitude / 2;
@@ -295,12 +314,12 @@ public class EffectCurve extends Effect {
                 value = position + amplitude / 2 * (1 - 4 * Math.abs((warped + 0.25) % 1 - 0.5));
                 break;
             case "sawtooth":
-                // ramps up over the whole cycle, then jumps back
-                value = position + amplitude / 2 * (2 * cyclePosition - 1);
+                // ramps up, then jumps back at the end of the cycle
+                value = position + amplitude / 2 * (2 * this.getRamp(cyclePosition) - 1);
                 break;
             case "reverse-sawtooth":
-                // ramps down over the whole cycle, then jumps back
-                value = position + amplitude / 2 * (1 - 2 * cyclePosition);
+                // the sawtooth run backwards: jumps up at the beginning of the cycle, then ramps down
+                value = position + amplitude / 2 * (2 * this.getRamp(1 - cyclePosition) - 1);
                 break;
         }
 

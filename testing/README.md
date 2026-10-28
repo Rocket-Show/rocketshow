@@ -977,6 +977,13 @@ Found by reading the code and by the tests. Each one gets a unit test or rig tes
   (Rocket-Show/show-designer `claude/curve-amplitude`). Designer projects are version 8: older ones get half the
   amplitude for these curves, so they look exactly the same (`EffectCurveTest`, `DesignerDmxTest`,
   `DesignerProjectCompatibilityTest`).
+- [x] **The width of a sine or a triangle skewed it into a sawtooth, and the square ran half a period after the
+  sine.** The curve rose over the width and fell over the rest. Every curve keeps its shape now and is on for exactly
+  the width: narrower, it rests at its bottom for the rest of the period, wider, at its top. A sine, a triangle and a
+  square stay centered on their peak, a sawtooth keeps its jump, and the width applies to the sawtooths as well. The
+  square is on while the sine is above its position. In the app and in the designer (Rocket-Show/show-designer
+  `claude/happy-planck-ll4a0i`). Shows with a square, or with a width other than 50 %, look different
+  (`EffectCurveTest`).
 - [x] **A hung synchronized unit delayed the main unit.** A play waited up to 30 seconds (before the read timeout: 60)
   for a unit which didn't answer, while holding the player lock, so stop and pause waited as well. A play waits at most
   6 seconds now (2 to connect, 5 for the answer), and not at all for a unit which didn't answer the last time, until
