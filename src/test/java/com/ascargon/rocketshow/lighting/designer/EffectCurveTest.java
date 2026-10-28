@@ -3,6 +3,8 @@ package com.ascargon.rocketshow.lighting.designer;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -206,8 +208,8 @@ class EffectCurveTest {
     void shapesTheOtherCurves() {
         // every curve swings over its whole amplitude, like the square
         EffectCurve square = curve("square");
-        assertEquals(0, valueAt(square, 100), 1e-9);
-        assertEquals(1, valueAt(square, 600), 1e-9);
+        assertEquals(1, valueAt(square, 100), 1e-9);
+        assertEquals(0, valueAt(square, 600), 1e-9);
 
         EffectCurve triangle = curve("triangle");
         assertEquals(0.5, valueAt(triangle, 0), 1e-9);
@@ -229,18 +231,156 @@ class EffectCurveTest {
         curve.setPosition(0.9f);
         curve.setAmplitude(2);
 
-        assertEquals(0, valueAt(curve, 100));
-        assertEquals(1, valueAt(curve, 600));
+        assertEquals(1, valueAt(curve, 100));
+        assertEquals(0, valueAt(curve, 600));
     }
 
     @Test
-    void stretchesTheOnPartOfASquareByItsDutyCycle() {
-        EffectCurve curve = curve("square");
-        curve.setDutyCycle(0.1f);
+    void runsTheSquareInPhaseWithTheSine() {
+        for (float dutyCycle : new float[]{0.1f, 0.5f, 0.9f}) {
+            EffectCurve sine = curve("sine");
+            EffectCurve square = curve("square");
+            sine.setDutyCycle(dutyCycle);
+            square.setDutyCycle(dutyCycle);
 
-        // on over the last tenth of the cycle only
-        assertEquals(0, valueAt(curve, 850), 1e-9);
-        assertEquals(1, valueAt(curve, 950), 1e-9);
+            // on while the sine is above its position. the borders are left out, where the
+            // sine is right on its position.
+            for (int millis = 2; millis < 1000; millis += 5) {
+                assertEquals(valueAt(sine, millis) > 0.5 ? 1 : 0, valueAt(square, millis), 1e-9);
+            }
+        }
+    }
+
+    @Test
+    void narrowsAndWidensASquareAroundItsMiddle() {
+        EffectCurve curve = curve("square");
+
+        // on from 200 to 300
+        curve.setDutyCycle(0.1f);
+        assertEquals(0, valueAt(curve, 199), 1e-9);
+        assertEquals(1, valueAt(curve, 201), 1e-9);
+        assertEquals(1, valueAt(curve, 299), 1e-9);
+        assertEquals(0, valueAt(curve, 301), 1e-9);
+
+        // off from 700 to 800
+        curve.setDutyCycle(0.9f);
+        assertEquals(1, valueAt(curve, 0), 1e-9);
+        assertEquals(1, valueAt(curve, 699), 1e-9);
+        assertEquals(0, valueAt(curve, 701), 1e-9);
+        assertEquals(0, valueAt(curve, 799), 1e-9);
+        assertEquals(1, valueAt(curve, 801), 1e-9);
+    }
+
+    @Test
+    void rampsANarrowSawtoothUpRightBeforeItsJump() {
+        EffectCurve curve = curve("sawtooth");
+        curve.setDutyCycle(0.2f);
+
+        // at the bottom until the ramp, which takes twice the width
+        assertEquals(0, valueAt(curve, 300), 1e-9);
+        assertEquals(0, valueAt(curve, 600), 1e-6);
+        assertEquals(0.5, valueAt(curve, 800), 1e-6);
+        assertEquals(0.75, valueAt(curve, 900), 1e-6);
+    }
+
+    @Test
+    void restsAWideSawtoothAtItsTopBeforeItsJump() {
+        EffectCurve curve = curve("sawtooth");
+        curve.setDutyCycle(0.8f);
+
+        assertEquals(0, valueAt(curve, 0), 1e-6);
+        assertEquals(0.5, valueAt(curve, 200), 1e-6);
+        assertEquals(1, valueAt(curve, 400), 1e-6);
+        assertEquals(1, valueAt(curve, 900), 1e-9);
+    }
+
+    @Test
+    void runsAReverseSawtoothAsTheSawtoothBackwardsAtAnyWidth() {
+        EffectCurve curve = curve("reverse-sawtooth");
+
+        curve.setDutyCycle(0.2f);
+        assertEquals(1, valueAt(curve, 0), 1e-9);
+        assertEquals(0.5, valueAt(curve, 200), 1e-6);
+        assertEquals(0, valueAt(curve, 500), 1e-9);
+
+        curve.setDutyCycle(0.8f);
+        assertEquals(1, valueAt(curve, 300), 1e-9);
+        assertEquals(0.5, valueAt(curve, 800), 1e-6);
+    }
+
+    @Test
+    void holdsEveryCurveFlatAtTheEndsOfTheWidth() {
+        for (String curveType : List.of("sine", "triangle", "square", "sawtooth", "reverse-sawtooth")) {
+            EffectCurve curve = curve(curveType);
+
+            for (int millis = 0; millis < 1000; millis += 50) {
+                curve.setDutyCycle(0);
+                assertEquals(0, valueAt(curve, millis), 1e-9);
+
+                curve.setDutyCycle(1);
+                assertEquals(1, valueAt(curve, millis), 1e-9);
+            }
+        }
+    }
+
+    @Test
+    void keepsASineAndATriangleSymmetricAroundTheirPeakAtAnyWidth() {
+        for (String curveType : List.of("sine", "triangle")) {
+            for (float dutyCycle : new float[]{0.1f, 0.3f, 0.7f, 0.9f}) {
+                EffectCurve curve = curve(curveType);
+                curve.setDutyCycle(dutyCycle);
+
+                // the peak stays where it is
+                assertEquals(1, valueAt(curve, 250), 1e-9);
+
+                for (int fromPeak = 10; fromPeak <= 250; fromPeak += 10) {
+                    assertEquals(valueAt(curve, 250 - fromPeak), valueAt(curve, 250 + fromPeak), 1e-6);
+                }
+            }
+        }
+    }
+
+    @Test
+    void restsANarrowSineAtItsBottom() {
+        EffectCurve curve = curve("sine");
+        curve.setDutyCycle(0.2f);
+
+        // a full swing over twice the width around the peak, crossing the middle at the
+        // borders of the width
+        assertEquals(0.5, valueAt(curve, 150), 1e-6);
+        assertEquals(0.5, valueAt(curve, 350), 1e-6);
+
+        // and at the bottom over the rest of the period
+        assertEquals(0, valueAt(curve, 0), 1e-9);
+        assertEquals(0, valueAt(curve, 500), 1e-9);
+        assertEquals(0, valueAt(curve, 750), 1e-9);
+    }
+
+    @Test
+    void restsAWideSineAtItsTop() {
+        EffectCurve curve = curve("sine");
+        curve.setDutyCycle(0.8f);
+
+        assertEquals(1, valueAt(curve, 0), 1e-9);
+        assertEquals(1, valueAt(curve, 500), 1e-9);
+        assertEquals(0.5, valueAt(curve, 650), 1e-6);
+        assertEquals(0, valueAt(curve, 750), 1e-9);
+        assertEquals(0.5, valueAt(curve, 850), 1e-6);
+    }
+
+    @Test
+    void restsACurveFlatBeyondTheMiddle() {
+        EffectCurve curve = curve("sine");
+
+        curve.setPosition(-0.5f);
+        for (int millis = 0; millis < 1000; millis += 50) {
+            assertEquals(0, valueAt(curve, millis), 1e-9);
+        }
+
+        curve.setPosition(1.5f);
+        for (int millis = 0; millis < 1000; millis += 50) {
+            assertEquals(1, valueAt(curve, millis), 1e-9);
+        }
     }
 
     @Test
