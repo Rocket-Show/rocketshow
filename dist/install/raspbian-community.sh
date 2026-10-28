@@ -290,35 +290,61 @@ mask_to_prefix() {
     echo $prefix
 }
 
-# Prefer the currently active connection; fall back to any configured connection.
-# Use sed instead of cut so connection names containing ':' are handled correctly.
-CON=$(nmcli -t -f NAME,DEVICE con show --active | grep ":${IFACE}$" | sed 's/:[^:]*$//' | head -1)
+# The connections are handled by their UUID: the names are not unique and may contain ':'.
+
+# The ethernet connections of eth0 (bound to it or to no interface), the most recently used first. An inactive
+# connection shows no device in "nmcli con show", so its interface is read from the connection itself.
+IFACE_CONS=""
+for uuid in $(nmcli -g TIMESTAMP,UUID,TYPE con show | sort -t: -k1,1nr | awk -F: '$3 == "802-3-ethernet" { print $2 }'); do
+    ifname=$(nmcli -g connection.interface-name con show "$uuid")
+    if [ -z "$ifname" ] || [ "$ifname" = "$IFACE" ]; then
+        IFACE_CONS="$IFACE_CONS $uuid"
+    fi
+done
+
+# Prefer the currently active connection, otherwise the one eth0 used last
+CON=$(nmcli -g UUID,DEVICE con show --active | awk -F: -v iface="$IFACE" '$2 == iface { print $1; exit }')
 if [ -z "$CON" ]; then
-    CON=$(nmcli -t -f NAME,DEVICE con show | grep ":${IFACE}$" | sed 's/:[^:]*$//' | head -1)
+    CON=$(echo "$IFACE_CONS" | awk '{ print $1 }')
 fi
 
 if [ -z "$CON" ]; then
-    CON="rocketshow-eth0"
-    nmcli con add type ethernet ifname "$IFACE" con-name "$CON" connection.autoconnect yes
+    CON=$(cat /proc/sys/kernel/random/uuid)
+    nmcli con add type ethernet ifname "$IFACE" con-name "rocketshow-eth0" connection.uuid "$CON"
 fi
+
+# Only this connection brings up eth0, not e.g. the ones an earlier version of this script added each time eth0 was
+# not connected
+for uuid in $IFACE_CONS; do
+    if [ "$uuid" != "$CON" ]; then
+        nmcli con mod "$uuid" connection.autoconnect no
+    fi
+done
 
 if [ "$MODE" = "static" ]; then
     PREFIX=$(mask_to_prefix "$SUBNET_MASK")
+    # Use the address, even if another device on the LAN answers for it (dad-timeout 0). Otherwise,
+    # NetworkManager refuses it and leaves eth0 without any IPv4 address.
     nmcli con mod "$CON" \
+        connection.autoconnect yes \
         ipv4.method manual \
         ipv4.addresses "${IP_ADDRESS}/${PREFIX}" \
-        ipv4.gateway "$GATEWAY"
+        ipv4.gateway "$GATEWAY" \
+        ipv4.dad-timeout 0
 
     DNS_SERVERS=""
     [ -n "$DNS1" ] && DNS_SERVERS="$DNS1"
     [ -n "$DNS1" ] && [ -n "$DNS2" ] && DNS_SERVERS="$DNS1 $DNS2"
     nmcli con mod "$CON" ipv4.dns "$DNS_SERVERS"
 else
+    # A leased address is checked again (the default dad-timeout)
     nmcli con mod "$CON" \
+        connection.autoconnect yes \
         ipv4.method auto \
         ipv4.addresses "" \
         ipv4.gateway "" \
-        ipv4.dns ""
+        ipv4.dns "" \
+        ipv4.dad-timeout -1
 fi
 
 # Reactivate the connection so changes take effect immediately without a reboot.
