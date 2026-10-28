@@ -99,4 +99,32 @@ class PresetIntensityTest {
 
         assertEquals(0, intensity(playing, 5000));
     }
+
+    @Test
+    void fadesAPresetOutWithItsSceneWhenTheSceneFadesOutPastItsClip() {
+        Scene fading = scene(1);
+        fading.setFadeOutMillis(2000);
+        fading.setFadeOutPost(true);
+        Preset preset = new Preset();
+        preset.setFadeOutMillis(1000);
+        PresetRegionScene playing = new PresetRegionScene(preset, region(0, 10000), fading);
+
+        // without times of its own, the preset ends with the scene: both fade out together
+        assertEquals(1, intensity(playing, 10000));
+        assertEquals(0.25 * 0.5, intensity(playing, 11500), 0.0000000001);
+    }
+
+    @Test
+    void fadesAPresetInWithItsSceneWhenTheSceneFadesInBeforeItsClip() {
+        Scene fading = scene(1);
+        fading.setFadeInMillis(2000);
+        fading.setFadeInPre(true);
+        Preset preset = new Preset();
+        preset.setFadeInMillis(1000);
+        PresetRegionScene playing = new PresetRegionScene(preset, region(5000, 10000), fading);
+
+        assertEquals(0.25 * 0.5, intensity(playing, 3500), 0.0000000001);
+        assertEquals(1, intensity(playing, 5000));
+    }
+
 }

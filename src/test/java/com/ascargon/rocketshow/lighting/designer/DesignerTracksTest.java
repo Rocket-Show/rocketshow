@@ -197,6 +197,36 @@ class DesignerTracksTest {
         assertEquals(255, show(project));
     }
 
+    // A scene fading in before its clip or out past it plays meanwhile: its presets play as long as the scene
+    @Test
+    void playsASceneWhileItFadesOutsideItsClip() throws Exception {
+        ObjectNode project = project(10);
+        addTrack(project, "top");
+        ObjectNode region = ((ArrayNode) composition(project).get("scenePlaybackRegions")).addObject();
+        region.put("sceneUuid", "bright-scene");
+        region.put("trackUuid", "top");
+        region.put("startMillis", 10000);
+        region.put("endMillis", 20000);
+        ObjectNode scene = (ObjectNode) project.get("scenes").get(1);
+        scene.put("fadeInMillis", 2000);
+        scene.put("fadeInPre", true);
+        scene.put("fadeOutMillis", 2000);
+        scene.put("fadeOutPost", true);
+
+        // half way into the fades, half of the scene is there
+        assertEquals(128, dimmerAt(project, 9000), 1);
+        assertEquals(128, dimmerAt(project, 21000), 1);
+        assertEquals(0, dimmerAt(project, 22500));
+    }
+
+    private int dimmerAt(ObjectNode project, long positionMillis) throws Exception {
+        DesignerTestEngine engine = new DesignerTestEngine();
+        int dimmer = engine.play(directory, project.toString(), "Song", positionMillis, List.of(UNIVERSE)).get(UNIVERSE).getOrDefault(1, 0);
+
+        assertEquals(List.of(), engine.errors);
+        return dimmer;
+    }
+
     @Test
     void playsNothingOfACompositionWithoutTracks() throws Exception {
         // e.g. one which only plays actions

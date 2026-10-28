@@ -135,6 +135,18 @@ class DesignerCompositionEndTest {
     }
 
     @Test
+    void waitsForAPresetFadingOutPastTheEndOfASceneFadingOutPastItsClip() throws Exception {
+        ObjectNode scene = addScene("a");
+        scene.put("fadeOutMillis", 2000);
+        scene.put("fadeOutPost", true);
+        preset("a").put("fadeOutMillis", 3000);
+        preset("a").put("fadeOutPost", true);
+        play("a", 0, 10000);
+
+        assertEquals(15000, endOfSong());
+    }
+
+    @Test
     void followsAPresetPlayingLongerThanItsClip() throws Exception {
         addScene("a");
         preset("a").put("endMillis", 15000);
