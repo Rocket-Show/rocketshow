@@ -63,11 +63,11 @@
 </div>
 
 <div class="form-group row">
-  <div class="col-lg-3 col-form-label">
+  <label class="col-lg-3 col-form-label">
     {{ "settings.monitoring" | translate }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
       [popover]="'settings.help.monitoring' | translate" triggers="mouseenter:mouseleave" container="body"
       placement="right" aria-hidden="true"></i>
-  </div>
+  </label>
   <div class="col-lg-9 d-flex">
     <div class="form-check my-auto">
       <input type="checkbox" [ngModel]="settings?.enableMonitor" (ngModelChange)="settings.enableMonitor = $event"
@@ -82,9 +82,9 @@
 
 @if (deviceInformation?.available && operatingSystemInformation?.subType == 'RASPBERRYOS') {
 <div class="form-group row">
-  <div class="col-lg-3 col-form-label">
+  <label class="col-lg-3 col-form-label">
     {{ "settings.backup.title" | translate }}
-  </div>
+  </label>
   <div class="col-lg-9">
     <a href="#" (click)="backupCreate(); (false)" class="btn btn-primary btn-sm">
       <i class="fa fa-download" aria-hidden="true"></i>
@@ -99,9 +99,9 @@
 
 @if (deviceInformation?.available) {
 <div class="form-group row">
-  <div class="col-lg-3 col-form-label">
+  <label class="col-lg-3 col-form-label">
     {{ "settings.update-test-branch" | translate }}
-  </div>
+  </label>
   <div class="col-lg-9 d-flex">
     <div class="form-check my-auto">
       <input type="checkbox" [ngModel]="settings?.updateTestBranch" (ngModelChange)="settings.updateTestBranch = $event"
@@ -132,17 +132,14 @@
 <app-spark-hint placement="settings-system" text="spark.hint.system"></app-spark-hint>
 
 <div class="form-group row">
-  <div class="col-lg-3"></div>
+  <label class="col-lg-3 col-form-label">{{
+    "settings.device" | translate
+    }}</label>
   <div class="col-lg-9">
     <a href="#" class="btn btn-primary btn-sm" (click)="reboot(); (false)">
       <i class="fa fa-repeat fa-fw" aria-hidden="true"></i>
       {{ "settings.reboot-device" | translate }}</a>
-  </div>
-</div>
-
-<div class="form-group row">
-  <div class="col-lg-3"></div>
-  <div class="col-lg-9">
+    &nbsp;
     <a href="#" class="btn btn-primary btn-sm" (click)="shutdown(); (false)">
       <i class="fa fa-power-off fa-fw" aria-hidden="true"></i>
       {{ "settings.shutdown-device" | translate }}</a>
