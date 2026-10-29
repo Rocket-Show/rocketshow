@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
@@ -82,6 +83,7 @@ class DesignerConformanceTest {
             case "pixels" -> pixels(input);
             case "pixelGroup" -> pixelGroup(input);
             case "channelValues" -> channelValues(input);
+            case "migration" -> migration(input);
             default -> throw new IllegalArgumentException("Unknown kind " + kind);
         };
     }
@@ -135,6 +137,20 @@ class DesignerConformanceTest {
         return result;
     }
 
+    // a capability value as the designer writes it (e.g. the color "Warm White"), without the properties missing
+    private static ObjectNode capability(FixtureCapabilityValue value) {
+        ObjectNode written = DesignerJson.MAPPER.valueToTree(value);
+        ObjectNode capability = NODES.objectNode();
+
+        for (String property : List.of("type", "color", "wheel", "profileUuid", "valuePercentage", "slotNumber")) {
+            if (written.has(property) && !written.get(property).isNull()) {
+                capability.set(property, written.get(property));
+            }
+        }
+
+        return capability;
+    }
+
     private static JsonNode state(PresetStepState state) {
         ObjectNode result = NODES.objectNode();
         result.put("step", state.getCurrentStep() == null ? null : state.getCurrentStep().getUuid());
@@ -144,18 +160,8 @@ class DesignerConformanceTest {
             channels.addArray().add(value.getProfileUuid()).add(value.getChannelName()).add(number(value.getValue()));
         }
 
-        // the values as the designer writes them (e.g. the color "Warm White"), without the ones missing
         ArrayNode capabilities = result.putArray("capabilities");
-        for (FixtureCapabilityValue value : state.getFixtureCapabilityValues()) {
-            ObjectNode written = DesignerJson.MAPPER.valueToTree(value);
-            ObjectNode capability = capabilities.addObject();
-
-            for (String property : List.of("type", "color", "wheel", "profileUuid", "valuePercentage", "slotNumber")) {
-                if (written.has(property) && !written.get(property).isNull()) {
-                    capability.set(property, written.get(property));
-                }
-            }
-        }
+        state.getFixtureCapabilityValues().forEach(value -> capabilities.add(capability(value)));
 
         ObjectNode effects = result.putObject("effects");
         for (String effectUuid : new TreeSet<>(state.getEffectAmounts().keySet())) {
@@ -337,6 +343,103 @@ class DesignerConformanceTest {
         }
 
         return runs;
+    }
+
+    private static <T> List<T> listOf(List<T> list) {
+        return list == null ? List.of() : list;
+    }
+
+    private static <T> List<T> listOf(T[] array) {
+        return array == null ? List.of() : Arrays.asList(array);
+    }
+
+    // a fixture of the project or of a preset: its uuid and its pixel (null for the fixture itself)
+    private static ArrayNode presetFixtures(List<PresetFixture> presetFixtures) {
+        ArrayNode result = NODES.arrayNode();
+        listOf(presetFixtures).forEach(presetFixture -> result.addArray().add(presetFixture.getFixtureUuid()).add(presetFixture.getPixelKey()));
+        return result;
+    }
+
+    private static ArrayNode texts(List<String> texts) {
+        ArrayNode result = NODES.arrayNode();
+        listOf(texts).forEach(result::add);
+        return result;
+    }
+
+    // What both engines keep of a migrated project and play it with, like the designer writes it (conformance.spec.ts):
+    // the fixtures and pixels of the presets, the steps, the curves, the layers of the scenes and the tracks of the
+    // compositions. A clip names its track by its place in the composition: the uuid of a new track is a random one.
+    private static JsonNode migratedProject(Project project) {
+        ObjectNode result = NODES.objectNode();
+        result.put("version", project.getVersion());
+        result.set("presetFixtures", presetFixtures(project.getPresetFixtures()));
+
+        ArrayNode presets = result.putArray("presets");
+        for (Preset preset : listOf(project.getPresets())) {
+            ObjectNode presetNode = presets.addObject();
+            presetNode.put("uuid", preset.getUuid());
+            presetNode.set("fixtures", presetFixtures(preset.getFixtures()));
+            presetNode.put("useGlobalFixtureOrder", preset.isUseGlobalFixtureOrder());
+
+            ArrayNode steps = presetNode.putArray("steps");
+            for (PresetStep step : listOf(preset.getSteps())) {
+                ObjectNode stepNode = steps.addObject();
+                stepNode.put("startMillis", step.getStartMillis());
+                stepNode.set("transitionMillis", number(step.getTransitionMillis()));
+                stepNode.put("transitionCurve", step.getTransitionCurve());
+
+                ArrayNode channels = stepNode.putArray("channels");
+                listOf(step.getFixtureChannelValues()).forEach(value -> channels.addArray().add(value.getProfileUuid()).add(value.getChannelName()).add(number(value.getValue())));
+
+                ArrayNode capabilities = stepNode.putArray("capabilities");
+                listOf(step.getFixtureCapabilityValues()).forEach(value -> capabilities.add(capability(value)));
+
+                ArrayNode effects = stepNode.putArray("effects");
+                listOf(step.getEffectAmounts()).forEach(effectAmount -> effects.addArray().add(effectAmount.getEffectUuid()).add(effectAmount.getAmount()));
+            }
+
+            ArrayNode effects = presetNode.putArray("effects");
+            for (Effect effect : listOf(preset.getEffects())) {
+                ObjectNode effectNode = effects.addObject();
+                effectNode.put("uuid", effect.getUuid());
+
+                if (effect instanceof EffectCurve curve) {
+                    effectNode.put("type", "curve");
+                    effectNode.put("curveType", curve.getCurveType());
+                    effectNode.put("amplitude", curve.getAmplitude());
+
+                    ArrayNode channels = effectNode.putArray("channels");
+                    listOf(curve.getChannels()).forEach(profileChannels -> channels.addArray().add(profileChannels.getProfileUuid()).add(texts(profileChannels.getChannels())));
+                } else {
+                    effectNode.put("type", "pan-tilt");
+                }
+            }
+        }
+
+        ArrayNode scenes = result.putArray("scenes");
+        listOf(project.getScenes()).forEach(scene -> scenes.addArray().add(scene.getUuid()).add(texts(listOf(scene.getPresetUuids()))));
+
+        ArrayNode compositions = result.putArray("compositions");
+        for (Composition composition : listOf(project.getCompositions())) {
+            ObjectNode compositionNode = compositions.addObject();
+            compositionNode.put("uuid", composition.getUuid());
+
+            List<String> trackUuids = composition.getTracks().stream().map(Track::getUuid).toList();
+            ArrayNode tracks = compositionNode.putArray("tracks");
+            composition.getTracks().forEach(track -> tracks.add(track.getName()));
+
+            ArrayNode clips = compositionNode.putArray("clips");
+            listOf(composition.getScenePlaybackRegions()).forEach(region -> clips.addArray().add(region.getSceneUuid()).add(trackUuids.indexOf(region.getTrackUuid())));
+        }
+
+        return result;
+    }
+
+    // A project of an older version migrated to the current one, like the engine does when it loads it
+    private JsonNode migration(JsonNode input) {
+        Project project = DesignerJson.MAPPER.treeToValue(resolveProfiles(input.get("project")), Project.class);
+        designerService().migrateProject(project);
+        return migratedProject(project);
     }
 
     // ---- the comparison ----

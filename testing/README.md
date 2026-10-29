@@ -129,8 +129,9 @@ The unit tests live in `src/test/java`:
   values, numbers and colors of the fixture library, the order and the older forms of pixel groups (`DesignerParityTest`
   and the new cases of `DesignerDmxTest`, mirroring the parity spec of the designer), and the very same values as the
   designer for its conformance cases, compared exactly (`DesignerConformanceTest`: curves, steps, fades, the fixture
-  library, test fixtures right on the edges of their ranges, wheels and pixels, and whole projects played on the
-  timeline, as a preset and as scenes, recorded from the designer and copied
+  library, test fixtures right on the edges of their ranges, wheels and pixels, whole projects played on the
+  timeline, as a preset and as scenes, and projects of every older version migrated, recorded from the designer and
+  copied
   to `src/test/resources/designer-conformance` with `testing/sync-designer-conformance.sh`, which CI checks)
 - Fixture library: searching and reading it like the designer, updating it from rocketshow.net once a week, every mode
   of a few real profiles played by the engine (`FixtureLibraryTest`, profiles in `src/test/resources/fixtures/`)
@@ -309,7 +310,7 @@ The designer migrations are tested with a project in version 2 and the same proj
 - [x] Designer effect curves, fades and pixel groups, mirroring the specs of the designer.
 - [x] The designer engine reads and works out a project like the preview of the designer (nulls, fractions, defaults
   of the fixture library, pixel groups), mirroring its parity spec.
-- [x] The conformance cases of the designer, which the engine has to come to exactly (900 cases, the copy checked in
+- [x] The conformance cases of the designer, which the engine has to come to exactly (941 cases, the copy checked in
   CI).
 - [x] Compositions and sets: storing, durations, keeping the sets up to date.
 - [x] Parsing the output of the system: RAUC, disk space, LAN, device information, command output while debugging.

@@ -308,6 +308,28 @@ class DesignerTracksTest {
     }
 
     @Test
+    void namesTheTracksOfASceneWithoutANameLikeNewOnes() {
+        // like the designer, which gives a new track the first number no track carries yet
+        Scene unnamed = new Scene();
+        unnamed.setUuid("unnamed");
+        unnamed.setName("");
+        Scene first = new Scene();
+        first.setUuid("first");
+        first.setName("First");
+
+        Composition composition = new Composition();
+        Track track = new Track();
+        track.setUuid("track");
+        track.setName("Track 2");
+        composition.getTracks().add(track);
+        composition.setScenePlaybackRegions(new ScenePlaybackRegion[]{region("unnamed", 0, 4000), region("unnamed", 2000, 6000), region("first", 0, 1000)});
+
+        DefaultDesignerService.assignTracks(composition, List.of(unnamed, first));
+
+        assertEquals(List.of("Track 2", "Track 3", "Track 4", "First"), composition.getTracks().stream().map(Track::getName).toList());
+    }
+
+    @Test
     void leavesACompositionWithoutClipsWithoutTracks() {
         Composition composition = new Composition();
         composition.setScenePlaybackRegions(new ScenePlaybackRegion[0]);
