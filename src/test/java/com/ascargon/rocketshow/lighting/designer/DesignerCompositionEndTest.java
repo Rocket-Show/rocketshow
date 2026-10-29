@@ -155,4 +155,15 @@ class DesignerCompositionEndTest {
         assertEquals(20000, endOfSong());
     }
 
+    @Test
+    void followsThePresetsOfTheSceneOfTheClip() throws Exception {
+        // the preset of the scene played, not the first one of the project
+        addScene("a");
+        addScene("b");
+        preset("b").put("endMillis", 15000);
+        play("b", 5000, 10000);
+
+        assertEquals(20000, endOfSong());
+    }
+
 }

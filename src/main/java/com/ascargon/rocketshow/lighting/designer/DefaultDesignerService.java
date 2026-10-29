@@ -745,8 +745,10 @@ public class DefaultDesignerService implements DesignerService {
             // there is a wheel connected to this capability
             if (capability.getWheel() instanceof String) {
                 cachedFixtureCapability.setWheelName((String) capability.getWheel());
-            } else if (capability.getWheel() instanceof String[]) {
-                cachedFixtureCapability.setWheelName(((String[]) capability.getWheel())[0]);
+            } else if (capability.getWheel() instanceof List<?> wheels) {
+                // a capability of several wheels (e.g. shaking them all) names them in a list (a JSON array is read
+                // as one): the first one, like in the designer
+                cachedFixtureCapability.setWheelName(wheels.isEmpty() ? null : String.valueOf(wheels.getFirst()));
             } else {
                 cachedFixtureCapability.setWheelName(channelName);
             }

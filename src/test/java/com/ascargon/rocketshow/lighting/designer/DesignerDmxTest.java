@@ -314,6 +314,152 @@ class DesignerDmxTest {
         assertEquals(Math.round(65535 * 0.333), head.get(2) * 256 + head.get(3), 1);
     }
 
+    // The dimmer of the pars: off until 7, from dark to bright between 8 and 134, then the strobe
+    private void shareTheDimmersOfThePars(ObjectNode project) {
+        ObjectNode dimmer = (ObjectNode) objectMapper.readTree("""
+                {"fineChannelAliases": [], "capabilities": [
+                  {"dmxRange": [0, 7], "type": "Intensity", "brightness": "off"},
+                  {"dmxRange": [8, 134], "type": "Intensity", "brightnessStart": "dark", "brightnessEnd": "bright"},
+                  {"dmxRange": [135, 255], "type": "ShutterStrobe", "shutterEffect": "Strobe"}
+                ]}
+                """);
+        ((ObjectNode) project.get("fixtureProfiles").get(0).get("availableChannels")).set("Dimmer", dimmer);
+    }
+
+    // A preset setting a channel of the passed fixture to a DMX value
+    private void addChannelPreset(ObjectNode project, String name, String fixtureUuid, String profileUuid, String channelName, double value) {
+        addPreset(project, name, List.of(fixtureUuid), List.of());
+        ArrayNode presets = (ArrayNode) project.get("presets");
+        ((ArrayNode) presets.get(presets.size() - 1).get("steps").get(0).get("fixtureChannelValues")).addObject()
+                .put("channelName", channelName)
+                .put("profileUuid", profileUuid)
+                .put("value", value);
+    }
+
+    @Test
+    void sendsTheValuesAsTheyAreWithTheMasterDimmerAtFull() throws Exception {
+        // Dimmed by a factor of 1 within its range, 43 would come out a hair below (42.99999999999999), which the DMX
+        // value rounds down
+        ObjectNode project = project();
+        shareTheDimmersOfThePars(project);
+        addChannelPreset(project, "Dimmer", "par-1", "test/rgb-par", "Dimmer", 43);
+
+        assertEquals(43, play(project).get(FRONT).get(1));
+    }
+
+    @Test
+    void dimsADimmerWithinTheRangeItIsIn() throws Exception {
+        ObjectNode project = project();
+        project.put("masterDimmerValue", 0.5);
+        shareTheDimmersOfThePars(project);
+        addChannelPreset(project, "Bright", "par-1", "test/rgb-par", "Dimmer", 134);
+        addChannelPreset(project, "Off", "par-2", "test/rgb-par", "Dimmer", 3);
+
+        Map<Integer, Integer> front = play(project).get(FRONT);
+
+        // Bright, right on the end of its range, half way from dark (1 %) to bright. Off is a single brightness, which
+        // can't be dimmed.
+        assertEquals(70, front.get(1));
+        assertEquals(3, front.get(11));
+    }
+
+    @Test
+    void dimsAnInvertedDimmerFromItsBrightEnd() throws Exception {
+        ObjectNode project = project();
+        project.put("masterDimmerValue", 0.5);
+        ObjectNode dimmer = (ObjectNode) objectMapper.readTree("""
+                {"fineChannelAliases": [], "capability": {"type": "Intensity", "brightnessStart": "bright", "brightnessEnd": "off"}}
+                """);
+        ((ObjectNode) project.get("fixtureProfiles").get(0).get("availableChannels")).set("Dimmer", dimmer);
+        addChannelPreset(project, "Bright", "par-1", "test/rgb-par", "Dimmer", 0);
+
+        // Bright at 0, the start of the channel: half of it is half way to off
+        assertEquals(127, play(project).get(FRONT).get(1));
+    }
+
+    @Test
+    void sendsEachByteOfA24BitChannel() throws Exception {
+        ObjectNode project = project();
+        ObjectNode head = (ObjectNode) project.get("fixtureProfiles").get(1);
+        ((ObjectNode) head.get("availableChannels").get("Pan")).putArray("fineChannelAliases").add("Pan fine").add("Pan finer");
+        ObjectNode finer = ((ArrayNode) head.get("modes").get(0).get("channels")).insertObject(2);
+        finer.put("name", "Pan finer");
+        finer.putArray("repeatFor");
+        finer.putArray("templateChannels");
+        addChannelPreset(project, "Pan", "head", "test/moving-head", "Pan", 0x123456);
+
+        assertEquals(List.of(0x12, 0x34, 0x56), addresses(play(project).get(BACK), 1, 3));
+    }
+
+    // A bar of three pixels in two modes, as the designer saves it: its red, green and blue channels per channel (all
+    // reds, then all greens and all blues) from address 31, and a 16 bit dimmer per pixel from address 41
+    private void addPixelBars(ObjectNode project) {
+        ObjectNode bar = (ObjectNode) objectMapper.readTree("""
+                {
+                  "uuid": "test/pixel-bar",
+                  "name": "Pixel bar",
+                  "matrix": {"pixelCount": [3, 1, 1]},
+                  "availableChannels": {},
+                  "templateChannels": {
+                    "Red $pixelKey": {"fineChannelAliases": [], "capability": {"type": "ColorIntensity", "color": "Red"}},
+                    "Green $pixelKey": {"fineChannelAliases": [], "capability": {"type": "ColorIntensity", "color": "Green"}},
+                    "Blue $pixelKey": {"fineChannelAliases": [], "capability": {"type": "ColorIntensity", "color": "Blue"}},
+                    "Dimmer $pixelKey": {"fineChannelAliases": ["Dimmer $pixelKey fine"], "capability": {"type": "Intensity"}}
+                  },
+                  "modes": [
+                    {"name": "9-channel", "shortName": "9ch", "channels": [{"name": "", "insert": "matrixChannels", "repeatFor": ["eachPixelABC"],
+                      "channelOrder": "perChannel", "templateChannels": ["Red $pixelKey", "Green $pixelKey", "Blue $pixelKey"]}]},
+                    {"name": "6-channel", "shortName": "6ch", "channels": [{"name": "", "insert": "matrixChannels", "repeatFor": ["eachPixelABC"],
+                      "channelOrder": "perPixel", "templateChannels": ["Dimmer $pixelKey", "Dimmer $pixelKey fine"]}]}
+                  ]
+                }
+                """);
+        ((ArrayNode) project.get("fixtureProfiles")).add(bar);
+
+        for (String mode : List.of("9ch", "6ch")) {
+            ObjectNode fixture = ((ArrayNode) project.get("fixtures")).addObject();
+            fixture.put("uuid", "bar-" + mode);
+            fixture.put("name", "Bar " + mode);
+            fixture.put("profileUuid", "test/pixel-bar");
+            fixture.put("modeShortName", mode);
+            fixture.put("dmxUniverseUuid", FRONT);
+            fixture.put("dmxFirstChannel", mode.equals("9ch") ? 30 : 40);
+
+            for (String pixelKey : List.of("1", "2", "3")) {
+                ((ArrayNode) project.get("presetFixtures")).addObject().put("fixtureUuid", "bar-" + mode).put("pixelKey", pixelKey);
+            }
+        }
+    }
+
+    // A preset for one pixel of a bar
+    private void addPixelPreset(ObjectNode project, String name, String fixtureUuid, String pixelKey, List<ObjectNode> capabilityValues) {
+        addPreset(project, name, List.of(fixtureUuid), capabilityValues);
+        ArrayNode presets = (ArrayNode) project.get("presets");
+        ((ObjectNode) presets.get(presets.size() - 1).get("fixtures").get(0)).put("pixelKey", pixelKey);
+    }
+
+    @Test
+    void sendsThePixelsOfABarChannelByChannel() throws Exception {
+        ObjectNode project = project();
+        addPixelBars(project);
+        addPixelPreset(project, "Red", "bar-9ch", "2", List.of(color(project, "Red", 1.0)));
+        addPixelPreset(project, "Blue", "bar-9ch", "3", List.of(color(project, "Blue", 1.0)));
+
+        // Red 1 to 3, green 1 to 3, blue 1 to 3
+        assertEquals(List.of(0, 255, 0, 0, 0, 0, 0, 0, 255), addresses(play(project).get(FRONT), 31, 39));
+    }
+
+    @Test
+    void sendsTheFineChannelsOfThePixels() throws Exception {
+        ObjectNode project = project();
+        addPixelBars(project);
+        addPixelPreset(project, "Half", "bar-6ch", "1", List.of(capability(project, "Intensity", 0.5)));
+        addPixelPreset(project, "Full", "bar-6ch", "2", List.of(capability(project, "Intensity", 1.0)));
+
+        // Dimmer 1 and its fine channel, then the ones of the pixels 2 and 3
+        assertEquals(List.of(127, 255, 255, 255, 0, 0), addresses(play(project).get(FRONT), 41, 46));
+    }
+
 
     // A preset lighting the pars in one color only
     private void addColorPreset(ObjectNode project, String name, double red, double blue) {

@@ -9,6 +9,8 @@ import com.ascargon.rocketshow.settings.TestSettings;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -93,6 +95,75 @@ class ScenePlayerServiceTest {
         scenePlayerService.setActiveScenes("Club Lights", List.of());
         scenePlayerService.setBlackout(false);
         verify(designerService, org.mockito.Mockito.atLeastOnce()).stopManualScenes();
+    }
+
+    @Test
+    void dimsTheScenesPlayingWhenTheMasterDimmerMoves() {
+        DefaultScenePlayerService scenePlayerService = scenePlayerService();
+        scenePlayerService.setActiveScenes("Club Lights", List.of("Club Lights-0"));
+
+        scenePlayerService.setMasterDimmer(0.3);
+
+        verify(designerService).playManualScenes(club, List.of("Club Lights-0"), 0.3);
+    }
+
+    @Test
+    void keepsTheStageDarkWithABlackoutWithoutScenes() {
+        // also over the lights of the default composition
+        DefaultScenePlayerService scenePlayerService = scenePlayerService();
+        scenePlayerService.setActiveScenes("Club Lights", List.of());
+
+        scenePlayerService.setBlackout(true);
+
+        verify(designerService).playManualScenes(club, List.of(), 0.0);
+    }
+
+    @Test
+    void listsTheScenesInTheirFolders() {
+        SceneFolder folder = new SceneFolder();
+        folder.setUuid("ballads");
+        folder.setName("Ballads");
+        club.setSceneFolders(List.of(folder));
+
+        List<SceneProject> projects = scenePlayerService().getProjects();
+
+        assertEquals(List.of("Ballads"), projects.get(1).getSceneFolders().stream().map(SceneFolder::getName).toList());
+        assertEquals(List.of(), projects.get(0).getSceneFolders());
+    }
+
+    @Test
+    void givesTheAppsTheScenesWithTheirPlacesAndLooks() {
+        // The Play screen shows them in the folders and the order of the designer, with their icon and color
+        Scene scene = club.getScenes().get(1);
+        scene.setFolderUuid("ballads");
+        scene.setSortIndex(2);
+        scene.setIcon("fa-star");
+        scene.setColor("#ff0000");
+        scene.setColorAuto(false);
+        scene.setDisplayColor("#ff0000");
+        SceneFolder folder = new SceneFolder();
+        folder.setUuid("ballads");
+        folder.setName("Ballads");
+        folder.setParentUuid("slow");
+        folder.setSortIndex(3);
+        club.setSceneFolders(List.of(folder));
+
+        JsonNode project = new ObjectMapper().valueToTree(scenePlayerService().getProjects()).get(1);
+
+        JsonNode written = project.get("scenes").get(1);
+        assertEquals("ballads", written.get("folderUuid").asString());
+        assertEquals(2, written.get("sortIndex").asDouble());
+        assertEquals("fa-star", written.get("icon").asString());
+        assertEquals("#ff0000", written.get("color").asString());
+        assertFalse(written.get("colorAuto").asBoolean());
+        assertEquals("#ff0000", written.get("displayColor").asString());
+        assertTrue(project.get("scenes").get(0).get("colorAuto").asBoolean());
+
+        JsonNode writtenFolder = project.get("sceneFolders").get(0);
+        assertEquals("ballads", writtenFolder.get("uuid").asString());
+        assertEquals("Ballads", writtenFolder.get("name").asString());
+        assertEquals("slow", writtenFolder.get("parentUuid").asString());
+        assertEquals(3, writtenFolder.get("sortIndex").asDouble());
     }
 
     @Test

@@ -303,6 +303,33 @@ class FixtureLibraryTest {
         assertEquals(profileUuids(), fixtureService.searchFixtures(null, null, null, null).stream().map(SearchFixtureTemplate::getUuid).sorted().toList());
     }
 
+    @Test
+    void updatesTheLibraryOverTheLeftoversOfAnUpdateBrokenOff() throws Exception {
+        // The download unpacked half way and the library replaced before
+        Files.createDirectories(directory.resolve(".fixtures-download/acme"));
+        Files.writeString(directory.resolve(".fixtures-download/acme/stale.json"), "{\"name\": \"Stale\", \"modes\": []}");
+        FileUtils.copyDirectory(library.toFile(), directory.resolve(".fixtures-old").toFile());
+
+        fixtureService.libraryUrl = serve(zip(NEW_LIBRARY));
+        fixtureService.updateProfiles();
+
+        assertEquals(List.of("acme/par"), fixtureService.searchFixtures(null, null, null, null).stream().map(SearchFixtureTemplate::getUuid).toList());
+        assertEquals(List.of("fixtures"), filesBesideTheLibrary());
+    }
+
+    @Test
+    void bringsTheLibraryBackWhenTheUnitWasSwitchedOffWhileReplacingIt() throws Exception {
+        // The library had been moved aside, the new one not yet in its place
+        List<String> profiles = profileUuids();
+        Files.move(library, directory.resolve(".fixtures-old"));
+        fixtureService.libraryUrl = "http://127.0.0.1:1/designer/downloads/fixtures.zip";
+
+        assertThrows(IOException.class, () -> fixtureService.updateProfiles());
+
+        assertEquals(profiles, profileUuids());
+        assertEquals(profiles, fixtureService.searchFixtures(null, null, null, null).stream().map(SearchFixtureTemplate::getUuid).sorted().toList());
+    }
+
     @TestFactory
     Stream<DynamicTest> playsEveryModeOfTheLibrary() throws Exception {
         List<DynamicTest> tests = new ArrayList<>();

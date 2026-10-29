@@ -1,0 +1,12 @@
+{
+  "kind": "presetIntensity",
+  "description": "How much of a preset reaches the stage right on the edges of its fades",
+  "generated": "by generate.mjs, the expected values recorded by record.mjs",
+  "cases": [
+    {"name":"a fade in still running where the fade out starts","input":{"preset":{"fadeInMillis":1500,"fadeOutMillis":1000},"region":{"startMillis":1000,"endMillis":3000},"times":[1000,2000,2500,3000]},"expected":[1,0.6666666666666666,0.5,1]},
+    {"name":"right at the end of a fade in of 333.3 ms","input":{"preset":{"fadeInMillis":333.3},"region":{"startMillis":1000,"endMillis":5000},"times":[1000,1333.3,1333.4]},"expected":[1,1,1]},
+    {"name":"right at the start of a fade out of 100.1 ms","input":{"preset":{"fadeOutMillis":100.1},"region":{"startMillis":0,"endMillis":3000},"times":[2899.8,2899.9,3000]},"expected":[1,1,1]},
+    {"name":"the fades of a preset with times of its own, on their edges","input":{"preset":{"startMillis":500,"endMillis":2500,"fadeInMillis":1000,"fadeOutMillis":1000,"fadeInCurve":"ease-in","fadeOutCurve":"ease-out"},"region":{"startMillis":1000,"endMillis":5000},"times":[1500,2500,3500]},"expected":[1,1,1]},
+    {"name":"the fades of a scene on their edges, the scene fading in before its clip","input":{"preset":{},"scene":{"fadeInMillis":333.3,"fadeOutMillis":100.1,"fadeInPre":true},"region":{"startMillis":1333.3,"endMillis":3000},"times":[1000,1333.3,2899.9,3000]},"expected":[1,1,1,1]}
+  ]
+}
