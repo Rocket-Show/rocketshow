@@ -49,7 +49,7 @@ CI (`.github/workflows/ci.yml`) runs on every push and on pull requests from for
 
 Mutation testing (`.github/workflows/mutation.yml`, once a week and when started by hand) puts faults into the engine
 playing the projects of the designer (`lighting/designer`) and checks that its tests notice them (PIT, the `mutation`
-profile in `pom.xml`). Today they notice 87 % of them; the run fails below 85 %. The report is kept as an artifact
+profile in `pom.xml`). Today they notice 94 % of them; the run fails below 92 %. The report is kept as an artifact
 (`mutation-report`). Locally, in about half an hour:
 
 ```shell
@@ -123,12 +123,14 @@ The unit tests live in `src/test/java`:
 - Lighting designer: presets (`PresetMirrorTest`, `PresetIntensityTest`, `PresetStepsTest`), effect curves and fades
   (`EffectCurveTest`, `TransitionCurveTest`, mirroring the specs of the designer), pixels and pixel groups of fixture
   matrices (`FixturePixelGroupTest`), the DMX values a project sends with the master dimmer and the live preview of
-  presets, scenes and the timeline (`DesignerDmxTest`), nothing sent once stopped (`DesignerSendTimerTest`), projects
+  presets, scenes and the timeline (`DesignerDmxTest`), when it starts and stops sending (playing, pausing, closing,
+  the preview, the scenes picked by hand) and nothing sent once stopped (`DesignerSendTimerTest`), projects
   read and worked out exactly like the designer reads them: values which are null, missing or not whole, default
   values, numbers and colors of the fixture library, the order and the older forms of pixel groups (`DesignerParityTest`
   and the new cases of `DesignerDmxTest`, mirroring the parity spec of the designer), and the very same values as the
   designer for its conformance cases, compared exactly (`DesignerConformanceTest`: curves, steps, fades, the fixture
-  library and whole projects played on the timeline, as a preset and as scenes, recorded from the designer and copied
+  library, test fixtures right on the edges of their ranges, wheels and pixels, and whole projects played on the
+  timeline, as a preset and as scenes, recorded from the designer and copied
   to `src/test/resources/designer-conformance` with `testing/sync-designer-conformance.sh`, which CI checks)
 - Fixture library: searching and reading it like the designer, updating it from rocketshow.net once a week, every mode
   of a few real profiles played by the engine (`FixtureLibraryTest`, profiles in `src/test/resources/fixtures/`)
@@ -307,7 +309,7 @@ The designer migrations are tested with a project in version 2 and the same proj
 - [x] Designer effect curves, fades and pixel groups, mirroring the specs of the designer.
 - [x] The designer engine reads and works out a project like the preview of the designer (nulls, fractions, defaults
   of the fixture library, pixel groups), mirroring its parity spec.
-- [x] The conformance cases of the designer, which the engine has to come to exactly (885 cases, the copy checked in
+- [x] The conformance cases of the designer, which the engine has to come to exactly (900 cases, the copy checked in
   CI).
 - [x] Compositions and sets: storing, durations, keeping the sets up to date.
 - [x] Parsing the output of the system: RAUC, disk space, LAN, device information, command output while debugging.

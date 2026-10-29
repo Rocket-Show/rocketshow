@@ -16,3 +16,8 @@ license). Each one stands for something the designer engine has to handle:
 | `varytec/easy-move-xs-hp-wash-7x8w-rgbw` | A dimmer sharing its channel with a strobe, its brightness in percent. |
 | `panasonic/pt-rz120` | A dimmer going from bright to off. |
 | `hong-yi/hy-g60` | Split colors of a color wheel (slot 1.5). |
+
+The profiles of `test` are written for the cases: `rgb-par`, `rgb` and `moving-head` light the scenarios, while
+`shared-dimmer` (several ranges of brightness on one channel), `wheels` (a gobo wheel before a color wheel, a channel
+named differently than its wheel, wheels named in a list) and `pixel-bar` (channels per channel, a dimmer of its own,
+the channels of a pixel named directly) are lit on the edges of what they have (`channel-values-edges.json`).

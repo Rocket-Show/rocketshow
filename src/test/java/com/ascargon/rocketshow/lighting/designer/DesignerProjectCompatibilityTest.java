@@ -37,6 +37,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -375,6 +376,145 @@ class DesignerProjectCompatibilityTest {
 
         assertArrayEquals(new String[]{firstPreset.getUuid(), "second-preset"}, scene.getPresetUuids());
         assertEquals(getFixtureUuids(project.getPresetFixtures()), getFixtureUuids(firstPreset.getFixtures()));
+    }
+
+    private static List<String> getFixturesAndPixels(List<PresetFixture> presetFixtures) {
+        return presetFixtures.stream().map(presetFixture -> presetFixture.getFixtureUuid() + (presetFixture.getPixelKey() == null ? "" : " " + presetFixture.getPixelKey())).toList();
+    }
+
+    @Test
+    void listsTheFixturesOfAProjectOfVersion1WithTheirPixels() throws Exception {
+        // Before version 2, a preset (and the project) named its fixtures only. Since, a fixture and each of its pixels
+        // can be chosen on their own: a fixture of version 1 means all of it.
+        Project project = DesignerJson.MAPPER.readValue("""
+                {"version": 1, "name": "Pixels",
+                 "fixtureProfiles": [{"uuid": "test/bar", "name": "Bar", "matrix": {"pixelCount": [2, 1, 1]},
+                   "availableChannels": {"Dimmer": {"capability": {"type": "Intensity"}}},
+                   "templateChannels": {"Red $pixelKey": {"capability": {"type": "ColorIntensity", "color": "Red"}}},
+                   "modes": [{"name": "3-channel", "shortName": "3ch", "channels": ["Dimmer",
+                     {"insert": "matrixChannels", "repeatFor": "eachPixelABC", "channelOrder": "perPixel", "templateChannels": ["Red $pixelKey"]}]}]}],
+                 "fixtures": [{"uuid": "bar", "name": "Bar", "profileUuid": "test/bar", "modeShortName": "3ch", "dmxUniverseUuid": "universe", "dmxFirstChannel": 0}],
+                 "presets": [{"uuid": "preset", "name": "Preset", "fixtureUuids": ["bar"]}],
+                 "scenes": [], "compositions": []}
+                """, Project.class);
+
+        migrate(project);
+
+        Preset preset = project.getPresets().getFirst();
+        assertEquals(List.of("bar", "bar 1", "bar 2"), getFixturesAndPixels(project.getPresetFixtures()));
+        assertEquals(List.of("bar", "bar 1", "bar 2"), getFixturesAndPixels(preset.getFixtures()));
+        assertNull(preset.getFixtureUuids());
+    }
+
+    @Test
+    void movesTheChannelValuesOfOldPresetsIntoTheirFirstStep() throws Exception {
+        Project project = DesignerJson.MAPPER.readValue("""
+                {"version": 2, "name": "Strobe", "fixtures": [], "presetFixtures": [], "scenes": [], "compositions": [],
+                 "presets": [{"uuid": "preset", "name": "Preset", "fixtures": [],
+                   "fixtureChannelValues": [{"profileUuid": "test/rgb-par", "channelName": "Strobe", "value": 20}]}]}
+                """, Project.class);
+        List<FixtureChannelValue> look = project.getPresets().getFirst().getFixtureChannelValues();
+
+        migrate(project);
+
+        assertEquals(look, project.getPresets().getFirst().getSteps().getFirst().getFixtureChannelValues());
+    }
+
+    @Test
+    void keepsTheOrdersOfAProjectOfVersion3() throws Exception {
+        // Since version 3, a scene layers its presets and a preset may chase its fixtures in an order of its own
+        Project project = DesignerJson.MAPPER.readValue("""
+                {"version": 3, "name": "Orders", "fixtures": [], "compositions": [],
+                 "presetFixtures": [{"fixtureUuid": "a"}, {"fixtureUuid": "b"}],
+                 "presets": [{"uuid": "first", "name": "First", "useGlobalFixtureOrder": false, "fixtures": [{"fixtureUuid": "b"}, {"fixtureUuid": "a"}]},
+                             {"uuid": "second", "name": "Second", "fixtures": []}],
+                 "scenes": [{"uuid": "scene", "name": "Scene", "presetUuids": ["second", "first"]}]}
+                """, Project.class);
+
+        migrate(project);
+
+        Preset first = project.getPresets().getFirst();
+        assertArrayEquals(new String[]{"second", "first"}, project.getScenes().getFirst().getPresetUuids());
+        assertEquals(List.of("b", "a"), getFixtureUuids(first.getFixtures()));
+        assertFalse(first.isUseGlobalFixtureOrder());
+    }
+
+    @Test
+    void ordersAFixtureTheOldProjectDoesNotListFirst() throws Exception {
+        // like the designer, which finds it at no place of the list of the project
+        Project project = DesignerJson.MAPPER.readValue("""
+                {"version": 2, "name": "Orders", "fixtures": [], "scenes": [], "compositions": [],
+                 "presetFixtures": [{"fixtureUuid": "a"}, {"fixtureUuid": "b"}],
+                 "presets": [{"uuid": "preset", "name": "Preset", "fixtures": [{"fixtureUuid": "b"}, {"fixtureUuid": "a"}, {"fixtureUuid": "gone"}]}]}
+                """, Project.class);
+
+        migrate(project);
+
+        assertEquals(List.of("gone", "a", "b"), getFixtureUuids(project.getPresets().getFirst().getFixtures()));
+    }
+
+    // A project of the passed version with a plane of 3 by 2 pixels given by their count, its pixels named like before
+    // version 9 ("Pixel 3-2-1"): the ones of the plane and some beside it
+    private static Project projectWithOldPixelKeys(int version) {
+        return DesignerJson.MAPPER.readValue("""
+                {"version": %d, "name": "Pixels", "scenes": [], "compositions": [],
+                 "fixtureProfiles": [{"uuid": "test/plane", "name": "Plane", "matrix": {"pixelCount": [3, 2, 1]},
+                   "availableChannels": {"Dimmer": {"capability": {"type": "Intensity"}}},
+                   "templateChannels": {"Red $pixelKey": {"capability": {"type": "ColorIntensity", "color": "Red"}}},
+                   "modes": [{"name": "7-channel", "shortName": "7ch", "channels": ["Dimmer",
+                     {"insert": "matrixChannels", "repeatFor": "eachPixelABC", "channelOrder": "perPixel", "templateChannels": ["Red $pixelKey"]}]}]}],
+                 "fixtures": [{"uuid": "plane", "name": "Plane", "profileUuid": "test/plane", "modeShortName": "7ch", "dmxUniverseUuid": "universe", "dmxFirstChannel": 0}],
+                 "presetFixtures": [{"fixtureUuid": "plane", "pixelKey": "Pixel 1-1-1"}, {"fixtureUuid": "plane", "pixelKey": "Pixel 3-2-1"},
+                   {"fixtureUuid": "plane", "pixelKey": "Pixel 0-1-1"}, {"fixtureUuid": "plane", "pixelKey": "Pixel 4-1-1"},
+                   {"fixtureUuid": "plane", "pixelKey": "Pixel 1-0-1"}, {"fixtureUuid": "plane", "pixelKey": "Pixel 1-3-1"},
+                   {"fixtureUuid": "plane", "pixelKey": "Pixel 1-1-0"}, {"fixtureUuid": "plane", "pixelKey": "Pixel 1-1-2"}],
+                 "presets": [{"uuid": "preset", "name": "Preset", "fixtures": [{"fixtureUuid": "plane", "pixelKey": "Pixel 3-2-1"}],
+                   "steps": [{"uuid": "step", "fixtureChannelValues": [{"profileUuid": "test/plane", "channelName": "Red Pixel 3-2-1", "value": 255}]}],
+                   "effects": [{"type": "curve", "uuid": "curve", "capabilities": [],
+                     "channels": [{"profileUuid": "test/plane", "channels": ["Red Pixel 2-1-1", "Red Pixel 4-1-1", "Dimmer"]}]}]}]}
+                """.formatted(version), Project.class);
+    }
+
+    @Test
+    void renamesThePixelsOfOlderProjectsLikeTheFixtureLibraryNamesThem() throws Exception {
+        Project project = projectWithOldPixelKeys(8);
+
+        migrate(project);
+
+        // Inside the plane only
+        assertEquals(List.of("plane (1, 1)", "plane (3, 2)", "plane Pixel 0-1-1", "plane Pixel 4-1-1", "plane Pixel 1-0-1", "plane Pixel 1-3-1",
+                "plane Pixel 1-1-0", "plane Pixel 1-1-2"), getFixturesAndPixels(project.getPresetFixtures()));
+
+        Preset preset = project.getPresets().getFirst();
+        assertEquals(List.of("plane (3, 2)"), getFixturesAndPixels(preset.getFixtures()));
+        assertEquals("Red (3, 2)", preset.getSteps().getFirst().getFixtureChannelValues().getFirst().getChannelName());
+        EffectCurve curve = (EffectCurve) preset.getEffects().getFirst();
+        assertEquals(List.of("Red (2, 1)", "Red Pixel 4-1-1", "Dimmer"), curve.getChannels().getFirst().getChannels());
+    }
+
+    @Test
+    void renamesThePixelsOnlyOnce() throws Exception {
+        // In a project of version 9, a name looking like an old one is a name of its own (e.g. of a pixel group)
+        Project project = projectWithOldPixelKeys(9);
+
+        migrate(project);
+
+        assertEquals("plane Pixel 1-1-1", getFixturesAndPixels(project.getPresetFixtures()).getFirst());
+        assertEquals("Red Pixel 3-2-1", project.getPresets().getFirst().getSteps().getFirst().getFixtureChannelValues().getFirst().getChannelName());
+    }
+
+    @Test
+    void warnsAboutAProjectOfANewerDesigner() throws Throwable {
+        Project newer = readProject(getMigrationProject("Template version 7.json"));
+        newer.setVersion(DefaultDesignerService.SUPPORTED_PROJECT_VERSION + 1);
+        Project current = readProject(getMigrationProject("Template version 7.json"));
+        current.setVersion(DefaultDesignerService.SUPPORTED_PROJECT_VERSION);
+
+        List<String> warnings = DesignerTestEngine.logged(Level.WARN, () -> migrate(newer));
+
+        assertEquals(1, warnings.size());
+        assertTrue(warnings.getFirst().contains("newer designer"), warnings.getFirst());
+        assertEquals(List.of(), DesignerTestEngine.logged(Level.WARN, () -> migrate(current)));
     }
 
     @Test

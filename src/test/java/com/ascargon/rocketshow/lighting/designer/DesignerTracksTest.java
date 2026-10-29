@@ -234,6 +234,15 @@ class DesignerTracksTest {
     }
 
     @Test
+    void playsNoClipOffTheTracksOfACurrentProject() throws Exception {
+        // only a project from before the tracks gets them
+        ObjectNode project = project(10);
+        play(project, "bright", null);
+
+        assertEquals(0, show(project));
+    }
+
+    @Test
     void putsEveryScenePlayedBeforeTheTracksOnATrackOfItsOwn() {
         Scene first = new Scene();
         first.setUuid("first");
@@ -257,6 +266,45 @@ class DesignerTracksTest {
         assertEquals(tracks.get(0).getUuid(), regions[1].getTrackUuid());
         assertEquals(tracks.get(1).getUuid(), regions[2].getTrackUuid());
         assertEquals(tracks.get(2).getUuid(), regions[3].getTrackUuid());
+    }
+
+    @Test
+    void putsTheClipsOfASceneFollowingEachOtherOnOneTrack() {
+        Scene scene = new Scene();
+        scene.setUuid("scene");
+        scene.setName("Scene");
+
+        Composition composition = new Composition();
+        composition.setScenePlaybackRegions(new ScenePlaybackRegion[]{region("scene", 0, 4000), region("scene", 4000, 8000)});
+
+        DefaultDesignerService.assignTracks(composition, List.of(scene));
+
+        // a clip ends where the next one starts
+        assertEquals(List.of("Scene"), composition.getTracks().stream().map(Track::getName).toList());
+    }
+
+    @Test
+    void leavesTheClipsOnTheirTracks() {
+        Scene first = new Scene();
+        first.setUuid("first");
+        first.setName("First");
+        Scene second = new Scene();
+        second.setUuid("second");
+        second.setName("Second");
+
+        Composition composition = new Composition();
+        Track track = new Track();
+        track.setUuid("track");
+        track.setName("Track");
+        composition.getTracks().add(track);
+        ScenePlaybackRegion onTrack = region("first", 0, 4000);
+        onTrack.setTrackUuid("track");
+        composition.setScenePlaybackRegions(new ScenePlaybackRegion[]{onTrack, region("second", 0, 4000)});
+
+        DefaultDesignerService.assignTracks(composition, List.of(first, second));
+
+        assertEquals(List.of("Track", "Second"), composition.getTracks().stream().map(Track::getName).toList());
+        assertEquals("track", onTrack.getTrackUuid());
     }
 
     @Test

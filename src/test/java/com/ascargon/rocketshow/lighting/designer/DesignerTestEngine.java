@@ -13,6 +13,7 @@ import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.config.Property;
+import org.junit.jupiter.api.function.Executable;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -40,23 +41,49 @@ class DesignerTestEngine {
     // The errors logged while playing
     final List<String> errors = new CopyOnWriteArrayList<>();
 
-    private static class ErrorCollector extends AbstractAppender {
+    // Collects what the lighting logs at a level or above
+    private static class LogCollector extends AbstractAppender {
 
-        private final List<String> errors;
+        private final List<String> messages;
+        private final Level level;
 
-        ErrorCollector(List<String> errors) {
+        LogCollector(List<String> messages, Level level) {
             super("DesignerTestEngine", null, null, true, Property.EMPTY_ARRAY);
-            this.errors = errors;
+            this.messages = messages;
+            this.level = level;
         }
 
         @Override
         public void append(LogEvent event) {
             // Only the lighting: other tests leave apps running, e.g. trying to open the MIDI devices of their settings
-            if (event.getLevel().isMoreSpecificThan(Level.ERROR) && event.getLoggerName().startsWith("com.ascargon.rocketshow.lighting")) {
-                errors.add(event.getMessage().getFormattedMessage() + (event.getThrown() == null ? "" : ": " + event.getThrown()));
+            if (event.getLevel().isMoreSpecificThan(level) && event.getLoggerName().startsWith("com.ascargon.rocketshow.lighting")) {
+                messages.add(event.getMessage().getFormattedMessage() + (event.getThrown() == null ? "" : ": " + event.getThrown()));
             }
         }
 
+    }
+
+    /**
+     * Run the passed action and return what the lighting logged meanwhile at the passed level or above, e.g. the
+     * warning about a project of a newer designer.
+     */
+    static List<String> logged(Level level, Executable action) throws Throwable {
+        List<String> messages = new CopyOnWriteArrayList<>();
+        LoggerContext context = (LoggerContext) LogManager.getContext(false);
+        LogCollector logCollector = new LogCollector(messages, level);
+        logCollector.start();
+        context.getConfiguration().getRootLogger().addAppender(logCollector, null, null);
+        context.updateLoggers();
+
+        try {
+            action.execute();
+        } finally {
+            context.getConfiguration().getRootLogger().removeAppender(logCollector.getName());
+            context.updateLoggers();
+            logCollector.stop();
+        }
+
+        return messages;
     }
 
     /**
@@ -145,7 +172,7 @@ class DesignerTestEngine {
         }).when(lightingService).sendExternalSync(anyBoolean());
 
         LoggerContext context = (LoggerContext) LogManager.getContext(false);
-        ErrorCollector errorCollector = new ErrorCollector(errors);
+        LogCollector errorCollector = new LogCollector(errors, Level.ERROR);
         errorCollector.start();
         context.getConfiguration().getRootLogger().addAppender(errorCollector, null, null);
         context.updateLoggers();
