@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpSession;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -116,6 +117,30 @@ class TransportApiTest extends ApiTest {
 
         assertNull(playerService.getCompositionName());
         assertEquals(CompositionPlayer.PlayState.STOPPED, playerService.getPlayState());
+    }
+
+    @Test
+    void playsNoSampleOnAUnitWithoutTheComposition() throws Exception {
+        // Another unit plays a sample this one doesn't have
+        mockMvc.perform(post("/api/transport/play-as-sample").param("name", "Only on the main unit").session(admin)).andExpect(status().isOk());
+
+        assertFalse(playerService.isPlayingComposition());
+    }
+
+    @Test
+    void stopsASampleWithNothingToPlay() throws Exception {
+        // E.g. only a lead sheet
+        Composition composition = new Composition();
+        composition.setName("Nothing to play");
+        compositionService.saveComposition(composition);
+
+        try {
+            mockMvc.perform(post("/api/transport/play-as-sample").param("name", "Nothing to play").session(admin)).andExpect(status().isOk());
+
+            assertFalse(playerService.isPlayingComposition());
+        } finally {
+            compositionService.deleteComposition("Nothing to play");
+        }
     }
 
     @Test
