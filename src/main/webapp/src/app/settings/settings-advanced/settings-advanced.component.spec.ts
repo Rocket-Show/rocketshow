@@ -4,15 +4,18 @@ import { HttpTestingController, provideHttpClientTesting } from "@angular/common
 import { of } from "rxjs";
 
 import { SettingsAdvancedComponent } from "./settings-advanced.component";
+import { SelfTestResultDialogComponent } from "../self-test-result-dialog/self-test-result-dialog.component";
 
 /**
- * The advanced settings: running the self-test of the unit, which plays test tones and switches outputs.
+ * The advanced settings: running the self-test of the unit, which plays test tones and switches outputs, and showing
+ * its checks in a dialog.
  */
 describe("Advanced settings", () => {
   let http: HttpTestingController;
   let warningDialogService: jasmine.SpyObj<any>;
   let waitDialogService: jasmine.SpyObj<any>;
   let toastGeneralErrorService: jasmine.SpyObj<any>;
+  let modalService: jasmine.SpyObj<any>;
   let advanced: SettingsAdvancedComponent;
 
   beforeEach(() => {
@@ -24,12 +27,13 @@ describe("Advanced settings", () => {
     warningDialogService = jasmine.createSpyObj("WarningDialogService", ["show"]);
     waitDialogService = jasmine.createSpyObj("WaitDialogService", ["show", "hide"]);
     toastGeneralErrorService = jasmine.createSpyObj("ToastGeneralErrorService", ["show"]);
+    modalService = jasmine.createSpyObj("BsModalService", ["show"]);
     const operatingSystemInformationService = { getOperatingSystemInformation: () => of({}) };
     const deviceInformationService = { getDeviceInformation: () => of({ available: false }) };
 
     advanced = new SettingsAdvancedComponent(undefined, warningDialogService, waitDialogService, TestBed.inject(HttpClient),
       undefined, operatingSystemInformationService as any, deviceInformationService as any, undefined,
-      toastGeneralErrorService);
+      toastGeneralErrorService, modalService);
   });
 
   afterEach(() => {
@@ -43,11 +47,15 @@ describe("Advanced settings", () => {
 
     expect(warningDialogService.show).toHaveBeenCalledWith("settings.self-test.warning");
     http.expectNone("system/test");
-    expect(advanced.selfTestResult).toBeUndefined();
+    expect(modalService.show).not.toHaveBeenCalled();
   });
 
-  it("shows the checks of the unit", () => {
+  it("shows the checks of the unit in a dialog", () => {
     warningDialogService.show.and.returnValue(of(true));
+    let waitDialogHidden: boolean;
+    modalService.show.and.callFake(() => {
+      waitDialogHidden = waitDialogService.hide.calls.any();
+    });
 
     advanced.runSelfTest();
 
@@ -63,11 +71,14 @@ describe("Advanced settings", () => {
       ],
     });
 
-    expect(waitDialogService.hide).toHaveBeenCalled();
-    expect(advanced.selfTestResult.result).toBe("FAILED");
-    expect(advanced.selfTestResult.checks.map((check) => check.name)).toEqual(["audio", "midi-loopback"]);
-    expect(advanced.selfTestResult.checks[0].target).toBe("USB Audio, 2 channels");
-    expect(advanced.selfTestResult.checks[1].details).toBe("196 of 200 messages received");
+    // Instead of the wait dialog
+    expect(waitDialogHidden).toBeTrue();
+    expect(modalService.show).toHaveBeenCalledOnceWith(SelfTestResultDialogComponent, jasmine.anything());
+    const selfTestResult = modalService.show.calls.mostRecent().args[1].initialState.selfTestResult;
+    expect(selfTestResult.result).toBe("FAILED");
+    expect(selfTestResult.checks.map((check) => check.name)).toEqual(["audio", "midi-loopback"]);
+    expect(selfTestResult.checks[0].target).toBe("USB Audio, 2 channels");
+    expect(selfTestResult.checks[1].details).toBe("196 of 200 messages received");
   });
 
   it("tells why the unit refused, e.g. while a composition plays", () => {
@@ -78,6 +89,6 @@ describe("Advanced settings", () => {
 
     expect(toastGeneralErrorService.show).toHaveBeenCalled();
     expect(waitDialogService.hide).toHaveBeenCalled();
-    expect(advanced.selfTestResult).toBeUndefined();
+    expect(modalService.show).not.toHaveBeenCalled();
   });
 });

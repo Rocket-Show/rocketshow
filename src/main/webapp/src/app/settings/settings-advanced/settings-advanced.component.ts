@@ -15,6 +15,8 @@ import { EMPTY, Subscription } from "rxjs";
 import { AuthService } from "../../services/auth.service";
 import { ToastGeneralErrorService } from "../../services/toast-general-error.service";
 import { SelfTestResult } from "../../models/self-test-result";
+import { BsModalService } from "ngx-bootstrap/modal";
+import { SelfTestResultDialogComponent } from "../self-test-result-dialog/self-test-result-dialog.component";
 
 @Component({
     selector: "app-settings-advanced",
@@ -31,7 +33,6 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
   downloadLogsLoading: boolean = false;
   operatingSystemInformation: OperatingSystemInformation;
   deviceInformation: DeviceInformation;
-  selfTestResult: SelfTestResult;
 
   loggingLevelList: string[] = [];
 
@@ -44,7 +45,8 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
     private operatingSystemInformationService: OperatingSystemInformationService,
     private deviceInformationService: DeviceInformationService,
     private authService: AuthService,
-    private toastGeneralErrorService: ToastGeneralErrorService
+    private toastGeneralErrorService: ToastGeneralErrorService,
+    private modalService: BsModalService
   ) {
     this.loggingLevelList.push("INFO");
     this.loggingLevelList.push("DEBUG");
@@ -167,7 +169,6 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
       .pipe(
         filter((result) => result),
         switchMap(() => {
-          this.selfTestResult = undefined;
           this.waitDialogService.show("settings.self-test.wait");
 
           return this.http.post("system/test", {}).pipe(
@@ -183,7 +184,14 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe((result) => {
-        this.selfTestResult = new SelfTestResult(result);
+        // The result replaces the wait dialog
+        this.waitDialogService.hide();
+        this.modalService.show(SelfTestResultDialogComponent, {
+          keyboard: true,
+          ignoreBackdropClick: true,
+          class: "modal-lg",
+          initialState: { selfTestResult: new SelfTestResult(result) },
+        });
       });
   }
 }

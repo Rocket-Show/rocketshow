@@ -253,7 +253,9 @@ try {
     await page.locator('#runSelfTest').click();
     // After the warning about the test tones and the outputs it switches
     await page.locator('app-warning-dialog').getByRole('button', { name: 'OK' }).click();
-    await page.locator('#selfTestResult').waitFor({ timeout: 60000 });
+    // In a dialog of its own, shown once the wait dialog has faded out
+    await page.locator('modal-container.show app-self-test-result-dialog #selfTestResult').waitFor({ timeout: 60000 });
+    await page.locator('app-wait-dialog').waitFor({ state: 'detached' });
 
     // Some checks depend on the machine running the unit (e.g. its clock, network or kernel log), so a check may fail
     const result = await page.locator('#selfTestResult').innerText();
@@ -261,6 +263,12 @@ try {
     if (!/^(Passed|Failed)/.test(result) || await page.locator('#selfTestResult tbody tr').count() < 20) {
       throw new Error(`The self-test of the new unit shows no result for every check:\n${result}`);
     }
+  });
+
+  await step('Close the result of the self-test', async () => {
+    await page.locator('#closeSelfTestResult').click();
+    await page.locator('app-self-test-result-dialog').waitFor({ state: 'detached' });
+    await page.locator('#runSelfTest').waitFor();
   });
 
   console.log('The web app works');

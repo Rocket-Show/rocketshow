@@ -103,6 +103,7 @@ import { ParticleBackgroundComponent } from "./particle-background/particle-back
 import { SettingsSecurityComponent } from "./settings/settings-security/settings-security.component";
 import { ChangePasswordDialogComponent } from './settings/change-password-dialog/change-password-dialog.component';
 import { NewApiKeyDialogComponent } from "./settings/new-api-key-dialog/new-api-key-dialog.component";
+import { SelfTestResultDialogComponent } from "./settings/self-test-result-dialog/self-test-result-dialog.component";
 import { DeviceInformationService } from "./services/device-information.service";
 import { SparkUpsellService } from "./services/spark-upsell.service";
 import { SparkHintComponent } from "./spark-hint/spark-hint.component";
@@ -204,6 +205,7 @@ const appRoutes: Routes = [
         ActionMidiComponent,
         ChangePasswordDialogComponent,
         NewApiKeyDialogComponent,
+        SelfTestResultDialogComponent,
         SortablejsDirective,
         SparkHintComponent,
     ],
