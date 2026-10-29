@@ -17,6 +17,7 @@ public class DefaultFixturePixelGroupResolveService implements FixturePixelGroup
 
     private static final Pattern COMP_PATTERN = Pattern.compile("^(<=|>=|=)\\s*(-?\\d+)$");
     private static final Pattern MOD_PATTERN = Pattern.compile("^(\\d+)n(?:\\+(\\d+))?$");
+    private static final Pattern PLAIN_NUMBER_PATTERN = Pattern.compile("^-?\\d+$");
 
     // ---------- numeric rule matching (<=5, >=5, =5, even, odd, 3n, 3n+1, plain number) ----------
     private boolean matchNumberRule(int value, String ruleRaw) {
@@ -51,12 +52,9 @@ public class DefaultFixturePixelGroupResolveService implements FixturePixelGroup
             return mod == target;
         }
 
-        // plain number => "=number"
-        try {
-            int asNum = Integer.parseInt(rule);
-            return value == asNum;
-        } catch (NumberFormatException ignored) {
-            // fall through
+        // plain number => "=number" (no "+5", like the designer)
+        if (PLAIN_NUMBER_PATTERN.matcher(rule).matches()) {
+            return value == Integer.parseInt(rule);
         }
 
         throw new IllegalArgumentException("Unknown numeric rule: \"" + ruleRaw + "\"");
@@ -95,6 +93,11 @@ public class DefaultFixturePixelGroupResolveService implements FixturePixelGroup
         return null;
     }
 
+    // the digits 0 to 9 only, like the designer (Character.isDigit would also take the digits of other scripts)
+    private static boolean isDigit(char character) {
+        return character >= '0' && character <= '9';
+    }
+
     // Pixel keys like the fixture library sorts them: numbers by their value (2 before 10), the rest alphabetically
     static int compareKeys(String key1, String key2) {
         int index1 = 0;
@@ -104,11 +107,11 @@ public class DefaultFixturePixelGroupResolveService implements FixturePixelGroup
             char char1 = key1.charAt(index1);
             char char2 = key2.charAt(index2);
 
-            if (Character.isDigit(char1) && Character.isDigit(char2)) {
+            if (isDigit(char1) && isDigit(char2)) {
                 int start1 = index1;
                 int start2 = index2;
-                while (index1 < key1.length() && Character.isDigit(key1.charAt(index1))) index1++;
-                while (index2 < key2.length() && Character.isDigit(key2.charAt(index2))) index2++;
+                while (index1 < key1.length() && isDigit(key1.charAt(index1))) index1++;
+                while (index2 < key2.length() && isDigit(key2.charAt(index2))) index2++;
 
                 int result = new BigInteger(key1.substring(start1, index1)).compareTo(new BigInteger(key2.substring(start2, index2)));
                 if (result != 0) return result;
@@ -158,7 +161,7 @@ public class DefaultFixturePixelGroupResolveService implements FixturePixelGroup
         }
 
         // 3) constraints by x/y/z/name
-        List<CachedFixturePixel> candidates = c.getName() != null ? sortedByKey(allPixels) : allPixels;
+        List<CachedFixturePixel> candidates = c.getName() != null && !c.getName().isEmpty() ? sortedByKey(allPixels) : allPixels;
         return candidates.stream()
                 .filter(p -> matchesAllConstraints(p, c))
                 .collect(Collectors.toList());

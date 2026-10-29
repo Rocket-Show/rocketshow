@@ -114,7 +114,10 @@ The unit tests live in `src/test/java`:
 - Lighting designer: presets (`PresetMirrorTest`, `PresetIntensityTest`, `PresetStepsTest`), effect curves and fades
   (`EffectCurveTest`, `TransitionCurveTest`, mirroring the specs of the designer), pixels and pixel groups of fixture
   matrices (`FixturePixelGroupTest`), the DMX values a project sends with the master dimmer and the live preview of
-  presets, scenes and the timeline (`DesignerDmxTest`), nothing sent once stopped (`DesignerSendTimerTest`)
+  presets, scenes and the timeline (`DesignerDmxTest`), nothing sent once stopped (`DesignerSendTimerTest`), projects
+  read and worked out exactly like the designer reads them: values which are null, missing or not whole, default
+  values, numbers and colors of the fixture library, the order and the older forms of pixel groups (`DesignerParityTest`
+  and the new cases of `DesignerDmxTest`, mirroring the parity spec of the designer)
 - Fixture library: searching and reading it like the designer, updating it from rocketshow.net once a week, every mode
   of a few real profiles played by the engine (`FixtureLibraryTest`, profiles in `src/test/resources/fixtures/`)
 - GPIO buttons, the reset button and outputs, on the simulated pins of the Pi4J mock plugin (`GpioTest`)
@@ -140,7 +143,7 @@ Run them locally without the web app build, with or without the coverage report 
 ./mvnw test -Pcoverage -Dskip.npm -Dskip.installnodenpm
 ```
 
-All 644 tests pass without any hardware attached, in a few minutes. The 55 tests playing real media need GStreamer
+All 682 tests pass without any hardware attached, in a few minutes. The 55 tests playing real media need GStreamer
 with the base, good and bad plugins (e.g. `apt install gstreamer1.0-plugins-base gstreamer1.0-plugins-good
 gstreamer1.0-plugins-bad`) and are skipped without it. One backup test needs an unreadable file, so it is skipped when
 running as root (root can read every file). It runs in CI. The tests cover 83 % of the lines and 72 % of the branches
@@ -290,6 +293,8 @@ The designer migrations are tested with a project in version 2 and the same proj
 - [x] DMX mixing, universe mapping and MIDI to DMX.
 - [x] The whole app started with the full release sample.
 - [x] Designer effect curves, fades and pixel groups, mirroring the specs of the designer.
+- [x] The designer engine reads and works out a project like the preview of the designer (nulls, fractions, defaults
+  of the fixture library, pixel groups), mirroring its parity spec.
 - [x] Compositions and sets: storing, durations, keeping the sets up to date.
 - [x] Parsing the output of the system: RAUC, disk space, LAN, device information, command output while debugging.
 - [x] The player's set logic: next, previous, empty and deleted sets, auto select.

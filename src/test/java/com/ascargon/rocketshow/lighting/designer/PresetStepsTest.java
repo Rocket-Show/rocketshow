@@ -24,7 +24,7 @@ class PresetStepsTest {
         PresetStep step = new PresetStep();
         step.setUuid("step-" + startMillis);
         step.setStartMillis(startMillis);
-        step.setTransitionMillis(transitionMillis);
+        step.setTransitionMillis((double) transitionMillis);
 
         FixtureChannelValue channelValue = new FixtureChannelValue();
         channelValue.setChannelName("dimmer");
@@ -154,7 +154,7 @@ class PresetStepsTest {
     void loopTravelsFromTheLastStepBackIntoTheFirst() {
         Preset sequence = preset(step(0, 100, 500), step(1000, 300, 0));
         sequence.setStepsLoop(true);
-        sequence.setStepsLoopMillis(2000L);
+        sequence.setStepsLoopMillis(2000d);
 
         // the wrap runs over the 500 ms the first step of the next pass opens with
         assertEquals(300, dimmerAt(sequence, 2000));

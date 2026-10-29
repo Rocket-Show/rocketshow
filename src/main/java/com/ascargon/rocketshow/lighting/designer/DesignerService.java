@@ -45,7 +45,7 @@ public interface DesignerService {
 
     void setSelectedStepUuid(String selectedStepUuid);
 
-    void setStepPreviewRunning(boolean stepPreviewRunning, long stepPreviewStartMillis);
+    void setStepPreviewRunning(boolean stepPreviewRunning, double stepPreviewStartMillis);
 
     void setSelectedSceneUuids(List<String> selectedSceneUuids);
 

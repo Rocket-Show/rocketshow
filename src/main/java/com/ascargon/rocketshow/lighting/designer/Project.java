@@ -22,7 +22,7 @@ public class Project {
 
     private String uuid;
     private String name;
-    private float masterDimmerValue = 1;
+    private double masterDimmerValue = 1;
     private String selectedPresetUuid;
 
     // the step of the selected preset the designer's panels are editing
@@ -31,9 +31,12 @@ public class Project {
     // the designer is watching the steps of the selected preset run instead of holding
     // the one it is editing, and the point on its clock the run was started from
     private boolean stepPreviewRunning = false;
-    private long stepPreviewStartMillis = 0;
+    private double stepPreviewStartMillis = 0;
 
     private List<String> selectedSceneUuids = new ArrayList<>();
+
+    // the composition open in the designer, whose tempo the curves synced to the beat follow while it isn't played
+    private String selectedCompositionUuid;
     // play the selected preset on its own (solo) instead of the selected scenes
     private boolean previewPreset = false;
     private Composition[] compositions;

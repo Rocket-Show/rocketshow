@@ -755,4 +755,148 @@ class DesignerDmxTest {
         assertEquals(List.of(255, 0, 0, 255), addresses(front, 1, 4));
     }
 
+
+    // ---- read and played like the designer previews it ----
+
+    @Test
+    void keepsTheDefaultsOfTheDesignerForValuesWhichAreNull() throws Exception {
+        // The designer writes null for a number it couldn't work out, and its own preview takes the default instead
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+        project.putNull("masterDimmerValue");
+        ObjectNode scene = (ObjectNode) project.get("scenes").get(0);
+        scene.putNull("dimmer");
+        scene.putNull("fadeInMillis");
+        scene.putNull("fadeOutMillis");
+
+        assertEquals(List.of(255, 255, 0, 0), addresses(play(project).get(FRONT), 1, 4));
+    }
+
+    @Test
+    void fadesNoSceneWithoutFadeTimes() throws Exception {
+        // A scene of the designer starts without fades, so one not giving them doesn't fade (it faded in over two
+        // seconds here before): 100 ms into its clip, it's at full already
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+        ObjectNode scene = (ObjectNode) project.get("scenes").get(0);
+        scene.remove("fadeInMillis");
+        scene.remove("fadeOutMillis");
+        ((ObjectNode) project.get("compositions").get(0).get("scenePlaybackRegions").get(0)).put("startMillis", 4900);
+
+        assertEquals(List.of(255, 255, 0, 0), addresses(play(project).get(FRONT), 1, 4));
+    }
+
+    @Test
+    void playsAProjectWithACapabilityOfANewerFixtureLibrary() throws Exception {
+        // The designer doesn't know the type either and leaves the capability out, the rest of the project plays
+        ObjectNode project = project();
+        ObjectNode laser = (ObjectNode) objectMapper.readTree("""
+                {"fineChannelAliases": [], "capability": {"type": "SomethingNew", "color": "Ultraviolet"}}
+                """);
+        ((ObjectNode) project.get("fixtureProfiles").get(0).get("availableChannels")).set("Laser", laser);
+        addColorPreset(project, "Red", 1, 0);
+
+        assertEquals(List.of(255, 255, 0, 0), addresses(play(project).get(FRONT), 1, 4));
+    }
+
+    @Test
+    void previewsNothingForAPresetDeletedInTheDesigner() throws Exception {
+        // The designer still names the preset it deleted last: its preview shows nothing, and so does the engine
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+
+        Map<Integer, Integer> front = preview(project, designerService -> {
+            designerService.setPreviewPreset(true);
+            designerService.setSelectedPresetUuid("deleted");
+        }).get(FRONT);
+
+        // only the default value of the strobe
+        assertEquals(List.of(0, 0, 0, 0, 0, 5), addresses(front, 1, 6));
+    }
+
+    @Test
+    void lightsAFixtureNamedWithAnEmptyPixelKey() throws Exception {
+        // An empty pixel key is no pixel key, like in the designer
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+        ((ObjectNode) project.get("presets").get(0).get("fixtures").get(0)).put("pixelKey", "");
+
+        assertEquals(List.of(255, 255, 0, 0), addresses(play(project).get(FRONT), 1, 4));
+    }
+
+    @Test
+    void leavesTheWheelAloneForAColorWithoutValue() throws Exception {
+        // The designer approximates no slot from a color it has no value for
+        ObjectNode project = project();
+        ObjectNode red = capability(project, "ColorIntensity", null);
+        red.put("color", "Red");
+        ObjectNode green = capability(project, "ColorIntensity", 0.0);
+        green.put("color", "Green");
+        ObjectNode blue = capability(project, "ColorIntensity", 1.0);
+        blue.put("color", "Blue");
+        addPreset(project, "Blue", List.of("head"), List.of(capability(project, "Intensity", 1.0), red, green, blue));
+
+        Map<Integer, Integer> back = play(project).get(BACK);
+
+        assertEquals(255, back.get(5));
+        assertEquals(0, back.getOrDefault(6, 0));
+    }
+
+    @Test
+    void playsTheFixturesOfAPresetOfVersion1() throws Exception {
+        // Before version 2, a preset (and the project) only named its fixtures
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+        project.put("version", 1);
+        project.remove("presetFixtures");
+        ObjectNode preset = (ObjectNode) project.get("presets").get(0);
+        preset.remove("fixtures");
+        preset.putArray("fixtureUuids").add("par-1").add("par-2");
+        // the values are kept on the preset itself then, there are no steps yet
+        preset.set("fixtureCapabilityValues", preset.get("steps").get(0).get("fixtureCapabilityValues"));
+        preset.remove("steps");
+
+        Map<Integer, Integer> front = play(project).get(FRONT);
+
+        assertEquals(List.of(255, 255, 0, 0), addresses(front, 1, 4));
+        assertEquals(List.of(255, 255, 0, 0), addresses(front, 11, 14));
+    }
+
+    // A square on the strobe channel of the pars, one beat long. It's chased by a fixed time of half a beat at 120 BPM,
+    // which lights par 2 at 120 BPM, while it's dark at 60 BPM (where it is half way through its longer beat).
+    private static void addBeatSyncedStrobe(ObjectNode project) {
+        ObjectNode effect = ((ArrayNode) project.get("presets").get(0).get("effects")).addObject();
+        effect.put("type", "curve");
+        effect.put("uuid", "strobe-square");
+        effect.put("curveType", "square");
+        effect.putArray("capabilities");
+        ObjectNode channels = effect.putArray("channels").addObject();
+        channels.put("profileUuid", "test/rgb-par");
+        channels.putArray("channels").add("Strobe");
+        effect.put("lengthMode", "beats");
+        effect.put("lengthBeats", 4);
+        effect.put("phasingMode", "millis");
+        effect.put("phasingMillis", 2000);
+    }
+
+    @Test
+    void runsTheCurvesOnTheTempoOfTheCompositionOpenInTheDesigner() throws Exception {
+        // The preview of a preset follows the tempo of the composition open in the designer, even while it isn't played
+        ObjectNode project = project();
+        addPreset(project, "Strobe", List.of("par-1", "par-2"), List.of());
+        addBeatSyncedStrobe(project);
+        ((ObjectNode) project.get("compositions").get(0)).put("beatsPerMinute", 60);
+
+        java.util.function.Consumer<DefaultDesignerService> previewPreset = designerService -> {
+            designerService.setPreviewPreset(true);
+            designerService.setSelectedPresetUuid("Strobe");
+        };
+
+        // no composition open: the default tempo of 120 BPM
+        assertEquals(255, preview(project, previewPreset).get(FRONT).getOrDefault(16, 0));
+
+        project.put("selectedCompositionUuid", "song");
+        assertEquals(0, preview(project, previewPreset).get(FRONT).getOrDefault(16, 0));
+    }
+
 }

@@ -21,7 +21,7 @@ public final class PresetSteps {
     // the length of one pass through the steps. Without a length of its own, the last
     // step holds as long as the one before it lasted, which loops an evenly spaced
     // chase the way it is written down.
-    public static long getStepsLoopMillis(Preset preset) {
+    public static double getStepsLoopMillis(Preset preset) {
         if (preset.getStepsLoopMillis() != null && preset.getStepsLoopMillis() > 0) {
             return preset.getStepsLoopMillis();
         }
@@ -55,17 +55,18 @@ public final class PresetSteps {
     // the time the sequence is shifted by for the passed fixture of the preset. This
     // follows the same rules the effect curves chase by.
     public static double getStepsPhasingMillis(Preset preset, Integer fixtureIndex, Integer fixtureCount) {
-        int groupSize = Math.max(preset.getStepsPhasingGroupSize(), 1);
-        int step = (fixtureIndex == null ? 0 : fixtureIndex) / groupSize;
+        // a number of fixtures: the designer rounds it
+        long groupSize = Math.max(Math.round(preset.getStepsPhasingGroupSize()), 1);
+        double step = Math.floor((double) (fixtureIndex == null ? 0 : fixtureIndex) / groupSize);
 
         if ("spread".equals(preset.getStepsPhasingMode())) {
             // distribute the passes over all chase steps of the preset
-            int count = fixtureCount == null ? 1 : fixtureCount;
-            int steps = Math.max((int) Math.ceil((double) count / groupSize), 1);
-            return (double) step / steps * preset.getStepsPhasingCycles() * getStepsLoopMillis(preset);
+            int count = fixtureCount == null || fixtureCount == 0 ? 1 : fixtureCount;
+            double steps = Math.max(Math.ceil((double) count / groupSize), 1);
+            return step / steps * preset.getStepsPhasingCycles() * getStepsLoopMillis(preset);
         }
 
-        return (double) step * preset.getStepsPhasingMillis();
+        return step * preset.getStepsPhasingMillis();
     }
 
     // When the step at the passed index gives way to the next one. The last step holds
@@ -78,7 +79,7 @@ public final class PresetSteps {
             return steps.get(index + 1).getStartMillis();
         }
 
-        return (double) steps.get(0).getStartMillis() + getStepsLoopMillis(preset);
+        return steps.get(0).getStartMillis() + getStepsLoopMillis(preset);
     }
 
     // Where the transition into a step ends: it begins as the step does and travels from
@@ -122,7 +123,7 @@ public final class PresetSteps {
     }
 
     // the values the preset applies at the passed time, relative to its own start
-    public static PresetStepState getStateAtMillis(Preset preset, long presetTimeMillis) {
+    public static PresetStepState getStateAtMillis(Preset preset, double presetTimeMillis) {
         List<PresetStep> steps = preset.getSteps();
 
         if (steps == null || steps.isEmpty()) {
@@ -145,7 +146,7 @@ public final class PresetSteps {
 
         PresetStep first = steps.get(0);
         double timeMillis = presetTimeMillis;
-        long loopMillis = 0;
+        double loopMillis = 0;
 
         if (preset.isStepsLoop()) {
             loopMillis = getStepsLoopMillis(preset);

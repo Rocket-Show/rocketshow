@@ -69,9 +69,9 @@ public class DefaultFixtureService implements FixtureService {
                 if (file.isFile() && !fileFilterService.filterFile(file.getName())) {
                     logger.debug("Load fixture " + file.getAbsolutePath());
 
-                    ObjectMapper mapper = new ObjectMapper();
                     try {
-                        FixtureProfile fixtureProfile = mapper.readValue(file, FixtureProfile.class);
+                        // read like the designer reads the profile, which it takes from here
+                        FixtureProfile fixtureProfile = DesignerJson.MAPPER.readValue(file, FixtureProfile.class);
 
                         SearchFixtureTemplate searchFixtureTemplate = new SearchFixtureTemplate();
                         searchFixtureTemplate.setUuid(manufacturerShortName + "/" + file.getName().substring(0, file.getName().length() - 5));
