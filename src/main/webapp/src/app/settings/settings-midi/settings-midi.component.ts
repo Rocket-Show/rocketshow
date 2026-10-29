@@ -28,6 +28,9 @@ export class SettingsMidiComponent implements OnInit, OnDestroy {
   midiInDevices: MidiDevice[];
   midiOutDevices: MidiDevice[];
   midiTimecodeFrameRates = ["FPS_24", "FPS_25", "FPS_29_97_DROP", "FPS_30"];
+  midiTimecodeModes = ["OFF", "MASTER", "SLAVE"];
+  midiTimecodeSlaveMappings = ["COMPOSITION", "SET"];
+  midiChannelList: number[] = [];
 
   compositions: Composition[];
 
@@ -45,6 +48,10 @@ export class SettingsMidiComponent implements OnInit, OnDestroy {
     this.deviceInformationService.getDeviceInformation().subscribe((deviceInformation) => {
       this.deviceInformation = deviceInformation;
     });
+
+    for (let i = 0; i < 16; i++) {
+      this.midiChannelList.push(i);
+    }
   }
 
   private loadSettings() {
@@ -55,6 +62,14 @@ export class SettingsMidiComponent implements OnInit, OnDestroy {
           this.settings = result;
           if (!this.settings.midiTimecodeFrameRate) {
             this.settings.midiTimecodeFrameRate = "FPS_30";
+          }
+
+          if (!this.settings.midiTimecodeMode) {
+            this.settings.midiTimecodeMode = "OFF";
+          }
+
+          if (!this.settings.midiTimecodeSlaveMapping) {
+            this.settings.midiTimecodeSlaveMapping = "COMPOSITION";
           }
 
           const noneDevice: MidiDevice = {

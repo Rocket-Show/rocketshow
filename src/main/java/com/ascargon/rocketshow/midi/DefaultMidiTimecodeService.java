@@ -28,13 +28,12 @@ public class DefaultMidiTimecodeService implements MidiTimecodeService {
     private Object owner;
 
     // Sends the quarter frames of a start. A receiver puts 8 of them together to one timecode, so they carry the
-    // position at the first one. Parts of different positions make the timecode jump, e.g. by a second on a new second.
+    // position at the first one, which MidiTimecodeQuarterFrameSequence takes care of.
     private class QuarterFrameSender implements Runnable {
 
         private final LongSupplier positionMillisSupplier;
         private final MidiTimecodeFrameRate frameRate;
-        private int messageType = 0;
-        private long positionMillis;
+        private final MidiTimecodeQuarterFrameSequence sequence = new MidiTimecodeQuarterFrameSequence();
 
         QuarterFrameSender(LongSupplier positionMillisSupplier, MidiTimecodeFrameRate frameRate) {
             this.positionMillisSupplier = positionMillisSupplier;
@@ -50,17 +49,12 @@ public class DefaultMidiTimecodeService implements MidiTimecodeService {
                 }
 
                 Settings settings = settingsService.getSettings();
-                if (!Boolean.TRUE.equals(settings.getMidiTimecodeEnabled()) || !midiDeviceOutService.isConnected()) {
+                if (settings.getMidiTimecodeMode() != MidiTimecodeMode.MASTER || !midiDeviceOutService.isConnected()) {
                     return;
                 }
 
-                if (messageType == 0) {
-                    positionMillis = positionMillisSupplier.getAsLong();
-                }
-
                 try {
-                    midiDeviceOutService.sendMessage(MidiTimecodeMessageFactory.createQuarterFrameMessage(positionMillis, frameRate, messageType));
-                    messageType = (messageType + 1) % 8;
+                    midiDeviceOutService.sendMessage(sequence.next(positionMillisSupplier.getAsLong(), frameRate));
                 } catch (InvalidMidiDataException e) {
                     logger.error("Could not send MIDI timecode quarter-frame message", e);
                 }
@@ -77,7 +71,7 @@ public class DefaultMidiTimecodeService implements MidiTimecodeService {
     @Override
     public synchronized void start(Object owner, LongSupplier positionMillisSupplier) {
         Settings settings = settingsService.getSettings();
-        if (!Boolean.TRUE.equals(settings.getMidiTimecodeEnabled())) {
+        if (settings.getMidiTimecodeMode() != MidiTimecodeMode.MASTER) {
             return;
         }
 

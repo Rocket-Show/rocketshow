@@ -8,6 +8,9 @@ import com.ascargon.rocketshow.midi.MidiDevice;
 import com.ascargon.rocketshow.midi.MidiDirection;
 import com.ascargon.rocketshow.midi.MidiRouter;
 import com.ascargon.rocketshow.midi.MidiRouterFactory;
+import com.ascargon.rocketshow.midi.MidiTimecodeSlaveService;
+import com.ascargon.rocketshow.midi.MidiCompositionSelectionService;
+import com.ascargon.rocketshow.midi.MidiShowControlService;
 import com.ascargon.rocketshow.midi.TestMidiDeviceProvider;
 import com.ascargon.rocketshow.settings.Settings;
 import com.ascargon.rocketshow.settings.SettingsService;
@@ -77,7 +80,9 @@ class MidiSelfTestTest {
 
         MidiRouterFactory midiRouterFactory = mock(MidiRouterFactory.class);
         when(midiRouterFactory.getSettingsMidiRouter(any())).thenReturn(midiRouter);
-        inService = new DefaultMidiDeviceInService(settingsService, actionMidiExecutionService, midiService, midiRouterFactory);
+        inService = new DefaultMidiDeviceInService(settingsService, actionMidiExecutionService,
+                mock(MidiTimecodeSlaveService.class), mock(MidiCompositionSelectionService.class),
+                mock(MidiShowControlService.class), midiService, midiRouterFactory);
         inService.init();
 
         midiSelfTest = new MidiSelfTest(settingsService, outService, inService);

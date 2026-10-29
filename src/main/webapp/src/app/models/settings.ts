@@ -9,6 +9,9 @@ import { OlaPlugin } from "./ola-plugin";
 import { ActionTriggerMidi } from "./action-trigger-midi";
 import { ActionTriggerMidiNoteOn } from "./action-trigger-midi-note-on";
 import { ActionTriggerMidiProgramChange } from "./action-trigger-midi-program-change";
+import { ActionTriggerMidiControlChange } from "./action-trigger-midi-control-change";
+import { ActionTriggerMidiSongSelect } from "./action-trigger-midi-song-select";
+import { ActionTriggerMidiSystemRealTime } from "./action-trigger-midi-system-real-time";
 import { ApiKey } from "./api-key";
 import { LightingUniverse } from "./lighting-universe";
 import { ScheduledComposition } from "./scheduled-composition";
@@ -17,8 +20,17 @@ export class Settings {
   version: number;
   midiInDevice: MidiDevice;
   midiOutDevice: MidiDevice;
-  midiTimecodeEnabled: boolean;
+  midiTimecodeMode: string;
   midiTimecodeFrameRate: string;
+  midiTimecodeSlaveMapping: string;
+  midiTimecodeSlaveOffsetMillis: number;
+  midiCompositionSelectionEnabled: boolean;
+  midiCompositionSelectionChannel: number;
+  midiCompositionSelectionAutoPlay: boolean;
+  midiShowControlEnabled: boolean;
+  midiShowControlDeviceId: number;
+  midiMachineControlEnabled: boolean;
+  midiMachineControlDeviceId: number;
   remoteDeviceList: RemoteDevice[];
   deviceInMidiRoutingList: MidiRouting[];
   remoteMidiRoutingList: MidiRouting[];
@@ -81,8 +93,17 @@ export class Settings {
       this.midiOutDevice = new MidiDevice(data.midiOutDevice);
     }
 
-    this.midiTimecodeEnabled = data.midiTimecodeEnabled;
+    this.midiTimecodeMode = data.midiTimecodeMode;
     this.midiTimecodeFrameRate = data.midiTimecodeFrameRate;
+    this.midiTimecodeSlaveMapping = data.midiTimecodeSlaveMapping;
+    this.midiTimecodeSlaveOffsetMillis = data.midiTimecodeSlaveOffsetMillis;
+    this.midiCompositionSelectionEnabled = data.midiCompositionSelectionEnabled;
+    this.midiCompositionSelectionChannel = data.midiCompositionSelectionChannel;
+    this.midiCompositionSelectionAutoPlay = data.midiCompositionSelectionAutoPlay;
+    this.midiShowControlEnabled = data.midiShowControlEnabled;
+    this.midiShowControlDeviceId = data.midiShowControlDeviceId;
+    this.midiMachineControlEnabled = data.midiMachineControlEnabled;
+    this.midiMachineControlDeviceId = data.midiMachineControlDeviceId;
 
     if (data.remoteDeviceList) {
       this.remoteDeviceList = [];
@@ -245,6 +266,18 @@ export class Settings {
     } else if (actionTriggerMidi.actionTriggerMidiProgramChange) {
       trigger = new ActionTriggerMidiProgramChange(
         actionTriggerMidi.actionTriggerMidiProgramChange
+      );
+    } else if (actionTriggerMidi.actionTriggerMidiControlChange) {
+      trigger = new ActionTriggerMidiControlChange(
+        actionTriggerMidi.actionTriggerMidiControlChange
+      );
+    } else if (actionTriggerMidi.actionTriggerMidiSongSelect) {
+      trigger = new ActionTriggerMidiSongSelect(
+        actionTriggerMidi.actionTriggerMidiSongSelect
+      );
+    } else if (actionTriggerMidi.actionTriggerMidiSystemRealTime) {
+      trigger = new ActionTriggerMidiSystemRealTime(
+        actionTriggerMidi.actionTriggerMidiSystemRealTime
       );
     }
     return trigger;

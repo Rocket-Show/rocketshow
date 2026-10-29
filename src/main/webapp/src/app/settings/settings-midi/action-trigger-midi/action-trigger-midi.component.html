@@ -10,28 +10,33 @@
       >
       <option value="NOTE_ON">{{ 'settings.midi-control-type-enum.NOTE_ON' | translate }}</option>
       <option value="PROGRAM_CHANGE">{{ 'settings.midi-control-type-enum.PROGRAM_CHANGE' | translate }}</option>
+      <option value="CONTROL_CHANGE">{{ 'settings.midi-control-type-enum.CONTROL_CHANGE' | translate }}</option>
+      <option value="SONG_SELECT">{{ 'settings.midi-control-type-enum.SONG_SELECT' | translate }}</option>
+      <option value="SYSTEM_REAL_TIME">{{ 'settings.midi-control-type-enum.SYSTEM_REAL_TIME' | translate }}</option>
     </select>
   </div>
 </div>
 
-<div class="form-group row">
-  <label class="col-md-3 col-form-label">{{
-    "settings.midi-control-channel-in" | translate
-  }}</label>
-  <div class="col-md-9">
-    <select
-      class="custom-select"
-      [ngModel]="trigger.channel"
-      (ngModelChange)="trigger.channel = $event"
-      >
-      @for (channel of channelList; track channel) {
-        <option [ngValue]="channel">
-          {{ channel + 1 }}
-        </option>
-      }
-    </select>
+@if (hasChannel()) {
+  <div class="form-group row">
+    <label class="col-md-3 col-form-label">{{
+      "settings.midi-control-channel-in" | translate
+    }}</label>
+    <div class="col-md-9">
+      <select
+        class="custom-select"
+        [ngModel]="trigger.channel"
+        (ngModelChange)="trigger.channel = $event"
+        >
+        @for (channel of channelList; track channel) {
+          <option [ngValue]="channel">
+            {{ channel + 1 }}
+          </option>
+        }
+      </select>
+    </div>
   </div>
-</div>
+}
 
 @if (getTriggerMidiType() == 'NOTE_ON') {
   <app-action-trigger-midi-note-on
@@ -43,4 +48,22 @@
   <app-action-trigger-midi-program-change
     [trigger]="trigger"
   ></app-action-trigger-midi-program-change>
+}
+
+@if (getTriggerMidiType() == 'CONTROL_CHANGE') {
+  <app-action-trigger-midi-control-change
+    [trigger]="trigger"
+  ></app-action-trigger-midi-control-change>
+}
+
+@if (getTriggerMidiType() == 'SONG_SELECT') {
+  <app-action-trigger-midi-song-select
+    [trigger]="trigger"
+  ></app-action-trigger-midi-song-select>
+}
+
+@if (getTriggerMidiType() == 'SYSTEM_REAL_TIME') {
+  <app-action-trigger-midi-system-real-time
+    [trigger]="trigger"
+  ></app-action-trigger-midi-system-real-time>
 }

@@ -46,7 +46,7 @@ describe("Set editor", () => {
     compositionEditor.ngOnInit();
 
     setEditor = new EditorSetComponent(compositionService, undefined, warningDialogService, pendingChangesDialogService,
-      toastrService, translateService as any, undefined);
+      toastrService, translateService as any, settingsService as any, undefined);
     setEditor.ngOnInit();
   });
 

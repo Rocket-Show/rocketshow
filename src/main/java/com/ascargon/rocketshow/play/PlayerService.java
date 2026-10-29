@@ -63,6 +63,12 @@ public interface PlayerService {
 
     long getPositionMillis();
 
+    Composition getCurrentComposition();
+
+    void setExternalTimecodePositionMillis(long positionMillis);
+
+    void syncToTimecode(long compositionPositionMillis) throws Exception;
+
     void compositionPlayerFinishedPlaying(CompositionPlayer compositionPlayer) throws Exception;
 
 

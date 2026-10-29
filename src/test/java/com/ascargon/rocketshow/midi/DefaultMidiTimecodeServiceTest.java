@@ -38,7 +38,7 @@ class DefaultMidiTimecodeServiceTest {
 
     @BeforeEach
     void setUp() {
-        settings.setMidiTimecodeEnabled(true);
+        settings.setMidiTimecodeMode(MidiTimecodeMode.MASTER);
         settings.setMidiTimecodeFrameRate(MidiTimecodeFrameRate.FPS_25);
         SettingsService settingsService = mock(SettingsService.class);
         when(settingsService.getSettings()).thenReturn(settings);
@@ -111,7 +111,7 @@ class DefaultMidiTimecodeServiceTest {
         waitMillis(200);
         assertEquals(count, sent.size());
 
-        settings.setMidiTimecodeEnabled(false);
+        settings.setMidiTimecodeMode(MidiTimecodeMode.OFF);
         midiTimecodeService.start(this, playingFrom(0));
         waitMillis(200);
         assertEquals(count, sent.size());

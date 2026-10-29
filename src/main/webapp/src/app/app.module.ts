@@ -78,6 +78,9 @@ import { VolumeSliderComponent } from "./volume-slider/volume-slider.component";
 import { ActionTriggerMidiComponent } from "./settings/settings-midi/action-trigger-midi/action-trigger-midi.component";
 import { ActionTriggerMidiProgramChangeComponent } from "./settings/settings-midi/action-trigger-midi/action-trigger-midi-program-change/action-trigger-midi-program-change.component";
 import { ActionTriggerMidiNoteOnComponent } from "./settings/settings-midi/action-trigger-midi/action-trigger-midi-note-on/action-trigger-midi-note-on.component";
+import { ActionTriggerMidiControlChangeComponent } from "./settings/settings-midi/action-trigger-midi/action-trigger-midi-control-change/action-trigger-midi-control-change.component";
+import { ActionTriggerMidiSongSelectComponent } from "./settings/settings-midi/action-trigger-midi/action-trigger-midi-song-select/action-trigger-midi-song-select.component";
+import { ActionTriggerMidiSystemRealTimeComponent } from "./settings/settings-midi/action-trigger-midi/action-trigger-midi-system-real-time/action-trigger-midi-system-real-time.component";
 import { ActionTriggerComponent } from "./action-trigger/action-trigger.component";
 import { ActionListComponent } from "./action-list/action-list.component";
 import { ActionComponent } from "./action/action.component";
@@ -183,6 +186,9 @@ const appRoutes: Routes = [
         ActionTriggerMidiComponent,
         ActionTriggerMidiNoteOnComponent,
         ActionTriggerMidiProgramChangeComponent,
+        ActionTriggerMidiControlChangeComponent,
+        ActionTriggerMidiSongSelectComponent,
+        ActionTriggerMidiSystemRealTimeComponent,
         ActionTriggerCompositionComponent,
         SettingsExternalControlComponent,
         ActionTriggerRaspberryGpioComponent,

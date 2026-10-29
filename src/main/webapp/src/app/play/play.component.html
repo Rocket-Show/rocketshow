@@ -65,6 +65,12 @@
                 @if (currentState?.currentCompositionName) {
                   <span class="transport-name">{{ currentState?.currentCompositionName }}</span>
                 }
+                @if (currentState?.midiTimecodeLocked) {
+                  <span class="badge badge-primary ml-2" [popover]="'play.help.midi-timecode-locked' | translate"
+                    triggers="mouseenter:mouseleave" container="body" placement="bottom">
+                    <i class="fa fa-clock-o" aria-hidden="true"></i> {{ "play.midi-timecode" | translate }}
+                  </span>
+                }
               </h5>
             </div>
 

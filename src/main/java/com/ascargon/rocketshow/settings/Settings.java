@@ -45,8 +45,51 @@ public class Settings {
     private String leadSheetPath;
     private MidiDevice midiInDevice;
     private MidiDevice midiOutDevice;
+
+    /**
+     * @deprecated Not used since settings version 4 anymore. Use midiTimecodeMode instead.
+     */
+    @Deprecated
     private Boolean midiTimecodeEnabled;
+
+    // Whether MIDI timecode is sent (master), followed (slave) or not used at all
+    private MidiTimecodeMode midiTimecodeMode;
+
+    // The frame rate used to send MIDI timecode as a master. As a slave, the frame rate announced by
+    // the master is used instead.
     private MidiTimecodeFrameRate midiTimecodeFrameRate;
+
+    // Whether an incoming timecode position addresses the current composition or the current set
+    private MidiTimecodeSlaveMapping midiTimecodeSlaveMapping;
+
+    // Compensates the latency of the incoming timecode (MIDI transport plus audio output buffer).
+    // A positive value plays later, a negative value plays earlier.
+    private Integer midiTimecodeSlaveOffsetMillis;
+
+    // Select compositions by their MIDI number, using incoming program change (extended by bank
+    // select) and song select messages
+    private Boolean midiCompositionSelectionEnabled;
+
+    // The channel program change messages are accepted on. Null means all channels. Song select
+    // carries no channel and is always accepted.
+    private Integer midiCompositionSelectionChannel;
+
+    // Start playing as soon as a composition was selected, instead of only selecting it
+    private Boolean midiCompositionSelectionAutoPlay;
+
+    // Follow MIDI Show Control (MSC) commands, as sent by lighting desks and show control systems
+    private Boolean midiShowControlEnabled;
+
+    // The MSC device ID this device listens on (0-126). Messages to the all-call ID 127 are always
+    // accepted.
+    private Integer midiShowControlDeviceId;
+
+    // Follow MIDI Machine Control (MMC) transport commands, as sent by DAWs
+    private Boolean midiMachineControlEnabled;
+
+    // The MMC device ID this device listens on (0-126). Messages to the all-call ID 127 are always
+    // accepted.
+    private Integer midiMachineControlDeviceId;
     private List<RemoteDevice> remoteDeviceList = new ArrayList<>();
 
     /**
@@ -214,7 +257,10 @@ public class Settings {
 
     @XmlElementWrapper(name = "actionTriggerMidiList")
     @XmlElements({@XmlElement(type = ActionTriggerMidiNoteOn.class, name = "actionTriggerMidiNoteOn"),
-            @XmlElement(type = ActionTriggerMidiProgramChange.class, name = "actionTriggerMidiProgramChange")})
+            @XmlElement(type = ActionTriggerMidiProgramChange.class, name = "actionTriggerMidiProgramChange"),
+            @XmlElement(type = ActionTriggerMidiControlChange.class, name = "actionTriggerMidiControlChange"),
+            @XmlElement(type = ActionTriggerMidiSongSelect.class, name = "actionTriggerMidiSongSelect"),
+            @XmlElement(type = ActionTriggerMidiSystemRealTime.class, name = "actionTriggerMidiSystemRealTime")})
     public List<ActionTriggerMidi> getActionTriggerMidiList() {
         return actionTriggerMidiList;
     }

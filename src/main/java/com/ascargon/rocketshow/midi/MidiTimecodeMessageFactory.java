@@ -15,11 +15,15 @@ class MidiTimecodeMessageFactory {
     private MidiTimecodeMessageFactory() {
     }
 
-    static ShortMessage createQuarterFrameMessage(long positionMillis, MidiTimecodeFrameRate frameRate, int messageType) throws InvalidMidiDataException {
-        // The time of the frame when the first quarter frame is sent. Receivers add the 2 frames the 8 quarter frames
-        // take themselves, like the MIDI timecode specification says.
-        TimecodePosition position = getTimecodePosition(positionMillis, frameRate);
-
+    /**
+     * One of the eight quarter-frame messages that together transmit a position.
+     * <p>
+     * All eight carry the same position, the one the sequence started at: transmitting it takes two
+     * frames, and the receiver adds those two frames back itself. Pass the same position for a whole
+     * sequence (see {@link MidiTimecodeQuarterFrameSequence}), otherwise the nibbles come from
+     * different moments and the receiver assembles a position that was never real.
+     */
+    static ShortMessage createQuarterFrameMessage(MidiTimecodePosition position, MidiTimecodeFrameRate frameRate, int messageType) throws InvalidMidiDataException {
         int value = switch (messageType) {
             case 0 -> position.frame() & 0x0F;
             case 1 -> (position.frame() >> 4) & 0x01;
@@ -37,8 +41,11 @@ class MidiTimecodeMessageFactory {
         return message;
     }
 
+    /**
+     * A full-frame message, used to locate a parked receiver to a position.
+     */
     static SysexMessage createFullFrameMessage(long positionMillis, MidiTimecodeFrameRate frameRate) throws InvalidMidiDataException {
-        TimecodePosition position = getTimecodePosition(positionMillis, frameRate);
+        MidiTimecodePosition position = getTimecodePosition(positionMillis, frameRate);
         byte[] data = new byte[]{
                 (byte) SysexMessage.SYSTEM_EXCLUSIVE,
                 (byte) FULL_FRAME_UNIVERSAL_REALTIME_SYSEX,
@@ -57,7 +64,10 @@ class MidiTimecodeMessageFactory {
         return message;
     }
 
-    private static TimecodePosition getTimecodePosition(long positionMillis, MidiTimecodeFrameRate frameRate) {
+    /**
+     * The SMPTE position a playback position in milliseconds corresponds to.
+     */
+    static MidiTimecodePosition getTimecodePosition(long positionMillis, MidiTimecodeFrameRate frameRate) {
         long frameNumber = Math.max(0, Math.round(positionMillis * frameRate.getFramesPerSecond() / 1000.0));
 
         if (frameRate.isDropFrame()) {
@@ -71,7 +81,7 @@ class MidiTimecodeMessageFactory {
         int minute = (int) ((totalSeconds / 60) % 60);
         int hour = (int) ((totalSeconds / 3600) % 24);
 
-        return new TimecodePosition(hour, minute, second, frame);
+        return new MidiTimecodePosition(hour, minute, second, frame);
     }
 
     private static long convertToDropFrameNumber(long frameNumber) {
@@ -90,8 +100,5 @@ class MidiTimecodeMessageFactory {
         }
 
         return frameNumber + droppedFrames;
-    }
-
-    private record TimecodePosition(int hour, int minute, int second, int frame) {
     }
 }

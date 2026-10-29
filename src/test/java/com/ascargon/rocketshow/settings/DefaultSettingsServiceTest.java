@@ -50,7 +50,14 @@ class DefaultSettingsServiceTest {
     // Settings of earlier releases, which were removed on purpose
     private final static Set<String> REMOVED_ELEMENTS = Set.of(
             // The global MIDI mapping always applies
-            "overrideParent"
+            "overrideParent",
+            // Replaced by midiTimecodeMode, which also says whether a timecode is followed
+            "midiTimecodeEnabled"
+    );
+
+    // Changed by a migration on purpose, and asserted on their own
+    private final static Set<String> MIGRATED_ELEMENTS = Set.of(
+            "version"
     );
 
     @TempDir
@@ -106,7 +113,7 @@ class DefaultSettingsServiceTest {
 
         for (Map.Entry<String, String> entry : before.entrySet()) {
             String element = entry.getKey().substring(entry.getKey().lastIndexOf('/') + 1, entry.getKey().lastIndexOf('['));
-            if (REMOVED_ELEMENTS.contains(element)) {
+            if (REMOVED_ELEMENTS.contains(element) || MIGRATED_ELEMENTS.contains(element)) {
                 continue;
             }
 

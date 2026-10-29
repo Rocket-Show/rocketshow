@@ -34,6 +34,26 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
 
     private final String uuid = String.valueOf(UUID.randomUUID());
 
+    // A drift up to this is not corrected at all, to keep the pipeline from being nudged constantly
+    private final static long TIMECODE_DRIFT_TOLERANCE_MILLIS = 10;
+
+    // Above this the media is not drifting but in the wrong place (the master looped, re-located or
+    // the composition was started late) and is pulled back by seeking instead of by trimming
+    private final static long TIMECODE_RESYNC_THRESHOLD_MILLIS = 100;
+
+    // Don't resync by seeking more often than this, so a pipeline that cannot keep up (or a master
+    // sending nonsense) does not turn into a seek storm
+    private final static long TIMECODE_RESYNC_INTERVAL_MILLIS = 500;
+
+    // The largest rate deviation used to trim drift. 0.2% is roughly 3.5 cents of pitch shift, which
+    // is inaudible, and still far more correction authority than a sound card's drift (usually well
+    // below 0.01%) ever needs.
+    private final static double TIMECODE_MAX_RATE_DEVIATION = 0.002;
+
+    // The error at which the full rate deviation is applied. Together with the clamp above this is a
+    // proportional controller on a rate that integrates into a position, so it stays stable.
+    private final static double TIMECODE_FULL_CORRECTION_ERROR_MILLIS = 100;
+
     public enum PlayState {
         PLAYING, // Is the composition playing?
         PAUSED, // Is the composition paused?
@@ -74,6 +94,16 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
 
     // The constructed GStreamer pipeline (master + slaves). Null when nothing is loaded.
     private CompositionPipeline compositionPipeline;
+
+    // The position within this composition dictated by an external MIDI timecode master, or -1 when
+    // this player does not follow a timecode. While it is set, it - not the pipeline - is this
+    // composition's position, so the lighting designer, the action triggers and the web app follow
+    // the master immediately and without drift. The media pipeline cannot simply be told a position
+    // (it is clocked by the sound card and the display), so it is pulled towards the timecode
+    // separately in syncToTimecode().
+    private volatile long externalTimecodePositionMillis = -1;
+
+    private long lastTimecodeResyncTimeMillis = 0;
 
     // Execute the action triggers at the specified positions
     private ScheduledExecutorService scheduler;
@@ -256,6 +286,16 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
         // Re-entrant (also called on resume / each loop): drop any previously scheduled end first
         stopAutoStopTimer();
 
+        if (scheduler == null) {
+            // Nothing was ever loaded, so there is nothing to stop
+            return;
+        }
+
+        if (isFollowingTimecode()) {
+            // The timecode master drives the end of the composition
+            return;
+        }
+
         if (compositionPipeline != null && compositionPipeline.hasMaster() && !masterEosReached) {
             // A live master pipeline drives the end via its EOS -> no need for the timer
             return;
@@ -281,6 +321,12 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
     // lights are placed after it, run them out first on the wall clock (the "trailing tail") and only
     // reach the real end of the composition once the full duration has elapsed; otherwise the end is now.
     private void onMasterEndOfStream() {
+        if (isFollowingTimecode()) {
+            // The position comes from the timecode master, so there is no wall-clock tail to run out
+            // and nothing here has to anchor the end of the composition
+            return;
+        }
+
         if (masterEosReached) {
             // Already in the tail (e.g. a duplicate EOS while resuming) -> nothing to do
             return;
@@ -312,6 +358,12 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
     // The composition reached its real end (full duration elapsed). Loop it back to the start if it
     // is set to loop, otherwise finish (media -> auto-next handling; pure actions -> just stop).
     private void reachedEnd() {
+        if (isFollowingTimecode()) {
+            // The timecode master decides when this composition ends, loops or is replaced by the
+            // next one - never the local timeline
+            return;
+        }
+
         if (composition.isLoop()) {
             loopToStart();
             return;
@@ -375,6 +427,11 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
     private void startActionTriggerTimer() {
         // Schedule all action triggers in the future of the current position
 
+        if (scheduler == null) {
+            // Nothing was ever loaded, so there is nothing to trigger against
+            return;
+        }
+
         // Cancel all current schedules
         for (ScheduledFuture<?> handle : actionTriggerHandleList) {
             handle.cancel(false);
@@ -403,13 +460,13 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
     private void scheduleActionTriggerTimers() {
         // Schedule the timers to execute the actions
 
-        if (composition.getActionTriggerList().isEmpty()) {
-            // No actions to trigger
+        if (composition.getActionTriggerList().isEmpty() || scheduler == null) {
+            // No actions to trigger, or nothing loaded to trigger against
             return;
         }
 
-        if (compositionPipeline == null || !compositionPipeline.hasMaster()) {
-            // No master pipeline to stay in sync with -> only schedule once
+        if (!isFollowingTimecode() && (compositionPipeline == null || !compositionPipeline.hasMaster())) {
+            // No master pipeline and no timecode master to stay in sync with -> only schedule once
             startActionTriggerTimer();
             return;
         }
@@ -663,9 +720,123 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
         midiTimecodeService.start(this, this::getPositionMillis);
     }
 
+    // --- MIDI timecode slave ---
+
+    /**
+     * Hand this player the position an external MIDI timecode master is at, expressed as a position
+     * inside this composition. Pass -1 to stop following a timecode.
+     * <p>
+     * This only publishes the position; use {@link #syncToTimecode(long)} to also pull the media
+     * pipeline towards it.
+     */
+    public void setExternalTimecodePositionMillis(long positionMillis) {
+        if (positionMillis < 0 && externalTimecodePositionMillis >= 0 && compositionPipeline != null) {
+            // Stopped following -> hand the pipeline back at its normal rate
+            compositionPipeline.setPlaybackRate(1);
+        }
+
+        externalTimecodePositionMillis = positionMillis;
+    }
+
+    public boolean isFollowingTimecode() {
+        return externalTimecodePositionMillis >= 0;
+    }
+
+    /**
+     * Follow the external MIDI timecode master, which is at the given position inside this
+     * composition.
+     * <p>
+     * Everything that is recalculated from the position (the lighting designer) or dispatched by it
+     * (the action triggers) follows the master exactly just by being handed the position. Audio and
+     * video cannot: they are clocked by the sound card and the display, so they have to be pulled
+     * towards the master instead. That is done in three bands:
+     * <ul>
+     *     <li>below {@link #TIMECODE_DRIFT_TOLERANCE_MILLIS} nothing is done, so the pipeline is not
+     *     nudged constantly;</li>
+     *     <li>up to {@link #TIMECODE_RESYNC_THRESHOLD_MILLIS} the playback rate is trimmed by a
+     *     fraction of a per cent, which is inaudible and invisible and eases the error out over a
+     *     few seconds - this is what absorbs the continuous drift between the sound card's clock and
+     *     the master's;</li>
+     *     <li>anything larger is not drift but a wrong position (the master looped or re-located, or
+     *     the composition started late) and is corrected by seeking, which is audible but rare.</li>
+     * </ul>
+     * <p>
+     * A pipeline that cannot trim its rate (see {@link CompositionPipeline#setPlaybackRate(double)})
+     * falls back to the third band alone.
+     */
+    public void syncToTimecode(long targetPositionMillis) throws Exception {
+        externalTimecodePositionMillis = targetPositionMillis;
+
+        if (playState != PlayState.PLAYING || compositionPipeline == null || !compositionPipeline.hasMaster()) {
+            // Nothing that is clocked by hardware -> handing over the position above is all it takes
+            return;
+        }
+
+        long mediaPositionMillis = compositionPipeline.queryMasterPositionMillis();
+
+        if (mediaPositionMillis < 0) {
+            // The pipeline could not be queried (e.g. right after a seek)
+            return;
+        }
+
+        // Positive: the media is ahead of the master and has to be slowed down
+        long errorMillis = mediaPositionMillis - targetPositionMillis;
+
+        if (Math.abs(errorMillis) <= TIMECODE_DRIFT_TOLERANCE_MILLIS) {
+            compositionPipeline.setPlaybackRate(1);
+            return;
+        }
+
+        if (Math.abs(errorMillis) <= TIMECODE_RESYNC_THRESHOLD_MILLIS) {
+            // Trim it out. If the pipeline cannot change its rate on the fly the drift simply keeps
+            // growing until it crosses the threshold below and is seeked away, which is far better
+            // than seeking on every small deviation.
+            compositionPipeline.setPlaybackRate(getTimecodeCorrectionRate(errorMillis));
+            return;
+        }
+
+        // Too far off to trim out
+        resyncToTimecode(targetPositionMillis, errorMillis);
+    }
+
+    private void resyncToTimecode(long targetPositionMillis, long errorMillis) throws Exception {
+        if (compositionPipeline.masterHasH265()) {
+            // Seeking is impossible with the hardware H.265 decoder (see seek()), so this
+            // composition can only be started in sync, never pulled back into sync
+            return;
+        }
+
+        long nowMillis = System.currentTimeMillis();
+
+        if (nowMillis - lastTimecodeResyncTimeMillis < TIMECODE_RESYNC_INTERVAL_MILLIS) {
+            // A seek takes a moment to settle; don't chase the master with a seek storm meanwhile
+            return;
+        }
+
+        lastTimecodeResyncTimeMillis = nowMillis;
+
+        logger.debug("Media is {}ms off the MIDI timecode; seeking to {}ms", errorMillis, targetPositionMillis);
+
+        seek(targetPositionMillis);
+    }
+
+    private static double getTimecodeCorrectionRate(long errorMillis) {
+        double correction = -errorMillis / TIMECODE_FULL_CORRECTION_ERROR_MILLIS * TIMECODE_MAX_RATE_DEVIATION;
+
+        return 1 + Math.max(-TIMECODE_MAX_RATE_DEVIATION, Math.min(TIMECODE_MAX_RATE_DEVIATION, correction));
+    }
+
     public long getPositionMillis() {
         if (composition == null) {
             return 0;
+        }
+
+        long timecodePositionMillis = externalTimecodePositionMillis;
+
+        if (timecodePositionMillis >= 0) {
+            // Following an external MIDI timecode master: it dictates the position (also while
+            // paused, so the transport shows where the master is parked)
+            return timecodePositionMillis;
         }
 
         // If we're not playing, just return the current start position to resume playing

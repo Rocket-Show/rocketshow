@@ -5,6 +5,8 @@ export class State {
     currentCompositionDurationMillis: number = 0;
     positionMillis: number;
     currentSetName: string;
+    midiTimecodeLocked: boolean = false;
+    midiTimecodeMillis: number;
     error: string;
 
     // the scenes picked by hand on the Play screen and whether a composition holds them, because it lights the stage
@@ -26,6 +28,8 @@ export class State {
         this.currentCompositionDurationMillis = data.currentCompositionDurationMillis;
         this.positionMillis = data.positionMillis;
         this.currentSetName = data.currentSetName;
+        this.midiTimecodeLocked = data.midiTimecodeLocked;
+        this.midiTimecodeMillis = data.midiTimecodeMillis;
         this.error = data.error;
         this.sceneProjectName = data.sceneProjectName;
         this.activeSceneUuids = data.activeSceneUuids || [];

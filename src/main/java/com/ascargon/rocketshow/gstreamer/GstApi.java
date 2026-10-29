@@ -36,4 +36,9 @@ public interface GstApi extends Library {
     // Get the bus from an element (usually the pipeline)
     Bus gst_element_get_bus(Element element);
 
+    // Seek with raw seek flags, so flags the Java bindings don't know about can be used (namely
+    // GST_SEEK_FLAG_INSTANT_RATE_CHANGE, see CompositionPipeline#setPlaybackRate). Format, startType
+    // and stopType are the plain enum values (Format#intValue, SeekType#intValue).
+    boolean gst_element_seek(Element element, double rate, int format, int flags, int startType, long start, int stopType, long stop);
+
 }

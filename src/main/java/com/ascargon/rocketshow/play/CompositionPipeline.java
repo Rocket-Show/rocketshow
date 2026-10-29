@@ -11,6 +11,7 @@ import com.ascargon.rocketshow.midi.MidiMessageParser;
 import com.ascargon.rocketshow.midi.MidiRouter;
 import org.freedesktop.gstreamer.*;
 import org.freedesktop.gstreamer.event.SeekFlags;
+import org.freedesktop.gstreamer.event.SeekType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +35,10 @@ import java.util.concurrent.TimeUnit;
 class CompositionPipeline {
 
     private final static Logger logger = LoggerFactory.getLogger(CompositionPipeline.class);
+
+    // GST_SEEK_FLAG_INSTANT_RATE_CHANGE. Available since GStreamer 1.18 but missing from the Java
+    // bindings' SeekFlags, so it has to be passed as a raw flag through GstApi.
+    private final static int SEEK_FLAG_INSTANT_RATE_CHANGE = 1 << 11;
 
     private final CompositionPipelineBuilder builder;
     private final Composition composition;
@@ -69,6 +74,14 @@ class CompositionPipeline {
 
     // True when a hardware H.265 decoder is in use in the master pipeline
     private boolean masterHasH265 = false;
+
+    // The playback rate currently applied to the master and its slaves. Only ever slightly off 1
+    // (see setPlaybackRate), used to trim drift against an external timecode.
+    private double playbackRate = 1;
+
+    // Turns false as soon as an instant rate change is rejected (GStreamer older than 1.18, or an
+    // element in the pipeline that does not handle it), so we stop trying.
+    private boolean instantRateChangeSupported = true;
 
     // Set when stopped: a slave starting again (H.265) doesn't build a new pipeline afterwards
     private volatile boolean stopped = false;
@@ -183,6 +196,56 @@ class CompositionPipeline {
                 EnumSet.of(SeekFlags.FLUSH, SeekFlags.KEY_UNIT),
                 positionMillis * 1_000_000L);
         masterPipeline.getState(5, TimeUnit.SECONDS);
+
+        // A flushing seek starts a new segment at rate 1
+        playbackRate = 1;
+    }
+
+    /**
+     * Trim the playback rate of the master and its slaves, to pull the pipeline back into sync with
+     * an external timecode without the audible/visible interruption of a seek.
+     * <p>
+     * Only ever called with a rate very close to 1 (see
+     * {@link CompositionPlayer#syncToTimecode(long)}): a rate change shifts the pitch of the audio,
+     * because there is no {@code scaletempo} in these pipelines, and it is only inaudible while the
+     * deviation stays in the per mille range.
+     * <p>
+     * Uses an instant rate change, which applies to the buffers already queued in the sinks instead
+     * of only taking effect at the next segment, and unlike a normal rate change does not need to
+     * flush.
+     * <p>
+     * Best-effort: a pipeline that cannot change its rate on the fly (GStreamer older than 1.18, or
+     * an element that does not handle it) simply keeps running at rate 1, and its drift is corrected
+     * by seeking once it grows past the resync threshold.
+     */
+    void setPlaybackRate(double rate) {
+        if (!instantRateChangeSupported || masterPipeline == null) {
+            return;
+        }
+
+        if (Math.abs(rate - playbackRate) < 0.000001) {
+            return;
+        }
+
+        if (!applyPlaybackRate(masterPipeline, rate)) {
+            logger.info("The pipeline does not support instant rate changes; correcting the timecode drift by seeking only");
+            instantRateChangeSupported = false;
+            return;
+        }
+
+        for (SlavePipeline slavePipeline : slavePipelineList) {
+            slavePipeline.setPlaybackRate(rate);
+        }
+
+        playbackRate = rate;
+    }
+
+    private static boolean applyPlaybackRate(Pipeline pipeline, double rate) {
+        // An instant rate change must not carry a start/stop position, only the new rate
+        return GstApi.GST_API.gst_element_seek(pipeline, rate, Format.TIME.intValue(),
+                SEEK_FLAG_INSTANT_RATE_CHANGE,
+                SeekType.NONE.intValue(), 0,
+                SeekType.NONE.intValue(), 0);
     }
 
     long queryMasterPositionMillis() {
@@ -201,6 +264,8 @@ class CompositionPipeline {
 
     // Seek the master (if any) and re-phase each slave to the matching in-loop position
     void seek(long positionMillis) {
+        playbackRate = 1;
+
         if (masterPipeline != null) {
             seekMasterTo(positionMillis);
         }
@@ -325,6 +390,10 @@ class CompositionPipeline {
         private final List<Element> volumeList = new ArrayList<>();
         private boolean hasH265 = false;
 
+        // The trimmed rate the master currently runs at, re-applied after every own seek/restart
+        // (which starts a new segment back at rate 1)
+        private double slavePlaybackRate = 1;
+
         SlavePipeline(CompositionFile compositionFile, int index) {
             this.compositionFile = compositionFile;
             this.index = index;
@@ -386,6 +455,8 @@ class CompositionPipeline {
 
             slavePipeline.setState(State.PLAYING);
             slavePipeline.getState(5, TimeUnit.SECONDS);
+
+            applySlavePlaybackRate();
         }
 
         // The in-loop content position (ms) the slave should be at for the given master position,
@@ -406,6 +477,21 @@ class CompositionPipeline {
         private void seekSlaveTo(long positionMillis) {
             if (slavePipeline != null) {
                 slavePipeline.seekSimple(Format.TIME, EnumSet.of(SeekFlags.FLUSH, SeekFlags.KEY_UNIT), positionMillis * 1_000_000L);
+                // The flushing seek started a new segment at rate 1
+                applySlavePlaybackRate();
+            }
+        }
+
+        // Follow the master's trimmed playback rate, so the slave keeps its phase while the master
+        // is being pulled back into sync with an external timecode
+        void setPlaybackRate(double rate) {
+            slavePlaybackRate = rate;
+            applySlavePlaybackRate();
+        }
+
+        private void applySlavePlaybackRate() {
+            if (slavePipeline != null && slavePlaybackRate != 1) {
+                applyPlaybackRate(slavePipeline, slavePlaybackRate);
             }
         }
 

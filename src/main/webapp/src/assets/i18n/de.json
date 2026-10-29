@@ -96,8 +96,10 @@
       "scenes-stack": "Wenn aktiviert, kommt eine angetippte Szene zu den bereits leuchtenden dazu. Sonst leuchtet nur diese Szene.",
       "scenes-release-all": "Schaltet alle Szenen aus.",
       "scenes-blackout": "Schaltet das Licht aus und behält die Szenen ausgewählt. Nochmals tippen holt sie zurück.",
-      "scenes-full-screen": "Zeigt Rocket Show auf dem ganzen Bildschirm, z. B. auf einem Tablet an der Wand."
-    }
+      "scenes-full-screen": "Zeigt Rocket Show auf dem ganzen Bildschirm, z. B. auf einem Tablet an der Wand.",
+      "midi-timecode-locked": "Dieses Gerät folgt einem eingehenden MIDI-Timecode; der externe Master steuert die Wiedergabe."
+    },
+    "midi-timecode": "Timecode"
   },
   "editor": {
     "compositions": "Kompositionen",
@@ -169,13 +171,25 @@
       "file-midi-routing": "Legt fest, wohin diese MIDI-Datei während der Wiedergabe gesendet wird, zum Beispiel an den MIDI-Ausgang, das Licht oder Remote-Geräte.",
       "edit-details": "Öffnet die detaillierten Einstellungen.",
       "reorder": "Ziehen, um die Reihenfolge zu ändern.",
-      "notes": "Persönliche Notizen zu dieser Komposition. Sie werden nur hier im Editor angezeigt und nicht abgespielt."
+      "notes": "Persönliche Notizen zu dieser Komposition. Sie werden nur hier im Editor angezeigt und nicht abgespielt.",
+      "timecode-start": "Die Position des eingehenden MIDI-Timecodes, an der diese Komposition beginnt, als hh:mm:ss.mmm. Wird nur verwendet, solange dieses Gerät einem MIDI-Timecode folgt.",
+      "timecode-start-set": "Die Position des eingehenden MIDI-Timecodes, an der diese Komposition innerhalb dieses Sets beginnt, als hh:mm:ss.mmm. Jede Komposition belegt den Bereich von hier bis zum Ende ihrer Dauer.",
+      "midi-number": "Die Nummer, mit der ein Master diese Komposition über MIDI auswählt, gezählt ab 1: Program Change 1 (über ein vorangehendes Bank Select auch über 128 hinaus) oder Song Select 1 wählt die Komposition mit der Nummer 1. Leer lassen, wenn diese Komposition nicht über MIDI auswählbar sein soll. Wird nur verwendet, solange die Auswahl über die MIDI-Nummer eingeschaltet ist; ein Set kann dieser Komposition für dieses Set eine andere Nummer geben.",
+      "midi-number-set": "Die Nummer, die diese Komposition innerhalb dieses Sets auswählt, damit jedes Set seine Kompositionen ab 1 nummerieren kann. Leer lassen, um die bei der Komposition selbst konfigurierte Nummer zu verwenden.",
+      "show-control-cue": "Die MIDI-Show-Control-Cue-Nummer, mit der ein Pult diese Komposition auswählt, zum Beispiel 12.5. Ein LOAD-Befehl wählt sie aus, ein GO-Befehl wählt sie aus und startet sie. Leer lassen, um stattdessen die MIDI-Nummer als Cue-Nummer zu verwenden. Wird nur verwendet, solange MIDI Show Control eingeschaltet ist; ein Set kann dieser Komposition für dieses Set eine andere Cue-Nummer geben.",
+      "show-control-cue-set": "Die Show-Control-Cue-Nummer, die diese Komposition innerhalb dieses Sets auswählt. Leer lassen, um die bei der Komposition selbst konfigurierte Cue-Nummer zu verwenden."
     },
     "action": {
       "actions": "Aktionen",
       "action": "Aktion",
       "position-millis": "Position in Millisekunden"
-    }
+    },
+    "timecode-start": "Timecode-Start",
+    "midi-number": "MIDI-Nummer",
+    "midi-number-none": "Über MIDI nicht auswählbar",
+    "show-control-cue": "Show-Control-Cue",
+    "show-control-cue-none": "MIDI-Nummer verwenden",
+    "set-override-none": "Übernommen"
   },
   "connection": {
     "title": "Keine Verbindung",
@@ -211,7 +225,7 @@
       "lighting-send-delay": "Lichtänderungen, die innerhalb dieses Zeitfensters auftreten, werden vor dem Senden zu einer einzigen Aktualisierung zusammengefasst, was Netzwerk- und DMX-Last reduziert.",
       "designer-frequency-hertz": "Wie oft pro Sekunde die Lichtausgabe neu berechnet und gesendet wird. Höhere Werte sind flüssiger, benötigen aber mehr Rechenleistung.",
       "designer-live-preview": "Zeigt im Designer während des Bearbeitens eine Live-Vorschau der Lichtausgabe an, statt nur während der Wiedergabe.",
-      "midi-timecode": "Sendet während der Wiedergabe MIDI-Timecode (MTC), damit externe Geräte wie eine DAW oder ein Lichtpult der aktuellen Position folgen können.",
+      "midi-timecode": "Sendet während der Wiedergabe MIDI-Timecode (MTC), damit externe Geräte wie eine DAW oder ein Lichtpult der aktuellen Position folgen können, oder folgt einem am MIDI-Eingang empfangenen Timecode, damit dieses Gerät synchron zu einem externen Master läuft.",
       "device-in-midi-routing": "Legt fest, wohin von angeschlossenen Eingabegeräten empfangenes MIDI gesendet wird, zum Beispiel an den MIDI-Ausgang, das Licht oder Remote-Geräte.",
       "remote-midi-routing": "Legt fest, wohin von Remote-RocketShow-Geräten empfangenes MIDI gesendet wird.",
       "global-midi-mapping": "Transformiert eingehendes MIDI global – zum Beispiel durch Verschieben von Kanälen oder Noten –, bevor es verarbeitet wird.",
@@ -222,7 +236,16 @@
       "remote-device-synchronize": "Das Remote-Gerät folgt diesem Gerät: Wird hier eine Komposition ausgewählt, abgespielt, pausiert oder gestoppt, macht es dasselbe mit seiner gleichnamigen Komposition, und es startet neu und fährt herunter, wenn dieses Gerät es tut. Dateien werden nicht kopiert.",
       "instruments": "Lege die in deiner Band verwendeten Instrumente fest. Leadsheets können pro Instrument zugewiesen werden, und jedes Gerät kann wählen, welches Instrument es anzeigt.",
       "personal-instrument": "Das auf diesem Gerät verwendete Instrument. Es bestimmt, welche Leadsheets und Stimmen hier angezeigt werden.",
-      "api-keys": "API-Schlüssel ermöglichen externen Systemen und anderen RocketShow-Geräten den Zugriff auf dieses Gerät ohne Passwort."
+      "api-keys": "API-Schlüssel ermöglichen externen Systemen und anderen RocketShow-Geräten den Zugriff auf dieses Gerät ohne Passwort.",
+      "midi-timecode-slave-mapping": "Pro Komposition: Der eingehende Timecode steuert die ausgewählte Komposition, beginnend beim Timecode-Start, der bei ihr konfiguriert ist. Pro Set: Jede Komposition des aktuellen Sets belegt einen eigenen Bereich auf dem eingehenden Timecode, und die passende Komposition wird automatisch ausgewählt und gestartet.",
+      "midi-timecode-slave-offset": "Gleicht die Latenz des eingehenden Timecodes und der Audioausgabe aus. Ein positiver Wert spielt später, ein negativer Wert früher.",
+      "midi-composition-selection": "Lässt einen Master eine Komposition über die bei ihr konfigurierte MIDI-Nummer auswählen, statt jede Komposition einzeln unter Steuerung zuzuordnen. Verwendet werden Program-Change- (erweitert durch Bank Select) und Song-Select-Befehle; ausgewählt wird die Komposition mit dieser Nummer.",
+      "midi-composition-selection-channel": "Der Kanal, auf dem Program-Change-Befehle angenommen werden. Song Select hat keinen Kanal und wird immer angenommen.",
+      "midi-composition-selection-auto-play": "Startet die Wiedergabe, sobald eine Komposition ausgewählt wurde. Lass dies aus, wenn der Master zuerst eine Komposition auswählt und sie mit einem separaten Befehl startet - das ist der übliche Weg.",
+      "midi-show-control": "Folgt MIDI Show Control, dem SysEx-Protokoll von Lichtpulten und Show-Control-Systemen. Ein LOAD-Befehl wählt die Komposition mit der passenden Cue-Nummer aus, GO wählt sie aus und startet sie, STOP pausiert und RESUME setzt fort.",
+      "midi-machine-control": "Folgt MIDI Machine Control, dem SysEx-Transportprotokoll von DAWs und Bandmaschinen: Play, Stop, Pause und Locate. Es sagt nicht, welche Komposition gespielt werden soll. Wird ignoriert, solange dieses Gerät einem MIDI-Timecode folgt, der den Transport bereits steuert.",
+      "midi-device-id": "Die Geräte-ID, unter der dieses Gerät angesprochen wird, 0 bis 126. Befehle an die Sammel-ID 127 werden immer angenommen.",
+      "midi-control-value": "Löst nur aus, wenn der Controller genau diesen Wert hat, zum Beispiel 127 für einen gedrückten Fussschalter. Leer lassen, um bei jedem Wert auszulösen."
     },
     "default": "Standard",
     "system": "System",
@@ -287,7 +310,6 @@
     "midi-device-in": "Eingang",
     "midi-device-out": "Ausgang",
     "midi-timecode": "MIDI Timecode",
-    "midi-timecode-enable": "MIDI Timecode senden",
     "midi-timecode-frame-rate": "Framerate",
     "midi-timecode-frame-rate-enum": {
       "FPS_24": "24 fps",
@@ -303,7 +325,10 @@
     "midi-control-program": "Programm",
     "midi-control-type-enum": {
       "NOTE_ON": "Note an",
-      "PROGRAM_CHANGE": "Programmwechsel"
+      "PROGRAM_CHANGE": "Programmwechsel",
+      "CONTROL_CHANGE": "Control Change",
+      "SONG_SELECT": "Song Select",
+      "SYSTEM_REAL_TIME": "Transport"
     },
     "no-midi-devices": "No MIDI devices available",
     "version": "Aktuelle Version",
@@ -509,7 +534,41 @@
     "secure-connection-enable": "Aktiviert",
     "build-date": "Build-Datum",
     "build-timestamp": "Build-Zeitstempel",
-    "build-number": "Build-Nummer"
+    "build-number": "Build-Nummer",
+    "midi-timecode-mode-enum": {
+      "OFF": "Aus",
+      "MASTER": "Senden (Master)",
+      "SLAVE": "Folgen (Slave)"
+    },
+    "midi-timecode-slave-mapping": "Timecode-Zuordnung",
+    "midi-timecode-slave-mapping-enum": {
+      "COMPOSITION": "Pro Komposition",
+      "SET": "Pro Set"
+    },
+    "midi-timecode-slave-offset": "Timecode-Versatz (ms)",
+    "midi-timecode-slave-warning": "Solange einem eingehenden Timecode gefolgt wird, steuert der Master die Wiedergabe: Kompositionen starten, stoppen und springen mit dem Timecode, und Wiederholen, das automatische Starten der nächsten Komposition sowie das Senden von Timecode werden nicht verwendet. Licht, MIDI und Aktionen folgen dem Master exakt. Audio und Video werden von der Soundkarte und vom Bildschirm getaktet und deshalb synchron gehalten, indem die Wiedergabegeschwindigkeit leicht angepasst und bei grösseren Abweichungen gesprungen wird, was kurz hör- oder sichtbar ist. Video ist bestenfalls frame-genau, und eine Komposition mit dem Hardware-H.265-Decoder kann nur synchron gestartet, aber nicht nachträglich korrigiert werden. Gib dem Master einen kurzen Vorlauf, damit sich die Wiedergabe einrasten kann.",
+    "midi-composition-selection": "Kompositionsauswahl",
+    "midi-composition-selection-enable": "Kompositionen über MIDI-Nummer auswählen",
+    "midi-composition-selection-channel": "Kanal",
+    "midi-composition-selection-channel-all": "Alle Kanäle",
+    "midi-composition-selection-auto-play": "Bei der Auswahl",
+    "midi-composition-selection-auto-play-enable": "Sofort abspielen",
+    "midi-show-control": "MIDI Show Control",
+    "midi-show-control-enable": "Show-Control-Befehlen folgen",
+    "midi-show-control-device-id": "Geräte-ID",
+    "midi-machine-control": "MIDI Machine Control",
+    "midi-machine-control-enable": "Machine-Control-Befehlen folgen",
+    "midi-machine-control-device-id": "Geräte-ID",
+    "midi-control-controller": "Controller",
+    "midi-control-value": "Wert",
+    "midi-control-value-any": "Beliebiger Wert",
+    "midi-control-song": "Song",
+    "midi-control-transport-message": "Befehl",
+    "midi-control-transport-message-enum": {
+      "START": "Start",
+      "CONTINUE": "Continue",
+      "STOP": "Stop"
+    }
   },
   "action": {
     "action": "Aktion",

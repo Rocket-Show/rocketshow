@@ -43,8 +43,41 @@ class DefaultActionMidiExecutionServiceTest {
         return actionTriggerMidiProgramChange;
     }
 
+    private ActionTriggerMidiControlChange addControlChangeTrigger(Integer channel, Integer controller, Integer value) {
+        ActionTriggerMidiControlChange actionTriggerMidiControlChange = new ActionTriggerMidiControlChange();
+        actionTriggerMidiControlChange.setChannel(channel);
+        actionTriggerMidiControlChange.setController(controller);
+        actionTriggerMidiControlChange.setValue(value);
+        settings.getActionTriggerMidiList().add(actionTriggerMidiControlChange);
+        return actionTriggerMidiControlChange;
+    }
+
+    private ActionTriggerMidiSongSelect addSongSelectTrigger(Integer channel, Integer song) {
+        ActionTriggerMidiSongSelect actionTriggerMidiSongSelect = new ActionTriggerMidiSongSelect();
+        actionTriggerMidiSongSelect.setChannel(channel);
+        actionTriggerMidiSongSelect.setSong(song);
+        settings.getActionTriggerMidiList().add(actionTriggerMidiSongSelect);
+        return actionTriggerMidiSongSelect;
+    }
+
+    private ActionTriggerMidiSystemRealTime addSystemRealTimeTrigger(ActionTriggerMidiSystemRealTime.SystemRealTimeType type) {
+        ActionTriggerMidiSystemRealTime actionTriggerMidiSystemRealTime = new ActionTriggerMidiSystemRealTime();
+        actionTriggerMidiSystemRealTime.setSystemRealTimeType(type);
+        settings.getActionTriggerMidiList().add(actionTriggerMidiSystemRealTime);
+        return actionTriggerMidiSystemRealTime;
+    }
+
     private void receive(int command, int channel, int data1, int data2) throws Exception {
         actionMidiExecutionService.processMidiSignal(new ShortMessage(command, channel, data1, data2));
+    }
+
+    // A system message carries no channel: its whole status byte is the message
+    private void receiveSystem(int status, int data1) throws Exception {
+        actionMidiExecutionService.processMidiSignal(new ShortMessage(status, data1, 0));
+    }
+
+    private void receiveSystem(int status) throws Exception {
+        actionMidiExecutionService.processMidiSignal(new ShortMessage(status));
     }
 
     @Test
@@ -117,6 +150,69 @@ class DefaultActionMidiExecutionServiceTest {
 
         verify(actionExecutionService).executeFromTrigger(trigger);
         verify(actionExecutionService).executeFromTrigger(anyNoteTrigger);
+    }
+
+
+    @Test
+    void triggersOnTheControllerAndItsValue() throws Exception {
+        ActionTriggerMidiControlChange trigger = addControlChangeTrigger(null, 64, 127);
+
+        receive(ShortMessage.CONTROL_CHANGE, 0, 64, 127);
+
+        verify(actionExecutionService).executeFromTrigger(trigger);
+    }
+
+    @Test
+    void triggersOnEveryValueOfTheControllerIfNotSet() throws Exception {
+        ActionTriggerMidiControlChange trigger = addControlChangeTrigger(null, 64, null);
+
+        receive(ShortMessage.CONTROL_CHANGE, 0, 64, 3);
+
+        verify(actionExecutionService).executeFromTrigger(trigger);
+    }
+
+    @Test
+    void ignoresAnotherValueOfTheController() throws Exception {
+        addControlChangeTrigger(null, 64, 127);
+
+        receive(ShortMessage.CONTROL_CHANGE, 0, 64, 0);
+        receive(ShortMessage.CONTROL_CHANGE, 0, 65, 127);
+
+        verify(actionExecutionService, never()).executeFromTrigger(any());
+    }
+
+    @Test
+    void triggersOnTheSongSelect() throws Exception {
+        ActionTriggerMidiSongSelect trigger = addSongSelectTrigger(null, 5);
+
+        receiveSystem(0xF3, 5);
+        receiveSystem(0xF3, 6);
+
+        verify(actionExecutionService).executeFromTrigger(trigger);
+    }
+
+    @Test
+    void triggersOnTheTransportMessage() throws Exception {
+        ActionTriggerMidiSystemRealTime trigger = addSystemRealTimeTrigger(ActionTriggerMidiSystemRealTime.SystemRealTimeType.CONTINUE);
+
+        receiveSystem(0xFB);
+        receiveSystem(0xFA);
+        receiveSystem(0xFC);
+
+        verify(actionExecutionService).executeFromTrigger(trigger);
+    }
+
+    /**
+     * A system message has no channel: the low nibble of 0xF3 is part of the status byte, but
+     * ShortMessage#getChannel() still reports it as channel 3.
+     */
+    @Test
+    void theChannelOfATriggerDoesNotApplyToSystemMessages() throws Exception {
+        ActionTriggerMidiSongSelect trigger = addSongSelectTrigger(0, 5);
+
+        receiveSystem(0xF3, 5);
+
+        verify(actionExecutionService).executeFromTrigger(trigger);
     }
 
 }

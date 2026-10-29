@@ -101,6 +101,46 @@
                 placement="right" aria-hidden="true"></i>
             </div>
           </div>
+          <!-- Timecode start (only relevant when following a MIDI timecode per composition) -->
+          @if (showTimecodeStart()) {
+            <div class="form-group">
+              <label for="compositionTimecodeStart">{{
+                "editor.timecode-start" | translate
+              }}</label>
+              <i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+                [popover]="'editor.help.timecode-start' | translate" triggers="mouseenter:mouseleave" container="body"
+                placement="right" aria-hidden="true"></i>
+              <input type="text" class="form-control" [ngModel]="timecodeStartText"
+                (ngModelChange)="onTimecodeStartChange($event)" (blur)="formatTimecodeStart()"
+                id="compositionTimecodeStart" placeholder="00:00:00.000" />
+            </div>
+          }
+          <!-- MIDI number (only relevant when a master selects compositions over MIDI) -->
+          @if (showMidiNumber()) {
+            <div class="form-group">
+              <label for="compositionMidiNumber">{{
+                "editor.midi-number" | translate
+              }}</label>
+              <i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+                [popover]="'editor.help.midi-number' | translate" triggers="mouseenter:mouseleave" container="body"
+                placement="right" aria-hidden="true"></i>
+              <input type="number" class="form-control" min="1" [(ngModel)]="currentComposition.midiNumber"
+                id="compositionMidiNumber" placeholder="{{ 'editor.midi-number-none' | translate }}" />
+            </div>
+          }
+          <!-- Show control cue (only relevant when a desk selects compositions by cue number) -->
+          @if (showShowControlCue()) {
+            <div class="form-group">
+              <label for="compositionShowControlCue">{{
+                "editor.show-control-cue" | translate
+              }}</label>
+              <i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+                [popover]="'editor.help.show-control-cue' | translate" triggers="mouseenter:mouseleave" container="body"
+                placement="right" aria-hidden="true"></i>
+              <input type="text" class="form-control" maxlength="30" [(ngModel)]="currentComposition.showControlCue"
+                id="compositionShowControlCue" placeholder="{{ 'editor.show-control-cue-none' | translate }}" />
+            </div>
+          }
           <!-- Audio volume -->
           @if (hasAudioFile()) {
             <div class="form-group">

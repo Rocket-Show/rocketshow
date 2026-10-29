@@ -29,10 +29,20 @@ export class Set {
       ...this,
       compositionList:
         this.compositionList?.map(
-          ({ name, durationMillis, autoStartNextComposition }) => ({
+          ({
             name,
             durationMillis,
             autoStartNextComposition,
+            timecodeStartMillis,
+            midiNumber,
+            showControlCue,
+          }) => ({
+            name,
+            durationMillis,
+            autoStartNextComposition,
+            timecodeStartMillis: timecodeStartMillis || 0,
+            midiNumber,
+            showControlCue,
           })
         ) || [],
 

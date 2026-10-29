@@ -1,0 +1,18 @@
+<div class="form-group row">
+  <label class="col-md-3 col-form-label">{{
+    "settings.midi-control-transport-message" | translate
+  }}</label>
+  <div class="col-md-9">
+    <select
+      class="custom-select"
+      [ngModel]="trigger.systemRealTimeType"
+      (ngModelChange)="trigger.systemRealTimeType = $event"
+      >
+      @for (systemRealTimeType of systemRealTimeTypes; track systemRealTimeType) {
+        <option [ngValue]="systemRealTimeType">
+          {{ "settings.midi-control-transport-message-enum." + systemRealTimeType | translate }}
+        </option>
+      }
+    </select>
+  </div>
+</div>

@@ -1,0 +1,18 @@
+<div class="form-group row">
+  <label class="col-md-3 col-form-label">{{
+    "settings.midi-control-song" | translate
+  }}</label>
+  <div class="col-md-9">
+    <select
+      class="custom-select"
+      [ngModel]="trigger.song"
+      (ngModelChange)="trigger.song = $event"
+      >
+      @for (song of songList; track song) {
+        <option [ngValue]="song">
+          {{ song + 1 }}
+        </option>
+      }
+    </select>
+  </div>
+</div>

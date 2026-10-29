@@ -31,4 +31,18 @@ public enum MidiTimecodeFrameRate {
     boolean isDropFrame() {
         return this == FPS_29_97_DROP;
     }
+
+    /**
+     * The frame rate a received timecode announces, falling back to 30fps for a rate code that no
+     * frame rate uses.
+     */
+    static MidiTimecodeFrameRate fromMidiRateCode(int midiRateCode) {
+        for (MidiTimecodeFrameRate frameRate : values()) {
+            if (frameRate.getMidiRateCode() == midiRateCode) {
+                return frameRate;
+            }
+        }
+
+        return FPS_30;
+    }
 }

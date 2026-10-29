@@ -60,7 +60,9 @@ class MidiDevicesTest {
     private DefaultMidiDeviceInService startIn() {
         MidiRouterFactory midiRouterFactory = mock(MidiRouterFactory.class);
         when(midiRouterFactory.getSettingsMidiRouter(any())).thenReturn(midiRouter);
-        inService = new DefaultMidiDeviceInService(settingsService, actionMidiExecutionService, midiService, midiRouterFactory);
+        inService = new DefaultMidiDeviceInService(settingsService, actionMidiExecutionService,
+                mock(MidiTimecodeSlaveService.class), mock(MidiCompositionSelectionService.class),
+                mock(MidiShowControlService.class), midiService, midiRouterFactory);
         inService.init();
         return inService;
     }

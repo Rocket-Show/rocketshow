@@ -18,6 +18,7 @@ import { Settings } from "../../models/settings";
 import { SettingsService } from "../../services/settings.service";
 import { ActionTriggerComposition } from "../../models/action-trigger-composition";
 import { EditorCompositionActionComponent } from "./editor-composition-action/editor-composition-action.component";
+import { formatTimecode, parseTimecode } from "../../timecode";
 
 @Component({
     selector: "app-editor-composition",
@@ -50,6 +51,8 @@ export class EditorCompositionComponent implements OnInit {
   lastPlayTime: Date;
   lastPlayPositionMillis: number = 0;
   sliding: boolean = false;
+
+  timecodeStartText: string = "";
 
   constructor(
     private compositionService: CompositionService,
@@ -126,6 +129,8 @@ export class EditorCompositionComponent implements OnInit {
 
     this.currentComposition = new Composition(JSON.parse(compositionString));
     this.initialComposition = new Composition(JSON.parse(compositionString));
+
+    this.formatTimecodeStart();
   }
 
   checkPendingChanges(): Observable<boolean> {
@@ -584,4 +589,36 @@ export class EditorCompositionComponent implements OnInit {
     this.sliding = true;
   }
 
+
+  onTimecodeStartChange(value: string) {
+    // Keep what was typed as it was typed; it is only re-formatted once the field is left
+    this.timecodeStartText = value;
+    this.currentComposition.timecodeStartMillis = parseTimecode(value);
+  }
+
+  formatTimecodeStart() {
+    this.timecodeStartText = formatTimecode(
+      this.currentComposition?.timecodeStartMillis
+    );
+  }
+
+  showTimecodeStart(): boolean {
+    return (
+      this.settings?.midiTimecodeMode == "SLAVE" &&
+      this.settings?.midiTimecodeSlaveMapping == "COMPOSITION"
+    );
+  }
+
+  // The show control cue number falls back to the MIDI number, so the number is also worth showing
+  // when only show control is used
+  showMidiNumber(): boolean {
+    return (
+      this.settings?.midiCompositionSelectionEnabled ||
+      this.settings?.midiShowControlEnabled
+    );
+  }
+
+  showShowControlCue(): boolean {
+    return this.settings?.midiShowControlEnabled;
+  }
 }

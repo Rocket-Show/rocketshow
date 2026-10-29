@@ -33,12 +33,15 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
     private SerialPort midiSerialDevice;
     private final MidiInDeviceReceiver midiInDeviceReceiver;
 
-    public DefaultMidiDeviceInService(SettingsService settingsService, ActionMidiExecutionService actionMidiExecutionService, MidiService midiService, MidiRouterFactory midiRouterFactory) {
+    public DefaultMidiDeviceInService(SettingsService settingsService, ActionMidiExecutionService actionMidiExecutionService,
+                                      MidiTimecodeSlaveService midiTimecodeSlaveService, MidiCompositionSelectionService midiCompositionSelectionService,
+                                      MidiShowControlService midiShowControlService, MidiService midiService, MidiRouterFactory midiRouterFactory) {
         this.settingsService = settingsService;
         this.midiService = midiService;
 
         // Initialize the MIDI in device receiver to executeFromTrigger MIDI control actions
-        midiInDeviceReceiver = new MidiInDeviceReceiver(actionMidiExecutionService, midiRouterFactory);
+        midiInDeviceReceiver = new MidiInDeviceReceiver(actionMidiExecutionService, midiTimecodeSlaveService,
+                midiCompositionSelectionService, midiShowControlService, midiRouterFactory);
     }
 
     @PostConstruct

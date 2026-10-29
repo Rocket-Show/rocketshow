@@ -103,6 +103,42 @@
                             </a>
                             <div class="col-auto flex-grow text-break-word col-auto my-auto pl-0">
                               <p class="mb-0">{{ composition.name }}</p>
+                              @if (hasSetOverrides()) {
+                                <!-- Values that belong to this composition within this set, not to the
+                                     composition itself -->
+                                <div class="d-flex flex-wrap mt-1" style="gap: 0.5rem;">
+                                  @if (showTimecodeStart()) {
+                                    <div>
+                                      <small class="text-muted">{{ 'editor.timecode-start' | translate }}</small>
+                                      <input type="text" class="form-control form-control-sm" style="width: 8rem;"
+                                        [ngModel]="composition.timecodeStartText" (ngModelChange)="onTimecodeStartChange(composition, $event)"
+                                        (blur)="formatTimecodeStart(composition)"
+                                        placeholder="00:00:00.000" [popover]="'editor.help.timecode-start-set' | translate"
+                                        triggers="mouseenter:mouseleave" container="body" placement="right">
+                                    </div>
+                                  }
+                                  @if (showMidiNumber()) {
+                                    <div>
+                                      <small class="text-muted">{{ 'editor.midi-number' | translate }}</small>
+                                      <input type="number" min="1" class="form-control form-control-sm" style="width: 6rem;"
+                                        [(ngModel)]="composition.midiNumber"
+                                        placeholder="{{ 'editor.set-override-none' | translate }}"
+                                        [popover]="'editor.help.midi-number-set' | translate"
+                                        triggers="mouseenter:mouseleave" container="body" placement="right">
+                                    </div>
+                                  }
+                                  @if (showShowControlCue()) {
+                                    <div>
+                                      <small class="text-muted">{{ 'editor.show-control-cue' | translate }}</small>
+                                      <input type="text" maxlength="30" class="form-control form-control-sm" style="width: 6rem;"
+                                        [(ngModel)]="composition.showControlCue"
+                                        placeholder="{{ 'editor.set-override-none' | translate }}"
+                                        [popover]="'editor.help.show-control-cue-set' | translate"
+                                        triggers="mouseenter:mouseleave" container="body" placement="right">
+                                    </div>
+                                  }
+                                </div>
+                              }
                             </div>
                             <div class="col-auto my-auto">
                               <a class="btn btn-primary btn-sm float-right" href="#" role="button" (click)="removeComposition(composition); false">

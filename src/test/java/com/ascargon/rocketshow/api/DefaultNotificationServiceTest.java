@@ -88,7 +88,9 @@ class DefaultNotificationServiceTest {
     @Test
     void sendsTheStateWithoutSetLoaded() throws Exception {
         // Only the set changed, while no set is loaded
-        State state = new DefaultStateService(mock(com.ascargon.rocketshow.lighting.designer.ScenePlayerService.class)).getCurrentState(null, new com.ascargon.rocketshow.composition.DefaultSetService(), mock(CompositionService.class));
+        State state = new DefaultStateService(mock(com.ascargon.rocketshow.lighting.designer.ScenePlayerService.class),
+                mock(com.ascargon.rocketshow.midi.MidiTimecodeSlaveService.class))
+                .getCurrentState(null, new com.ascargon.rocketshow.composition.DefaultSetService(), mock(CompositionService.class));
 
         assertEquals(null, state.getCurrentSetName());
     }

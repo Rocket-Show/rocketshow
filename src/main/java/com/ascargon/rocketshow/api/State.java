@@ -18,6 +18,12 @@ public class State {
     private Long currentCompositionDurationMillis;
     private Long positionMillis;
     private String currentSetName;
+
+    // True while this device is following an incoming MIDI timecode, and the absolute position of
+    // that timecode master
+    private boolean midiTimecodeLocked;
+    private Long midiTimecodeMillis;
+
     private String error;
 
     // the scenes picked by hand on the Play screen (see ScenePlayerService) and whether a composition holds them,
