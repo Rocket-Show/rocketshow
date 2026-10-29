@@ -36,7 +36,8 @@ public final class TransitionCurve {
                 return 1 - (1 - position) * (1 - position);
             case "ease-in-out":
                 // slow at both ends, fastest in the middle
-                return position < 0.5 ? 2 * position * position : 1 - Math.pow(-2 * position + 2, 2) / 2;
+                // squared by a multiplication, like in the designer (a power may round differently)
+                return position < 0.5 ? 2 * position * position : 1 - (-2 * position + 2) * (-2 * position + 2) / 2;
             case "snap":
                 // holds the old value for the whole transition and jumps at the end of it
                 return 0;

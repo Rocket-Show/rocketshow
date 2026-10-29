@@ -445,7 +445,7 @@ public class DefaultDesignerService implements DesignerService {
         return presets;
     }
 
-    private List<PresetRegionScene> getPresetsInTime(long timeMillis) {
+    private List<PresetRegionScene> getPresetsInTime(double timeMillis) {
         // Return all presets which should be active during the specified time, the ones at the bottom first: the ones
         // processed later overwrite them
         List<PresetRegionScene> activePresets = new ArrayList<>();
@@ -482,7 +482,7 @@ public class DefaultDesignerService implements DesignerService {
         return activePresets;
     }
 
-    private List<PresetRegionScene> getPresets(long timeMillis) {
+    private List<PresetRegionScene> getPresets(double timeMillis) {
         // Get relevant presets in correct order to process with their corresponding scene, if available
         List<PresetRegionScene> presets = new ArrayList<>();
 
@@ -1436,7 +1436,7 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     // return all fixture uuids with their corresponding channel values
-    private Map<CachedFixture, List<FixtureChannelValue>> getChannelValues(long timeMillis, List<PresetRegionScene> presets) {
+    private Map<CachedFixture, List<FixtureChannelValue>> getChannelValues(double timeMillis, List<PresetRegionScene> presets) {
         // Loop over all relevant presets and calc the property values from the presets (capabilities and effects)
         HashMap<CachedFixture, List<FixtureChannelValue>> calculatedFixtures = new HashMap<>();
 
@@ -1467,10 +1467,11 @@ public class DefaultDesignerService implements DesignerService {
         for (int i = 0; i < cachedFixtures.size(); i++) {
             CachedFixture cachedFixture = cachedFixtures.get(i);
 
-            // all values of the current fixture channels
-            List<FixtureChannelValue> values = new ArrayList<>();
-
             CachedFixture alreadyCalculatedFixture = getAlreadyCalculatedFixture(cachedFixtures, i);
+
+            // all values of the current fixture channels. A fixture on the same DMX address as one before is the same
+            // lamp: it takes its values, like in the designer.
+            List<FixtureChannelValue> values = alreadyCalculatedFixture == null ? new ArrayList<>() : new ArrayList<>(calculatedFixtures.get(alreadyCalculatedFixture));
 
             if (logger.isTraceEnabled()) {
                 logger.trace("Calculate fixture: " + cachedFixture.getProfile().getName());
@@ -1549,7 +1550,7 @@ public class DefaultDesignerService implements DesignerService {
         return (effectTimeMillis % loopMillis + loopMillis) % loopMillis;
     }
 
-    private void mixEffects(long timeMillis, int fixtureIndex, Integer fixtureCount, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double intensityPercentage, PresetStepState state) {
+    private void mixEffects(double timeMillis, int fixtureIndex, Integer fixtureCount, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double intensityPercentage, PresetStepState state) {
         double effectTimeMillis = timeMillis;
 
         if (preset.getRegion() != null) {
@@ -1817,6 +1818,17 @@ public class DefaultDesignerService implements DesignerService {
                 }
             }
         }
+    }
+
+    // Package visible for the conformance cases of the designer: the values of each fixture (and pixel) of the loaded
+    // project at the passed time, the way the universe is worked out (the designer's clock isn't on whole milliseconds)
+    Map<CachedFixture, List<FixtureChannelValue>> calculateChannelValues(double timeMillis) {
+        return getChannelValues(timeMillis, getPresets(timeMillis));
+    }
+
+    // Package visible for the conformance cases of the designer
+    List<CachedFixture> getCachedFixtures() {
+        return cachedFixtures;
     }
 
     private void calculateUniverse(long timeMillis) {

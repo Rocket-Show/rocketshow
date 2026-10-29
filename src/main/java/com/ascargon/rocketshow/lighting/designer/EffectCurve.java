@@ -296,8 +296,7 @@ public class EffectCurve extends Effect {
         switch (this.curveType) {
             case "sine":
                 warped = this.warpCyclePosition(cyclePosition);
-                // StrictMath like the browser (fdlibm), so the designer and the stage get the very same values
-                value = position + amplitude / 2 * StrictMath.sin(2 * Math.PI * warped);
+                value = position + amplitude / 2 * CycleSine.sin(warped);
                 break;
             case "square":
                 // on while the sine is above its position: over the duty cycle, centered on
