@@ -339,8 +339,11 @@ public class DefaultPlayerService implements PlayerService {
             logger.error("Timeout while waiting for the compositions to stop on remote devices");
         }
 
-        // Reset the lighting universe to clear left out signals
-        lightingService.reset();
+        // Reset the lighting universe to clear left out signals. Not while the scenes picked by hand on the Play screen
+        // play (e.g. along with a composition without a designer project), they would blink.
+        if (!designerService.isPlayingManualScenes()) {
+            lightingService.reset();
+        }
 
         // Set all configured external control GPIO output pins low (same as blacking out the lighting)
         raspberryGpioOutService.setAllLow();

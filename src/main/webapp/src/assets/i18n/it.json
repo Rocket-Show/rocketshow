@@ -62,6 +62,28 @@
     "settings": "Impostazioni"
   },
   "play": {
+    "mode-compositions": "Composizioni",
+    "mode-scenes": "Scene",
+    "mode-composition-playing": "È in riproduzione una composizione",
+    "scenes-stack": "Sovrapponi",
+    "scenes-release-all": "Spegni tutte",
+    "scenes-blackout": "Blackout",
+    "scenes-master": "Master",
+    "scenes-full-screen": "Schermo intero",
+    "scenes-exit-full-screen": "Esci da schermo intero",
+    "scenes-all": "Tutte",
+    "scenes-nothing-on": "Niente acceso",
+    "scenes-count-on": "{{count}} scene accese",
+    "scenes-on": "Accesa",
+    "scenes-held": "In attesa",
+    "scenes-held-composition": "\"{{name}}\" è in riproduzione.",
+    "scenes-held-composition-detail": "Ora illumina il palco. Le tue scene tornano quando si ferma.",
+    "scenes-held-preview": "L'anteprima dal vivo del designer illumina ora il palco.",
+    "scenes-held-preview-detail": "Tocca una scena per riprendere le luci.",
+    "scenes-stop-composition": "Ferma composizione",
+    "scenes-projects": "Progetti del designer con scene",
+    "scenes-count": "{{count}} scene",
+    "scenes-count-one": "1 scena",
     "help": {
       "auto-select-next": "Quando è attivo, la composizione successiva del set viene selezionata non appena quella corrente termina. Parte subito se la composizione terminata è contrassegnata nel set per avviare automaticamente la successiva.",
       "switch-to-grid": "Passa alla griglia dei cue, dove ogni composizione è un grande pulsante che puoi attivare direttamente.",
@@ -69,7 +91,12 @@
       "activity-midi-in": "Lampeggia quando vengono ricevuti dati MIDI.",
       "activity-midi-out": "Lampeggia quando vengono inviati dati MIDI.",
       "activity-audio": "Mostra il livello di uscita audio attuale per canale.",
-      "activity-lighting": "Lampeggia quando vengono inviati dati di illuminazione."
+      "activity-lighting": "Lampeggia quando vengono inviati dati di illuminazione.",
+      "mode": "Passa dalle composizioni del set alle scene dei progetti del designer, per illuminare il palco a mano.",
+      "scenes-stack": "Se attivo, un tocco aggiunge la scena a quelle già accese. Altrimenti un tocco accende solo quella scena.",
+      "scenes-release-all": "Spegne tutte le scene.",
+      "scenes-blackout": "Spegne la luce e mantiene le scene selezionate. Tocca di nuovo per riaccenderle.",
+      "scenes-full-screen": "Mostra Rocket Show a schermo intero, per esempio su un tablet appeso al muro."
     }
   },
   "editor": {

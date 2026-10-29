@@ -62,6 +62,28 @@
     "settings": "Paramètres"
   },
   "play": {
+    "mode-compositions": "Compositions",
+    "mode-scenes": "Scènes",
+    "mode-composition-playing": "Une composition est en cours de lecture",
+    "scenes-stack": "Empiler",
+    "scenes-release-all": "Tout éteindre",
+    "scenes-blackout": "Blackout",
+    "scenes-master": "Master",
+    "scenes-full-screen": "Plein écran",
+    "scenes-exit-full-screen": "Quitter le plein écran",
+    "scenes-all": "Toutes",
+    "scenes-nothing-on": "Rien d'allumé",
+    "scenes-count-on": "{{count}} scènes allumées",
+    "scenes-on": "Allumée",
+    "scenes-held": "En attente",
+    "scenes-held-composition": "\"{{name}}\" est en cours de lecture.",
+    "scenes-held-composition-detail": "Elle éclaire la scène maintenant. Vos scènes reviennent dès qu'elle s'arrête.",
+    "scenes-held-preview": "L'aperçu en direct du concepteur éclaire la scène maintenant.",
+    "scenes-held-preview-detail": "Touchez une scène pour reprendre la lumière.",
+    "scenes-stop-composition": "Arrêter la composition",
+    "scenes-projects": "Projets du concepteur avec des scènes",
+    "scenes-count": "{{count}} scènes",
+    "scenes-count-one": "1 scène",
     "help": {
       "auto-select-next": "Lorsque cette option est activée, la composition suivante du set est sélectionnée dès que la composition en cours se termine. Elle démarre aussitôt si la composition terminée est marquée dans le set pour lancer automatiquement la suivante.",
       "switch-to-grid": "Passe à la grille de cues, où chaque composition est un grand bouton que vous pouvez déclencher directement.",
@@ -69,7 +91,12 @@
       "activity-midi-in": "Clignote lorsque des données MIDI sont reçues.",
       "activity-midi-out": "Clignote lorsque des données MIDI sont envoyées.",
       "activity-audio": "Affiche le niveau de sortie audio actuel par canal.",
-      "activity-lighting": "Clignote lorsque des données d'éclairage sont envoyées."
+      "activity-lighting": "Clignote lorsque des données d'éclairage sont envoyées.",
+      "mode": "Basculez entre les compositions du set et les scènes des projets du concepteur, pour éclairer la scène à la main.",
+      "scenes-stack": "Si activé, un toucher ajoute la scène à celles déjà allumées. Sinon, un toucher allume seulement cette scène.",
+      "scenes-release-all": "Éteint toutes les scènes.",
+      "scenes-blackout": "Éteint la lumière et garde les scènes sélectionnées. Touchez à nouveau pour les rallumer.",
+      "scenes-full-screen": "Affiche Rocket Show sur tout l'écran, par exemple sur une tablette fixée au mur."
     }
   },
   "editor": {

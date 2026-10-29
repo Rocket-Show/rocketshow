@@ -4,7 +4,8 @@ import { Composition } from "./../models/composition";
 import { CompositionService } from "./../services/composition.service";
 import { StateService } from "./../services/state.service";
 import { Set } from "./../models/set";
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from "@angular/core";
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostListener } from "@angular/core";
+import { TranslateService } from "@ngx-translate/core";
 import { State } from "../models/state";
 import { TransportService } from "../services/transport.service";
 import { Subscription, timer } from "rxjs";
@@ -20,6 +21,7 @@ import { ActivityAudioChannel } from "../models/activity-audio-channel";
 import { ActivityLightingService } from "../services/activity-lighting.service";
 import { ActivityLighting } from "../models/activity-lighting";
 import { AuthService } from "../services/auth.service";
+import { ScenesService } from "../services/scenes.service";
 
 @Component({
   selector: "app-play",
@@ -53,6 +55,13 @@ export class PlayComponent implements OnInit, OnDestroy {
 
   viewMode: 'setlist' | 'grid' = 'setlist';
 
+  // the compositions of the set or the scenes of the designer projects, lit by hand
+  playMode: 'compositions' | 'scenes' = 'compositions';
+
+  // the whole screen for Rocket Show, e.g. on a tablet on the wall
+  fullscreenAvailable: boolean = !!document.fullscreenEnabled;
+  fullscreen: boolean = !!document.fullscreenElement;
+
   activityMidiSubscription: Subscription;
   activityAudioSubscription: Subscription;
   activityLightingSubscription: Subscription;
@@ -79,6 +88,8 @@ export class PlayComponent implements OnInit, OnDestroy {
     public activityLightingService: ActivityLightingService,
     public settingsService: SettingsService,
     private authService: AuthService,
+    public scenesService: ScenesService,
+    private translateService: TranslateService,
   ) {
     this.loadSettings();
 
@@ -141,6 +152,7 @@ export class PlayComponent implements OnInit, OnDestroy {
     this.stateService.getsConnected.subscribe(() => {
       this.loadAllSets();
       this.loadCurrentSet();
+      this.loadSceneProjects();
     });
 
     // Load the current state
@@ -153,10 +165,12 @@ export class PlayComponent implements OnInit, OnDestroy {
     this.sessionService.getSession().subscribe((session) => {
       this.session = session;
       this.viewMode = session.playViewMode || 'setlist';
+      this.playMode = session.playMode || 'compositions';
     });
 
     this.loadAllSets();
     this.loadCurrentSet();
+    this.loadSceneProjects();
 
     // Subscribe to MIDI activities
     this.activityMidiSubscription = this.activityMidiService.subject.subscribe(
@@ -541,6 +555,93 @@ export class PlayComponent implements OnInit, OnDestroy {
     const index = this.currentCompositionIndex();
 
     return index < 0 || index >= this.currentSet.compositionList.length - 1;
+  }
+
+  // the designer projects with scenes, which the switch to the scenes is only shown with
+  private loadSceneProjects() {
+    this.scenesService.loadProjects().subscribe();
+  }
+
+  scenesAvailable(): boolean {
+    return this.scenesService.projects.length > 0;
+  }
+
+  showScenes(): boolean {
+    return this.playMode === 'scenes' && this.scenesAvailable();
+  }
+
+  compositionPlaying(): boolean {
+    return this.currentState?.playState === 'PLAYING';
+  }
+
+  setPlayMode(playMode: 'compositions' | 'scenes') {
+    this.playMode = playMode;
+
+    if (this.session) {
+      this.session.playMode = playMode;
+    }
+
+    this.sessionService.setPlayMode(playMode).subscribe();
+
+    // the scenes may have been changed in the designer meanwhile
+    if (playMode === 'scenes') {
+      this.loadSceneProjects();
+    }
+  }
+
+  // what the scenes light: the scene on, how many are on, or why they are dark
+  sceneReadout(): string {
+    if (this.currentState?.sceneBlackout) {
+      return this.translateService.instant('play.scenes-blackout');
+    }
+
+    if (this.currentState?.scenesHeld) {
+      return this.translateService.instant('play.scenes-held');
+    }
+
+    const scenesOn = this.scenesService.scenesOn(this.currentState);
+
+    if (scenesOn.length === 0) {
+      return this.translateService.instant('play.scenes-nothing-on');
+    }
+
+    if (scenesOn.length === 1) {
+      return scenesOn[0].name;
+    }
+
+    return this.translateService.instant('play.scenes-count-on', { count: scenesOn.length });
+  }
+
+  toggleSceneStack() {
+    this.scenesService.stack = !this.scenesService.stack;
+  }
+
+  releaseAllScenes() {
+    this.scenesService
+      .releaseAll(this.currentState)
+      .pipe(catchError((err) => this.toastGeneralErrorService.show(err)))
+      .subscribe();
+  }
+
+  toggleSceneBlackout() {
+    this.scenesService
+      .setBlackout(!this.currentState.sceneBlackout, this.currentState)
+      .pipe(catchError((err) => this.toastGeneralErrorService.show(err)))
+      .subscribe();
+  }
+
+  toggleFullscreen() {
+    // refused e.g. by a browser which only allows it for videos: nothing changes then
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => undefined);
+    } else {
+      document.documentElement.requestFullscreen().catch(() => undefined);
+    }
+  }
+
+  @HostListener('document:fullscreenchange')
+  fullscreenChanged() {
+    this.fullscreen = !!document.fullscreenElement;
   }
 
   toggleViewMode() {

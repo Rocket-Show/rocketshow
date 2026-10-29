@@ -37,6 +37,7 @@ class ApiSecurityTest extends ApiTest {
         assertDenied(post("/api/system/enable-ssh"));
         assertDenied(post("/api/system/execute-action").contentType(MediaType.APPLICATION_JSON).content("{}"));
         assertDenied(post("/api/composition/delete").param("name", "Song"));
+        assertDenied(post("/api/scenes/active").param("projectName", "Club").contentType(MediaType.APPLICATION_JSON).content("[]"));
     }
 
     @Test
@@ -46,6 +47,7 @@ class ApiSecurityTest extends ApiTest {
 
         assertAllowed(get("/api/system/state").header(ApiKeyAuthFilter.API_KEY_HEADER_NAME, API_KEY));
         assertAllowed(get("/api/composition/list").header(ApiKeyAuthFilter.API_KEY_HEADER_NAME, API_KEY));
+        assertAllowed(get("/api/scenes/projects").header(ApiKeyAuthFilter.API_KEY_HEADER_NAME, API_KEY));
     }
 
     @Test
@@ -64,6 +66,7 @@ class ApiSecurityTest extends ApiTest {
         assertDenied(get("/api/system/settings").header(ApiKeyAuthFilter.API_KEY_HEADER_NAME, API_KEY));
         assertDenied(get("/api/lead-sheet/list").header(ApiKeyAuthFilter.API_KEY_HEADER_NAME, API_KEY));
         assertDenied(post("/api/session/set-play-view-mode").param("value", "setlist").header(ApiKeyAuthFilter.API_KEY_HEADER_NAME, API_KEY));
+        assertDenied(post("/api/session/set-play-mode").param("value", "scenes").header(ApiKeyAuthFilter.API_KEY_HEADER_NAME, API_KEY));
         assertDenied(post("/api/system/factory-reset").header(ApiKeyAuthFilter.API_KEY_HEADER_NAME, API_KEY));
         assertDenied(post("/api/auth/change-password").header(ApiKeyAuthFilter.API_KEY_HEADER_NAME, API_KEY)
                 .contentType(MediaType.APPLICATION_JSON).content("{\"oldPassword\": \"x\", \"newPassword\": \"y\"}"));

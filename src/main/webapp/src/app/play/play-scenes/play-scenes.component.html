@@ -1,0 +1,84 @@
+<!-- The project and its folders, like the set above the compositions -->
+<div class="list-group scenes-header-group">
+  <div class="list-group-item scenes-header">
+    <div class="btn-group" dropdown container="body">
+      <a href="#" id="scene-project-button" dropdownToggle aria-controls="scene-project-dropdown">
+        <span>{{ project()?.name }}</span>
+        <i class="fa fa-caret-down ml-2" aria-hidden="true"></i>
+      </a>
+      <ul id="scene-project-dropdown" *dropdownMenu class="dropdown-menu" role="menu" aria-labelledby="scene-project-button">
+        <li role="presentation"><h6 class="dropdown-header">{{ 'play.scenes-projects' | translate }}</h6></li>
+        @for (sceneProject of scenesService.projects; track sceneProject.name) {
+          <li role="menuitem">
+            <a class="dropdown-item d-flex" [class.active]="sceneProject === project()" href="#"
+              (click)="viewProject(sceneProject); false;">
+              <span class="mr-3">{{ sceneProject.name }}</span>
+              <small class="ml-auto my-auto scenes-count">{{ (sceneProject.scenes.length === 1 ? 'play.scenes-count-one' : 'play.scenes-count') | translate: { count: sceneProject.scenes.length } }}</small>
+            </a>
+          </li>
+        }
+      </ul>
+    </div>
+
+    @if (folders().length > 0) {
+      <div class="scene-folders" role="tablist" [attr.aria-label]="project()?.name">
+        <button type="button" role="tab" class="scene-folder" [class.active]="!scenesService.viewedFolderUuid"
+          [attr.aria-selected]="!scenesService.viewedFolderUuid" (click)="viewFolder(undefined)">
+          {{ 'play.scenes-all' | translate }}
+        </button>
+        @for (folder of folders(); track folder.uuid) {
+          <button type="button" role="tab" class="scene-folder" [class.active]="scenesService.viewedFolderUuid === folder.uuid"
+            [attr.aria-selected]="scenesService.viewedFolderUuid === folder.uuid" (click)="viewFolder(folder)">
+            {{ folder.name }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+</div>
+
+<div class="scenes-body">
+  <!-- A composition lights the stage with its own designer project: the scenes wait for it -->
+  @if (state?.scenesHeld) {
+    <div class="scenes-held" role="status">
+      <i class="fa fa-play scenes-held-icon" aria-hidden="true"></i>
+      @if (compositionPlaying()) {
+        <div class="scenes-held-text">
+          <strong>{{ 'play.scenes-held-composition' | translate: { name: state.currentCompositionName } }}</strong>
+          {{ 'play.scenes-held-composition-detail' | translate }}
+        </div>
+        <button type="button" class="btn btn-secondary scenes-held-stop" (click)="stopComposition()">
+          {{ 'play.scenes-stop-composition' | translate }}
+        </button>
+      } @else {
+        <div class="scenes-held-text">
+          <strong>{{ 'play.scenes-held-preview' | translate }}</strong>
+          {{ 'play.scenes-held-preview-detail' | translate }}
+        </div>
+      }
+    </div>
+  }
+
+  <div class="scene-grid">
+    @for (tile of tiles(); track tile.scene.uuid) {
+      <button type="button" class="scene-tile" [class.scene-tile-on]="tile.on && !tile.held"
+        [class.scene-tile-held]="tile.held" [attr.aria-pressed]="tile.on"
+        [style.--scene-color]="tile.color" [style.--scene-text]="tile.textColor" (click)="tap(tile)">
+        <span class="scene-tile-top">
+          <i class="fa {{ tile.icon }} scene-tile-icon" aria-hidden="true"></i>
+          @if (tile.dimmerPercent < 100) {
+            <span class="scene-tile-dimmer">{{ tile.dimmerPercent }}%</span>
+          }
+        </span>
+        <span class="scene-tile-name">{{ tile.scene.name }}</span>
+        <span class="scene-tile-status">
+          @if (tile.held) {
+            {{ 'play.scenes-held' | translate }}
+          } @else if (tile.on) {
+            {{ 'play.scenes-on' | translate }}
+          }
+        </span>
+      </button>
+    }
+  </div>
+</div>

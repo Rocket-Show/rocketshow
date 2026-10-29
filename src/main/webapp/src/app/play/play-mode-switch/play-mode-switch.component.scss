@@ -1,0 +1,53 @@
+/* Kept quiet next to the transport: it is used once in a while, the transport all the time */
+.mode-switch {
+    display: inline-flex;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid var(--sd-border);
+    border-radius: var(--sd-radius);
+    background-color: var(--sd-bg);
+}
+
+.mode-switch-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 12px;
+    border: none;
+    border-radius: var(--sd-radius-sm);
+    background-color: transparent;
+    color: var(--sd-text-muted);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mode-switch-option:hover {
+    color: var(--sd-text);
+}
+
+.mode-switch-option.active {
+    background-color: var(--sd-surface-4);
+    color: var(--sd-text);
+    cursor: default;
+}
+
+.mode-switch-option:focus {
+    outline: none;
+}
+
+.mode-switch-option:focus-visible {
+    box-shadow: var(--sd-focus-ring);
+}
+
+/* A composition plays while the scenes are shown */
+.mode-switch-playing {
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
+    background-color: var(--sd-info);
+    box-shadow: 0 0 8px rgba(61, 157, 240, 0.8);
+}

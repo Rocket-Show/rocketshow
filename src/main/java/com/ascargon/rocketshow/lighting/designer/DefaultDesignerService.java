@@ -72,6 +72,15 @@ public class DefaultDesignerService implements DesignerService {
     private long stepPreviewStartMillis = 0;
     private List<String> selectedSceneUuids = new ArrayList<>();
 
+    // The scenes picked by hand on the Play screen (see ScenePlayerService), the project they are from and the master
+    // dimmer of the Play screen. They play whenever no composition plays a project of its own: right away, or once the
+    // composition closes its project.
+    // (read by the timer sending the universes and by the players of the compositions)
+    private Project manualScenesProject;
+    private List<String> manualSceneUuids = new ArrayList<>();
+    private volatile double manualScenesMasterDimmer = 1;
+    private volatile boolean playingManualScenes = false;
+
     private List<LightingUniverseState> lightingUniverses = new ArrayList<>();
 
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
@@ -1597,7 +1606,12 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     private double getMasterDimmer() {
-        return project == null ? 1 : project.getMasterDimmerValue();
+        if (project == null) {
+            return 1;
+        }
+
+        // the scenes picked on the Play screen are dimmed by its master dimmer as well, on top of the one of the project
+        return project.getMasterDimmerValue() * (playingManualScenes ? manualScenesMasterDimmer : 1);
     }
 
     // How much the colors of a fixture with a virtual dimmer are dimmed when they are sent: by the virtual dimmer and
@@ -2482,7 +2496,12 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     @Override
-    public void load(CompositionPlayer compositionPlayer, Project project, Pipeline pipeline) {
+    public synchronized void load(CompositionPlayer compositionPlayer, Project project, Pipeline pipeline) {
+        // The universes of the project played so far are replaced -> nothing may be sending them anymore, e.g. the
+        // scenes picked by hand, which a composition takes the lights over from
+        stopTimer();
+        playingManualScenes = false;
+
         migrateProject(project);
 
         this.compositionPlayer = compositionPlayer;
@@ -2521,7 +2540,8 @@ public class DefaultDesignerService implements DesignerService {
 
     @Override
     public void pause() {
-        if (project == null) {
+        // The scenes picked by hand keep playing, e.g. while a composition without a project of its own is paused
+        if (project == null || playingManualScenes) {
             return;
         }
 
@@ -2529,8 +2549,10 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     @Override
-    public void close() {
-        if (project == null) {
+    public synchronized void close() {
+        // The scenes picked by hand on the Play screen aren't the project of a composition: a composition loading or
+        // stopping leaves them playing
+        if (project == null || playingManualScenes) {
             return;
         }
 
@@ -2540,6 +2562,81 @@ public class DefaultDesignerService implements DesignerService {
 
         project = null;
         pipeline = null;
+
+        // Nothing plays a project of its own anymore -> the scenes picked by hand come back
+        if (hasManualScenes()) {
+            startManualScenes();
+        }
+    }
+
+    @Override
+    public synchronized void playManualScenes(Project project, List<String> sceneUuids, double masterDimmer) {
+        manualSceneUuids = new ArrayList<>(sceneUuids);
+        manualScenesMasterDimmer = masterDimmer;
+
+        if (playingManualScenes && project == manualScenesProject) {
+            // The project plays already: the engine picks the scenes and the master dimmer up with its next universe,
+            // without starting the effects over (e.g. while the master dimmer is being dragged)
+            selectedSceneUuids = manualSceneUuids;
+            return;
+        }
+
+        manualScenesProject = project;
+
+        if (this.project != null && compositionPlayer != null && !compositionPlayer.isDefaultComposition()) {
+            // A composition plays its own project: the scenes wait for it to close. The default composition is only
+            // played in between, the scenes picked by hand go before its lights.
+            return;
+        }
+
+        startManualScenes();
+    }
+
+    // Play the scenes picked by hand, the way the designer previews the scenes selected in it
+    private void startManualScenes() {
+        load(null, manualScenesProject, null);
+
+        playPreview = false;
+        previewPreset = false;
+        selectedPresetUuid = null;
+        selectedStepUuid = null;
+        stepPreviewRunning = false;
+        selectedSceneUuids = manualSceneUuids;
+        playingManualScenes = true;
+
+        startPositionMillis = 0;
+        startTimer();
+    }
+
+    @Override
+    public synchronized void stopManualScenes() {
+        manualScenesProject = null;
+        manualSceneUuids = new ArrayList<>();
+        manualScenesMasterDimmer = 1;
+
+        if (!playingManualScenes) {
+            return;
+        }
+
+        playingManualScenes = false;
+        stopTimer();
+        removeLightingUniverses();
+        project = null;
+
+        // Nothing sends the universes of the scenes anymore -> turn the lights off, instead of leaving the values sent
+        // last on the wire
+        lightingService.setExternalSync(false);
+        lightingService.reset();
+    }
+
+    @Override
+    public boolean hasManualScenes() {
+        return manualScenesProject != null;
+    }
+
+    @Override
+    public boolean isPlayingManualScenes() {
+        return playingManualScenes;
     }
 
     @Override
@@ -2555,7 +2652,9 @@ public class DefaultDesignerService implements DesignerService {
 
     @Override
     public void stopPreview() {
-        if (project == null) {
+        // The scenes picked by hand on the Play screen aren't a preview of the designer: they keep playing, e.g. when
+        // the live preview is turned off in the settings
+        if (project == null || playingManualScenes) {
             return;
         }
 
