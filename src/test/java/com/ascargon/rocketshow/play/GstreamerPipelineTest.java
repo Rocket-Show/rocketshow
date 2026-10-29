@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.after;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
@@ -321,13 +322,49 @@ class GstreamerPipelineTest {
         unit.compositionPlayer.setComposition(composition(1000, broken));
         unit.compositionPlayer.play();
 
-        // GStreamer's reason first, then the error following it
+        // GStreamer's reason first, then the error following it, with the file and the element which failed
         ArgumentCaptor<String> errors = ArgumentCaptor.forClass(String.class);
         verify(unit.notificationService, timeout(5000).atLeastOnce()).notifyClients(errors.capture());
-        assertEquals("Could not determine type of stream.", errors.getAllValues().getFirst());
+        assertEquals("broken.wav: typefind: Could not determine type of stream.", errors.getAllValues().getFirst());
         assertTrue(GstreamerTestUnit.waitFor(() -> unit.compositionPlayer.getPlayState() == CompositionPlayer.PlayState.STOPPED, 5000));
         verify(unit.playerService, never()).compositionPlayerFinishedPlaying(any());
         assertEquals(List.of(), unit.midiMessages);
+    }
+
+    @Test
+    void tellsWhyItCouldNotPlayAFileWithOtherChannelsThanItKnows() throws Exception {
+        // E.g. replaced by a file with other channels: the mix matrix still takes 6
+        AudioCompositionFile song = unit.wav("song.wav", 1000, 0.5, 0.5, unit.front);
+        song.setChannels(6);
+
+        unit.compositionPlayer.setComposition(composition(1000, song));
+        unit.compositionPlayer.play();
+
+        // GStreamer only tells that nothing took the stream of the file, the reason follows
+        ArgumentCaptor<String> errors = ArgumentCaptor.forClass(String.class);
+        verify(unit.notificationService, timeout(5000).atLeastOnce()).notifyClients(errors.capture());
+        String[] error = errors.getAllValues().getFirst().split("\n");
+        assertEquals(2, error.length);
+        assertTrue(error[0].matches("song\\.wav: wavparse\\d+: Internal data stream error\\. \\(streaming stopped, reason not-linked \\(-1\\)\\)"), error[0]);
+        assertTrue(error[1].startsWith("Could not link audiouridecodebin0:src_0 -> audioconvert0:sink (mismatch in channels). Offered: audio/x-raw, "), error[1]);
+        assertTrue(GstreamerTestUnit.waitFor(() -> unit.compositionPlayer.getPlayState() == CompositionPlayer.PlayState.STOPPED, 5000));
+    }
+
+    @Test
+    void tellsTheErrorOfALoopingFileAndPlaysOn() throws Exception {
+        AudioCompositionFile song = unit.wav("song.wav", 1500, 0.5, 0.5, unit.front);
+        AudioCompositionFile click = unit.wav("click.wav", 300, 0.5, 0.5, unit.monitor);
+        click.setLoop(true);
+        Files.writeString(unit.mediaFile(unit.settingsService.getSettings().getAudioPath(), "click.wav"), "this is no audio");
+
+        unit.playToTheEnd(composition(1500, song, click));
+
+        // Told with its file, while the song played to its end
+        ArgumentCaptor<String> errors = ArgumentCaptor.forClass(String.class);
+        verify(unit.notificationService, atLeastOnce()).notifyClients(errors.capture());
+        assertEquals("click.wav: typefind: Could not determine type of stream.", errors.getAllValues().getFirst());
+        assertAbout(0.5, unit.card(1).peak(0), "front left");
+        verify(unit.playerService).compositionPlayerFinishedPlaying(any());
     }
 
 }

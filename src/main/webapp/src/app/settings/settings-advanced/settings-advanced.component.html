@@ -95,7 +95,7 @@
                   [class.badge-danger]="check.result == 'FAILED'" [class.badge-secondary]="check.result == 'SKIPPED'">{{
                   ("settings.self-test.result-enum." + check.result) | translate }}</span>
               </td>
-              <td><small>{{ check.details }}</small></td>
+              <td><small style="white-space: pre-line;">{{ check.details }}</small></td>
             </tr>
             }
           </tbody>

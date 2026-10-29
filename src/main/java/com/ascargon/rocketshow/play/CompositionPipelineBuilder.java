@@ -9,6 +9,7 @@ import com.ascargon.rocketshow.composition.ActionTriggerComposition;
 import com.ascargon.rocketshow.composition.Composition;
 import com.ascargon.rocketshow.composition.CompositionFile;
 import com.ascargon.rocketshow.gstreamer.GstApi;
+import com.ascargon.rocketshow.gstreamer.GstPipelineErrors;
 import com.ascargon.rocketshow.midi.*;
 import com.ascargon.rocketshow.settings.CapabilitiesService;
 import com.ascargon.rocketshow.settings.SettingsService;
@@ -92,6 +93,9 @@ public class CompositionPipelineBuilder {
         // A fatal GStreamer error occurred (the player should notify and stop)
         void onError(String message);
 
+        // A looping file failed in its own slave pipeline (the player should notify, the others play on)
+        void onSlaveError(String message);
+
         // The master pipeline reached the PLAYING state
         void onPlaying();
 
@@ -106,36 +110,6 @@ public class CompositionPipelineBuilder {
         boolean hasVideo = hasVideo(composition);
 
         Pipeline masterPipeline = new Pipeline();
-        Bus bus = GstApi.GST_API.gst_element_get_bus(masterPipeline);
-
-        bus.connect((Bus.ERROR) (GstObject source, int code, String message) -> {
-            logger.error("GST error: " + message);
-            listener.onError(message);
-        });
-        bus.connect((Bus.WARNING) (GstObject source, int code, String message) -> logger.warn("GST: " + message));
-        bus.connect((Bus.INFO) (GstObject source, int code, String message) -> logger.warn("GST: " + message));
-        bus.connect((GstObject source, State old, State newState, State pending) -> {
-            if (source.getTypeName().equals("GstPipeline") && newState == State.PLAYING) {
-                listener.onPlaying();
-            }
-        });
-        bus.connect((Bus.EOS) source -> listener.onEndOfStream());
-        bus.connect((Bus bus1, Message message) -> {
-            if (message.getType().equals(MessageType.ELEMENT)) {
-                Structure structure = message.getStructure();
-
-                if (structure.getName().equals("level")) {
-                    try {
-                        // We got a level message
-                        activityNotificationAudioService.notifyClients(structure.getDoubles("peak"));
-                    } catch (Exception e) {
-                        logger.error("Could not process level message", e);
-                    }
-                }
-            }
-        });
-
-        GstApi.GST_API.gst_object_unref(bus);
 
         // Decide which sources belong in the master pipeline and which loop independently in their
         // own slave pipelines.
@@ -198,9 +172,11 @@ public class CompositionPipelineBuilder {
         midiMapping.setParent(settingsService.getSettings().getMidiMapping());
         MidiMessageParser midiMessageParser = new MidiMessageParser();
 
-        CompositionPipeline compositionPipeline = new CompositionPipeline(this, composition, masterPipeline, recreateExecutor, midiMapping, midiMessageParser);
+        CompositionPipeline compositionPipeline = new CompositionPipeline(this, composition, masterPipeline, listener, recreateExecutor, midiMapping, midiMessageParser);
 
         if (masterPipeline != null) {
+            connectMasterBus(compositionPipeline, listener);
+
             // Prepare the audio devices used by the master files and keep the mixers to link into.
             // Use audio to provide a clock, if there's no video. Otherwise, let video provide the
             // clock (more stable, avoids jittering issues).
@@ -209,7 +185,15 @@ public class CompositionPipelineBuilder {
             // Add all master files to the master pipeline
             for (CompositionFile compositionFile : masterFileList) {
                 int index = composition.getCompositionFileList().indexOf(compositionFile);
+                List<Element> elementsBefore = masterPipeline.getElements();
                 addCompositionFileToPipeline(compositionFile, masterPipeline, audioMixerList, index, hasVideo, compositionPipeline);
+
+                // To tell which file failed
+                for (Element element : masterPipeline.getElements()) {
+                    if (!elementsBefore.contains(element)) {
+                        compositionPipeline.addFileElement(element.getName(), compositionFile.getName());
+                    }
+                }
             }
         }
 
@@ -221,6 +205,40 @@ public class CompositionPipelineBuilder {
         }
 
         return compositionPipeline;
+    }
+
+    private void connectMasterBus(CompositionPipeline compositionPipeline, MasterEventListener listener) {
+        Bus bus = GstApi.GST_API.gst_element_get_bus(compositionPipeline.getMasterPipeline());
+
+        GstPipelineErrors.onError(bus, (topLevelElement, description) -> {
+            String error = compositionPipeline.describeError(topLevelElement, description, null);
+            logger.error("GST error: " + error);
+            listener.onError(error);
+        });
+        bus.connect((Bus.WARNING) (GstObject source, int code, String message) -> logger.warn("GST warning from " + source.getName() + ": " + message));
+        bus.connect((Bus.INFO) (GstObject source, int code, String message) -> logger.warn("GST info from " + source.getName() + ": " + message));
+        bus.connect((GstObject source, State old, State newState, State pending) -> {
+            if (source.getTypeName().equals("GstPipeline") && newState == State.PLAYING) {
+                listener.onPlaying();
+            }
+        });
+        bus.connect((Bus.EOS) source -> listener.onEndOfStream());
+        bus.connect((Bus bus1, Message message) -> {
+            if (message.getType().equals(MessageType.ELEMENT)) {
+                Structure structure = message.getStructure();
+
+                if (structure.getName().equals("level")) {
+                    try {
+                        // We got a level message
+                        activityNotificationAudioService.notifyClients(structure.getDoubles("peak"));
+                    } catch (Exception e) {
+                        logger.error("Could not process level message", e);
+                    }
+                }
+            }
+        });
+
+        GstApi.GST_API.gst_object_unref(bus);
     }
 
     // The tick GStreamer's midiparse sends every 10 milliseconds, which is no part of the file
@@ -318,7 +336,7 @@ public class CompositionPipelineBuilder {
         target.add(playBin);
     }
 
-    private void addVideoToPipeline(VideoCompositionFile videoCompositionFile, Pipeline target, int index) {
+    private void addVideoToPipeline(VideoCompositionFile videoCompositionFile, Pipeline target, int index, CompositionPipeline ctx) {
         logger.debug("Add video file to pipeline");
 
         // Does not work on OS X
@@ -344,7 +362,7 @@ public class CompositionPipelineBuilder {
             pad.set("offset", (settingsService.getSettings().getOffsetMillisVideo() + videoCompositionFile.getOffsetMillis()) * 1000000L);
 
             if (name.startsWith("video/x-raw")) {
-                pad.link(videoQueue.getSinkPads().get(0));
+                ctx.link(element, pad, videoQueue.getSinkPads().get(0));
             } else if (name.startsWith("audio/x-raw")) {
                 // TODO where should the audio go to? hdmisink not available in Debian Buster anymore.
             }
@@ -436,7 +454,7 @@ public class CompositionPipelineBuilder {
             String name = caps.getStructure(0).getName();
 
             if ("audio/x-raw-float".equals(name) || "audio/x-raw-int".equals(name) || "audio/x-raw".equals(name)) {
-                pad.link(audioConvert.getSinkPads().get(0));
+                ctx.link(element, pad, audioConvert.getSinkPads().get(0));
             }
         });
 
@@ -636,7 +654,7 @@ public class CompositionPipelineBuilder {
         } else if (compositionFile instanceof AudioCompositionFile && capabilitiesService.getCapabilities().isGstreamer()) {
             addAudioToPipeline((AudioCompositionFile) compositionFile, target, audioMixerList, index, ctx);
         } else if (compositionFile instanceof VideoCompositionFile && capabilitiesService.getCapabilities().isGstreamer() && hasVideo) {
-            addVideoToPipeline((VideoCompositionFile) compositionFile, target, index);
+            addVideoToPipeline((VideoCompositionFile) compositionFile, target, index, ctx);
         }
     }
 
