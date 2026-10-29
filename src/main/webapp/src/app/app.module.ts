@@ -46,6 +46,7 @@ import { PlayComponent } from "./play/play.component";
 import { PlayModeSwitchComponent } from "./play/play-mode-switch/play-mode-switch.component";
 import { PlaySceneMasterComponent } from "./play/play-scene-master/play-scene-master.component";
 import { PlayScenesComponent } from "./play/play-scenes/play-scenes.component";
+import { ActionSceneComponent } from "./action/action-scene/action-scene.component";
 import { SettingsComponent } from "./settings/settings.component";
 import { SettingsSystemComponent } from "./settings/settings-system/settings-system.component";
 import { SettingsAdvancedComponent } from "./settings/settings-advanced/settings-advanced.component";
@@ -192,6 +193,7 @@ const appRoutes: Routes = [
         ActionTransportComponent,
         ActionRaspberryGpioComponent,
         ActionHttpComponent,
+        ActionSceneComponent,
         ActionLightingComponent,
         ActionMidiComponent,
         ChangePasswordDialogComponent,

@@ -4,6 +4,8 @@ import com.ascargon.rocketshow.api.ActionHttp;
 import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.lighting.ActionLighting;
 import com.ascargon.rocketshow.lighting.LightingService;
+import com.ascargon.rocketshow.lighting.designer.ActionScene;
+import com.ascargon.rocketshow.lighting.designer.ScenePlayerService;
 import com.ascargon.rocketshow.midi.ActionMidi;
 import com.ascargon.rocketshow.midi.MidiRouter;
 import com.ascargon.rocketshow.midi.MidiRouterFactory;
@@ -40,6 +42,7 @@ public class DefaultActionExecutionService implements ActionExecutionService {
     private final LightingService lightingService;
     private final MidiRouter midiRouter;
     private final RaspberryGpioOutService raspberryGpioOutService;
+    private final ScenePlayerService scenePlayerService;
 
     private final HttpClient httpClient;
 
@@ -53,12 +56,13 @@ public class DefaultActionExecutionService implements ActionExecutionService {
 
     // Lazy load the playerService to avoid a circular dependency, because the playerService can execute actions and
     // is called by this service for transport actions.
-    public DefaultActionExecutionService(@Lazy PlayerService playerService, SettingsService settingsService, RebootService rebootService, LightingService lightingService, MidiRouterFactory midiRouterFactory, RaspberryGpioOutService raspberryGpioOutService) {
+    public DefaultActionExecutionService(@Lazy PlayerService playerService, SettingsService settingsService, RebootService rebootService, LightingService lightingService, MidiRouterFactory midiRouterFactory, RaspberryGpioOutService raspberryGpioOutService, ScenePlayerService scenePlayerService) {
         this.playerService = playerService;
         this.settingsService = settingsService;
         this.rebootService = rebootService;
         this.lightingService = lightingService;
         this.raspberryGpioOutService = raspberryGpioOutService;
+        this.scenePlayerService = scenePlayerService;
 
         midiRouter = midiRouterFactory.getSettingsMidiRouter(Settings::getRemoteMidiRoutingList);
 
@@ -150,6 +154,17 @@ public class DefaultActionExecutionService implements ActionExecutionService {
                     midiRouter.sendSignal(((ActionMidi) action).getMidiSignal().getShortMessage(), MidiSource.ACTION);
             case LIGHTING -> lightingService.executeAction((ActionLighting) action);
             case RASPBERRY_GPIO -> raspberryGpioOutService.executeAction((ActionRaspberryGpio) action);
+            case SCENE -> {
+                ActionScene actionScene = (ActionScene) action;
+                switch (actionScene.getSceneActionType()) {
+                    case PLAY_SCENE ->
+                            scenePlayerService.playScene(actionScene.getProjectName(), actionScene.getScene(), actionScene.getDurationMillis());
+                    case RELEASE_ALL -> scenePlayerService.releaseAll();
+                    case BLACKOUT_ON -> scenePlayerService.setBlackout(true);
+                    case BLACKOUT_OFF -> scenePlayerService.setBlackout(false);
+                    case TOGGLE_BLACKOUT -> scenePlayerService.toggleBlackout();
+                }
+            }
             case SYSTEM -> {
                 ActionSystem actionSystem = (ActionSystem) action;
                 switch (actionSystem.getSystemActionType()) {

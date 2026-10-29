@@ -9,6 +9,7 @@ import { ActionMidi } from "../models/action-midi";
 import { ActionLighting } from "../models/action-lighting";
 import { ActionRaspberryGpio } from "../models/action-raspberry-gpio";
 import { ActionHttp } from "../models/action-http";
+import { ActionScene } from "../models/action-scene";
 
 @Component({
     selector: "app-action",
@@ -59,6 +60,8 @@ export class ActionComponent {
       this.action = new ActionRaspberryGpio(this.action);
     } else if (newValue === "HTTP") {
       this.action = new ActionHttp(this.action);
+    } else if (newValue === "SCENE") {
+      this.action = new ActionScene(this.action);
     }
 
     this.change.emit({ index: this.index, newAction: this.action });

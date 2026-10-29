@@ -523,7 +523,8 @@
       "MIDI": "MIDI",
       "LIGHTING": "灯光",
       "RASPBERRY_GPIO": "外部控制",
-      "HTTP": "HTTP"
+      "HTTP": "HTTP",
+      "SCENE": "场景"
     },
     "system": {
       "type": "系统类型",
@@ -582,6 +583,20 @@
       "output": "输出",
       "status": "状态",
       "high": "高"
+    },
+    "scene": {
+      "type": "命令",
+      "type-enum": {
+        "PLAY_SCENE": "播放场景",
+        "RELEASE_ALL": "关闭所有场景",
+        "BLACKOUT_ON": "开启全黑",
+        "BLACKOUT_OFF": "关闭全黑",
+        "TOGGLE_BLACKOUT": "切换全黑"
+      },
+      "project": "设计器项目",
+      "scene": "场景",
+      "duration": "持续时间（秒）",
+      "duration-help": "超过此时间后场景会再次关闭。设为 0 时，场景会一直开启，直到选择其他场景。新场景会关闭之前的场景。"
     }
   },
   "spark": {

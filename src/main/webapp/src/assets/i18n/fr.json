@@ -523,7 +523,8 @@
       "MIDI": "MIDI",
       "LIGHTING": "Éclairage",
       "RASPBERRY_GPIO": "Contrôle externe",
-      "HTTP": "HTTP"
+      "HTTP": "HTTP",
+      "SCENE": "Scènes"
     },
     "system": {
       "type": "Type de système",
@@ -582,6 +583,20 @@
       "output": "Sortie",
       "status": "Statut",
       "high": "Haut"
+    },
+    "scene": {
+      "type": "Commande",
+      "type-enum": {
+        "PLAY_SCENE": "Jouer une scène",
+        "RELEASE_ALL": "Éteindre toutes les scènes",
+        "BLACKOUT_ON": "Activer le blackout",
+        "BLACKOUT_OFF": "Désactiver le blackout",
+        "TOGGLE_BLACKOUT": "Basculer le blackout"
+      },
+      "project": "Projet du concepteur",
+      "scene": "Scène",
+      "duration": "Durée (secondes)",
+      "duration-help": "La scène s'éteint à nouveau après ce temps. Avec 0, elle reste allumée jusqu'à ce que d'autres scènes soient choisies. Une nouvelle scène éteint la précédente."
     }
   },
   "spark": {

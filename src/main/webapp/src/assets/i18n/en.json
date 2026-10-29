@@ -533,7 +533,8 @@
       "MIDI": "MIDI",
       "LIGHTING": "Lighting",
       "RASPBERRY_GPIO": "External control",
-      "HTTP": "HTTP"
+      "HTTP": "HTTP",
+      "SCENE": "Scenes"
     },
     "system": {
       "type": "System type",
@@ -592,6 +593,20 @@
       "output": "Output",
       "status": "Status",
       "high": "High"
+    },
+    "scene": {
+      "type": "Command",
+      "type-enum": {
+        "PLAY_SCENE": "Play Scene",
+        "RELEASE_ALL": "Release All Scenes",
+        "BLACKOUT_ON": "Blackout On",
+        "BLACKOUT_OFF": "Blackout Off",
+        "TOGGLE_BLACKOUT": "Toggle Blackout"
+      },
+      "project": "Designer project",
+      "scene": "Scene",
+      "duration": "Duration (seconds)",
+      "duration-help": "The scene turns off again after this time. With 0 it stays on until other scenes are picked. A new scene turns the one before off."
     }
   },
   "spark": {
