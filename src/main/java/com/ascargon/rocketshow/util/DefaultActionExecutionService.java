@@ -123,7 +123,7 @@ public class DefaultActionExecutionService implements ActionExecutionService {
     }
 
     private void executeActionOnRemoteDevice(Action action, RemoteDevice remoteDevice) {
-        remoteDevice.doPost("execute-action", action);
+        remoteDevice.doPost("system/execute-action", action);
     }
 
     private void executeActionLocally(Action action) throws Exception {
