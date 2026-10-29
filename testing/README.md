@@ -47,6 +47,15 @@ CI (`.github/workflows/ci.yml`) runs on every push and on pull requests from for
 - **Release sample:** on `master` (releases are built from it) and when started by hand, generates the sample files of
   the version in the pom if they are missing (see [Files of earlier releases](#files-of-earlier-releases)).
 
+Mutation testing (`.github/workflows/mutation.yml`, once a week and when started by hand) puts faults into the engine
+playing the projects of the designer (`lighting/designer`) and checks that its tests notice them (PIT, the `mutation`
+profile in `pom.xml`). Today they notice 87 % of them; the run fails below 85 %. The report is kept as an artifact
+(`mutation-report`). Locally, in about half an hour:
+
+```shell
+./mvnw test-compile org.pitest:pitest-maven:mutationCoverage -Pmutation -Dskip.npm -Dskip.installnodenpm
+```
+
 Dependabot (`.github/dependabot.yml`) proposes updates of Maven, npm and the GitHub actions once a month, one grouped
 pull request per ecosystem, so each update goes through CI. Security updates come as soon as they are known, once the
 Dependabot alerts and security updates are enabled in the settings of the repository.

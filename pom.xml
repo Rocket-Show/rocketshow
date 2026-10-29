@@ -245,6 +245,48 @@
     </dependencies>
 
     <profiles>
+        <!-- Mutation testing of the engine playing the projects of the designer: how many of the faults put into
+             it the tests notice. ./mvnw test-compile org.pitest:pitest-maven:mutationCoverage -Pmutation
+             -Dskip.npm -Dskip.installnodenpm (report in target/pit-reports) -->
+        <profile>
+            <id>mutation</id>
+            <properties>
+                <pit.threads>2</pit.threads>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-maven</artifactId>
+                        <version>1.30.1</version>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.pitest</groupId>
+                                <artifactId>pitest-junit5-plugin</artifactId>
+                                <version>1.2.3</version>
+                            </dependency>
+                        </dependencies>
+                        <configuration>
+                            <targetClasses>
+                                <param>com.ascargon.rocketshow.lighting.designer.*</param>
+                            </targetClasses>
+                            <targetTests>
+                                <param>com.ascargon.rocketshow.lighting.designer.*</param>
+                            </targetTests>
+                            <threads>${pit.threads}</threads>
+                            <!-- the tests notice 87 % of the faults today: fail, once they notice clearly fewer -->
+                            <mutationThreshold>85</mutationThreshold>
+                            <timestampedReports>false</timestampedReports>
+                            <outputFormats>
+                                <param>HTML</param>
+                                <param>CSV</param>
+                            </outputFormats>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
         <!-- Measure the coverage of the tests: ./mvnw test -Pcoverage (report in target/site/jacoco) -->
         <profile>
             <id>coverage</id>
