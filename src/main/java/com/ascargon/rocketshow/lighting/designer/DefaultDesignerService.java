@@ -1401,19 +1401,27 @@ public class DefaultDesignerService implements DesignerService {
                         }
                     }
                 }
+            }
+        }
 
-                // approximate the color from a color or a different color wheel, if necessary
-                if (!hasColor && cachedChannel.getColorWheel() != null) {
-                    CachedFixtureCapability capability = getApproximatedColorWheelCapability(state.getFixtureCapabilityValues(), cachedChannel);
+        // A fixture which lights no color of its own (with its color channels or a slot of its color wheel) shows the
+        // color on its color wheel, approximated from the colors set or from a slot of a different wheel. Only once all
+        // the values are mixed, so that the order they come in doesn't decide whether the wheel turns as well.
+        if (hasColor) {
+            return;
+        }
 
-                    if (capability != null) {
-                        // we found an approximated color in the available wheel channel
-                        FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
-                        fixtureChannelValue.setChannelName(cachedChannel.getName());
-                        fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
-                        fixtureChannelValue.setValue(capability.getCenterValue());
-                        this.mixChannelValue(values, fixtureChannelValue, 1);
-                    }
+        for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
+            if (cachedChannel.getColorWheel() != null) {
+                CachedFixtureCapability capability = getApproximatedColorWheelCapability(state.getFixtureCapabilityValues(), cachedChannel);
+
+                if (capability != null) {
+                    // we found an approximated color in the available wheel channel
+                    FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
+                    fixtureChannelValue.setChannelName(cachedChannel.getName());
+                    fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
+                    fixtureChannelValue.setValue(capability.getCenterValue());
+                    this.mixChannelValue(values, fixtureChannelValue, 1);
                 }
             }
         }
