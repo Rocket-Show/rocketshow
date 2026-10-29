@@ -39,6 +39,18 @@ class DesignerParityTest {
         assertEquals(1, project.getMasterDimmerValue());
     }
 
+    // earlier designers saved a few of the values typed in as text
+    @Test
+    void readsANumberSavedAsTextAsTheNumberItIs() {
+        assertEquals(200, read("{\"value\": \"200\"}", FixtureChannelValue.class).getValue());
+        assertEquals(12, read("{\"value\": \" 12 \"}", FixtureChannelValue.class).getValue());
+        assertEquals(100, read("{\"value\": \"1e2\"}", FixtureChannelValue.class).getValue());
+        assertNull(read("{\"value\": \"\"}", FixtureChannelValue.class).getValue());
+        assertEquals(127.5, read("{\"value\": 127.5}", FixtureChannelValue.class).getValue());
+
+        assertEquals(128, read("{\"beatsPerMinute\": \"128\"}", Composition.class).getBeatsPerMinute());
+    }
+
     @Test
     void startsASceneWithoutFades() {
         Scene scene = read("{}", Scene.class);

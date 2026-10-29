@@ -1,0 +1,36 @@
+name: Mutation testing
+
+# How many of the faults put into the engine playing the projects of the designer its tests notice (PIT, see the
+# mutation profile in the pom). It takes about half an hour, so it runs once a week and on demand.
+on:
+  schedule:
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
+
+jobs:
+  designer-engine:
+    name: Mutation testing of the designer engine
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+      - name: Run the mutation tests
+        run: ./mvnw -B test-compile org.pitest:pitest-maven:mutationCoverage -Pmutation -Dpit.threads=4 -Dskip.npm -Dskip.installnodenpm
+      - name: Summarize the mutation score
+        if: always()
+        run: |
+          if [ -f target/pit-reports/mutations.csv ]; then
+            awk -F, '{ total++ } $6 == "KILLED" || $6 == "TIMED_OUT" || $6 == "MEMORY_ERROR" { killed++ } END { printf "Mutants killed by the tests: %d of %d (%.1f %%)\n", killed, total, 100 * killed / total }' \
+              target/pit-reports/mutations.csv >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mutation-report
+          path: target/pit-reports
+          retention-days: 30
