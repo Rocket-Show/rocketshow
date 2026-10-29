@@ -5,6 +5,8 @@ import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.composition.ActionTriggerComposition;
 import com.ascargon.rocketshow.lighting.ActionLighting;
 import com.ascargon.rocketshow.lighting.LightingService;
+import com.ascargon.rocketshow.lighting.designer.ActionScene;
+import com.ascargon.rocketshow.lighting.designer.ScenePlayerService;
 import com.ascargon.rocketshow.midi.ActionMidi;
 import com.ascargon.rocketshow.midi.MidiRouter;
 import com.ascargon.rocketshow.midi.MidiRouterFactory;
@@ -56,6 +58,7 @@ class DefaultActionExecutionServiceTest {
     private final LightingService lightingService = mock(LightingService.class);
     private final MidiRouter midiRouter = mock(MidiRouter.class);
     private final RaspberryGpioOutService raspberryGpioOutService = mock(RaspberryGpioOutService.class);
+    private final ScenePlayerService scenePlayerService = mock(ScenePlayerService.class);
 
     private DefaultActionExecutionService actionExecutionService;
 
@@ -64,7 +67,7 @@ class DefaultActionExecutionServiceTest {
         MidiRouterFactory midiRouterFactory = mock(MidiRouterFactory.class);
         when(midiRouterFactory.getSettingsMidiRouter(any())).thenReturn(midiRouter);
 
-        actionExecutionService = new DefaultActionExecutionService(playerService, settingsService, rebootService, lightingService, midiRouterFactory, raspberryGpioOutService);
+        actionExecutionService = new DefaultActionExecutionService(playerService, settingsService, rebootService, lightingService, midiRouterFactory, raspberryGpioOutService, scenePlayerService);
     }
 
     private static ActionTransport transport(ActionTransport.TransportActionType type, String compositionName) {
@@ -112,6 +115,34 @@ class DefaultActionExecutionServiceTest {
         inOrder.verify(playerService).setCompositionName("Song 2");
         inOrder.verify(playerService).play();
         inOrder.verify(playerService).playAsSample("Applause");
+    }
+
+    private static ActionScene scene(ActionScene.SceneActionType type) {
+        ActionScene action = new ActionScene();
+        action.setSceneActionType(type);
+        return action;
+    }
+
+    @Test
+    void lightsTheScenesOfTheDesignerProjects() throws Exception {
+        ActionScene play = scene(ActionScene.SceneActionType.PLAY_SCENE);
+        play.setProjectName("Club Lights");
+        play.setScene("Warm wash");
+        play.setDurationMillis(5000);
+
+        actionExecutionService.executeFromTrigger(trigger(
+                play,
+                scene(ActionScene.SceneActionType.BLACKOUT_ON),
+                scene(ActionScene.SceneActionType.BLACKOUT_OFF),
+                scene(ActionScene.SceneActionType.TOGGLE_BLACKOUT),
+                scene(ActionScene.SceneActionType.RELEASE_ALL)));
+
+        var inOrder = inOrder(scenePlayerService);
+        inOrder.verify(scenePlayerService).playScene("Club Lights", "Warm wash", 5000);
+        inOrder.verify(scenePlayerService).setBlackout(true);
+        inOrder.verify(scenePlayerService).setBlackout(false);
+        inOrder.verify(scenePlayerService).toggleBlackout();
+        inOrder.verify(scenePlayerService).releaseAll();
     }
 
     @Test

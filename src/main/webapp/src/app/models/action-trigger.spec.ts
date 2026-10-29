@@ -4,6 +4,7 @@ import { ActionLighting } from "./action-lighting";
 import { ActionMidi } from "./action-midi";
 import { ActionNull } from "./action-null";
 import { ActionRaspberryGpio } from "./action-raspberry-gpio";
+import { ActionScene } from "./action-scene";
 import { ActionSystem } from "./action-system";
 import { ActionTransport } from "./action-transport";
 import { ActionTriggerComposition } from "./action-trigger-composition";
@@ -20,6 +21,7 @@ describe("Actions of a trigger", () => {
     LIGHTING: ActionLighting,
     RASPBERRY_GPIO: ActionRaspberryGpio,
     HTTP: ActionHttp,
+    SCENE: ActionScene,
   };
 
   // Like the action editor: a new action has no type, until one is selected
@@ -65,6 +67,22 @@ describe("Actions of a trigger", () => {
     expect(trigger.actionList[0]).toBeInstanceOf(ActionNull);
     expect(trigger.actionList[0].type).toBe("NULL");
     expect(trigger.actionList[0].remoteDeviceNames).toEqual(["Unit B"]);
+  });
+
+  it("keeps the scene a SCENE action plays and for how long", () => {
+    const trigger = new ActionTriggerComposition();
+    const action = newAction("SCENE") as ActionScene;
+    action.projectName = "Club Lights";
+    action.scene = "warm-wash";
+    action.durationMillis = 5000;
+    trigger.actionList.push(action);
+
+    const loaded = saveAndLoad(trigger).actionList[0] as ActionScene;
+
+    expect(loaded.sceneActionType).toBe("PLAY_SCENE");
+    expect(loaded.projectName).toBe("Club Lights");
+    expect(loaded.scene).toBe("warm-wash");
+    expect(loaded.durationMillis).toBe(5000);
   });
 
   // The unit ignores fields it doesn't know
