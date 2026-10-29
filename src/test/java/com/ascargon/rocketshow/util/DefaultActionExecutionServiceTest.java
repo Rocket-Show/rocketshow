@@ -183,7 +183,7 @@ class DefaultActionExecutionServiceTest {
 
         actionExecutionService.execute(play);
 
-        verify(unit2).doPost("execute-action", play);
+        verify(unit2).doPost("system/execute-action", play);
         verify(playerService, never()).play();
     }
 
