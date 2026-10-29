@@ -1,11 +1,15 @@
 package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.RocketShowApplication;
+import com.ascargon.rocketshow.composition.CompositionService;
+import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.settings.SettingsService;
+import com.ascargon.rocketshow.lighting.designer.DesignerJson;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.lighting.designer.FixtureService;
 import com.ascargon.rocketshow.lighting.designer.Project;
 import com.ascargon.rocketshow.lighting.designer.SearchFixtureTemplate;
+import com.ascargon.rocketshow.util.FileNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.system.ApplicationHome;
@@ -29,12 +33,16 @@ public class DesignerController {
     private final FixtureService fixtureService;
     private final DesignerService designerService;
     private final SettingsService settingsService;
+    private final CompositionService compositionService;
+    private final PlayerService playerService;
 
-    public DesignerController(ControllerService controllerService, FixtureService fixtureService, DesignerService designerService, SettingsService settingsService) {
+    public DesignerController(ControllerService controllerService, FixtureService fixtureService, DesignerService designerService, SettingsService settingsService, CompositionService compositionService, PlayerService playerService) {
         this.controllerService = controllerService;
         this.fixtureService = fixtureService;
         this.designerService = designerService;
         this.settingsService = settingsService;
+        this.compositionService = compositionService;
+        this.playerService = playerService;
     }
 
     @ExceptionHandler(Exception.class)
@@ -54,7 +62,7 @@ public class DesignerController {
 
     @PostMapping("preview")
     public synchronized void preview(
-            @RequestBody Project project,
+            @RequestBody String projectJson,
             @RequestParam("positionMillis") long positionMillis,
             @RequestParam(value = "compositionName", required = false, defaultValue = "") String compositionName
     ) {
@@ -68,6 +76,9 @@ public class DesignerController {
         }
 
         logger.debug("Preview designer...");
+
+        // read like the projects saved on the unit, which the designer's own preview reads the same way
+        Project project = DesignerJson.MAPPER.readValue(projectJson, Project.class);
 
         // Stop currently playing stuff
         designerService.stopPreview();
@@ -105,7 +116,7 @@ public class DesignerController {
             return new String(Files.readAllBytes(Paths.get(new ApplicationHome(RocketShowApplication.class).getDir() + File.separator + "designer_template.json")));
         }
 
-        return new String(Files.readAllBytes(Paths.get(settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getDesignerPath() + File.separator + name + ".json")));
+        return new String(Files.readAllBytes(Paths.get(settingsService.getSettings().getBasePath() + File.separator + settingsService.getSettings().getDesignerPath() + File.separator + FileNames.check(name) + ".json")));
     }
 
     @GetMapping("projects")
@@ -114,13 +125,21 @@ public class DesignerController {
     }
 
     @PostMapping("project")
-    public void saveProject(@RequestBody String project) throws IOException {
+    public void saveProject(@RequestBody String project) throws Exception {
         designerService.saveProject(project);
+        lightsChanged();
     }
 
     @DeleteMapping("project")
-    public void deleteProject(@RequestParam("name") String name) throws IOException {
+    public void deleteProject(@RequestParam("name") String name) throws Exception {
         designerService.deleteProjectByName(name);
+        lightsChanged();
+    }
+
+    // A composition plays at least as long as its lights: the sets and the composition playing show how long now
+    private void lightsChanged() throws Exception {
+        compositionService.updateSets();
+        playerService.compositionsChanged();
     }
 
     @PostMapping("update-profiles")

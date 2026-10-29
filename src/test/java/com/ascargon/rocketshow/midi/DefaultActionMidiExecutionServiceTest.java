@@ -3,7 +3,6 @@ package com.ascargon.rocketshow.midi;
 import com.ascargon.rocketshow.settings.Settings;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.ActionExecutionService;
-import com.ascargon.rocketshow.util.ActionTrigger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -17,106 +16,190 @@ import static org.mockito.Mockito.when;
 
 class DefaultActionMidiExecutionServiceTest {
 
-    private Settings settings;
-    private ActionExecutionService actionExecutionService;
-    private DefaultActionMidiExecutionService service;
+    private final SettingsService settingsService = mock(SettingsService.class);
+    private final ActionExecutionService actionExecutionService = mock(ActionExecutionService.class);
+    private final DefaultActionMidiExecutionService actionMidiExecutionService = new DefaultActionMidiExecutionService(settingsService, actionExecutionService);
+
+    private final Settings settings = new Settings();
 
     @BeforeEach
     void setUp() {
-        settings = new Settings();
-
-        SettingsService settingsService = mock(SettingsService.class);
         when(settingsService.getSettings()).thenReturn(settings);
-
-        actionExecutionService = mock(ActionExecutionService.class);
-        service = new DefaultActionMidiExecutionService(settingsService, actionExecutionService);
     }
 
-    private <T extends ActionTriggerMidi> T addTrigger(T trigger) {
-        settings.getActionTriggerMidiList().add(trigger);
-        return trigger;
+    private ActionTriggerMidiNoteOn addNoteOnTrigger(Integer channel, Integer note) {
+        ActionTriggerMidiNoteOn actionTriggerMidiNoteOn = new ActionTriggerMidiNoteOn();
+        actionTriggerMidiNoteOn.setChannel(channel);
+        actionTriggerMidiNoteOn.setNote(note);
+        settings.getActionTriggerMidiList().add(actionTriggerMidiNoteOn);
+        return actionTriggerMidiNoteOn;
     }
 
-    private void verifyTriggered(ActionTrigger trigger) throws Exception {
+    private ActionTriggerMidiProgramChange addProgramChangeTrigger(Integer channel, Integer program) {
+        ActionTriggerMidiProgramChange actionTriggerMidiProgramChange = new ActionTriggerMidiProgramChange();
+        actionTriggerMidiProgramChange.setChannel(channel);
+        actionTriggerMidiProgramChange.setProgram(program);
+        settings.getActionTriggerMidiList().add(actionTriggerMidiProgramChange);
+        return actionTriggerMidiProgramChange;
+    }
+
+    private ActionTriggerMidiControlChange addControlChangeTrigger(Integer channel, Integer controller, Integer value) {
+        ActionTriggerMidiControlChange actionTriggerMidiControlChange = new ActionTriggerMidiControlChange();
+        actionTriggerMidiControlChange.setChannel(channel);
+        actionTriggerMidiControlChange.setController(controller);
+        actionTriggerMidiControlChange.setValue(value);
+        settings.getActionTriggerMidiList().add(actionTriggerMidiControlChange);
+        return actionTriggerMidiControlChange;
+    }
+
+    private ActionTriggerMidiSongSelect addSongSelectTrigger(Integer channel, Integer song) {
+        ActionTriggerMidiSongSelect actionTriggerMidiSongSelect = new ActionTriggerMidiSongSelect();
+        actionTriggerMidiSongSelect.setChannel(channel);
+        actionTriggerMidiSongSelect.setSong(song);
+        settings.getActionTriggerMidiList().add(actionTriggerMidiSongSelect);
+        return actionTriggerMidiSongSelect;
+    }
+
+    private ActionTriggerMidiSystemRealTime addSystemRealTimeTrigger(ActionTriggerMidiSystemRealTime.SystemRealTimeType type) {
+        ActionTriggerMidiSystemRealTime actionTriggerMidiSystemRealTime = new ActionTriggerMidiSystemRealTime();
+        actionTriggerMidiSystemRealTime.setSystemRealTimeType(type);
+        settings.getActionTriggerMidiList().add(actionTriggerMidiSystemRealTime);
+        return actionTriggerMidiSystemRealTime;
+    }
+
+    private void receive(int command, int channel, int data1, int data2) throws Exception {
+        actionMidiExecutionService.processMidiSignal(new ShortMessage(command, channel, data1, data2));
+    }
+
+    // A system message carries no channel: its whole status byte is the message
+    private void receiveSystem(int status, int data1) throws Exception {
+        actionMidiExecutionService.processMidiSignal(new ShortMessage(status, data1, 0));
+    }
+
+    private void receiveSystem(int status) throws Exception {
+        actionMidiExecutionService.processMidiSignal(new ShortMessage(status));
+    }
+
+    @Test
+    void triggersOnTheNoteAndChannel() throws Exception {
+        ActionTriggerMidiNoteOn trigger = addNoteOnTrigger(1, 60);
+
+        receive(ShortMessage.NOTE_ON, 1, 60, 100);
+
         verify(actionExecutionService).executeFromTrigger(trigger);
     }
 
-    private void verifyNotTriggered() throws Exception {
+    @Test
+    void ignoresOtherNotesAndChannels() throws Exception {
+        addNoteOnTrigger(1, 60);
+
+        receive(ShortMessage.NOTE_ON, 1, 61, 100);
+        receive(ShortMessage.NOTE_ON, 2, 60, 100);
+
         verify(actionExecutionService, never()).executeFromTrigger(any());
     }
 
     @Test
-    void triggersOnAControlChange() throws Exception {
-        ActionTriggerMidiControlChange trigger = addTrigger(new ActionTriggerMidiControlChange());
-        trigger.setController(64);
-        trigger.setValue(127);
+    void triggersOnEveryNoteAndChannelIfNotSet() throws Exception {
+        ActionTriggerMidiNoteOn trigger = addNoteOnTrigger(null, null);
 
-        ShortMessage message = new ShortMessage();
-        message.setMessage(ShortMessage.CONTROL_CHANGE, 0, 64, 127);
-        service.processMidiSignal(message);
+        receive(ShortMessage.NOTE_ON, 9, 36, 127);
 
-        verifyTriggered(trigger);
+        verify(actionExecutionService).executeFromTrigger(trigger);
     }
 
     @Test
-    void aControlChangeWithoutAValueMatchesAnyValue() throws Exception {
-        ActionTriggerMidiControlChange trigger = addTrigger(new ActionTriggerMidiControlChange());
-        trigger.setController(64);
+    void ignoresReleasedKeys() throws Exception {
+        // Many keyboards send a released key as note on with velocity 0, often with running status
+        addNoteOnTrigger(1, 60);
 
-        ShortMessage message = new ShortMessage();
-        message.setMessage(ShortMessage.CONTROL_CHANGE, 0, 64, 3);
-        service.processMidiSignal(message);
+        receive(ShortMessage.NOTE_ON, 1, 60, 0);
+        receive(ShortMessage.NOTE_OFF, 1, 60, 64);
 
-        verifyTriggered(trigger);
+        verify(actionExecutionService, never()).executeFromTrigger(any());
     }
 
     @Test
-    void ignoresAControlChangeWithADifferentValue() throws Exception {
-        ActionTriggerMidiControlChange trigger = addTrigger(new ActionTriggerMidiControlChange());
-        trigger.setController(64);
-        trigger.setValue(127);
+    void triggersOnTheProgramChange() throws Exception {
+        ActionTriggerMidiProgramChange trigger = addProgramChangeTrigger(null, 5);
 
-        ShortMessage message = new ShortMessage();
-        message.setMessage(ShortMessage.CONTROL_CHANGE, 0, 64, 0);
-        service.processMidiSignal(message);
+        receive(ShortMessage.PROGRAM_CHANGE, 3, 5, 0);
+        receive(ShortMessage.PROGRAM_CHANGE, 3, 6, 0);
 
-        verifyNotTriggered();
+        verify(actionExecutionService).executeFromTrigger(trigger);
     }
 
     @Test
-    void triggersOnASongSelect() throws Exception {
-        ActionTriggerMidiSongSelect trigger = addTrigger(new ActionTriggerMidiSongSelect());
-        trigger.setSong(5);
+    void keepsNotesAndProgramChangesApart() throws Exception {
+        addNoteOnTrigger(null, 5);
+        addProgramChangeTrigger(null, 60);
 
-        ShortMessage message = new ShortMessage();
-        message.setMessage(0xF3, 5, 0);
-        service.processMidiSignal(message);
+        receive(ShortMessage.PROGRAM_CHANGE, 0, 5, 0);
+        receive(ShortMessage.NOTE_ON, 0, 60, 100);
+        receive(ShortMessage.CONTROL_CHANGE, 0, 5, 127);
 
-        verifyTriggered(trigger);
+        verify(actionExecutionService, never()).executeFromTrigger(any());
     }
 
     @Test
-    void triggersOnTheTransportMessages() throws Exception {
-        ActionTriggerMidiSystemRealTime trigger = addTrigger(new ActionTriggerMidiSystemRealTime());
-        trigger.setSystemRealTimeType(ActionTriggerMidiSystemRealTime.SystemRealTimeType.CONTINUE);
+    void executesEveryMatchingTrigger() throws Exception {
+        ActionTriggerMidiNoteOn trigger = addNoteOnTrigger(1, 60);
+        ActionTriggerMidiNoteOn anyNoteTrigger = addNoteOnTrigger(null, null);
 
-        ShortMessage message = new ShortMessage();
-        message.setMessage(0xFB);
-        service.processMidiSignal(message);
+        receive(ShortMessage.NOTE_ON, 1, 60, 100);
 
-        verifyTriggered(trigger);
+        verify(actionExecutionService).executeFromTrigger(trigger);
+        verify(actionExecutionService).executeFromTrigger(anyNoteTrigger);
+    }
+
+
+    @Test
+    void triggersOnTheControllerAndItsValue() throws Exception {
+        ActionTriggerMidiControlChange trigger = addControlChangeTrigger(null, 64, 127);
+
+        receive(ShortMessage.CONTROL_CHANGE, 0, 64, 127);
+
+        verify(actionExecutionService).executeFromTrigger(trigger);
     }
 
     @Test
-    void ignoresATransportMessageOfAnotherType() throws Exception {
-        ActionTriggerMidiSystemRealTime trigger = addTrigger(new ActionTriggerMidiSystemRealTime());
-        trigger.setSystemRealTimeType(ActionTriggerMidiSystemRealTime.SystemRealTimeType.START);
+    void triggersOnEveryValueOfTheControllerIfNotSet() throws Exception {
+        ActionTriggerMidiControlChange trigger = addControlChangeTrigger(null, 64, null);
 
-        ShortMessage message = new ShortMessage();
-        message.setMessage(0xFC);
-        service.processMidiSignal(message);
+        receive(ShortMessage.CONTROL_CHANGE, 0, 64, 3);
 
-        verifyNotTriggered();
+        verify(actionExecutionService).executeFromTrigger(trigger);
+    }
+
+    @Test
+    void ignoresAnotherValueOfTheController() throws Exception {
+        addControlChangeTrigger(null, 64, 127);
+
+        receive(ShortMessage.CONTROL_CHANGE, 0, 64, 0);
+        receive(ShortMessage.CONTROL_CHANGE, 0, 65, 127);
+
+        verify(actionExecutionService, never()).executeFromTrigger(any());
+    }
+
+    @Test
+    void triggersOnTheSongSelect() throws Exception {
+        ActionTriggerMidiSongSelect trigger = addSongSelectTrigger(null, 5);
+
+        receiveSystem(0xF3, 5);
+        receiveSystem(0xF3, 6);
+
+        verify(actionExecutionService).executeFromTrigger(trigger);
+    }
+
+    @Test
+    void triggersOnTheTransportMessage() throws Exception {
+        ActionTriggerMidiSystemRealTime trigger = addSystemRealTimeTrigger(ActionTriggerMidiSystemRealTime.SystemRealTimeType.CONTINUE);
+
+        receiveSystem(0xFB);
+        receiveSystem(0xFA);
+        receiveSystem(0xFC);
+
+        verify(actionExecutionService).executeFromTrigger(trigger);
     }
 
     /**
@@ -125,28 +208,11 @@ class DefaultActionMidiExecutionServiceTest {
      */
     @Test
     void theChannelOfATriggerDoesNotApplyToSystemMessages() throws Exception {
-        ActionTriggerMidiSongSelect trigger = addTrigger(new ActionTriggerMidiSongSelect());
-        trigger.setChannel(0);
-        trigger.setSong(5);
+        ActionTriggerMidiSongSelect trigger = addSongSelectTrigger(0, 5);
 
-        ShortMessage message = new ShortMessage();
-        message.setMessage(0xF3, 5, 0);
-        service.processMidiSignal(message);
+        receiveSystem(0xF3, 5);
 
-        verifyTriggered(trigger);
-    }
-
-    @Test
-    void theChannelStillAppliesToChannelMessages() throws Exception {
-        ActionTriggerMidiNoteOn trigger = addTrigger(new ActionTriggerMidiNoteOn());
-        trigger.setChannel(2);
-        trigger.setNote(60);
-
-        ShortMessage message = new ShortMessage();
-        message.setMessage(ShortMessage.NOTE_ON, 0, 60, 100);
-        service.processMidiSignal(message);
-
-        verifyNotTriggered();
+        verify(actionExecutionService).executeFromTrigger(trigger);
     }
 
 }

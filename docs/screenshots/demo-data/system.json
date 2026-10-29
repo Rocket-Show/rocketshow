@@ -1,0 +1,94 @@
+{
+  "auth": { "authenticated": true, "passwordConfigured": true, "username": "admin", "roles": ["ADMIN"] },
+
+  "deviceInformation": {
+    "spark": { "available": true, "fileVersion": "1", "country": "CH", "serial": "118F7AB39E6035364DE46B1F7B79006B", "model": "RS-SPARK-1", "hardwareRevision": "1.0", "sku": "RS-SPARK-1" },
+    "community": { "available": false }
+  },
+
+  "operatingSystemInformation": { "type": "LINUX", "subType": "RASPBERRYOS", "architectureType": "ARM64", "raspberryVersion": "MODEL_5" },
+
+  "currentVersion": { "version": "3.1.0", "date": "2026-08-29", "changeNoteList": [] },
+  "remoteVersion": {
+    "version": "3.1.0",
+    "date": "2026-08-29",
+    "changeNoteList": [
+      { "version": "3.1.0", "changes": "New skin, more features for the lighting designer" },
+      { "version": "3.0.2", "changes": "Minor bugfixes" }
+    ]
+  },
+  "updateState": { "step": "IDLE", "progressPercentage": 0 },
+  "buildInfo": { "buildDate": "2026-08-29", "buildTimestamp": "2026-08-29T14:12:03Z", "buildNumber": "3.1.0-412" },
+
+  "diskSpace": { "usedMB": 18432, "availableMB": 112640 },
+  "lanInfo": { "ipAddress": "192.168.1.20", "subnetMask": "255.255.255.0", "gateway": "192.168.1.1", "dns1": "192.168.1.1", "dns2": "" },
+
+  "session": { "autoSelectNextComposition": true, "playViewMode": "setlist" },
+
+  "state": {
+    "playState": "PLAYING",
+    "currentSetName": "Summer Tour 2026",
+    "currentCompositionIndex": 1,
+    "currentCompositionName": "Neon Skyline",
+    "currentCompositionDurationMillis": 245000,
+    "positionMillis": 83420
+  },
+
+  "audioDevices": [
+    { "id": 0, "key": "hw:CARD=SPARK,DEV=0", "name": "SPARK Audio, outputs 1-2" },
+    { "id": 1, "key": "hw:CARD=SPARK,DEV=1", "name": "SPARK Audio, outputs 3-4" },
+    { "id": 2, "key": "hw:CARD=Headphones,DEV=0", "name": "bcm2835 Headphones" }
+  ],
+  "maxAudioChannels": 4,
+
+  "midiInDevices": [
+    { "id": 1, "name": "FC-300 MIDI", "vendor": "Roland", "description": "Roland FC-300 MIDI foot controller", "serialPort": false },
+    { "id": 3, "name": "SPARK MIDI In", "vendor": "Rocket Show", "description": "5-pin DIN input", "serialPort": true }
+  ],
+  "midiOutDevices": [
+    { "id": 2, "name": "Nord Stage 3 MIDI", "vendor": "Clavia", "description": "Nord Stage 3 USB MIDI", "serialPort": false },
+    { "id": 4, "name": "SPARK MIDI Out", "vendor": "Rocket Show", "description": "5-pin DIN output", "serialPort": true }
+  ],
+
+  "olaPlugins": [
+    { "id": 1, "name": "ArtNet", "conflictList": [] },
+    { "id": 2, "name": "Enttec USB Pro", "conflictList": [] },
+    { "id": 4, "name": "E1.31 (sACN)", "conflictList": [] },
+    { "id": 5, "name": "Serial USB", "conflictList": [] },
+    { "id": 6, "name": "Enttec Open DMX", "conflictList": [{ "id": 13, "name": "FTDI USB DMX" }] },
+    { "id": 8, "name": "StageProfi", "conflictList": [] },
+    { "id": 13, "name": "FTDI USB DMX", "conflictList": [{ "id": 6, "name": "Enttec Open DMX" }] }
+  ],
+  "olaOutputPorts": [
+    { "id": "1-0", "device": "SPARK DMX512", "description": "On-board DMX output", "output": true },
+    { "id": "2-0", "device": "ArtNet", "description": "ArtNet Universe 0:0:1", "output": true },
+    { "id": "2-1", "device": "ArtNet", "description": "ArtNet Universe 0:0:2", "output": true }
+  ],
+
+  "community": {
+    "settings": {
+      "lightingUniverseList": [
+        { "uuid": "f869189e-4068-4800-a61f-66a1499946fd", "name": "Stage DMX", "olaUniverseId": 1, "olaOutputPortId": "3-0", "olaOutputPortDevice": "Enttec Usb Pro Device" },
+        { "uuid": "3c1d5e2a-9b7f-4a61-8d2e-5f0a7b6c4e13", "name": "Art-Net truss", "olaUniverseId": 2, "olaOutputPortId": "2-0", "olaOutputPortDevice": "ArtNet" }
+      ]
+    },
+    "olaOutputPorts": [
+      { "id": "3-0", "device": "Enttec Usb Pro Device", "description": "Serial #: 02242398, firmware 2.4", "output": true },
+      { "id": "2-0", "device": "ArtNet", "description": "ArtNet Universe 0:0:1", "output": true },
+      { "id": "2-1", "device": "ArtNet", "description": "ArtNet Universe 0:0:2", "output": true }
+    ]
+  },
+
+  "health": {
+    "healthStatusSeverity": "OK",
+    "freeDiskSpacePercentage": 86,
+    "freeMemory": 6144,
+    "temperature": 48.5,
+    "recentErrorRate": 0,
+    "softwareVersion": "3.1.0",
+    "softwareDate": "2026-08-29",
+    "eepromVersionDate": "2025-05-13",
+    "raucSlot": "A",
+    "reasons": []
+  }
+}

@@ -5,6 +5,7 @@ import com.ascargon.rocketshow.audio.AudioDevice;
 import com.ascargon.rocketshow.composition.Composition;
 import com.ascargon.rocketshow.composition.CompositionFile;
 import com.ascargon.rocketshow.gstreamer.GstApi;
+import com.ascargon.rocketshow.gstreamer.GstPipelineErrors;
 import com.ascargon.rocketshow.midi.MidiMapping;
 import com.ascargon.rocketshow.midi.MidiMessageParser;
 import com.ascargon.rocketshow.midi.MidiRouter;
@@ -19,6 +20,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
@@ -40,6 +42,7 @@ class CompositionPipeline {
 
     private final CompositionPipelineBuilder builder;
     private final Composition composition;
+    private final CompositionPipelineBuilder.MasterEventListener listener;
 
     // The master gstreamer pipeline, used to sync all files which must stay aligned (the longest
     // source plus all non-looping sources). Drives the composition timeline. May be null when every
@@ -62,6 +65,13 @@ class CompositionPipeline {
     // Used to recreate H.265 slave pipelines off the bus-callback thread (the player's scheduler)
     private final Executor recreateExecutor;
 
+    // The composition file of each element directly in the master pipeline, by its name, to tell which file failed
+    private final Map<String, String> fileNameByElement = new ConcurrentHashMap<>();
+
+    // Why the stream of an element directly in a pipeline (e.g. a uridecodebin) could not be linked, by its name.
+    // GStreamer only tells afterwards that nothing took the stream ("reason not-linked (-1)").
+    private final Map<String, String> linkFailureByElement = new ConcurrentHashMap<>();
+
     // True when a hardware H.265 decoder is in use in the master pipeline
     private boolean masterHasH265 = false;
 
@@ -73,11 +83,19 @@ class CompositionPipeline {
     // element in the pipeline that does not handle it), so we stop trying.
     private boolean instantRateChangeSupported = true;
 
+    // Set when stopped: a slave starting again (H.265) doesn't build a new pipeline afterwards
+    private volatile boolean stopped = false;
+
+    // Held while a slave is built again (H.265) and while stopping, so they never use the same pipeline at once
+    private final Object rebuildLock = new Object();
+
     CompositionPipeline(CompositionPipelineBuilder builder, Composition composition, Pipeline masterPipeline,
-                        Executor recreateExecutor, MidiMapping midiMapping, MidiMessageParser midiMessageParser) {
+                        CompositionPipelineBuilder.MasterEventListener listener, Executor recreateExecutor,
+                        MidiMapping midiMapping, MidiMessageParser midiMessageParser) {
         this.builder = builder;
         this.composition = composition;
         this.masterPipeline = masterPipeline;
+        this.listener = listener;
         this.recreateExecutor = recreateExecutor;
         this.midiMapping = midiMapping;
         this.midiMessageParser = midiMessageParser;
@@ -115,6 +133,34 @@ class CompositionPipeline {
 
     MidiMapping getMidiMapping() {
         return midiMapping;
+    }
+
+    void addFileElement(String elementName, String fileName) {
+        fileNameByElement.put(elementName, fileName);
+    }
+
+    // Link a stream of an element directly in a pipeline (e.g. a uridecodebin) as soon as it appeared
+    void link(Element element, Pad pad, Pad sink) {
+        String failure = GstPipelineErrors.link(pad, sink);
+        if (failure != null) {
+            linkFailureByElement.put(element.getName(), failure);
+        }
+    }
+
+    // The error of a pipeline for the web app, with the file which failed (if known) and why its stream could not be
+    // linked (if it could not), e.g. "song.wav: wavparse0: Internal data stream error. (streaming stopped, reason
+    // not-linked (-1))\nCould not link audiouridecodebin0:src_0 -> audioconvert0:sink. Offered: ... Accepted: ..."
+    String describeError(String topLevelElement, String description, String fileName) {
+        String linkFailure = null;
+
+        if (topLevelElement != null) {
+            if (fileName == null) {
+                fileName = fileNameByElement.get(topLevelElement);
+            }
+            linkFailure = linkFailureByElement.get(topLevelElement);
+        }
+
+        return (fileName == null ? "" : fileName + ": ") + description + (linkFailure == null ? "" : "\n" + linkFailure);
     }
 
     // Build a slave pipeline for the given looping source and add it to this pipeline
@@ -276,6 +322,14 @@ class CompositionPipeline {
     // Avoid audio artifacts: mute the master and all slaves, then tear everything down (master,
     // slaves and MIDI routers).
     void stop() {
+        stopped = true;
+
+        synchronized (rebuildLock) {
+            stopPipelines();
+        }
+    }
+
+    private void stopPipelines() {
         if (masterPipeline != null || !slavePipelineList.isEmpty()) {
             setMasterVolume(0.0);
             for (SlavePipeline slavePipeline : slavePipelineList) {
@@ -350,8 +404,13 @@ class CompositionPipeline {
             slavePipeline = new Pipeline("slave" + index);
 
             Bus bus = GstApi.GST_API.gst_element_get_bus(slavePipeline);
-            bus.connect((Bus.ERROR) (GstObject source, int code, String message) ->
-                    logger.error("GST slave error (" + compositionFile.getName() + "): " + message));
+            GstPipelineErrors.onError(bus, (topLevelElement, description) -> {
+                String error = describeError(topLevelElement, description, compositionFile.getName());
+                logger.error("GST slave error: " + error);
+                if (!stopped) {
+                    listener.onSlaveError(error);
+                }
+            });
             // When the slave reaches the end of its source, loop it back to the start
             bus.connect((Bus.EOS) source -> loop());
             GstApi.GST_API.gst_object_unref(bus);
@@ -439,7 +498,7 @@ class CompositionPipeline {
         // The slave reached its own end -> loop straight back to the start (it stays phase-aligned
         // because it has been playing at the shared clock rate).
         void loop() {
-            if (slavePipeline == null) {
+            if (stopped || slavePipeline == null) {
                 return;
             }
             if (hasH265) {
@@ -453,7 +512,7 @@ class CompositionPipeline {
 
         // The master was seeked/looped -> jump to the in-loop position matching its new position.
         void rephaseTo(long masterPositionMillis) {
-            if (slavePipeline == null) {
+            if (stopped || slavePipeline == null) {
                 return;
             }
             if (hasH265) {
@@ -465,12 +524,19 @@ class CompositionPipeline {
         }
 
         private void recreate(long masterPositionMillis) {
-            try {
-                stop();
-                build();
-                startSyncedToMaster(masterPositionMillis);
-            } catch (Exception e) {
-                logger.error("Could not recreate slave pipeline for " + compositionFile.getName(), e);
+            synchronized (rebuildLock) {
+                // Stopped meanwhile: nothing plays on
+                if (stopped) {
+                    return;
+                }
+
+                try {
+                    stop();
+                    build();
+                    startSyncedToMaster(masterPositionMillis);
+                } catch (Exception e) {
+                    logger.error("Could not recreate slave pipeline for " + compositionFile.getName(), e);
+                }
             }
         }
 

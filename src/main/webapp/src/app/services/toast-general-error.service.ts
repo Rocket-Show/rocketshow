@@ -21,7 +21,8 @@ export class ToastGeneralErrorService {
         let text = result["settings.toast-general-error"];
 
         if (message) {
-          text += "<hr /><small>" + message + "</small>";
+          // Text, e.g. the formats GStreamer could not agree on ("channels=< 1, 2 >"), on several lines
+          text += "<hr /><small>" + this.escapeHtml(message).replace(/\n/g, "<br />") + "</small>";
         }
 
         this.toastrService.error(
@@ -30,6 +31,15 @@ export class ToastGeneralErrorService {
           { timeOut: 0, extendedTimeOut: 0, enableHtml: true }
         );
       });
+  }
+
+  private escapeHtml(text: string): string {
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 
   show(error?: Error): any {

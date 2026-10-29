@@ -1,0 +1,13 @@
+{
+  "kind": "mixColors",
+  "description": "The colors of split wheel slots and color presets, mixed",
+  "cases": [
+    {"name":"#ff0000","input":{"colors":["#ff0000"]},"expected":[255,0,0]},
+    {"name":"#ff0000 + #0000ff","input":{"colors":["#ff0000","#0000ff"]},"expected":[127.5,0,127.5]},
+    {"name":"#ff0000 + orange + #0000ff","input":{"colors":["#ff0000","orange","#0000ff"]},"expected":[127.5,0,127.5]},
+    {"name":"orange","input":{"colors":["orange"]},"expected":null},
+    {"name":"nothing","input":{"colors":[]},"expected":null},
+    {"name":"#fff + #000","input":{"colors":["#fff","#000"]},"expected":[127.5,127.5,127.5]},
+    {"name":"#123456 + #654321 + #abcdef","input":{"colors":["#123456","#654321","#abcdef"]},"expected":[96.66666666666667,108,119.33333333333333]}
+  ]
+}

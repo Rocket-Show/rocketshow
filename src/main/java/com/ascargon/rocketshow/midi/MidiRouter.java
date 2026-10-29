@@ -6,7 +6,6 @@ import com.ascargon.rocketshow.settings.SettingsService;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.*;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,8 +22,8 @@ public class MidiRouter {
     private final MidiDeviceOutService midiDeviceOutService;
     private final ActivityNotificationMidiService activityNotificationMidiService;
 
-    private final Map<MidiRouting, Receiver> receiverList = new HashMap<>();
-    private final List<Midi2MonitorReceiver> midi2MonitorReceiverList = new ArrayList<>();
+    // Replaced as a whole when the routings change, so a message being sent meanwhile uses the old routings
+    private volatile Map<MidiRouting, Receiver> receiverList = new HashMap<>();
 
     public MidiRouter(SettingsService settingsService, Midi2LightingConvertService midi2LightingConvertService, LightingService lightingService, MidiDeviceOutService midiDeviceOutService, ActivityNotificationMidiService activityNotificationMidiService, List<MidiRouting> midiRoutingList) {
         this.settingsService = settingsService;
@@ -33,10 +32,27 @@ public class MidiRouter {
         this.midiDeviceOutService = midiDeviceOutService;
         this.activityNotificationMidiService = activityNotificationMidiService;
 
+        setMidiRoutingList(midiRoutingList);
+    }
+
+    // Route to other routings (e.g. after the settings changed) and close the receivers of the previous ones
+    public synchronized void setMidiRoutingList(List<MidiRouting> midiRoutingList) {
+        Map<MidiRouting, Receiver> newReceiverList = new HashMap<>();
+
         // Create a receiver for each routing
         for (MidiRouting midirouting : midiRoutingList) {
-            receiverList.put(midirouting, getReceiver(midirouting));
+            // The global mapping applies to every routing. Routings of a composition get the composition's mapping
+            // as parent instead, which uses the global mapping itself.
+            if (midirouting.getMidiMapping() != null && midirouting.getMidiMapping().getParent() == null) {
+                midirouting.getMidiMapping().setParent(settingsService.getSettings().getMidiMapping());
+            }
+
+            newReceiverList.put(midirouting, getReceiver(midirouting));
         }
+
+        Map<MidiRouting, Receiver> oldReceiverList = receiverList;
+        receiverList = newReceiverList;
+        closeReceivers(oldReceiverList);
     }
 
     // Get the correct receiver based on the routing
@@ -64,44 +80,33 @@ public class MidiRouter {
         return null;
     }
 
-    // Connect two transmitters, the processing one and another one to monitor the signals to all routings
-    void connectTransmitter(Transmitter processingTransmitter, Transmitter monitoringTransmitter) {
-        for (Map.Entry<MidiRouting, Receiver> entry : receiverList.entrySet()) {
-            // Connect the processing transmitter
-            processingTransmitter.setReceiver(entry.getValue());
-
-            // Connect the monitoring transmitter
-            Midi2MonitorReceiver midi2MonitorReceiver = new Midi2MonitorReceiver(activityNotificationMidiService, entry.getKey());
-            monitoringTransmitter.setReceiver(midi2MonitorReceiver);
-            midi2MonitorReceiverList.add(midi2MonitorReceiver);
-        }
-    }
-
     public void sendSignal(MidiMessage midiMessage, MidiSource midiSource) throws InvalidMidiDataException {
         if (midiMessage instanceof ShortMessage) {
             activityNotificationMidiService.notifyClients((ShortMessage) midiMessage, MidiDirection.IN, midiSource, null);
         }
 
-        // Send the signal to each receiver
+        // Send the signal to each receiver. Each one gets its own copy, because the receivers map the message.
         for (Map.Entry<MidiRouting, Receiver> entry : receiverList.entrySet()) {
-            entry.getValue().send(midiMessage, -1);
-            if (midiMessage instanceof ShortMessage) {
-                activityNotificationMidiService.notifyClients((ShortMessage) midiMessage, MidiDirection.OUT, midiSource, entry.getKey().getMidiDestination());
+            MidiMessage routedMidiMessage = (MidiMessage) midiMessage.clone();
+
+            entry.getValue().send(routedMidiMessage, -1);
+            if (routedMidiMessage instanceof ShortMessage) {
+                activityNotificationMidiService.notifyClients((ShortMessage) routedMidiMessage, MidiDirection.OUT, midiSource, entry.getKey().getMidiDestination());
             }
         }
     }
 
-    public void close() {
-        // Close all receivers
-        for (Map.Entry<MidiRouting, Receiver> entry : receiverList.entrySet()) {
-            if (entry.getValue() != null) {
-                entry.getValue().close();
+    private void closeReceivers(Map<MidiRouting, Receiver> receivers) {
+        for (Receiver receiver : receivers.values()) {
+            if (receiver != null) {
+                receiver.close();
             }
         }
+    }
 
-        for (Midi2MonitorReceiver midi2MonitorReceiver : midi2MonitorReceiverList) {
-            midi2MonitorReceiver.close();
-        }
+    public synchronized void close() {
+        // Close all receivers
+        closeReceivers(receiverList);
     }
 
 }

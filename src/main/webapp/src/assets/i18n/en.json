@@ -42,7 +42,7 @@
     "wifi-ap-activated": "Activated",
     "wifi-ap-deactivated": "Deactivated (recommended)",
     "wifi-ap-same-pw": "Use device password",
-    "wifi-ap-same-pw-warning": "Using the same passwort reduces security.",
+    "wifi-ap-same-pw-warning": "Using the same password reduces security.",
     "step-5-title": "Secure Connection",
     "tls-enabled": "Activated (recommended)",
     "tls-disabled": "Deactivated",
@@ -62,15 +62,42 @@
     "settings": "Settings"
   },
   "play": {
+    "mode-compositions": "Compositions",
+    "mode-scenes": "Scenes",
+    "mode-composition-playing": "A composition is playing",
+    "scenes-stack": "Stack",
+    "scenes-release-all": "Release all",
+    "scenes-blackout": "Blackout",
+    "scenes-master": "Master",
+    "scenes-full-screen": "Full screen",
+    "scenes-exit-full-screen": "Exit full screen",
+    "scenes-all": "All",
+    "scenes-nothing-on": "Nothing on",
+    "scenes-count-on": "{{count}} scenes on",
+    "scenes-on": "On",
+    "scenes-held": "Held",
+    "scenes-held-composition": "“{{name}}” is playing.",
+    "scenes-held-composition-detail": "It lights the stage now. Your scenes come back when it stops.",
+    "scenes-held-preview": "The live preview of the designer lights the stage now.",
+    "scenes-held-preview-detail": "Tap a scene to take the lights back.",
+    "scenes-stop-composition": "Stop composition",
+    "scenes-projects": "Designer projects with scenes",
+    "scenes-count": "{{count}} scenes",
+    "scenes-count-one": "1 scene",
     "help": {
-      "midi-timecode-locked": "This device is following an incoming MIDI timecode; the external master controls playback.",
-      "auto-select-next": "When enabled, the next composition is automatically selected and played as soon as the current one finishes — useful for playing through a whole set hands-free.",
+      "auto-select-next": "When enabled, the next composition of the set is selected as soon as the current one finishes. It starts playing right away if the composition that finished is marked in the set to start the next one automatically.",
       "switch-to-grid": "Switch to the cue grid, where every composition is a large button you can trigger directly.",
       "switch-to-setlist": "Switch to the setlist view with transport controls and a scrolling composition list.",
       "activity-midi-in": "Blinks when MIDI data is received.",
       "activity-midi-out": "Blinks when MIDI data is sent.",
       "activity-audio": "Shows the current audio output level per channel.",
-      "activity-lighting": "Blinks when lighting data is sent."
+      "activity-lighting": "Blinks when lighting data is sent.",
+      "mode": "Switch between the compositions of the set and the scenes of the designer projects, to light the stage by hand.",
+      "scenes-stack": "When enabled, a tap adds a scene to the ones already on. Otherwise a tap lights only that scene.",
+      "scenes-release-all": "Turns all scenes off.",
+      "scenes-blackout": "Turns the light off and keeps the scenes selected. Tap again to bring them back.",
+      "scenes-full-screen": "Shows Rocket Show on the whole screen, e.g. on a tablet mounted on the wall.",
+      "midi-timecode-locked": "This device is following an incoming MIDI timecode; the external master controls playback."
     },
     "midi-timecode": "Timecode"
   },
@@ -100,12 +127,6 @@
     "offset-millis": "Delay in milliseconds",
     "offset-placeholder": "Delay in milliseconds",
     "loop": "Loop",
-    "timecode-start": "Timecode start",
-    "midi-number": "MIDI number",
-    "midi-number-none": "Not selectable over MIDI",
-    "show-control-cue": "Show control cue",
-    "show-control-cue-none": "Use the MIDI number",
-    "set-override-none": "Inherited",
     "routing": "MIDI Output",
     "add-routing": "Add output",
     "edit-file": "Edit file",
@@ -139,12 +160,6 @@
       "test-play": "Test-play this composition to preview it. This does not affect the live show on the “Start” page.",
       "test-stop": "Stop the test playback.",
       "loop": "When enabled, this composition automatically starts again from the beginning once it reaches the end.",
-      "timecode-start": "The position of the incoming MIDI timecode at which this composition starts, as hh:mm:ss.mmm. Only used while this device follows a MIDI timecode.",
-      "timecode-start-set": "The position of the incoming MIDI timecode at which this composition starts within this set, as hh:mm:ss.mmm. Each composition occupies the window from here until its duration runs out.",
-      "midi-number": "The number a master uses to select this composition over MIDI, counted from 1: program change 1 (extended by a preceding bank select beyond 128) or song select 1 selects the composition numbered 1. Leave empty if this composition should not be selectable over MIDI. Only used while selecting compositions by MIDI number is switched on, and a set can give this composition a different number for that set.",
-      "midi-number-set": "The number that selects this composition within this set, so every set can number its compositions from 1. Leave empty to use the number configured on the composition itself.",
-      "show-control-cue": "The MIDI Show Control cue number a desk uses to select this composition, for example 12.5. A LOAD command selects it, a GO command selects and starts it. Leave empty to use the MIDI number as the cue number instead. Only used while MIDI Show Control is switched on, and a set can give this composition a different cue number for that set.",
-      "show-control-cue-set": "The show control cue number that selects this composition within this set. Leave empty to use the cue number configured on the composition itself.",
       "audio-volume": "Overall playback volume for all audio files in this composition.",
       "add-file": "A media file (audio, video or MIDI) that is played as part of this composition.",
       "add-action": "Trigger an action — such as MIDI, HTTP or lighting — at a defined position within the composition.",
@@ -156,13 +171,25 @@
       "file-midi-routing": "Defines where this MIDI file is sent during playback, for example to the MIDI output, lighting or remote devices.",
       "edit-details": "Open the detailed settings.",
       "reorder": "Drag to change the order.",
-      "notes": "Personal notes for this composition. They are only shown here in the editor and are never played back."
+      "notes": "Personal notes for this composition. They are only shown here in the editor and are never played back.",
+      "timecode-start": "The position of the incoming MIDI timecode at which this composition starts, as hh:mm:ss.mmm. Only used while this device follows a MIDI timecode.",
+      "timecode-start-set": "The position of the incoming MIDI timecode at which this composition starts within this set, as hh:mm:ss.mmm. Each composition occupies the window from here until its duration runs out.",
+      "midi-number": "The number a master uses to select this composition over MIDI, counted from 1: program change 1 (extended by a preceding bank select beyond 128) or song select 1 selects the composition numbered 1. Leave empty if this composition should not be selectable over MIDI. Only used while selecting compositions by MIDI number is switched on, and a set can give this composition a different number for that set.",
+      "midi-number-set": "The number that selects this composition within this set, so every set can number its compositions from 1. Leave empty to use the number configured on the composition itself.",
+      "show-control-cue": "The MIDI Show Control cue number a desk uses to select this composition, for example 12.5. A LOAD command selects it, a GO command selects and starts it. Leave empty to use the MIDI number as the cue number instead. Only used while MIDI Show Control is switched on, and a set can give this composition a different cue number for that set.",
+      "show-control-cue-set": "The show control cue number that selects this composition within this set. Leave empty to use the cue number configured on the composition itself."
     },
     "action": {
       "actions": "Actions",
       "action": "Action",
       "position-millis": "Position in milliseconds"
-    }
+    },
+    "timecode-start": "Timecode start",
+    "midi-number": "MIDI number",
+    "midi-number-none": "Not selectable over MIDI",
+    "show-control-cue": "Show control cue",
+    "show-control-cue-none": "Use the MIDI number",
+    "set-override-none": "Inherited"
   },
   "connection": {
     "title": "No connection",
@@ -199,6 +226,17 @@
       "designer-frequency-hertz": "How many times per second the lighting output is recalculated and sent. Higher values are smoother but use more processing power.",
       "designer-live-preview": "Shows a live preview of the lighting output in the Designer while you edit, instead of only during playback.",
       "midi-timecode": "Sends MIDI Timecode (MTC) during playback so external devices, such as a DAW or lighting desk, can follow the current position, or follows a timecode received on the MIDI input so this device plays in sync with an external master.",
+      "device-in-midi-routing": "Defines where MIDI received from connected input devices is sent, for example to the MIDI output, lighting or remote devices.",
+      "remote-midi-routing": "Defines where MIDI received from remote RocketShow devices is sent.",
+      "global-midi-mapping": "Transforms incoming MIDI globally — for example shifting channels or notes — before it is processed.",
+      "midi-control": "Map incoming MIDI messages (such as notes or program changes) to actions like starting, stopping or selecting compositions.",
+      "lan-ip": "By default the device obtains its IP address automatically (DHCP). Enable manual configuration to assign a fixed IP address.",
+      "remote-devices": "Other RocketShow devices that this device can control and keep in sync during a show.",
+      "remote-device-api-key": "An API key generated on the remote device (under Security) that authorizes this device to control it.",
+      "remote-device-synchronize": "The remote device follows this one: when a composition is selected, played, paused or stopped here, it does the same with its composition of the same name, and it reboots and shuts down along with this device. Files are not copied.",
+      "instruments": "Define the instruments used in your band. Leadsheets can be assigned per instrument, and each device can choose which instrument it shows.",
+      "personal-instrument": "The instrument used on this device. It determines which leadsheets and parts are shown here.",
+      "api-keys": "API keys let external systems and other RocketShow devices access this device without a password.",
       "midi-timecode-slave-mapping": "Per composition: the incoming timecode drives the selected composition, starting at the timecode start configured on it. Per set: every composition of the current set occupies its own window on the incoming timecode, and the matching composition is selected and started automatically.",
       "midi-timecode-slave-offset": "Compensates the latency of the incoming timecode and of the audio output. A positive value plays later, a negative value plays earlier.",
       "midi-composition-selection": "Lets a master pick a composition by the MIDI number configured on it, instead of mapping every composition separately under Control. Program change (extended by bank select) and song select messages are used; the composition carrying that number is selected.",
@@ -207,18 +245,7 @@
       "midi-show-control": "Follow MIDI Show Control, the SysEx protocol lighting desks and show control systems use. A LOAD command selects the composition with the matching cue number, GO selects and starts it, STOP pauses and RESUME continues.",
       "midi-machine-control": "Follow MIDI Machine Control, the SysEx transport protocol DAWs and tape machines use: play, stop, pause and locate. It does not say which composition to play. Ignored while this device follows a MIDI timecode, which already owns the transport.",
       "midi-device-id": "The device ID this device is addressed by, 0 to 126. Messages sent to the all-call ID 127 are always accepted.",
-      "midi-control-value": "Only trigger when the controller has exactly this value, for example 127 for a pressed footswitch. Leave empty to trigger on any value.",
-      "device-in-midi-routing": "Defines where MIDI received from connected input devices is sent, for example to the MIDI output, lighting or remote devices.",
-      "remote-midi-routing": "Defines where MIDI received from remote RocketShow devices is sent.",
-      "global-midi-mapping": "Transforms incoming MIDI globally — for example shifting channels or notes — before it is processed.",
-      "midi-control": "Map incoming MIDI messages (such as notes or program changes) to actions like starting, stopping or selecting compositions.",
-      "lan-ip": "By default the device obtains its IP address automatically (DHCP). Enable manual configuration to assign a fixed IP address.",
-      "remote-devices": "Other RocketShow devices that this device can control and keep in sync during a show.",
-      "remote-device-api-key": "An API key generated on the remote device (under Security) that authorizes this device to control it.",
-      "remote-device-synchronize": "Keep the compositions and media on the remote device in sync with this device.",
-      "instruments": "Define the instruments used in your band. Leadsheets can be assigned per instrument, and each device can choose which instrument it shows.",
-      "personal-instrument": "The instrument used on this device. It determines which leadsheets and parts are shown here.",
-      "api-keys": "API keys let external systems and other RocketShow devices access this device without a password."
+      "midi-control-value": "Only trigger when the controller has exactly this value, for example 127 for a pressed footswitch. Leave empty to trigger on any value."
     },
     "default": "Default",
     "system": "System",
@@ -248,13 +275,14 @@
     "wlan-ap-ssid": "Name",
     "wlan-ap-ssid-hide": "Hide network",
     "wlan-ap-wpa-passphrase": "Passphrase (WPA2-PSK)",
-    "wlan-ap-wpa-passphrase-short-error": "The wireless access point passphrase is too short (at least 8 characters).",
+    "wlan-ap-wpa-passphrase-short-error": "The wireless access point passphrase needs 8 to 63 characters.",
     "wlan-ap-hw-mode": "Protocol",
     "wlan-ap-channel": "Channel",
     "wlan-ap-country-code": "Country",
     "language": "Language",
     "warning-reboot": "Do you really want to reboot the device?",
     "warning-shutdown": "Do you really want to shutdown the device?",
+    "factory-defaults": "Factory defaults",
     "factory-reset": "Reset to factory defaults",
     "factory-reset-done": "The factory defaults have successfully been restored.",
     "wait-factory-reset": "Please wait, while the device is being reset...",
@@ -263,7 +291,9 @@
     "warning-settings-changes": "The settings contain unsaved changes. Do you really want to proceed?",
     "usb-interface": "USB interface",
     "reset-after-boot": "Reset after boot",
+    "logs": "Logs",
     "download-logs": "Download logs",
+    "maintenance-mode": "Maintenance mode",
     "enable-maintenance-mode": "Enable Maintenance Mode",
     "maintenance-mode-enabled": "SSH is now enabled with user \"rocketshow\" and the one-time password \"{{password}}\" for one hour or until reboot.",
     "remote-device-add": "Add remote device",
@@ -280,46 +310,12 @@
     "midi-device-in": "MIDI input",
     "midi-device-out": "MIDI output",
     "midi-timecode": "MIDI timecode",
-    "midi-timecode-mode-enum": {
-      "OFF": "Off",
-      "MASTER": "Send (master)",
-      "SLAVE": "Follow (slave)"
-    },
     "midi-timecode-frame-rate": "Frame rate",
     "midi-timecode-frame-rate-enum": {
       "FPS_24": "24 fps",
       "FPS_25": "25 fps",
       "FPS_29_97_DROP": "29.97 fps drop-frame",
       "FPS_30": "30 fps"
-    },
-    "midi-timecode-slave-mapping": "Timecode mapping",
-    "midi-timecode-slave-mapping-enum": {
-      "COMPOSITION": "Per composition",
-      "SET": "Per set"
-    },
-    "midi-timecode-slave-offset": "Timecode offset (ms)",
-    "midi-timecode-slave-warning": "While following an incoming timecode, the master controls the transport: compositions start, stop and locate with the timecode, and looping, automatically starting the next composition and sending timecode are not used. Lighting, MIDI and actions follow the master exactly. Audio and video are clocked by the sound card and the display, so they are kept in sync by trimming the playback rate slightly and, for larger deviations, by seeking, which is briefly audible or visible. Video is frame-accurate at best, and a composition using the hardware H.265 decoder can only be started in sync, never corrected afterwards. Give the master a moment of pre-roll so playback can lock on.",
-    "midi-composition-selection": "Composition selection",
-    "midi-composition-selection-enable": "Select compositions by MIDI number",
-    "midi-composition-selection-channel": "Channel",
-    "midi-composition-selection-channel-all": "All channels",
-    "midi-composition-selection-auto-play": "On selection",
-    "midi-composition-selection-auto-play-enable": "Start playing immediately",
-    "midi-show-control": "MIDI Show Control",
-    "midi-show-control-enable": "Follow show control commands",
-    "midi-show-control-device-id": "Device ID",
-    "midi-machine-control": "MIDI Machine Control",
-    "midi-machine-control-enable": "Follow machine control commands",
-    "midi-machine-control-device-id": "Device ID",
-    "midi-control-controller": "Controller",
-    "midi-control-value": "Value",
-    "midi-control-value-any": "Any value",
-    "midi-control-song": "Song",
-    "midi-control-transport-message": "Message",
-    "midi-control-transport-message-enum": {
-      "START": "Start",
-      "CONTINUE": "Continue",
-      "STOP": "Stop"
     },
     "midi-control": "Control",
     "midi-control-type": "Type",
@@ -328,11 +324,11 @@
     "midi-control-note-in": "Input note",
     "midi-control-program": "Program",
     "midi-control-type-enum": {
+      "NOTE_ON": "Note on",
+      "PROGRAM_CHANGE": "Program change",
       "CONTROL_CHANGE": "Control change",
       "SONG_SELECT": "Song select",
-      "SYSTEM_REAL_TIME": "Transport",
-      "NOTE_ON": "Note on",
-      "PROGRAM_CHANGE": "Program change"
+      "SYSTEM_REAL_TIME": "Transport"
     },
     "no-midi-devices": "No MIDI devices available",
     "version": "Current version",
@@ -355,6 +351,7 @@
     "update-error": "The update failed.",
     "reboot-device": "Reboot",
     "shutdown-device": "Shutdown",
+    "device": "Device",
     "default-composition": "Default composition",
     "no-default-composition": "None",
     "audio-buses": "Audio buses",
@@ -439,9 +436,49 @@
       "restore-done": "The backup has been restored.",
       "wait-restore": "The backup is being restored..."
     },
+    "self-test": {
+      "title": "Self-test",
+      "help": "Checks the hardware of the device: every sound card (with a cable from its outputs to its inputs, also what comes out of them), the screen and the video decoder, the MIDI devices (with a loopback cable from the MIDI out to the MIDI in), the GPIO outputs and the reset button, the DMX interface and universes, the storage, the network, the clock and the power supply. Ready to use devices also check their updates, watchdog and read-only system.",
+      "run": "Run self-test",
+      "warning": "For up to half a minute, the self-test plays a test tone on every sound card and a test picture on the screen, sends MIDI notes and program changes to the MIDI out device, switches the GPIO outputs and sends DMX to every universe. Turn down the speakers and disconnect the devices which must not be affected. Run the self-test now?",
+      "wait": "The self-test is running...",
+      "result-PASSED": "Passed. Checks of hardware the device doesn't have are skipped.",
+      "result-FAILED": "Failed",
+      "check": "Check",
+      "result": "Result",
+      "details": "Details",
+      "result-enum": {
+        "PASSED": "Passed",
+        "FAILED": "Failed",
+        "SKIPPED": "Skipped"
+      },
+      "check-enum": {
+        "health": "Health",
+        "storage": "Storage",
+        "updates": "Updates",
+        "watchdog": "Watchdog",
+        "read-only-root": "Read-only system",
+        "clock": "Clock",
+        "lan": "LAN connection",
+        "access-point": "Wireless access point",
+        "audio": "Audio",
+        "audio-loopback": "Audio loopback",
+        "video": "Video",
+        "video-decoder": "Video decoder",
+        "midi-out": "MIDI out",
+        "midi-loopback": "MIDI loopback",
+        "gpio-out": "GPIO outputs",
+        "gpio-loopback": "GPIO loopback",
+        "reset-button": "Reset button",
+        "dmx-interface": "DMX interface",
+        "dmx": "DMX",
+        "power": "Power supply"
+      }
+    },
     "external-control": {
       "title": "External control",
-      "bcm-pin-id": "BCM Pin ID"
+      "bcm-pin-id": "BCM Pin ID",
+      "input": "Input"
     },
     "scheduler": {
       "title": "Scheduler",
@@ -506,6 +543,40 @@
       "install-info": "The complete corresponding source code is available at the link above. In accordance with the license, you are free to run, study, modify and redistribute this software. You may build your own image and install a modified version on this device.",
       "third-party": "Third-party components",
       "third-party-intro": "Rocket Show includes the following open source components, which remain under their respective licenses:"
+    },
+    "midi-timecode-mode-enum": {
+      "OFF": "Off",
+      "MASTER": "Send (master)",
+      "SLAVE": "Follow (slave)"
+    },
+    "midi-timecode-slave-mapping": "Timecode mapping",
+    "midi-timecode-slave-mapping-enum": {
+      "COMPOSITION": "Per composition",
+      "SET": "Per set"
+    },
+    "midi-timecode-slave-offset": "Timecode offset (ms)",
+    "midi-timecode-slave-warning": "While following an incoming timecode, the master controls the transport: compositions start, stop and locate with the timecode, and looping, automatically starting the next composition and sending timecode are not used. Lighting, MIDI and actions follow the master exactly. Audio and video are clocked by the sound card and the display, so they are kept in sync by trimming the playback rate slightly and, for larger deviations, by seeking, which is briefly audible or visible. Video is frame-accurate at best, and a composition using the hardware H.265 decoder can only be started in sync, never corrected afterwards. Give the master a moment of pre-roll so playback can lock on.",
+    "midi-composition-selection": "Composition selection",
+    "midi-composition-selection-enable": "Select compositions by MIDI number",
+    "midi-composition-selection-channel": "Channel",
+    "midi-composition-selection-channel-all": "All channels",
+    "midi-composition-selection-auto-play": "On selection",
+    "midi-composition-selection-auto-play-enable": "Start playing immediately",
+    "midi-show-control": "MIDI Show Control",
+    "midi-show-control-enable": "Follow show control commands",
+    "midi-show-control-device-id": "Device ID",
+    "midi-machine-control": "MIDI Machine Control",
+    "midi-machine-control-enable": "Follow machine control commands",
+    "midi-machine-control-device-id": "Device ID",
+    "midi-control-controller": "Controller",
+    "midi-control-value": "Value",
+    "midi-control-value-any": "Any value",
+    "midi-control-song": "Song",
+    "midi-control-transport-message": "Message",
+    "midi-control-transport-message-enum": {
+      "START": "Start",
+      "CONTINUE": "Continue",
+      "STOP": "Stop"
     }
   },
   "action": {
@@ -521,7 +592,8 @@
       "MIDI": "MIDI",
       "LIGHTING": "Lighting",
       "RASPBERRY_GPIO": "External control",
-      "HTTP": "HTTP"
+      "HTTP": "HTTP",
+      "SCENE": "Scenes"
     },
     "system": {
       "type": "System type",
@@ -549,6 +621,7 @@
       "velocity": "Velocity"
     },
     "transport": {
+      "type": "Command",
       "composition-name": "Composition name",
       "type-enum": {
         "PLAY": "Play",
@@ -576,8 +649,27 @@
     },
     "raspberry-gpio": {
       "pin": "Pin",
+      "output": "Output",
       "status": "Status",
       "high": "High"
+    },
+    "scene": {
+      "type": "Command",
+      "type-enum": {
+        "PLAY_SCENE": "Play Scene",
+        "RELEASE_ALL": "Release All Scenes",
+        "BLACKOUT_ON": "Blackout On",
+        "BLACKOUT_OFF": "Blackout Off",
+        "TOGGLE_BLACKOUT": "Toggle Blackout"
+      },
+      "project": "Designer project",
+      "scene": "Scene",
+      "plays": "Plays",
+      "until-stopped": "Until stopped",
+      "for-a-time": "For a set time",
+      "until-stopped-help": "The scene stays on until another scene is played or all scenes are turned off. A blackout only darkens it.",
+      "for-a-time-help": "The scene turns off again after this time, unless another scene was played before.",
+      "duration": "Duration (seconds)"
     }
   },
   "spark": {

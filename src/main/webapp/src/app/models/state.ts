@@ -9,6 +9,14 @@ export class State {
     midiTimecodeMillis: number;
     error: string;
 
+    // the scenes picked by hand on the Play screen and whether a composition holds them, because it lights the stage
+    // with its own designer project at the moment
+    sceneProjectName: string;
+    activeSceneUuids: string[] = [];
+    sceneBlackout: boolean = false;
+    sceneMasterDimmer: number = 1;
+    scenesHeld: boolean = false;
+
     constructor(data?: any) {
         if (!data) {
             return;
@@ -23,5 +31,10 @@ export class State {
         this.midiTimecodeLocked = data.midiTimecodeLocked;
         this.midiTimecodeMillis = data.midiTimecodeMillis;
         this.error = data.error;
+        this.sceneProjectName = data.sceneProjectName;
+        this.activeSceneUuids = data.activeSceneUuids || [];
+        this.sceneBlackout = data.sceneBlackout || false;
+        this.sceneMasterDimmer = data.sceneMasterDimmer === undefined ? 1 : data.sceneMasterDimmer;
+        this.scenesHeld = data.scenesHeld || false;
     }
 }

@@ -25,6 +25,16 @@ Use this command to skip tests and NPM build:
 For frequent builds, you might want to comment out the frontend-maven-plugin in the POM and make use of the Maven
 parameter `-DskipTests`.
 
+### Documentation screenshots
+
+The screenshots on [rocketshow.net/docs](https://rocketshow.net/docs) are taken from the built web app with demo data
+instead of a device. Retake them after changing a screen, see [docs/screenshots/README.md](./docs/screenshots/README.md).
+
+### Testing
+
+See [testing/README.md](./testing/README.md) for the test strategy (unit tests, device self-test and the
+hardware-in-the-loop rig) and the open todos.
+
 ### Local Angular frontend development
 
 While developing the web app, it might be convenient to start an Angular server:

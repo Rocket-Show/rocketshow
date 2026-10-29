@@ -125,6 +125,14 @@ export class SettingsService {
     return this.observable;
   }
 
+  // Load the settings as saved on the device, without replacing the cached
+  // settings, which might contain unsaved changes
+  getSavedSettings(): Observable<Settings> {
+    return this.http
+      .get("system/settings")
+      .pipe(map((response) => new Settings(response)));
+  }
+
   saveSettings(): Observable<Object> {
     const mergedSettings = { ...this.originalSettings, ...this.settings }; // Merge known and unknown fields
     this.removeNoneMidiDevices(mergedSettings);

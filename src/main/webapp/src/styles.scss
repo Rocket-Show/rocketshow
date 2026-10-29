@@ -540,10 +540,12 @@ label {
   font-size: $rs-font-size;
 }
 
+/* centre a single line on the control height with padding rather than the
+   line-height, so a label that wraps doesn't spread its lines apart */
 .col-form-label {
-  padding-top: 0;
-  padding-bottom: 0;
-  line-height: $rs-control-height;
+  padding-top: calc((#{$rs-control-height} - 1.5em) / 2);
+  padding-bottom: calc((#{$rs-control-height} - 1.5em) / 2);
+  line-height: 1.5;
 }
 
 .form-group {
@@ -1000,6 +1002,22 @@ button.list-group-item {
 .modal-full {
   max-width: unset !important;
   margin: $sd-space-5 !important;
+}
+
+/* The full-screen layers over the app (no connection, lead sheet): the app shows a little through them, but not
+   through their message or the lead sheet on them */
+.overlay-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1030;
+  background-color: rgba($sd-bg, 0.85);
+}
+
+/* the message's alert is tinted, so it gets a solid surface underneath */
+.overlay-message {
+  background-color: $sd-surface-1;
+  border-radius: $sd-radius;
 }
 
 .modal-backdrop {

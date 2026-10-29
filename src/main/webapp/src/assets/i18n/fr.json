@@ -62,15 +62,42 @@
     "settings": "Paramètres"
   },
   "play": {
+    "mode-compositions": "Compositions",
+    "mode-scenes": "Scènes",
+    "mode-composition-playing": "Une composition est en cours de lecture",
+    "scenes-stack": "Empiler",
+    "scenes-release-all": "Tout éteindre",
+    "scenes-blackout": "Blackout",
+    "scenes-master": "Master",
+    "scenes-full-screen": "Plein écran",
+    "scenes-exit-full-screen": "Quitter le plein écran",
+    "scenes-all": "Toutes",
+    "scenes-nothing-on": "Rien d'allumé",
+    "scenes-count-on": "{{count}} scènes allumées",
+    "scenes-on": "Allumée",
+    "scenes-held": "En attente",
+    "scenes-held-composition": "\"{{name}}\" est en cours de lecture.",
+    "scenes-held-composition-detail": "Elle éclaire la scène maintenant. Vos scènes reviennent dès qu'elle s'arrête.",
+    "scenes-held-preview": "L'aperçu en direct du concepteur éclaire la scène maintenant.",
+    "scenes-held-preview-detail": "Touchez une scène pour reprendre la lumière.",
+    "scenes-stop-composition": "Arrêter la composition",
+    "scenes-projects": "Projets du concepteur avec des scènes",
+    "scenes-count": "{{count}} scènes",
+    "scenes-count-one": "1 scène",
     "help": {
-      "midi-timecode-locked": "Cet appareil suit un code temporel MIDI entrant ; le maître externe commande la lecture.",
-      "auto-select-next": "Lorsque cette option est activée, la composition suivante est automatiquement sélectionnée et lue dès que la composition en cours se termine — pratique pour jouer tout un set sans intervention.",
+      "auto-select-next": "Lorsque cette option est activée, la composition suivante du set est sélectionnée dès que la composition en cours se termine. Elle démarre aussitôt si la composition terminée est marquée dans le set pour lancer automatiquement la suivante.",
       "switch-to-grid": "Passe à la grille de cues, où chaque composition est un grand bouton que vous pouvez déclencher directement.",
       "switch-to-setlist": "Passe à la vue setlist avec les commandes de lecture et une liste de compositions défilante.",
       "activity-midi-in": "Clignote lorsque des données MIDI sont reçues.",
       "activity-midi-out": "Clignote lorsque des données MIDI sont envoyées.",
       "activity-audio": "Affiche le niveau de sortie audio actuel par canal.",
-      "activity-lighting": "Clignote lorsque des données d'éclairage sont envoyées."
+      "activity-lighting": "Clignote lorsque des données d'éclairage sont envoyées.",
+      "mode": "Basculez entre les compositions du set et les scènes des projets du concepteur, pour éclairer la scène à la main.",
+      "scenes-stack": "Si activé, un toucher ajoute la scène à celles déjà allumées. Sinon, un toucher allume seulement cette scène.",
+      "scenes-release-all": "Éteint toutes les scènes.",
+      "scenes-blackout": "Éteint la lumière et garde les scènes sélectionnées. Touchez à nouveau pour les rallumer.",
+      "scenes-full-screen": "Affiche Rocket Show sur tout l'écran, par exemple sur une tablette fixée au mur.",
+      "midi-timecode-locked": "Cet appareil suit un code temporel MIDI entrant ; le maître externe commande la lecture."
     },
     "midi-timecode": "Code temporel"
   },
@@ -100,12 +127,6 @@
     "offset-millis": "Délai en millisecondes",
     "offset-placeholder": "Délai en millisecondes",
     "loop": "Répéter",
-    "timecode-start": "Début du code temporel",
-    "midi-number": "Numéro MIDI",
-    "midi-number-none": "Non sélectionnable en MIDI",
-    "show-control-cue": "Cue de show control",
-    "show-control-cue-none": "Utiliser le numéro MIDI",
-    "set-override-none": "Hérité",
     "routing": "Sortie MIDI",
     "add-routing": "Ajouter une sortie",
     "edit-file": "Modifier le fichier",
@@ -139,12 +160,6 @@
       "test-play": "Lit cette composition à titre d'essai pour la prévisualiser. Cela n'affecte pas le spectacle en direct sur la page \"Démarrer\".",
       "test-stop": "Arrête la lecture d'essai.",
       "loop": "Lorsque cette option est activée, cette composition recommence automatiquement depuis le début une fois arrivée à la fin.",
-      "timecode-start": "La position du code temporel MIDI entrant à laquelle cette composition commence, au format hh:mm:ss.mmm. Utilisé uniquement lorsque cet appareil suit un code temporel MIDI.",
-      "timecode-start-set": "La position du code temporel MIDI entrant à laquelle cette composition commence au sein de ce set, au format hh:mm:ss.mmm. Chaque composition occupe la plage allant d'ici jusqu'à la fin de sa durée.",
-      "midi-number": "Le numéro par lequel un maître sélectionne cette composition en MIDI, compté à partir de 1 : le changement de programme 1 (étendu au-delà de 128 par un bank select préalable) ou le song select 1 sélectionne la composition numérotée 1. Laissez vide si cette composition ne doit pas être sélectionnable en MIDI. Utilisé uniquement lorsque la sélection par numéro MIDI est activée ; un set peut attribuer à cette composition un autre numéro pour ce set.",
-      "midi-number-set": "Le numéro qui sélectionne cette composition au sein de ce set, afin que chaque set puisse numéroter ses compositions à partir de 1. Laissez vide pour utiliser le numéro configuré sur la composition elle-même.",
-      "show-control-cue": "Le numéro de cue MIDI Show Control par lequel une console sélectionne cette composition, par exemple 12.5. Une commande LOAD la sélectionne, une commande GO la sélectionne et la démarre. Laissez vide pour utiliser le numéro MIDI comme numéro de cue. Utilisé uniquement lorsque MIDI Show Control est activé ; un set peut attribuer à cette composition un autre numéro de cue pour ce set.",
-      "show-control-cue-set": "Le numéro de cue de show control qui sélectionne cette composition au sein de ce set. Laissez vide pour utiliser le numéro de cue configuré sur la composition elle-même.",
       "audio-volume": "Volume de lecture global de tous les fichiers audio de cette composition.",
       "add-file": "Un fichier multimédia (audio, vidéo ou MIDI) lu dans le cadre de cette composition.",
       "add-action": "Déclenche une action — telle que MIDI, HTTP ou éclairage — à une position définie dans la composition.",
@@ -156,13 +171,25 @@
       "file-midi-routing": "Définit où ce fichier MIDI est envoyé pendant la lecture, par exemple vers la sortie MIDI, l'éclairage ou les appareils distants.",
       "edit-details": "Ouvre les paramètres détaillés.",
       "reorder": "Glissez pour modifier l'ordre.",
-      "notes": "Notes personnelles pour cette composition. Elles ne s'affichent qu'ici dans l'éditeur et ne sont jamais lues."
+      "notes": "Notes personnelles pour cette composition. Elles ne s'affichent qu'ici dans l'éditeur et ne sont jamais lues.",
+      "timecode-start": "La position du code temporel MIDI entrant à laquelle cette composition commence, au format hh:mm:ss.mmm. Utilisé uniquement lorsque cet appareil suit un code temporel MIDI.",
+      "timecode-start-set": "La position du code temporel MIDI entrant à laquelle cette composition commence au sein de ce set, au format hh:mm:ss.mmm. Chaque composition occupe la plage allant d'ici jusqu'à la fin de sa durée.",
+      "midi-number": "Le numéro par lequel un maître sélectionne cette composition en MIDI, compté à partir de 1 : le changement de programme 1 (étendu au-delà de 128 par un bank select préalable) ou le song select 1 sélectionne la composition numérotée 1. Laissez vide si cette composition ne doit pas être sélectionnable en MIDI. Utilisé uniquement lorsque la sélection par numéro MIDI est activée ; un set peut attribuer à cette composition un autre numéro pour ce set.",
+      "midi-number-set": "Le numéro qui sélectionne cette composition au sein de ce set, afin que chaque set puisse numéroter ses compositions à partir de 1. Laissez vide pour utiliser le numéro configuré sur la composition elle-même.",
+      "show-control-cue": "Le numéro de cue MIDI Show Control par lequel une console sélectionne cette composition, par exemple 12.5. Une commande LOAD la sélectionne, une commande GO la sélectionne et la démarre. Laissez vide pour utiliser le numéro MIDI comme numéro de cue. Utilisé uniquement lorsque MIDI Show Control est activé ; un set peut attribuer à cette composition un autre numéro de cue pour ce set.",
+      "show-control-cue-set": "Le numéro de cue de show control qui sélectionne cette composition au sein de ce set. Laissez vide pour utiliser le numéro de cue configuré sur la composition elle-même."
     },
     "action": {
       "actions": "Actions",
       "action": "Action",
       "position-millis": "Position en millisecondes"
-    }
+    },
+    "timecode-start": "Début du code temporel",
+    "midi-number": "Numéro MIDI",
+    "midi-number-none": "Non sélectionnable en MIDI",
+    "show-control-cue": "Cue de show control",
+    "show-control-cue-none": "Utiliser le numéro MIDI",
+    "set-override-none": "Hérité"
   },
   "connection": {
     "title": "Pas de connexion",
@@ -199,6 +226,17 @@
       "designer-frequency-hertz": "Combien de fois par seconde la sortie d'éclairage est recalculée et envoyée. Des valeurs plus élevées sont plus fluides mais demandent plus de puissance de calcul.",
       "designer-live-preview": "Affiche un aperçu en direct de la sortie d'éclairage dans le Concepteur pendant l'édition, et non plus seulement pendant la lecture.",
       "midi-timecode": "Envoie le timecode MIDI (MTC) pendant la lecture afin que des appareils externes, comme une DAW ou une console lumière, puissent suivre la position actuelle, ou suit un timecode reçu sur l'entrée MIDI afin que cet appareil joue en synchronisation avec un maître externe.",
+      "device-in-midi-routing": "Définit où est envoyé le MIDI reçu des périphériques d'entrée connectés, par exemple vers la sortie MIDI, l'éclairage ou les appareils distants.",
+      "remote-midi-routing": "Définit où est envoyé le MIDI reçu des appareils RocketShow distants.",
+      "global-midi-mapping": "Transforme globalement le MIDI entrant — par exemple en décalant les canaux ou les notes — avant son traitement.",
+      "midi-control": "Associez les messages MIDI entrants (notes ou changements de programme, par exemple) à des actions comme démarrer, arrêter ou sélectionner des compositions.",
+      "lan-ip": "Par défaut, l'appareil obtient son adresse IP automatiquement (DHCP). Activez la configuration manuelle pour attribuer une adresse IP fixe.",
+      "remote-devices": "D'autres appareils RocketShow que cet appareil peut commander et garder synchronisés pendant un spectacle.",
+      "remote-device-api-key": "Une clé d'API générée sur l'appareil distant (sous Sécurité) qui autorise cet appareil à le commander.",
+      "remote-device-synchronize": "L'appareil distant suit celui-ci : quand une composition est sélectionnée, lue, mise en pause ou arrêtée ici, il fait de même avec sa composition du même nom, et il redémarre et s'éteint avec cet appareil. Les fichiers ne sont pas copiés.",
+      "instruments": "Définissez les instruments utilisés dans votre groupe. Les feuilles de lead peuvent être attribuées par instrument, et chaque appareil peut choisir l'instrument qu'il affiche.",
+      "personal-instrument": "L'instrument utilisé sur cet appareil. Il détermine les feuilles de lead et les parties affichées ici.",
+      "api-keys": "Les clés d'API permettent à des systèmes externes et à d'autres appareils RocketShow d'accéder à cet appareil sans mot de passe.",
       "midi-timecode-slave-mapping": "Par composition : le code temporel entrant pilote la composition sélectionnée, à partir du début de code temporel configuré sur celle-ci. Par set : chaque composition du set actuel occupe sa propre plage sur le code temporel entrant, et la composition correspondante est sélectionnée et démarrée automatiquement.",
       "midi-timecode-slave-offset": "Compense la latence du code temporel entrant et de la sortie audio. Une valeur positive joue plus tard, une valeur négative plus tôt.",
       "midi-composition-selection": "Permet à un maître de choisir une composition par le numéro MIDI configuré sur celle-ci, au lieu d'associer chaque composition séparément sous Commande. Les messages de changement de programme (étendus par le bank select) et de song select sont utilisés ; la composition portant ce numéro est sélectionnée.",
@@ -207,18 +245,7 @@
       "midi-show-control": "Suit MIDI Show Control, le protocole SysEx utilisé par les consoles lumière et les systèmes de show control. Une commande LOAD sélectionne la composition dont le numéro de cue correspond, GO la sélectionne et la démarre, STOP met en pause et RESUME reprend.",
       "midi-machine-control": "Suit MIDI Machine Control, le protocole SysEx de transport utilisé par les DAW et les magnétophones : lecture, arrêt, pause et positionnement. Il n'indique pas quelle composition jouer. Ignoré lorsque cet appareil suit un code temporel MIDI, qui commande déjà la lecture.",
       "midi-device-id": "L'ID sous lequel cet appareil est adressé, de 0 à 126. Les commandes envoyées à l'ID général 127 sont toujours acceptées.",
-      "midi-control-value": "Ne déclenche que lorsque le contrôleur a exactement cette valeur, par exemple 127 pour une pédale enfoncée. Laissez vide pour déclencher sur n'importe quelle valeur.",
-      "device-in-midi-routing": "Définit où est envoyé le MIDI reçu des périphériques d'entrée connectés, par exemple vers la sortie MIDI, l'éclairage ou les appareils distants.",
-      "remote-midi-routing": "Définit où est envoyé le MIDI reçu des appareils RocketShow distants.",
-      "global-midi-mapping": "Transforme globalement le MIDI entrant — par exemple en décalant les canaux ou les notes — avant son traitement.",
-      "midi-control": "Associez les messages MIDI entrants (notes ou changements de programme, par exemple) à des actions comme démarrer, arrêter ou sélectionner des compositions.",
-      "lan-ip": "Par défaut, l'appareil obtient son adresse IP automatiquement (DHCP). Activez la configuration manuelle pour attribuer une adresse IP fixe.",
-      "remote-devices": "D'autres appareils RocketShow que cet appareil peut commander et garder synchronisés pendant un spectacle.",
-      "remote-device-api-key": "Une clé d'API générée sur l'appareil distant (sous Sécurité) qui autorise cet appareil à le commander.",
-      "remote-device-synchronize": "Garde les compositions et les médias de l'appareil distant synchronisés avec cet appareil.",
-      "instruments": "Définissez les instruments utilisés dans votre groupe. Les feuilles de lead peuvent être attribuées par instrument, et chaque appareil peut choisir l'instrument qu'il affiche.",
-      "personal-instrument": "L'instrument utilisé sur cet appareil. Il détermine les feuilles de lead et les parties affichées ici.",
-      "api-keys": "Les clés d'API permettent à des systèmes externes et à d'autres appareils RocketShow d'accéder à cet appareil sans mot de passe."
+      "midi-control-value": "Ne déclenche que lorsque le contrôleur a exactement cette valeur, par exemple 127 pour une pédale enfoncée. Laissez vide pour déclencher sur n'importe quelle valeur."
     },
     "default": "Par défaut",
     "system": "Système",
@@ -248,13 +275,14 @@
     "wlan-ap-ssid": "Nom",
     "wlan-ap-ssid-hide": "Masquer le réseau",
     "wlan-ap-wpa-passphrase": "Phrase secrète (WPA2-PSK)",
-    "wlan-ap-wpa-passphrase-short-error": "La phrase secrète du point d'accès sans fil est trop courte (au moins 8 caractères).",
+    "wlan-ap-wpa-passphrase-short-error": "La phrase secrète du point d'accès sans fil doit comporter de 8 à 63 caractères.",
     "wlan-ap-hw-mode": "Protocole",
     "wlan-ap-channel": "Canal",
     "wlan-ap-country-code": "Pays",
     "language": "Langue",
     "warning-reboot": "Voulez-vous vraiment redémarrer l'appareil ?",
     "warning-shutdown": "Voulez-vous vraiment éteindre l'appareil ?",
+    "factory-defaults": "Paramètres d'usine",
     "factory-reset": "Réinitialiser aux paramètres d'usine",
     "factory-reset-done": "Les paramètres d'usine ont été restaurés avec succès.",
     "wait-factory-reset": "Veuillez patienter pendant la réinitialisation de l'appareil...",
@@ -263,7 +291,9 @@
     "warning-settings-changes": "Les paramètres contiennent des modifications non enregistrées. Voulez-vous vraiment continuer ?",
     "usb-interface": "Interface USB",
     "reset-after-boot": "Réinitialiser après le démarrage",
+    "logs": "Journaux",
     "download-logs": "Télécharger les journaux",
+    "maintenance-mode": "Mode maintenance",
     "enable-maintenance-mode": "Activer le mode maintenance",
     "maintenance-mode-enabled": "SSH est maintenant activé avec l'utilisateur \"rocketshow\" et le mot de passe à usage unique \"{{password}}\" pendant une heure ou jusqu'au redémarrage.",
     "remote-device-add": "Ajouter un appareil distant",
@@ -280,46 +310,12 @@
     "midi-device-in": "Entrée MIDI",
     "midi-device-out": "Sortie MIDI",
     "midi-timecode": "Code temporel MIDI",
-    "midi-timecode-mode-enum": {
-      "OFF": "Désactivé",
-      "MASTER": "Envoyer (maître)",
-      "SLAVE": "Suivre (esclave)"
-    },
     "midi-timecode-frame-rate": "Fréquence d'images",
     "midi-timecode-frame-rate-enum": {
       "FPS_24": "24 ips",
       "FPS_25": "25 ips",
       "FPS_29_97_DROP": "29.97 ips drop-frame",
       "FPS_30": "30 ips"
-    },
-    "midi-timecode-slave-mapping": "Affectation du code temporel",
-    "midi-timecode-slave-mapping-enum": {
-      "COMPOSITION": "Par composition",
-      "SET": "Par set"
-    },
-    "midi-timecode-slave-offset": "Décalage du code temporel (ms)",
-    "midi-timecode-slave-warning": "Lorsqu'un code temporel entrant est suivi, c'est le maître qui commande la lecture : les compositions démarrent, s'arrêtent et se positionnent avec le code temporel, et la répétition, le démarrage automatique de la composition suivante ainsi que l'envoi de code temporel ne sont pas utilisés. La lumière, le MIDI et les actions suivent le maître exactement. L'audio et la vidéo sont cadencés par la carte son et par l'écran ; ils sont donc maintenus synchronisés en ajustant légèrement la vitesse de lecture et, en cas d'écart plus important, en se repositionnant, ce qui est brièvement audible ou visible. La vidéo est au mieux précise à l'image près, et une composition utilisant le décodeur matériel H.265 peut seulement être démarrée en synchronisation, sans correction ultérieure. Prévoyez un court pré-roll sur le maître pour que la lecture puisse se verrouiller.",
-    "midi-composition-selection": "Sélection des compositions",
-    "midi-composition-selection-enable": "Sélectionner les compositions par numéro MIDI",
-    "midi-composition-selection-channel": "Canal",
-    "midi-composition-selection-channel-all": "Tous les canaux",
-    "midi-composition-selection-auto-play": "À la sélection",
-    "midi-composition-selection-auto-play-enable": "Lancer la lecture immédiatement",
-    "midi-show-control": "MIDI Show Control",
-    "midi-show-control-enable": "Suivre les commandes de show control",
-    "midi-show-control-device-id": "ID d'appareil",
-    "midi-machine-control": "MIDI Machine Control",
-    "midi-machine-control-enable": "Suivre les commandes de machine control",
-    "midi-machine-control-device-id": "ID d'appareil",
-    "midi-control-controller": "Contrôleur",
-    "midi-control-value": "Valeur",
-    "midi-control-value-any": "N'importe quelle valeur",
-    "midi-control-song": "Morceau",
-    "midi-control-transport-message": "Message",
-    "midi-control-transport-message-enum": {
-      "START": "Start",
-      "CONTINUE": "Continue",
-      "STOP": "Stop"
     },
     "midi-control": "Contrôle",
     "midi-control-type": "Type",
@@ -328,11 +324,11 @@
     "midi-control-note-in": "Note d'entrée",
     "midi-control-program": "Programme",
     "midi-control-type-enum": {
+      "NOTE_ON": "Note activée",
+      "PROGRAM_CHANGE": "Changement de programme",
       "CONTROL_CHANGE": "Changement de contrôle",
       "SONG_SELECT": "Song select",
-      "SYSTEM_REAL_TIME": "Transport",
-      "NOTE_ON": "Note activée",
-      "PROGRAM_CHANGE": "Changement de programme"
+      "SYSTEM_REAL_TIME": "Transport"
     },
     "no-midi-devices": "Aucun appareil MIDI disponible",
     "version": "Version actuelle",
@@ -354,6 +350,7 @@
     "update-error": "La mise à jour a échoué.",
     "reboot-device": "Redémarrer",
     "shutdown-device": "Éteindre",
+    "device": "Appareil",
     "default-composition": "Composition par défaut",
     "no-default-composition": "Aucune",
     "audio-buses": "Bus audio",
@@ -438,9 +435,49 @@
       "restore-done": "La sauvegarde a été restaurée.",
       "wait-restore": "La sauvegarde est en cours de restauration..."
     },
+    "self-test": {
+      "title": "Autotest",
+      "help": "Vérifie le matériel de l'appareil : chaque carte son (avec un câble de ses sorties à ses entrées, aussi ce qui en sort), l'écran et le décodeur vidéo, les appareils MIDI (avec un câble de la sortie MIDI à l'entrée MIDI), les sorties GPIO et le bouton de réinitialisation, l'interface et les univers DMX, le stockage, le réseau, l'horloge et l'alimentation. Les appareils prêts à l'emploi vérifient aussi leurs mises à jour, le watchdog et le système en lecture seule.",
+      "run": "Lancer l'autotest",
+      "warning": "Pendant jusqu'à une demi-minute, l'autotest joue un son de test sur chaque carte son et une image de test sur l'écran, envoie des notes MIDI et des changements de programme à l'appareil de sortie MIDI, commute les sorties GPIO et envoie du DMX à chaque univers. Baissez les haut-parleurs et débranchez les appareils qui ne doivent pas être affectés. Lancer l'autotest maintenant ?",
+      "wait": "L'autotest est en cours...",
+      "result-PASSED": "Réussi. Les vérifications du matériel que l'appareil n'a pas sont ignorées.",
+      "result-FAILED": "Échoué",
+      "check": "Vérification",
+      "result": "Résultat",
+      "details": "Détails",
+      "result-enum": {
+        "PASSED": "Réussi",
+        "FAILED": "Échoué",
+        "SKIPPED": "Ignoré"
+      },
+      "check-enum": {
+        "health": "État",
+        "storage": "Stockage",
+        "updates": "Mises à jour",
+        "watchdog": "Watchdog",
+        "read-only-root": "Système en lecture seule",
+        "clock": "Horloge",
+        "lan": "Connexion LAN",
+        "access-point": "Point d'accès sans fil",
+        "audio": "Audio",
+        "audio-loopback": "Boucle audio",
+        "video": "Vidéo",
+        "video-decoder": "Décodeur vidéo",
+        "midi-out": "Sortie MIDI",
+        "midi-loopback": "Boucle MIDI",
+        "gpio-out": "Sorties GPIO",
+        "gpio-loopback": "Boucle GPIO",
+        "reset-button": "Bouton de réinitialisation",
+        "dmx-interface": "Interface DMX",
+        "dmx": "DMX",
+        "power": "Alimentation"
+      }
+    },
     "external-control": {
       "title": "Contrôle externe",
-      "bcm-pin-id": "ID de broche BCM"
+      "bcm-pin-id": "ID de broche BCM",
+      "input": "Entrée"
     },
     "scheduler": {
       "title": "Planification",
@@ -496,7 +533,41 @@
     "secure-connection-enable": "Activé",
     "build-date": "Date de compilation",
     "build-timestamp": "Horodatage de compilation",
-    "build-number": "Numéro de compilation"
+    "build-number": "Numéro de compilation",
+    "midi-timecode-mode-enum": {
+      "OFF": "Désactivé",
+      "MASTER": "Envoyer (maître)",
+      "SLAVE": "Suivre (esclave)"
+    },
+    "midi-timecode-slave-mapping": "Affectation du code temporel",
+    "midi-timecode-slave-mapping-enum": {
+      "COMPOSITION": "Par composition",
+      "SET": "Par set"
+    },
+    "midi-timecode-slave-offset": "Décalage du code temporel (ms)",
+    "midi-timecode-slave-warning": "Lorsqu'un code temporel entrant est suivi, c'est le maître qui commande la lecture : les compositions démarrent, s'arrêtent et se positionnent avec le code temporel, et la répétition, le démarrage automatique de la composition suivante ainsi que l'envoi de code temporel ne sont pas utilisés. La lumière, le MIDI et les actions suivent le maître exactement. L'audio et la vidéo sont cadencés par la carte son et par l'écran ; ils sont donc maintenus synchronisés en ajustant légèrement la vitesse de lecture et, en cas d'écart plus important, en se repositionnant, ce qui est brièvement audible ou visible. La vidéo est au mieux précise à l'image près, et une composition utilisant le décodeur matériel H.265 peut seulement être démarrée en synchronisation, sans correction ultérieure. Prévoyez un court pré-roll sur le maître pour que la lecture puisse se verrouiller.",
+    "midi-composition-selection": "Sélection des compositions",
+    "midi-composition-selection-enable": "Sélectionner les compositions par numéro MIDI",
+    "midi-composition-selection-channel": "Canal",
+    "midi-composition-selection-channel-all": "Tous les canaux",
+    "midi-composition-selection-auto-play": "À la sélection",
+    "midi-composition-selection-auto-play-enable": "Lancer la lecture immédiatement",
+    "midi-show-control": "MIDI Show Control",
+    "midi-show-control-enable": "Suivre les commandes de show control",
+    "midi-show-control-device-id": "ID d'appareil",
+    "midi-machine-control": "MIDI Machine Control",
+    "midi-machine-control-enable": "Suivre les commandes de machine control",
+    "midi-machine-control-device-id": "ID d'appareil",
+    "midi-control-controller": "Contrôleur",
+    "midi-control-value": "Valeur",
+    "midi-control-value-any": "N'importe quelle valeur",
+    "midi-control-song": "Morceau",
+    "midi-control-transport-message": "Message",
+    "midi-control-transport-message-enum": {
+      "START": "Start",
+      "CONTINUE": "Continue",
+      "STOP": "Stop"
+    }
   },
   "action": {
     "action": "Action",
@@ -511,7 +582,8 @@
       "MIDI": "MIDI",
       "LIGHTING": "Éclairage",
       "RASPBERRY_GPIO": "Contrôle externe",
-      "HTTP": "HTTP"
+      "HTTP": "HTTP",
+      "SCENE": "Scènes"
     },
     "system": {
       "type": "Type de système",
@@ -539,6 +611,7 @@
       "velocity": "Vélocité"
     },
     "transport": {
+      "type": "Commande",
       "composition-name": "Nom de la composition",
       "type-enum": {
         "PLAY": "Lecture",
@@ -566,8 +639,27 @@
     },
     "raspberry-gpio": {
       "pin": "Broche",
+      "output": "Sortie",
       "status": "Statut",
       "high": "Haut"
+    },
+    "scene": {
+      "type": "Commande",
+      "type-enum": {
+        "PLAY_SCENE": "Jouer une scène",
+        "RELEASE_ALL": "Éteindre toutes les scènes",
+        "BLACKOUT_ON": "Activer le blackout",
+        "BLACKOUT_OFF": "Désactiver le blackout",
+        "TOGGLE_BLACKOUT": "Basculer le blackout"
+      },
+      "project": "Projet du concepteur",
+      "scene": "Scène",
+      "plays": "Joue",
+      "until-stopped": "Jusqu'à l'arrêt",
+      "for-a-time": "Pendant une durée",
+      "until-stopped-help": "La scène reste allumée jusqu'à ce qu'une autre scène soit jouée ou que toutes les scènes soient éteintes. Un blackout ne fait que l'assombrir.",
+      "for-a-time-help": "La scène s'éteint à nouveau après ce temps, sauf si une autre scène a été jouée avant.",
+      "duration": "Durée (secondes)"
     }
   },
   "spark": {

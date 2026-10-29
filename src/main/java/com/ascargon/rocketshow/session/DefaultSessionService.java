@@ -2,6 +2,7 @@ package com.ascargon.rocketshow.session;
 
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.settings.SettingsService;
+import com.ascargon.rocketshow.util.AtomicFile;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
@@ -57,7 +58,7 @@ public class DefaultSessionService implements SessionService {
             // output pretty printed
             jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 
-            jaxbMarshaller.marshal(session, file);
+            AtomicFile.marshal(jaxbMarshaller, session, file);
 
             logger.info("Session saved");
         } catch (JAXBException e) {
@@ -79,6 +80,9 @@ public class DefaultSessionService implements SessionService {
                 logger.info("Session restored");
             } catch (JAXBException e) {
                 logger.error("Could not load session", e);
+
+                // Start with a new session, the player needs one
+                session = new Session();
             }
         } else {
             // There is no session existant -> create a default session

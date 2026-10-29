@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="1754" viewBox="0 0 1240 1754" font-family="Georgia, 'Times New Roman', serif">
+  <!-- The demo lead sheet: served for every lead sheet the demo compositions
+       name, so the lead sheet viewer has something that looks like one. -->
+  <rect width="1240" height="1754" fill="#ffffff"/>
+  <text x="620" y="150" font-size="64" text-anchor="middle" font-weight="bold">Neon Skyline</text>
+  <text x="620" y="210" font-size="30" text-anchor="middle" fill="#444">Guitar · Capo 2 · 120 BPM · 4/4</text>
+  <g font-size="30" fill="#222">
+    <text x="110" y="330" font-weight="bold">Intro</text>
+    <text x="110" y="560" font-weight="bold">Verse</text>
+    <text x="110" y="880" font-weight="bold">Chorus</text>
+    <text x="110" y="1200" font-weight="bold">Bridge</text>
+    <text x="110" y="1440" font-weight="bold">Outro</text>
+  </g>
+  <g stroke="#222" stroke-width="3" fill="none">
+    <!-- one row = four bars -->
+    <path d="M110 360h1020M110 440h1020M110 360v80M365 360v80M620 360v80M875 360v80M1130 360v80"/>
+    <path d="M110 590h1020M110 670h1020M110 590v80M365 590v80M620 590v80M875 590v80M1130 590v80"/>
+    <path d="M110 700h1020M110 780h1020M110 700v80M365 700v80M620 700v80M875 700v80M1130 700v80"/>
+    <path d="M110 910h1020M110 990h1020M110 910v80M365 910v80M620 910v80M875 910v80M1130 910v80"/>
+    <path d="M110 1020h1020M110 1100h1020M110 1020v80M365 1020v80M620 1020v80M875 1020v80M1130 1020v80"/>
+    <path d="M110 1230h1020M110 1310h1020M110 1230v80M365 1230v80M620 1230v80M875 1230v80M1130 1230v80"/>
+    <path d="M110 1470h1020M110 1550h1020M110 1470v80M365 1470v80M620 1470v80M875 1470v80M1130 1470v80"/>
+  </g>
+  <g font-size="40" font-weight="bold" fill="#5b2d9c">
+    <text x="140" y="415">Em</text><text x="395" y="415">C</text><text x="650" y="415">G</text><text x="905" y="415">D</text>
+    <text x="140" y="645">Em</text><text x="395" y="645">C</text><text x="650" y="645">G</text><text x="905" y="645">D</text>
+    <text x="140" y="755">Em</text><text x="395" y="755">C</text><text x="650" y="755">Am</text><text x="905" y="755">B7</text>
+    <text x="140" y="965">C</text><text x="395" y="965">G</text><text x="650" y="965">D</text><text x="905" y="965">Em</text>
+    <text x="140" y="1075">C</text><text x="395" y="1075">G</text><text x="650" y="1075">D</text><text x="905" y="1075">D/F#</text>
+    <text x="140" y="1285">Am</text><text x="395" y="1285">Em</text><text x="650" y="1285">C</text><text x="905" y="1285">D</text>
+    <text x="140" y="1525">Em</text><text x="395" y="1525">C</text><text x="650" y="1525">G</text><text x="905" y="1525">D</text>
+  </g>
+  <g font-size="26" fill="#666" font-style="italic">
+    <text x="110" y="820">×2, second time into the chorus</text>
+    <text x="110" y="1140">After the 2nd chorus: bridge, then one bar of the "Hit"</text>
+    <text x="110" y="1590">Hold the last chord, let it ring</text>
+  </g>
+</svg>

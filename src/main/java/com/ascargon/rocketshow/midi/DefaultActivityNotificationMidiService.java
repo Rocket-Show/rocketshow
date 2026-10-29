@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.midi;
 
 import com.ascargon.rocketshow.settings.SettingsService;
+import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -16,9 +17,10 @@ import javax.sound.midi.ShortMessage;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Notify all connected websocket clients about a MIDI event.
@@ -32,8 +34,16 @@ public class DefaultActivityNotificationMidiService extends TextWebSocketHandler
 
     private final SettingsService settingsService;
 
-    private Timer sendActivityTimer;
+    // Sends all messages, so a session never gets two at once and the MIDI routing never waits for a slow web app
+    private final ScheduledExecutorService sender = Executors.newSingleThreadScheduledExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "midi-monitor");
+        thread.setDaemon(true);
+        return thread;
+    });
 
+    // The MIDI events of the last 50 milliseconds, mixed into one activity for performance reasons. Events come from
+    // several threads at once (e.g. a MIDI device and a MIDI file).
+    private final Object pendingLock = new Object();
     private ActivityMidi activityMidi;
 
     public DefaultActivityNotificationMidiService(SettingsService settingsService) {
@@ -50,23 +60,27 @@ public class DefaultActivityNotificationMidiService extends TextWebSocketHandler
         sessions.remove(session);
     }
 
-    private synchronized void sendWebsocketMessage() throws IOException {
-        if (activityMidi == null) {
-            return;
+    private void sendPending() {
+        ActivityMidi pendingActivityMidi;
+
+        synchronized (pendingLock) {
+            pendingActivityMidi = activityMidi;
+            activityMidi = null;
         }
 
-        ObjectMapper mapper = new ObjectMapper();
-        String returnValue = mapper.writeValueAsString(activityMidi);
+        try {
+            String returnValue = new ObjectMapper().writeValueAsString(pendingActivityMidi);
 
-        for (WebSocketSession webSocketSession : sessions) {
-            try {
-                webSocketSession.sendMessage(new TextMessage(returnValue));
-            } catch (Exception e) {
-                sessions.remove(webSocketSession);
+            for (WebSocketSession webSocketSession : sessions) {
+                try {
+                    webSocketSession.sendMessage(new TextMessage(returnValue));
+                } catch (Exception e) {
+                    sessions.remove(webSocketSession);
+                }
             }
+        } catch (Exception e) {
+            logger.error("Could not send the MIDI activity", e);
         }
-
-        activityMidi = null;
     }
 
     @Override
@@ -77,20 +91,25 @@ public class DefaultActivityNotificationMidiService extends TextWebSocketHandler
 
         MidiSignal midiSignal = new MidiSignal(shortMessage);
 
-        // Mix the current event into the pending activity or create a new one
-        if (activityMidi == null) {
-            // Create a new MIDI activity
-            activityMidi = new ActivityMidi();
+        synchronized (pendingLock) {
+            // Mix the current event into the pending activity or create a new one
+            if (activityMidi == null) {
+                // Create a new MIDI activity
+                activityMidi = new ActivityMidi();
 
-            activityMidi.setMidiSignal(midiSignal);
-            activityMidi.setMidiDirection(midiDirection);
-            if (midiSource != null) {
-                activityMidi.getMidiSources().add(midiSource);
+                activityMidi.setMidiSignal(midiSignal);
+                activityMidi.setMidiDirection(midiDirection);
+                if (midiSource != null) {
+                    activityMidi.getMidiSources().add(midiSource);
+                }
+                if (midiDestination != null) {
+                    activityMidi.getMidiDestinations().add(midiDestination);
+                }
+
+                sender.schedule(this::sendPending, 50, TimeUnit.MILLISECONDS);
+                return;
             }
-            if (midiDestination != null) {
-                activityMidi.getMidiDestinations().add(midiDestination);
-            }
-        } else {
+
             // Mix the current MIDI event into the pending activity
             // TODO mix the signal
 
@@ -106,46 +125,27 @@ public class DefaultActivityNotificationMidiService extends TextWebSocketHandler
                 activityMidi.getMidiDestinations().add(midiDestination);
             }
         }
-
-        if (sendActivityTimer != null) {
-            // There is already a timer running -> let it finish and ignore this event for performance reasons
-            return;
-        }
-
-        TimerTask timerTask = new TimerTask() {
-            @Override
-            public void run() {
-                try {
-                    // Send the current MIDI state
-                    sendWebsocketMessage();
-                } catch (Exception e) {
-                    logger.error("Could not send the MIDI activity", e);
-                }
-
-                if (sendActivityTimer != null) {
-                    sendActivityTimer.cancel();
-                }
-
-                sendActivityTimer = null;
-            }
-        };
-
-        sendActivityTimer = new Timer();
-        sendActivityTimer.schedule(timerTask, 50);
     }
 
     @Scheduled(fixedRate = 25000) // every 25 seconds
     public void sendPing() {
-        for (WebSocketSession session : sessions) {
-            if (session.isOpen()) {
-                try {
-                    session.sendMessage(new PingMessage(ByteBuffer.wrap(new byte[]{1})));
-                } catch (IOException e) {
-                    logger.debug("Ping failed, closing websocket session", e);
-                    sessions.remove(session);
+        sender.execute(() -> {
+            for (WebSocketSession session : sessions) {
+                if (session.isOpen()) {
+                    try {
+                        session.sendMessage(new PingMessage(ByteBuffer.wrap(new byte[]{1})));
+                    } catch (IOException e) {
+                        logger.debug("Ping failed, closing websocket session", e);
+                        sessions.remove(session);
+                    }
                 }
             }
-        }
+        });
+    }
+
+    @PreDestroy
+    public void close() {
+        sender.shutdownNow();
     }
 
 }

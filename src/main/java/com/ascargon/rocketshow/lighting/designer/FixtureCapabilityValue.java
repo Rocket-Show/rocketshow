@@ -9,7 +9,7 @@ public class FixtureCapabilityValue {
     private Double valuePercentage;
 
     private FixtureCapability.FixtureCapabilityColor color;
-    private Integer slotNumber;
+    private Double slotNumber;
     private String wheel;
 
     public FixtureCapability.FixtureCapabilityType getType() {
@@ -44,11 +44,11 @@ public class FixtureCapabilityValue {
         this.color = color;
     }
 
-    public Integer getSlotNumber() {
+    public Double getSlotNumber() {
         return slotNumber;
     }
 
-    public void setSlotNumber(Integer slotNumber) {
+    public void setSlotNumber(Double slotNumber) {
         this.slotNumber = slotNumber;
     }
 

@@ -74,10 +74,13 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
     private final CompositionPipelineBuilder compositionPipelineBuilder;
 
     private Composition composition;
-    private PlayState playState = PlayState.STOPPED;
+    private volatile PlayState playState = PlayState.STOPPED;
+
+    // Held while the pipeline is replaced or stopped, e.g. an H.265 composition starting again while it's stopped
+    private final Object pipelineLock = new Object();
     private boolean firstPlayDone = false; // Has the pipeline played at least once?
     // True once the master pipeline reached EOS but the composition is still running to let trailing
-    // actions (placed after the longest source) fire. Position then advances on the wall clock.
+    // actions or designer lights (placed after the longest source) play. Position then advances on the wall clock.
     private boolean masterEosReached = false;
     private long startPosition = 0; // The position, the composition started the last play
     private long lastPlayTimeMillis; // The system time, when playing started
@@ -126,15 +129,24 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
 
     @Override
     public void onError(String message) {
-        try {
-            notificationService.notifyClients(message);
-        } catch (Exception e) {
-            logger.error("Could not notify clients about an error", e);
-        }
+        notifyError(message);
         try {
             stop();
         } catch (Exception e) {
             logger.error("Could not stop compostion triggered by an error", e);
+        }
+    }
+
+    @Override
+    public void onSlaveError(String message) {
+        notifyError(message);
+    }
+
+    private void notifyError(String message) {
+        try {
+            notificationService.notifyClients(message);
+        } catch (Exception e) {
+            logger.error("Could not notify clients about an error", e);
         }
     }
 
@@ -177,11 +189,11 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
         firstPlayDone = false;
 
         if (playState != PlayState.STOPPED) {
-            // A resume (PAUSED) returns here -> keep masterEosReached so a trailing-action tail survives
+            // A resume (PAUSED) returns here -> keep masterEosReached so a trailing tail survives
             return;
         }
 
-        // Fresh load -> not in a trailing-action tail
+        // Fresh load -> not in a trailing tail
         masterEosReached = false;
 
         // Search for active files
@@ -219,18 +231,22 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
         // Destroy an old pipeline, if required
         stopPipeline();
 
-        // Initialize lighting without designer
-        lightingService.setExternalSync(false);
+        // Initialize lighting without designer. The scenes picked by hand on the Play screen keep playing until a
+        // project of a composition takes the lights over, so their engine keeps sending the universes.
+        if (!designerService.isPlayingManualScenes()) {
+            lightingService.setExternalSync(false);
+        }
 
         // Destroy an old designer project, if required
         this.designerService.close();
 
         // Prepare the scheduler for all contained action triggers (and some buffer for overlapping
         // runs). Created before the pipeline so it can recreate H.265 slaves off the bus thread.
+        shutdownScheduler();
         scheduler = Executors.newScheduledThreadPool(composition.getActionTriggerList().size() + 5);
 
         if (hasActiveFile) {
-            compositionPipeline = compositionPipelineBuilder.build(composition, isSample, this, scheduler);
+            compositionPipeline = compositionPipelineBuilder.build(composition, designerService.getCompositionEndMillis(composition.getName()), isSample, this, scheduler);
         }
 
         logger.debug("Composition '" + composition.getName() + "' loaded");
@@ -242,10 +258,27 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
         }
     }
 
+    // End the threads of the scheduler. Every load creates a new one, so they would pile up otherwise. A task
+    // running at the moment (e.g. the end of the composition stopping it) still finishes, the pending ones don't run.
+    private void shutdownScheduler() {
+        if (scheduler == null) {
+            return;
+        }
+
+        if (scheduler instanceof ScheduledThreadPoolExecutor scheduledThreadPoolExecutor) {
+            scheduledThreadPoolExecutor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+            scheduledThreadPoolExecutor.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
+        }
+
+        scheduler.shutdown();
+    }
+
     private void stopPipeline() {
-        if (compositionPipeline != null) {
-            compositionPipeline.stop();
-            compositionPipeline = null;
+        synchronized (pipelineLock) {
+            if (compositionPipeline != null) {
+                compositionPipeline.stop();
+                compositionPipeline = null;
+            }
         }
     }
 
@@ -268,10 +301,10 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
             return;
         }
 
-        // No master, or a master that already reached EOS (trailing-action tail) -> the wall clock
+        // No master, or a master that already reached EOS (trailing tail) -> the wall clock
         // drives the end. Add a small buffer so the last action triggers fire before we loop/finish.
         autoStopHandle = scheduler.schedule(this::reachedEnd,
-                composition.getDurationMillis() - getPositionMillis() + 50, MILLISECONDS);
+                getDurationMillis() - getPositionMillis() + 50, MILLISECONDS);
     }
 
     private void stopAutoStopTimer() {
@@ -284,9 +317,9 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
         autoStopHandle = null;
     }
 
-    // The master pipeline reached its end (the longest non-looping source). If actions are placed
-    // after it, run them out first on the wall clock (the "trailing-action tail") and only reach the
-    // real end of the composition once the full duration has elapsed; otherwise the end is now.
+    // The master pipeline reached its end (the longest non-looping source). If actions or designer
+    // lights are placed after it, run them out first on the wall clock (the "trailing tail") and only
+    // reach the real end of the composition once the full duration has elapsed; otherwise the end is now.
     private void onMasterEndOfStream() {
         if (isFollowingTimecode()) {
             // The position comes from the timecode master, so there is no wall-clock tail to run out
@@ -299,7 +332,7 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
             return;
         }
 
-        long remainingMillis = composition.getDurationMillis() - getPositionMillis();
+        long remainingMillis = getDurationMillis() - getPositionMillis();
 
         if (remainingMillis <= 0 && composition.isLoop()) {
             // No trailing tail and looping -> loop straight away, so there is no gap between
@@ -337,11 +370,9 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
         }
 
         try {
-            if (compositionPipeline != null && compositionPipeline.hasMedia()) {
-                playerService.compositionPlayerFinishedPlaying(this);
-            } else {
-                stop();
-            }
+            // The player service decides what follows, also for a composition without files (e.g. only lighting): the
+            // next composition of a set, or just stopping (e.g. a sample)
+            playerService.compositionPlayerFinishedPlaying(this);
         } catch (Exception e) {
             logger.error("Could not finish the composition at its end", e);
         }
@@ -368,21 +399,28 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
     }
 
     private void recreateMasterAndRestart() {
-        try {
-            stopPipeline();
-            firstPlayDone = false;
-            masterEosReached = false;
-            compositionPipeline = compositionPipelineBuilder.build(composition, isSample, this, scheduler);
-            if (compositionPipeline.hasMaster()) {
-                compositionPipeline.prerollMaster();
-                compositionPipeline.detectMasterH265();
-                compositionPipeline.playMaster();
+        synchronized (pipelineLock) {
+            // Stopped meanwhile: nothing plays on
+            if (playState != PlayState.PLAYING) {
+                return;
             }
-            compositionPipeline.startSlaves(0);
-            lastPlayTimeMillis = System.currentTimeMillis();
-            calculateRemainingActionTriggerList(0);
-        } catch (Exception e) {
-            logger.error("Could not recreate the H.265 pipeline to loop the composition", e);
+
+            try {
+                stopPipeline();
+                firstPlayDone = false;
+                masterEosReached = false;
+                compositionPipeline = compositionPipelineBuilder.build(composition, designerService.getCompositionEndMillis(composition.getName()), isSample, this, scheduler);
+                if (compositionPipeline.hasMaster()) {
+                    compositionPipeline.prerollMaster();
+                    compositionPipeline.detectMasterH265();
+                    compositionPipeline.playMaster();
+                }
+                compositionPipeline.startSlaves(0);
+                lastPlayTimeMillis = System.currentTimeMillis();
+                calculateRemainingActionTriggerList(0);
+            } catch (Exception e) {
+                logger.error("Could not recreate the H.265 pipeline to loop the composition", e);
+            }
         }
     }
 
@@ -471,10 +509,20 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
         // Load the files, if not already done by a previously by a separate call
         loadFiles();
 
+        if (playState == PlayState.STOPPED) {
+            // Nothing to play (no media, no actions, no designer project)
+            return;
+        }
+
         // Load the designer files
         // -> no separate step, because there's only one global handler and the default composition is closed
         // after the loading step.
         Project designerProject = designerService.getProjectByCompositionName(composition.getName());
+        if (designerProject != null && isDefaultComposition && designerService.hasManualScenes()) {
+            // The default composition only plays in between: the scenes picked by hand on the Play screen go before
+            // its lights
+            designerProject = null;
+        }
         if (designerProject != null) {
             logger.info("Designer project found. Load it...");
             designerService.load(this, designerProject, compositionPipeline == null ? null : compositionPipeline.getMasterPipeline());
@@ -485,7 +533,7 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
 
         if (compositionPipeline != null && compositionPipeline.hasMaster()) {
             if (masterEosReached) {
-                // Resuming during the trailing-action tail: the master is exhausted (at EOS) and its
+                // Resuming during the trailing tail: the master is exhausted (at EOS) and its
                 // position is past the end, so don't re-preroll or seek it. Just resume playback so
                 // the slaves/clock keep running while the wall-clock timers (re-armed below) finish.
                 compositionPipeline.playMaster();
@@ -538,7 +586,8 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
     }
 
     public void pause() throws Exception {
-        if (playState == PlayState.PAUSED) {
+        if (playState == PlayState.PAUSED || playState == PlayState.STOPPED || playState == PlayState.STOPPING) {
+            // Nothing plays. Pausing would skip loading the files on the next play.
             return;
         }
 
@@ -596,6 +645,7 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
         stopAutoStopTimer();
         stopActionTriggerTimer();
         cancelPendingActionTriggers();
+        shutdownScheduler();
         midiTimecodeService.stop(this);
 
         if (!isSample && !isDefaultComposition) {
@@ -633,7 +683,7 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
 
         startPosition = positionMillis;
 
-        // A (flushing) seek re-activates the pipeline, so we leave any trailing-action tail and let
+        // A (flushing) seek re-activates the pipeline, so we leave any trailing tail and let
         // the pipeline drive position and the end of stream again.
         masterEosReached = false;
 
@@ -647,9 +697,13 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
 
         this.lastPlayTimeMillis = System.currentTimeMillis();
 
-        calculateRemainingActionTriggerList(startPosition);
-        scheduleActionTriggerTimers();
         if (playState == PlayState.PLAYING) {
+            calculateRemainingActionTriggerList(startPosition);
+            scheduleActionTriggerTimers();
+
+            // Without a master pipeline, the end moves with the position
+            startAutoStopTimer();
+
             startMidiTimecode();
         }
 
@@ -792,7 +846,7 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
 
         // If there is a live pipeline -> use it (only if playing, querying its status is not reliably
         // otherwise). After the master reached EOS its position is frozen at the longest source, so
-        // fall through to the wall clock to keep advancing through the trailing-action tail.
+        // fall through to the wall clock to keep advancing through the trailing tail.
         if (compositionPipeline != null && compositionPipeline.hasMaster() && !masterEosReached) {
             long queriedMillis = compositionPipeline.queryMasterPositionMillis();
             if (queriedMillis >= startPosition) {
@@ -801,7 +855,7 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
             }
         }
 
-        // No (usable) pipeline position (only actions, or the trailing-action tail) -> wall clock
+        // No (usable) pipeline position (only actions or lights, or the trailing tail) -> wall clock
         return System.currentTimeMillis() - lastPlayTimeMillis + startPosition;
     }
 
@@ -814,6 +868,16 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
         }
 
         return false;
+    }
+
+    // How long the composition plays: as long as its files and actions, or as the lights of its designer project, whichever
+    // is longer. A composition with nothing but lights plays as long as them.
+    public long getDurationMillis() {
+        if (composition == null) {
+            return 0;
+        }
+
+        return Math.max(composition.getDurationMillis(), designerService.getCompositionEndMillis(composition.getName()));
     }
 
     public PlayState getPlayState() {

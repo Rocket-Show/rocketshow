@@ -24,7 +24,7 @@ class PresetStepsTest {
         PresetStep step = new PresetStep();
         step.setUuid("step-" + startMillis);
         step.setStartMillis(startMillis);
-        step.setTransitionMillis(transitionMillis);
+        step.setTransitionMillis((double) transitionMillis);
 
         FixtureChannelValue channelValue = new FixtureChannelValue();
         channelValue.setChannelName("dimmer");
@@ -154,7 +154,7 @@ class PresetStepsTest {
     void loopTravelsFromTheLastStepBackIntoTheFirst() {
         Preset sequence = preset(step(0, 100, 500), step(1000, 300, 0));
         sequence.setStepsLoop(true);
-        sequence.setStepsLoopMillis(2000L);
+        sequence.setStepsLoopMillis(2000d);
 
         // the wrap runs over the 500 ms the first step of the next pass opens with
         assertEquals(300, dimmerAt(sequence, 2000));
@@ -251,7 +251,7 @@ class PresetStepsTest {
         FixtureCapabilityValue capabilityValue = new FixtureCapabilityValue();
         capabilityValue.setType(FixtureCapability.FixtureCapabilityType.WheelSlot);
         capabilityValue.setWheel("Color Wheel");
-        capabilityValue.setSlotNumber(slotNumber);
+        capabilityValue.setSlotNumber((double) slotNumber);
 
         return capabilityValue;
     }
@@ -266,8 +266,8 @@ class PresetStepsTest {
 
         Preset sequence = preset(from, to);
 
-        assertEquals(1, (int) PresetSteps.getStateAtMillis(sequence, 1000).getFixtureCapabilityValues().get(0).getSlotNumber());
-        assertEquals(4, (int) PresetSteps.getStateAtMillis(sequence, 1500).getFixtureCapabilityValues().get(0).getSlotNumber());
+        assertEquals(1, PresetSteps.getStateAtMillis(sequence, 1000).getFixtureCapabilityValues().get(0).getSlotNumber());
+        assertEquals(4, PresetSteps.getStateAtMillis(sequence, 1500).getFixtureCapabilityValues().get(0).getSlotNumber());
     }
 
     @Test
@@ -281,8 +281,8 @@ class PresetStepsTest {
 
         Preset sequence = preset(from, to);
 
-        assertEquals(1, (int) PresetSteps.getStateAtMillis(sequence, 1500).getFixtureCapabilityValues().get(0).getSlotNumber());
-        assertEquals(4, (int) PresetSteps.getStateAtMillis(sequence, 2000).getFixtureCapabilityValues().get(0).getSlotNumber());
+        assertEquals(1, PresetSteps.getStateAtMillis(sequence, 1500).getFixtureCapabilityValues().get(0).getSlotNumber());
+        assertEquals(4, PresetSteps.getStateAtMillis(sequence, 2000).getFixtureCapabilityValues().get(0).getSlotNumber());
     }
 
     @Test

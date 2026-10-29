@@ -5,6 +5,7 @@ import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
 import com.ascargon.rocketshow.util.ChunkedFileUploadService;
 import com.ascargon.rocketshow.util.FileFilterService;
+import com.ascargon.rocketshow.util.FileNames;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
@@ -102,7 +103,7 @@ public class DefaultCompositionFileService implements CompositionFileService {
             path += settingsService.getSettings().getVideoPath();
         }
 
-        path += File.separator + name;
+        path += File.separator + FileNames.check(name);
 
         return path;
     }
@@ -177,25 +178,19 @@ public class DefaultCompositionFileService implements CompositionFileService {
             logger.error("Could not create directory to save the file", e);
         }
 
-        path += fileName;
+        path += FileNames.check(fileName);
 
         return new File(path);
     }
 
     @Override
     public void saveFileInit(String fileName) throws Exception {
-        File file = saveFileGetFile(fileName);
-        if (file.exists()) {
-            boolean result = file.delete();
-            if (!result) {
-                throw new Exception("Could not delete composition file '" + file.getPath() + "'");
-            }
-        }
+        chunkedFileUploadService.startUpload(saveFileGetFile(fileName));
     }
 
     @Override
     public void saveFileAddChunk(InputStream inputStream, String fileName) throws Exception {
-        chunkedFileUploadService.handleChunk(inputStream, saveFileGetFile(fileName));
+        chunkedFileUploadService.uploadChunk(inputStream, saveFileGetFile(fileName));
     }
 
     @Override
@@ -216,6 +211,8 @@ public class DefaultCompositionFileService implements CompositionFileService {
         }
 
         compositionFile.setName(fileName);
+
+        chunkedFileUploadService.finishUpload(saveFileGetFile(fileName));
 
         return compositionFile;
     }

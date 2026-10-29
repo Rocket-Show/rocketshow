@@ -45,7 +45,7 @@ export class TransportService {
   }
 
   setCompositionName(compositionName: string): Observable<null> {
-    return this.http.post('transport/set-composition-name?name=' + compositionName, null).pipe(map((response: Response) => {
+    return this.http.post('transport/set-composition-name?name=' + encodeURIComponent(compositionName), null).pipe(map((response: Response) => {
       return null;
     }));
   }

@@ -44,7 +44,8 @@ public class DefaultLightingService implements LightingService {
     private final SettingsService settingsService;
     private final OperatingSystemInformationService operatingSystemInformationService;
 
-    private final String OLA_URL = "http://localhost:9090/";
+    // The web interface of OLA. Package visible for the tests.
+    String olaUrl = "http://localhost:9090/";
 
     // Cache the channel values and send them each time
     private final List<LightingUniverseState> lightingUniverseList = new CopyOnWriteArrayList<>();
@@ -96,17 +97,7 @@ public class DefaultLightingService implements LightingService {
                 capabilitiesService.getCapabilities().setOla(true);
                 reset();
             }
-            if (olaUniversesMatchDesiredMapping()) {
-                logger.debug("OLA universes already match desired mapping, skipping reconciliation and rebuild");
-                olaReady = getLightingUniverses().stream().anyMatch(u ->
-                        u.getOlaUniverseId() != null &&
-                        u.getOlaOutputPortId() != null && !u.getOlaOutputPortId().isBlank()
-                );
-            } else {
-                logger.debug("Reconcile OLA ports/universes...");
-                reconcileOlaPortIds();
-                initializeUniverses();
-            }
+            setUpOlaUniverses();
         } catch (Exception e) {
             logger.error("Could not initialize OLA client (attempt {}/{})", attempt, OLA_MAX_RETRIES, e);
         }
@@ -117,6 +108,35 @@ public class DefaultLightingService implements LightingService {
         } else if (olaReady) {
             olaRetryExecutor.shutdown();
         }
+    }
+
+    // Package visible for the tests
+    void setOlaClient(OlaClient olaClient) {
+        this.olaClient = olaClient;
+    }
+
+    // Package visible for the tests
+    boolean isOlaReady() {
+        return olaReady;
+    }
+
+    // Patch the universes of the settings in OLA, if they aren't yet. Package visible for the tests.
+    void setUpOlaUniverses() {
+        if (olaUniversesMatchDesiredMapping()) {
+            logger.debug("OLA universes already match desired mapping, skipping reconciliation and rebuild");
+            olaReady = hasPatchedUniverse();
+        } else {
+            logger.debug("Reconcile OLA ports/universes...");
+            reconcileOlaPortIds();
+            updateUniverses(getLightingUniverses());
+        }
+    }
+
+    private boolean hasPatchedUniverse() {
+        return getLightingUniverses().stream().anyMatch(u ->
+                u.getOlaUniverseId() != null &&
+                u.getOlaOutputPortId() != null && !u.getOlaOutputPortId().isBlank()
+        );
     }
 
     private boolean olaUniversesMatchDesiredMapping() {
@@ -182,7 +202,7 @@ public class DefaultLightingService implements LightingService {
     }
 
     private List<OlaPort> fetchLiveOlaOutputPorts() throws Exception {
-        HttpGet httpGet = new HttpGet(OLA_URL + "json/get_ports");
+        HttpGet httpGet = new HttpGet(olaUrl + "json/get_ports");
         HttpResponse response = httpClient.execute(httpGet);
         ObjectMapper mapper = new ObjectMapper();
         OlaPort[] portArray = mapper.readValue(response.getEntity().getContent(), OlaPort[].class);
@@ -354,8 +374,15 @@ public class DefaultLightingService implements LightingService {
                 || Objects.equals(lightingUniverse.getUuid(), defaultLightingUniverse.getUuid()));
     }
 
+    private boolean isConfiguredLightingUniverse(String uuid) {
+        return getLightingUniverses().stream().anyMatch(lightingUniverse -> Objects.equals(lightingUniverse.getUuid(), uuid));
+    }
+
     private boolean lightingUniverseMatchesMapping(LightingUniverseState lightingUniverseState, LightingUniverse lightingUniverse, boolean onlyOneMapping) {
-        if (lightingUniverseState.getMappingUuid() != null && !lightingUniverseState.getMappingUuid().isBlank()) {
+        // A mapping to a universe which was removed from the settings (e.g. still used by the fixtures of a designer
+        // project) counts as no mapping, instead of sending to no universe at all
+        if (lightingUniverseState.getMappingUuid() != null && !lightingUniverseState.getMappingUuid().isBlank()
+                && isConfiguredLightingUniverse(lightingUniverseState.getMappingUuid())) {
             return Objects.equals(lightingUniverseState.getMappingUuid(), lightingUniverse.getUuid());
         }
 
@@ -370,7 +397,8 @@ public class DefaultLightingService implements LightingService {
         return lightingUniverseState.getName().equals(lightingUniverse.getName());
     }
 
-    private short[] mixLightingUniverses(List<LightingUniverseState> sourceLightingUniverses, LightingUniverse lightingUniverse, boolean onlyOneMapping) {
+    // Package visible for the tests
+    short[] mixLightingUniverses(List<LightingUniverseState> sourceLightingUniverses, LightingUniverse lightingUniverse, boolean onlyOneMapping) {
         List<LightingUniverseState> matchingLightingUniverses = new ArrayList<>();
 
         for (LightingUniverseState lightingUniverseState : sourceLightingUniverses) {
@@ -430,26 +458,33 @@ public class DefaultLightingService implements LightingService {
             return;
         }
 
+        Timer timer = new Timer();
+
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
+                // Let the next value schedule a new send before sending this one. Otherwise, a value set while
+                // sending would not be sent at all.
+                synchronized (DefaultLightingService.this) {
+                    if (sendUniverseTimer == timer) {
+                        sendUniverseTimer = null;
+                    }
+                }
+
+                // End the thread of the timer after this task
+                timer.cancel();
+
                 try {
                     // Send the universe
                     sendUniverse(settingsService.getSettings().getEnableMonitor());
                 } catch (Exception e) {
                     logger.error("Could not send the lighting universe", e);
                 }
-
-                if (sendUniverseTimer != null) {
-                    sendUniverseTimer.cancel();
-                }
-
-                sendUniverseTimer = null;
             }
         };
 
-        sendUniverseTimer = new Timer();
-        sendUniverseTimer.schedule(timerTask, settingsService.getSettings().getLightingSendDelayMillis());
+        sendUniverseTimer = timer;
+        timer.schedule(timerTask, settingsService.getSettings().getLightingSendDelayMillis());
     }
 
     @Override
@@ -475,7 +510,7 @@ public class DefaultLightingService implements LightingService {
         RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(5000).build();
         httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
 
-        HttpPost httpPost = new HttpPost(OLA_URL + "new_universe");
+        HttpPost httpPost = new HttpPost(olaUrl + "new_universe");
 
         List<NameValuePair> data = new ArrayList<>(3);
 
@@ -523,7 +558,7 @@ public class DefaultLightingService implements LightingService {
 
         logger.debug("{} port '{}' from universe '{}'...", logAction, portIds, olaUniverseId);
 
-        HttpPost httpPost = new HttpPost(OLA_URL + "modify_universe");
+        HttpPost httpPost = new HttpPost(olaUrl + "modify_universe");
 
         List<NameValuePair> data = new ArrayList<>(3);
         data.add(new BasicNameValuePair("id", String.valueOf(olaUniverseId)));
@@ -570,7 +605,18 @@ public class DefaultLightingService implements LightingService {
     }
 
     @Override
-    public void initializeUniverses() {
+    public synchronized void initializeUniverses() {
+        if (olaClient == null) {
+            // OLA client is not connected
+            return;
+        }
+
+        // Patching again unpatches the ports for a moment, e.g. while a show sends DMX on each saved setting
+        if (olaUniversesMatchDesiredMapping()) {
+            olaReady = hasPatchedUniverse();
+            return;
+        }
+
         updateUniverses(getLightingUniverses());
     }
 
@@ -881,6 +927,40 @@ public class DefaultLightingService implements LightingService {
             boolean enabled = olaPluginList.stream().anyMatch(plugin -> plugin.getName().equals(olaPlugin.getName()));
             olaClient.setPluginState(olaPlugin.getId(), enabled);
         }
+    }
+
+    @Override
+    public synchronized boolean isPatched(LightingUniverse lightingUniverse) {
+        if (olaClient == null || lightingUniverse.getOlaUniverseId() == null || lightingUniverse.getOlaOutputPortId() == null) {
+            return false;
+        }
+
+        Ola.DeviceInfoReply deviceInfoReply = olaClient.getDeviceInfo();
+        if (deviceInfoReply == null) {
+            return false;
+        }
+
+        for (Ola.DeviceInfo deviceInfo : deviceInfoReply.getDeviceList()) {
+            for (Ola.PortInfo outputPort : deviceInfo.getOutputPortList()) {
+                String portId = deviceInfo.getDeviceAlias() + "-O-" + outputPort.getPortId();
+                if (portId.equals(lightingUniverse.getOlaOutputPortId()) && outputPort.hasUniverse()
+                        && outputPort.getUniverse() == lightingUniverse.getOlaUniverseId()) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    // Synchronized like sending the mixed universes: OLA's connection breaks, when two threads send at the same time
+    @Override
+    public synchronized boolean sendDmx(LightingUniverse lightingUniverse, short[] values) {
+        if (olaClient == null || lightingUniverse.getOlaUniverseId() == null) {
+            return false;
+        }
+
+        return olaClient.sendDmx(lightingUniverse.getOlaUniverseId(), values);
     }
 
     private LightingUniverseState getLightingUniverseForAction(String universeUuid) {

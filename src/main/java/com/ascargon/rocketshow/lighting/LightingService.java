@@ -34,4 +34,11 @@ public interface LightingService {
     void updateUniverses(List<LightingUniverse> lightingUniverses);
 
     void executeAction(ActionLighting actionLighting);
+
+    // Whether OLA has patched a universe of the settings to its output port, e.g. for the self-test
+    boolean isPatched(LightingUniverse lightingUniverse);
+
+    // Sends the values to a universe of the settings right away, without the values of the compositions, e.g. for the
+    // self-test. False when OLA didn't take them.
+    boolean sendDmx(LightingUniverse lightingUniverse, short[] values);
 }

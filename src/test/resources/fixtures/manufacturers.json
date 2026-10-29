@@ -1,0 +1,47 @@
+{
+  "$schema": "https://raw.githubusercontent.com/OpenLightingProject/open-fixture-library/schema-12.5.0/schemas/manufacturers.json",
+  "adb": {
+    "name": "ADB",
+    "website": "https://www.adbstagelight.com",
+    "rdmId": 16708
+  },
+  "chauvet-dj": {
+    "name": "Chauvet DJ",
+    "website": "https://www.chauvetdj.com/"
+  },
+  "dts": {
+    "name": "DTS",
+    "website": "https://dts-lighting.it/",
+    "rdmId": 1808
+  },
+  "elation": {
+    "name": "Elation",
+    "website": "https://www.elationlighting.com/",
+    "rdmId": 8870
+  },
+  "etc": {
+    "name": "ETC",
+    "website": "https://www.etcconnect.com/",
+    "rdmId": 25972
+  },
+  "hong-yi": {
+    "name": "Hong Yi",
+    "website": "https://en.hongyilights.com/"
+  },
+  "ibiza-light": {
+    "name": "Ibiza light",
+    "website": "https://lotronic.net/gb/brand/16-ibiza"
+  },
+  "panasonic": {
+    "name": "Panasonic",
+    "website": "https://panasonic.net/cns/projector/"
+  },
+  "stairville": {
+    "name": "Stairville",
+    "website": "https://www.thomann.de/intl/stairville.html"
+  },
+  "varytec": {
+    "name": "Varytec",
+    "website": "https://www.thomann.de/intl/varytec.html"
+  }
+}

@@ -1,11 +1,58 @@
 <div class="container-fluid" style="margin-top: 15px;">
 
-  <!-- Transport (setlist mode) -->
-  @if (viewMode === 'setlist') {
+  <!-- Transport (setlist mode), or the scene controls while the scenes are shown -->
+  @if (viewMode === 'setlist' || showScenes()) {
   <div class="row" style="flex: 0 0 auto;">
     <div class="col">
       <div class="card border-secondary card-transport mb-3">
         <div class="card-body">
+
+          @if (showScenes()) {
+          <!-- The scene controls, laid out like the transport: what is on, the buttons and the switch -->
+          <div class="row d-flex align-items-center transport-row">
+            <div class="col-12 col-lg order-2 order-lg-1 transport-readout">
+              <h5 class="mb-0">
+                <span [class.text-danger]="currentState?.sceneBlackout"
+                  [class.text-info]="!currentState?.sceneBlackout && currentState?.scenesHeld">{{ sceneReadout() }}</span>
+                @if (currentState?.sceneProjectName && currentState?.activeSceneUuids?.length) {
+                  <span class="transport-name">{{ currentState.sceneProjectName }}</span>
+                }
+              </h5>
+            </div>
+
+            <div class="col-auto mx-auto order-1 order-lg-2 scene-controls">
+              <!-- Light several scenes at once -->
+              <button type="button" (click)="toggleSceneStack()" class="btn btn-scene"
+                [class.btn-scene-active]="scenesService.stack" [attr.aria-pressed]="scenesService.stack"
+                [popover]="'play.help.scenes-stack' | translate" triggers="mouseenter:mouseleave"
+                container="body" placement="bottom">
+                <i class="fa fa-clone fa-fw" aria-hidden="true"></i>
+                {{ 'play.scenes-stack' | translate }}
+              </button>
+
+              <button type="button" (click)="releaseAllScenes()" class="btn btn-scene"
+                [disabled]="!currentState?.activeSceneUuids?.length"
+                [popover]="'play.help.scenes-release-all' | translate" triggers="mouseenter:mouseleave"
+                container="body" placement="bottom">
+                <i class="fa fa-times fa-fw" aria-hidden="true"></i>
+                {{ 'play.scenes-release-all' | translate }}
+              </button>
+
+              <button type="button" (click)="toggleSceneBlackout()" class="btn btn-scene btn-scene-blackout"
+                [class.btn-scene-blackout-active]="currentState?.sceneBlackout" [attr.aria-pressed]="currentState?.sceneBlackout"
+                [popover]="'play.help.scenes-blackout' | translate" triggers="mouseenter:mouseleave"
+                container="body" placement="bottom">
+                <i class="fa fa-power-off fa-fw" aria-hidden="true"></i>
+                {{ 'play.scenes-blackout' | translate }}
+              </button>
+            </div>
+
+            <ng-container *ngTemplateOutlet="modeSwitch"></ng-container>
+          </div>
+
+          <!-- The master dimmer of the scenes, where the position of the composition is -->
+          <app-play-scene-master [state]="currentState"></app-play-scene-master>
+          } @else {
 
           <!-- The transport buttons, with the readout beside them where there is room -->
           <div class="row d-flex align-items-center transport-row">
@@ -81,8 +128,7 @@
               </button>
             </div>
 
-            <!-- balances the readout, so the buttons stay centred on the card -->
-            <div class="col d-none d-lg-block order-lg-3"></div>
+            <ng-container *ngTemplateOutlet="modeSwitch"></ng-container>
           </div>
 
           <!-- The slider -->
@@ -94,17 +140,29 @@
               </mv-slider>
             </div>
           </div>
+          }
 
         </div>
 
         <div class="card-footer">
           <div class="row">
             <div class="col d-flex align-items-center">
-              <button class="btn-view-toggle" (click)="toggleViewMode()"
-                [popover]="'play.help.switch-to-grid' | translate" triggers="mouseenter:mouseleave"
-                container="body" placement="top">
-                <i class="fa fa-th-large fa-fw" aria-hidden="true"></i>
-              </button>
+              @if (showScenes()) {
+                @if (fullscreenAvailable) {
+                  <button class="btn-view-toggle" (click)="toggleFullscreen()"
+                    [popover]="'play.help.scenes-full-screen' | translate" triggers="mouseenter:mouseleave"
+                    container="body" placement="top">
+                    <i class="fa fa-fw" [class.fa-expand]="!fullscreen" [class.fa-compress]="fullscreen" aria-hidden="true"></i>
+                    {{ (fullscreen ? 'play.scenes-exit-full-screen' : 'play.scenes-full-screen') | translate }}
+                  </button>
+                }
+              } @else {
+                <button class="btn-view-toggle" (click)="toggleViewMode()"
+                  [popover]="'play.help.switch-to-grid' | translate" triggers="mouseenter:mouseleave"
+                  container="body" placement="top">
+                  <i class="fa fa-th-large fa-fw" aria-hidden="true"></i>
+                </button>
+              }
             </div>
 
             <div class="col col-auto pl-1 d-flex">
@@ -167,6 +225,10 @@
   <div class="row" style="overflow-y: auto; margin-right: 0; flex: 1 1 auto; min-height: 0;">
     <div class="col" style="display: flex; flex-flow: column; padding-right: 0;">
 
+      @if (showScenes()) {
+      <app-play-scenes [state]="currentState"></app-play-scenes>
+      } @else {
+
       <!-- For larger screens -->
       <div class="list-group d-none d-sm-flex" style="flex: 0 0 auto;">
         <div class="list-group-item flex-column align-items-start">
@@ -199,6 +261,9 @@
               }
             </ul>
           </div>
+          @if (viewMode === 'grid' && scenesAvailable()) {
+            <span class="float-right ml-3"><ng-container *ngTemplateOutlet="modeSwitchControl"></ng-container></span>
+          }
           <span style="margin-top: 3px" class="float-right">{{ totalPlayTime }}</span>
         </div>
       </div>
@@ -283,6 +348,9 @@
             </ul>
           </div>
 
+          @if (viewMode === 'grid' && scenesAvailable()) {
+            <span class="float-right ml-3"><ng-container *ngTemplateOutlet="modeSwitchControl"></ng-container></span>
+          }
           <span style="margin-top: 3px" class="float-right">{{ totalPlayTime }}</span>
         </div>
       </div>
@@ -380,7 +448,25 @@
       </div>
       }
 
+      }
     </div>
   </div>
 
 </div>
+
+<!-- The switch between the compositions and the scenes, at the top right of the transport. Only there once a designer
+     project has scenes, it balances the readout otherwise, so the buttons stay centred on the card. -->
+<ng-template #modeSwitch>
+  @if (scenesAvailable()) {
+    <div class="col-12 col-lg order-0 order-lg-3 d-flex justify-content-center justify-content-lg-end mode-switch-col">
+      <ng-container *ngTemplateOutlet="modeSwitchControl"></ng-container>
+    </div>
+  } @else {
+    <div class="col d-none d-lg-block order-lg-3"></div>
+  }
+</ng-template>
+
+<ng-template #modeSwitchControl>
+  <app-play-mode-switch [mode]="showScenes() ? 'scenes' : 'compositions'" [compositionPlaying]="compositionPlaying()"
+    (modeChange)="setPlayMode($event)"></app-play-mode-switch>
+</ng-template>

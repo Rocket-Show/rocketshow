@@ -16,6 +16,7 @@ class MidiTimecodeMessageFactoryTest {
         MidiTimecodePosition position = MidiTimecodeMessageFactory.getTimecodePosition(1_234, MidiTimecodeFrameRate.FPS_30);
         ShortMessage message = MidiTimecodeMessageFactory.createQuarterFrameMessage(position, MidiTimecodeFrameRate.FPS_30, 0);
 
+        // Frame 7 of the second 1, without the 2 frames the receiver adds
         assertEquals(0xF1, message.getStatus());
         assertEquals(0x07, message.getData1());
     }

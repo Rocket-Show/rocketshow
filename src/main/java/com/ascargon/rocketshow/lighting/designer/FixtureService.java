@@ -14,4 +14,6 @@ public interface FixtureService {
 
     void updateProfiles() throws Exception;
 
+    void updateProfilesIfOutdated() throws Exception;
+
 }

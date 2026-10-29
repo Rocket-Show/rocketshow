@@ -45,4 +45,8 @@ export class SessionService {
     return this.http.post('session/set-play-view-mode?value=' + value, undefined);
   }
 
+  setPlayMode(value: string): Observable<Object> {
+    return this.http.post('session/set-play-mode?value=' + value, undefined);
+  }
+
 }

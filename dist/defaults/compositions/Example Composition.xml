@@ -36,7 +36,6 @@
                     <midiMapping>
                         <channelOffset>0</channelOffset>
                         <noteOffset>0</noteOffset>
-                        <overrideParent>false</overrideParent>
                     </midiMapping>
                     <remoteDeviceList/>
                     <universeUuid>f869189e-4068-4800-a61f-66a1499946fd</universeUuid>

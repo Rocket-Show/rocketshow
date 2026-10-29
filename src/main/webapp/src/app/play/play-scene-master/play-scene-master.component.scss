@@ -1,0 +1,85 @@
+.scene-master {
+    display: flex;
+    align-items: center;
+    gap: var(--sd-space-4);
+}
+
+.scene-master-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sd-text-muted);
+}
+
+.scene-master-value {
+    min-width: 3.25rem;
+    text-align: right;
+    font-size: 1.125rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+/* A fader with a handle large enough for a finger, filled up to its value */
+.scene-master-fader {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 48px;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+    touch-action: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.scene-master-fader:focus {
+    outline: none;
+}
+
+.scene-master-fader::-webkit-slider-runnable-track {
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(to right, var(--sd-primary) var(--fill), var(--sd-surface-4) var(--fill));
+}
+
+.scene-master-fader::-moz-range-track {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--sd-surface-4);
+}
+
+.scene-master-fader::-moz-range-progress {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--sd-primary);
+}
+
+.scene-master-fader::-webkit-slider-thumb {
+    width: 32px;
+    height: 40px;
+    margin-top: -16px;
+    border: none;
+    border-radius: var(--sd-radius-lg);
+    background: var(--sd-text);
+    box-shadow: var(--sd-shadow-2);
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.scene-master-fader::-moz-range-thumb {
+    width: 32px;
+    height: 40px;
+    border: none;
+    border-radius: var(--sd-radius-lg);
+    background: var(--sd-text);
+    box-shadow: var(--sd-shadow-2);
+}
+
+.scene-master-fader:focus-visible::-webkit-slider-thumb {
+    box-shadow: var(--sd-focus-ring), var(--sd-shadow-2);
+}
+
+.scene-master-fader:focus-visible::-moz-range-thumb {
+    box-shadow: var(--sd-focus-ring), var(--sd-shadow-2);
+}

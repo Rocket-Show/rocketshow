@@ -7,9 +7,9 @@ src/main/resources/static/*
 logs.zip
 /dist/defaults.tar.gz
 
-# generated from test run
-session.xml
-settings.xml
+# generated in the project directory by a test run
+/session.xml
+/settings.xml
 log/*
 
 ### STS ###
@@ -33,3 +33,7 @@ log/*
 /nbbuild/
 /nbdist/
 /.nb-gradle/
+# Smoke test of the web app
+/testing/smoke/node_modules
+/testing/smoke/package-lock.json
+/testing/smoke/screenshots

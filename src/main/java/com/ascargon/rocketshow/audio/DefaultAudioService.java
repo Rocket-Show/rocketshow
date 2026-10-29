@@ -4,7 +4,11 @@ import com.ascargon.rocketshow.settings.Settings;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.OperatingSystemInformation;
 import com.ascargon.rocketshow.util.OperatingSystemInformationService;
+import org.freedesktop.gstreamer.Caps;
+import org.freedesktop.gstreamer.Element;
 import org.freedesktop.gstreamer.ElementFactory;
+import org.freedesktop.gstreamer.State;
+import org.freedesktop.gstreamer.StateChangeReturn;
 import org.freedesktop.gstreamer.elements.BaseSink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,16 +20,23 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class DefaultAudioService implements AudioService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultAudioService.class);
+
+    // The channels in the caps of a sound card, e.g. "channels=(int)[ 1, 8 ]" or "channels=(int){ 2, 6 }"
+    private static final Pattern CHANNELS_PATTERN = Pattern.compile("channels=\\(int\\)(\\[[^]]*]|\\{[^}]*}|\\d+)");
+    private static final Pattern NUMBER_PATTERN = Pattern.compile("\\d+");
 
     private final OperatingSystemInformationService operatingSystemInformationService;
 
@@ -33,7 +44,7 @@ public class DefaultAudioService implements AudioService {
         this.operatingSystemInformationService = operatingSystemInformationService;
     }
 
-    private AudioDevice getAudioDeviceFromString(String line) {
+    private static AudioDevice getAudioDeviceFromString(String line) {
         AudioDevice audioDevice = new AudioDevice();
 
         audioDevice.setId(Integer.parseInt(line.substring(0, 3).trim()));
@@ -45,38 +56,45 @@ public class DefaultAudioService implements AudioService {
 
     @Override
     public List<AudioDevice> getAudioDevices() {
-        List<AudioDevice> audioDeviceList = new ArrayList<>();
-
         logger.debug("List audio devices...");
 
         try (BufferedReader reader = Files.newBufferedReader(Path.of("/proc/asound/cards"))) {
-            String line;
-            int lineIndex = 0;
-
-            while ((line = reader.readLine()) != null) {
-                logger.trace("Output from audio device list file: {}", line);
-
-                if (lineIndex % 2 == 0 && !line.startsWith("---")) {
-                    AudioDevice audioDevice = getAudioDeviceFromString(line);
-
-                    if (audioDevice.getName() != null
-                            && !audioDevice.getName().isEmpty()
-                            && !"ALSA".equals(audioDevice.getKey())
-                            && !"Headphones".equals(audioDevice.getKey())
-                            && !"vc4hdmi0".equals(audioDevice.getKey())
-                            && !"vc4hdmi1".equals(audioDevice.getKey())
-                    ) {
-                        audioDeviceList.add(audioDevice);
-                    }
-                }
-
-                lineIndex++;
-            }
+            List<AudioDevice> audioDeviceList = readAudioDevices(reader);
+            logger.debug("Audio devices listed");
+            return audioDeviceList;
         } catch (IOException e) {
             logger.error("Could not list audio devices", e);
         }
 
-        logger.debug("Audio devices listed");
+        return new ArrayList<>();
+    }
+
+    // Read the sound cards of ALSA (/proc/asound/cards), without the ones built into the Raspberry Pi. Package visible
+    // for the tests.
+    static List<AudioDevice> readAudioDevices(BufferedReader reader) throws IOException {
+        List<AudioDevice> audioDeviceList = new ArrayList<>();
+        String line;
+        int lineIndex = 0;
+
+        while ((line = reader.readLine()) != null) {
+            logger.trace("Output from audio device list file: {}", line);
+
+            if (lineIndex % 2 == 0 && !line.startsWith("---")) {
+                AudioDevice audioDevice = getAudioDeviceFromString(line);
+
+                if (audioDevice.getName() != null
+                        && !audioDevice.getName().isEmpty()
+                        && !"ALSA".equals(audioDevice.getKey())
+                        && !"Headphones".equals(audioDevice.getKey())
+                        && !"vc4hdmi0".equals(audioDevice.getKey())
+                        && !"vc4hdmi1".equals(audioDevice.getKey())
+                ) {
+                    audioDeviceList.add(audioDevice);
+                }
+            }
+
+            lineIndex++;
+        }
 
         return audioDeviceList;
     }
@@ -192,7 +210,8 @@ public class DefaultAudioService implements AudioService {
         }
 
         for (AudioBus audioBus : settings.getAudioBusList()) {
-            if (audioBus.getAudioDevice().getId() == audioDevice.getId()) {
+            // A bus without device doesn't play
+            if (audioBus.getAudioDevice() != null && audioBus.getAudioDevice().getId() == audioDevice.getId()) {
                 count += audioBus.getChannels();
             }
         }
@@ -209,7 +228,63 @@ public class DefaultAudioService implements AudioService {
                 audioDeviceSet.add(audioBus.getAudioDevice());
             }
         }
-        return audioDeviceSet.stream().toList();
+        // Always in the same order, e.g. to write the same .asoundrc for the same settings
+        return audioDeviceSet.stream().sorted(Comparator.comparingInt(AudioDevice::getId)).toList();
+    }
+
+    private static String getHardwareDeviceName(AudioDevice audioDevice) {
+        return "hw:CARD=" + audioDevice.getKey();
+    }
+
+    @Override
+    public BaseSink getGstHardwareAudioSink(AudioDevice audioDevice) {
+        BaseSink sink = (BaseSink) ElementFactory.make("alsasink", "hardwaresink_" + getAudioDeviceAlsaName(audioDevice));
+        sink.set("device", getHardwareDeviceName(audioDevice));
+        sink.set("sync", true);
+        return sink;
+    }
+
+    @Override
+    public Element getGstHardwareAudioSource(AudioDevice audioDevice) {
+        Element source = ElementFactory.make("alsasrc", "hardwaresource_" + getAudioDeviceAlsaName(audioDevice));
+        source.set("device", getHardwareDeviceName(audioDevice));
+        return source;
+    }
+
+    @Override
+    public int getHardwareChannelCount(AudioDevice audioDevice, boolean capture) {
+        Element element = capture ? getGstHardwareAudioSource(audioDevice) : getGstHardwareAudioSink(audioDevice);
+
+        try {
+            // Ready opens the sound card, which then tells its formats
+            if (element.setState(State.READY) == StateChangeReturn.FAILURE) {
+                return 0;
+            }
+
+            Caps caps = element.getStaticPad(capture ? "src" : "sink").queryCaps(null);
+            return getMaxChannels(caps.toString());
+        } catch (Exception e) {
+            logger.warn("Could not read the channels of the sound card " + audioDevice.getKey(), e);
+            return 0;
+        } finally {
+            element.setState(State.NULL);
+            element.dispose();
+        }
+    }
+
+    // The most channels in caps. Package visible for the tests.
+    static int getMaxChannels(String caps) {
+        int maxChannels = 0;
+        Matcher matcher = CHANNELS_PATTERN.matcher(caps);
+
+        while (matcher.find()) {
+            Matcher numbers = NUMBER_PATTERN.matcher(matcher.group(1));
+            while (numbers.find()) {
+                maxChannels = Math.max(maxChannels, Integer.parseInt(numbers.group()));
+            }
+        }
+
+        return maxChannels;
     }
 
 }

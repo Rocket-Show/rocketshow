@@ -1,0 +1,141 @@
+{
+  "createdFromFile": false,
+  "categories": [
+    "Color Changer"
+  ],
+  "availableChannels": {
+    "Dimmer": {
+      "fineChannelAliases": [],
+      "capabilities": [],
+      "capability": {
+        "dmxRange": [],
+        "type": "Intensity"
+      }
+    },
+    "Red": {
+      "fineChannelAliases": [],
+      "capabilities": [],
+      "capability": {
+        "dmxRange": [],
+        "type": "ColorIntensity",
+        "color": "Red"
+      }
+    },
+    "Green": {
+      "fineChannelAliases": [],
+      "capabilities": [],
+      "capability": {
+        "dmxRange": [],
+        "type": "ColorIntensity",
+        "color": "Green"
+      }
+    },
+    "Blue": {
+      "fineChannelAliases": [],
+      "capabilities": [],
+      "capability": {
+        "dmxRange": [],
+        "type": "ColorIntensity",
+        "color": "Blue"
+      }
+    },
+    "White": {
+      "fineChannelAliases": [],
+      "capabilities": [],
+      "capability": {
+        "dmxRange": [],
+        "type": "ColorIntensity",
+        "color": "White"
+      }
+    },
+    "Strobe": {
+      "fineChannelAliases": [],
+      "capabilities": [
+        {
+          "dmxRange": [
+            0,
+            9
+          ],
+          "type": "NoFunction"
+        },
+        {
+          "dmxRange": [
+            10,
+            255
+          ],
+          "type": "ShutterStrobe"
+        }
+      ]
+    }
+  },
+  "templateChannels": {},
+  "wheels": {},
+  "modes": [
+    {
+      "channels": [
+        {
+          "repeatFor": [],
+          "templateChannels": [],
+          "name": "Red"
+        },
+        {
+          "repeatFor": [],
+          "templateChannels": [],
+          "name": "Green"
+        },
+        {
+          "repeatFor": [],
+          "templateChannels": [],
+          "name": "Blue"
+        },
+        {
+          "repeatFor": [],
+          "templateChannels": [],
+          "name": "White"
+        }
+      ],
+      "name": "4-Channel",
+      "shortName": "4ch"
+    },
+    {
+      "channels": [
+        {
+          "repeatFor": [],
+          "templateChannels": [],
+          "name": "Dimmer"
+        },
+        {
+          "repeatFor": [],
+          "templateChannels": [],
+          "name": "Red"
+        },
+        {
+          "repeatFor": [],
+          "templateChannels": [],
+          "name": "Green"
+        },
+        {
+          "repeatFor": [],
+          "templateChannels": [],
+          "name": "Blue"
+        },
+        {
+          "repeatFor": [],
+          "templateChannels": [],
+          "name": "White"
+        },
+        {
+          "repeatFor": [],
+          "templateChannels": [],
+          "name": "Strobe"
+        }
+      ],
+      "name": "6-Channel",
+      "shortName": "6ch"
+    }
+  ],
+  "uuid": "generic/rgbw-par",
+  "name": "RGBW LED PAR",
+  "manufacturerName": "Generic",
+  "manufacturerShortName": "generic"
+}

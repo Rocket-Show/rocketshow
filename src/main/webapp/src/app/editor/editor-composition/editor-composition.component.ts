@@ -183,16 +183,20 @@ export class EditorCompositionComponent implements OnInit {
     this.copyInitialComposition();
   }
 
-  private saveApi(composition: Composition) {
+  private saveApi(composition: Composition, previousName?: string) {
     this.savingComposition = true;
+    const name = composition.name;
 
     this.compositionService
-      .saveComposition(composition)
+      .saveComposition(composition, previousName)
       .pipe(
         map(() => {
           this.loadCompositions();
           this.copyInitialComposition();
 
+          if (previousName) {
+            this.compositionService.compositionRenamed.next({ previousName: previousName, name: name });
+          }
           this.compositionService.compositionsChanged.next();
 
           this.translateService
@@ -253,24 +257,14 @@ export class EditorCompositionComponent implements OnInit {
   }
 
   private performSave(composition: Composition) {
-    // Delete the old composition, if the name changed
+    // Rename the composition, if the name changed: the sets, designer projects and settings using it keep it
     if (
       this.initialComposition &&
       this.initialComposition.name &&
       this.initialComposition.name != composition.name &&
       this.initialComposition.name.length > 0
     ) {
-      this.compositionService
-        .deleteComposition(this.initialComposition.name)
-        .pipe(
-          map(() => {
-            this.saveApi(composition);
-          }),
-          catchError((err) => {
-            return this.toastGeneralErrorService.show(err);
-          })
-        )
-        .subscribe();
+      this.saveApi(composition, this.initialComposition.name);
     } else {
       this.saveApi(composition);
     }
@@ -283,13 +277,16 @@ export class EditorCompositionComponent implements OnInit {
       .pipe(
         map((result) => {
           if (result) {
+            const name = this.initialComposition.name;
+
             this.compositionService
-              .deleteComposition(this.initialComposition.name)
+              .deleteComposition(name)
               .pipe(
                 map(() => {
                   this.unselect();
                   this.loadCompositions();
 
+                  this.compositionService.compositionDeleted.next(name);
                   this.compositionService.compositionsChanged.next();
 
                   this.translateService
@@ -536,10 +533,18 @@ export class EditorCompositionComponent implements OnInit {
     }, millis);
   }
 
+  private stopPlayUpdate() {
+    if (this.playUpdateSubscription) {
+      this.playUpdateSubscription.unsubscribe();
+      this.playUpdateSubscription = undefined;
+    }
+  }
+
   play() {
     this.compositionService
       .testPlay(this.currentComposition)
       .subscribe((result) => {
+        this.stopPlayUpdate();
         this.testPlayDurationMillis = result.durationMillis;
         this.lastPlayTime = new Date();
         this.lastPlayPositionMillis = 0;
@@ -560,11 +565,14 @@ export class EditorCompositionComponent implements OnInit {
   }
 
   stop() {
+    if (this.stopTimer) {
+      clearTimeout(this.stopTimer);
+      this.stopTimer = undefined;
+    }
+
     this.compositionService.testStop().subscribe(() => {
       this.isTestPlaying = false;
-      if (this.playUpdateSubscription) {
-        this.playUpdateSubscription.unsubscribe;
-      }
+      this.stopPlayUpdate();
     });
   }
 

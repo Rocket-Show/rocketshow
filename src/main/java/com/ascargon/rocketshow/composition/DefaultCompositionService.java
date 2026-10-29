@@ -1,11 +1,14 @@
 package com.ascargon.rocketshow.composition;
 
 import com.ascargon.rocketshow.settings.CapabilitiesService;
-import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
 import com.ascargon.rocketshow.gstreamer.GstDiscovererService;
+import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.midi.MidiCompositionFile;
+import com.ascargon.rocketshow.util.ActionTrigger;
+import com.ascargon.rocketshow.util.AtomicFile;
+import com.ascargon.rocketshow.util.FileNames;
 import com.ascargon.rocketshow.video.VideoCompositionFile;
 import com.sun.jna.Pointer;
 import jakarta.xml.bind.JAXBContext;
@@ -41,15 +44,17 @@ public class DefaultCompositionService implements CompositionService {
     private final SettingsService settingsService;
     private final CapabilitiesService capabilitiesService;
     private final GstDiscovererService gstDiscovererService;
+    private final DesignerService designerService;
 
     // All available compositions
     private final List<Composition> compositionCache = new ArrayList<>();
     private final List<Set> compositionSetCache = new ArrayList<>();
 
-    public DefaultCompositionService(SettingsService settingsService, CapabilitiesService capabilitiesService, GstDiscovererService gstDiscovererService) {
+    public DefaultCompositionService(SettingsService settingsService, CapabilitiesService capabilitiesService, GstDiscovererService gstDiscovererService, DesignerService designerService) {
         this.settingsService = settingsService;
         this.capabilitiesService = capabilitiesService;
         this.gstDiscovererService = gstDiscovererService;
+        this.designerService = designerService;
 
         // Initialize the cache
         this.loadAllCompositions();
@@ -92,7 +97,7 @@ public class DefaultCompositionService implements CompositionService {
         // Load a composition
         JAXBContext jaxbContext = JAXBContext.newInstance(Composition.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-        composition = (Composition) jaxbUnmarshaller.unmarshal(new File(settingsService.getSettings().getBasePath() + File.separator + COMPOSITIONS_PATH + File.separator + name + ".xml"));
+        composition = (Composition) jaxbUnmarshaller.unmarshal(new File(settingsService.getSettings().getBasePath() + File.separator + COMPOSITIONS_PATH + File.separator + FileNames.check(name) + ".xml"));
 
         finalizeLoadedComposition(composition, name);
 
@@ -109,7 +114,7 @@ public class DefaultCompositionService implements CompositionService {
         // Load a set
         JAXBContext jaxbContext = JAXBContext.newInstance(Set.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-        set = (Set) jaxbUnmarshaller.unmarshal(new File(settingsService.getSettings().getBasePath() + File.separator + SETS_PATH + File.separator + name + ".xml"));
+        set = (Set) jaxbUnmarshaller.unmarshal(new File(settingsService.getSettings().getBasePath() + File.separator + SETS_PATH + File.separator + FileNames.check(name) + ".xml"));
 
         logger.info("Set '" + name + "' successfully loaded");
 
@@ -138,9 +143,10 @@ public class DefaultCompositionService implements CompositionService {
         return null;
     }
 
-    private void updateSets() throws Exception {
+    @Override
+    public void updateSets() throws Exception {
         // Update all sets (remove deleted files, update playing times),
-        // when a composition has been changed/deleted
+        // when a composition or a designer project has been changed/deleted
 
         List<Set> sets = new ArrayList<>(getAllSets());
 
@@ -168,7 +174,8 @@ public class DefaultCompositionService implements CompositionService {
 
         if (fileList != null) {
             for (File file : fileList) {
-                if (file.isFile()) {
+                // Hidden files are e.g. compositions being written
+                if (file.isFile() && !file.getName().startsWith(".")) {
                     try {
                         Composition composition = loadComposition(file.getName().substring(0, file.getName().length() - 4));
                         compositionCache.add(composition);
@@ -189,7 +196,7 @@ public class DefaultCompositionService implements CompositionService {
 
         if (fileList != null) {
             for (File file : fileList) {
-                if (file.isFile()) {
+                if (file.isFile() && !file.getName().startsWith(".")) {
                     String setName = file.getName().substring(0, file.getName().length() - 4);
                     try {
                         Set set = loadSet(setName);
@@ -222,31 +229,76 @@ public class DefaultCompositionService implements CompositionService {
         return duration;
     }
 
+    // The file as analyzed when the composition was saved, if it didn't change since. Saving a composition doesn't
+    // stop the one playing, so its unchanged files aren't analyzed again during a show.
+    private CompositionFile getUnchangedFile(Composition savedComposition, CompositionFile compositionFile, File mediaFile) {
+        if (savedComposition == null) {
+            return null;
+        }
+
+        File savedFile = new File(settingsService.getSettings().getBasePath() + File.separator + COMPOSITIONS_PATH + File.separator + FileNames.check(savedComposition.getName()) + ".xml");
+
+        for (CompositionFile savedCompositionFile : savedComposition.getCompositionFileList()) {
+            if (savedCompositionFile.getClass().equals(compositionFile.getClass())
+                    && savedCompositionFile.getName().equals(compositionFile.getName())
+                    && savedCompositionFile.getDurationMillis() > 0
+                    && mediaFile.lastModified() < savedFile.lastModified()) {
+
+                return savedCompositionFile;
+            }
+        }
+
+        return null;
+    }
+
     @Override
     public void analyzeComposition(Composition composition) throws Exception {
+        analyzeComposition(composition, getComposition(composition.getName()));
+    }
+
+    // The files of the saved composition, which didn't change, aren't analyzed again
+    private void analyzeComposition(Composition composition, Composition savedComposition) throws Exception {
+
         // Set additional information for each file
         for (CompositionFile compositionFile : composition.getCompositionFileList()) {
             String path = settingsService.getSettings().getBasePath() + settingsService.getSettings().getMediaPath() + File.separator;
 
             if (compositionFile instanceof MidiCompositionFile) {
+                File mediaFile = new File(path + settingsService.getSettings().getMidiPath() + File.separator + compositionFile.getName());
+                CompositionFile unchangedFile = getUnchangedFile(savedComposition, compositionFile, mediaFile);
+
                 // Getting duration with Gstreamer does not work (missing plugins)
-                compositionFile.setDurationMillis(getMidiDuration(path + settingsService.getSettings().getMidiPath() + File.separator + compositionFile.getName()));
-            } else if (compositionFile instanceof AudioCompositionFile) {
+                compositionFile.setDurationMillis(unchangedFile == null ? getMidiDuration(mediaFile.getPath()) : unchangedFile.getDurationMillis());
+            } else if (compositionFile instanceof AudioCompositionFile audioCompositionFile) {
+                File mediaFile = new File(path + settingsService.getSettings().getAudioPath() + File.separator + compositionFile.getName());
+
+                if (getUnchangedFile(savedComposition, compositionFile, mediaFile) instanceof AudioCompositionFile unchangedFile) {
+                    audioCompositionFile.setDurationMillis(unchangedFile.getDurationMillis());
+                    audioCompositionFile.setChannels(unchangedFile.getChannels());
+                    continue;
+                }
+
                 if (!capabilitiesService.getCapabilities().isGstreamer()) {
                     throw new Exception("Gstreamer is not available");
                 }
 
-                AudioCompositionFile audioCompositionFile = ((AudioCompositionFile) compositionFile);
-
-                Pointer discovererInformation = gstDiscovererService.getDiscovererInformation(path + settingsService.getSettings().getAudioPath() + File.separator + compositionFile.getName());
+                Pointer discovererInformation = gstDiscovererService.getDiscovererInformation(mediaFile.getPath());
                 audioCompositionFile.setDurationMillis(gstDiscovererService.getDurationMillis(discovererInformation));
                 audioCompositionFile.setChannels(gstDiscovererService.getChannels(discovererInformation));
             } else if (compositionFile instanceof VideoCompositionFile) {
+                File mediaFile = new File(path + settingsService.getSettings().getVideoPath() + File.separator + compositionFile.getName());
+                CompositionFile unchangedFile = getUnchangedFile(savedComposition, compositionFile, mediaFile);
+
+                if (unchangedFile != null) {
+                    compositionFile.setDurationMillis(unchangedFile.getDurationMillis());
+                    continue;
+                }
+
                 if (!capabilitiesService.getCapabilities().isGstreamer()) {
                     throw new Exception("Gstreamer is not available");
                 }
 
-                Pointer discovererInformation = gstDiscovererService.getDiscovererInformation(path + settingsService.getSettings().getVideoPath() + File.separator + compositionFile.getName());
+                Pointer discovererInformation = gstDiscovererService.getDiscovererInformation(mediaFile.getPath());
                 compositionFile.setDurationMillis(gstDiscovererService.getDurationMillis(discovererInformation));
             }
         }
@@ -271,18 +323,22 @@ public class DefaultCompositionService implements CompositionService {
 
     @Override
     public synchronized void saveComposition(Composition composition) throws Exception {
-        analyzeComposition(composition);
+        saveComposition(composition, getComposition(composition.getName()));
+    }
+
+    private void saveComposition(Composition composition, Composition savedComposition) throws Exception {
+        analyzeComposition(composition, savedComposition);
 
         // Save the composition in XML
         String directory = settingsService.getSettings().getBasePath() + File.separator + COMPOSITIONS_PATH;
         createDirectoryIfNotExists(directory);
 
-        File file = new File(directory + File.separator + composition.getName() + ".xml");
+        File file = new File(directory + File.separator + FileNames.check(composition.getName()) + ".xml");
         JAXBContext jaxbContext = JAXBContext.newInstance(Composition.class);
         Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
         jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-        jaxbMarshaller.marshal(composition, file);
+        AtomicFile.marshal(jaxbMarshaller, composition, file);
 
         // Update the cache
         for (Composition cachedComposition : compositionCache) {
@@ -321,8 +377,9 @@ public class DefaultCompositionService implements CompositionService {
                     // --> delete it from the set
                     iterator.remove();
                 } else {
-                    // The composition still exists -> update some information
-                    setComposition.setDurationMillis(composition.getDurationMillis());
+                    // The composition still exists -> update some information. It plays as long as its files and
+                    // actions, or as the lights of its designer project, whichever is longer.
+                    setComposition.setDurationMillis(Math.max(composition.getDurationMillis(), designerService.getCompositionEndMillis(composition.getName())));
                 }
             }
         }
@@ -330,12 +387,12 @@ public class DefaultCompositionService implements CompositionService {
         String directory = settingsService.getSettings().getBasePath() + File.separator + SETS_PATH;
         createDirectoryIfNotExists(directory);
 
-        File file = new File(directory + File.separator + set.getName() + ".xml");
+        File file = new File(directory + File.separator + FileNames.check(set.getName()) + ".xml");
         JAXBContext jaxbContext = JAXBContext.newInstance(Set.class);
         Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
         jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-        jaxbMarshaller.marshal(set, file);
+        AtomicFile.marshal(jaxbMarshaller, set, file);
 
         // Update the cache
         for (Set cachedCompositionSet : compositionSetCache) {
@@ -356,9 +413,9 @@ public class DefaultCompositionService implements CompositionService {
     }
 
     @Override
-    public synchronized void deleteComposition(String name, PlayerService playerService) throws Exception {
+    public synchronized void deleteComposition(String name) throws Exception {
         // Delete the composition
-        File file = new File(settingsService.getSettings().getBasePath() + File.separator + COMPOSITIONS_PATH + File.separator + name + ".xml");
+        File file = new File(settingsService.getSettings().getBasePath() + File.separator + COMPOSITIONS_PATH + File.separator + FileNames.check(name) + ".xml");
 
         if (file.exists()) {
             boolean result = file.delete();
@@ -377,20 +434,54 @@ public class DefaultCompositionService implements CompositionService {
 
         updateSets();
 
-        // Set another composition, if we deleted the current one
-        if (playerService.getCompositionName().equals(name)) {
-            if (compositionCache.size() > 0) {
-                playerService.setComposition(compositionCache.get(0));
+        logger.info("Composition '" + name + "' deleted");
+    }
+
+    // Saves the composition under its new name and moves the references to its previous name along: in the sets and
+    // in the actions of the compositions selecting or playing it. Its files are analyzed like before the rename.
+    @Override
+    public synchronized void renameComposition(String previousName, Composition composition) throws Exception {
+        Composition previousComposition = getComposition(FileNames.check(previousName));
+
+        if (previousComposition == null) {
+            throw new Exception("Composition '" + previousName + "' not found");
+        }
+
+        saveComposition(composition, previousComposition);
+
+        for (Composition otherComposition : new ArrayList<>(compositionCache)) {
+            if (!otherComposition.getName().equals(previousName)
+                    && ActionTrigger.renameComposition(otherComposition.getActionTriggerList(), previousName, composition.getName())) {
+
+                saveComposition(otherComposition);
             }
         }
 
-        logger.info("Composition '" + name + "' deleted");
+        for (Set set : new ArrayList<>(getAllSets())) {
+            Set loadedSet = loadSet(set.getName());
+            boolean renamed = false;
+
+            for (SetComposition setComposition : loadedSet.getSetCompositionList()) {
+                if (previousName.equals(setComposition.getName())) {
+                    setComposition.setName(composition.getName());
+                    renamed = true;
+                }
+            }
+
+            if (renamed) {
+                saveSet(loadedSet);
+            }
+        }
+
+        deleteComposition(previousName);
+
+        logger.info("Composition '" + previousName + "' renamed to '" + composition.getName() + "'");
     }
 
     @Override
     public synchronized void deleteSet(String name) {
         // Delete the set
-        File file = new File(settingsService.getSettings().getBasePath() + File.separator + SETS_PATH + File.separator + name + ".xml");
+        File file = new File(settingsService.getSettings().getBasePath() + File.separator + SETS_PATH + File.separator + FileNames.check(name) + ".xml");
 
         if (file.exists()) {
             boolean result = file.delete();

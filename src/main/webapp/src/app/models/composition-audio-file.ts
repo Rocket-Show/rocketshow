@@ -15,7 +15,8 @@ export class CompositionAudioFile extends CompositionFile {
       this.outputBusUuid = data.outputBusUuid;
     }
 
-    if (data.volume) {
+    // Also a muted file (0)
+    if (data.volume != null) {
       this.volume = data.volume;
     }
   }

@@ -1,6 +1,6 @@
 package com.ascargon.rocketshow.midi;
 
-import com.ascargon.rocketshow.settings.SettingsService;
+import com.ascargon.rocketshow.settings.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,21 +28,32 @@ class MidiInDeviceReceiver implements Receiver {
 
     private final MidiRouter midiRouter;
 
+    // Gets the input instead of the triggers and the routings, e.g. during the self-test
+    private volatile Receiver divertedReceiver;
+
     MidiInDeviceReceiver(ActionMidiExecutionService actionMidiExecutionService, MidiTimecodeSlaveService midiTimecodeSlaveService,
                          MidiCompositionSelectionService midiCompositionSelectionService, MidiShowControlService midiShowControlService,
-                         SettingsService settingsService, MidiRouterFactory midiRouterFactory) {
+                         MidiRouterFactory midiRouterFactory) {
         this.actionMidiExecutionService = actionMidiExecutionService;
         this.midiTimecodeSlaveService = midiTimecodeSlaveService;
         this.midiCompositionSelectionService = midiCompositionSelectionService;
         this.midiShowControlService = midiShowControlService;
 
-        midiRouter = midiRouterFactory.getMidiRouter(settingsService.getSettings().getDeviceInMidiRoutingList());
+        midiRouter = midiRouterFactory.getSettingsMidiRouter(Settings::getDeviceInMidiRoutingList);
     }
 
     @Override
     public void send(MidiMessage midiMessage, long timeStamp) {
-        // Let everything that can be controlled from a master see the message first, and for all
-        // message types: a timecode locate, show control and machine control all arrive as SysEx.
+        // Diverted first: while the input belongs to something else (the self-test), nothing may act
+        // on it - not the triggers, not the routings and not a master controlling this device.
+        Receiver divertedReceiver = this.divertedReceiver;
+        if (divertedReceiver != null) {
+            divertedReceiver.send(midiMessage, timeStamp);
+            return;
+        }
+
+        // Let everything that can be controlled from a master see the message, and for all message
+        // types: a timecode locate, show control and machine control all arrive as SysEx.
         try {
             midiTimecodeSlaveService.processMidiMessage(midiMessage);
         } catch (Exception e) {
@@ -78,6 +89,10 @@ class MidiInDeviceReceiver implements Receiver {
         } catch (InvalidMidiDataException e) {
             logger.error("Could not route event from MIDI device", e);
         }
+    }
+
+    void divert(Receiver receiver) {
+        divertedReceiver = receiver;
     }
 
     @Override

@@ -1,6 +1,8 @@
 package com.ascargon.rocketshow.health;
 
 import com.ascargon.rocketshow.lighting.OlaService;
+import com.ascargon.rocketshow.settings.Settings;
+import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.update.RaucService;
 import com.ascargon.rocketshow.update.VersionInfo;
 import com.ascargon.rocketshow.update.VersionService;
@@ -31,6 +33,7 @@ public class DefaultHealthService implements HealthService {
     private final RaucService raucService;
     private final DeviceInformationService deviceInformationService;
     private final EepromService eepromService;
+    private final SettingsService settingsService;
 
     public DefaultHealthService(
             HdmiService hdmiService,
@@ -41,7 +44,8 @@ public class DefaultHealthService implements HealthService {
             VersionService versionService,
             RaucService raucService,
             DeviceInformationService deviceInformationService,
-            EepromService eepromService
+            EepromService eepromService,
+            SettingsService settingsService
     ) {
         this.hdmiService = hdmiService;
         this.diskSpaceService = diskSpaceService;
@@ -52,6 +56,7 @@ public class DefaultHealthService implements HealthService {
         this.raucService = raucService;
         this.deviceInformationService = deviceInformationService;
         this.eepromService = eepromService;
+        this.settingsService = settingsService;
     }
 
     private void addReason(HealthStatus healthStatus, String reason) {
@@ -146,7 +151,15 @@ public class DefaultHealthService implements HealthService {
             }
         } catch (Exception e) {
             setDegraded(healthStatus);
-            addReason(healthStatus, "Could not check free disk space");
+            addReason(healthStatus, "Could not check the temperature");
+        }
+
+        // Earlier releases took a passphrase with less than 8 characters, which leaves the access point open
+        Settings settings = settingsService.getSettings();
+        String wlanApPassphrase = settings.getWlanApPassphrase();
+        if (Boolean.TRUE.equals(settings.getWlanApEnable()) && wlanApPassphrase != null && !wlanApPassphrase.isEmpty() && wlanApPassphrase.length() < 8) {
+            setDegraded(healthStatus);
+            addReason(healthStatus, "The wireless access point is open, because its passphrase has less than 8 characters. Set a new one in the network settings.");
         }
 
         String olaError = olaService.getHealthyError();
@@ -174,13 +187,6 @@ public class DefaultHealthService implements HealthService {
         // TODO show connected USB devices
 
         return healthStatus;
-    }
-
-    @Override
-    public void testSystem() {
-        // TODO play the default composition and check for errors
-        // TODO periodically change GPIO output status (e.g. each 3 seconds)
-        // TODO Send MIDI messages, expect the same MIDI messages
     }
 
 }

@@ -13,6 +13,7 @@ import jakarta.annotation.PreDestroy;
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.MidiUnavailableException;
+import javax.sound.midi.Receiver;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
@@ -27,7 +28,6 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
 
     private final SettingsService settingsService;
     private final MidiService midiService;
-    private final MidiRouter midiRouter;
     private Timer connectMidiDeviceTimer;
     private javax.sound.midi.MidiDevice midiDevice;
     private SerialPort midiSerialDevice;
@@ -41,10 +41,7 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
 
         // Initialize the MIDI in device receiver to executeFromTrigger MIDI control actions
         midiInDeviceReceiver = new MidiInDeviceReceiver(actionMidiExecutionService, midiTimecodeSlaveService,
-                midiCompositionSelectionService, midiShowControlService, settingsService, midiRouterFactory);
-
-        // Initialize the MIDI router
-        midiRouter = midiRouterFactory.getMidiRouter(settingsService.getSettings().getDeviceInMidiRoutingList());
+                midiCompositionSelectionService, midiShowControlService, midiRouterFactory);
     }
 
     @PostConstruct
@@ -66,9 +63,7 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
 
             midiDevice.open();
 
-            // Connect the transmitters (getTransmitter() returns a new transmitter each call)
-            midiRouter.connectTransmitter(midiDevice.getTransmitter(), midiDevice.getTransmitter());
-
+            // The receiver executes the actions and routes the messages
             midiDevice.getTransmitter().setReceiver(midiInDeviceReceiver);
 
             logger.info("Successfully connected to MIDI IN device " + midiDevice.getDeviceInfo().getName());
@@ -117,7 +112,8 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
                                     try {
                                         Optional<MidiMessage> maybe = parser.offerByte(b);
                                         maybe.ifPresent(midiMessage -> {
-                                            logger.trace("Received MIDI message over serial: {}", midiMessage.toString());
+                                            // E.g. 48 MIDI clock messages per second at 120 BPM
+                                            logger.debug("Received MIDI message over serial: {}", midiMessage);
                                             midiInDeviceReceiver.send(midiMessage, -1);
                                         });
                                     } catch (InvalidMidiDataException e) {
@@ -199,7 +195,11 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
             midiDevice = null;
         }
 
-        midiRouter.close();
+        // The serial port stays open for MIDI out, but stops being listened to
+        if (midiSerialDevice != null) {
+            midiSerialDevice.removeEventListener();
+            midiSerialDevice = null;
+        }
     }
 
     @Override
@@ -211,6 +211,16 @@ public class DefaultMidiDeviceInService implements MidiDeviceInService {
     @Override
     public javax.sound.midi.MidiDevice getMidiDevice() {
         return midiDevice;
+    }
+
+    @Override
+    public boolean isConnected() {
+        return midiDevice != null || midiSerialDevice != null;
+    }
+
+    @Override
+    public void divert(Receiver receiver) {
+        midiInDeviceReceiver.divert(receiver);
     }
 
 }

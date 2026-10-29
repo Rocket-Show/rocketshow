@@ -20,6 +20,10 @@ public class Preset {
     private String uuid;
     private String name;
 
+    // OBSOLETE: the fixtures of the preset in a project before version 2, which named the fixtures only (replaced with
+    // the fixtures and their pixels, see DefaultDesignerService.migrateProjectToVersion2)
+    private List<String> fixtureUuids;
+
     // all related fixtures, in the order they are chased in (only relevant, if
     // useGlobalFixtureOrder is false)
     private List<PresetFixture> fixtures = new ArrayList<>();
@@ -45,23 +49,24 @@ public class Preset {
 
     // the length of one pass (null = the last step holds as long as the one before it
     // lasted, see PresetSteps.getStepsLoopMillis)
-    private Long stepsLoopMillis;
+    private Double stepsLoopMillis;
 
     // how the sequence is shifted from one fixture to the next (chasing), following the
     // same rules as the effect curves: "millis" shifts it by a fixed time, "spread"
     // distributes stepsPhasingCycles full passes over all fixtures of the preset.
     // both values are signed: a negative one chases in the opposite direction.
     private String stepsPhasingMode = "millis";
-    private long stepsPhasingMillis = 0;
-    private float stepsPhasingCycles = 1;
+    private double stepsPhasingMillis = 0;
+    private double stepsPhasingCycles = 1;
 
-    // how many fixtures share the same chase step (1 = each fixture on its own)
-    private int stepsPhasingGroupSize = 1;
+    // how many fixtures share the same chase step (1 = each fixture on its own). The designer rounds it, like a
+    // number of fixtures.
+    private double stepsPhasingGroupSize = 1;
 
     // all related effects. They stay on the preset instead of moving into the steps, so
     // that they keep their phase across a step transition: a step only opens or closes
     // them (see PresetStep.effectAmounts).
-    private List<Effect> effects;
+    private List<Effect> effects = new ArrayList<>();
 
     // mirror what the preset puts on the pan or the tilt of its moving heads: every one
     // of its fixtures is pointed at the mirrored position (1 - value) on that axis, its
@@ -72,12 +77,12 @@ public class Preset {
 
     // position offset, relative to the scene start
     // (null = start/end of the scene itself)
-    private Long startMillis;
-    private Long endMillis;
+    private Double startMillis;
+    private Double endMillis;
 
     // fading times
-    private long fadeInMillis = 0;
-    private long fadeOutMillis = 0;
+    private double fadeInMillis = 0;
+    private double fadeOutMillis = 0;
 
     // fade in/out outside the start/end times?
     private boolean fadeInPre = false;

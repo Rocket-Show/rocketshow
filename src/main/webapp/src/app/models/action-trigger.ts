@@ -4,6 +4,7 @@ import { ActionLighting } from "./action-lighting";
 import { ActionMidi } from "./action-midi";
 import { ActionNull } from "./action-null";
 import { ActionRaspberryGpio } from "./action-raspberry-gpio";
+import { ActionScene } from "./action-scene";
 import { ActionSystem } from "./action-system";
 import { ActionTransport } from "./action-transport";
 
@@ -20,7 +21,7 @@ export class ActionTrigger {
         let actionObject: Action;
 
         if (action.actionNull) {
-          actionObject = new ActionNull(action.nullAction);
+          actionObject = new ActionNull(action.actionNull);
         } else if (action.actionSystem) {
           actionObject = new ActionSystem(action.actionSystem);
         } else if (action.actionTransport) {
@@ -33,6 +34,8 @@ export class ActionTrigger {
           actionObject = new ActionRaspberryGpio(action.actionRaspberryGpio);
         } else if (action.actionHttp) {
           actionObject = new ActionHttp(action.actionHttp);
+        } else if (action.actionScene) {
+          actionObject = new ActionScene(action.actionScene);
         } else {
           console.warn("Uknown action type", action);
         }

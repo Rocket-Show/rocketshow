@@ -43,7 +43,7 @@ public abstract class Effect {
     // moment - the fixtures keep whatever the rest of the preset puts on them then.
     // the tempo is the one of the composition the effect is played in, which the curves
     // synced to the beat run on. it is null while a preset is previewed on its own.
-    public abstract Double getValueAtMillis(long timeMillis, Integer fixtureIndex, Integer fixtureCount, Double beatsPerMinute);
+    public abstract Double getValueAtMillis(double timeMillis, Integer fixtureIndex, Integer fixtureCount, Double beatsPerMinute);
 
     public String getUuid() {
         return uuid;

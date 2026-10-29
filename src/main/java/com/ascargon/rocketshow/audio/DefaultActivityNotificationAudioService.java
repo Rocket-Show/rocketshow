@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.audio;
 
 import com.ascargon.rocketshow.settings.SettingsService;
+import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -16,6 +17,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Notify all connected websocket clients about an audio event.
@@ -28,6 +31,17 @@ public class DefaultActivityNotificationAudioService extends TextWebSocketHandle
     private final SettingsService settingsService;
 
     private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
+
+    // Sends all messages, so a session never gets two at once and nobody waits for a slow web app
+    private final ExecutorService sender = Executors.newSingleThreadExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "audio-monitor");
+        thread.setDaemon(true);
+        return thread;
+    });
+
+    // The latest levels to send. Levels arriving while sending replace the pending ones instead of queuing up.
+    private final Object pendingLock = new Object();
+    private double[] pendingVolumeDbs;
 
     public DefaultActivityNotificationAudioService(SettingsService settingsService) {
         this.settingsService = settingsService;
@@ -43,7 +57,11 @@ public class DefaultActivityNotificationAudioService extends TextWebSocketHandle
         sessions.remove(session);
     }
 
-    private synchronized void sendWebsocketMessage(double[] volumeDbs) throws IOException {
+    private void sendWebsocketMessage(double[] volumeDbs) throws IOException {
+        if (settingsService.getSettings().getAudioBusList().isEmpty()) {
+            return;
+        }
+
         ActivityAudio activityAudio = new ActivityAudio();
 
         int currentAudioBusIndex = -1;
@@ -90,32 +108,55 @@ public class DefaultActivityNotificationAudioService extends TextWebSocketHandle
         }
     }
 
+    private void sendPending() {
+        double[] volumeDbs;
+
+        synchronized (pendingLock) {
+            volumeDbs = pendingVolumeDbs;
+            pendingVolumeDbs = null;
+        }
+
+        try {
+            sendWebsocketMessage(volumeDbs);
+        } catch (Exception e) {
+            logger.error("Could not send audio activity message", e);
+        }
+    }
+
     @Override
     public void notifyClients(double[] volumeDbs) {
-        // Wrap in a thread, to not block the main thread and make synchronized calls
-        // to websocket (two writes to the same session from different threads is not allowed)
-        Thread thread = new Thread(() -> {
-            try {
-                sendWebsocketMessage(volumeDbs);
-            } catch (IOException e) {
-                logger.error("Could not send audio activity message", e);
+        // Don't block the pipeline sending the levels
+        synchronized (pendingLock) {
+            boolean sendScheduled = pendingVolumeDbs != null;
+            pendingVolumeDbs = volumeDbs;
+
+            if (sendScheduled) {
+                return;
             }
-        });
-        thread.start();
+        }
+
+        sender.execute(this::sendPending);
     }
 
     @Scheduled(fixedRate = 25000) // every 25 seconds
     public void sendPing() {
-        for (WebSocketSession session : sessions) {
-            if (session.isOpen()) {
-                try {
-                    session.sendMessage(new PingMessage(ByteBuffer.wrap(new byte[]{1})));
-                } catch (IOException e) {
-                    logger.debug("Ping failed, closing websocket session", e);
-                    sessions.remove(session);
+        sender.execute(() -> {
+            for (WebSocketSession session : sessions) {
+                if (session.isOpen()) {
+                    try {
+                        session.sendMessage(new PingMessage(ByteBuffer.wrap(new byte[]{1})));
+                    } catch (IOException e) {
+                        logger.debug("Ping failed, closing websocket session", e);
+                        sessions.remove(session);
+                    }
                 }
             }
-        }
+        });
+    }
+
+    @PreDestroy
+    public void close() {
+        sender.shutdownNow();
     }
 
 }

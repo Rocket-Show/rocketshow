@@ -3,10 +3,10 @@ import { TranslateService } from '@ngx-translate/core';
 import { BsModalService } from 'ngx-bootstrap/modal';
 import { CompositionService } from './../../services/composition.service';
 import { Set } from './../../models/set';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { map, catchError, finalize } from "rxjs/operators";
 import { PendingChangesDialogService } from './../../services/pending-changes-dialog.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { WarningDialogService } from '../../services/warning-dialog.service';
 import { Composition } from '../../models/composition';
 import { ToastrService } from 'ngx-toastr';
@@ -20,7 +20,9 @@ import { formatTimecode, parseTimecode } from '../../timecode';
     styleUrls: ['./editor-set.component.scss'],
     standalone: false
 })
-export class EditorSetComponent implements OnInit {
+export class EditorSetComponent implements OnInit, OnDestroy {
+
+  private subscriptions: Subscription[] = [];
 
   searchName: string = '';
 
@@ -62,9 +64,42 @@ export class EditorSetComponent implements OnInit {
     this.loadAvailableCompositions();
 
     // Subscribe to composition changes
-    this.compositionService.compositionsChanged.subscribe(() => {
+    this.subscriptions.push(this.compositionService.compositionsChanged.subscribe(() => {
       this.loadAvailableCompositions();
-    });
+    }));
+
+    // The open set contains a renamed or deleted composition like its saved version on the device, keeping its
+    // unsaved changes. Saved with the previous name, the set would lose the composition.
+    this.subscriptions.push(this.compositionService.compositionRenamed.subscribe((renamed) => {
+      for (let set of this.openSets()) {
+        for (let composition of set.compositionList) {
+          if (composition.name == renamed.previousName) {
+            composition.name = renamed.name;
+          }
+        }
+      }
+    }));
+
+    this.subscriptions.push(this.compositionService.compositionDeleted.subscribe((name) => {
+      for (let set of this.openSets()) {
+        for (let i = set.compositionList.length - 1; i >= 0; i--) {
+          if (set.compositionList[i].name == name) {
+            set.compositionList.splice(i, 1);
+          }
+        }
+      }
+    }));
+  }
+
+  ngOnDestroy() {
+    for (let subscription of this.subscriptions) {
+      subscription.unsubscribe();
+    }
+  }
+
+  // The open set, as it's edited and as it was loaded
+  private openSets(): Set[] {
+    return [this.currentSet, this.initialSet].filter((set) => set);
   }
 
   private loadAvailableCompositions() {

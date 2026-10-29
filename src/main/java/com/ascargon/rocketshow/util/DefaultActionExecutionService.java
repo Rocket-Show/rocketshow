@@ -4,6 +4,8 @@ import com.ascargon.rocketshow.api.ActionHttp;
 import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.lighting.ActionLighting;
 import com.ascargon.rocketshow.lighting.LightingService;
+import com.ascargon.rocketshow.lighting.designer.ActionScene;
+import com.ascargon.rocketshow.lighting.designer.ScenePlayerService;
 import com.ascargon.rocketshow.midi.ActionMidi;
 import com.ascargon.rocketshow.midi.MidiRouter;
 import com.ascargon.rocketshow.midi.MidiRouterFactory;
@@ -11,6 +13,7 @@ import com.ascargon.rocketshow.midi.MidiSource;
 import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.raspberry.ActionRaspberryGpio;
 import com.ascargon.rocketshow.raspberry.RaspberryGpioOutService;
+import com.ascargon.rocketshow.settings.Settings;
 import com.ascargon.rocketshow.settings.SettingsService;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -25,6 +28,8 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 public class DefaultActionExecutionService implements ActionExecutionService {
@@ -37,21 +42,35 @@ public class DefaultActionExecutionService implements ActionExecutionService {
     private final LightingService lightingService;
     private final MidiRouter midiRouter;
     private final RaspberryGpioOutService raspberryGpioOutService;
+    private final ScenePlayerService scenePlayerService;
 
     private final HttpClient httpClient;
 
+    // HTTP actions run one after the other in a thread of their own. A slow or unreachable server must not hold up
+    // what triggers the actions, e.g. the MIDI input, a GPIO button or a composition.
+    private final ExecutorService httpActionExecutor = Executors.newSingleThreadExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "http-actions");
+        thread.setDaemon(true);
+        return thread;
+    });
+
     // Lazy load the playerService to avoid a circular dependency, because the playerService can execute actions and
     // is called by this service for transport actions.
-    public DefaultActionExecutionService(@Lazy PlayerService playerService, SettingsService settingsService, RebootService rebootService, LightingService lightingService, MidiRouterFactory midiRouterFactory, RaspberryGpioOutService raspberryGpioOutService) {
+    public DefaultActionExecutionService(@Lazy PlayerService playerService, SettingsService settingsService, RebootService rebootService, LightingService lightingService, MidiRouterFactory midiRouterFactory, RaspberryGpioOutService raspberryGpioOutService, ScenePlayerService scenePlayerService) {
         this.playerService = playerService;
         this.settingsService = settingsService;
         this.rebootService = rebootService;
         this.lightingService = lightingService;
         this.raspberryGpioOutService = raspberryGpioOutService;
+        this.scenePlayerService = scenePlayerService;
 
-        midiRouter = midiRouterFactory.getMidiRouter(settingsService.getSettings().getRemoteMidiRoutingList());
+        midiRouter = midiRouterFactory.getSettingsMidiRouter(Settings::getRemoteMidiRoutingList);
 
-        RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(60000 /* 60 seconds */).build();
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(10000)
+                .setSocketTimeout(30000)
+                .setConnectionRequestTimeout(30000)
+                .build();
         httpClient = HttpClientBuilder.create().setDefaultRequestConfig(requestConfig).build();
     }
 
@@ -98,14 +117,17 @@ public class DefaultActionExecutionService implements ActionExecutionService {
         HttpResponse response;
         response = httpClient.execute(request);
 
+        // Read the body in any case, which releases the connection
+        String body = response.getEntity() == null ? "" : EntityUtils.toString(response.getEntity());
+
         logger.debug("Received response from HTTP action");
         logger.debug("Status code: " + response.getStatusLine().getStatusCode());
         logger.debug("Status phrase: " + response.getStatusLine().getReasonPhrase());
-        logger.debug("Response body: " + EntityUtils.toString(response.getEntity()));
+        logger.debug("Response body: " + body);
     }
 
     private void executeActionOnRemoteDevice(Action action, RemoteDevice remoteDevice) {
-        remoteDevice.doPost("execute-action", action);
+        remoteDevice.doPost("system/execute-action", action);
     }
 
     private void executeActionLocally(Action action) throws Exception {
@@ -132,13 +154,34 @@ public class DefaultActionExecutionService implements ActionExecutionService {
                     midiRouter.sendSignal(((ActionMidi) action).getMidiSignal().getShortMessage(), MidiSource.ACTION);
             case LIGHTING -> lightingService.executeAction((ActionLighting) action);
             case RASPBERRY_GPIO -> raspberryGpioOutService.executeAction((ActionRaspberryGpio) action);
+            case SCENE -> {
+                ActionScene actionScene = (ActionScene) action;
+                switch (actionScene.getSceneActionType()) {
+                    case PLAY_SCENE -> scenePlayerService.playScene(actionScene.getProjectName(), actionScene.getScene(),
+                            actionScene.isUntilStopped() ? ScenePlayerService.UNTIL_STOPPED : actionScene.getDurationMillis());
+                    case RELEASE_ALL -> scenePlayerService.releaseAll();
+                    case BLACKOUT_ON -> scenePlayerService.setBlackout(true);
+                    case BLACKOUT_OFF -> scenePlayerService.setBlackout(false);
+                    case TOGGLE_BLACKOUT -> scenePlayerService.toggleBlackout();
+                }
+            }
             case SYSTEM -> {
                 ActionSystem actionSystem = (ActionSystem) action;
                 switch (actionSystem.getSystemActionType()) {
                     case REBOOT -> rebootService.reboot();
                 }
             }
-            case HTTP -> executeActionHttp((ActionHttp) action);
+            case HTTP -> {
+                ActionHttp actionHttp = (ActionHttp) action;
+
+                httpActionExecutor.execute(() -> {
+                    try {
+                        executeActionHttp(actionHttp);
+                    } catch (Exception e) {
+                        logger.error("Could not execute the HTTP action to URL '{}'", actionHttp.getUrl(), e);
+                    }
+                });
+            }
             default -> logger.warn("Action '" + action.getType() + "' is unknown and cannot be executed");
         }
     }

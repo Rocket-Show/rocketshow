@@ -39,6 +39,22 @@ public interface PlayerService {
 
     void loadSetAndComposition(String setName) throws Exception;
 
+    void compositionsChanged() throws Exception;
+
+    void compositionRenamed(String previousName, String name) throws Exception;
+
+    void restartDefaultComposition() throws Exception;
+
+    // Stops the default composition, e.g. for the self-test
+    void stopDefaultComposition() throws Exception;
+
+    // Plays the default composition again, unless a composition plays
+    void resumeDefaultComposition() throws Exception;
+
+    // Whether a composition plays (or is loaded, paused, ...), a sample or a test from the editor. Not the default
+    // composition.
+    boolean isPlayingComposition();
+
     CompositionPlayer.PlayState getPlayState();
 
     String getCompositionName();

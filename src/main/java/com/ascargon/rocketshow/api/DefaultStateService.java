@@ -2,6 +2,7 @@ package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
+import com.ascargon.rocketshow.lighting.designer.ScenePlayerService;
 import com.ascargon.rocketshow.midi.MidiTimecodeSlaveService;
 import com.ascargon.rocketshow.play.PlayerService;
 import org.springframework.stereotype.Service;
@@ -9,9 +10,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class DefaultStateService implements StateService {
 
+    private final ScenePlayerService scenePlayerService;
     private final MidiTimecodeSlaveService midiTimecodeSlaveService;
 
-    public DefaultStateService(MidiTimecodeSlaveService midiTimecodeSlaveService) {
+    public DefaultStateService(ScenePlayerService scenePlayerService, MidiTimecodeSlaveService midiTimecodeSlaveService) {
+        this.scenePlayerService = scenePlayerService;
         this.midiTimecodeSlaveService = midiTimecodeSlaveService;
     }
 
@@ -52,12 +55,18 @@ public class DefaultStateService implements StateService {
         } else {
             currentState.setCurrentCompositionIndex(setService.getCurrentCompositionIndex());
 
-            if (setService.getCurrentSet() == null && playerService != null) {
-                currentState.setCurrentCompositionIndex(getCompositionIndexWithoutSet(compositionService, playerService.getCompositionName()));
-            } else {
+            if (setService.getCurrentSet() != null) {
                 currentState.setCurrentSetName(setService.getCurrentSet().getName());
+            } else if (playerService != null) {
+                currentState.setCurrentCompositionIndex(getCompositionIndexWithoutSet(compositionService, playerService.getCompositionName()));
             }
         }
+
+        currentState.setSceneProjectName(scenePlayerService.getProjectName());
+        currentState.setActiveSceneUuids(scenePlayerService.getActiveSceneUuids());
+        currentState.setSceneBlackout(scenePlayerService.isBlackout());
+        currentState.setSceneMasterDimmer(scenePlayerService.getMasterDimmer());
+        currentState.setScenesHeld(scenePlayerService.isHeld());
 
         return currentState;
     }

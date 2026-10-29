@@ -1,0 +1,8 @@
+<div class="scene-master">
+  <label class="scene-master-label mb-0" for="sceneMasterDimmer">{{ 'play.scenes-master' | translate }}</label>
+  <input id="sceneMasterDimmer" class="scene-master-fader" type="range" min="0" max="100" step="1"
+    [value]="percent()" [style.--fill]="percent() + '%'"
+    (pointerdown)="startDrag()" (pointerup)="endDrag()" (pointercancel)="endDrag()" (blur)="endDrag()"
+    (input)="input($any($event.target).valueAsNumber)">
+  <span class="scene-master-value">{{ percent() }}%</span>
+</div>

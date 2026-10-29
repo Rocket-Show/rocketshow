@@ -9,10 +9,12 @@ import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -59,6 +61,13 @@ public class DefaultSchedulerService implements SchedulerService {
     // that they must neither be executed nor planned again
     private final AtomicLong generation = new AtomicLong();
 
+    private final Clock clock;
+
+    // The time of the clock and the elapsed time at the last check of the clock
+    private long checkedClockMillis;
+    private long checkedNanos;
+
+    @Autowired
     public DefaultSchedulerService(
             SettingsService settingsService,
             CompositionService compositionService,
@@ -67,11 +76,44 @@ public class DefaultSchedulerService implements SchedulerService {
             // is only needed as soon as a composition is actually started
             @Lazy PlayerService playerService
     ) {
+        this(settingsService, compositionService, playerService, Clock.systemDefaultZone());
+    }
+
+    // Package visible for the tests
+    DefaultSchedulerService(SettingsService settingsService, CompositionService compositionService, PlayerService playerService, Clock clock) {
         this.settingsService = settingsService;
         this.compositionService = compositionService;
         this.playerService = playerService;
+        this.clock = clock;
 
         reload();
+
+        // Units without a real time clock start with the time they were switched off at and get the right time from
+        // the internet later. The planned executions wait for a duration, so they're planned again, when the clock
+        // is set. Otherwise, a daily show would start at another time of the day.
+        checkedClockMillis = clock.millis();
+        checkedNanos = System.nanoTime();
+        scheduler.scheduleAtFixedRate(this::checkClock, 10, 10, TimeUnit.SECONDS);
+    }
+
+    // Package visible for the tests
+    synchronized void checkClock() {
+        long clockMillis = clock.millis();
+        long nanos = System.nanoTime();
+        long clockSetMillis = clockMillis - checkedClockMillis - (nanos - checkedNanos) / 1_000_000;
+
+        checkedClockMillis = clockMillis;
+        checkedNanos = nanos;
+
+        if (Math.abs(clockSetMillis) > 2000) {
+            logger.info("The clock has been set by {} millis. Plan the scheduled compositions again.", clockSetMillis);
+
+            try {
+                reload();
+            } catch (Exception e) {
+                logger.error("Could not plan the scheduled compositions again", e);
+            }
+        }
     }
 
     @EventListener
@@ -101,34 +143,39 @@ public class DefaultSchedulerService implements SchedulerService {
 
             ScheduledEntry scheduledEntry = new ScheduledEntry(scheduledComposition);
             scheduledEntryList.add(scheduledEntry);
-            scheduleNext(scheduledEntry, currentGeneration);
+            scheduleNext(scheduledEntry, currentGeneration, clock.instant());
         }
     }
 
     /**
-     * Plan the next execution of the specified entry.
+     * Plan the next execution of the specified entry after the specified point in time.
      */
-    private synchronized void scheduleNext(ScheduledEntry scheduledEntry, long scheduleGeneration) {
+    private synchronized void scheduleNext(ScheduledEntry scheduledEntry, long scheduleGeneration, Instant after) {
         if (scheduleGeneration != generation.get()) {
             // The schedule has been reloaded meanwhile
             return;
         }
 
+        // An execution starts up to a millisecond early, because the delay is planned in milliseconds. Planned from
+        // the current time, it would start once more.
+        Instant now = clock.instant();
+        ZonedDateTime from = ZonedDateTime.ofInstant(after.isAfter(now) ? after : now, clock.getZone());
+
         ScheduledComposition scheduledComposition = scheduledEntry.getScheduledComposition();
-        Instant nextExecution = getNextExecution(scheduledComposition, ZonedDateTime.now());
+        Instant nextExecution = getNextExecution(scheduledComposition, from);
 
         if (nextExecution == null) {
             logger.warn("The schedule of composition '{}' is incomplete. It will not be started.", scheduledComposition.getCompositionName());
             return;
         }
 
-        long delayMillis = Math.max(0, Duration.between(Instant.now(), nextExecution).toMillis());
+        long delayMillis = Math.max(0, Duration.between(now, nextExecution).toMillis());
 
         logger.debug("Start the composition '{}' in {} millis", scheduledComposition.getCompositionName(), delayMillis);
 
         scheduledEntry.setFuture(scheduler.schedule(() -> {
             // Plan the next execution first, so it's not delayed by the composition being started
-            scheduleNext(scheduledEntry, scheduleGeneration);
+            scheduleNext(scheduledEntry, scheduleGeneration, nextExecution);
 
             if (scheduleGeneration == generation.get()) {
                 playExecutor.execute(() -> startComposition(scheduledComposition));

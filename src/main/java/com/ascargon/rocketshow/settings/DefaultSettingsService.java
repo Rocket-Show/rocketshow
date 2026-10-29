@@ -15,13 +15,18 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.system.ApplicationHome;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
 import javax.sound.midi.MidiUnavailableException;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -31,7 +36,7 @@ public class DefaultSettingsService implements SettingsService {
 
     private final static Logger logger = LoggerFactory.getLogger(Settings.class);
 
-    private final int CURRENT_SETTINGS_VERSION = 4;
+    public final static int CURRENT_SETTINGS_VERSION = 4;
     private String directory;
     private final String FILE_NAME = "settings";
 
@@ -43,27 +48,43 @@ public class DefaultSettingsService implements SettingsService {
     private Settings settings;
     private String lastSavedDefaultComposition;
     private List<ScheduledComposition> lastSavedScheduledCompositionList = new ArrayList<>();
+    private String lastSavedMidiRoutings;
+    private String lastSavedRaspberryGpio;
 
     public DefaultSettingsService(
             OperatingSystemInformationService operatingSystemInformationService,
             MidiService midiService,
             DeviceInformationService deviceInformationService,
-            ApplicationEventPublisher applicationEventPublisher
+            ApplicationEventPublisher applicationEventPublisher,
+            // The directory of the settings, e.g. for tests. Otherwise, it depends on the device.
+            @Value("${rocketshow.directory:}") String directory
     ) {
         this.operatingSystemInformationService = operatingSystemInformationService;
         this.midiService = midiService;
         this.deviceInformationService = deviceInformationService;
         this.applicationEventPublisher = applicationEventPublisher;
 
-        directory = new ApplicationHome(RocketShowApplication.class).getDir().toString();
-        if (isReadOnlyFileSystem()) {
-            directory = "/data/rocketshow";
+        this.directory = directory;
+        if (this.directory == null || this.directory.isEmpty()) {
+            this.directory = new ApplicationHome(RocketShowApplication.class).getDir().toString();
+            if (isReadOnlyFileSystem()) {
+                this.directory = "/data/rocketshow";
+            }
         }
 
         try {
             load();
         } catch (Exception e) {
             logger.error("Could not load the settings", e);
+
+            // Keep the file, before the defaults are saved instead of it: someone may get the settings back from it
+            try {
+                File file = new File(this.directory, FILE_NAME + ".xml");
+                Files.copy(file.toPath(), new File(this.directory, FILE_NAME + ".xml.broken").toPath(), StandardCopyOption.REPLACE_EXISTING);
+                logger.error("Kept the settings, which could not be loaded, in {}.xml.broken", FILE_NAME);
+            } catch (Exception copyException) {
+                logger.error("Could not keep the settings, which could not be loaded", copyException);
+            }
         }
 
         // Apply default settings (if not loaded)
@@ -76,6 +97,8 @@ public class DefaultSettingsService implements SettingsService {
         try {
             lastSavedDefaultComposition = getNormalizedDefaultComposition();
             lastSavedScheduledCompositionList = getScheduledCompositionListCopy();
+            lastSavedMidiRoutings = getMidiRoutings();
+            lastSavedRaspberryGpio = getRaspberryGpio();
             save();
         } catch (JAXBException e) {
             logger.error("Could not save settings", e);
@@ -393,6 +416,39 @@ public class DefaultSettingsService implements SettingsService {
         return "";
     }
 
+    // A composition was renamed: the default composition, the scheduled compositions and the actions of the triggers
+    // selecting or playing it get its new name
+    @Override
+    public synchronized void renameComposition(String previousName, String name) throws JAXBException {
+        boolean renamed = false;
+
+        if (previousName.equals(settings.getDefaultComposition())) {
+            settings.setDefaultComposition(name);
+            renamed = true;
+        }
+
+        for (ScheduledComposition scheduledComposition : settings.getScheduledCompositionList()) {
+            if (previousName.equals(scheduledComposition.getCompositionName())) {
+                scheduledComposition.setCompositionName(name);
+                renamed = true;
+            }
+        }
+
+        renamed |= ActionTrigger.renameComposition(settings.getActionTriggerMidiList(), previousName, name);
+        renamed |= ActionTrigger.renameComposition(settings.getActionTriggerRaspberryGpioList(), previousName, name);
+
+        for (MidiControl midiControl : settings.getMidiControlList()) {
+            if (previousName.equals(midiControl.getCompositionName())) {
+                midiControl.setCompositionName(name);
+                renamed = true;
+            }
+        }
+
+        if (renamed) {
+            save();
+        }
+    }
+
     @Override
     public void save() throws JAXBException {
         File file = new File(directory, FILE_NAME + ".xml");
@@ -401,12 +457,14 @@ public class DefaultSettingsService implements SettingsService {
         Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
         jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 
-        jaxbMarshaller.marshal(settings, file);
+        AtomicFile.marshal(jaxbMarshaller, settings, file);
 
         logger.info("Settings saved");
 
         publishDefaultCompositionChangedEventIfNeeded();
         publishScheduledCompositionsChangedEventIfNeeded();
+        publishMidiRoutingsChangedEventIfNeeded();
+        publishRaspberryGpioChangedEventIfNeeded();
     }
 
     @Override
@@ -432,6 +490,8 @@ public class DefaultSettingsService implements SettingsService {
 
         lastSavedDefaultComposition = getNormalizedDefaultComposition();
         lastSavedScheduledCompositionList = getScheduledCompositionListCopy();
+        lastSavedMidiRoutings = getMidiRoutings();
+        lastSavedRaspberryGpio = getRaspberryGpio();
 
         logger.info("Settings loaded");
     }
@@ -480,6 +540,57 @@ public class DefaultSettingsService implements SettingsService {
 
         lastSavedScheduledCompositionList = scheduledCompositionList;
         applicationEventPublisher.publishEvent(new ScheduledCompositionsChangedEvent());
+    }
+
+    // The MIDI routings and the global MIDI mapping, to find out whether they changed
+    private String getMidiRoutings() {
+        if (settings == null) {
+            return null;
+        }
+
+        return new ObjectMapper().writeValueAsString(Arrays.asList(
+                settings.getDeviceInMidiRoutingList(),
+                settings.getRemoteMidiRoutingList(),
+                settings.getMidiMapping()
+        ));
+    }
+
+    private void publishMidiRoutingsChangedEventIfNeeded() {
+        String midiRoutings = getMidiRoutings();
+
+        // Only when they changed, because the routers start over (e.g. the lighting of MIDI routings)
+        if (Objects.equals(lastSavedMidiRoutings, midiRoutings)) {
+            return;
+        }
+
+        lastSavedMidiRoutings = midiRoutings;
+        applicationEventPublisher.publishEvent(new MidiRoutingsChangedEvent());
+    }
+
+    // The GPIO triggers and outputs, to find out whether they changed
+    private String getRaspberryGpio() {
+        if (settings == null) {
+            return null;
+        }
+
+        return new ObjectMapper().writeValueAsString(Arrays.asList(
+                settings.getEnableRaspberryGpio(),
+                settings.getRaspberryGpioDebounceMillis(),
+                settings.getActionTriggerRaspberryGpioList(),
+                settings.getRaspberryGpioOutputPinBcmList()
+        ));
+    }
+
+    private void publishRaspberryGpioChangedEventIfNeeded() {
+        String raspberryGpio = getRaspberryGpio();
+
+        // Only when they changed, because the pins are set up again
+        if (Objects.equals(lastSavedRaspberryGpio, raspberryGpio)) {
+            return;
+        }
+
+        lastSavedRaspberryGpio = raspberryGpio;
+        applicationEventPublisher.publishEvent(new RaspberryGpioChangedEvent());
     }
 
     private void migrateToVersion2() {

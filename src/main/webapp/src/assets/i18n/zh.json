@@ -62,15 +62,42 @@
     "settings": "设置"
   },
   "play": {
+    "mode-compositions": "作品",
+    "mode-scenes": "场景",
+    "mode-composition-playing": "有作品正在播放",
+    "scenes-stack": "叠加",
+    "scenes-release-all": "全部关闭",
+    "scenes-blackout": "全黑",
+    "scenes-master": "总控",
+    "scenes-full-screen": "全屏",
+    "scenes-exit-full-screen": "退出全屏",
+    "scenes-all": "全部",
+    "scenes-nothing-on": "未开启任何场景",
+    "scenes-count-on": "已开启 {{count}} 个场景",
+    "scenes-on": "开启",
+    "scenes-held": "暂停中",
+    "scenes-held-composition": "\"{{name}}\"正在播放。",
+    "scenes-held-composition-detail": "它现在控制舞台灯光。停止后，您的场景会恢复。",
+    "scenes-held-preview": "设计器的实时预览现在控制舞台灯光。",
+    "scenes-held-preview-detail": "点击一个场景即可收回灯光控制。",
+    "scenes-stop-composition": "停止作品",
+    "scenes-projects": "包含场景的设计器项目",
+    "scenes-count": "{{count}} 个场景",
+    "scenes-count-one": "1 个场景",
     "help": {
-      "midi-timecode-locked": "本设备正在跟随外部 MIDI 时间码，播放由外部主机控制。",
-      "auto-select-next": "启用后，当前作品播放结束后会自动选择并播放下一个作品，便于免操作地播放整个集合。",
+      "auto-select-next": "启用后，当前作品结束时会自动选择集合中的下一个作品。如果结束的作品在集合中标记为自动开始下一个，则下一个作品会立即开始播放。",
       "switch-to-grid": "切换到 Cue 网格视图，每个作品都是一个可直接触发的大按钮。",
       "switch-to-setlist": "切换到 setlist 列表视图，包含播放控制和可滚动的作品列表。",
       "activity-midi-in": "接收到 MIDI 数据时闪烁。",
       "activity-midi-out": "发送 MIDI 数据时闪烁。",
       "activity-audio": "显示当前各通道的音频输出电平。",
-      "activity-lighting": "发送灯光数据时闪烁。"
+      "activity-lighting": "发送灯光数据时闪烁。",
+      "mode": "在当前歌单的作品与设计器项目的场景之间切换，以便手动控制舞台灯光。",
+      "scenes-stack": "启用后，点击会把场景叠加到已开启的场景上。否则点击只开启该场景。",
+      "scenes-release-all": "关闭所有场景。",
+      "scenes-blackout": "关闭灯光并保留所选场景。再次点击即可恢复。",
+      "scenes-full-screen": "在整个屏幕上显示 Rocket Show，例如挂在墙上的平板电脑。",
+      "midi-timecode-locked": "本设备正在跟随外部 MIDI 时间码，播放由外部主机控制。"
     },
     "midi-timecode": "时间码"
   },
@@ -100,12 +127,6 @@
     "offset-millis": "延迟（毫秒）",
     "offset-placeholder": "延迟（毫秒）",
     "loop": "循环",
-    "timecode-start": "时间码起点",
-    "midi-number": "MIDI 编号",
-    "midi-number-none": "不可通过 MIDI 选择",
-    "show-control-cue": "演出控制提示号",
-    "show-control-cue-none": "使用 MIDI 编号",
-    "set-override-none": "继承",
     "routing": "MIDI输出",
     "add-routing": "添加输出",
     "edit-file": "编辑文件",
@@ -139,12 +160,6 @@
       "test-play": "试播此作品以进行预览。这不会影响\"开始\"页面上的现场演出。",
       "test-stop": "停止试播。",
       "loop": "启用后，此作品播放到结尾时会自动从头重新开始。",
-      "timecode-start": "本作品在收到的 MIDI 时间码上开始的位置，格式为 hh:mm:ss.mmm。仅在本设备跟随 MIDI 时间码时使用。",
-      "timecode-start-set": "此作品在本演出集中于收到的 MIDI 时间码上开始的位置，格式为 hh:mm:ss.mmm。每个作品占据从这里起、持续其时长的区间。",
-      "midi-number": "主机通过 MIDI 选择此作品所用的编号，从 1 开始计数：程序改变 1（配合在前的音色库选择可超过 128）或乐曲选择 1 会选中编号为 1 的作品。若此作品不应通过 MIDI 选择，请留空。仅在启用“按 MIDI 编号选择作品”时生效；演出集可以为此作品在该演出集中指定另一个编号。",
-      "midi-number-set": "在本演出集中选择此作品所用的编号，这样每个演出集都能从 1 开始编号。留空则使用作品本身配置的编号。",
-      "show-control-cue": "控台通过 MIDI 演出控制选择此作品所用的提示号，例如 12.5。LOAD 命令选中它，GO 命令选中并启动它。留空则改用 MIDI 编号作为提示号。仅在启用 MIDI 演出控制时生效；演出集可以为此作品在该演出集中指定另一个提示号。",
-      "show-control-cue-set": "在本演出集中选择此作品所用的演出控制提示号。留空则使用作品本身配置的提示号。",
       "audio-volume": "此作品中所有音频文件的总体播放音量。",
       "add-file": "作为此作品一部分播放的媒体文件（音频、视频或 MIDI）。",
       "add-action": "在作品中的指定位置触发动作，例如 MIDI、HTTP 或灯光。",
@@ -156,13 +171,25 @@
       "file-midi-routing": "定义播放期间此 MIDI 文件发送到何处，例如发送到 MIDI 输出、灯光或远程设备。",
       "edit-details": "打开详细设置。",
       "reorder": "拖动以更改顺序。",
-      "notes": "此作品的个人备注。仅在此编辑器中显示，不会被播放。"
+      "notes": "此作品的个人备注。仅在此编辑器中显示，不会被播放。",
+      "timecode-start": "本作品在收到的 MIDI 时间码上开始的位置，格式为 hh:mm:ss.mmm。仅在本设备跟随 MIDI 时间码时使用。",
+      "timecode-start-set": "此作品在本演出集中于收到的 MIDI 时间码上开始的位置，格式为 hh:mm:ss.mmm。每个作品占据从这里起、持续其时长的区间。",
+      "midi-number": "主机通过 MIDI 选择此作品所用的编号，从 1 开始计数：程序改变 1（配合在前的音色库选择可超过 128）或乐曲选择 1 会选中编号为 1 的作品。若此作品不应通过 MIDI 选择，请留空。仅在启用“按 MIDI 编号选择作品”时生效；演出集可以为此作品在该演出集中指定另一个编号。",
+      "midi-number-set": "在本演出集中选择此作品所用的编号，这样每个演出集都能从 1 开始编号。留空则使用作品本身配置的编号。",
+      "show-control-cue": "控台通过 MIDI 演出控制选择此作品所用的提示号，例如 12.5。LOAD 命令选中它，GO 命令选中并启动它。留空则改用 MIDI 编号作为提示号。仅在启用 MIDI 演出控制时生效；演出集可以为此作品在该演出集中指定另一个提示号。",
+      "show-control-cue-set": "在本演出集中选择此作品所用的演出控制提示号。留空则使用作品本身配置的提示号。"
     },
     "action": {
       "actions": "动作",
       "action": "动作",
       "position-millis": "位置（毫秒）"
-    }
+    },
+    "timecode-start": "时间码起点",
+    "midi-number": "MIDI 编号",
+    "midi-number-none": "不可通过 MIDI 选择",
+    "show-control-cue": "演出控制提示号",
+    "show-control-cue-none": "使用 MIDI 编号",
+    "set-override-none": "继承"
   },
   "connection": {
     "title": "无连接",
@@ -199,6 +226,17 @@
       "designer-frequency-hertz": "每秒重新计算并发送灯光输出的次数。数值越高越流畅，但占用更多处理性能。",
       "designer-live-preview": "在编辑时于设计器中显示灯光输出的实时预览，而不仅在播放时显示。",
       "midi-timecode": "在播放过程中发送 MIDI 时间码（MTC），以便 DAW 或灯光控台等外部设备跟随当前位置；或跟随 MIDI 输入收到的时间码，使本设备与外部主机同步播放。",
+      "device-in-midi-routing": "定义从已连接输入设备收到的 MIDI 发送到何处，例如发送到 MIDI 输出、灯光或远程设备。",
+      "remote-midi-routing": "定义从远程 RocketShow 设备收到的 MIDI 发送到何处。",
+      "global-midi-mapping": "在处理之前对传入的 MIDI 进行全局转换，例如移调通道或音符。",
+      "midi-control": "将传入的 MIDI 消息（如音符或程序变更）映射到启动、停止或选择作品等动作。",
+      "lan-ip": "默认情况下，设备会自动获取 IP 地址（DHCP）。启用手动配置可指定固定 IP 地址。",
+      "remote-devices": "此设备可在演出期间控制并保持同步的其他 RocketShow 设备。",
+      "remote-device-api-key": "在远程设备上（在\"安全\"中）生成的 API 密钥，用于授权此设备对其进行控制。",
+      "remote-device-synchronize": "远程设备跟随本设备：在此选择、播放、暂停或停止作品时，它会对其同名作品执行相同操作，并随本设备一起重启和关机。文件不会被复制。",
+      "instruments": "定义乐队使用的乐器。主奏谱可按乐器分配，每台设备都可以选择显示哪种乐器。",
+      "personal-instrument": "此设备使用的乐器。它决定此处显示哪些主奏谱和分谱。",
+      "api-keys": "API 密钥允许外部系统和其他 RocketShow 设备无需密码即可访问此设备。",
       "midi-timecode-slave-mapping": "按作品：收到的时间码驱动当前选中的作品，从该作品所配置的时间码起点开始。按演出集：当前演出集中的每个作品在收到的时间码上各占一段区间，匹配的作品会被自动选中并启动。",
       "midi-timecode-slave-offset": "补偿收到的时间码和音频输出的延迟。正值播放得更晚，负值播放得更早。",
       "midi-composition-selection": "让主机通过作品上配置的 MIDI 编号来选择作品，而不必在“控制”中逐个映射。使用程序改变（可由音色库选择扩展）和乐曲选择消息；带有该编号的作品会被选中。",
@@ -207,18 +245,7 @@
       "midi-show-control": "跟随 MIDI 演出控制——灯光控台和演出控制系统使用的 SysEx 协议。LOAD 命令选中提示号匹配的作品，GO 选中并启动，STOP 暂停，RESUME 继续。",
       "midi-machine-control": "跟随 MIDI 机器控制——DAW 和录音机使用的 SysEx 走带协议：播放、停止、暂停和定位。它不指定播放哪个作品。当本设备正在跟随 MIDI 时间码时将被忽略，因为走带已由时间码控制。",
       "midi-device-id": "本设备被寻址时使用的设备 ID，0 到 126。发送到广播 ID 127 的命令始终被接收。",
-      "midi-control-value": "仅当控制器正好为此数值时才触发，例如踏板踩下时的 127。留空表示任意数值都触发。",
-      "device-in-midi-routing": "定义从已连接输入设备收到的 MIDI 发送到何处，例如发送到 MIDI 输出、灯光或远程设备。",
-      "remote-midi-routing": "定义从远程 RocketShow 设备收到的 MIDI 发送到何处。",
-      "global-midi-mapping": "在处理之前对传入的 MIDI 进行全局转换，例如移调通道或音符。",
-      "midi-control": "将传入的 MIDI 消息（如音符或程序变更）映射到启动、停止或选择作品等动作。",
-      "lan-ip": "默认情况下，设备会自动获取 IP 地址（DHCP）。启用手动配置可指定固定 IP 地址。",
-      "remote-devices": "此设备可在演出期间控制并保持同步的其他 RocketShow 设备。",
-      "remote-device-api-key": "在远程设备上（在\"安全\"中）生成的 API 密钥，用于授权此设备对其进行控制。",
-      "remote-device-synchronize": "使远程设备上的作品和媒体与此设备保持同步。",
-      "instruments": "定义乐队使用的乐器。主奏谱可按乐器分配，每台设备都可以选择显示哪种乐器。",
-      "personal-instrument": "此设备使用的乐器。它决定此处显示哪些主奏谱和分谱。",
-      "api-keys": "API 密钥允许外部系统和其他 RocketShow 设备无需密码即可访问此设备。"
+      "midi-control-value": "仅当控制器正好为此数值时才触发，例如踏板踩下时的 127。留空表示任意数值都触发。"
     },
     "default": "默认",
     "system": "系统",
@@ -248,13 +275,14 @@
     "wlan-ap-ssid": "名称",
     "wlan-ap-ssid-hide": "隐藏网络",
     "wlan-ap-wpa-passphrase": "密码（WPA2-PSK）",
-    "wlan-ap-wpa-passphrase-short-error": "无线接入点密码太短（至少8个字符）。",
+    "wlan-ap-wpa-passphrase-short-error": "无线接入点密码需要8到63个字符。",
     "wlan-ap-hw-mode": "协议",
     "wlan-ap-channel": "频道",
     "wlan-ap-country-code": "国家",
     "language": "语言",
     "warning-reboot": "确定要重启设备吗？",
     "warning-shutdown": "确定要关闭设备吗？",
+    "factory-defaults": "出厂设置",
     "factory-reset": "恢复出厂设置",
     "factory-reset-done": "出厂设置已成功恢复。",
     "wait-factory-reset": "请稍候，设备正在重置...",
@@ -263,7 +291,9 @@
     "warning-settings-changes": "设置包含未保存的更改。确定要继续吗？",
     "usb-interface": "USB接口",
     "reset-after-boot": "启动后重置",
+    "logs": "日志",
     "download-logs": "下载日志",
+    "maintenance-mode": "维护模式",
     "enable-maintenance-mode": "启用维护模式",
     "maintenance-mode-enabled": "SSH现已以用户\"rocketshow\"和一次性密码\"{{password}}\"启用一小时或直到重启。",
     "remote-device-add": "添加远程设备",
@@ -280,46 +310,12 @@
     "midi-device-in": "MIDI输入",
     "midi-device-out": "MIDI输出",
     "midi-timecode": "MIDI时间码",
-    "midi-timecode-mode-enum": {
-      "OFF": "关闭",
-      "MASTER": "发送（主机）",
-      "SLAVE": "跟随（从机）"
-    },
     "midi-timecode-frame-rate": "帧率",
     "midi-timecode-frame-rate-enum": {
       "FPS_24": "24帧/秒",
       "FPS_25": "25帧/秒",
       "FPS_29_97_DROP": "29.97帧/秒丢帧",
       "FPS_30": "30帧/秒"
-    },
-    "midi-timecode-slave-mapping": "时间码映射",
-    "midi-timecode-slave-mapping-enum": {
-      "COMPOSITION": "按作品",
-      "SET": "按演出集"
-    },
-    "midi-timecode-slave-offset": "时间码偏移（毫秒）",
-    "midi-timecode-slave-warning": "跟随外部时间码时，走带由主机控制：作品随时间码启动、停止和定位，循环、自动开始下一个作品以及发送时间码均不生效。灯光、MIDI 和动作会精确跟随主机。音频和视频由声卡与显示器定时，因此通过轻微调整播放速度来保持同步；偏差较大时会跳转定位，这会短暂可闻或可见。视频最多只能达到帧级精度，使用硬件 H.265 解码器的作品只能同步启动，之后无法再校正。请让主机预卷一小段时间，以便播放能够锁定。",
-    "midi-composition-selection": "作品选择",
-    "midi-composition-selection-enable": "按 MIDI 编号选择作品",
-    "midi-composition-selection-channel": "通道",
-    "midi-composition-selection-channel-all": "所有通道",
-    "midi-composition-selection-auto-play": "选择后",
-    "midi-composition-selection-auto-play-enable": "立即开始播放",
-    "midi-show-control": "MIDI 演出控制（MSC）",
-    "midi-show-control-enable": "跟随演出控制命令",
-    "midi-show-control-device-id": "设备 ID",
-    "midi-machine-control": "MIDI 机器控制（MMC）",
-    "midi-machine-control-enable": "跟随机器控制命令",
-    "midi-machine-control-device-id": "设备 ID",
-    "midi-control-controller": "控制器",
-    "midi-control-value": "数值",
-    "midi-control-value-any": "任意数值",
-    "midi-control-song": "乐曲",
-    "midi-control-transport-message": "消息",
-    "midi-control-transport-message-enum": {
-      "START": "Start",
-      "CONTINUE": "Continue",
-      "STOP": "Stop"
     },
     "midi-control": "控制",
     "midi-control-type": "类型",
@@ -328,11 +324,11 @@
     "midi-control-note-in": "输入音符",
     "midi-control-program": "程序",
     "midi-control-type-enum": {
+      "NOTE_ON": "音符开",
+      "PROGRAM_CHANGE": "程序更改",
       "CONTROL_CHANGE": "控制器改变",
       "SONG_SELECT": "乐曲选择",
-      "SYSTEM_REAL_TIME": "走带",
-      "NOTE_ON": "音符开",
-      "PROGRAM_CHANGE": "程序更改"
+      "SYSTEM_REAL_TIME": "走带"
     },
     "no-midi-devices": "没有可用的MIDI设备",
     "version": "当前版本",
@@ -354,6 +350,7 @@
     "update-error": "更新失败。",
     "reboot-device": "重启",
     "shutdown-device": "关机",
+    "device": "设备",
     "default-composition": "默认作品",
     "no-default-composition": "无",
     "audio-buses": "音频总线",
@@ -438,9 +435,49 @@
       "restore-done": "备份已恢复。",
       "wait-restore": "正在恢复备份..."
     },
+    "self-test": {
+      "title": "自检",
+      "help": "检查设备的硬件：每块声卡（使用从其输出到其输入的线缆时，也检查实际输出的声音）、屏幕和视频解码器、MIDI 设备（使用从 MIDI 输出到 MIDI 输入的回环线）、GPIO 输出和复位按钮、DMX 接口和宇宙、存储、网络、时钟和电源。即用型设备还会检查其更新、看门狗和只读系统。",
+      "run": "运行自检",
+      "warning": "在最多半分钟内，自检会在每块声卡上播放测试音并在屏幕上显示测试画面，向 MIDI 输出设备发送 MIDI 音符和音色切换，切换 GPIO 输出，并向每个宇宙发送 DMX。请调低扬声器音量，并断开不应受影响的设备。现在运行自检吗？",
+      "wait": "正在运行自检...",
+      "result-PASSED": "通过。设备没有的硬件的检查已跳过。",
+      "result-FAILED": "未通过",
+      "check": "检查",
+      "result": "结果",
+      "details": "详情",
+      "result-enum": {
+        "PASSED": "通过",
+        "FAILED": "未通过",
+        "SKIPPED": "已跳过"
+      },
+      "check-enum": {
+        "health": "状态",
+        "storage": "存储",
+        "updates": "更新",
+        "watchdog": "看门狗",
+        "read-only-root": "只读系统",
+        "clock": "时钟",
+        "lan": "LAN连接",
+        "access-point": "无线接入点",
+        "audio": "音频",
+        "audio-loopback": "音频回环",
+        "video": "视频",
+        "video-decoder": "视频解码器",
+        "midi-out": "MIDI 输出",
+        "midi-loopback": "MIDI 回环",
+        "gpio-out": "GPIO 输出",
+        "gpio-loopback": "GPIO 回环",
+        "reset-button": "复位按钮",
+        "dmx-interface": "DMX 接口",
+        "dmx": "DMX",
+        "power": "电源"
+      }
+    },
     "external-control": {
       "title": "外部控制",
-      "bcm-pin-id": "BCM引脚ID"
+      "bcm-pin-id": "BCM引脚ID",
+      "input": "输入"
     },
     "scheduler": {
       "title": "定时启动",
@@ -496,7 +533,41 @@
     "secure-connection-enable": "已激活",
     "build-date": "构建日期",
     "build-timestamp": "构建时间戳",
-    "build-number": "构建编号"
+    "build-number": "构建编号",
+    "midi-timecode-mode-enum": {
+      "OFF": "关闭",
+      "MASTER": "发送（主机）",
+      "SLAVE": "跟随（从机）"
+    },
+    "midi-timecode-slave-mapping": "时间码映射",
+    "midi-timecode-slave-mapping-enum": {
+      "COMPOSITION": "按作品",
+      "SET": "按演出集"
+    },
+    "midi-timecode-slave-offset": "时间码偏移（毫秒）",
+    "midi-timecode-slave-warning": "跟随外部时间码时，走带由主机控制：作品随时间码启动、停止和定位，循环、自动开始下一个作品以及发送时间码均不生效。灯光、MIDI 和动作会精确跟随主机。音频和视频由声卡与显示器定时，因此通过轻微调整播放速度来保持同步；偏差较大时会跳转定位，这会短暂可闻或可见。视频最多只能达到帧级精度，使用硬件 H.265 解码器的作品只能同步启动，之后无法再校正。请让主机预卷一小段时间，以便播放能够锁定。",
+    "midi-composition-selection": "作品选择",
+    "midi-composition-selection-enable": "按 MIDI 编号选择作品",
+    "midi-composition-selection-channel": "通道",
+    "midi-composition-selection-channel-all": "所有通道",
+    "midi-composition-selection-auto-play": "选择后",
+    "midi-composition-selection-auto-play-enable": "立即开始播放",
+    "midi-show-control": "MIDI 演出控制（MSC）",
+    "midi-show-control-enable": "跟随演出控制命令",
+    "midi-show-control-device-id": "设备 ID",
+    "midi-machine-control": "MIDI 机器控制（MMC）",
+    "midi-machine-control-enable": "跟随机器控制命令",
+    "midi-machine-control-device-id": "设备 ID",
+    "midi-control-controller": "控制器",
+    "midi-control-value": "数值",
+    "midi-control-value-any": "任意数值",
+    "midi-control-song": "乐曲",
+    "midi-control-transport-message": "消息",
+    "midi-control-transport-message-enum": {
+      "START": "Start",
+      "CONTINUE": "Continue",
+      "STOP": "Stop"
+    }
   },
   "action": {
     "action": "动作",
@@ -511,7 +582,8 @@
       "MIDI": "MIDI",
       "LIGHTING": "灯光",
       "RASPBERRY_GPIO": "外部控制",
-      "HTTP": "HTTP"
+      "HTTP": "HTTP",
+      "SCENE": "场景"
     },
     "system": {
       "type": "系统类型",
@@ -539,6 +611,7 @@
       "velocity": "力度"
     },
     "transport": {
+      "type": "命令",
       "composition-name": "作品名称",
       "type-enum": {
         "PLAY": "播放",
@@ -566,8 +639,27 @@
     },
     "raspberry-gpio": {
       "pin": "引脚",
+      "output": "输出",
       "status": "状态",
       "high": "高"
+    },
+    "scene": {
+      "type": "命令",
+      "type-enum": {
+        "PLAY_SCENE": "播放场景",
+        "RELEASE_ALL": "关闭所有场景",
+        "BLACKOUT_ON": "开启全黑",
+        "BLACKOUT_OFF": "关闭全黑",
+        "TOGGLE_BLACKOUT": "切换全黑"
+      },
+      "project": "设计器项目",
+      "scene": "场景",
+      "plays": "播放方式",
+      "until-stopped": "直到停止",
+      "for-a-time": "持续一段时间",
+      "until-stopped-help": "场景会一直开启，直到播放其他场景或关闭所有场景。全黑只会让它暗下来。",
+      "for-a-time-help": "超过此时间后场景会再次关闭，除非之前已播放其他场景。",
+      "duration": "持续时间（秒）"
     }
   },
   "spark": {

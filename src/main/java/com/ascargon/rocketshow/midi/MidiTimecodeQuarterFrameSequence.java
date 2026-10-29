@@ -31,12 +31,4 @@ class MidiTimecodeQuarterFrameSequence {
         return message;
     }
 
-    /**
-     * Start a new sequence, e.g. because playback was located somewhere else.
-     */
-    void reset() {
-        messageType = 0;
-        position = null;
-    }
-
 }

@@ -4,7 +4,8 @@ import com.ascargon.rocketshow.composition.TestPlayResponse;
 import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.composition.Composition;
 import com.ascargon.rocketshow.composition.CompositionService;
-import com.ascargon.rocketshow.composition.SetService;
+import com.ascargon.rocketshow.lighting.designer.DesignerService;
+import com.ascargon.rocketshow.settings.SettingsService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,13 +20,15 @@ public class CompositionController {
     private final ControllerService controllerService;
     private final CompositionService compositionService;
     private final PlayerService playerService;
-    private final SetService setService;
+    private final DesignerService designerService;
+    private final SettingsService settingsService;
 
-    public CompositionController(ControllerService controllerService, CompositionService compositionService, PlayerService playerService, SetService setService) {
+    public CompositionController(ControllerService controllerService, CompositionService compositionService, PlayerService playerService, DesignerService designerService, SettingsService settingsService) {
         this.controllerService = controllerService;
         this.compositionService = compositionService;
         this.playerService = playerService;
-        this.setService = setService;
+        this.designerService = designerService;
+        this.settingsService = settingsService;
     }
 
     @ExceptionHandler(Exception.class)
@@ -43,26 +46,20 @@ public class CompositionController {
         return compositionService.getComposition(name);
     }
 
+    // Saves the composition. With its previous name, it's renamed: the sets, designer projects, settings and actions
+    // using it keep it under its new name.
     @PostMapping
-    public ResponseEntity<Void> save(@RequestBody Composition composition) throws Exception {
-        // Stop the current composition, because we cannot determine the MIDI duration
-        // if a MIDI file is already playing. Also, the composition will be stopped anyway, if we need
-        // to read it again because it changed.
-        playerService.stop();
+    public ResponseEntity<Void> save(@RequestBody Composition composition, @RequestParam(value = "previousName", required = false) String previousName) throws Exception {
+        if (previousName != null && !previousName.isEmpty() && !previousName.equals(composition.getName())) {
+            compositionService.renameComposition(previousName, composition);
+            designerService.renameComposition(previousName, composition.getName());
+            settingsService.renameComposition(previousName, composition.getName());
+            playerService.compositionRenamed(previousName, composition.getName());
+        } else {
+            compositionService.saveComposition(composition);
 
-        compositionService.saveComposition(composition);
-
-        // If this is the current composition, read it again
-        if (playerService.getCompositionName() != null
-                && playerService.getCompositionName().equals(composition.getName())) {
-
-            playerService.setComposition(compositionService.getComposition(composition.getName()),
-                    true, true);
-        }
-
-        // Refresh the current set
-        if (setService.getCurrentSet() != null) {
-            playerService.loadSetAndComposition(setService.getCurrentSet().getName());
+            // Doesn't stop the composition playing, e.g. when the next song is changed during a show
+            playerService.compositionsChanged();
         }
 
         return new ResponseEntity<>(HttpStatus.OK);
@@ -70,11 +67,8 @@ public class CompositionController {
 
     @PostMapping("delete")
     public ResponseEntity<Void> delete(@RequestParam("name") String name) throws Exception {
-        compositionService.deleteComposition(name, playerService);
-
-        if (setService.getCurrentSet() != null) {
-            playerService.loadSetAndComposition(setService.getCurrentSet().getName());
-        }
+        compositionService.deleteComposition(name);
+        playerService.compositionsChanged();
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -84,7 +78,7 @@ public class CompositionController {
         TestPlayResponse testPlayResponse = new TestPlayResponse();
         compositionService.analyzeComposition(composition);
         playerService.playTestComposition(composition);
-        testPlayResponse.setDurationMillis(composition.getDurationMillis());
+        testPlayResponse.setDurationMillis(playerService.getTestCompositionPlayer().getDurationMillis());
         return testPlayResponse;
     }
 

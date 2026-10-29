@@ -10,6 +10,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.MidiUnavailableException;
+import javax.sound.midi.Receiver;
 import java.io.OutputStream;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -23,6 +24,8 @@ public class DefaultMidiDeviceOutService implements MidiDeviceOutService {
     private final MidiService midiService;
     private Timer connectMidiDeviceTimer;
     private javax.sound.midi.MidiDevice midiDevice;
+    // One receiver for all messages: the device keeps every receiver it hands out until it's closed
+    private Receiver receiver;
     private SerialPort midiSerialDevice;
 
     public DefaultMidiDeviceOutService(SettingsService settingsService, MidiService midiService) {
@@ -46,6 +49,7 @@ public class DefaultMidiDeviceOutService implements MidiDeviceOutService {
                 logger.trace("MIDI OUT device not found. Try again in 10 seconds.");
             } else {
                 midiDevice.open();
+                this.receiver = midiDevice.getReceiver();
                 this.midiDevice = midiDevice;
                 logger.info("Successfully connected to MIDI OUT device " + this.midiDevice.getDeviceInfo().getName());
                 return true;
@@ -120,9 +124,14 @@ public class DefaultMidiDeviceOutService implements MidiDeviceOutService {
     @PreDestroy
     private void close() {
         if (midiDevice != null) {
+            receiver.close();
+            receiver = null;
             midiDevice.close();
             midiDevice = null;
         }
+
+        // The serial port stays open for MIDI in
+        midiSerialDevice = null;
     }
 
     @Override
@@ -152,21 +161,24 @@ public class DefaultMidiDeviceOutService implements MidiDeviceOutService {
             return;
         }
 
+        try {
+            sendMessageChecked(message);
+        } catch (Exception e) {
+            logger.error("Could not send MIDI signal to the MIDI out device", e);
+        }
+    }
+
+    @Override
+    public void sendMessageChecked(MidiMessage message) throws Exception {
         if (midiDevice != null) {
-            try {
-                midiDevice.getReceiver().send(message, -1);
-            } catch (Exception e) {
-                logger.error("Could not send MIDI signal to out device receiver " + midiDevice.getDeviceInfo().getName(), e);
-            }
+            receiver.send(message, -1);
         } else if (midiSerialDevice != null) {
-            try {
-                byte[] data = message.getMessage();
-                OutputStream output = midiSerialDevice.getOutputStream();
-                output.write(data);
-                output.flush();
-            } catch (Exception e) {
-                logger.error("Could not send MIDI signal to serial out device receiver", e);
-            }
+            byte[] data = message.getMessage();
+            OutputStream output = midiSerialDevice.getOutputStream();
+            output.write(data);
+            output.flush();
+        } else {
+            throw new IllegalStateException("No MIDI out device connected");
         }
     }
 

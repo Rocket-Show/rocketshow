@@ -1,0 +1,777 @@
+[
+  {
+    "name": "Intro – Countdown",
+    "durationMillis": 92000,
+    "fileList": [
+      {
+        "videoFile": {
+          "name": "intro_countdown.mp4",
+          "type": "VIDEO",
+          "durationMillis": 92000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false
+        }
+      },
+      {
+        "audioFile": {
+          "name": "intro_countdown.wav",
+          "type": "AUDIO",
+          "durationMillis": 92000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "outputBusUuid": "2d9b6f4a-8c1e-47a3-b5d8-7f29c4e87562"
+        }
+      },
+      {
+        "audioFile": {
+          "name": "intro_countdown_cues.wav",
+          "type": "AUDIO",
+          "durationMillis": 92000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "outputBusUuid": "7b3f9a2d-4c81-4e6f-9d73-a8f14c2e9101"
+        }
+      },
+      {
+        "midiFile": {
+          "name": "intro_lights.mid",
+          "type": "MIDI",
+          "durationMillis": 92000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "midiRoutingList": [
+            {
+              "midiDestination": "LIGHTING",
+              "midiMapping": {
+                "channelOffset": 0,
+                "noteOffset": 0
+              },
+              "universeUuid": "f869189e-4068-4800-a61f-66a1499946fd",
+              "remoteDeviceList": []
+            }
+          ]
+        }
+      }
+    ],
+    "notes": "House lights go out via the HTTP action at 0:00. Band walks on at 1:20.",
+    "loop": false,
+    "audioVolume": 1,
+    "leadSheetList": [],
+    "actionTriggerList": [
+      {
+        "positionMillis": 0,
+        "actionList": [
+          {
+            "actionHttp": {
+              "type": "HTTP",
+              "executeLocally": true,
+              "remoteDeviceList": [],
+              "httpMethod": "POST",
+              "url": "http://192.168.1.50/api/scenes/house-lights-off",
+              "body": "{\"fade\": 3}",
+              "headerList": {
+                "Content-Type": "application/json"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "positionMillis": 88000,
+        "actionList": [
+          {
+            "actionMidi": {
+              "type": "MIDI",
+              "executeLocally": true,
+              "remoteDeviceList": [],
+              "midiSignal": {
+                "command": 192,
+                "channel": 0,
+                "data1": 12,
+                "data2": 0
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Neon Skyline",
+    "durationMillis": 245000,
+    "fileList": [
+      {
+        "audioFile": {
+          "name": "neon_skyline_backing.wav",
+          "type": "AUDIO",
+          "durationMillis": 245000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "outputBusUuid": "2d9b6f4a-8c1e-47a3-b5d8-7f29c4e87562"
+        }
+      },
+      {
+        "audioFile": {
+          "name": "neon_skyline_click.wav",
+          "type": "AUDIO",
+          "durationMillis": 245000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "outputBusUuid": "7b3f9a2d-4c81-4e6f-9d73-a8f14c2e9101",
+          "volume": 0.7079
+        }
+      },
+      {
+        "midiFile": {
+          "name": "neon_skyline_keys.mid",
+          "type": "MIDI",
+          "durationMillis": 245000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "midiRoutingList": [
+            {
+              "midiDestination": "OUT_DEVICE",
+              "midiMapping": {
+                "channelOffset": 0,
+                "noteOffset": 0
+              },
+              "universeUuid": "",
+              "remoteDeviceList": []
+            }
+          ]
+        }
+      },
+      {
+        "midiFile": {
+          "name": "neon_skyline_lights.mid",
+          "type": "MIDI",
+          "durationMillis": 245000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "midiRoutingList": [
+            {
+              "midiDestination": "LIGHTING",
+              "midiMapping": {
+                "channelOffset": 0,
+                "noteOffset": 0
+              },
+              "universeUuid": "f869189e-4068-4800-a61f-66a1499946fd",
+              "remoteDeviceList": []
+            }
+          ]
+        }
+      },
+      {
+        "videoFile": {
+          "name": "neon_skyline_visuals.mp4",
+          "type": "VIDEO",
+          "durationMillis": 245000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false
+        }
+      }
+    ],
+    "notes": "Capo 2. Two bars of click before the downbeat.",
+    "loop": false,
+    "audioVolume": 1,
+    "leadSheetList": [
+      {
+        "name": "neon-skyline-chords.png",
+        "instrumentUuid": "5f1c2a9e-3b7d-4e21-9a6f-1c0d8e2b7a02"
+      },
+      {
+        "name": "neon-skyline-keys.png",
+        "instrumentUuid": "5f1c2a9e-3b7d-4e21-9a6f-1c0d8e2b7a04"
+      }
+    ],
+    "actionTriggerList": [
+      {
+        "positionMillis": 0,
+        "actionList": [
+          {
+            "actionMidi": {
+              "type": "MIDI",
+              "executeLocally": true,
+              "remoteDeviceList": [],
+              "midiSignal": {
+                "command": 192,
+                "channel": 0,
+                "data1": 4,
+                "data2": 0
+              }
+            }
+          }
+        ]
+      },
+      {
+        "positionMillis": 184000,
+        "actionList": [
+          {
+            "actionLighting": {
+              "type": "LIGHTING",
+              "executeLocally": true,
+              "remoteDeviceList": [],
+              "lightingActionUniverseList": [
+                {
+                  "universeUuid": "3c1d5e2a-9b7f-4a61-8d2e-5f0a7b6c4e13",
+                  "channelValueList": [
+                    {
+                      "channel": 0,
+                      "value": 255
+                    },
+                    {
+                      "channel": 1,
+                      "value": 120
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Midnight Run",
+    "durationMillis": 228000,
+    "fileList": [
+      {
+        "audioFile": {
+          "name": "midnight_run_backing.wav",
+          "type": "AUDIO",
+          "durationMillis": 228000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "outputBusUuid": "2d9b6f4a-8c1e-47a3-b5d8-7f29c4e87562"
+        }
+      },
+      {
+        "audioFile": {
+          "name": "midnight_run_click.wav",
+          "type": "AUDIO",
+          "durationMillis": 228000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "outputBusUuid": "7b3f9a2d-4c81-4e6f-9d73-a8f14c2e9101"
+        }
+      },
+      {
+        "midiFile": {
+          "name": "midnight_run_lights.mid",
+          "type": "MIDI",
+          "durationMillis": 228000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "midiRoutingList": [
+            {
+              "midiDestination": "LIGHTING",
+              "midiMapping": {
+                "channelOffset": 0,
+                "noteOffset": 0
+              },
+              "universeUuid": "f869189e-4068-4800-a61f-66a1499946fd",
+              "remoteDeviceList": []
+            },
+            {
+              "midiDestination": "REMOTE",
+              "midiMapping": {
+                "channelOffset": 0,
+                "noteOffset": 0
+              },
+              "universeUuid": "",
+              "remoteDeviceList": [
+                "Backstage Video"
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "notes": "",
+    "loop": false,
+    "audioVolume": 1,
+    "leadSheetList": [
+      {
+        "name": "midnight-run-chords.png",
+        "instrumentUuid": "5f1c2a9e-3b7d-4e21-9a6f-1c0d8e2b7a02"
+      }
+    ],
+    "actionTriggerList": []
+  },
+  {
+    "name": "Glass Hearts",
+    "durationMillis": 261000,
+    "fileList": [
+      {
+        "audioFile": {
+          "name": "glass_hearts_strings.wav",
+          "type": "AUDIO",
+          "durationMillis": 261000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "outputBusUuid": "2d9b6f4a-8c1e-47a3-b5d8-7f29c4e87562"
+        }
+      },
+      {
+        "audioFile": {
+          "name": "glass_hearts_click.wav",
+          "type": "AUDIO",
+          "durationMillis": 261000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "outputBusUuid": "7b3f9a2d-4c81-4e6f-9d73-a8f14c2e9101"
+        }
+      },
+      {
+        "videoFile": {
+          "name": "glass_hearts_lyrics.mp4",
+          "type": "VIDEO",
+          "durationMillis": 261000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false
+        }
+      }
+    ],
+    "notes": "",
+    "loop": false,
+    "audioVolume": 1,
+    "leadSheetList": [
+      {
+        "name": "glass-hearts-chords.png",
+        "instrumentUuid": "5f1c2a9e-3b7d-4e21-9a6f-1c0d8e2b7a02"
+      },
+      {
+        "name": "glass-hearts-keys.png",
+        "instrumentUuid": "5f1c2a9e-3b7d-4e21-9a6f-1c0d8e2b7a04"
+      }
+    ],
+    "actionTriggerList": []
+  },
+  {
+    "name": "Satellite",
+    "durationMillis": 213000,
+    "fileList": [
+      {
+        "audioFile": {
+          "name": "satellite_backing.wav",
+          "type": "AUDIO",
+          "durationMillis": 213000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "outputBusUuid": "2d9b6f4a-8c1e-47a3-b5d8-7f29c4e87562"
+        }
+      },
+      {
+        "audioFile": {
+          "name": "satellite_click.wav",
+          "type": "AUDIO",
+          "durationMillis": 213000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "outputBusUuid": "7b3f9a2d-4c81-4e6f-9d73-a8f14c2e9101"
+        }
+      },
+      {
+        "midiFile": {
+          "name": "satellite_synth.mid",
+          "type": "MIDI",
+          "durationMillis": 213000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "midiRoutingList": [
+            {
+              "midiDestination": "OUT_DEVICE",
+              "midiMapping": {
+                "channelOffset": 1,
+                "noteOffset": 0
+              },
+              "universeUuid": "",
+              "remoteDeviceList": []
+            }
+          ]
+        }
+      }
+    ],
+    "notes": "",
+    "loop": false,
+    "audioVolume": 1,
+    "leadSheetList": [],
+    "actionTriggerList": []
+  },
+  {
+    "name": "Afterglow",
+    "durationMillis": 302000,
+    "fileList": [
+      {
+        "audioFile": {
+          "name": "afterglow_pad.wav",
+          "type": "AUDIO",
+          "durationMillis": 302000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "outputBusUuid": "2d9b6f4a-8c1e-47a3-b5d8-7f29c4e87562",
+          "volume": 0.5012
+        }
+      },
+      {
+        "videoFile": {
+          "name": "afterglow_sunset.mp4",
+          "type": "VIDEO",
+          "durationMillis": 302000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false
+        }
+      }
+    ],
+    "notes": "Ballad. No click — the drummer counts in.",
+    "loop": false,
+    "audioVolume": 1,
+    "leadSheetList": [
+      {
+        "name": "afterglow-chords.png",
+        "instrumentUuid": "5f1c2a9e-3b7d-4e21-9a6f-1c0d8e2b7a02"
+      }
+    ],
+    "actionTriggerList": []
+  },
+  {
+    "name": "Thunder Road",
+    "durationMillis": 237000,
+    "fileList": [
+      {
+        "audioFile": {
+          "name": "thunder_road_backing.wav",
+          "type": "AUDIO",
+          "durationMillis": 237000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "outputBusUuid": "2d9b6f4a-8c1e-47a3-b5d8-7f29c4e87562"
+        }
+      },
+      {
+        "audioFile": {
+          "name": "thunder_road_click.wav",
+          "type": "AUDIO",
+          "durationMillis": 237000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "outputBusUuid": "7b3f9a2d-4c81-4e6f-9d73-a8f14c2e9101"
+        }
+      },
+      {
+        "midiFile": {
+          "name": "thunder_road_lights.mid",
+          "type": "MIDI",
+          "durationMillis": 237000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "midiRoutingList": [
+            {
+              "midiDestination": "LIGHTING",
+              "midiMapping": {
+                "channelOffset": 0,
+                "noteOffset": 0
+              },
+              "universeUuid": "f869189e-4068-4800-a61f-66a1499946fd",
+              "remoteDeviceList": []
+            }
+          ]
+        }
+      }
+    ],
+    "notes": "",
+    "loop": false,
+    "audioVolume": 1,
+    "leadSheetList": [],
+    "actionTriggerList": [
+      {
+        "positionMillis": 221000,
+        "actionList": [
+          {
+            "actionRaspberryGpio": {
+              "type": "RASPBERRY_GPIO",
+              "executeLocally": true,
+              "remoteDeviceList": [],
+              "pinId": 22,
+              "high": true
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Fireworks (Encore)",
+    "durationMillis": 280000,
+    "fileList": [
+      {
+        "audioFile": {
+          "name": "fireworks_backing.wav",
+          "type": "AUDIO",
+          "durationMillis": 280000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "outputBusUuid": "2d9b6f4a-8c1e-47a3-b5d8-7f29c4e87562"
+        }
+      },
+      {
+        "audioFile": {
+          "name": "fireworks_click.wav",
+          "type": "AUDIO",
+          "durationMillis": 280000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "outputBusUuid": "7b3f9a2d-4c81-4e6f-9d73-a8f14c2e9101"
+        }
+      },
+      {
+        "midiFile": {
+          "name": "fireworks_lights.mid",
+          "type": "MIDI",
+          "durationMillis": 280000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "midiRoutingList": [
+            {
+              "midiDestination": "LIGHTING",
+              "midiMapping": {
+                "channelOffset": 0,
+                "noteOffset": 0
+              },
+              "universeUuid": "f869189e-4068-4800-a61f-66a1499946fd",
+              "remoteDeviceList": []
+            },
+            {
+              "midiDestination": "LIGHTING",
+              "midiMapping": {
+                "channelOffset": 0,
+                "noteOffset": 0
+              },
+              "universeUuid": "3c1d5e2a-9b7f-4a61-8d2e-5f0a7b6c4e13",
+              "remoteDeviceList": []
+            }
+          ]
+        }
+      },
+      {
+        "videoFile": {
+          "name": "fireworks_led_wall.mp4",
+          "type": "VIDEO",
+          "durationMillis": 280000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false
+        }
+      }
+    ],
+    "notes": "",
+    "loop": false,
+    "audioVolume": 1,
+    "leadSheetList": [],
+    "actionTriggerList": [
+      {
+        "positionMillis": 264000,
+        "actionList": [
+          {
+            "actionRaspberryGpio": {
+              "type": "RASPBERRY_GPIO",
+              "executeLocally": true,
+              "remoteDeviceList": [],
+              "pinId": 22,
+              "high": true
+            }
+          },
+          {
+            "actionHttp": {
+              "type": "HTTP",
+              "executeLocally": true,
+              "remoteDeviceList": [],
+              "httpMethod": "POST",
+              "url": "http://192.168.1.50/api/scenes/confetti",
+              "body": "",
+              "headerList": {}
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Applause & Outro",
+    "durationMillis": 45000,
+    "fileList": [
+      {
+        "audioFile": {
+          "name": "outro_music.wav",
+          "type": "AUDIO",
+          "durationMillis": 45000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "outputBusUuid": "2d9b6f4a-8c1e-47a3-b5d8-7f29c4e87562"
+        }
+      },
+      {
+        "videoFile": {
+          "name": "venue_logo_loop.mp4",
+          "type": "VIDEO",
+          "durationMillis": 30000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": true
+        }
+      }
+    ],
+    "notes": "",
+    "loop": false,
+    "audioVolume": 1,
+    "leadSheetList": [],
+    "actionTriggerList": []
+  },
+  {
+    "name": "Walk-in Loop",
+    "durationMillis": 600000,
+    "fileList": [
+      {
+        "audioFile": {
+          "name": "walk_in_playlist.mp3",
+          "type": "AUDIO",
+          "durationMillis": 600000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "outputBusUuid": "2d9b6f4a-8c1e-47a3-b5d8-7f29c4e87562",
+          "volume": 0.3548
+        }
+      },
+      {
+        "videoFile": {
+          "name": "venue_logo_loop.mp4",
+          "type": "VIDEO",
+          "durationMillis": 30000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": true
+        }
+      }
+    ],
+    "notes": "Runs before doors and during the break.",
+    "loop": true,
+    "audioVolume": 1,
+    "leadSheetList": [],
+    "actionTriggerList": []
+  },
+  {
+    "name": "Soundcheck – Pink Noise",
+    "durationMillis": 60000,
+    "fileList": [
+      {
+        "audioFile": {
+          "name": "pink_noise.wav",
+          "type": "AUDIO",
+          "durationMillis": 60000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "outputBusUuid": "2d9b6f4a-8c1e-47a3-b5d8-7f29c4e87562"
+        }
+      }
+    ],
+    "notes": "",
+    "loop": true,
+    "audioVolume": 1,
+    "leadSheetList": [],
+    "actionTriggerList": []
+  },
+  {
+    "name": "Example Composition",
+    "durationMillis": 242000,
+    "fileList": [
+      {
+        "audioFile": {
+          "name": "head_smashed_far_away.wav",
+          "type": "AUDIO",
+          "durationMillis": 242000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "outputBusUuid": "2d9b6f4a-8c1e-47a3-b5d8-7f29c4e87562"
+        }
+      },
+      {
+        "audioFile": {
+          "name": "head_smashed_far_away_click.wav",
+          "type": "AUDIO",
+          "durationMillis": 242000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "outputBusUuid": "7b3f9a2d-4c81-4e6f-9d73-a8f14c2e9101"
+        }
+      },
+      {
+        "midiFile": {
+          "name": "light_example.mid",
+          "type": "MIDI",
+          "durationMillis": 72858,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false,
+          "midiRoutingList": [
+            {
+              "midiDestination": "LIGHTING",
+              "midiMapping": {
+                "channelOffset": 0,
+                "noteOffset": 0
+              },
+              "universeUuid": "f869189e-4068-4800-a61f-66a1499946fd",
+              "remoteDeviceList": []
+            }
+          ]
+        }
+      },
+      {
+        "videoFile": {
+          "name": "RocketShow.mp4",
+          "type": "VIDEO",
+          "durationMillis": 31000,
+          "offsetMillis": 0,
+          "active": true,
+          "loop": false
+        }
+      }
+    ],
+    "notes": "",
+    "loop": false,
+    "audioVolume": 1,
+    "leadSheetList": [],
+    "actionTriggerList": []
+  }
+]

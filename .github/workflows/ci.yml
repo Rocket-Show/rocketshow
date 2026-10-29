@@ -1,0 +1,202 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Unit tests
+    # Pull requests from branches of this repository are already tested by the push
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+      - name: Install GStreamer
+        # For the tests playing real media, with sinks capturing what the sound cards and the screen would get
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad
+      - name: Run the unit tests
+        run: ./mvnw -B test -Pcoverage -Dskip.npm -Dskip.installnodenpm
+        env:
+          GSTREAMER_TESTS_REQUIRED: true
+      - name: Summarize the coverage
+        run: |
+          awk -F, 'NR > 1 { missed += $8; covered += $9 } END { printf "Line coverage of the unit tests: %.1f %%\n", 100 * covered / (covered + missed) }' \
+            target/site/jacoco/jacoco.csv >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: target/site/jacoco
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-reports
+          path: target/surefire-reports
+          retention-days: 14
+
+  designer-conformance:
+    name: Conformance cases of the designer up to date
+    # The engine plays the cases of the designer (DesignerConformanceTest) from a copy of them, which has to be the one
+    # of the designer: master against the designer's master, every other branch against its develop
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: Rocket-Show/show-designer
+          ref: ${{ github.ref_name == 'master' && 'master' || 'develop' }}
+          path: show-designer
+          sparse-checkout: web/projects/designer/conformance
+      - name: Compare the copy with the cases of the designer
+        run: |
+          if [ ! -d show-designer/web/projects/designer/conformance/cases ]; then
+            echo "::warning::This branch of the designer has no conformance cases yet"
+            exit 0
+          fi
+          if ! diff -r show-designer/web/projects/designer/conformance/cases src/test/resources/designer-conformance/cases \
+            || ! diff -r show-designer/web/projects/designer/conformance/profiles src/test/resources/designer-conformance/profiles; then
+            echo "::error::The conformance cases differ from the ones of the designer: run testing/sync-designer-conformance.sh"
+            exit 1
+          fi
+
+  web-unit:
+    name: Web app unit tests
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Like the Maven build (frontend-maven-plugin in the pom)
+          node-version: 24
+          cache: npm
+          cache-dependency-path: src/main/webapp/package-lock.json
+      - name: Install the dependencies
+        working-directory: src/main/webapp
+        run: npm install --force --no-audit --no-fund
+      - name: Run the unit tests
+        working-directory: src/main/webapp
+        run: npx ng test --watch=false --browsers=ChromeHeadlessCI
+
+  build:
+    name: Build with web app
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+      - uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('src/main/webapp/package-lock.json') }}
+      - name: Build the application including the web app
+        run: ./mvnw -B package -DskipTests
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rocketshow-jar
+          path: target/rocketshow.jar
+          retention-days: 14
+
+  smoke:
+    name: Web app smoke test
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: rocketshow-jar
+          path: ${{ runner.temp }}/unit
+      - name: Install the browser
+        working-directory: testing/smoke
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Start a new unit
+        working-directory: ${{ runner.temp }}/unit
+        run: |
+          # Installed next to the app on a unit, like by dist/install
+          cp "$GITHUB_WORKSPACE/dist/designer_template.json" .
+          nohup java -jar rocketshow.jar > rocketshow.log 2>&1 &
+          for i in $(seq 1 90); do
+            curl -sf http://localhost:8080/api/system/health > /dev/null && exit 0
+            sleep 1
+          done
+          cat rocketshow.log
+          exit 1
+      - name: Run the smoke test
+        working-directory: testing/smoke
+        run: node smoke.mjs
+        env:
+          BASE_URL: http://localhost:8080
+          SCREENSHOT_DIRECTORY: ${{ runner.temp }}/screenshots
+      - name: Collect the log of the unit
+        if: always()
+        run: cp ${{ runner.temp }}/unit/rocketshow.log ${{ runner.temp }}/screenshots/ 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-test
+          path: ${{ runner.temp }}/screenshots
+          retention-days: 14
+
+  release-sample:
+    name: Release sample
+    # Releases are built from master. Their sample files are loaded by the tests of every later release, see
+    # testing/README.md.
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+      - name: Generate the sample of the release, if missing
+        id: sample
+        run: |
+          release=$(./mvnw -B -q help:evaluate -Dexpression=project.version -DforceStdout | sed 's/-SNAPSHOT$//')
+          echo "release=$release" >> "$GITHUB_OUTPUT"
+          if [ -d "src/test/resources/compat/$release" ]; then
+            echo "The sample of release $release is in src/test/resources/compat/$release." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          ./mvnw -B test -Dskip.npm -Dskip.installnodenpm -Dtest=ReleaseSampleGenerator -Dsample.release="$release"
+          echo "missing=true" >> "$GITHUB_OUTPUT"
+      - name: Load the new sample like the next releases
+        if: steps.sample.outputs.missing == 'true'
+        run: ./mvnw -B test -Dskip.npm -Dskip.installnodenpm -Dtest='CompatibilityTest,DesignerProjectCompatibilityTest,DefaultSettingsServiceTest,ReleaseSampleStartTest,ReleaseSamplesStartTest'
+      - uses: actions/upload-artifact@v4
+        if: steps.sample.outputs.missing == 'true'
+        with:
+          name: release-sample-${{ steps.sample.outputs.release }}
+          path: src/test/resources/compat/${{ steps.sample.outputs.release }}
+          retention-days: 90
+      - name: Ask for the sample
+        if: steps.sample.outputs.missing == 'true'
+        run: |
+          release=${{ steps.sample.outputs.release }}
+          echo "::warning::The sample of release $release is missing. Commit the artifact release-sample-$release into src/test/resources/compat/$release."
+          echo "The sample of release $release is missing: download the artifact release-sample-$release, unpack it into src/test/resources/compat/$release and commit it." >> "$GITHUB_STEP_SUMMARY"

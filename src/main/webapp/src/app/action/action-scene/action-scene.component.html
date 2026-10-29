@@ -1,0 +1,69 @@
+<div class="form-group row">
+  <label class="col-md-3 col-form-label">{{
+    "action.scene.type" | translate
+  }}</label>
+  <div class="col-md-9">
+    <select class="custom-select" [(ngModel)]="action.sceneActionType">
+      @for (type of typeList; track type) {
+        <option value="{{ type }}">
+          {{ "action.scene.type-enum." + type | translate }}
+        </option>
+      }
+    </select>
+  </div>
+</div>
+
+@if (action.sceneActionType === 'PLAY_SCENE') {
+  <div class="form-group row">
+    <label class="col-md-3 col-form-label">{{
+      "action.scene.project" | translate
+    }}</label>
+    <div class="col-md-9">
+      <select class="custom-select" [ngModel]="action.projectName" (ngModelChange)="selectProject($event)">
+        @for (project of scenesService.projects; track project.name) {
+          <option [ngValue]="project.name">{{ project.name }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <div class="form-group row">
+    <label class="col-md-3 col-form-label">{{
+      "action.scene.scene" | translate
+    }}</label>
+    <div class="col-md-9">
+      <select class="custom-select" [(ngModel)]="action.scene">
+        @for (scene of scenes(); track scene.uuid) {
+          <option [ngValue]="scene.uuid">{{ scene.name }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <div class="form-group row">
+    <label class="col-md-3 col-form-label">{{
+      "action.scene.plays" | translate
+    }}</label>
+    <div class="col-md-9">
+      <select class="custom-select" [ngModel]="action.untilStopped" (ngModelChange)="setUntilStopped($event)">
+        <option [ngValue]="true">{{ "action.scene.until-stopped" | translate }}</option>
+        <option [ngValue]="false">{{ "action.scene.for-a-time" | translate }}</option>
+      </select>
+      <small class="form-text text-muted">{{
+        (action.untilStopped ? "action.scene.until-stopped-help" : "action.scene.for-a-time-help") | translate
+      }}</small>
+    </div>
+  </div>
+
+  @if (!action.untilStopped) {
+    <div class="form-group row">
+      <label class="col-md-3 col-form-label">{{
+        "action.scene.duration" | translate
+      }}</label>
+      <div class="col-md-9">
+        <input type="number" min="0.1" step="0.1" class="form-control" [ngModel]="durationSeconds()"
+          (ngModelChange)="setDurationSeconds($event)" />
+      </div>
+    </div>
+  }
+}

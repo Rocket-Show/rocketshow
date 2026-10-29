@@ -11,9 +11,9 @@
 
 @if (deviceInformation?.available) {
 <div class="form-group row">
-    <div class="col-lg-3 col-form-label">
+    <label class="col-lg-3 col-form-label">
         {{ "settings.secure-connection" | translate }}
-    </div>
+    </label>
     <div class="col-lg-9 d-flex py-2" style="flex-direction: column;">
         <div class="form-check my-auto">
             <input type="checkbox" [ngModel]="settings?.tlsEnable" (ngModelChange)="settings.tlsEnable = $event"
