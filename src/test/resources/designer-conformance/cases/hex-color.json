@@ -1,0 +1,19 @@
+{
+  "kind": "hexColor",
+  "description": "Colors of the wheels of the fixture library",
+  "cases": [
+    {"name":"'#ff8000'","input":{"text":"#ff8000"},"expected":[255,128,0]},
+    {"name":"'#FF8000'","input":{"text":"#FF8000"},"expected":[255,128,0]},
+    {"name":"'ff8000'","input":{"text":"ff8000"},"expected":[255,128,0]},
+    {"name":"'#f80'","input":{"text":"#f80"},"expected":[255,136,0]},
+    {"name":"'f80'","input":{"text":"f80"},"expected":[255,136,0]},
+    {"name":"'#000000'","input":{"text":"#000000"},"expected":[0,0,0]},
+    {"name":"'#ffffff'","input":{"text":"#ffffff"},"expected":[255,255,255]},
+    {"name":"'orange'","input":{"text":"orange"},"expected":null},
+    {"name":"'#ff80'","input":{"text":"#ff80"},"expected":null},
+    {"name":"'#ff80000'","input":{"text":"#ff80000"},"expected":null},
+    {"name":"'#gg0000'","input":{"text":"#gg0000"},"expected":null},
+    {"name":"''","input":{"text":""},"expected":null},
+    {"name":"'#12345'","input":{"text":"#12345"},"expected":null}
+  ]
+}

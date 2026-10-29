@@ -1,0 +1,23 @@
+{
+  "kind": "defaultValue",
+  "description": "The value a channel of the fixture library starts out with",
+  "cases": [
+    {"name":"a DMX value","input":{"channel":{"defaultValue":128}},"expected":128},
+    {"name":"a DMX value with a fraction","input":{"channel":{"defaultValue":128.5}},"expected":128.5},
+    {"name":"a DMX value as text","input":{"channel":{"defaultValue":"77"}},"expected":77},
+    {"name":"zero","input":{"channel":{"defaultValue":0}},"expected":0},
+    {"name":"zero as text","input":{"channel":{"defaultValue":"0"}},"expected":0},
+    {"name":"a percentage","input":{"channel":{"defaultValue":"50%"}},"expected":127.49999999999999},
+    {"name":"a percentage with a fraction","input":{"channel":{"defaultValue":"33.3%"}},"expected":84.91499999999999},
+    {"name":"a percentage of 16 bit","input":{"channel":{"defaultValue":"12.5%","fineChannelAliases":["Tilt fine"]}},"expected":8191.875},
+    {"name":"a percentage of 24 bit","input":{"channel":{"defaultValue":"100%","fineChannelAliases":["fine","finer"]}},"expected":16777215},
+    {"name":"zero percent","input":{"channel":{"defaultValue":"0%"}},"expected":0},
+    {"name":"none","input":{"channel":{}},"expected":null},
+    {"name":"null","input":{"channel":{"defaultValue":null}},"expected":null},
+    {"name":"a word","input":{"channel":{"defaultValue":"high"}},"expected":null},
+    {"name":"a word in percent","input":{"channel":{"defaultValue":"high%"}},"expected":null},
+    {"name":"hexadecimal","input":{"channel":{"defaultValue":"0x10"}},"expected":null},
+    {"name":"a negative value","input":{"channel":{"defaultValue":-5}},"expected":-5},
+    {"name":"above the channel","input":{"channel":{"defaultValue":300}},"expected":300}
+  ]
+}

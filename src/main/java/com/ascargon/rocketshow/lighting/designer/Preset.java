@@ -66,7 +66,7 @@ public class Preset {
     // all related effects. They stay on the preset instead of moving into the steps, so
     // that they keep their phase across a step transition: a step only opens or closes
     // them (see PresetStep.effectAmounts).
-    private List<Effect> effects;
+    private List<Effect> effects = new ArrayList<>();
 
     // mirror what the preset puts on the pan or the tilt of its moving heads: every one
     // of its fixtures is pointed at the mirrored position (1 - value) on that axis, its

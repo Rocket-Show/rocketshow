@@ -43,6 +43,32 @@ jobs:
           path: target/surefire-reports
           retention-days: 14
 
+  designer-conformance:
+    name: Conformance cases of the designer up to date
+    # The engine plays the cases of the designer (DesignerConformanceTest) from a copy of them, which has to be the one
+    # of the designer: master against the designer's master, every other branch against its develop
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: Rocket-Show/show-designer
+          ref: ${{ github.ref_name == 'master' && 'master' || 'develop' }}
+          path: show-designer
+          sparse-checkout: web/projects/designer/conformance
+      - name: Compare the copy with the cases of the designer
+        run: |
+          if [ ! -d show-designer/web/projects/designer/conformance/cases ]; then
+            echo "::warning::This branch of the designer has no conformance cases yet"
+            exit 0
+          fi
+          if ! diff -r show-designer/web/projects/designer/conformance/cases src/test/resources/designer-conformance/cases \
+            || ! diff -r show-designer/web/projects/designer/conformance/profiles src/test/resources/designer-conformance/profiles; then
+            echo "::error::The conformance cases differ from the ones of the designer: run testing/sync-designer-conformance.sh"
+            exit 1
+          fi
+
   web-unit:
     name: Web app unit tests
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
