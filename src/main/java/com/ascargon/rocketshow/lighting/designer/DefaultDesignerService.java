@@ -2283,8 +2283,8 @@ public class DefaultDesignerService implements DesignerService {
     // Until version 3, the global lists of the project defined the layer order of the
     // presets and the order the fixtures are chased in. Both are stored per scene/preset
     // now -> sort them the way the global lists ordered them, so an older project still
-    // looks exactly the same.
-    private void migrateProject(Project project) {
+    // looks exactly the same. Package visible for the conformance cases of the designer.
+    void migrateProject(Project project) {
         if (project == null) {
             return;
         }
@@ -2454,18 +2454,19 @@ public class DefaultDesignerService implements DesignerService {
     private static final Pattern LEGACY_PIXEL_KEY = Pattern.compile("Pixel (\\d+)-(\\d+)-(\\d+)");
 
     // The pixel keys of the passed text renamed like the fixture library names them (e.g. "Red Pixel 3-1-1" becomes
-    // "Red 3")
+    // "Red 3"). The numbers are read like the designer reads them: one too long for an int is beside the matrix as
+    // well.
     private static String renameLegacyPixelKeys(String text, List<Integer> pixelCount, boolean whole) {
         Matcher matcher = LEGACY_PIXEL_KEY.matcher(text);
         StringBuilder result = new StringBuilder();
 
         while (whole ? matcher.matches() : matcher.find()) {
-            int x = Integer.parseInt(matcher.group(1));
-            int y = Integer.parseInt(matcher.group(2));
-            int z = Integer.parseInt(matcher.group(3));
+            double x = Double.parseDouble(matcher.group(1));
+            double y = Double.parseDouble(matcher.group(2));
+            double z = Double.parseDouble(matcher.group(3));
             boolean inMatrix = x >= 1 && x <= pixelCount.get(0) && y >= 1 && y <= pixelCount.get(1) && z >= 1 && z <= pixelCount.get(2);
 
-            matcher.appendReplacement(result, Matcher.quoteReplacement(inMatrix ? getDefaultPixelKey(pixelCount, x, y, z) : matcher.group()));
+            matcher.appendReplacement(result, Matcher.quoteReplacement(inMatrix ? getDefaultPixelKey(pixelCount, (int) x, (int) y, (int) z) : matcher.group()));
 
             if (whole) {
                 break;
@@ -2607,13 +2608,36 @@ public class DefaultDesignerService implements DesignerService {
                 if (track == null) {
                     track = new Track();
                     track.setUuid(UUID.randomUUID().toString());
-                    track.setName(sceneTracks.isEmpty() ? scene.getName() : scene.getName() + " " + (sceneTracks.size() + 1));
+
+                    // the tracks of a scene without a name are named like new ones (e.g. "Track 3")
+                    if (scene.getName() == null || scene.getName().isEmpty()) {
+                        track.setName(getNewTrackName(composition));
+                    } else {
+                        track.setName(sceneTracks.isEmpty() ? scene.getName() : scene.getName() + " " + (sceneTracks.size() + 1));
+                    }
+
                     sceneTracks.add(track);
                     composition.getTracks().add(track);
                 }
 
                 region.setTrackUuid(track.getUuid());
             }
+        }
+    }
+
+    // A name for another track of the composition, which none of its tracks carries yet, like getNewTrackName of the
+    // designer
+    private static String getNewTrackName(Composition composition) {
+        int number = composition.getTracks().size() + 1;
+
+        while (true) {
+            String name = "Track " + number;
+
+            if (composition.getTracks().stream().noneMatch(track -> name.equals(track.getName()))) {
+                return name;
+            }
+
+            number++;
         }
     }
 

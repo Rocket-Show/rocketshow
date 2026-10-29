@@ -493,6 +493,19 @@ class DesignerProjectCompatibilityTest {
     }
 
     @Test
+    void keepsTheNameOfAPixelWithANumberTooLongForAnInt() throws Exception {
+        // like the designer, which reads it as a number far beside the matrix: the project is loaded all the same
+        Project project = projectWithOldPixelKeys(8);
+        project.getPresetFixtures().getFirst().setPixelKey("Pixel 99999999999-1-1");
+        project.getPresets().getFirst().getSteps().getFirst().getFixtureChannelValues().getFirst().setChannelName("Red Pixel 1-99999999999-1");
+
+        migrate(project);
+
+        assertEquals("plane Pixel 99999999999-1-1", getFixturesAndPixels(project.getPresetFixtures()).getFirst());
+        assertEquals("Red Pixel 1-99999999999-1", project.getPresets().getFirst().getSteps().getFirst().getFixtureChannelValues().getFirst().getChannelName());
+    }
+
+    @Test
     void renamesThePixelsOnlyOnce() throws Exception {
         // In a project of version 9, a name looking like an old one is a name of its own (e.g. of a pixel group)
         Project project = projectWithOldPixelKeys(9);
