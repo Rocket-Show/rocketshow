@@ -213,10 +213,6 @@ public class RemoteDevice {
         doPost("transport/load?name=" + URLEncoder.encode(name, StandardCharsets.UTF_8), null, synchronous);
     }
 
-    public void load() {
-        doPost("transport/load", null, false);
-    }
-
     public void play() {
         doPost("transport/play");
     }
