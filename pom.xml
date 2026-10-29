@@ -274,8 +274,8 @@
                                 <param>com.ascargon.rocketshow.lighting.designer.*</param>
                             </targetTests>
                             <threads>${pit.threads}</threads>
-                            <!-- the tests notice 87 % of the faults today: fail, once they notice clearly fewer -->
-                            <mutationThreshold>85</mutationThreshold>
+                            <!-- the tests notice 94 % of the faults today: fail, once they notice clearly fewer -->
+                            <mutationThreshold>92</mutationThreshold>
                             <timestampedReports>false</timestampedReports>
                             <outputFormats>
                                 <param>HTML</param>
