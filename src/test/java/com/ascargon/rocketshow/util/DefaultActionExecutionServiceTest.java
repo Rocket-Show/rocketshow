@@ -130,8 +130,16 @@ class DefaultActionExecutionServiceTest {
         play.setScene("Warm wash");
         play.setDurationMillis(5000);
 
+        // The duration is kept for when the scene is played for a while again
+        ActionScene playUntilStopped = scene(ActionScene.SceneActionType.PLAY_SCENE);
+        playUntilStopped.setProjectName("Club Lights");
+        playUntilStopped.setScene("Strobe");
+        playUntilStopped.setUntilStopped(true);
+        playUntilStopped.setDurationMillis(5000);
+
         actionExecutionService.executeFromTrigger(trigger(
                 play,
+                playUntilStopped,
                 scene(ActionScene.SceneActionType.BLACKOUT_ON),
                 scene(ActionScene.SceneActionType.BLACKOUT_OFF),
                 scene(ActionScene.SceneActionType.TOGGLE_BLACKOUT),
@@ -139,6 +147,7 @@ class DefaultActionExecutionServiceTest {
 
         var inOrder = inOrder(scenePlayerService);
         inOrder.verify(scenePlayerService).playScene("Club Lights", "Warm wash", 5000);
+        inOrder.verify(scenePlayerService).playScene("Club Lights", "Strobe", ScenePlayerService.UNTIL_STOPPED);
         inOrder.verify(scenePlayerService).setBlackout(true);
         inOrder.verify(scenePlayerService).setBlackout(false);
         inOrder.verify(scenePlayerService).toggleBlackout();

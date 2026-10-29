@@ -42,15 +42,17 @@ public class ScenesController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    // Play one scene of the project, by its uuid or its name, instead of the ones played so far. After the passed time
-    // (0 = none) it is turned off again, unless other scenes were picked meanwhile.
+    // Play one scene of the project, by its uuid or its name, instead of the ones played so far: until it is stopped
+    // (untilStopped, or without a duration) by other scenes or by turning all scenes off, or else for the passed time.
+    // Then it is turned off again, unless other scenes were picked meanwhile.
     @PostMapping("play")
     public ResponseEntity<Void> playScene(
             @RequestParam("projectName") String projectName,
             @RequestParam("scene") String scene,
+            @RequestParam(value = "untilStopped", required = false, defaultValue = "false") boolean untilStopped,
             @RequestParam(value = "durationMillis", required = false, defaultValue = "0") long durationMillis
     ) {
-        scenePlayerService.playScene(projectName, scene, durationMillis);
+        scenePlayerService.playScene(projectName, scene, untilStopped ? ScenePlayerService.UNTIL_STOPPED : durationMillis);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

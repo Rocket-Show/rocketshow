@@ -157,8 +157,8 @@ public class DefaultActionExecutionService implements ActionExecutionService {
             case SCENE -> {
                 ActionScene actionScene = (ActionScene) action;
                 switch (actionScene.getSceneActionType()) {
-                    case PLAY_SCENE ->
-                            scenePlayerService.playScene(actionScene.getProjectName(), actionScene.getScene(), actionScene.getDurationMillis());
+                    case PLAY_SCENE -> scenePlayerService.playScene(actionScene.getProjectName(), actionScene.getScene(),
+                            actionScene.isUntilStopped() ? ScenePlayerService.UNTIL_STOPPED : actionScene.getDurationMillis());
                     case RELEASE_ALL -> scenePlayerService.releaseAll();
                     case BLACKOUT_ON -> scenePlayerService.setBlackout(true);
                     case BLACKOUT_OFF -> scenePlayerService.setBlackout(false);

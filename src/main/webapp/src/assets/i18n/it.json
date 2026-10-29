@@ -595,8 +595,12 @@
       },
       "project": "Progetto del designer",
       "scene": "Scena",
-      "duration": "Durata (secondi)",
-      "duration-help": "Dopo questo tempo la scena si spegne di nuovo. Con 0 resta accesa finché non si scelgono altre scene. Una nuova scena spegne quella precedente."
+      "plays": "Riproduzione",
+      "until-stopped": "Fino all'arresto",
+      "for-a-time": "Per un certo tempo",
+      "until-stopped-help": "La scena resta accesa finché non si riproduce un'altra scena o si spengono tutte le scene. Un blackout la oscura soltanto.",
+      "for-a-time-help": "Dopo questo tempo la scena si spegne di nuovo, a meno che prima non sia stata riprodotta un'altra scena.",
+      "duration": "Durata (secondi)"
     }
   },
   "spark": {

@@ -8,7 +8,10 @@ export class ActionScene extends Action {
   // the scene to play, by its uuid (or by its name)
   scene: string;
 
-  // how long the scene plays, before it is turned off again (0 = until other scenes are picked)
+  // the scene plays until it is stopped: by another scene or by turning all scenes off
+  untilStopped: boolean = true;
+
+  // how long the scene plays otherwise, before it is turned off again (0 = until stopped as well)
   durationMillis: number = 0;
 
   constructor(data?: any) {
@@ -22,6 +25,9 @@ export class ActionScene extends Action {
     this.projectName = data.projectName;
     this.scene = data.scene;
     this.durationMillis = data.durationMillis || 0;
+
+    // a scene played without a duration plays until stopped too
+    this.untilStopped = data.untilStopped || !this.durationMillis;
 
     if (!this.sceneActionType) {
       this.sceneActionType = "PLAY_SCENE";

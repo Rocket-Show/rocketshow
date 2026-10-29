@@ -42,6 +42,14 @@ export class ActionSceneComponent implements OnInit {
     this.action.scene = this.scenes()[0]?.uuid;
   }
 
+  setUntilStopped(untilStopped: boolean) {
+    this.action.untilStopped = untilStopped;
+
+    if (!untilStopped && !this.action.durationMillis) {
+      this.action.durationMillis = 10000;
+    }
+  }
+
   durationSeconds(): number {
     return (this.action.durationMillis || 0) / 1000;
   }

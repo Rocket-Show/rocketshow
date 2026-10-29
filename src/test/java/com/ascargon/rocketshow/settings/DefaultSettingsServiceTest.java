@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.settings;
 
 import com.ascargon.rocketshow.StrictXml;
+import com.ascargon.rocketshow.lighting.designer.ActionScene;
 import com.ascargon.rocketshow.midi.MidiRouting;
 import com.ascargon.rocketshow.midi.MidiService;
 import com.ascargon.rocketshow.raspberry.ActionTriggerRaspberryGpio;
@@ -255,6 +256,29 @@ class DefaultSettingsServiceTest {
         verify(applicationEventPublisher, times(3)).publishEvent(any(RaspberryGpioChangedEvent.class));
     }
 
+
+    @Test
+    void keepsTheSceneAButtonPlaysAfterARestart() throws Exception {
+        Path directory = Files.createTempDirectory(tempPath, "scene");
+        DefaultSettingsService settingsService = start(directory);
+
+        ActionScene play = new ActionScene();
+        play.setSceneActionType(ActionScene.SceneActionType.PLAY_SCENE);
+        play.setProjectName("Club Lights");
+        play.setScene("Warm wash");
+        play.setUntilStopped(true);
+        ActionTriggerRaspberryGpio trigger = new ActionTriggerRaspberryGpio();
+        trigger.setPinId(22);
+        trigger.getActionList().add(play);
+        settingsService.getSettings().getActionTriggerRaspberryGpioList().add(trigger);
+        settingsService.save();
+
+        ActionScene loaded = (ActionScene) start(directory).getSettings().getActionTriggerRaspberryGpioList().getFirst().getActionList().getFirst();
+        assertEquals(ActionScene.SceneActionType.PLAY_SCENE, loaded.getSceneActionType());
+        assertEquals("Club Lights", loaded.getProjectName());
+        assertEquals("Warm wash", loaded.getScene());
+        assertTrue(loaded.isUntilStopped());
+    }
 
     @Test
     void keepsSettingsWhichCannotBeLoaded() throws Exception {

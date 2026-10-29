@@ -90,6 +90,16 @@ class ScenesApiTest extends ApiTest {
     }
 
     @Test
+    void keepsTheSceneOnUntilItIsStopped() throws Exception {
+        mockMvc.perform(post("/api/scenes/play").session(admin).param("projectName", PROJECT).param("scene", "warm")
+                        .param("untilStopped", "true").param("durationMillis", "200"))
+                .andExpect(status().isOk());
+        Thread.sleep(500);
+
+        assertEquals(List.of("warm"), scenePlayerService.getActiveSceneUuids());
+    }
+
+    @Test
     void refusesASceneTheProjectDoesNotHave() throws Exception {
         mockMvc.perform(post("/api/scenes/play").session(admin).param("projectName", PROJECT).param("scene", "Strobe"))
                 .andExpect(status().isBadRequest());

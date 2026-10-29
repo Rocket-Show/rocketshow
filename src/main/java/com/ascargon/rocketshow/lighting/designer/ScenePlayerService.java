@@ -32,9 +32,12 @@ public interface ScenePlayerService {
     // Play the passed scenes of the passed project instead of the ones picked so far (none = release them all)
     void setActiveScenes(String projectName, List<String> sceneUuids);
 
+    // The time a scene is played until it is stopped: by other scenes or by turning all scenes off
+    long UNTIL_STOPPED = 0;
+
     // Play one scene of the project, by its uuid or its name, instead of the scenes on so far. After the passed time
-    // (0 = none) it is turned off again, unless other scenes were picked meanwhile. Throws an IllegalArgumentException
-    // for a scene the project doesn't have.
+    // (or UNTIL_STOPPED) it is turned off again, unless other scenes were picked meanwhile. Throws an
+    // IllegalArgumentException for a scene the project doesn't have.
     void playScene(String projectName, String scene, long durationMillis);
 
     // Turn all scenes off

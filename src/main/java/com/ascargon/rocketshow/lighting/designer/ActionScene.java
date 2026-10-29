@@ -28,7 +28,10 @@ public class ActionScene extends Action {
     private String projectName;
     private String scene;
 
-    // how long the scene plays, before it is turned off again (0 = until other scenes are picked)
+    // play the scene until it is stopped (by another scene or by turning all scenes off), instead of for a while
+    private boolean untilStopped = false;
+
+    // how long the scene plays otherwise, before it is turned off again (0 = until stopped as well)
     private long durationMillis = 0;
 
     @Override

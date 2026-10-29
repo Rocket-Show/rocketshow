@@ -596,8 +596,12 @@
       },
       "project": "Designer-Projekt",
       "scene": "Szene",
-      "duration": "Dauer (Sekunden)",
-      "duration-help": "Nach dieser Zeit geht die Szene wieder aus. Mit 0 bleibt sie an, bis andere Szenen gewählt werden. Eine neue Szene schaltet die vorherige aus."
+      "plays": "Läuft",
+      "until-stopped": "Bis sie gestoppt wird",
+      "for-a-time": "Eine bestimmte Zeit lang",
+      "until-stopped-help": "Die Szene bleibt an, bis eine andere Szene abgespielt wird oder alle Szenen ausgeschaltet werden. Ein Blackout dunkelt sie nur ab.",
+      "for-a-time-help": "Nach dieser Zeit geht die Szene wieder aus, es sei denn, vorher wurde eine andere Szene abgespielt.",
+      "duration": "Dauer (Sekunden)"
     }
   },
   "spark": {
