@@ -155,7 +155,7 @@ Run them locally without the web app build, with or without the coverage report 
 ./mvnw test -Pcoverage -Dskip.npm -Dskip.installnodenpm
 ```
 
-All 1581 tests pass without any hardware attached, in a few minutes. The 55 tests playing real media need GStreamer
+All 1677 tests pass without any hardware attached, in a few minutes. The 55 tests playing real media need GStreamer
 with the base, good and bad plugins (e.g. `apt install gstreamer1.0-plugins-base gstreamer1.0-plugins-good
 gstreamer1.0-plugins-bad`) and are skipped without it. One backup test needs an unreadable file, so it is skipped when
 running as root (root can read every file). It runs in CI. The tests cover 83 % of the lines and 72 % of the branches
@@ -426,7 +426,7 @@ In this order. The power comes last, after the others loaded the unit.
 | `audio` | For each sound card of the audio settings (all the buses on it), or of a unit without them every sound card ALSA offers (its own device, with all the channels it offers): a sine at -20 dBFS on every channel for 3 seconds, each channel at its own frequency (400 Hz, 550 Hz, 700 Hz, ...), mixed like the audio files of a composition (mix matrix) into the output of a composition: mixer, the rate and channels of the settings, `level`, volume and the sink on the ALSA device of the buses (`rs_<card>`). Measured with the `level` element before the sink, once a second. | The pipeline reaches `PLAYING`, no error on the bus, every channel in every measurement at -20 dBFS ±3 dB |
 | `audio-loopback` | If the sound card has inputs: records them while the sines play (with a cable from the outputs to the inputs) and measures the frequency of each output on each input over one second (Goertzel) | Each input hears the output of the same channel at -60 dBFS or louder, and the others at least 20 dB less. Tells swapped channels, crosstalk and silent inputs. |
 | `video` | If a display is connected (any HDMI connector the kernel reports as `connected`): `videotestsrc` on the sink of the videos of a composition (`kmssink`, on the Raspberry Pi 3 the one `playbin` picks) for 3 seconds. The connector, the name of the display (EDID) and its preferred mode go into the target. | The pipeline reaches `PLAYING`, no error on the bus |
-| `video-decoder` | Decodes a video of 10 frames of H.265 in the app with `uridecodebin`, like the videos of a composition, also without display. Into `fakevideosink`, which offers the video meta like `kmssink`: the hardware decoder of a Raspberry Pi hands over DMABuf and refuses sinks without it. | Every frame decoded. The decoder (hardware or software) goes into the target. Skipped without H.265 decoder (e.g. a Raspberry Pi 3). |
+| `video-decoder` | Decodes a video of 10 frames of H.265 in the app onto the display, like the videos of a composition: `uridecodebin`, `videoconvert` and the sink of the videos (`kmssink`). Only that sink takes the frames of the hardware decoder of a Raspberry Pi, which hands over DMABuf and needs the video meta and the buffer pool of the sink. | Every frame decoded. The decoder (hardware or software) goes into the target. Skipped without display, and without H.265 decoder (e.g. a Raspberry Pi 3). |
 | `midi-out` | Sends a burst of 200 messages on the MIDI out device of the settings, one each 2 ms: note on, control change (the undefined controllers 20 to 31), program change and note off, on every channel, with data bytes across their whole range | Sending succeeds |
 | `midi-loopback` | Listens on the MIDI in device of the settings during the burst and up to a second after it. Real-time messages (e.g. active sensing an interface sends by itself) don't count. | Every message arrives once, in order, unchanged. The target tells which out device arrived on which in device. |
 | `gpio-out` | Switches the GPIO outputs of the settings high and low once per second for 5 seconds (visible on a fixture LED), then back to their states before. Never touches reserved pins or the pins of GPIO triggers, which may be wired to a button. | The state read back matches |
@@ -559,16 +559,17 @@ a model need the hardware description ([section 5](#5-hardware-features), see th
     the input (the analysis allows about 1.5 s).
   - [ ] `video` on `kmssink` with a display connected (the name and mode from the EDID), and on a Raspberry Pi 3
     (`autovideosink`). `video-decoder`: the hardware decoder of a Raspberry Pi 4 and 5 picked by `uridecodebin`. The
-    first ready to use unit failed with "Internal data stream error.": `v4l2slh265dec` refused `appsink`, which doesn't
-    offer the video meta ("DMABuf caps negotiated without the mandatory support of VideoMeta"), so it decodes into
-    `fakevideosink` now. The test picture of `video` showed on its display.
+    first ready to use unit failed with "Internal data stream error.": `v4l2slh265dec` (GStreamer 1.29) refused
+    `appsink`, which doesn't offer the video meta ("DMABuf caps negotiated without the mandatory support of
+    VideoMeta"), `fakevideosink`, which offers no buffer pool for DMABuf ("Failed to configure the buffer pool"), and
+    system memory. So it decodes onto the display now, like compositions. The test picture of `video` showed on it.
   - [ ] `midi-loopback` on the DIN ports (serial) and on a USB MIDI interface: no message lost at one per 2 ms.
   - [ ] `gpio-out`, `gpio-loopback` and `reset-button` on the GPIO chip of each model (Pi4J with gpiod).
   - [ ] `dmx-interface` and `dmx` with an OLA output port patched: the ramp on a DMX receiver.
   - [ ] `updates`, `watchdog` and `read-only-root` on a ready to use unit: the output of its `rauc status`, the service
     of the app with `WatchdogSec`. Found on the first unit: RAUC colors its status also when not printing to a
     terminal and marks the slots with ⏺ and ○ where the locale supports UTF-8, so `updates` found no slot. Both of its
-    slots are marked bad (see [Open](#open)).
+    slots were reported bad (see [Open](#open)).
   - [ ] `power`: the app may run `vcgencmd` (the user of the app needs the group `video`). `storage`: the speeds of the
     SD cards in use against the minimums, whether the app may read the kernel log.
   - [ ] The duration: well under a minute.
@@ -1103,10 +1104,11 @@ Found by reading the code and by the tests. Each one gets a unit test or rig tes
 
 ### Open
 
-- **Both slots of a SPARK are marked bad.** `rauc status` of the first unit checked (booted from `rootfs.1` after an
-  update) reports `boot status: bad` for both slots, also the one running, which `finishUpdate()` marks good with
-  `rauc status mark-good` after the update. Either marking good fails or doesn't stick, or the bootloader backend of
-  RAUC in the image doesn't report it. The `updates` check of the self-test fails on such a unit. Next: run
-  `rauc status mark-good` on the unit and `rauc status` again, and look at the `get-state` and `set-state` of the
-  backend in the image.
+- **A SPARK running from slot B reports both slots bad.** `rauc status` of the first unit checked (booted from
+  `rootfs.1` after an update) reported `boot status: bad` for both slots, also after `rauc status mark-good`. The
+  bootloader backend of RAUC in the image (`rauc/rauc-custom-backend` of the spark repository) keeps no state: the
+  slot running is good, the other one bad unless the firmware tries it. But the firmware numbers the boot partitions
+  by counting the FAT partitions only (`3` for bootfsB on `/dev/mmcblk0p4`), and `get-state` looked the number up as
+  the device's partition number, so it failed on slot B. Updates were not affected. Fixed in the spark repository,
+  open until a bundle with it is installed. The `updates` check of the self-test fails on such a unit until then.
 

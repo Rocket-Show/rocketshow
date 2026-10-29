@@ -29,8 +29,8 @@ import java.util.stream.Collectors;
 
 /**
  * Plays a test picture on the screen, with the sink of the videos of a composition, and decodes a short H.265 video
- * like a composition does (with the hardware decoder, if the unit has one). Whether a picture appears needs someone
- * looking or a capture device.
+ * onto it like a composition does (with the hardware decoder, if the unit has one). Whether a picture appears needs
+ * someone looking or a capture device.
  */
 @Service
 class VideoSelfTest implements SelfTestStep {
@@ -179,14 +179,17 @@ class VideoSelfTest implements SelfTestStep {
         }
     }
 
-    // Like the video files of a composition: by uridecodebin, which picks the decoder with the highest rank. Into
-    // fakevideosink, which offers the video meta like kmssink: hardware decoders handing over DMABuf (e.g.
-    // v4l2slh265dec of a Raspberry Pi) refuse a sink without it ("not-negotiated").
+    // Like the video files of a composition: uridecodebin picks the decoder with the highest rank, and the frames go
+    // through videoconvert to the sink of the videos. Only that sink takes the frames of the hardware decoder of a
+    // Raspberry Pi: v4l2slh265dec hands over DMABuf, which needs the video meta and the buffer pool of kmssink. Other
+    // sinks fail ("not-negotiated", "Failed to configure the buffer pool"), also when asking for system memory.
     private SelfTestCheck decode() throws Exception {
-        for (String element : List.of("uridecodebin", "fakevideosink")) {
-            if (!isInstalled(element)) {
-                return SelfTestCheck.skipped(VIDEO_DECODER, null, "The GStreamer element " + element + " is not installed");
-            }
+        if (!isInstalled("uridecodebin")) {
+            return SelfTestCheck.skipped(VIDEO_DECODER, null, "The GStreamer element uridecodebin is not installed");
+        }
+
+        if (hdmiService.getConnectedDisplays().isEmpty()) {
+            return SelfTestCheck.skipped(VIDEO_DECODER, null, "No display connected, the video decodes onto it like the videos of compositions");
         }
 
         Path video = Files.createTempFile("rocketshow-selftest", ".mp4");
@@ -210,7 +213,13 @@ class VideoSelfTest implements SelfTestStep {
                 uriDecodeBin.set("uri", video.toUri().toString());
                 pipeline.add(uriDecodeBin);
 
-                Element sink = ElementFactory.make("fakevideosink", "selftest_decodedsink");
+                Element queue = ElementFactory.make("queue", "selftest_decodedqueue");
+                pipeline.add(queue);
+
+                Element videoConvert = ElementFactory.make("videoconvert", "selftest_decodedconvert");
+                pipeline.add(videoConvert);
+
+                Element sink = compositionPipelineBuilder.createVideoSink();
                 sink.set("sync", false);
                 sink.getStaticPad("sink").addDataProbe((pad, buffer) -> {
                     frames.incrementAndGet();
@@ -218,11 +227,14 @@ class VideoSelfTest implements SelfTestStep {
                 });
                 pipeline.add(sink);
 
+                queue.link(videoConvert);
+                videoConvert.link(sink);
+
                 // GStreamer only tells afterwards that nothing took the stream, if it could not be linked
                 uriDecodeBin.connect((Element.PAD_ADDED) (Element element, Pad pad) -> {
                     Caps caps = pad.getCurrentCaps();
                     if (caps != null && caps.getStructure(0).getName().startsWith("video/x-raw")) {
-                        String failure = GstPipelineErrors.link(pad, sink.getStaticPad("sink"));
+                        String failure = GstPipelineErrors.link(pad, queue.getStaticPad("sink"));
                         if (failure != null) {
                             error.compareAndSet(null, failure);
                         }

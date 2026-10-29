@@ -77,7 +77,7 @@ class AudioVideoSelfTestTest {
     void setUp() {
         TestGstreamer.assumeInstalled("audiotestsrc", "audioconvert", "audioresample", "audiomixer", "level", "volume",
                 "appsink", "appsrc", "videotestsrc", "videoconvert", "filesink", "uridecodebin", "qtdemux", "h265parse", "libde265dec",
-                "fakevideosink");
+                "queue", "fakesink");
 
         settings.setAudioRate(RATE);
         when(settingsService.getSettings()).thenReturn(settings);
@@ -420,9 +420,11 @@ class AudioVideoSelfTestTest {
         assertEquals("Recorded only 1000 ms", tooShort.getDetails());
     }
 
+    // The sink of the test picture, then a new sink for each further video (the decoded one): a fakesink, an appsink
+    // would hold back the end of the stream until its frames are pulled
     private VideoSelfTest videoSelfTest(Element sink) {
         CompositionPipelineBuilder compositionPipelineBuilder = mock(CompositionPipelineBuilder.class);
-        when(compositionPipelineBuilder.createVideoSink()).thenReturn(sink);
+        when(compositionPipelineBuilder.createVideoSink()).thenReturn(sink).thenAnswer(invocation -> ElementFactory.make("fakesink", "decodedsink"));
         VideoSelfTest videoSelfTest = new VideoSelfTest(hdmiService, compositionPipelineBuilder, capabilitiesService, mock(GstreamerInitService.class));
         videoSelfTest.pictureMillis = 500;
         return videoSelfTest;
@@ -459,6 +461,10 @@ class AudioVideoSelfTestTest {
 
         assertEquals(SelfTestOutcome.SKIPPED, checks(context, VideoSelfTest.VIDEO).getFirst().getResult());
         assertEquals("No display connected", checks(context, VideoSelfTest.VIDEO).getFirst().getDetails());
+        // Only the sink of the videos takes the frames of the hardware decoder of a Raspberry Pi
+        assertEquals(SelfTestOutcome.SKIPPED, checks(context, VideoSelfTest.VIDEO_DECODER).getFirst().getResult());
+        assertEquals("No display connected, the video decodes onto it like the videos of compositions",
+                checks(context, VideoSelfTest.VIDEO_DECODER).getFirst().getDetails());
     }
 
     @Test
@@ -477,7 +483,8 @@ class AudioVideoSelfTestTest {
     }
 
     @Test
-    void decodesAnH265VideoLikeACompositionAlsoWithoutDisplay() throws Exception {
+    void decodesAnH265VideoOntoTheSinkOfTheVideosLikeAComposition() throws Exception {
+        when(hdmiService.getConnectedDisplays()).thenReturn(List.of(new HdmiService.ConnectedDisplay("HDMI-A-1", "1920x1080", null)));
         SelfTestContext context = context();
 
         videoSelfTest(ElementFactory.make("appsink", "videosink")).run(context);
