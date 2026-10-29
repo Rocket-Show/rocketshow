@@ -595,8 +595,12 @@
       },
       "project": "Projeto do designer",
       "scene": "Cena",
-      "duration": "Duração (segundos)",
-      "duration-help": "A cena volta a apagar-se após este tempo. Com 0 fica acesa até serem escolhidas outras cenas. Uma cena nova apaga a anterior."
+      "plays": "Toca",
+      "until-stopped": "Até ser parada",
+      "for-a-time": "Durante um tempo",
+      "until-stopped-help": "A cena fica acesa até ser tocada outra cena ou serem apagadas todas as cenas. Um blackout apenas a escurece.",
+      "for-a-time-help": "A cena volta a apagar-se após este tempo, a menos que outra cena seja tocada antes.",
+      "duration": "Duração (segundos)"
     }
   },
   "spark": {

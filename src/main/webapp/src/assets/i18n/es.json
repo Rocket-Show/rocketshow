@@ -595,8 +595,12 @@
       },
       "project": "Proyecto del diseñador",
       "scene": "Escena",
-      "duration": "Duración (segundos)",
-      "duration-help": "La escena se apaga de nuevo tras este tiempo. Con 0 sigue encendida hasta que se eligen otras escenas. Una escena nueva apaga la anterior."
+      "plays": "Se reproduce",
+      "until-stopped": "Hasta que se detenga",
+      "for-a-time": "Durante un tiempo",
+      "until-stopped-help": "La escena sigue encendida hasta que se reproduce otra escena o se apagan todas las escenas. Un blackout solo la oscurece.",
+      "for-a-time-help": "La escena se apaga de nuevo tras este tiempo, salvo que antes se reproduzca otra escena.",
+      "duration": "Duración (segundos)"
     }
   },
   "spark": {

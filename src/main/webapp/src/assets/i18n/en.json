@@ -605,8 +605,12 @@
       },
       "project": "Designer project",
       "scene": "Scene",
-      "duration": "Duration (seconds)",
-      "duration-help": "The scene turns off again after this time. With 0 it stays on until other scenes are picked. A new scene turns the one before off."
+      "plays": "Plays",
+      "until-stopped": "Until stopped",
+      "for-a-time": "For a set time",
+      "until-stopped-help": "The scene stays on until another scene is played or all scenes are turned off. A blackout only darkens it.",
+      "for-a-time-help": "The scene turns off again after this time, unless another scene was played before.",
+      "duration": "Duration (seconds)"
     }
   },
   "spark": {

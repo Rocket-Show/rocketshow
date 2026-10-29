@@ -595,8 +595,12 @@
       },
       "project": "Projet du concepteur",
       "scene": "Scène",
-      "duration": "Durée (secondes)",
-      "duration-help": "La scène s'éteint à nouveau après ce temps. Avec 0, elle reste allumée jusqu'à ce que d'autres scènes soient choisies. Une nouvelle scène éteint la précédente."
+      "plays": "Joue",
+      "until-stopped": "Jusqu'à l'arrêt",
+      "for-a-time": "Pendant une durée",
+      "until-stopped-help": "La scène reste allumée jusqu'à ce qu'une autre scène soit jouée ou que toutes les scènes soient éteintes. Un blackout ne fait que l'assombrir.",
+      "for-a-time-help": "La scène s'éteint à nouveau après ce temps, sauf si une autre scène a été jouée avant.",
+      "duration": "Durée (secondes)"
     }
   },
   "spark": {

@@ -157,11 +157,11 @@ class ScenePlayerServiceTest {
         DefaultScenePlayerService scenePlayerService = scenePlayerService();
         scenePlayerService.setActiveScenes("Club Lights", List.of("Club Lights-0", "Club Lights-1"));
 
-        scenePlayerService.playScene("Club Lights", "Scene 1", 0);
+        scenePlayerService.playScene("Club Lights", "Scene 1", ScenePlayerService.UNTIL_STOPPED);
         verify(designerService).playManualScenes(club, List.of("Club Lights-1"), 1.0);
         assertEquals(List.of("Club Lights-1"), scenePlayerService.getActiveSceneUuids());
 
-        scenePlayerService.playScene("Club Lights", "Club Lights-0", 0);
+        scenePlayerService.playScene("Club Lights", "Club Lights-0", ScenePlayerService.UNTIL_STOPPED);
         assertEquals(List.of("Club Lights-0"), scenePlayerService.getActiveSceneUuids());
     }
 
@@ -169,8 +169,8 @@ class ScenePlayerServiceTest {
     void refusesASceneTheProjectDoesNotHave() {
         DefaultScenePlayerService scenePlayerService = scenePlayerService();
 
-        assertThrows(IllegalArgumentException.class, () -> scenePlayerService.playScene("Club Lights", "Strobe", 0));
-        assertThrows(IllegalArgumentException.class, () -> scenePlayerService.playScene("Deleted", "Scene 0", 0));
+        assertThrows(IllegalArgumentException.class, () -> scenePlayerService.playScene("Club Lights", "Strobe", ScenePlayerService.UNTIL_STOPPED));
+        assertThrows(IllegalArgumentException.class, () -> scenePlayerService.playScene("Deleted", "Scene 0", ScenePlayerService.UNTIL_STOPPED));
     }
 
     @Test
@@ -213,6 +213,22 @@ class ScenePlayerServiceTest {
 
         // Both plays and the end are saved and sent to the apps (before the folder of the test is cleaned up)
         verify(notificationService, timeout(1000).times(3)).notifyClients(any(), any());
+    }
+
+    @Test
+    void keepsAScenePlayedUntilStoppedOnAfterTheTimeOfTheOneBefore() throws Exception {
+        DefaultScenePlayerService scenePlayerService = scenePlayerService();
+
+        scenePlayerService.playScene("Club Lights", "Scene 0", 200);
+        scenePlayerService.playScene("Club Lights", "Scene 0", ScenePlayerService.UNTIL_STOPPED);
+        Thread.sleep(500);
+        assertEquals(List.of("Club Lights-0"), scenePlayerService.getActiveSceneUuids());
+
+        // Another scene stops it, as does turning all scenes off
+        scenePlayerService.playScene("Club Lights", "Scene 1", ScenePlayerService.UNTIL_STOPPED);
+        assertEquals(List.of("Club Lights-1"), scenePlayerService.getActiveSceneUuids());
+        scenePlayerService.releaseAll();
+        assertEquals(List.of(), scenePlayerService.getActiveSceneUuids());
     }
 
     @Test

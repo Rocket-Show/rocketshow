@@ -74,6 +74,7 @@ describe("Actions of a trigger", () => {
     const action = newAction("SCENE") as ActionScene;
     action.projectName = "Club Lights";
     action.scene = "warm-wash";
+    action.untilStopped = false;
     action.durationMillis = 5000;
     trigger.actionList.push(action);
 
@@ -82,7 +83,24 @@ describe("Actions of a trigger", () => {
     expect(loaded.sceneActionType).toBe("PLAY_SCENE");
     expect(loaded.projectName).toBe("Club Lights");
     expect(loaded.scene).toBe("warm-wash");
+    expect(loaded.untilStopped).toBeFalse();
     expect(loaded.durationMillis).toBe(5000);
+  });
+
+  it("plays the scene of a new SCENE action until it is stopped", () => {
+    const trigger = new ActionTriggerComposition();
+    trigger.actionList.push(newAction("SCENE"));
+
+    expect((saveAndLoad(trigger).actionList[0] as ActionScene).untilStopped).toBeTrue();
+  });
+
+  // As the unit plays it
+  it("plays the scene of a SCENE action without a duration until it is stopped", () => {
+    const trigger = new ActionTriggerComposition({
+      actionList: [{ actionScene: { type: "SCENE", sceneActionType: "PLAY_SCENE", untilStopped: false, durationMillis: 0 } }],
+    });
+
+    expect((trigger.actionList[0] as ActionScene).untilStopped).toBeTrue();
   });
 
   // The unit ignores fields it doesn't know
