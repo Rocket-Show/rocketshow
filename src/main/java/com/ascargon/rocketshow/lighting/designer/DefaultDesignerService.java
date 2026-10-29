@@ -923,11 +923,6 @@ public class DefaultDesignerService implements DesignerService {
             colorBlue = capabilityValue.getValuePercentage() == null ? Double.NaN : 255 * capabilityValue.getValuePercentage();
         }
 
-        if (colorRed == null && colorGreen == null && colorBlue == null) {
-            // no color found -> search the first color wheel
-            // TODO
-        }
-
         if (colorRed != null && colorGreen != null && colorBlue != null) {
             for (CachedFixtureCapability capability : cachedChannel.getCapabilities()) {
                 if (capability.getCapability().getSlotNumber() != null) {
