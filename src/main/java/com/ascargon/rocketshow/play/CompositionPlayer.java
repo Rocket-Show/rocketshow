@@ -99,15 +99,24 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
 
     @Override
     public void onError(String message) {
-        try {
-            notificationService.notifyClients(message);
-        } catch (Exception e) {
-            logger.error("Could not notify clients about an error", e);
-        }
+        notifyError(message);
         try {
             stop();
         } catch (Exception e) {
             logger.error("Could not stop compostion triggered by an error", e);
+        }
+    }
+
+    @Override
+    public void onSlaveError(String message) {
+        notifyError(message);
+    }
+
+    private void notifyError(String message) {
+        try {
+            notificationService.notifyClients(message);
+        } catch (Exception e) {
+            logger.error("Could not notify clients about an error", e);
         }
     }
 

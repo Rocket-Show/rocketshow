@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.selftest;
 
+import com.ascargon.rocketshow.gstreamer.GstPipelineErrors;
 import com.ascargon.rocketshow.gstreamer.GstreamerInitService;
 import com.ascargon.rocketshow.play.CompositionPipelineBuilder;
 import com.ascargon.rocketshow.settings.CapabilitiesService;
@@ -120,7 +121,7 @@ class VideoSelfTest implements SelfTestStep {
             Pipeline pipeline = buildPipeline(sink);
 
             Bus bus = pipeline.getBus();
-            SelfTestPipelineErrors.onError(bus, message -> {
+            GstPipelineErrors.onError(bus, message -> {
                 error.compareAndSet(null, message);
                 playing.countDown();
             });
@@ -217,15 +218,19 @@ class VideoSelfTest implements SelfTestStep {
                 });
                 pipeline.add(sink);
 
+                // GStreamer only tells afterwards that nothing took the stream, if it could not be linked
                 uriDecodeBin.connect((Element.PAD_ADDED) (Element element, Pad pad) -> {
                     Caps caps = pad.getCurrentCaps();
                     if (caps != null && caps.getStructure(0).getName().startsWith("video/x-raw")) {
-                        pad.link(sink.getStaticPad("sink"));
+                        String failure = GstPipelineErrors.link(pad, sink.getStaticPad("sink"));
+                        if (failure != null) {
+                            error.compareAndSet(null, failure);
+                        }
                     }
                 });
 
                 Bus bus = pipeline.getBus();
-                SelfTestPipelineErrors.onError(bus, message -> {
+                GstPipelineErrors.onError(bus, message -> {
                     error.compareAndSet(null, message);
                     done.countDown();
                 });

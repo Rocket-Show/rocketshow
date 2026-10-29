@@ -3,6 +3,7 @@ package com.ascargon.rocketshow.selftest;
 import com.ascargon.rocketshow.audio.AudioDevice;
 import com.ascargon.rocketshow.audio.AudioService;
 import com.ascargon.rocketshow.gstreamer.GstApi;
+import com.ascargon.rocketshow.gstreamer.GstPipelineErrors;
 import com.ascargon.rocketshow.gstreamer.GstreamerInitService;
 import com.ascargon.rocketshow.play.CompositionPipelineBuilder;
 import com.ascargon.rocketshow.settings.CapabilitiesService;
@@ -156,7 +157,7 @@ class AudioSelfTest implements SelfTestStep {
             Pipeline pipeline = buildPipeline(audioDevice, channels, ofTheSettings);
 
             Bus bus = pipeline.getBus();
-            SelfTestPipelineErrors.onError(bus, message -> {
+            GstPipelineErrors.onError(bus, message -> {
                 error.compareAndSet(null, message);
                 playing.countDown();
             });
@@ -367,7 +368,7 @@ class AudioSelfTest implements SelfTestStep {
         formatFilter.link(sink);
 
         Bus bus = loopbackPipeline.getBus();
-        SelfTestPipelineErrors.onError(bus, message -> {
+        GstPipelineErrors.onError(bus, message -> {
             recording.error.compareAndSet(null, message);
             recordingStarted.countDown();
         });
