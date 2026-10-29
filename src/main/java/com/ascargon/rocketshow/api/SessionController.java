@@ -43,4 +43,12 @@ public class SessionController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    // What the Play screen shows: the compositions of the set or the scenes of the designer projects
+    @PostMapping("set-play-mode")
+    public ResponseEntity<Void> setPlayMode(@RequestParam("value") String value) {
+        sessionService.getSession().setPlayMode(value);
+        sessionService.save();
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
 }

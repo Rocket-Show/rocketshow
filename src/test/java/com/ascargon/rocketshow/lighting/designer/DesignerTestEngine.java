@@ -91,6 +91,14 @@ class DesignerTestEngine {
         });
     }
 
+    /**
+     * Start the engine the way the passed function does with the project, e.g. playing the scenes picked by hand on
+     * the Play screen, and return the first DMX values the engine sends.
+     */
+    Map<String, Map<Integer, Integer>> start(Path directory, String project, java.util.function.BiConsumer<DefaultDesignerService, Project> start, List<String> universeUuids) throws Exception {
+        return run(directory, project, universeUuids, start);
+    }
+
     private Map<String, Map<Integer, Integer>> run(Path directory, String project, List<String> universeUuids, java.util.function.BiConsumer<DefaultDesignerService, Project> start) throws Exception {
         Path designerPath = Files.createDirectories(directory.resolve("designer"));
         try (var files = Files.list(designerPath)) {

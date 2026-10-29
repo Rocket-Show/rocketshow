@@ -1,0 +1,232 @@
+:host {
+    display: flex;
+    flex-flow: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+/* The header reads as one framed block with the tiles below it, like the set and its compositions */
+.scenes-header-group {
+    flex: 0 0 auto;
+}
+
+.scenes-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sd-space-2) var(--sd-space-4);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.scenes-count {
+    color: var(--sd-text-dim);
+}
+
+.dropdown-item.active .scenes-count {
+    color: inherit;
+}
+
+.scene-folders {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-left: auto;
+    padding: 3px;
+    border: 1px solid var(--sd-border);
+    border-radius: var(--sd-radius-lg);
+    background-color: var(--sd-surface-1);
+}
+
+@media (max-width: 575px) {
+    /* below the project on a phone: from the left, like the rest */
+    .scene-folders {
+        margin-left: 0;
+    }
+}
+
+.scene-folder {
+    height: 40px;
+    padding: 0 var(--sd-space-4);
+    border: none;
+    border-radius: var(--sd-radius);
+    background-color: transparent;
+    color: var(--sd-text-muted);
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.scene-folder:hover {
+    color: var(--sd-text);
+}
+
+.scene-folder.active {
+    background-color: var(--sd-surface-4);
+    color: var(--sd-text);
+}
+
+.scene-folder:focus {
+    outline: none;
+}
+
+.scene-folder:focus-visible {
+    box-shadow: var(--sd-focus-ring);
+}
+
+.scenes-body {
+    display: flex;
+    flex-flow: column;
+    gap: var(--sd-space-3);
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: var(--sd-space-3);
+    overflow-y: auto;
+    border: 1px solid var(--sd-border);
+    border-top: none;
+    border-radius: 0 0 var(--sd-radius-lg) var(--sd-radius-lg);
+}
+
+.scenes-held {
+    display: flex;
+    align-items: center;
+    gap: var(--sd-space-3);
+    padding: var(--sd-space-2) var(--sd-space-3) var(--sd-space-2) var(--sd-space-4);
+    border: 1px solid rgba(61, 157, 240, 0.5);
+    border-radius: var(--sd-radius-lg);
+    background-color: rgba(61, 157, 240, 0.14);
+}
+
+.scenes-held-icon {
+    color: var(--sd-info);
+    font-size: 1.25rem;
+}
+
+.scenes-held-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    color: var(--sd-text-muted);
+}
+
+.scenes-held-text strong {
+    color: var(--sd-text);
+    font-weight: 600;
+}
+
+.scenes-held-stop {
+    flex: 0 0 auto;
+    min-height: 40px;
+}
+
+/* Large tiles for a finger, as many in a row as fit */
+.scene-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-auto-rows: 112px;
+    gap: var(--sd-space-3);
+}
+
+.scene-tile {
+    display: flex;
+    flex-flow: column;
+    justify-content: space-between;
+    min-width: 0;
+    margin: 0;
+    padding: var(--sd-space-3) 14px;
+    border: 2px solid var(--sd-border);
+    border-radius: var(--sd-radius-lg);
+    background-color: var(--sd-surface-2);
+    color: var(--sd-text);
+    text-align: left;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.scene-tile:hover {
+    border-color: var(--sd-border-strong);
+}
+
+.scene-tile:active {
+    opacity: 0.8;
+}
+
+.scene-tile:focus {
+    outline: none;
+}
+
+.scene-tile:focus-visible {
+    box-shadow: var(--sd-focus-ring);
+}
+
+.scene-tile-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.scene-tile-icon {
+    color: var(--scene-color);
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
+.scene-tile-dimmer {
+    padding: 2px 7px;
+    border-radius: var(--sd-radius);
+    background-color: var(--sd-surface-4);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.scene-tile-name {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    line-height: 1.2;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow-wrap: anywhere;
+}
+
+.scene-tile-status {
+    min-height: 1em;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+/* Lit: filled with the color of the scene, so it can be seen across the room */
+.scene-tile-on,
+.scene-tile-on:hover {
+    border-color: var(--scene-color);
+    background-color: var(--scene-color);
+    color: var(--scene-text);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--scene-color) 25%, transparent),
+        0 8px 26px color-mix(in srgb, var(--scene-color) 35%, transparent);
+}
+
+.scene-tile-on .scene-tile-icon {
+    color: var(--scene-text);
+}
+
+.scene-tile-on .scene-tile-dimmer {
+    background-color: color-mix(in srgb, var(--scene-text) 18%, transparent);
+}
+
+/* On, but kept dark by a composition or a blackout: it lights up again once they end */
+.scene-tile-held,
+.scene-tile-held:hover {
+    border-style: dashed;
+    border-color: var(--scene-color);
+}
+
+.scene-tile-held .scene-tile-status {
+    color: var(--scene-color);
+}

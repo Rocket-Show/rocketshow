@@ -192,8 +192,11 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
         // Destroy an old pipeline, if required
         stopPipeline();
 
-        // Initialize lighting without designer
-        lightingService.setExternalSync(false);
+        // Initialize lighting without designer. The scenes picked by hand on the Play screen keep playing until a
+        // project of a composition takes the lights over, so their engine keeps sending the universes.
+        if (!designerService.isPlayingManualScenes()) {
+            lightingService.setExternalSync(false);
+        }
 
         // Destroy an old designer project, if required
         this.designerService.close();
@@ -449,6 +452,11 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
         // -> no separate step, because there's only one global handler and the default composition is closed
         // after the loading step.
         Project designerProject = designerService.getProjectByCompositionName(composition.getName());
+        if (designerProject != null && isDefaultComposition && designerService.hasManualScenes()) {
+            // The default composition only plays in between: the scenes picked by hand on the Play screen go before
+            // its lights
+            designerProject = null;
+        }
         if (designerProject != null) {
             logger.info("Designer project found. Load it...");
             designerService.load(this, designerProject, compositionPipeline == null ? null : compositionPipeline.getMasterPipeline());

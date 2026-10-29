@@ -2,11 +2,18 @@ package com.ascargon.rocketshow.api;
 
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
+import com.ascargon.rocketshow.lighting.designer.ScenePlayerService;
 import com.ascargon.rocketshow.play.PlayerService;
 import org.springframework.stereotype.Service;
 
 @Service
 public class DefaultStateService implements StateService {
+
+    private final ScenePlayerService scenePlayerService;
+
+    public DefaultStateService(ScenePlayerService scenePlayerService) {
+        this.scenePlayerService = scenePlayerService;
+    }
 
     private int getCompositionIndexWithoutSet(
             CompositionService compositionService,
@@ -43,6 +50,12 @@ public class DefaultStateService implements StateService {
                 currentState.setCurrentCompositionIndex(getCompositionIndexWithoutSet(compositionService, playerService.getCompositionName()));
             }
         }
+
+        currentState.setSceneProjectName(scenePlayerService.getProjectName());
+        currentState.setActiveSceneUuids(scenePlayerService.getActiveSceneUuids());
+        currentState.setSceneBlackout(scenePlayerService.isBlackout());
+        currentState.setSceneMasterDimmer(scenePlayerService.getMasterDimmer());
+        currentState.setScenesHeld(scenePlayerService.isHeld());
 
         return currentState;
     }

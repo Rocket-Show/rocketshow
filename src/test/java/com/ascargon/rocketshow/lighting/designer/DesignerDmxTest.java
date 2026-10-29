@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.lighting.designer;
 
+import com.ascargon.rocketshow.play.CompositionPlayer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import tools.jackson.databind.ObjectMapper;
@@ -11,7 +12,10 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * The DMX values the designer engine sends for the fixtures of a project: the channels of a preset, fine channels,
@@ -555,6 +559,134 @@ class DesignerDmxTest {
 
         // Half way to dark, still in red
         assertEquals(List.of(127, 255, 0, 0), addresses(front, 1, 4));
+    }
+
+    // Start the engine the way the passed function does with the project, e.g. playing the scenes picked by hand on
+    // the Play screen, and return the first DMX values it sends
+    private Map<String, Map<Integer, Integer>> start(ObjectNode project, java.util.function.BiConsumer<DefaultDesignerService, Project> start) throws Exception {
+        DesignerTestEngine engine = new DesignerTestEngine();
+        Map<String, Map<Integer, Integer>> universes = engine.start(directory, project.toString(), start, List.of(FRONT, BACK));
+
+        assertEquals(List.of(), engine.errors);
+        return universes;
+    }
+
+    // A composition playing the project, the default composition (played in between the others) or a regular one
+    private static CompositionPlayer compositionPlayer(boolean defaultComposition) {
+        com.ascargon.rocketshow.composition.Composition composition = new com.ascargon.rocketshow.composition.Composition();
+        composition.setName("Song");
+        CompositionPlayer compositionPlayer = mock(CompositionPlayer.class);
+        when(compositionPlayer.getComposition()).thenReturn(composition);
+        when(compositionPlayer.getPlayState()).thenReturn(CompositionPlayer.PlayState.PLAYING);
+        when(compositionPlayer.isDefaultComposition()).thenReturn(defaultComposition);
+        return compositionPlayer;
+    }
+
+    @Test
+    void playsTheScenesPickedByHandOnThePlayScreen() throws Exception {
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+        addColorPreset(project, "Blue", 0, 1);
+
+        Map<Integer, Integer> front = start(project, (designerService, loadedProject) ->
+                designerService.playManualScenes(loadedProject, List.of("Blue-scene"), 1)).get(FRONT);
+
+        assertEquals(List.of(255, 0, 0, 255), addresses(front, 1, 4));
+    }
+
+    @Test
+    void dimsTheScenesPickedByHandWithTheMasterDimmerOfThePlayScreen() throws Exception {
+        ObjectNode project = project();
+        project.put("masterDimmerValue", 0.5);
+        addColorPreset(project, "Red", 1, 0);
+
+        // On top of the master dimmer of the project: a quarter of the brightness, the color stays
+        Map<Integer, Integer> front = start(project, (designerService, loadedProject) ->
+                designerService.playManualScenes(loadedProject, List.of("Red-scene"), 0.5)).get(FRONT);
+        assertEquals(List.of(63, 255), addresses(front, 1, 2));
+
+        // A blackout turns the master dimmer of the Play screen all the way down
+        front = start(project, (designerService, loadedProject) ->
+                designerService.playManualScenes(loadedProject, List.of("Red-scene"), 0)).get(FRONT);
+        assertEquals(List.of(0, 255), addresses(front, 1, 2));
+    }
+
+    @Test
+    void bringsTheScenesPickedByHandBackOnceTheProjectOfACompositionCloses() throws Exception {
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+        addColorPreset(project, "Blue", 0, 1);
+
+        Map<Integer, Integer> front = start(project, (designerService, loadedProject) -> {
+            // The composition lights the stage with its own project: the scenes wait
+            designerService.load(compositionPlayer(false), loadedProject, null);
+            designerService.playManualScenes(loadedProject, List.of("Blue-scene"), 1);
+            assertTrue(designerService.hasManualScenes());
+            assertFalse(designerService.isPlayingManualScenes());
+
+            // ... until it stops
+            designerService.close();
+            assertTrue(designerService.isPlayingManualScenes());
+        }).get(FRONT);
+
+        assertEquals(List.of(255, 0, 0, 255), addresses(front, 1, 4));
+    }
+
+    @Test
+    void playsTheScenesPickedByHandInsteadOfTheLightsOfTheDefaultComposition() throws Exception {
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+        addColorPreset(project, "Blue", 0, 1);
+
+        Map<Integer, Integer> front = start(project, (designerService, loadedProject) -> {
+            designerService.load(compositionPlayer(true), loadedProject, null);
+            designerService.playManualScenes(loadedProject, List.of("Blue-scene"), 1);
+            assertTrue(designerService.isPlayingManualScenes());
+        }).get(FRONT);
+
+        assertEquals(List.of(255, 0, 0, 255), addresses(front, 1, 4));
+    }
+
+    @Test
+    void keepsPlayingTheScenesPickedByHandAlongWithACompositionWithoutProject() throws Exception {
+        ObjectNode project = project();
+        addColorPreset(project, "Blue", 0, 1);
+
+        Map<Integer, Integer> front = start(project, (designerService, loadedProject) -> {
+            designerService.playManualScenes(loadedProject, List.of("Blue-scene"), 1);
+
+            // A composition without a project closes the one played so far when it loads, pauses the engine and
+            // starts it again. The live preview of the designer is turned off in the settings.
+            designerService.close();
+            designerService.pause();
+            designerService.play();
+            designerService.stopPreview();
+
+            assertTrue(designerService.isPlayingManualScenes());
+        }).get(FRONT);
+
+        assertEquals(List.of(255, 0, 0, 255), addresses(front, 1, 4));
+    }
+
+    @Test
+    void bringsBackTheScenesPickedLast() throws Exception {
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+        addColorPreset(project, "Blue", 0, 1);
+
+        Map<Integer, Integer> front = start(project, (designerService, loadedProject) -> {
+            designerService.load(compositionPlayer(false), loadedProject, null);
+            designerService.playManualScenes(loadedProject, List.of("Red-scene"), 1);
+
+            // Released while the composition plays: nothing would come back
+            designerService.stopManualScenes();
+            assertFalse(designerService.hasManualScenes());
+
+            designerService.playManualScenes(loadedProject, List.of("Blue-scene"), 1);
+            designerService.close();
+        }).get(FRONT);
+
+        assertEquals(List.of(255, 0, 0, 255), addresses(front, 1, 4));
     }
 
 }

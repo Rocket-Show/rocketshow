@@ -28,6 +28,7 @@ import { CompositionService } from "./services/composition.service";
 import { FileService } from "./services/file.service";
 import { SettingsService } from "./services/settings.service";
 import { SessionService } from "./services/session.service";
+import { ScenesService } from "./services/scenes.service";
 import { WarningDialogService } from "./services/warning-dialog.service";
 import { WarningDialogComponent } from "./warning-dialog/warning-dialog.component";
 import { PendingChangesDialogService } from "./services/pending-changes-dialog.service";
@@ -42,6 +43,9 @@ import { ProvisionComponent } from "./provision/provision.component";
 import { UpdateProgressComponent } from "./update-progress/update-progress.component";
 import { ConnectionComponent } from "./connection/connection.component";
 import { PlayComponent } from "./play/play.component";
+import { PlayModeSwitchComponent } from "./play/play-mode-switch/play-mode-switch.component";
+import { PlaySceneMasterComponent } from "./play/play-scene-master/play-scene-master.component";
+import { PlayScenesComponent } from "./play/play-scenes/play-scenes.component";
 import { SettingsComponent } from "./settings/settings.component";
 import { SettingsSystemComponent } from "./settings/settings-system/settings-system.component";
 import { SettingsAdvancedComponent } from "./settings/settings-advanced/settings-advanced.component";
@@ -134,6 +138,9 @@ const appRoutes: Routes = [
         ProvisionComponent,
         ParticleBackgroundComponent,
         PlayComponent,
+        PlayModeSwitchComponent,
+        PlaySceneMasterComponent,
+        PlayScenesComponent,
         SettingsComponent,
         EditorComponent,
         EditorCompositionComponent,
@@ -227,6 +234,7 @@ const appRoutes: Routes = [
         FileService,
         SettingsService,
         SessionService,
+        ScenesService,
         WarningDialogService,
         PendingChangesDialogService,
         UpdateService,

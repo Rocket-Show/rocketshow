@@ -6,6 +6,7 @@ import com.ascargon.rocketshow.composition.Composition;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
+import com.ascargon.rocketshow.lighting.designer.Project;
 import com.ascargon.rocketshow.midi.MidiTimecodeService;
 import com.ascargon.rocketshow.settings.Capabilities;
 import com.ascargon.rocketshow.settings.CapabilitiesService;
@@ -23,6 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -285,6 +288,27 @@ class CompositionPlayerTest {
         waitMillis(500);
         int leakedThreads = countThreads() - threads;
         assertTrue(leakedThreads < 5, leakedThreads + " threads left after 10 plays");
+    }
+
+    @Test
+    void leavesTheLightsToTheScenesPickedByHandWhenPlayedInBetween() throws Exception {
+        DesignerService designerService = playerService.getDesignerService();
+        Project project = new Project();
+        when(designerService.getProjectByCompositionName("Actions")).thenReturn(project);
+        when(designerService.hasManualScenes()).thenReturn(true);
+        compositionPlayer.setComposition(composition(0, 1000));
+
+        // The default composition plays in between the others: the scenes picked on the Play screen go before its
+        // lights
+        compositionPlayer.setDefaultComposition(true);
+        compositionPlayer.play();
+        verify(designerService, never()).load(any(), any(), any());
+        compositionPlayer.stop();
+
+        // A composition played on purpose lights the stage with its own project
+        compositionPlayer.setDefaultComposition(false);
+        compositionPlayer.play();
+        verify(designerService).load(compositionPlayer, project, null);
     }
 
 }

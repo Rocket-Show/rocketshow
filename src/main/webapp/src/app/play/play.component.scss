@@ -303,3 +303,82 @@
     0%, 100% { opacity: 1; }
     50% { opacity: 0.5; }
 }
+
+/* The switch between the compositions and the scenes. Below lg it sits above the buttons, from lg up at the right
+   of the transport, where the room only balanced the readout. */
+.mode-switch-col {
+    margin-bottom: 10px;
+}
+
+@media (min-width: 992px) {
+    .mode-switch-col {
+        margin-bottom: 0;
+    }
+}
+
+/* The scene controls take the place of the transport buttons, as large as them for a finger */
+.scene-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sd-space-2);
+}
+
+.btn-scene {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sd-space-2);
+    height: 46px;
+    padding: 0 var(--sd-space-4);
+    border: 1px solid var(--sd-border-strong);
+    border-radius: var(--sd-radius-lg);
+    background-color: var(--sd-surface-2);
+    color: var(--sd-text);
+    font-weight: 600;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-scene:hover:not(:disabled) {
+    background-color: var(--sd-surface-3);
+    color: var(--sd-text);
+}
+
+.btn-scene:focus,
+.btn-scene:active:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.btn-scene:focus-visible {
+    box-shadow: var(--sd-focus-ring);
+}
+
+.btn-scene-active,
+.btn-scene-active:hover:not(:disabled) {
+    border-color: var(--sd-primary);
+    background-color: var(--sd-primary-soft);
+    color: var(--sd-primary-text);
+}
+
+.btn-scene-blackout {
+    min-width: 140px;
+    justify-content: center;
+    border: 2px solid var(--sd-danger);
+    background-color: transparent;
+    color: var(--sd-danger);
+}
+
+.btn-scene-blackout:hover:not(:disabled) {
+    background-color: rgba(229, 84, 75, 0.14);
+    color: var(--sd-danger);
+}
+
+.btn-scene-blackout-active,
+.btn-scene-blackout-active:hover:not(:disabled) {
+    background-color: var(--sd-danger);
+    color: var(--sd-bg);
+}
+
+app-play-scene-master {
+    display: block;
+}

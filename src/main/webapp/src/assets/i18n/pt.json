@@ -62,6 +62,28 @@
     "settings": "Definições"
   },
   "play": {
+    "mode-compositions": "Composições",
+    "mode-scenes": "Cenas",
+    "mode-composition-playing": "Está a tocar uma composição",
+    "scenes-stack": "Sobrepor",
+    "scenes-release-all": "Apagar todas",
+    "scenes-blackout": "Blackout",
+    "scenes-master": "Master",
+    "scenes-full-screen": "Ecrã inteiro",
+    "scenes-exit-full-screen": "Sair do ecrã inteiro",
+    "scenes-all": "Todas",
+    "scenes-nothing-on": "Nada aceso",
+    "scenes-count-on": "{{count}} cenas acesas",
+    "scenes-on": "Acesa",
+    "scenes-held": "Em espera",
+    "scenes-held-composition": "\"{{name}}\" está a tocar.",
+    "scenes-held-composition-detail": "Ilumina agora o palco. As suas cenas voltam quando parar.",
+    "scenes-held-preview": "A pré-visualização em direto do designer ilumina agora o palco.",
+    "scenes-held-preview-detail": "Toque numa cena para recuperar a luz.",
+    "scenes-stop-composition": "Parar composição",
+    "scenes-projects": "Projetos do designer com cenas",
+    "scenes-count": "{{count}} cenas",
+    "scenes-count-one": "1 cena",
     "help": {
       "auto-select-next": "Quando ativado, a composição seguinte do set é selecionada assim que a atual termina. Começa a tocar de imediato se a composição que terminou estiver marcada no set para iniciar a seguinte automaticamente.",
       "switch-to-grid": "Muda para a grelha de cues, onde cada composição é um botão grande que pode acionar diretamente.",
@@ -69,7 +91,12 @@
       "activity-midi-in": "Pisca quando são recebidos dados MIDI.",
       "activity-midi-out": "Pisca quando são enviados dados MIDI.",
       "activity-audio": "Mostra o nível de saída de áudio atual por canal.",
-      "activity-lighting": "Pisca quando são enviados dados de iluminação."
+      "activity-lighting": "Pisca quando são enviados dados de iluminação.",
+      "mode": "Alterna entre as composições do set e as cenas dos projetos do designer, para iluminar o palco à mão.",
+      "scenes-stack": "Quando ativado, um toque junta a cena às que já estão acesas. Caso contrário, um toque acende apenas essa cena.",
+      "scenes-release-all": "Apaga todas as cenas.",
+      "scenes-blackout": "Apaga a luz e mantém as cenas selecionadas. Toque de novo para as recuperar.",
+      "scenes-full-screen": "Mostra o Rocket Show no ecrã inteiro, por exemplo num tablet fixado na parede."
     }
   },
   "editor": {

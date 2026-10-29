@@ -46,6 +46,10 @@ public class Project {
     public List<PresetFixture> presetFixtures;
 
     private List<Scene> scenes;
+
+    // the folders the scenes are grouped in
+    private List<SceneFolder> sceneFolders;
+
     private List<Preset> presets;
 
 }
