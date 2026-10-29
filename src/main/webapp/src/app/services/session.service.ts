@@ -45,7 +45,12 @@ export class SessionService {
     return this.http.post('session/set-play-view-mode?value=' + value, undefined);
   }
 
-  setPlayMode(value: string): Observable<Object> {
+  setPlayMode(value: 'compositions' | 'scenes'): Observable<Object> {
+    // the Play screen shows it again, when it is opened next
+    if (this.session) {
+      this.session.playMode = value;
+    }
+
     return this.http.post('session/set-play-mode?value=' + value, undefined);
   }
 

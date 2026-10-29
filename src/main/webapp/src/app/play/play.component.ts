@@ -55,9 +55,6 @@ export class PlayComponent implements OnInit, OnDestroy {
 
   viewMode: 'setlist' | 'grid' = 'setlist';
 
-  // the compositions of the set or the scenes of the designer projects, lit by hand
-  playMode: 'compositions' | 'scenes' = 'compositions';
-
   // the whole screen for Rocket Show, e.g. on a tablet on the wall
   fullscreenAvailable: boolean = !!document.fullscreenEnabled;
   fullscreen: boolean = !!document.fullscreenElement;
@@ -165,7 +162,7 @@ export class PlayComponent implements OnInit, OnDestroy {
     this.sessionService.getSession().subscribe((session) => {
       this.session = session;
       this.viewMode = session.playViewMode || 'setlist';
-      this.playMode = session.playMode || 'compositions';
+      this.scenesService.playMode = session.playMode || 'compositions';
     });
 
     this.loadAllSets();
@@ -563,11 +560,11 @@ export class PlayComponent implements OnInit, OnDestroy {
   }
 
   scenesAvailable(): boolean {
-    return this.scenesService.projects.length > 0;
+    return this.scenesService.scenesAvailable();
   }
 
   showScenes(): boolean {
-    return this.playMode === 'scenes' && this.scenesAvailable();
+    return this.scenesService.showScenes();
   }
 
   compositionPlaying(): boolean {
@@ -575,18 +572,7 @@ export class PlayComponent implements OnInit, OnDestroy {
   }
 
   setPlayMode(playMode: 'compositions' | 'scenes') {
-    this.playMode = playMode;
-
-    if (this.session) {
-      this.session.playMode = playMode;
-    }
-
-    this.sessionService.setPlayMode(playMode).subscribe();
-
-    // the scenes may have been changed in the designer meanwhile
-    if (playMode === 'scenes') {
-      this.loadSceneProjects();
-    }
+    this.scenesService.setPlayMode(playMode);
   }
 
   // what the scenes light: the scene on, how many are on, or why they are dark

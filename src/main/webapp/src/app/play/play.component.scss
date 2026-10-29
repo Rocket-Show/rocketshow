@@ -306,16 +306,6 @@
 
 /* The switch between the compositions and the scenes. Below lg it sits above the buttons, from lg up at the right
    of the transport, where the room only balanced the readout. */
-.mode-switch-col {
-    margin-bottom: 10px;
-}
-
-@media (min-width: 992px) {
-    .mode-switch-col {
-        margin-bottom: 0;
-    }
-}
-
 /* The scene controls take the place of the transport buttons, as large as them for a finger */
 .scene-controls {
     display: flex;

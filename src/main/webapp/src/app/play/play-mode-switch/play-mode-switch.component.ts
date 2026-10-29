@@ -14,6 +14,9 @@ export class PlayModeSwitchComponent {
   // a composition plays, while the scenes are shown
   @Input() compositionPlaying: boolean = false;
 
+  // only the icons, e.g. next to the menu on a small screen
+  @Input() compact: boolean = false;
+
   @Output() modeChange = new EventEmitter<'compositions' | 'scenes'>();
 
   select(mode: 'compositions' | 'scenes') {

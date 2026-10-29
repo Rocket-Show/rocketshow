@@ -14,6 +14,7 @@ import { AuthService } from "./services/auth.service";
 import { DeviceInformationService } from "./services/device-information.service";
 import { ToastrService } from "ngx-toastr";
 import { UpdateService } from "./services/update.service";
+import { ScenesService } from "./services/scenes.service";
 import { UpdateState } from "./models/update-state";
 
 @Component({
@@ -46,7 +47,8 @@ export class AppComponent implements OnInit {
     private route: ActivatedRoute,
     public authService: AuthService,
     private toastrService: ToastrService,
-    private updateService: UpdateService
+    private updateService: UpdateService,
+    public scenesService: ScenesService
   ) {
     translateService.setDefaultLang("en");
   }
@@ -208,6 +210,11 @@ export class AppComponent implements OnInit {
 
   showLeadSheet() {
     this.leadSheetService.show();
+  }
+
+  // on a small screen, the switch between the compositions and the scenes of the Play screen is next to the menu
+  playModeSwitchVisible(): boolean {
+    return this.isPlay && this.scenesService.scenesAvailable();
   }
 
   leadSheetButtonVisible(): boolean {
