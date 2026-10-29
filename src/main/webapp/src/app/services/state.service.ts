@@ -11,7 +11,8 @@ import { AuthService } from './auth.service';
 export class StateService {
 
   public state: Subject<State> = new Subject();
-  private currentState: State;
+  // the state received last
+  currentState: State;
 
   // The websocket endpoint url
   private wsUrl: string;

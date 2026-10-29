@@ -51,3 +51,19 @@
     background-color: var(--sd-info);
     box-shadow: 0 0 8px rgba(61, 157, 240, 0.8);
 }
+
+/* Only the icons, as high as the menu button next to them */
+.mode-switch-compact .mode-switch-option {
+    position: relative;
+    justify-content: center;
+    width: 36px;
+    height: 32px;
+    padding: 0;
+    font-size: 1rem;
+}
+
+.mode-switch-compact .mode-switch-playing {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+}

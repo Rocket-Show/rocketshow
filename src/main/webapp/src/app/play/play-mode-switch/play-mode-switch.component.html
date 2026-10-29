@@ -1,9 +1,11 @@
-<div class="mode-switch" role="tablist" [attr.aria-label]="'play.help.mode' | translate"
-  [popover]="'play.help.mode' | translate" triggers="mouseenter:mouseleave" container="body" placement="bottom">
+<!-- No help on a touch screen next to the menu: a tap would leave it open -->
+<div class="mode-switch" [class.mode-switch-compact]="compact" role="tablist" [attr.aria-label]="'play.help.mode' | translate"
+  [popover]="compact ? '' : ('play.help.mode' | translate)" triggers="mouseenter:mouseleave" container="body"
+  placement="bottom">
   <button type="button" role="tab" class="mode-switch-option" [class.active]="mode === 'compositions'"
     [attr.aria-selected]="mode === 'compositions'" (click)="select('compositions')">
     <i class="fa fa-music fa-fw" aria-hidden="true"></i>
-    {{ 'play.mode-compositions' | translate }}
+    <span [class.sr-only]="compact">{{ 'play.mode-compositions' | translate }}</span>
     @if (mode === 'scenes' && compositionPlaying) {
       <span class="mode-switch-playing" aria-hidden="true"></span>
       <span class="sr-only">{{ 'play.mode-composition-playing' | translate }}</span>
@@ -12,6 +14,6 @@
   <button type="button" role="tab" class="mode-switch-option" [class.active]="mode === 'scenes'"
     [attr.aria-selected]="mode === 'scenes'" (click)="select('scenes')">
     <i class="fa fa-lightbulb-o fa-fw" aria-hidden="true"></i>
-    {{ 'play.mode-scenes' | translate }}
+    <span [class.sr-only]="compact">{{ 'play.mode-scenes' | translate }}</span>
   </button>
 </div>

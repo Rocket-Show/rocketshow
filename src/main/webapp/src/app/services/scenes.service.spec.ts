@@ -3,6 +3,7 @@ import { provideHttpClient } from "@angular/common/http";
 import { HttpTestingController, provideHttpClientTesting } from "@angular/common/http/testing";
 
 import { ScenesService } from "./scenes.service";
+import { SessionService } from "./session.service";
 import { SceneProject } from "../models/scene-project";
 import { State } from "../models/state";
 
@@ -44,7 +45,7 @@ describe("ScenesService", () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [ScenesService, provideHttpClient(), provideHttpClientTesting()],
+      providers: [ScenesService, SessionService, provideHttpClient(), provideHttpClientTesting()],
     });
 
     service = TestBed.inject(ScenesService);
@@ -110,6 +111,19 @@ describe("ScenesService", () => {
     expect(current.sceneProjectName).toBe("Club");
     expect(current.activeSceneUuids).toEqual(["red"]);
     expect(service.scenesOn(current).map((s) => s.name)).toEqual(["Red"]);
+  });
+
+  it("shows the scenes once switched to them, as long as a designer project has scenes", () => {
+    expect(service.showScenes()).toBeFalse();
+
+    service.setPlayMode("scenes");
+    http.expectOne("session/set-play-mode?value=scenes").flush(null);
+    // the scenes may have been changed in the designer meanwhile
+    http.expectOne("scenes/projects").flush([{ name: "Garden", scenes: [{ uuid: "lanterns", name: "Lanterns" }] }]);
+    expect(service.showScenes()).toBeTrue();
+
+    service.projects = [];
+    expect(service.showScenes()).toBeFalse();
   });
 
   it("marks a scene with the color the designer shows it with", () => {

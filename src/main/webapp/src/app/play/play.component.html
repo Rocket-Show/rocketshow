@@ -262,7 +262,7 @@
             </ul>
           </div>
           @if (viewMode === 'grid' && scenesAvailable()) {
-            <span class="float-right ml-3"><ng-container *ngTemplateOutlet="modeSwitchControl"></ng-container></span>
+            <span class="float-right ml-3 d-none d-lg-inline"><ng-container *ngTemplateOutlet="modeSwitchControl"></ng-container></span>
           }
           <span style="margin-top: 3px" class="float-right">{{ totalPlayTime }}</span>
         </div>
@@ -349,7 +349,7 @@
           </div>
 
           @if (viewMode === 'grid' && scenesAvailable()) {
-            <span class="float-right ml-3"><ng-container *ngTemplateOutlet="modeSwitchControl"></ng-container></span>
+            <span class="float-right ml-3 d-none d-lg-inline"><ng-container *ngTemplateOutlet="modeSwitchControl"></ng-container></span>
           }
           <span style="margin-top: 3px" class="float-right">{{ totalPlayTime }}</span>
         </div>
@@ -455,15 +455,14 @@
 </div>
 
 <!-- The switch between the compositions and the scenes, at the top right of the transport. Only there once a designer
-     project has scenes, it balances the readout otherwise, so the buttons stay centred on the card. -->
+     project has scenes, it balances the readout otherwise, so the buttons stay centred on the card. On a small screen
+     the switch is next to the menu instead. -->
 <ng-template #modeSwitch>
-  @if (scenesAvailable()) {
-    <div class="col-12 col-lg order-0 order-lg-3 d-flex justify-content-center justify-content-lg-end mode-switch-col">
+  <div class="col d-none d-lg-flex order-lg-3 justify-content-end">
+    @if (scenesAvailable()) {
       <ng-container *ngTemplateOutlet="modeSwitchControl"></ng-container>
-    </div>
-  } @else {
-    <div class="col d-none d-lg-block order-lg-3"></div>
-  }
+    }
+  </div>
 </ng-template>
 
 <ng-template #modeSwitchControl>

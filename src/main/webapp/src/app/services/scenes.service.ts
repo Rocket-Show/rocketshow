@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DesignerScene, DesignerSceneFolder, SceneProject } from '../models/scene-project';
 import { State } from '../models/state';
+import { SessionService } from './session.service';
 
 /**
  * The scenes of the designer projects, lit by hand on the Play screen. The device plays them and tells every app
@@ -25,13 +26,36 @@ export class ScenesService {
   viewedProjectName: string;
   viewedFolderUuid: string;
 
-  constructor(private http: HttpClient) { }
+  // what the Play screen shows: the compositions of the set or the scenes. Switched on the transport, or next to the
+  // menu on a small screen.
+  playMode: 'compositions' | 'scenes' = 'compositions';
+
+  constructor(private http: HttpClient, private sessionService: SessionService) { }
 
   loadProjects(): Observable<SceneProject[]> {
     return this.http.get('scenes/projects').pipe(map((result: any[]) => {
       this.projects = result.map((project) => new SceneProject(project));
       return this.projects;
     }));
+  }
+
+  // the scenes can only be shown with a designer project with scenes
+  scenesAvailable(): boolean {
+    return this.projects.length > 0;
+  }
+
+  showScenes(): boolean {
+    return this.playMode === 'scenes' && this.scenesAvailable();
+  }
+
+  setPlayMode(playMode: 'compositions' | 'scenes') {
+    this.playMode = playMode;
+    this.sessionService.setPlayMode(playMode).subscribe();
+
+    // the scenes may have been changed in the designer meanwhile
+    if (playMode === 'scenes') {
+      this.loadProjects().subscribe();
+    }
   }
 
   // the project shown: the one picked here, the one of the scenes on or the first one

@@ -55,8 +55,16 @@
       }}</a>
   </div>
   }
+  <!-- The compositions or the scenes of the Play screen, where the transport has no room for the switch -->
+  @if (playModeSwitchVisible()) {
+  <app-play-mode-switch class="d-lg-none ml-auto" [compact]="true"
+    [mode]="scenesService.showScenes() ? 'scenes' : 'compositions'"
+    [compositionPlaying]="stateService.currentState?.playState === 'PLAYING'"
+    (modeChange)="scenesService.setPlayMode($event)"></app-play-mode-switch>
+  }
   <!-- Hamburger -->
-  <button class="navbar-toggler navbar-toggler-left ml-3" type="button" data-toggle="collapse"
+  <button class="navbar-toggler navbar-toggler-left" [class.ml-auto]="!playModeSwitchVisible()"
+    [class.ml-2]="playModeSwitchVisible()" type="button" data-toggle="collapse"
     data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
     aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
@@ -88,7 +96,7 @@
   </div>
   <!-- Show the leadsheet -->
   @if (leadSheetButtonVisible()) {
-  <div class="ml-auto navbar-actions">
+  <div class="ml-2 ml-lg-auto navbar-actions">
     @if (isPlay) {
     <a href="#" (click)="showLeadSheet(); (false)" class="btn btn-primary">
       <i class="fa fa-file-text-o" aria-hidden="true"></i></a>
