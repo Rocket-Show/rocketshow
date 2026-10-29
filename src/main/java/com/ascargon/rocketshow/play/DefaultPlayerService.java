@@ -280,15 +280,30 @@ public class DefaultPlayerService implements PlayerService {
 
         playExecutor.shutdown();
 
+        Composition sample = compositionService.getComposition(compositionName);
+
+        if (sample == null) {
+            // E.g. a synchronized unit playing a sample this one doesn't have: nothing gets played here
+            logger.warn("Composition '{}' to play as a sample doesn't exist", compositionName);
+            return;
+        }
+
         // Clone the composition for each played sample (we don't want them all
         // to share the same instance) and play it
-        Composition composition = compositionService
-                .cloneComposition(compositionService.getComposition(compositionName));
+        Composition composition = compositionService.cloneComposition(sample);
         CompositionPlayer compositionPlayer = new CompositionPlayer(this);
         compositionPlayer.setSample(true);
         compositionPlayer.setComposition(composition);
         sampleCompositionPlayerList.add(compositionPlayer);
-        compositionPlayer.play();
+
+        try {
+            compositionPlayer.play();
+        } finally {
+            if (compositionPlayer.getPlayState() == CompositionPlayer.PlayState.STOPPED) {
+                // Nothing to play (no media, no actions, no designer project) or it couldn't: it never finishes playing
+                sampleCompositionPlayerList.remove(compositionPlayer);
+            }
+        }
     }
 
     @Override
