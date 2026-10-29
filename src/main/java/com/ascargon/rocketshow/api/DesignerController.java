@@ -4,6 +4,7 @@ import com.ascargon.rocketshow.RocketShowApplication;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.settings.SettingsService;
+import com.ascargon.rocketshow.lighting.designer.DesignerJson;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
 import com.ascargon.rocketshow.lighting.designer.FixtureService;
 import com.ascargon.rocketshow.lighting.designer.Project;
@@ -61,7 +62,7 @@ public class DesignerController {
 
     @PostMapping("preview")
     public synchronized void preview(
-            @RequestBody Project project,
+            @RequestBody String projectJson,
             @RequestParam("positionMillis") long positionMillis,
             @RequestParam(value = "compositionName", required = false, defaultValue = "") String compositionName
     ) {
@@ -75,6 +76,9 @@ public class DesignerController {
         }
 
         logger.debug("Preview designer...");
+
+        // read like the projects saved on the unit, which the designer's own preview reads the same way
+        Project project = DesignerJson.MAPPER.readValue(projectJson, Project.class);
 
         // Stop currently playing stuff
         designerService.stopPreview();

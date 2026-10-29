@@ -27,8 +27,8 @@ public class CachedFixtureChannel {
     // all channel capabilities
     private List<CachedFixtureCapability> capabilities = new ArrayList<>();
 
-    // default value
-    private double defaultValue;
+    // the value the channel starts out with, null for none (also for one the designer can't read either)
+    private Double defaultValue;
 
     // maximum value
     private double maxValue;

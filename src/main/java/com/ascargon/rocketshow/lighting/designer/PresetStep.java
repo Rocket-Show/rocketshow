@@ -23,11 +23,11 @@ public class PresetStep {
     // when this step starts, relative to the start of the preset. It is what the preset
     // shows from that millisecond (and with it from that beat) until the next step
     // starts, and the transition into it runs over the beginning of that time.
-    private long startMillis = 0;
+    private double startMillis = 0;
 
     // how long the values travel from the previous step into this one, counted from the
     // start of this step: null = the whole time this step lasts, 0 = a jump
-    private Long transitionMillis;
+    private Double transitionMillis;
     private String transitionCurve = "linear";
 
     // the selected values

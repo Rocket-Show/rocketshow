@@ -39,9 +39,9 @@ public class Scene {
     // scenes had a dimmer brings none, which leaves it at full.
     private double dimmer = 1;
 
-    // Fading times
-    private long fadeInMillis = 2000;
-    private long fadeOutMillis = 2000;
+    // Fading times. A scene of the designer starts without fades, which a project not giving them keeps.
+    private double fadeInMillis = 0;
+    private double fadeOutMillis = 0;
 
     // fade in/out outside the start/end times?
     private boolean fadeInPre = false;
@@ -131,19 +131,19 @@ public class Scene {
         this.dimmer = dimmer;
     }
 
-    public long getFadeInMillis() {
+    public double getFadeInMillis() {
         return fadeInMillis;
     }
 
-    public void setFadeInMillis(long fadeInMillis) {
+    public void setFadeInMillis(double fadeInMillis) {
         this.fadeInMillis = fadeInMillis;
     }
 
-    public long getFadeOutMillis() {
+    public double getFadeOutMillis() {
         return fadeOutMillis;
     }
 
-    public void setFadeOutMillis(long fadeOutMillis) {
+    public void setFadeOutMillis(double fadeOutMillis) {
         this.fadeOutMillis = fadeOutMillis;
     }
 

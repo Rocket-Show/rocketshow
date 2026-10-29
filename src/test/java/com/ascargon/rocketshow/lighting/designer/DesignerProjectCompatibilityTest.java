@@ -133,7 +133,7 @@ class DesignerProjectCompatibilityTest {
             }
 
             for (ScenePlaybackRegion region : composition.getScenePlaybackRegions()) {
-                positions.add(new Position(composition.getName(), (region.getStartMillis() + region.getEndMillis()) / 2));
+                positions.add(new Position(composition.getName(), (long) ((region.getStartMillis() + region.getEndMillis()) / 2)));
             }
         }
 
@@ -342,7 +342,7 @@ class DesignerProjectCompatibilityTest {
         Project project = readProject(getMigrationProject("Template version 7.json"));
         List<Effect> effects = project.getPresets().getFirst().getEffects();
         EffectCurve sine = (EffectCurve) effects.getFirst();
-        float sineAmplitude = sine.getAmplitude();
+        double sineAmplitude = sine.getAmplitude();
         EffectCurve square = new EffectCurve();
         square.setCurveType("square");
         square.setAmplitude(0.5f);

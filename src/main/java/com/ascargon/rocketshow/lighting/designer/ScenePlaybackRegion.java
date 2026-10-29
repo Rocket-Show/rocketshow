@@ -11,8 +11,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 class ScenePlaybackRegion {
 
 	private String sceneUuid;
-    private long startMillis;
-    private long endMillis;
+    // the designer keeps the times it is given, also the parts of a millisecond (e.g. of a clip as long as a bar)
+    private double startMillis;
+    private double endMillis;
 
     // the track of the composition the scene is played on
     private String trackUuid;
@@ -25,19 +26,19 @@ class ScenePlaybackRegion {
         this.sceneUuid = sceneUuid;
     }
 
-    public long getStartMillis() {
+    public double getStartMillis() {
         return startMillis;
     }
 
-    public void setStartMillis(long startMillis) {
+    public void setStartMillis(double startMillis) {
         this.startMillis = startMillis;
     }
 
-    public long getEndMillis() {
+    public double getEndMillis() {
         return endMillis;
     }
 
-    public void setEndMillis(long endMillis) {
+    public void setEndMillis(double endMillis) {
         this.endMillis = endMillis;
     }
 
