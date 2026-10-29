@@ -7,9 +7,9 @@
     <div class="card border-secondary">
       <div class="card-body">
         <div class="form-group row">
-          <div class="col-sm-3">{{ 'settings.lan-ip-mode' | translate }}</div>
-          <div class="col-sm-9">
-            <div class="form-check">
+          <label class="col-sm-3 col-form-label">{{ 'settings.lan-ip-mode' | translate }}</label>
+          <div class="col-sm-9 d-flex">
+            <div class="form-check my-auto">
               <input type="checkbox" [ngModel]="settings?.lanStaticIpEnable" (ngModelChange)="onLanStaticIpEnableChange($event)"
                 class="form-check-input" id="lanStaticIpEnable">
               <label class="form-check-label" for="lanStaticIpEnable">
@@ -76,9 +76,9 @@
         <i>{{ 'settings.wlan-ap-description' | translate }}</i>
 
         <div class="form-group row mt-3 mb-0">
-          <div class="col-sm-3">{{ 'settings.wlan-ap-status' | translate }}</div>
-          <div class="col-sm-9">
-            <div class="form-check">
+          <label class="col-sm-3 col-form-label">{{ 'settings.wlan-ap-status' | translate }}</label>
+          <div class="col-sm-9 d-flex">
+            <div class="form-check my-auto">
               <input type="checkbox" [ngModel]="settings?.wlanApEnable" (ngModelChange)="settings.wlanApEnable = $event"
                 class="form-check-input" id="wlanApEnable">
 

@@ -12,7 +12,7 @@
 
 @if (deviceInformation?.available) {
 <div class="form-group row">
-  <div class="col-lg-3"></div>
+  <label class="col-lg-3 col-form-label">{{ 'settings.factory-defaults' | translate }}</label>
   <div class="col-lg-9">
     <a href="#" class="btn btn-primary btn-sm" (click)="factoryReset(); false;">
       <i class="fa fa-home" aria-hidden="true"></i> {{ 'settings.factory-reset' | translate }}</a>
@@ -23,7 +23,7 @@
 <app-spark-hint placement="settings-advanced" text="spark.hint.advanced-factory-reset"></app-spark-hint>
 
 <div class="form-group row">
-  <div class="col-lg-3"></div>
+  <label class="col-lg-3 col-form-label">{{ 'settings.logs' | translate }}</label>
   <div class="col-lg-9">
     <button type="button" class="btn btn-primary btn-sm" [disabled]="downloadLogsLoading"
       (click)="downloadLogs(); false;">
@@ -40,7 +40,7 @@
 
 @if (deviceInformation?.available) {
 <div class="form-group row">
-  <div class="col-lg-3"></div>
+  <label class="col-lg-3 col-form-label">{{ 'settings.maintenance-mode' | translate }}</label>
   <div class="col-lg-9">
     <button type="button" class="btn btn-primary btn-sm" [disabled]="enableMaintenanceModeLoading"
       (click)="enableMaintenanceMode(); false;">
@@ -57,11 +57,11 @@
 }
 
 <div class="form-group row">
-  <div class="col-lg-3 col-form-label">
+  <label class="col-lg-3 col-form-label">
     {{ "settings.self-test.title" | translate }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
       [popover]="'settings.self-test.help' | translate" triggers="mouseenter:mouseleave" container="body"
       placement="right" aria-hidden="true"></i>
-  </div>
+  </label>
   <div class="col-lg-9">
     <a href="#" (click)="runSelfTest(); (false)" class="btn btn-primary btn-sm" id="runSelfTest">
       <i class="fa fa-check-square-o fa-fw" aria-hidden="true"></i>
