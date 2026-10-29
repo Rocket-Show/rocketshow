@@ -540,10 +540,12 @@ label {
   font-size: $rs-font-size;
 }
 
+/* centre a single line on the control height with padding rather than the
+   line-height, so a label that wraps doesn't spread its lines apart */
 .col-form-label {
-  padding-top: 0;
-  padding-bottom: 0;
-  line-height: $rs-control-height;
+  padding-top: calc((#{$rs-control-height} - 1.5em) / 2);
+  padding-bottom: calc((#{$rs-control-height} - 1.5em) / 2);
+  line-height: 1.5;
 }
 
 .form-group {
