@@ -172,4 +172,118 @@ class CapabilityPositionsTest {
             assertFalse(CapabilityPositions.isPositionedType(FixtureCapability.FixtureCapabilityType.valueOf(type)), type);
         }
     }
+
+    // a channel of the passed capabilities, cached like the designer service caches them
+    private static CachedFixtureChannel channel(List<FixtureCapability> capabilities) {
+        CachedFixtureChannel channel = new CachedFixtureChannel();
+        channel.setName("Channel");
+        channel.setMaxValue(255);
+
+        for (FixtureCapability capability : capabilities) {
+            CachedFixtureCapability cachedCapability = new CachedFixtureCapability();
+            cachedCapability.setCapability(capability);
+
+            if (capability.getDmxRange() != null && capability.getDmxRange().size() == 2) {
+                cachedCapability.setCenterValue((int) Math.floor((capability.getDmxRange().get(0) + capability.getDmxRange().get(1)) / 2f));
+            }
+
+            channel.getCapabilities().add(cachedCapability);
+        }
+
+        return channel;
+    }
+
+    private static FixtureCapability range(int low, int high, FixtureCapability.FixtureCapabilityType type) {
+        FixtureCapability capability = capability(type);
+        capability.setDmxRange(List.of(low, high));
+        return capability;
+    }
+
+    @Test
+    void turnsEitherWayAndStopsInTheMiddle() {
+        FixtureCapability anticlockwise = range(0, 63, FixtureCapability.FixtureCapabilityType.WheelSlotRotation);
+        anticlockwise.setSpeedStart("fast CCW");
+        anticlockwise.setSpeedEnd("slow CCW");
+        FixtureCapability stop = range(64, 67, FixtureCapability.FixtureCapabilityType.WheelSlotRotation);
+        stop.setSpeed("stop");
+        FixtureCapability clockwise = range(68, 127, FixtureCapability.FixtureCapabilityType.WheelSlotRotation);
+        clockwise.setSpeedStart("slow CW");
+        clockwise.setSpeedEnd("fast CW");
+        FixtureCapability indexed = range(128, 255, FixtureCapability.FixtureCapabilityType.WheelSlotRotation);
+        indexed.setAngleStart("0deg");
+        indexed.setAngleEnd("360deg");
+        CachedFixtureChannel gobo = channel(List.of(anticlockwise, stop, clockwise, indexed));
+
+        assertEquals(0, CapabilityPositions.getPositionedChannelValue(gobo, FixtureCapability.FixtureCapabilityType.WheelSlotRotation, 0, null));
+        assertEquals(31.5, CapabilityPositions.getRotationChannelValue(gobo, FixtureCapability.FixtureCapabilityType.WheelSlotRotation, 0.25));
+        assertEquals(65, CapabilityPositions.getRotationChannelValue(gobo, FixtureCapability.FixtureCapabilityType.WheelSlotRotation, 0.5));
+        assertEquals(127, CapabilityPositions.getRotationChannelValue(gobo, FixtureCapability.FixtureCapabilityType.WheelSlotRotation, 1));
+
+        // turning both ways on one range, the other way round
+        FixtureCapability across = capability(FixtureCapability.FixtureCapabilityType.PrismRotation);
+        across.setSpeedStart("fast CW");
+        across.setSpeedEnd("fast CCW");
+        CachedFixtureChannel prism = channel(List.of(across));
+        assertEquals(0, CapabilityPositions.getRotationChannelValue(prism, FixtureCapability.FixtureCapabilityType.PrismRotation, 1));
+        assertEquals(127.5, CapabilityPositions.getRotationChannelValue(prism, FixtureCapability.FixtureCapabilityType.PrismRotation, 0.5));
+        assertEquals(255, CapabilityPositions.getRotationChannelValue(prism, FixtureCapability.FixtureCapabilityType.PrismRotation, 0));
+
+        // stopped with no function, not turning anticlockwise at all
+        FixtureCapability turning = range(10, 255, FixtureCapability.FixtureCapabilityType.Rotation);
+        turning.setSpeedStart("slow CW");
+        turning.setSpeedEnd("fast CW");
+        CachedFixtureChannel rotation = channel(List.of(range(0, 9, FixtureCapability.FixtureCapabilityType.NoFunction), turning));
+        assertEquals(4, CapabilityPositions.getRotationChannelValue(rotation, FixtureCapability.FixtureCapabilityType.Rotation, 0.5));
+        assertNull(CapabilityPositions.getRotationChannelValue(rotation, FixtureCapability.FixtureCapabilityType.Rotation, 0));
+        assertNull(CapabilityPositions.getRotationChannelValue(channel(List.of(indexed)), FixtureCapability.FixtureCapabilityType.WheelSlotRotation, 1));
+        assertEquals(0, CapabilityPositions.getRotationRank("stop"));
+        assertTrue(CapabilityPositions.getRotationRank("-10rpm") < 0);
+    }
+
+    @Test
+    void putsInTheBladeTheValueNames() {
+        FixtureCapability top = range(0, 127, FixtureCapability.FixtureCapabilityType.BladeInsertion);
+        top.setBlade("Top");
+        top.setInsertionStart("out");
+        top.setInsertionEnd("in");
+        FixtureCapability bottom = range(128, 255, FixtureCapability.FixtureCapabilityType.BladeInsertion);
+        bottom.setBlade("Bottom");
+        bottom.setInsertionStart("100%");
+        bottom.setInsertionEnd("0%");
+        CachedFixtureChannel blades = channel(List.of(top, bottom));
+
+        assertEquals(127, CapabilityPositions.getPositionedChannelValue(blades, FixtureCapability.FixtureCapabilityType.BladeInsertion, 1, "Top"));
+        assertEquals(128, CapabilityPositions.getPositionedChannelValue(blades, FixtureCapability.FixtureCapabilityType.BladeInsertion, 1, "Bottom"));
+        assertNull(CapabilityPositions.getPositionedChannelValue(blades, FixtureCapability.FixtureCapabilityType.BladeInsertion, 1, "Left"));
+        assertEquals(0, CapabilityPositions.getPositionedChannelValue(blades, FixtureCapability.FixtureCapabilityType.BladeInsertion, 0, null));
+    }
+
+    @Test
+    void pulsesTheIrisAndShakesTheGoboOverTheRestOfTheirChannel() {
+        FixtureCapability iris = range(0, 199, FixtureCapability.FixtureCapabilityType.Iris);
+        FixtureCapability pulse = range(200, 255, FixtureCapability.FixtureCapabilityType.IrisEffect);
+        pulse.setSpeedStart("slow");
+        pulse.setSpeedEnd("fast");
+        CachedFixtureChannel irisChannel = channel(List.of(iris, pulse));
+
+        assertTrue(CapabilityPositions.isOverridingType(FixtureCapability.FixtureCapabilityType.IrisEffect));
+        assertNull(CapabilityPositions.getPositionedChannelValue(irisChannel, FixtureCapability.FixtureCapabilityType.IrisEffect, 0, null));
+        assertEquals(255, CapabilityPositions.getPositionedChannelValue(irisChannel, FixtureCapability.FixtureCapabilityType.IrisEffect, 1, null));
+
+        // a gobo shaking on its own, and the whole wheel shaking, named after its channel
+        FixtureCapability slot = range(10, 59, FixtureCapability.FixtureCapabilityType.WheelShake);
+        slot.setSlotNumber(2d);
+        slot.setShakeSpeedStart("slow");
+        slot.setShakeSpeedEnd("fast");
+        FixtureCapability wheel = range(60, 255, FixtureCapability.FixtureCapabilityType.WheelShake);
+        wheel.setShakeSpeedStart("fast");
+        wheel.setShakeSpeedEnd("slow");
+        CachedFixtureChannel goboChannel = channel(List.of(slot, wheel));
+        goboChannel.getCapabilities().get(0).setWheelName("Channel");
+
+        assertEquals(59, CapabilityPositions.getShakeChannelValue(goboChannel, "Channel", 2d, 1));
+        assertEquals(60, CapabilityPositions.getShakeChannelValue(goboChannel, "Channel", 3d, 1));
+        assertNull(CapabilityPositions.getShakeChannelValue(goboChannel, "Channel", 2d, 0));
+        assertNull(CapabilityPositions.getShakeChannelValue(goboChannel, "Other", 2d, 1));
+    }
 }

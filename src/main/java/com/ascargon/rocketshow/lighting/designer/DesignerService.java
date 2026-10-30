@@ -53,6 +53,10 @@ public interface DesignerService {
     // presets do with them, until the next project is loaded
     void setIdentifyFixtureUuids(List<String> identifyFixtureUuids);
 
+    // the fixtures the designer asks from its fixture pool to reset themselves or to switch their lamp on, over what the
+    // presets do with them (see Maintenance)
+    void setMaintenanceFixtureUuids(List<String> resetFixtureUuids, List<String> lampOnFixtureUuids);
+
     // Play the scenes of the project picked by hand on the Play screen, dimmed by its master dimmer (0 to 1). They play
     // whenever no composition plays a project of its own: right away, or once the composition closes its project.
     void playManualScenes(Project project, List<String> sceneUuids, double masterDimmer);

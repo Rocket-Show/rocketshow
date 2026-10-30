@@ -118,6 +118,23 @@ public class FixtureCapability {
     private String fogOutput;
     private String fogOutputStart;
     private String fogOutputEnd;
+    private String angle;
+    private String insertion;
+    private String insertionStart;
+    private String insertionEnd;
+    private String shakeSpeed;
+    private String shakeSpeedStart;
+    private String shakeSpeedEnd;
+
+    // the blade of a framing shutter: Top, Right, Bottom or Left (or its number)
+    private String blade;
+
+    // the name of the effect of an iris or a frost (e.g. Pulse), the time a maintenance value has to be held (e.g. 3s)
+    private String effectName;
+    private String hold;
+
+    // what the capability does, in words (e.g. "Reset" of a maintenance capability)
+    private String comment;
 
     // the colors a color preset (e.g. a color macro) lights in
     private List<String> colors;

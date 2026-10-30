@@ -1,0 +1,256 @@
+{
+  "name": "Effects Spot",
+  "categories": [
+    "Moving Head"
+  ],
+  "wheels": {
+    "Gobo Wheel": {
+      "slots": [
+        {
+          "type": "Open"
+        },
+        {
+          "type": "Gobo",
+          "name": "Dots"
+        },
+        {
+          "type": "Gobo",
+          "name": "Star"
+        }
+      ]
+    }
+  },
+  "availableChannels": {
+    "Dimmer": {
+      "capability": {
+        "type": "Intensity"
+      }
+    },
+    "Gobo Wheel": {
+      "capabilities": [
+        {
+          "dmxRange": [
+            0,
+            9
+          ],
+          "type": "WheelSlot",
+          "slotNumber": 1
+        },
+        {
+          "dmxRange": [
+            10,
+            19
+          ],
+          "type": "WheelSlot",
+          "slotNumber": 2
+        },
+        {
+          "dmxRange": [
+            20,
+            29
+          ],
+          "type": "WheelSlot",
+          "slotNumber": 3
+        },
+        {
+          "dmxRange": [
+            30,
+            79
+          ],
+          "type": "WheelShake",
+          "slotNumber": 2,
+          "shakeSpeedStart": "slow",
+          "shakeSpeedEnd": "fast"
+        },
+        {
+          "dmxRange": [
+            80,
+            129
+          ],
+          "type": "WheelShake",
+          "slotNumber": 3,
+          "shakeSpeedStart": "fast",
+          "shakeSpeedEnd": "slow"
+        },
+        {
+          "dmxRange": [
+            130,
+            255
+          ],
+          "type": "WheelRotation",
+          "speedStart": "slow CW",
+          "speedEnd": "fast CW"
+        }
+      ]
+    },
+    "Gobo Rotation": {
+      "capabilities": [
+        {
+          "dmxRange": [
+            0,
+            63
+          ],
+          "type": "WheelSlotRotation",
+          "speedStart": "fast CCW",
+          "speedEnd": "slow CCW"
+        },
+        {
+          "dmxRange": [
+            64,
+            67
+          ],
+          "type": "WheelSlotRotation",
+          "speed": "stop"
+        },
+        {
+          "dmxRange": [
+            68,
+            127
+          ],
+          "type": "WheelSlotRotation",
+          "speedStart": "slow CW",
+          "speedEnd": "fast CW"
+        },
+        {
+          "dmxRange": [
+            128,
+            255
+          ],
+          "type": "WheelSlotRotation",
+          "angleStart": "0deg",
+          "angleEnd": "360deg"
+        }
+      ]
+    },
+    "Prism Rotation": {
+      "capability": {
+        "type": "PrismRotation",
+        "speedStart": "-10rpm",
+        "speedEnd": "10rpm"
+      }
+    },
+    "Rotation": {
+      "capabilities": [
+        {
+          "dmxRange": [
+            0,
+            9
+          ],
+          "type": "NoFunction"
+        },
+        {
+          "dmxRange": [
+            10,
+            255
+          ],
+          "type": "Rotation",
+          "speedStart": "slow CW",
+          "speedEnd": "fast CW"
+        }
+      ]
+    },
+    "Iris": {
+      "capabilities": [
+        {
+          "dmxRange": [
+            0,
+            199
+          ],
+          "type": "Iris",
+          "openPercentStart": "100%",
+          "openPercentEnd": "0%"
+        },
+        {
+          "dmxRange": [
+            200,
+            255
+          ],
+          "type": "IrisEffect",
+          "effectName": "Pulse",
+          "speedStart": "slow",
+          "speedEnd": "fast"
+        }
+      ]
+    },
+    "Frost": {
+      "capabilities": [
+        {
+          "dmxRange": [
+            0,
+            9
+          ],
+          "type": "NoFunction"
+        },
+        {
+          "dmxRange": [
+            10,
+            199
+          ],
+          "type": "Frost",
+          "frostIntensityStart": "0%",
+          "frostIntensityEnd": "100%"
+        },
+        {
+          "dmxRange": [
+            200,
+            255
+          ],
+          "type": "FrostEffect",
+          "effectName": "Pulse",
+          "speedStart": "fast",
+          "speedEnd": "slow"
+        }
+      ]
+    },
+    "Blade Top": {
+      "capability": {
+        "type": "BladeInsertion",
+        "blade": "Top",
+        "insertionStart": "out",
+        "insertionEnd": "in"
+      }
+    },
+    "Blade Top Rotation": {
+      "capability": {
+        "type": "BladeRotation",
+        "blade": "Top",
+        "angleStart": "-30deg",
+        "angleEnd": "30deg"
+      }
+    },
+    "Blade Bottom": {
+      "capability": {
+        "type": "BladeInsertion",
+        "blade": "Bottom",
+        "insertionStart": "100%",
+        "insertionEnd": "0%"
+      }
+    },
+    "Blade System": {
+      "capability": {
+        "type": "BladeSystemRotation",
+        "angleStart": "-45deg",
+        "angleEnd": "45deg"
+      }
+    }
+  },
+  "modes": [
+    {
+      "name": "Full",
+      "shortName": "full",
+      "channels": [
+        "Dimmer",
+        "Gobo Wheel",
+        "Gobo Rotation",
+        "Prism Rotation",
+        "Rotation",
+        "Iris",
+        "Frost",
+        "Blade Top",
+        "Blade Top Rotation",
+        "Blade Bottom",
+        "Blade System"
+      ]
+    }
+  ]
+}

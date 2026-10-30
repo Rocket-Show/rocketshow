@@ -319,6 +319,7 @@ class DesignerConformanceTest {
 
         // the fixtures identified from the fixture pool, if any
         designerService.setIdentifyFixtureUuids(preview.has("identify") ? strings(preview.get("identify")) : new ArrayList<>());
+        designerService.setMaintenanceFixtureUuids(preview.has("reset") ? strings(preview.get("reset")) : new ArrayList<>(), preview.has("lampOn") ? strings(preview.get("lampOn")) : new ArrayList<>());
 
         ArrayNode frames = NODES.arrayNode();
 
@@ -406,7 +407,7 @@ class DesignerConformanceTest {
                 ObjectNode effectNode = effects.addObject();
                 effectNode.put("uuid", effect.getUuid());
 
-                if (effect instanceof EffectCurve curve) {
+                if (effect instanceof EffectCurve curve && !(effect instanceof EffectPanTilt)) {
                     effectNode.put("type", "curve");
                     effectNode.put("curveType", curve.getCurveType());
                     effectNode.put("amplitude", curve.getAmplitude());

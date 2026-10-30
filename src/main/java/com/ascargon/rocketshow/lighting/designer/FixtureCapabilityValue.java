@@ -12,6 +12,65 @@ public class FixtureCapabilityValue {
     private Double slotNumber;
     private String wheel;
 
+    // pan and tilt: the position in degrees from the middle of the range, the degrees the fixtures are fanned out
+    // over and the spot on the stage (in cm) they point at (see PanTilt)
+    private Double valueDegrees;
+    private Double spreadDegrees;
+    private Double aimX;
+    private Double aimY;
+    private Double aimZ;
+
+    // the blade of a framing shutter: Top, Right, Bottom or Left
+    private String blade;
+
+    public Double getValueDegrees() {
+        return valueDegrees;
+    }
+
+    public void setValueDegrees(Double valueDegrees) {
+        this.valueDegrees = valueDegrees;
+    }
+
+    public Double getSpreadDegrees() {
+        return spreadDegrees;
+    }
+
+    public void setSpreadDegrees(Double spreadDegrees) {
+        this.spreadDegrees = spreadDegrees;
+    }
+
+    public Double getAimX() {
+        return aimX;
+    }
+
+    public void setAimX(Double aimX) {
+        this.aimX = aimX;
+    }
+
+    public Double getAimY() {
+        return aimY;
+    }
+
+    public void setAimY(Double aimY) {
+        this.aimY = aimY;
+    }
+
+    public Double getAimZ() {
+        return aimZ;
+    }
+
+    public void setAimZ(Double aimZ) {
+        this.aimZ = aimZ;
+    }
+
+    public String getBlade() {
+        return blade;
+    }
+
+    public void setBlade(String blade) {
+        this.blade = blade;
+    }
+
     public FixtureCapability.FixtureCapabilityType getType() {
         return type;
     }

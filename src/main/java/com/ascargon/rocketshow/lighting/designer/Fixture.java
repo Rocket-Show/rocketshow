@@ -21,4 +21,15 @@ public class Fixture {
     private int dmxFirstChannel;
     private String modeShortName;
 
+    // where the fixture hangs: spread over the stage with the others (topFront, bottomFront, topBack, bottomBack) or
+    // placed by hand (manual) at the position (in cm) and turned by the rotation (in degrees), like in the designer
+    // (see StagePlacements)
+    private String positioning = "topFront";
+    private double positionX = 0;
+    private double positionY = 0;
+    private double positionZ = 0;
+    private double rotationX = 0;
+    private double rotationY = 0;
+    private double rotationZ = 0;
+
 }

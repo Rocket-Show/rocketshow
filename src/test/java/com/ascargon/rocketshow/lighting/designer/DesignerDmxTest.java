@@ -628,6 +628,72 @@ class DesignerDmxTest {
         assertEquals(List.of(0, 0, 0, 0, 0, 5), addresses(front, 11, 16));
     }
 
+    // a moving head with a channel resetting it and switching its lamp on, at channel 31 of the front
+    private void addMaintainedHead(ObjectNode project) throws Exception {
+        ((ArrayNode) project.get("fixtureProfiles")).add(objectMapper.readTree("""
+                {
+                  "uuid": "test/maintained",
+                  "name": "Head with a lamp",
+                  "availableChannels": {
+                    "Pan": {"capability": {"type": "Pan", "angleStart": "0deg", "angleEnd": "540deg"}, "fineChannelAliases": []},
+                    "Control": {"fineChannelAliases": [], "capabilities": [
+                      {"dmxRange": [0, 9], "type": "NoFunction"},
+                      {"dmxRange": [10, 19], "type": "Maintenance", "comment": "Lamp on"},
+                      {"dmxRange": [20, 29], "type": "Maintenance", "comment": "Reset"}
+                    ]}
+                  },
+                  "modes": [{"name": "2-channel", "shortName": "2ch", "channels": [{"name": "Pan"}, {"name": "Control"}]}]
+                }
+                """));
+        ((ArrayNode) project.get("fixtures")).addObject()
+                .put("uuid", "maintained")
+                .put("name", "Maintained")
+                .put("profileUuid", "test/maintained")
+                .put("modeShortName", "2ch")
+                .put("dmxUniverseUuid", FRONT)
+                .put("dmxFirstChannel", 30);
+        ((ArrayNode) project.get("presetFixtures")).addObject().put("fixtureUuid", "maintained");
+
+        ObjectNode pan = capability(project, "Pan", null);
+        pan.put("valueDegrees", 135);
+        addPreset(project, "Panned", List.of("maintained"), List.of(pan));
+    }
+
+    @Test
+    void resetsTheFixturesTheDesignerSendsWithItsPreview() throws Exception {
+        ObjectNode project = project();
+        addMaintainedHead(project);
+        project.putArray("resetFixtureUuids").add("maintained");
+
+        // like DesignerController.preview, which reads them from the project the designer sends
+        Map<Integer, Integer> front = new DesignerTestEngine().start(directory, project.toString(), (designerService, loadedProject) -> {
+            designerService.stopPreview();
+            designerService.load(null, loadedProject, null);
+            designerService.setMaintenanceFixtureUuids(loadedProject.getResetFixtureUuids(), loadedProject.getLampOnFixtureUuids());
+            designerService.startPreview(0);
+        }, List.of(FRONT, BACK)).get(FRONT);
+
+        // resetting itself, nothing else being played
+        assertEquals(24, front.get(32));
+    }
+
+    @Test
+    void switchesTheLampOnAndForgetsItWithTheNextProject() throws Exception {
+        ObjectNode project = project();
+        addMaintainedHead(project);
+
+        Map<Integer, Integer> lit = preview(project, designerService -> designerService.setMaintenanceFixtureUuids(null, List.of("maintained"))).get(FRONT);
+        assertEquals(14, lit.get(32));
+
+        Map<Integer, Integer> front = new DesignerTestEngine().start(directory, project.toString(), (designerService, loadedProject) -> {
+            designerService.setMaintenanceFixtureUuids(List.of("maintained"), List.of("maintained"));
+            designerService.load(null, loadedProject, null);
+            designerService.startPreview(0);
+        }, List.of(FRONT, BACK)).get(FRONT);
+
+        assertEquals(0, front.getOrDefault(32, 0));
+    }
+
     @Test
     void movesAChannelWithAnEffect() throws Exception {
         ObjectNode project = project();

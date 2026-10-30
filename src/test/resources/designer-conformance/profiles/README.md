@@ -28,4 +28,8 @@ speed given as a speed and as the time a movement takes, a flash duration in mil
 `hazer` (a kind of fog with "no function" below it, a range putting out nothing, an output in cubic metres per minute)
 and `macro-par` (color macros, alone and next to colors of its own) play the capabilities set as a position, the colors
 of a fixture mixing them with filters or showing them on its macros and the fixtures identified from the fixture pool
-(`channel-values-capabilities.json`).
+(`channel-values-capabilities.json`). `wide-mover` (a pan over 630°, a tilt running from 90° to -90° and
+commands to reset itself and to switch its lamp on) and `effects-spot` (gobos shaking, rotations turning either way,
+on one range or on two, a rotation turning to an angle only, the pulse of an iris and of a frost sharing their channels
+and the blades of a framing shutter) point, aim and move the moving heads, next to `moving-head` and `mover`, and play
+the rotations, the blades, the pulses and the shakes (`channel-values-movements.json`).

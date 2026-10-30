@@ -38,6 +38,17 @@ public class Project {
     // the fixtures the designer is identifying from its fixture pool: they blink at full white in its live preview
     private List<String> identifyFixtureUuids = new ArrayList<>();
 
+    // the fixtures the designer asks from its fixture pool to reset themselves or to switch their lamp on (see
+    // Maintenance)
+    private List<String> resetFixtureUuids = new ArrayList<>();
+    private List<String> lampOnFixtureUuids = new ArrayList<>();
+
+    // the stage the fixtures are spread over (in cm), like in the designer
+    private double stageWidthCm = 600;
+    private double stageHeightCm = 350;
+    private double stageDepthCm = 600;
+    private double stageFloorHeightCm = 30;
+
     // the composition open in the designer, whose tempo the curves synced to the beat follow while it isn't played
     private String selectedCompositionUuid;
     // play the selected preset on its own (solo) instead of the selected scenes

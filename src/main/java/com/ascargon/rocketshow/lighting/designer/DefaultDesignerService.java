@@ -76,6 +76,11 @@ public class DefaultDesignerService implements DesignerService {
     // the fixtures being identified from the fixture pool of the designer (see Identify)
     private volatile List<String> identifyFixtureUuids = new ArrayList<>();
 
+    // the fixtures the designer asks from its fixture pool to reset themselves or to switch their lamp on (see
+    // Maintenance)
+    private volatile List<String> resetFixtureUuids = new ArrayList<>();
+    private volatile List<String> lampOnFixtureUuids = new ArrayList<>();
+
     // The scenes picked by hand on the Play screen (see ScenePlayerService), the project they are from and the master
     // dimmer of the Play screen. They play whenever no composition plays a project of its own: right away, or once the
     // composition closes its project.
@@ -1373,10 +1378,33 @@ public class DefaultDesignerService implements DesignerService {
             return null;
         }
 
-        return CapabilityPositions.getPositionedChannelValue(channel, capabilityValue.getType(), capabilityValue.getValuePercentage());
+        if (capabilityValue.getType() == FixtureCapability.FixtureCapabilityType.WheelShake) {
+            return CapabilityPositions.getShakeChannelValue(channel, capabilityValue.getWheel(), capabilityValue.getSlotNumber(), capabilityValue.getValuePercentage());
+        }
+
+        return CapabilityPositions.getPositionedChannelValue(channel, capabilityValue.getType(), capabilityValue.getValuePercentage(), capabilityValue.getBlade());
     }
 
-    private void mixCapabilityValues(PresetStepState state, CachedFixture cachedFixture, List<FixtureChannelValue> values, double intensityPercentage, Preset preset) {
+    // the value a pan or tilt value points a fixture of the passed profile at with a channel, or null, if the channel
+    // doesn't turn it on that axis (see PanTilt). The context places the fixture within its preset and on the stage.
+    private static Double getPanTiltChannelValue(FixtureCapabilityValue capabilityValue, CachedFixtureChannel channel, String profileUuid, Preset preset, PanTilt.Context context) {
+        if (emptyToNull(capabilityValue.getProfileUuid()) != null && !capabilityValue.getProfileUuid().equals(profileUuid)) {
+            return null;
+        }
+
+        return PanTilt.getPanTiltChannelValue(capabilityValue, channel, preset.mirrorsCapability(capabilityValue.getType()), context);
+    }
+
+    // put a value on a channel of the fixture, over what is on it
+    private void mixFixtureChannelValue(List<FixtureChannelValue> values, CachedFixture cachedFixture, String channelName, double value) {
+        FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
+        fixtureChannelValue.setChannelName(channelName);
+        fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
+        fixtureChannelValue.setValue(value);
+        this.mixChannelValue(values, fixtureChannelValue, 1);
+    }
+
+    private void mixCapabilityValues(PresetStepState state, CachedFixture cachedFixture, List<FixtureChannelValue> values, double intensityPercentage, Preset preset, PanTilt.Context context) {
         boolean hasColor = false;
 
         // how bright the fixture lights below this preset and how bright the preset lights it, to blend the colors
@@ -1391,6 +1419,23 @@ public class DefaultDesignerService implements DesignerService {
         for (FixtureCapabilityValue presetCapabilityValue : capabilityValues) {
             for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
                 if (cachedChannel.getChannel() != null) {
+                    if (CapabilityPositions.isOverridingType(presetCapabilityValue.getType())) {
+                        // played over the rest below
+                        continue;
+                    }
+
+                    if (PanTilt.isPanTilt(presetCapabilityValue.getType())) {
+                        // a position of a moving head is played on the channel as a whole, by where the fixture is
+                        // placed in its preset and on the stage (see PanTilt)
+                        Double value = getPanTiltChannelValue(presetCapabilityValue, cachedChannel, cachedFixture.getProfile().getUuid(), preset, context);
+
+                        if (value != null) {
+                            mixFixtureChannelValue(values, cachedFixture, cachedChannel.getName(), value);
+                        }
+
+                        continue;
+                    }
+
                     if (CapabilityPositions.isPositionedType(presetCapabilityValue.getType())) {
                         // a position is played on the channel as a whole, by the capability of it doing it
                         Double value = getPositionedChannelValue(presetCapabilityValue, cachedChannel, cachedFixture.getProfile().getUuid());
@@ -1434,15 +1479,6 @@ public class DefaultDesignerService implements DesignerService {
                             if (isBrightness(presetCapabilityValue)) {
                                 // handled for the whole channel above
                                 continue;
-                            } else if ((presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Pan || presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Tilt) && hasValue(presetCapabilityValue)) {
-                                // a preset which mirrors this axis points its fixtures at the mirrored position
-                                double valuePercentage = preset.getMirroredValuePercentage(presetCapabilityValue.getType(), presetCapabilityValue.getValuePercentage());
-
-                                FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
-                                fixtureChannelValue.setChannelName(cachedChannel.getName());
-                                fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
-                                fixtureChannelValue.setValue(cachedChannel.getMaxValue() * valuePercentage);
-                                this.mixChannelValue(values, fixtureChannelValue, 1);
                             } else if (presetCapabilityValue.getType() == FixtureCapability.FixtureCapabilityType.WheelSlot && Objects.equals(channelCapability.getCapability().getSlotNumber(), presetCapabilityValue.getSlotNumber())) {
                                 // wheel slot (color, gobo, etc.)
                                 FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
@@ -1456,6 +1492,22 @@ public class DefaultDesignerService implements DesignerService {
                                     hasColor = true;
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        }
+
+        // The pulse of an iris or a frost and the shake of a gobo play over what the rest puts on the same channel,
+        // whatever order they come in
+        for (FixtureCapabilityValue presetCapabilityValue : capabilityValues) {
+            if (CapabilityPositions.isOverridingType(presetCapabilityValue.getType())) {
+                for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
+                    if (cachedChannel.getChannel() != null) {
+                        Double value = getPositionedChannelValue(presetCapabilityValue, cachedChannel, cachedFixture.getProfile().getUuid());
+
+                        if (value != null) {
+                            mixFixtureChannelValue(values, cachedFixture, cachedChannel.getName(), value);
                         }
                     }
                 }
@@ -1547,6 +1599,14 @@ public class DefaultDesignerService implements DesignerService {
             }
         }
 
+        // what the fixture pool asks the fixtures to do, in the order the designer plays it
+        Map<Maintenance.Action, List<String>> maintenance = new LinkedHashMap<>();
+        maintenance.put(Maintenance.Action.RESET, resetFixtureUuids);
+        maintenance.put(Maintenance.Action.LAMP_ON, lampOnFixtureUuids);
+
+        // where the fixtures hang, to aim the moving heads at a spot
+        Map<String, PanTilt.StagePlacement> placements = PanTilt.getStagePlacements(project);
+
         for (int i = 0; i < cachedFixtures.size(); i++) {
             CachedFixture cachedFixture = cachedFixtures.get(i);
 
@@ -1589,9 +1649,12 @@ public class DefaultDesignerService implements DesignerService {
                             state = getPresetStepState(preset, timeMillis - PresetSteps.getStepsPhasingMillis(preset.getPreset(), fixtureIndex, fixtureCounts.get(preset.getPreset())));
                         }
 
-                        mixCapabilityValues(state, cachedFixture, values, intensityPercentage, preset.getPreset());
+                        Integer fixtureCount = fixtureCounts.get(preset.getPreset());
+                        PanTilt.Context context = new PanTilt.Context(fixtureIndex, fixtureCount == null ? 1 : fixtureCount, placements.get(cachedFixture.getFixture().getUuid()));
+
+                        mixCapabilityValues(state, cachedFixture, values, intensityPercentage, preset.getPreset(), context);
                         mixChannelValues(state, cachedFixture, values, intensityPercentage);
-                        mixEffects(timeMillis, fixtureIndex, fixtureCounts.get(preset.getPreset()), preset, cachedFixture, values, intensityPercentage, state);
+                        mixEffects(timeMillis, fixtureIndex, fixtureCount, preset, cachedFixture, values, intensityPercentage, state, context);
                     }
                 }
             }
@@ -1599,6 +1662,18 @@ public class DefaultDesignerService implements DesignerService {
             // a fixture being identified from the fixture pool of the designer blinks, whatever the presets light it with
             if (identifyFixtureUuids.contains(cachedFixture.getFixture().getUuid())) {
                 values = getIdentifyValues(cachedFixture, values, timeMillis);
+            }
+
+            // a fixture asked to reset itself or to switch its lamp on does it, whatever the presets do with it
+            for (Map.Entry<Maintenance.Action, List<String>> entry : maintenance.entrySet()) {
+                if (entry.getValue().contains(cachedFixture.getFixture().getUuid())) {
+                    Maintenance.Found found = Maintenance.getCapability(cachedFixture.getChannels(), entry.getKey());
+
+                    if (found != null && found.capability().getCapability().getDmxRange() != null && found.capability().getCapability().getDmxRange().size() == 2) {
+                        values = new ArrayList<>(values);
+                        mixFixtureChannelValue(values, cachedFixture, found.channel().getName(), found.capability().getCenterValue());
+                    }
+                }
             }
 
             // Store the calculated values for subsequent fixtures on the same DMX address
@@ -1614,7 +1689,7 @@ public class DefaultDesignerService implements DesignerService {
         List<FixtureChannelValue> values = new ArrayList<>(presetValues);
         PresetStepState state = new PresetStepState();
         state.setFixtureCapabilityValues(Identify.getCapabilityValues(cachedFixture, timeMillis));
-        mixCapabilityValues(state, cachedFixture, values, 1, new Preset());
+        mixCapabilityValues(state, cachedFixture, values, 1, new Preset(), new PanTilt.Context(0, 1, null));
 
         return values;
     }
@@ -1649,7 +1724,7 @@ public class DefaultDesignerService implements DesignerService {
         return (effectTimeMillis % loopMillis + loopMillis) % loopMillis;
     }
 
-    private void mixEffects(double timeMillis, int fixtureIndex, Integer fixtureCount, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double intensityPercentage, PresetStepState state) {
+    private void mixEffects(double timeMillis, int fixtureIndex, Integer fixtureCount, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double intensityPercentage, PresetStepState state, PanTilt.Context context) {
         double effectTimeMillis = timeMillis;
 
         if (preset.getRegion() != null) {
@@ -1662,6 +1737,11 @@ public class DefaultDesignerService implements DesignerService {
             double effectIntensityPercentage = intensityPercentage * effectAmount;
 
             if (effect.isVisible() && effectAmount > 0) {
+                if (effect instanceof EffectPanTilt panTilt) {
+                    mixPanTiltEffect(panTilt, effectTimeMillis, preset, cachedFixture, values, effectIntensityPercentage, state, context);
+                    continue;
+                }
+
                 // EffectCurve
                 if (effect instanceof EffectCurve effectCurve) {
                     Double beatsPerMinute = this.getBeatsPerMinute();
@@ -1714,8 +1794,43 @@ public class DefaultDesignerService implements DesignerService {
                         }
                     }
                 }
+            }
+        }
+    }
 
-                // TODO other effects (PanTilt, etc.)
+    // A movement of the moving heads, around where the preset points each of them (or around the middle, if it
+    // doesn't), mirrored with the preset, like in the designer
+    private void mixPanTiltEffect(EffectPanTilt effect, double effectTimeMillis, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double effectIntensityPercentage, PresetStepState state, PanTilt.Context context) {
+        Double beatsPerMinute = this.getBeatsPerMinute();
+        double curveTimeMillis = getCurveTimeMillis(effect, effectTimeMillis, preset, context.fixtureCount(), beatsPerMinute);
+        EffectPanTilt.Offset offset = effect.getOffsetAtMillis(curveTimeMillis, context.fixtureIndex(), context.fixtureCount(), beatsPerMinute);
+
+        // the movement does not apply anymore after it has finished running
+        if (offset == null) {
+            return;
+        }
+
+        for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
+            if (cachedChannel.getChannel() == null) {
+                continue;
+            }
+
+            for (FixtureCapability.FixtureCapabilityType type : List.of(FixtureCapability.FixtureCapabilityType.Pan, FixtureCapability.FixtureCapabilityType.Tilt)) {
+                Double range = PanTilt.getAxisRange(cachedChannel, type);
+
+                if (range == null) {
+                    continue;
+                }
+
+                boolean mirror = preset.getPreset().mirrorsCapability(type);
+                Double center = PanTilt.getPresetPanTiltDegrees(state.getFixtureCapabilityValues(), type, cachedFixture.getProfile().getUuid(), range, mirror, context);
+                double move = type == FixtureCapability.FixtureCapabilityType.Pan ? offset.pan() : offset.tilt();
+
+                FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
+                fixtureChannelValue.setChannelName(cachedChannel.getName());
+                fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
+                fixtureChannelValue.setValue(PanTilt.getAxisChannelValue(cachedChannel, range, (center == null ? 0 : center) + (mirror ? -move : move)));
+                this.mixChannelValue(values, fixtureChannelValue, effectIntensityPercentage);
             }
         }
     }
@@ -2541,7 +2656,8 @@ public class DefaultDesignerService implements DesignerService {
                 }
 
                 for (Effect effect : preset.getEffects()) {
-                    if (effect instanceof EffectCurve curve && !"square".equals(curve.getCurveType())) {
+                    // (a movement of the pan and the tilt runs on the timing of a curve, but swings over no amplitude)
+                    if (effect instanceof EffectCurve curve && !(effect instanceof EffectPanTilt) && !"square".equals(curve.getCurveType())) {
                         curve.setAmplitude(curve.getAmplitude() / 2);
                     }
                 }
@@ -2782,6 +2898,8 @@ public class DefaultDesignerService implements DesignerService {
 
         // a fixture is only identified while the designer previews the patch it is in (see setIdentifyFixtureUuids)
         this.identifyFixtureUuids = new ArrayList<>();
+        this.resetFixtureUuids = new ArrayList<>();
+        this.lampOnFixtureUuids = new ArrayList<>();
 
         // a preview names the composition it plays, if any (see setPreviewComposition)
         this.composition = compositionPlayer == null ? null : getCompositionByName(project, compositionPlayer.getComposition().getName());
@@ -2976,6 +3094,12 @@ public class DefaultDesignerService implements DesignerService {
     @Override
     public void setIdentifyFixtureUuids(List<String> identifyFixtureUuids) {
         this.identifyFixtureUuids = identifyFixtureUuids == null ? new ArrayList<>() : new ArrayList<>(identifyFixtureUuids);
+    }
+
+    @Override
+    public void setMaintenanceFixtureUuids(List<String> resetFixtureUuids, List<String> lampOnFixtureUuids) {
+        this.resetFixtureUuids = resetFixtureUuids == null ? new ArrayList<>() : new ArrayList<>(resetFixtureUuids);
+        this.lampOnFixtureUuids = lampOnFixtureUuids == null ? new ArrayList<>() : new ArrayList<>(lampOnFixtureUuids);
     }
 
     @Override

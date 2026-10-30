@@ -177,6 +177,14 @@ public class EffectCurve extends Effect {
     // moment - the fixtures keep whatever the rest of the preset puts on them then
     @Override
     public Double getValueAtMillis(double timeMillis, Integer fixtureIndex, Integer fixtureCount, Double beatsPerMinute) {
+        Double cyclePosition = this.getCyclePositionAtMillis(timeMillis, fixtureIndex, fixtureCount, beatsPerMinute);
+
+        return cyclePosition == null ? null : this.getCurveValue(cyclePosition);
+    }
+
+    // where the curve is inside its cycle (between 0 and 1) for the passed fixture, or null if it does not apply at
+    // this moment
+    public Double getCyclePositionAtMillis(double timeMillis, Integer fixtureIndex, Integer fixtureCount, Double beatsPerMinute) {
         double lengthMillis = this.getLengthMillis(beatsPerMinute);
         double phasingMillis = this.getPhasingMillis(fixtureIndex, fixtureCount, beatsPerMinute);
         double phaseMillis = this.getPhaseMillis(beatsPerMinute);
@@ -199,11 +207,11 @@ public class EffectCurve extends Effect {
                     return null;
                 }
 
-                return this.getCurveValue(this.getCyclePosition(runEndMillis - phaseMillis, true, lengthMillis));
+                return this.getCyclePosition(runEndMillis - phaseMillis, true, lengthMillis);
             }
         }
 
-        return this.getCurveValue(this.getCyclePosition(timeMillis - phase, false, lengthMillis));
+        return this.getCyclePosition(timeMillis - phase, false, lengthMillis);
     }
 
     // the position inside the current cycle, between 0 and 1

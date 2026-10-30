@@ -1,0 +1,96 @@
+{
+  "name": "Wide Mover",
+  "categories": [
+    "Moving Head"
+  ],
+  "availableChannels": {
+    "Pan": {
+      "fineChannelAliases": [
+        "Pan fine"
+      ],
+      "capability": {
+        "type": "Pan",
+        "angleStart": "0deg",
+        "angleEnd": "630deg"
+      }
+    },
+    "Tilt": {
+      "capability": {
+        "type": "Tilt",
+        "angleStart": "90deg",
+        "angleEnd": "-90deg"
+      }
+    },
+    "Dimmer": {
+      "capability": {
+        "type": "Intensity"
+      }
+    },
+    "Control": {
+      "capabilities": [
+        {
+          "dmxRange": [
+            0,
+            9
+          ],
+          "type": "NoFunction"
+        },
+        {
+          "dmxRange": [
+            10,
+            19
+          ],
+          "type": "Maintenance",
+          "comment": "Lamp on",
+          "hold": "3s"
+        },
+        {
+          "dmxRange": [
+            20,
+            29
+          ],
+          "type": "Maintenance",
+          "comment": "Lamp off",
+          "hold": "3s"
+        },
+        {
+          "dmxRange": [
+            30,
+            39
+          ],
+          "type": "Maintenance",
+          "comment": "Reset pan/tilt"
+        },
+        {
+          "dmxRange": [
+            40,
+            49
+          ],
+          "type": "Maintenance",
+          "comment": "Reset",
+          "hold": "5s"
+        },
+        {
+          "dmxRange": [
+            50,
+            255
+          ],
+          "type": "NoFunction"
+        }
+      ]
+    }
+  },
+  "modes": [
+    {
+      "name": "5ch",
+      "shortName": "5ch",
+      "channels": [
+        "Pan",
+        "Pan fine",
+        "Tilt",
+        "Dimmer",
+        "Control"
+      ]
+    }
+  ]
+}
