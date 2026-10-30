@@ -317,6 +317,9 @@ class DesignerConformanceTest {
             default -> throw new IllegalArgumentException("Unknown preview mode " + mode);
         }
 
+        // the fixtures identified from the fixture pool, if any
+        designerService.setIdentifyFixtureUuids(preview.has("identify") ? strings(preview.get("identify")) : new ArrayList<>());
+
         ArrayNode frames = NODES.arrayNode();
 
         for (JsonNode time : times) {

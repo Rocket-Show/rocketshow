@@ -72,6 +72,9 @@ public class DefaultDesignerService implements DesignerService {
     private double stepPreviewStartMillis = 0;
     private List<String> selectedSceneUuids = new ArrayList<>();
 
+    // the fixtures being identified from the fixture pool of the designer (see Identify)
+    private volatile List<String> identifyFixtureUuids = new ArrayList<>();
+
     // The scenes picked by hand on the Play screen (see ScenePlayerService), the project they are from and the master
     // dimmer of the Play screen. They play whenever no composition plays a project of its own: right away, or once the
     // composition closes its project.
@@ -1336,6 +1339,16 @@ public class DefaultDesignerService implements DesignerService {
         mixChannelValue(values, blendedValue, 1);
     }
 
+    // the value a positioned capability value (see CapabilityPositions) drives a channel of a fixture of the passed
+    // profile to, or null, if the channel doesn't do it
+    private static Double getPositionedChannelValue(FixtureCapabilityValue capabilityValue, CachedFixtureChannel channel, String profileUuid) {
+        if (!hasValue(capabilityValue) || (emptyToNull(capabilityValue.getProfileUuid()) != null && !capabilityValue.getProfileUuid().equals(profileUuid))) {
+            return null;
+        }
+
+        return CapabilityPositions.getPositionedChannelValue(channel, capabilityValue.getType(), capabilityValue.getValuePercentage());
+    }
+
     private void mixCapabilityValues(PresetStepState state, CachedFixture cachedFixture, List<FixtureChannelValue> values, double intensityPercentage, Preset preset) {
         boolean hasColor = false;
 
@@ -1344,10 +1357,28 @@ public class DefaultDesignerService implements DesignerService {
         Double brightnessBelow = getDimmerBrightness(cachedFixture, values);
         double presetBrightness = brightnessBelow == null ? 0 : getPresetDimmerBrightness(state, cachedFixture, preset, brightnessBelow);
 
+        // a fixture mixing its colors with filters is given the colors the other way round (see SubtractiveColors)
+        List<FixtureCapabilityValue> capabilityValues = SubtractiveColors.getFixtureCapabilityValues(state.getFixtureCapabilityValues(), cachedFixture.getChannels());
+
         // mix the capability values of the state the preset is in
-        for (FixtureCapabilityValue presetCapabilityValue : state.getFixtureCapabilityValues()) {
+        for (FixtureCapabilityValue presetCapabilityValue : capabilityValues) {
             for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
                 if (cachedChannel.getChannel() != null) {
+                    if (CapabilityPositions.isPositionedType(presetCapabilityValue.getType())) {
+                        // a position is played on the channel as a whole, by the capability of it doing it
+                        Double value = getPositionedChannelValue(presetCapabilityValue, cachedChannel, cachedFixture.getProfile().getUuid());
+
+                        if (value != null) {
+                            FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
+                            fixtureChannelValue.setChannelName(cachedChannel.getName());
+                            fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
+                            fixtureChannelValue.setValue(value);
+                            this.mixChannelValue(values, fixtureChannelValue, 1);
+                        }
+
+                        continue;
+                    }
+
                     if (isBrightness(presetCapabilityValue)) {
                         // intensity and colorIntensity (dimmer and color): the capabilities of the channel giving it
                         List<CachedFixtureCapability> brightnessCapabilities = cachedChannel.getCapabilities().stream()
@@ -1518,11 +1549,27 @@ public class DefaultDesignerService implements DesignerService {
                 }
             }
 
+            // a fixture being identified from the fixture pool of the designer blinks, whatever the presets light it with
+            if (identifyFixtureUuids.contains(cachedFixture.getFixture().getUuid())) {
+                values = getIdentifyValues(cachedFixture, values, timeMillis);
+            }
+
             // Store the calculated values for subsequent fixtures on the same DMX address
             calculatedFixtures.put(cachedFixture, values);
         }
 
         return calculatedFixtures;
+    }
+
+    // the values of a fixture being identified: the ones the presets give it, with what identifies it on top (see
+    // Identify). It keeps everything else, e.g. where it points to.
+    private List<FixtureChannelValue> getIdentifyValues(CachedFixture cachedFixture, List<FixtureChannelValue> presetValues, double timeMillis) {
+        List<FixtureChannelValue> values = new ArrayList<>(presetValues);
+        PresetStepState state = new PresetStepState();
+        state.setFixtureCapabilityValues(Identify.getCapabilityValues(cachedFixture, timeMillis));
+        mixCapabilityValues(state, cachedFixture, values, 1, new Preset());
+
+        return values;
     }
 
     // the tempo the curves synced to the beat follow: the one of the composition playing, or else the one of the
@@ -2686,6 +2733,9 @@ public class DefaultDesignerService implements DesignerService {
         this.project = project;
         this.pipeline = pipeline;
 
+        // a fixture is only identified while the designer previews the patch it is in (see setIdentifyFixtureUuids)
+        this.identifyFixtureUuids = new ArrayList<>();
+
         // a preview names the composition it plays, if any (see setPreviewComposition)
         this.composition = compositionPlayer == null ? null : getCompositionByName(project, compositionPlayer.getComposition().getName());
 
@@ -2874,6 +2924,11 @@ public class DefaultDesignerService implements DesignerService {
     @Override
     public void setSelectedSceneUuids(List<String> selectedSceneUuids) {
         this.selectedSceneUuids = selectedSceneUuids;
+    }
+
+    @Override
+    public void setIdentifyFixtureUuids(List<String> identifyFixtureUuids) {
+        this.identifyFixtureUuids = identifyFixtureUuids == null ? new ArrayList<>() : new ArrayList<>(identifyFixtureUuids);
     }
 
     @Override

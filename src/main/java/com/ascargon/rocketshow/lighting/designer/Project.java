@@ -35,6 +35,9 @@ public class Project {
 
     private List<String> selectedSceneUuids = new ArrayList<>();
 
+    // the fixtures the designer is identifying from its fixture pool: they blink at full white in its live preview
+    private List<String> identifyFixtureUuids = new ArrayList<>();
+
     // the composition open in the designer, whose tempo the curves synced to the beat follow while it isn't played
     private String selectedCompositionUuid;
     // play the selected preset on its own (solo) instead of the selected scenes

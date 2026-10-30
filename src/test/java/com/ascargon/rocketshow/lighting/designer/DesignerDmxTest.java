@@ -522,6 +522,67 @@ class DesignerDmxTest {
     }
 
     @Test
+    void strobesFromItsPositionAndOpensTheShutterAtZero() throws Exception {
+        ObjectNode project = project();
+        addPreset(project, "Strobe", List.of("par-1"), List.of(capability(project, "ShutterStrobe", 0.5)));
+        addPreset(project, "Open", List.of("par-2"), List.of(capability(project, "ShutterStrobe", 0.0)));
+
+        Map<Integer, Integer> front = play(project).get(FRONT);
+
+        // Half way between the slow and the fast end of the strobe (10 to 255), the shutter of par 2 open (0 to 9)
+        assertEquals(132, front.get(6));
+        assertEquals(4, front.get(16));
+    }
+
+    @Test
+    void identifiesAFixtureFromTheFixturePoolOfTheDesigner() throws Exception {
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+        ((ArrayNode) project.get("presets").get(0).get("fixtures")).addObject().put("fixtureUuid", "par-2");
+
+        Map<Integer, Integer> front = preview(project, designerService -> {
+            designerService.setPreviewPreset(true);
+            designerService.setSelectedPresetUuid("Red");
+            designerService.setIdentifyFixtureUuids(List.of("par-2", "rgb"));
+        }).get(FRONT);
+
+        // Par 1 plays the preset, par 2 is lit at full white with its shutter open, like the par without a dimmer
+        assertEquals(List.of(255, 255, 0, 0, 0, 5), addresses(front, 1, 6));
+        assertEquals(List.of(255, 255, 255, 255, 0, 4), addresses(front, 11, 16));
+        assertEquals(List.of(255, 255, 255), addresses(front, 21, 23));
+    }
+
+    @Test
+    void identifiesTheFixturesTheDesignerSendsWithItsPreview() throws Exception {
+        ObjectNode project = project();
+        project.putArray("identifyFixtureUuids").add("par-1");
+
+        // like DesignerController.preview, which reads them from the project the designer sends
+        Map<Integer, Integer> front = new DesignerTestEngine().start(directory, project.toString(), (designerService, loadedProject) -> {
+            designerService.stopPreview();
+            designerService.load(null, loadedProject, null);
+            designerService.setIdentifyFixtureUuids(loadedProject.getIdentifyFixtureUuids());
+            designerService.startPreview(0);
+        }, List.of(FRONT, BACK)).get(FRONT);
+
+        assertEquals(List.of(255, 255, 255, 255, 0, 4), addresses(front, 1, 6));
+        assertEquals(List.of(0, 0, 0, 0, 0, 5), addresses(front, 11, 16));
+    }
+
+    @Test
+    void forgetsTheIdentifiedFixturesWithTheNextProject() throws Exception {
+        ObjectNode project = project();
+
+        Map<Integer, Integer> front = new DesignerTestEngine().start(directory, project.toString(), (designerService, loadedProject) -> {
+            designerService.setIdentifyFixtureUuids(List.of("par-2"));
+            designerService.load(null, loadedProject, null);
+            designerService.startPreview(0);
+        }, List.of(FRONT, BACK)).get(FRONT);
+
+        assertEquals(List.of(0, 0, 0, 0, 0, 5), addresses(front, 11, 16));
+    }
+
+    @Test
     void movesAChannelWithAnEffect() throws Exception {
         ObjectNode project = project();
         addColorPreset(project, "Red", 1, 0);

@@ -89,6 +89,7 @@ public class DesignerController {
         designerService.setSelectedStepUuid(project.getSelectedStepUuid());
         designerService.setStepPreviewRunning(project.isStepPreviewRunning(), project.getStepPreviewStartMillis());
         designerService.setSelectedSceneUuids(project.getSelectedSceneUuids());
+        designerService.setIdentifyFixtureUuids(project.getIdentifyFixtureUuids());
         designerService.setPreviewComposition(compositionName);
 
         designerService.startPreview(positionMillis);

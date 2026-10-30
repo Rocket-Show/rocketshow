@@ -49,6 +49,10 @@ public interface DesignerService {
 
     void setSelectedSceneUuids(List<String> selectedSceneUuids);
 
+    // The fixtures being identified from the fixture pool of the designer: they blink at full white, whatever the
+    // presets do with them, until the next project is loaded
+    void setIdentifyFixtureUuids(List<String> identifyFixtureUuids);
+
     // Play the scenes of the project picked by hand on the Play screen, dimmed by its master dimmer (0 to 1). They play
     // whenever no composition plays a project of its own: right away, or once the composition closes its project.
     void playManualScenes(Project project, List<String> sceneUuids, double masterDimmer);

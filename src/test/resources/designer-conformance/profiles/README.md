@@ -21,3 +21,8 @@ The profiles of `test` are written for the cases: `rgb-par`, `rgb` and `moving-h
 `shared-dimmer` (several ranges of brightness on one channel), `wheels` (a gobo wheel before a color wheel, a channel
 named differently than its wheel, wheels named in a list) and `pixel-bar` (channels per channel, a dimmer of its own,
 the channels of a pixel named directly) are lit on the edges of what they have (`channel-values-edges.json`).
+`beam` (a shutter, a strobe speed, a zoom, a focus, an iris, a frost, a color temperature and a prism, their ranges
+running both ways round, in words and in numbers), `strobe-par` (a strobe sharing its channel with the dimmer, "no
+function" switching another one off, white, amber and UV) and `cmy-spot` (colors mixed with filters) play the
+capabilities set as a position, the colors of a fixture mixing them with filters and the fixtures identified from the
+fixture pool (`channel-values-capabilities.json`).

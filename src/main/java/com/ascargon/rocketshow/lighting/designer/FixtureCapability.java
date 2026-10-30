@@ -92,4 +92,25 @@ public class FixtureCapability {
     private String brightnessStart;
     private String brightnessEnd;
 
+    // what a shutter does (e.g. "Open" or "Strobe"), and whether it flashes at random or to the sound
+    private String shutterEffect;
+    private Boolean randomTiming;
+    private Boolean soundControlled;
+
+    // the ends of the ranges the positioned capabilities are played in (see CapabilityPositions), like the fixture
+    // library writes them (e.g. "10deg", "wide" or "3200K")
+    private String speed;
+    private String speedStart;
+    private String speedEnd;
+    private String angleStart;
+    private String angleEnd;
+    private String distanceStart;
+    private String distanceEnd;
+    private String openPercentStart;
+    private String openPercentEnd;
+    private String frostIntensityStart;
+    private String frostIntensityEnd;
+    private String colorTemperatureStart;
+    private String colorTemperatureEnd;
+
 }
