@@ -1,0 +1,76 @@
+{
+  "name": "Hazer",
+  "categories": [
+    "Hazer"
+  ],
+  "availableChannels": {
+    "Haze": {
+      "capabilities": [
+        {
+          "dmxRange": [
+            0,
+            9
+          ],
+          "type": "NoFunction"
+        },
+        {
+          "dmxRange": [
+            10,
+            255
+          ],
+          "type": "Fog",
+          "fogType": "Haze",
+          "fogOutputStart": "weak",
+          "fogOutputEnd": "strong"
+        }
+      ]
+    },
+    "Output": {
+      "capabilities": [
+        {
+          "dmxRange": [
+            0,
+            4
+          ],
+          "type": "FogOutput",
+          "fogOutput": "off"
+        },
+        {
+          "dmxRange": [
+            5,
+            255
+          ],
+          "type": "FogOutput",
+          "fogOutputStart": "100%",
+          "fogOutputEnd": "1%"
+        }
+      ]
+    },
+    "Pump": {
+      "capability": {
+        "type": "FogOutput",
+        "fogOutputStart": "0m^3/min",
+        "fogOutputEnd": "2m^3/min"
+      }
+    },
+    "Fan": {
+      "capability": {
+        "type": "Speed",
+        "speedStart": "slow",
+        "speedEnd": "fast"
+      }
+    }
+  },
+  "modes": [
+    {
+      "name": "4-channel",
+      "shortName": "4ch",
+      "channels": [
+        "Haze",
+        "Output",
+        "Pump",
+        "Fan"
+      ]
+    }
+  ]
+}

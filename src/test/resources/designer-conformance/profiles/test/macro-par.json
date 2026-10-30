@@ -1,0 +1,122 @@
+{
+  "name": "Par with color macros",
+  "categories": [
+    "Color Changer"
+  ],
+  "availableChannels": {
+    "Dimmer": {
+      "capability": {
+        "type": "Intensity"
+      }
+    },
+    "Red": {
+      "capability": {
+        "type": "ColorIntensity",
+        "color": "Red"
+      }
+    },
+    "Green": {
+      "capability": {
+        "type": "ColorIntensity",
+        "color": "Green"
+      }
+    },
+    "Blue": {
+      "capability": {
+        "type": "ColorIntensity",
+        "color": "Blue"
+      }
+    },
+    "Macro": {
+      "capabilities": [
+        {
+          "dmxRange": [
+            0,
+            9
+          ],
+          "type": "NoFunction"
+        },
+        {
+          "dmxRange": [
+            10,
+            49
+          ],
+          "type": "ColorPreset",
+          "colors": [
+            "#ff0000"
+          ]
+        },
+        {
+          "dmxRange": [
+            50,
+            89
+          ],
+          "type": "ColorPreset",
+          "colors": [
+            "#00ff00"
+          ]
+        },
+        {
+          "dmxRange": [
+            90,
+            129
+          ],
+          "type": "ColorPreset",
+          "colors": [
+            "#0000ff"
+          ]
+        },
+        {
+          "dmxRange": [
+            130,
+            169
+          ],
+          "type": "ColorPreset",
+          "colors": [
+            "#ffffff"
+          ]
+        },
+        {
+          "dmxRange": [
+            170,
+            209
+          ],
+          "type": "ColorPreset",
+          "colors": [
+            "#ff0000",
+            "#0000ff"
+          ]
+        },
+        {
+          "dmxRange": [
+            210,
+            255
+          ],
+          "type": "ColorPreset",
+          "comment": "Rainbow"
+        }
+      ]
+    }
+  },
+  "modes": [
+    {
+      "name": "Macros",
+      "shortName": "macros",
+      "channels": [
+        "Dimmer",
+        "Macro"
+      ]
+    },
+    {
+      "name": "RGB",
+      "shortName": "rgb",
+      "channels": [
+        "Dimmer",
+        "Red",
+        "Green",
+        "Blue",
+        "Macro"
+      ]
+    }
+  ]
+}

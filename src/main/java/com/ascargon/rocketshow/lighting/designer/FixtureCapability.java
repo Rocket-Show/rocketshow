@@ -112,5 +112,14 @@ public class FixtureCapability {
     private String frostIntensityEnd;
     private String colorTemperatureStart;
     private String colorTemperatureEnd;
+    private String duration;
+    private String durationStart;
+    private String durationEnd;
+    private String fogOutput;
+    private String fogOutputStart;
+    private String fogOutputEnd;
+
+    // the colors a color preset (e.g. a color macro) lights in
+    private List<String> colors;
 
 }

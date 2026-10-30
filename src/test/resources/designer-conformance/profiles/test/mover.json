@@ -1,0 +1,129 @@
+{
+  "name": "Mover",
+  "categories": [
+    "Moving Head"
+  ],
+  "availableChannels": {
+    "Dimmer": {
+      "capability": {
+        "type": "Intensity"
+      }
+    },
+    "Pan": {
+      "capability": {
+        "type": "Pan"
+      }
+    },
+    "Speed": {
+      "capability": {
+        "type": "PanTiltSpeed",
+        "durationStart": "0.1s",
+        "durationEnd": "20s"
+      }
+    },
+    "Movement": {
+      "capabilities": [
+        {
+          "dmxRange": [
+            0,
+            9
+          ],
+          "type": "PanTiltSpeed",
+          "speed": "fast",
+          "comment": "Tracking"
+        },
+        {
+          "dmxRange": [
+            10,
+            255
+          ],
+          "type": "PanTiltSpeed",
+          "durationStart": "long",
+          "durationEnd": "short"
+        }
+      ]
+    },
+    "Shutter": {
+      "capabilities": [
+        {
+          "dmxRange": [
+            0,
+            9
+          ],
+          "type": "ShutterStrobe",
+          "shutterEffect": "Open"
+        },
+        {
+          "dmxRange": [
+            10,
+            255
+          ],
+          "type": "ShutterStrobe",
+          "shutterEffect": "Strobe",
+          "speedStart": "1Hz",
+          "speedEnd": "25Hz"
+        }
+      ]
+    },
+    "Flash": {
+      "capability": {
+        "type": "StrobeDuration",
+        "durationStart": "5ms",
+        "durationEnd": "0.5s"
+      }
+    },
+    "Beam": {
+      "capabilities": [
+        {
+          "dmxRange": [
+            0,
+            9
+          ],
+          "type": "NoFunction"
+        },
+        {
+          "dmxRange": [
+            10,
+            255
+          ],
+          "type": "BeamAngle",
+          "angleStart": "4deg",
+          "angleEnd": "45deg"
+        }
+      ]
+    },
+    "Zoom": {
+      "capability": {
+        "type": "Zoom",
+        "angleStart": "wide",
+        "angleEnd": "narrow"
+      }
+    }
+  },
+  "modes": [
+    {
+      "name": "Beam angle",
+      "shortName": "beam",
+      "channels": [
+        "Dimmer",
+        "Pan",
+        "Speed",
+        "Shutter",
+        "Flash",
+        "Beam"
+      ]
+    },
+    {
+      "name": "Zoom",
+      "shortName": "zoom",
+      "channels": [
+        "Dimmer",
+        "Pan",
+        "Movement",
+        "Shutter",
+        "Flash",
+        "Zoom"
+      ]
+    }
+  ]
+}

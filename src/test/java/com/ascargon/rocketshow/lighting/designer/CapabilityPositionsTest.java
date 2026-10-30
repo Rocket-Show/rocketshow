@@ -2,6 +2,8 @@ package com.ascargon.rocketshow.lighting.designer;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -46,6 +48,65 @@ class CapabilityPositionsTest {
         assertTrue(CapabilityPositions.getPropertyRank("stop") < CapabilityPositions.getPropertyRank("slow"));
         assertTrue(CapabilityPositions.getPropertyRank("slow") < CapabilityPositions.getPropertyRank("1Hz"));
         assertTrue(CapabilityPositions.getPropertyRank("fast") > CapabilityPositions.getPropertyRank("50Hz"));
+    }
+
+    @Test
+    void comparesTimesAndRoundsPerMinute() {
+        assertEquals(0.5, CapabilityPositions.getPropertyRank("500ms"));
+        assertEquals(2, CapabilityPositions.getPropertyRank("2s"));
+        assertEquals(2, CapabilityPositions.getPropertyRank("120rpm"));
+        assertEquals(2, CapabilityPositions.getPropertyRank("2m^3/min"));
+        assertTrue(CapabilityPositions.getPropertyRank("instant") < CapabilityPositions.getPropertyRank("short"));
+        assertTrue(CapabilityPositions.getPropertyRank("short") < CapabilityPositions.getPropertyRank("1ms"));
+        assertTrue(CapabilityPositions.getPropertyRank("long") > CapabilityPositions.getPropertyRank("60s"));
+        assertTrue(CapabilityPositions.getPropertyRank("off") < CapabilityPositions.getPropertyRank("weak"));
+        assertTrue(CapabilityPositions.getPropertyRank("weak") < CapabilityPositions.getPropertyRank("strong"));
+    }
+
+    @Test
+    void tellsAMovementGivenByTheTimeItTakesTheOtherWayRound() {
+        FixtureCapability speed = capability(FixtureCapability.FixtureCapabilityType.PanTiltSpeed);
+        speed.setDurationStart("0.1s");
+        speed.setDurationEnd("20s");
+        assertTrue(CapabilityPositions.isRangeReversed(speed));
+
+        speed.setDurationStart("long");
+        speed.setDurationEnd("short");
+        assertFalse(CapabilityPositions.isRangeReversed(speed));
+
+        // a speed says it rather than a time
+        speed.setSpeedStart("slow");
+        speed.setSpeedEnd("fast");
+        speed.setDurationStart("0.1s");
+        speed.setDurationEnd("20s");
+        assertFalse(CapabilityPositions.isRangeReversed(speed));
+    }
+
+    @Test
+    void tellsTheRangesOfTheFlashDurationTheBeamAngleAndTheFog() {
+        FixtureCapability flash = capability(FixtureCapability.FixtureCapabilityType.StrobeDuration);
+        flash.setDurationStart("5ms");
+        flash.setDurationEnd("0.5s");
+        assertFalse(CapabilityPositions.isRangeReversed(flash));
+
+        FixtureCapability beam = capability(FixtureCapability.FixtureCapabilityType.BeamAngle);
+        beam.setAngleStart("45deg");
+        beam.setAngleEnd("4deg");
+        assertTrue(CapabilityPositions.isRangeReversed(beam));
+
+        FixtureCapability fog = capability(FixtureCapability.FixtureCapabilityType.Fog);
+        fog.setFogOutputStart("strong");
+        fog.setFogOutputEnd("weak");
+        assertTrue(CapabilityPositions.isRangeReversed(fog));
+    }
+
+    @Test
+    void playsTheZoomOnTheBeamAngleAndTheFogOutputOnTheFog() {
+        assertEquals(List.of(FixtureCapability.FixtureCapabilityType.Zoom, FixtureCapability.FixtureCapabilityType.BeamAngle),
+                CapabilityPositions.getPlayingTypes(FixtureCapability.FixtureCapabilityType.Zoom));
+        assertEquals(List.of(FixtureCapability.FixtureCapabilityType.FogOutput, FixtureCapability.FixtureCapabilityType.Fog),
+                CapabilityPositions.getPlayingTypes(FixtureCapability.FixtureCapabilityType.FogOutput));
+        assertFalse(CapabilityPositions.isPositionedType(FixtureCapability.FixtureCapabilityType.BeamAngle));
     }
 
     @Test
@@ -103,7 +164,7 @@ class CapabilityPositionsTest {
 
     @Test
     void knowsTheCapabilitiesSetAsAPosition() {
-        for (String type : new String[]{"ShutterStrobe", "StrobeSpeed", "Zoom", "Focus", "Iris", "Frost", "ColorTemperature", "Prism"}) {
+        for (String type : new String[]{"ShutterStrobe", "StrobeSpeed", "StrobeDuration", "Zoom", "Focus", "Iris", "Frost", "ColorTemperature", "Prism", "PanTiltSpeed", "FogOutput"}) {
             assertTrue(CapabilityPositions.isPositionedType(FixtureCapability.FixtureCapabilityType.valueOf(type)), type);
         }
 

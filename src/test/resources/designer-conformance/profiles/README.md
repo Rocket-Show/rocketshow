@@ -23,6 +23,9 @@ named differently than its wheel, wheels named in a list) and `pixel-bar` (chann
 the channels of a pixel named directly) are lit on the edges of what they have (`channel-values-edges.json`).
 `beam` (a shutter, a strobe speed, a zoom, a focus, an iris, a frost, a color temperature and a prism, their ranges
 running both ways round, in words and in numbers), `strobe-par` (a strobe sharing its channel with the dimmer, "no
-function" switching another one off, white, amber and UV) and `cmy-spot` (colors mixed with filters) play the
-capabilities set as a position, the colors of a fixture mixing them with filters and the fixtures identified from the
-fixture pool (`channel-values-capabilities.json`).
+function" switching another one off, white, amber and UV), `cmy-spot` (colors mixed with filters), `mover` (a movement
+speed given as a speed and as the time a movement takes, a flash duration in milliseconds and seconds, a beam angle),
+`hazer` (a kind of fog with "no function" below it, a range putting out nothing, an output in cubic metres per minute)
+and `macro-par` (color macros, alone and next to colors of its own) play the capabilities set as a position, the colors
+of a fixture mixing them with filters or showing them on its macros and the fixtures identified from the fixture pool
+(`channel-values-capabilities.json`).

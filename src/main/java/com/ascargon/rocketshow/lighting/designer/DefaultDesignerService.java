@@ -27,6 +27,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -903,45 +904,71 @@ public class DefaultDesignerService implements DesignerService {
         return mixColors(colorsRgb);
     }
 
-    private CachedFixtureCapability getApproximatedColorWheelCapability(List<FixtureCapabilityValue> capabilityValues, CachedFixtureChannel cachedChannel) {
-        // return an approximated wheel slot channel capability, if a color or a slot on a different
-        // wheel has been selected
-        Double colorRed = null;
-        Double colorGreen = null;
-        Double colorBlue = null;
+    // the color the capability values light (0 to 255 for each of red, green and blue), which a color wheel or the color
+    // presets of a fixture show approximated, or null, if they don't name all three
+    private double[] getApproximatedColor(List<FixtureCapabilityValue> capabilityValues) {
+        FixtureCapabilityValue red = getCapabilityValue(capabilityValues, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.Red, null, null);
+        FixtureCapabilityValue green = getCapabilityValue(capabilityValues, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.Green, null, null);
+        FixtureCapabilityValue blue = getCapabilityValue(capabilityValues, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.Blue, null, null);
+
+        if (red == null || green == null || blue == null) {
+            return null;
+        }
+
+        // a color without a value is none, like in the designer
+        return new double[]{
+                red.getValuePercentage() == null ? Double.NaN : 255 * red.getValuePercentage(),
+                green.getValuePercentage() == null ? Double.NaN : 255 * green.getValuePercentage(),
+                blue.getValuePercentage() == null ? Double.NaN : 255 * blue.getValuePercentage()
+        };
+    }
+
+    // the capability of the channel closest to the color the capability values light, of the passed colors
+    private CachedFixtureCapability getClosestColorCapability(List<FixtureCapabilityValue> capabilityValues, CachedFixtureChannel cachedChannel, Function<CachedFixtureCapability, Color> colorOf) {
+        double[] color = getApproximatedColor(capabilityValues);
         double lowestDiff = Double.MAX_VALUE;
         CachedFixtureCapability lowestDiffCapability = null;
-        FixtureCapabilityValue capabilityValue;
 
-        capabilityValue = getCapabilityValue(capabilityValues, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.Red, null, null);
-        if (capabilityValue != null) {
-            colorRed = capabilityValue.getValuePercentage() == null ? Double.NaN : 255 * capabilityValue.getValuePercentage();
-        }
-        capabilityValue = getCapabilityValue(capabilityValues, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.Green, null, null);
-        if (capabilityValue != null) {
-            colorGreen = capabilityValue.getValuePercentage() == null ? Double.NaN : 255 * capabilityValue.getValuePercentage();
-        }
-        capabilityValue = getCapabilityValue(capabilityValues, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.Blue, null, null);
-        if (capabilityValue != null) {
-            colorBlue = capabilityValue.getValuePercentage() == null ? Double.NaN : 255 * capabilityValue.getValuePercentage();
+        if (color == null) {
+            return null;
         }
 
-        if (colorRed != null && colorGreen != null && colorBlue != null) {
-            for (CachedFixtureCapability capability : cachedChannel.getCapabilities()) {
-                if (capability.getCapability().getSlotNumber() != null) {
-                    Color mixedColor = getMixedWheelSlotColor(capability.getWheel(), capability.getCapability().getSlotNumber());
-                    if (mixedColor != null) {
-                        double diff = Math.abs(mixedColor.getRed() - colorRed) + Math.abs(mixedColor.getGreen() - colorGreen) + Math.abs(mixedColor.getBlue() - colorBlue);
-                        if (diff < lowestDiff) {
-                            lowestDiff = diff;
-                            lowestDiffCapability = capability;
-                        }
-                    }
+        for (CachedFixtureCapability capability : cachedChannel.getCapabilities()) {
+            Color mixedColor = colorOf.apply(capability);
+
+            if (mixedColor != null) {
+                double diff = Math.abs(mixedColor.getRed() - color[0]) + Math.abs(mixedColor.getGreen() - color[1]) + Math.abs(mixedColor.getBlue() - color[2]);
+
+                if (diff < lowestDiff) {
+                    lowestDiff = diff;
+                    lowestDiffCapability = capability;
                 }
             }
         }
 
         return lowestDiffCapability;
+    }
+
+    private CachedFixtureCapability getApproximatedColorWheelCapability(List<FixtureCapabilityValue> capabilityValues, CachedFixtureChannel cachedChannel) {
+        // return an approximated wheel slot channel capability, if a color or a slot on a different
+        // wheel has been selected
+        return getClosestColorCapability(capabilityValues, cachedChannel, capability -> capability.getCapability().getSlotNumber() == null
+                ? null
+                : getMixedWheelSlotColor(capability.getWheel(), capability.getCapability().getSlotNumber()));
+    }
+
+    // The color preset (e.g. a color macro) of the channel closest to the color the capability values light, which a
+    // fixture without colors and without a color wheel of its own shows (see mixCapabilityValues), or null, if the
+    // channel has no preset showing a color, like in the designer
+    private CachedFixtureCapability getApproximatedColorPresetCapability(List<FixtureCapabilityValue> capabilityValues, CachedFixtureChannel cachedChannel) {
+        return getClosestColorCapability(capabilityValues, cachedChannel, capability -> {
+            FixtureCapability fixtureCapability = capability.getCapability();
+            boolean hasRange = fixtureCapability.getDmxRange() != null && fixtureCapability.getDmxRange().size() == 2;
+
+            return fixtureCapability.getType() == FixtureCapability.FixtureCapabilityType.ColorPreset && hasRange && fixtureCapability.getColors() != null
+                    ? mixHexColors(fixtureCapability.getColors())
+                    : null;
+        });
     }
 
     private CachedFixture getAlreadyCalculatedFixture(List<CachedFixture> fixtures, int fixtureIndex) {
@@ -1448,6 +1475,26 @@ public class DefaultDesignerService implements DesignerService {
 
                 if (capability != null) {
                     // we found an approximated color in the available wheel channel
+                    FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
+                    fixtureChannelValue.setChannelName(cachedChannel.getName());
+                    fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
+                    fixtureChannelValue.setValue(capability.getCenterValue());
+                    this.mixChannelValue(values, fixtureChannelValue, 1);
+                }
+            }
+        }
+
+        // A fixture without a color wheel either shows the color on its color presets (e.g. the color macros of a par
+        // lighting in nothing but them), approximated the same way, like in the designer
+        if (cachedFixture.getChannels().stream().anyMatch(cachedChannel -> cachedChannel.getColorWheel() != null)) {
+            return;
+        }
+
+        for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
+            if (cachedChannel.getChannel() != null) {
+                CachedFixtureCapability capability = getApproximatedColorPresetCapability(state.getFixtureCapabilityValues(), cachedChannel);
+
+                if (capability != null) {
                     FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
                     fixtureChannelValue.setChannelName(cachedChannel.getName());
                     fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());

@@ -535,6 +535,52 @@ class DesignerDmxTest {
     }
 
     @Test
+    void showsTheClosestColorMacroAndSwitchesTheHazeOff() throws Exception {
+        ObjectNode project = project();
+        ArrayNode profiles = (ArrayNode) project.get("fixtureProfiles");
+        profiles.add(objectMapper.readTree("""
+                {
+                  "uuid": "test/macros",
+                  "name": "Par with color macros",
+                  "availableChannels": {
+                    "Dimmer": {"capability": {"type": "Intensity"}, "fineChannelAliases": []},
+                    "Macro": {"fineChannelAliases": [], "capabilities": [
+                      {"dmxRange": [0, 9], "type": "NoFunction"},
+                      {"dmxRange": [10, 49], "type": "ColorPreset", "colors": ["#ff0000"]},
+                      {"dmxRange": [50, 89], "type": "ColorPreset", "colors": ["#0000ff"]}
+                    ]},
+                    "Haze": {"fineChannelAliases": [], "capabilities": [
+                      {"dmxRange": [0, 9], "type": "NoFunction"},
+                      {"dmxRange": [10, 255], "type": "Fog", "fogType": "Haze", "fogOutputStart": "weak", "fogOutputEnd": "strong"}
+                    ]}
+                  },
+                  "modes": [{"name": "3-channel", "shortName": "3ch", "channels": [{"name": "Dimmer"}, {"name": "Macro"}, {"name": "Haze"}]}]
+                }
+                """));
+        ((ArrayNode) project.get("fixtures")).addObject()
+                .put("uuid", "macros")
+                .put("name", "Macros")
+                .put("profileUuid", "test/macros")
+                .put("modeShortName", "3ch")
+                .put("dmxUniverseUuid", FRONT)
+                .put("dmxFirstChannel", 30);
+        ((ArrayNode) project.get("presetFixtures")).addObject().put("fixtureUuid", "macros");
+
+        ObjectNode red = capability(project, "ColorIntensity", 0.9);
+        red.put("color", "Red");
+        ObjectNode green = capability(project, "ColorIntensity", 0.1);
+        green.put("color", "Green");
+        ObjectNode blue = capability(project, "ColorIntensity", 0.2);
+        blue.put("color", "Blue");
+        addPreset(project, "Red", List.of("macros"), List.of(capability(project, "Intensity", 1.0), red, green, blue, capability(project, "FogOutput", 0.0)));
+
+        Map<Integer, Integer> front = play(project).get(FRONT);
+
+        // full, the red macro in its middle, the haze off
+        assertEquals(List.of(255, 29, 4), addresses(front, 31, 33));
+    }
+
+    @Test
     void identifiesAFixtureFromTheFixturePoolOfTheDesigner() throws Exception {
         ObjectNode project = project();
         addColorPreset(project, "Red", 1, 0);
