@@ -8,8 +8,8 @@
 <app-login></app-login>
 }
 
-<!-- Connectivity indicator -->
-@if (authService.initiallyLoaded && stateService.initiallyLoaded && (authService.noConnection || !stateService.connected)) {
+<!-- Connectivity indicator (the state is only connected while logged in) -->
+@if (authService.initiallyLoaded && stateService.initiallyLoaded && (authService.noConnection || (authService.currentState?.authenticated && !stateService.connected))) {
 <app-connection></app-connection>
 }
 

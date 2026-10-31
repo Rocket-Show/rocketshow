@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { AppWebSocket, WebSocketConfig } from './web-socket';
-import { filter, map, pairwise, startWith } from "rxjs/operators";
+import { exhaustMap, filter, map, pairwise, startWith } from "rxjs/operators";
 import { EMPTY, Observable, Subject, Subscription, timer } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { State } from '../models/state';
@@ -35,7 +35,12 @@ export class StateService {
     }
     this.authService.state.subscribe((state) => {
       if (state.authenticated) {
-        this.init()
+        if (this.websocket) {
+          // E.g. logged in again after the device rebooted -> keep the connection, it reconnects with the new session
+          this.websocket.connect();
+        } else {
+          this.init();
+        }
       } else {
         this.websocket?.close(true);
         this.websocket = null;
@@ -88,10 +93,16 @@ export class StateService {
 
     // try to reconnect manually and don't rely on reconnectIfNotNormalClose, because
     // this too slow sometimes (exponential backoff timer). try to reconnect
-    // each 5 seconds.
-    let reconnectTimer = timer(0, 5000);
-    this.reconnectSubscription = reconnectTimer.subscribe(() => {
-      if (!this.connected) {
+    // each 5 seconds. The device refuses the websocket without telling why, if it
+    // forgot the session (e.g. rebooted) -> check the session first and log in again.
+    let reconnectTimer = timer(5000, 5000);
+    this.reconnectSubscription = reconnectTimer.pipe(
+      filter(() => !this.connected),
+      exhaustMap(() => this.authService.sessionLost())
+    ).subscribe((sessionLost) => {
+      if (sessionLost) {
+        this.authService.init().subscribe();
+      } else {
         this.websocket.connect();
       }
     });
