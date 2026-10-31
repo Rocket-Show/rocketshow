@@ -104,10 +104,13 @@ import { SettingsSecurityComponent } from "./settings/settings-security/settings
 import { ChangePasswordDialogComponent } from './settings/change-password-dialog/change-password-dialog.component';
 import { NewApiKeyDialogComponent } from "./settings/new-api-key-dialog/new-api-key-dialog.component";
 import { SelfTestResultDialogComponent } from "./settings/self-test-result-dialog/self-test-result-dialog.component";
+import { HealthStatusComponent } from "./settings/health-status/health-status.component";
+import { HealthDialogComponent } from "./settings/health-dialog/health-dialog.component";
 import { DeviceInformationService } from "./services/device-information.service";
 import { SparkUpsellService } from "./services/spark-upsell.service";
 import { SparkHintComponent } from "./spark-hint/spark-hint.component";
 import { HealthService } from "./services/health.service";
+import { SelfTestService } from "./services/self-test.service";
 
 const appRoutes: Routes = [
   { path: "intro", component: IntroComponent },
@@ -206,6 +209,8 @@ const appRoutes: Routes = [
         ChangePasswordDialogComponent,
         NewApiKeyDialogComponent,
         SelfTestResultDialogComponent,
+        HealthStatusComponent,
+        HealthDialogComponent,
         SortablejsDirective,
         SparkHintComponent,
     ],
@@ -254,6 +259,7 @@ const appRoutes: Routes = [
         DeviceInformationService,
         SparkUpsellService,
         HealthService,
+        SelfTestService,
         provideHttpClient(withInterceptorsFromDi()),
     ] })
 export class AppModule {}

@@ -10,13 +10,12 @@ import { OperatingSystemInformation } from "../../models/operating-system-inform
 import { OperatingSystemInformationService } from "../../services/operating-system-information.service";
 import { DeviceInformation } from "../../models/device-information";
 import { DeviceInformationService } from "../../services/device-information.service";
-import { catchError, filter, finalize, map, switchMap } from "rxjs/operators";
-import { EMPTY, Subscription } from "rxjs";
+import { finalize, map } from "rxjs/operators";
+import { Subscription } from "rxjs";
 import { AuthService } from "../../services/auth.service";
-import { ToastGeneralErrorService } from "../../services/toast-general-error.service";
-import { SelfTestResult } from "../../models/self-test-result";
 import { BsModalService } from "ngx-bootstrap/modal";
-import { SelfTestResultDialogComponent } from "../self-test-result-dialog/self-test-result-dialog.component";
+import { SelfTestService } from "../../services/self-test.service";
+import { HealthDialogComponent } from "../health-dialog/health-dialog.component";
 
 @Component({
     selector: "app-settings-advanced",
@@ -45,8 +44,8 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
     private operatingSystemInformationService: OperatingSystemInformationService,
     private deviceInformationService: DeviceInformationService,
     private authService: AuthService,
-    private toastGeneralErrorService: ToastGeneralErrorService,
-    private modalService: BsModalService
+    private modalService: BsModalService,
+    private selfTestService: SelfTestService
   ) {
     this.loggingLevelList.push("INFO");
     this.loggingLevelList.push("DEBUG");
@@ -162,36 +161,15 @@ export class SettingsAdvancedComponent implements OnInit, OnDestroy {
       });
   }
 
-  // Plays test tones and switches outputs, so only after a warning
-  runSelfTest() {
-    this.warningDialogService
-      .show("settings.self-test.warning")
-      .pipe(
-        filter((result) => result),
-        switchMap(() => {
-          this.waitDialogService.show("settings.self-test.wait");
+  // Only reads, so no warning
+  showHealth() {
+    this.modalService.show(HealthDialogComponent, {
+      keyboard: true,
+      class: "modal-lg",
+    });
+  }
 
-          return this.http.post("system/test", {}).pipe(
-            finalize(() => {
-              this.waitDialogService.hide();
-            }),
-            catchError((error) => {
-              // E.g. a composition plays
-              this.toastGeneralErrorService.show(error);
-              return EMPTY;
-            })
-          );
-        })
-      )
-      .subscribe((result) => {
-        // The result replaces the wait dialog
-        this.waitDialogService.hide();
-        this.modalService.show(SelfTestResultDialogComponent, {
-          keyboard: true,
-          ignoreBackdropClick: true,
-          class: "modal-lg",
-          initialState: { selfTestResult: new SelfTestResult(result) },
-        });
-      });
+  runSelfTest() {
+    this.selfTestService.run();
   }
 }

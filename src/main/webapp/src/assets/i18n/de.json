@@ -475,6 +475,32 @@
         "power": "Stromversorgung"
       }
     },
+    "health": {
+      "title": "Zustand",
+      "help": "Der Zustand des Geräts, wie ihn der Watchdog und die Updates sehen: Schweregrad, Gründe, Softwareversion, freier Speicherplatz, Temperatur und letzte Fehler. Er liest nur, ist also anders als der Selbsttest auch während einer Show unbedenklich.",
+      "show": "Zustand anzeigen",
+      "status": "Status",
+      "reasons": "Gründe",
+      "software-version": "Softwareversion",
+      "free-disk-space": "Freier Speicherplatz",
+      "temperature": "Temperatur",
+      "recent-error-rate": "Letzte Fehler",
+      "rauc-slot": "System-Slot",
+      "loading": "Zustand wird geladen...",
+      "unavailable": "Der Zustand ist momentan nicht verfügbar.",
+      "severity-enum": {
+        "OK": "OK",
+        "DEGRADED": "Eingeschränkt",
+        "FAIL_RESTART_APP": "Fehler, die App startet neu",
+        "FAIL_REBOOT_DEVICE": "Fehler, das Gerät startet neu"
+      }
+    },
+    "provisioning": {
+      "title": "Provisionierung",
+      "help": "Seriennummer, Modell und Hardware-Revision, die das Gerät im Werk erhalten hat, zusammen mit seinem Zustand, dem Selbsttest und dem Update.",
+      "serial": "Seriennummer",
+      "open": "Provisionierung öffnen"
+    },
     "external-control": {
       "title": "Externe Steuerung",
       "bcm-pin-id": "BCM Pin ID",

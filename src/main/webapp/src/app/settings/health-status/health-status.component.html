@@ -1,0 +1,51 @@
+@if (health) {
+<div class="form-group row mb-3">
+  <label class="col-lg-4 col-form-label">{{ "settings.health.status" | translate }}</label>
+  <div class="col-lg-8 my-auto">
+    <span class="badge" id="healthSeverity"
+      [class.badge-success]="health.healthStatusSeverity === 'OK'"
+      [class.badge-warning]="health.healthStatusSeverity === 'DEGRADED'"
+      [class.badge-danger]="health.healthStatusSeverity === 'FAIL_RESTART_APP' || health.healthStatusSeverity === 'FAIL_REBOOT_DEVICE'">
+      {{ ("settings.health.severity-enum." + health.healthStatusSeverity) | translate }}
+    </span>
+  </div>
+</div>
+
+@if (health.reasons?.length) {
+<div class="form-group row mb-3">
+  <label class="col-lg-4 col-form-label">{{ "settings.health.reasons" | translate }}</label>
+  <div class="col-lg-8 my-auto">
+    <ul class="mb-0 pl-3">
+      @for (reason of health.reasons; track $index) {
+      <li>{{ reason }}</li>
+      }
+    </ul>
+  </div>
+</div>
+}
+
+<div class="form-group row mb-2">
+  <label class="col-lg-4 col-form-label">{{ "settings.health.software-version" | translate }}</label>
+  <div class="col-lg-8 my-auto">{{ health.softwareVersion }}</div>
+</div>
+<div class="form-group row mb-2">
+  <label class="col-lg-4 col-form-label">{{ "settings.health.free-disk-space" | translate }}</label>
+  <div class="col-lg-8 my-auto">{{ health.freeDiskSpacePercentage }}%</div>
+</div>
+<div class="form-group row mb-2">
+  <label class="col-lg-4 col-form-label">{{ "settings.health.temperature" | translate }}</label>
+  <div class="col-lg-8 my-auto">{{ health.temperature }}</div>
+</div>
+<div class="form-group row mb-2">
+  <label class="col-lg-4 col-form-label">{{ "settings.health.recent-error-rate" | translate }}</label>
+  <div class="col-lg-8 my-auto">{{ health.recentErrorRate }}</div>
+</div>
+<div class="form-group row mb-0">
+  <label class="col-lg-4 col-form-label">{{ "settings.health.rauc-slot" | translate }}</label>
+  <div class="col-lg-8 my-auto">{{ health.raucSlot }}</div>
+</div>
+} @else if (loading) {
+<p class="mb-0"><i class="fa fa-spinner fa-pulse fa-fw"></i> {{ "settings.health.loading" | translate }}</p>
+} @else {
+<p class="mb-0">{{ "settings.health.unavailable" | translate }}</p>
+}

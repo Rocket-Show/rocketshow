@@ -87,57 +87,25 @@
           </button>
         </div>
         <div class="card-body">
-          @if (health) {
-          <div class="form-group row mb-3">
-            <label class="col-lg-4 col-form-label">Status</label>
-            <div class="col-lg-8 my-auto">
-              <span class="badge"
-                [class.badge-success]="health.healthStatusSeverity === 'OK'"
-                [class.badge-warning]="health.healthStatusSeverity === 'DEGRADED'"
-                [class.badge-danger]="health.healthStatusSeverity === 'FAIL_RESTART_APP' || health.healthStatusSeverity === 'FAIL_REBOOT_DEVICE'">
-                {{ health.healthStatusSeverity }}
-              </span>
-            </div>
-          </div>
+          <app-health-status [health]="health" [loading]="healthLoading"></app-health-status>
+        </div>
+      </div>
 
-          @if (health.reasons?.length) {
-          <div class="form-group row mb-3">
-            <label class="col-lg-4 col-form-label">Reasons</label>
-            <div class="col-lg-8 my-auto">
-              <ul class="mb-0 pl-3">
-                @for (reason of health.reasons; track reason) {
-                <li>{{ reason }}</li>
-                }
-              </ul>
-            </div>
-          </div>
+      <!-- Self-test -->
+      <div class="card border-secondary mb-4">
+        <div class="card-header">Self-test</div>
+        <div class="card-body">
+          <p class="mb-3">Check the hardware of the device: audio, video, MIDI, GPIO, DMX, storage, network, clock and power
+            supply. Plays test tones and switches outputs.</p>
+          @if (!setupOrAdmin) {
+          <p class="mb-3 text-muted">You need to be logged in to run the self-test on this device.</p>
           }
-
-          <div class="form-group row mb-2">
-            <label class="col-lg-4 col-form-label">Software version</label>
-            <div class="col-lg-8 my-auto">{{ health.softwareVersion }}</div>
+          <div class="d-flex float-right">
+            <button type="button" class="btn btn-primary" id="runSelfTest" (click)="runSelfTest(); false"
+              [disabled]="!setupOrAdmin">
+              <i class="fa fa-check-square-o fa-fw" aria-hidden="true"></i> Run self-test
+            </button>
           </div>
-          <div class="form-group row mb-2">
-            <label class="col-lg-4 col-form-label">Free disk space</label>
-            <div class="col-lg-8 my-auto">{{ health.freeDiskSpacePercentage }}%</div>
-          </div>
-          <div class="form-group row mb-2">
-            <label class="col-lg-4 col-form-label">Temperature</label>
-            <div class="col-lg-8 my-auto">{{ health.temperature }}</div>
-          </div>
-          <div class="form-group row mb-2">
-            <label class="col-lg-4 col-form-label">Recent error rate</label>
-            <div class="col-lg-8 my-auto">{{ health.recentErrorRate }}</div>
-          </div>
-          <div class="form-group row mb-0">
-            <label class="col-lg-4 col-form-label">RAUC slot</label>
-            <div class="col-lg-8 my-auto">{{ health.raucSlot }}</div>
-          </div>
-          } @else if (healthLoading) {
-          <p class="mb-0"><i class="fa fa-spinner fa-pulse fa-fw"></i> Loading health status...</p>
-          } @else {
-          <p class="mb-0">The health status is currently unavailable.</p>
-          }
         </div>
       </div>
 
@@ -146,11 +114,11 @@
         <div class="card-header">Update</div>
         <div class="card-body">
           <p class="mb-3">Check for available updates and install them.</p>
-          @if (!canUpdate) {
+          @if (!setupOrAdmin) {
           <p class="mb-3 text-muted">You need to be logged in to update this device.</p>
           }
           <div class="d-flex float-right">
-            <button type="button" class="btn btn-primary" (click)="openUpdateDialog(); false" [disabled]="!canUpdate">
+            <button type="button" class="btn btn-primary" (click)="openUpdateDialog(); false" [disabled]="!setupOrAdmin">
               <i class="fa fa-download" aria-hidden="true"></i> Start update
             </button>
           </div>

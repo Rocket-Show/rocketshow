@@ -1,0 +1,23 @@
+<div class="card-modal">
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>{{ "settings.health.title" | translate }}</span>
+      <button type="button" class="btn btn-sm btn-secondary" id="refreshHealth" (click)="refresh(); false"
+        [disabled]="loading">
+        <i class="fa fa-refresh" [class.fa-spin]="loading" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="card-body" id="health">
+      <app-health-status [health]="health" [loading]="loading"></app-health-status>
+    </div>
+
+    <div class="card-footer">
+      <div class="d-flex float-right">
+        <button type="button" class="btn btn-primary" id="closeHealth" (click)="close(); false">
+          {{ "misc.ok" | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

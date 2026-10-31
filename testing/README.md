@@ -360,19 +360,34 @@ The designer migrations are tested with a project in version 2 and the same proj
 ## 2. Device self-test
 
 A unit checks its own hardware, with nothing attached except optional loopback cables. It runs through
-`POST /api/system/test` (`SelfTestService` in the package `selftest`, one step per kind of hardware), from the system
-settings of the web app or with `testing/selftest/selftest.py`.
+`POST /api/system/test` (`SelfTestService` in the package `selftest`, one step per kind of hardware), from the advanced
+settings or the provisioning page (`#/provision`) of the web app, or with `testing/selftest/selftest.py`.
 
 ### Where it is used
 
 - **At the factory, during provisioning.** The endpoint is reachable without login as long as the initial setup is not
-  completed (`SecurityConfig.java:72`), like the device information and update endpoints. See
-  [Factory provisioning](#factory-provisioning).
+  completed (`SecurityConfig.java:72`), like the device information and update endpoints. The provisioning page runs
+  it as well. See [Factory provisioning](#factory-provisioning).
 - **As the first stage of every rig run.** A unit that fails its self-test is not tested further, so rig failures
   point at real problems instead of a loose cable.
 - **On demand by an admin**, e.g. when helping a user: "Self-test" in the advanced settings shows the result of every
   check in a dialog. It plays test tones and switches outputs, so it shows a warning first and never runs by itself: not at boot,
   not after an update.
+
+### Self-test and health
+
+The health (`GET /api/system/health`, `HealthService`) is not a test, but the state of the unit: software version,
+EEPROM, free disk space, temperature, the passphrase of the access point, OLA, recent errors in the log, with a
+severity (`OK`, `DEGRADED`, `FAIL_RESTART_APP`, `FAIL_REBOOT_DEVICE`). It only reads, is reachable without login and
+takes a moment, so it is safe at any time, also during a show. The watchdog of the ready to use units reads it every 30
+seconds and restarts the app or reboots, and the first boot after an update falls back to the other slot when it
+failed.
+
+The self-test touches the hardware, takes up to half a minute and never runs during a show. Its first check `health`
+reads the health, passing on `OK` and `DEGRADED`. So the self-test can't replace the health (the watchdog and the update
+can't play test tones), and the health can't replace the self-test (it doesn't know whether a sound card plays). The
+provisioning page and the advanced settings show both, and the advanced settings link to the provisioning page (on
+units with device information) to see the serial.
 
 ### What it proves and what it does not
 
