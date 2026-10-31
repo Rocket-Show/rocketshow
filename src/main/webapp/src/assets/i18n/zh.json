@@ -474,6 +474,32 @@
         "power": "电源"
       }
     },
+    "health": {
+      "title": "健康状态",
+      "help": "设备的状态，与看门狗和更新所看到的一致：严重程度、原因、软件版本、可用磁盘空间、温度和最近的错误。它只读取数据，因此与自检不同，在演出期间也是安全的。",
+      "show": "显示健康状态",
+      "status": "状态",
+      "reasons": "原因",
+      "software-version": "软件版本",
+      "free-disk-space": "可用磁盘空间",
+      "temperature": "温度",
+      "recent-error-rate": "最近的错误",
+      "rauc-slot": "系统槽位",
+      "loading": "正在加载健康状态...",
+      "unavailable": "健康状态当前不可用。",
+      "severity-enum": {
+        "OK": "正常",
+        "DEGRADED": "降级",
+        "FAIL_RESTART_APP": "故障，应用将重启",
+        "FAIL_REBOOT_DEVICE": "故障，设备将重启"
+      }
+    },
+    "provisioning": {
+      "title": "出厂配置",
+      "help": "设备在出厂时获得的序列号、型号和硬件版本，以及它的健康状态、自检和更新。",
+      "serial": "序列号",
+      "open": "打开出厂配置"
+    },
     "external-control": {
       "title": "外部控制",
       "bcm-pin-id": "BCM引脚ID",

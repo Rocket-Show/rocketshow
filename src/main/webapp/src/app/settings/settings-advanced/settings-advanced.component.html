@@ -56,6 +56,35 @@
 </div>
 }
 
+@if (deviceInformation?.available) {
+<div class="form-group row">
+  <label class="col-lg-3 col-form-label">
+    {{ "settings.provisioning.title" | translate }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+      [popover]="'settings.provisioning.help' | translate" triggers="mouseenter:mouseleave" container="body"
+      placement="right" aria-hidden="true"></i>
+  </label>
+  <div class="col-lg-9 d-flex flex-wrap align-items-center">
+    <span class="mr-3" id="serial">{{ "settings.provisioning.serial" | translate }}: {{ deviceInformation.serial || "-" }}</span>
+    <a routerLink="/provision" class="btn btn-primary btn-sm" id="openProvision">
+      <i class="fa fa-id-card-o fa-fw" aria-hidden="true"></i>
+      {{ "settings.provisioning.open" | translate }}</a>
+  </div>
+</div>
+}
+
+<div class="form-group row">
+  <label class="col-lg-3 col-form-label">
+    {{ "settings.health.title" | translate }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+      [popover]="'settings.health.help' | translate" triggers="mouseenter:mouseleave" container="body"
+      placement="right" aria-hidden="true"></i>
+  </label>
+  <div class="col-lg-9">
+    <a href="#" (click)="showHealth(); (false)" class="btn btn-primary btn-sm" id="showHealth">
+      <i class="fa fa-heartbeat fa-fw" aria-hidden="true"></i>
+      {{ "settings.health.show" | translate }}</a>
+  </div>
+</div>
+
 <div class="form-group row">
   <label class="col-lg-3 col-form-label">
     {{ "settings.self-test.title" | translate }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"

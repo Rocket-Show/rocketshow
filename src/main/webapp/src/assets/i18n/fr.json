@@ -474,6 +474,32 @@
         "power": "Alimentation"
       }
     },
+    "health": {
+      "title": "État",
+      "help": "L'état de l'appareil, tel que le voient le watchdog et les mises à jour : gravité, raisons, version du logiciel, espace disque libre, température et erreurs récentes. Il ne fait que lire, donc contrairement à l'autotest il est sans risque pendant un spectacle.",
+      "show": "Afficher l'état",
+      "status": "Statut",
+      "reasons": "Raisons",
+      "software-version": "Version du logiciel",
+      "free-disk-space": "Espace disque libre",
+      "temperature": "Température",
+      "recent-error-rate": "Erreurs récentes",
+      "rauc-slot": "Slot système",
+      "loading": "Chargement de l'état...",
+      "unavailable": "L'état n'est pas disponible pour le moment.",
+      "severity-enum": {
+        "OK": "OK",
+        "DEGRADED": "Dégradé",
+        "FAIL_RESTART_APP": "Échec, l'application redémarre",
+        "FAIL_REBOOT_DEVICE": "Échec, l'appareil redémarre"
+      }
+    },
+    "provisioning": {
+      "title": "Provisionnement",
+      "help": "Le numéro de série, le modèle et la révision matérielle reçus en usine, avec l'état de l'appareil, l'autotest et la mise à jour.",
+      "serial": "Numéro de série",
+      "open": "Ouvrir le provisionnement"
+    },
     "external-control": {
       "title": "Contrôle externe",
       "bcm-pin-id": "ID de broche BCM",

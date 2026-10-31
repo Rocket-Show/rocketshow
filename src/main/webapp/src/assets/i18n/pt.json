@@ -474,6 +474,32 @@
         "power": "Alimentação"
       }
     },
+    "health": {
+      "title": "Estado",
+      "help": "O estado do dispositivo, tal como o watchdog e as atualizações o veem: gravidade, motivos, versão do software, espaço livre em disco, temperatura e erros recentes. Apenas lê, por isso, ao contrário do autoteste, é seguro durante um espetáculo.",
+      "show": "Mostrar estado",
+      "status": "Estado",
+      "reasons": "Motivos",
+      "software-version": "Versão do software",
+      "free-disk-space": "Espaço livre em disco",
+      "temperature": "Temperatura",
+      "recent-error-rate": "Erros recentes",
+      "rauc-slot": "Slot do sistema",
+      "loading": "A carregar o estado...",
+      "unavailable": "O estado não está disponível de momento.",
+      "severity-enum": {
+        "OK": "OK",
+        "DEGRADED": "Degradado",
+        "FAIL_RESTART_APP": "Falha, a aplicação reinicia",
+        "FAIL_REBOOT_DEVICE": "Falha, o dispositivo reinicia"
+      }
+    },
+    "provisioning": {
+      "title": "Aprovisionamento",
+      "help": "O número de série, o modelo e a revisão de hardware recebidos na fábrica, juntamente com o estado do dispositivo, o autoteste e a atualização.",
+      "serial": "Número de série",
+      "open": "Abrir aprovisionamento"
+    },
     "external-control": {
       "title": "Controlo externo",
       "bcm-pin-id": "ID de pino BCM",

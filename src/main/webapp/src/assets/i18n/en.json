@@ -475,6 +475,32 @@
         "power": "Power supply"
       }
     },
+    "health": {
+      "title": "Health",
+      "help": "The state of the device, as the watchdog and the updates see it: severity, the reasons, software version, free disk space, temperature and recent errors. It only reads, so unlike the self-test it is safe during a show.",
+      "show": "Show health",
+      "status": "Status",
+      "reasons": "Reasons",
+      "software-version": "Software version",
+      "free-disk-space": "Free disk space",
+      "temperature": "Temperature",
+      "recent-error-rate": "Recent errors",
+      "rauc-slot": "System slot",
+      "loading": "Loading the health status...",
+      "unavailable": "The health status is currently unavailable.",
+      "severity-enum": {
+        "OK": "OK",
+        "DEGRADED": "Degraded",
+        "FAIL_RESTART_APP": "Failed, the app restarts",
+        "FAIL_REBOOT_DEVICE": "Failed, the device reboots"
+      }
+    },
+    "provisioning": {
+      "title": "Provisioning",
+      "help": "The serial, model and hardware revision the device got at the factory, together with its health, the self-test and the update.",
+      "serial": "Serial",
+      "open": "Open provisioning"
+    },
     "external-control": {
       "title": "External control",
       "bcm-pin-id": "BCM Pin ID",

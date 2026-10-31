@@ -5,6 +5,7 @@ import { HealthStatus } from '../models/health-status';
 import { AuthService } from '../services/auth.service';
 import { DeviceInformationService } from '../services/device-information.service';
 import { HealthService } from '../services/health.service';
+import { SelfTestService } from '../services/self-test.service';
 import { ToastGeneralErrorService } from '../services/toast-general-error.service';
 import { UpdateDialogComponent } from '../settings/update-dialog/update-dialog.component';
 
@@ -29,13 +30,15 @@ export class ProvisionComponent implements OnInit {
     private healthService: HealthService,
     private modalService: BsModalService,
     private toastGeneralErrorService: ToastGeneralErrorService,
-    private authService: AuthService
+    private authService: AuthService,
+    private selfTestService: SelfTestService
   ) { }
 
-  // Updating is only possible while the device is still unprovisioned (no admin
-  // password set yet) or when an admin is logged in. Otherwise the backend
-  // rejects the update with an authorization error, so the button is disabled.
-  get canUpdate(): boolean {
+  // Updating and the self-test are only possible while the device is still
+  // unprovisioned (no admin password set yet) or when an admin is logged in.
+  // Otherwise the backend rejects them with an authorization error, so the
+  // buttons are disabled.
+  get setupOrAdmin(): boolean {
     const state = this.authService.currentState;
     return !!state && (!state.passwordConfigured || state.authenticated);
   }
@@ -89,6 +92,10 @@ export class ProvisionComponent implements OnInit {
         this.toastGeneralErrorService.show(err);
       }
     });
+  }
+
+  runSelfTest() {
+    this.selfTestService.run();
   }
 
   openUpdateDialog() {
