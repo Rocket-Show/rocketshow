@@ -19,6 +19,9 @@ export class AuthService {
   public noConnection: boolean = false;
   public initiallyLoaded: boolean = false;
 
+  // Remembered in this browser, to log in again after the device rebooted and forgot the session
+  private readonly passwordKey = 'adminPassword';
+
   constructor(private http: HttpClient) {
     this.init().subscribe();
   }
@@ -26,6 +29,7 @@ export class AuthService {
   init(): Observable<AuthState> {
     this.noConnection = false;
     return this.http.get<AuthState>('auth/me', { withCredentials: true }).pipe(
+      switchMap(result => this.loginWithStoredPassword(result)),
       tap(result => {
         this.setCurrentState(result);
       }),
@@ -39,6 +43,58 @@ export class AuthService {
         }, false));
       })
     );
+  }
+
+  private loginWithStoredPassword(state: AuthState): Observable<AuthState> {
+    if (!state.passwordConfigured) {
+      // E.g. after a factory reset
+      this.removeStoredPassword();
+      return of(state);
+    }
+
+    const password = this.getStoredPassword();
+
+    if (state.authenticated || !password) {
+      return of(state);
+    }
+
+    return this.http.post<AuthState>(
+      'auth/login',
+      { password },
+      { withCredentials: true }
+    ).pipe(
+      catchError((error) => {
+        if (error.status === 401) {
+          // E.g. changed in another browser -> ask for the new one
+          this.removeStoredPassword();
+        }
+        return of(state);
+      })
+    );
+  }
+
+  private getStoredPassword(): string {
+    try {
+      return localStorage.getItem(this.passwordKey);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  private storePassword(password: string) {
+    try {
+      localStorage.setItem(this.passwordKey, password);
+    } catch (e) {
+      // Storage not available (e.g. disabled) -> the user has to log in after each reboot
+    }
+  }
+
+  private removeStoredPassword() {
+    try {
+      localStorage.removeItem(this.passwordKey);
+    } catch (e) {
+      // Storage not available -> nothing stored either
+    }
   }
 
   pollForStateAfterConnectionLoss(pollIntervalMs: number = 1000): Observable<AuthState> {
@@ -90,7 +146,10 @@ export class AuthService {
       },
       { withCredentials: true }
     ).pipe(
-      tap(res => this.state.next(res))
+      tap(res => {
+        this.storePassword(password);
+        this.state.next(res);
+      })
     );
   }
 
@@ -100,7 +159,10 @@ export class AuthService {
       { password },
       { withCredentials: true }
     ).pipe(
-      tap(res => this.state.next(res))
+      tap(res => {
+        this.storePassword(password);
+        this.state.next(res);
+      })
     );
   }
 
@@ -110,10 +172,14 @@ export class AuthService {
       {},
       { withCredentials: true }
     ).pipe(
-      tap(() => this.state.next({
-        authenticated: false,
-        passwordConfigured: true
-      }))
+      tap(() => {
+        // Otherwise the next start would log in again right away
+        this.removeStoredPassword();
+        this.state.next({
+          authenticated: false,
+          passwordConfigured: true
+        });
+      })
     );
   }
 
@@ -122,6 +188,8 @@ export class AuthService {
       'auth/change-password',
       { "oldPassword": oldPassword, "newPassword": newPassword },
       { withCredentials: true }
+    ).pipe(
+      tap(() => this.storePassword(newPassword))
     );
   }
 }
