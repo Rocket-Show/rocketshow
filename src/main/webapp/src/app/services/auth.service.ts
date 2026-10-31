@@ -45,6 +45,14 @@ export class AuthService {
     );
   }
 
+  // Whether the device forgot the session (e.g. rebooted), without changing the state. False, if not reachable.
+  sessionLost(): Observable<boolean> {
+    return this.http.get<AuthState>('auth/me', { withCredentials: true }).pipe(
+      map(result => !result.authenticated),
+      catchError(() => of(false))
+    );
+  }
+
   private loginWithStoredPassword(state: AuthState): Observable<AuthState> {
     if (!state.passwordConfigured) {
       // E.g. after a factory reset

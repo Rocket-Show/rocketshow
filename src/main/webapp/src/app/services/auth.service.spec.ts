@@ -136,6 +136,27 @@ describe("AuthService", () => {
     expect(localStorage.getItem(passwordKey)).toBe("old");
   });
 
+  it("notices, when the device forgot the session, without changing the state", () => {
+    const service = start(loggedIn);
+    let sessionLost: boolean;
+
+    service.sessionLost().subscribe((result) => sessionLost = result);
+    http.expectOne("auth/me").flush(loggedOut);
+
+    expect(sessionLost).toBeTrue();
+    expect(service.currentState.authenticated).toBeTrue();
+  });
+
+  it("does not take an unreachable device for a lost session", () => {
+    const service = start(loggedIn);
+    let sessionLost: boolean;
+
+    service.sessionLost().subscribe((result) => sessionLost = result);
+    http.expectOne("auth/me").error(new ProgressEvent("error"));
+
+    expect(sessionLost).toBeFalse();
+  });
+
   it("forgets the password after logging out", () => {
     localStorage.setItem(passwordKey, "secret");
     const service = start(loggedIn);
