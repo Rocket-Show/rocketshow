@@ -203,7 +203,7 @@
         <dependency>
             <groupId>com.pi4j</groupId>
             <artifactId>pi4j-plugin-gpiod</artifactId>
-            <version>3.0.3</version>
+            <version>4.0.2</version>
         </dependency>
         <!-- Simulated GPIO pins for the tests -->
         <dependency>
