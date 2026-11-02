@@ -24,6 +24,7 @@ import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -258,6 +259,11 @@ class DefaultBackupServiceTest {
     @Test
     void keepsTheDataWhenTheBackupIsIncomplete() throws Exception {
         writeData();
+        // Larger than the zeros bsdtar (e.g. on macOS) pads the compressed backup with to 10 KB, and not compressible:
+        // the first half of the backup then lacks data, not only some of the padding
+        byte[] media = new byte[100 * 1024];
+        new Random(1).nextBytes(media);
+        Files.write(basePath.resolve("media/audio/song.wav"), media);
         byte[] backup = createBackup();
 
         // Refused at the latest when finishing the upload
