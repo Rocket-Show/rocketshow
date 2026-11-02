@@ -13,7 +13,7 @@ Refer to [the docs](./docs/index.md) to find out how to use Rocket Show.
 
 ### Build
 
-1. Build: `./mvnw clean package`
+1. Build: `./mvnw clean package -Dmaven.test.skip=true`
 2. Start: `java -jar target/rocketshow.jar`
 3. Open the web app on http://localhost:8080
 
