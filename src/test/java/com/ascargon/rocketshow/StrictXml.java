@@ -4,7 +4,13 @@ import com.ascargon.rocketshow.composition.Composition;
 import com.ascargon.rocketshow.settings.Settings;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.Unmarshaller;
+import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.XMLFilterImpl;
 
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.sax.SAXSource;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,22 +39,39 @@ public class StrictXml {
             )
     );
 
-    private static boolean isIgnored(String message, Class<?> type) {
-        for (String element : IGNORED_ELEMENTS.getOrDefault(type, Set.of())) {
-            if (message.contains("local:\"" + element + "\"")) {
-                return true;
-            }
+    // Passes the file on to JAXB and remembers the element JAXB is starting to read, because it reports an element it
+    // does not know right then. Not taken from the message, which is in the language of the JVM (e.g. 'lokal:"type"'
+    // instead of 'local:"type"' in German).
+    private static class StartedElementFilter extends XMLFilterImpl {
+
+        private String startedElement;
+
+        private StartedElementFilter() throws Exception {
+            SAXParserFactory parserFactory = SAXParserFactory.newInstance();
+            parserFactory.setNamespaceAware(true);
+            setParent(parserFactory.newSAXParser().getXMLReader());
         }
 
-        return false;
+        @Override
+        public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+            startedElement = localName;
+
+            try {
+                super.startElement(uri, localName, qName, attributes);
+            } finally {
+                startedElement = null;
+            }
+        }
     }
 
     public static List<String> getProblems(Path file, Class<?> type) throws Exception {
         List<String> problems = new ArrayList<>();
+        Set<String> ignoredElements = IGNORED_ELEMENTS.getOrDefault(type, Set.of());
+        StartedElementFilter filter = new StartedElementFilter();
 
         Unmarshaller unmarshaller = JAXBContext.newInstance(type).createUnmarshaller();
         unmarshaller.setEventHandler(event -> {
-            if (!isIgnored(event.getMessage(), type)) {
+            if (filter.startedElement == null || !ignoredElements.contains(filter.startedElement)) {
                 problems.add(event.getMessage());
             }
 
@@ -56,7 +79,7 @@ public class StrictXml {
             return true;
         });
 
-        assertNotNull(unmarshaller.unmarshal(file.toFile()));
+        assertNotNull(unmarshaller.unmarshal(new SAXSource(filter, new InputSource(file.toUri().toString()))));
         return problems;
     }
 
