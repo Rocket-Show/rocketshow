@@ -159,6 +159,12 @@ public class Settings {
     private Integer videoWidth;
     private Integer videoHeight;
     private Boolean customVideoResolution;
+
+    // Whether the display switches to the mode with the width and height of each video before it plays, instead of
+    // showing the video scaled in the mode the display is in (force-modesetting of kmssink). A video needs a size the
+    // display offers then.
+    private boolean videoForceModesetting = false;
+
     private Boolean lanStaticIpEnable;
     private String lanIpAddress;
     private String lanSubnetMask;

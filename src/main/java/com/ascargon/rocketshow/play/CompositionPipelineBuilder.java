@@ -273,6 +273,16 @@ public class CompositionPipelineBuilder {
         return kmssink;
     }
 
+    // If set, kmssink switches the display to the mode with the width and height of the video, also when the display
+    // already shows a mode. Otherwise it only does when the display shows none, and shows the video scaled into the
+    // mode. Only for the videos of compositions: the video of the self-test has a size no display offers. Package
+    // visible for the tests.
+    void setDisplayMode(Element videoSink) {
+        if (settingsService.getSettings().isVideoForceModesetting() && "kmssink".equals(videoSink.getFactory().getName())) {
+            videoSink.set("force-modesetting", true);
+        }
+    }
+
     private int getAudioBusStartChannel(AudioBus audioBus) {
         int startChannelIndex = 0;
 
@@ -373,6 +383,7 @@ public class CompositionPipelineBuilder {
 
         Element kmssink = getGstVideoSink();
         kmssink.set("sync", true);
+        setDisplayMode(kmssink);
         target.add(kmssink);
 
         videoSource.link(videoQueue);

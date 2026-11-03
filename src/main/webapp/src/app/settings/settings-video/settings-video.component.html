@@ -9,6 +9,22 @@
   </div>
 </div>
 
+<div class="form-group row">
+  <div class="col-lg-3"></div>
+  <div class="col-lg-9">
+    <div class="form-check">
+      <input type="checkbox" [ngModel]="settings?.videoForceModesetting"
+        (ngModelChange)="settings.videoForceModesetting = $event" class="form-check-input" id="videoForceModesetting">
+      <label class="form-check-label" for="videoForceModesetting">
+        {{ 'settings.video-force-modesetting' | translate }}<i
+          class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
+          [popover]="'settings.help.video-force-modesetting' | translate" triggers="mouseenter:mouseleave"
+          container="body" placement="right" aria-hidden="true"></i>
+      </label>
+    </div>
+  </div>
+</div>
+
 <!-- Not available on Debian Buster (Raspberry Pi 4) -->
 <!-- <div class="form-group row">
 <label class="col-sm-3 col-form-label">{{ 'settings.video-resolution' | translate }}</label>
