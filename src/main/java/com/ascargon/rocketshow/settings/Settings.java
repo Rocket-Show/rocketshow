@@ -156,10 +156,6 @@ public class Settings {
     private Integer alsaBufferSize;
     private Integer alsaPeriodTime;
     private List<AudioBus> audioBusList = new ArrayList<>();
-    private Integer videoWidth;
-    private Integer videoHeight;
-    private Boolean customVideoResolution;
-
     // Whether the display switches to the mode with the width and height of each video before it plays, instead of
     // showing the video scaled in the mode the display is in (force-modesetting of kmssink). A video needs a size the
     // display offers then.

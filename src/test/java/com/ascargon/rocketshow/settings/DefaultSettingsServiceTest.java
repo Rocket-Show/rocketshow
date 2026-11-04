@@ -52,7 +52,11 @@ class DefaultSettingsServiceTest {
             // The global MIDI mapping always applies
             "overrideParent",
             // Replaced by midiTimecodeMode, which also says whether a timecode is followed
-            "midiTimecodeEnabled"
+            "midiTimecodeEnabled",
+            // The size of the screen in the video settings had no effect
+            "videoWidth",
+            "videoHeight",
+            "customVideoResolution"
     );
 
     // Changed by a migration on purpose, and asserted on their own

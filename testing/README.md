@@ -100,8 +100,8 @@ The unit tests live in `src/test/java`:
   GStreamer can't play (`GstreamerPipelineTest`), pausing, seeking, looping the composition, actions after the media,
   H.265 videos (which can't be paused or seeked) and stopping while they start again (`GstreamerPlayerTest`, setup in
   `GstreamerTestUnit`), reading the duration and the channels of uploaded media (`DefaultGstDiscovererServiceTest`),
-  keeping the sound cards of a Raspberry Pi open with silence and opening the cards of changed audio settings instead
-  (`AudioDeviceKeepOpenTest`)
+  keeping the sound cards of a Raspberry Pi open with silence and opening the cards of changed audio settings instead,
+  once no composition plays on the old ones anymore (`AudioDeviceKeepOpenTest`)
 - MIDI devices on a simulated MIDI system of Java: which devices are offered, sending, receiving, finding a device by
   its name and connecting it again (`MidiDevicesTest`)
 - Actions of triggers: HTTP requests to other systems, lighting, selecting compositions
@@ -808,8 +808,10 @@ These are the paths that brick units in the field, and nobody runs them by hand.
 - [ ] Scheduler starts a composition at the planned time.
 - [ ] Settings save and reload while idle.
 - [ ] Backup and restore.
-- [ ] Change the sound card of a bus, the rate and the ALSA period and buffer while idle and while the default
-  composition plays: audio plays on the new settings without a restart, without sound artifacts.
+- [ ] Change the sound card of a bus, the rate and the ALSA period and buffer while idle, while the default
+  composition plays and while a composition plays: audio plays on the new settings without a restart, without sound
+  artifacts (a composition playing keeps the old ones until it stops). The log tells when ALSA reads the changed
+  settings and which sound cards are kept open, or why one can't be.
 
 ### 6.4 Chaos
 
@@ -1009,6 +1011,13 @@ Found by reading the code and by the tests. Each one gets a unit test or rig tes
   kept open against sound artifacts were only opened at the start. ALSA reads it again after a change now, and the
   sound cards are opened again (`AlsaConfigurationTest`, `ApplySystemSettingsTest`). Needs the rig to confirm it on
   real sound cards (see the show scenarios).
+- [x] **Audio settings changed while a composition played still needed a restart.** The sound cards kept open against
+  sound artifacts were opened again right away, while the composition still played on the old ones. ALSA then shared
+  a sound card with the old settings (e.g. the rate) and kept them as long as the sound cards stayed open, i.e. until
+  a restart, or couldn't open a sound card at all, if it moved in the order of the settings. They're opened once
+  nothing plays anymore now. A sound card which can't be kept open is logged with the reason, it went unnoticed
+  before. ALSA is told to read the changed settings by the name its library has on every Linux (`libasound.so.2`),
+  not only by the one of its development package (`AudioDeviceKeepOpenTest`).
 - [x] **Sine, triangle and sawtooth effects swung over half of their amplitude, the square over all of it.** At the
   default amplitude of 1 around the middle, a sine moved a channel between 64 and 191, a square between 0 and 255, in
   the designer as well. Every curve swings over its whole amplitude now, in the app and in the designer

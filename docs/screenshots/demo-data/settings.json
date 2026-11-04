@@ -59,7 +59,6 @@
   ],
 
   "offsetMillisVideo": 0,
-  "customVideoResolution": false,
   "videoForceModesetting": false,
 
   "lightingSendDelayMillis": 10,

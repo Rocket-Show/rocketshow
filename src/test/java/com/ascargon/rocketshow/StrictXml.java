@@ -35,7 +35,11 @@ public class StrictXml {
             ),
             Settings.class, Set.of(
                     // Removed from the MIDI mapping, the global mapping always applies
-                    "overrideParent"
+                    "overrideParent",
+                    // Removed from the video settings, the size of the screen had no effect
+                    "videoWidth",
+                    "videoHeight",
+                    "customVideoResolution"
             )
     );
 

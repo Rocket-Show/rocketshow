@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.audio;
 
 import com.ascargon.rocketshow.gstreamer.GstApi;
+import com.ascargon.rocketshow.gstreamer.GstPipelineErrors;
 import com.ascargon.rocketshow.gstreamer.GstreamerInitService;
 import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.settings.AudioSettingsChangedEvent;
@@ -11,10 +12,12 @@ import org.freedesktop.gstreamer.Caps;
 import org.freedesktop.gstreamer.Element;
 import org.freedesktop.gstreamer.ElementFactory;
 import org.freedesktop.gstreamer.Pipeline;
+import org.freedesktop.gstreamer.StateChangeReturn;
 import org.freedesktop.gstreamer.elements.BaseSink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -35,6 +38,9 @@ public class DefaultAudioDeviceKeepOpenService implements AudioDeviceKeepOpenSer
 
     // The pipelines keeping the devices open. Kept here, so they're not disposed after they're not used anymore.
     private final List<Pipeline> pipelines = new ArrayList<>();
+
+    // The audio settings changed while a composition played: the devices are opened once nothing plays anymore
+    private boolean waitsForNothingPlaying;
 
     public DefaultAudioDeviceKeepOpenService(
             SettingsService settingsService,
@@ -87,10 +93,17 @@ public class DefaultAudioDeviceKeepOpenService implements AudioDeviceKeepOpenSer
             audioResample.link(capsFilter);
             capsFilter.link(sink);
 
-            pipeline.play();
-            pipelines.add(pipeline);
+            String key = audioDevice.getKey();
+            GstPipelineErrors.onError(pipeline.getBus(), error -> logger.error("Could not keep audio device {} open: {}", key, error));
 
-            logger.info("Keep audio device " + audioDevice.getKey() + " always open to avoid sound artifacts...");
+            // Opens the device right away
+            if (pipeline.play() == StateChangeReturn.FAILURE) {
+                logger.error("Could not keep audio device {} open", key);
+            } else {
+                logger.info("Keep audio device {} always open to avoid sound artifacts...", key);
+            }
+
+            pipelines.add(pipeline);
 
             provideClock = false;
         }
@@ -107,7 +120,9 @@ public class DefaultAudioDeviceKeepOpenService implements AudioDeviceKeepOpenSer
 
     // Keep the devices of the changed audio settings open instead, without a restart. ALSA numbers the devices shared
     // by several pipelines in the order of the settings, so all pipelines open with the old settings close first:
-    // these and the default composition. A composition playing keeps its devices until it stops.
+    // these and the default composition. A composition playing keeps its devices until it stops. Opened meanwhile, the
+    // devices here would share its sound cards with the old settings (e.g. the rate) and keep them until a restart, or
+    // not open at all, if a sound card moved in the order of the settings. So they're opened once nothing plays.
     @EventListener
     public synchronized void audioSettingsChanged(AudioSettingsChangedEvent event) {
         close();
@@ -118,6 +133,24 @@ public class DefaultAudioDeviceKeepOpenService implements AudioDeviceKeepOpenSer
             logger.error("Could not play the default composition again", e);
         }
 
+        if (playerService.isPlayingComposition()) {
+            logger.info("The audio settings changed while a composition plays, the audio devices are kept open again after it");
+            waitsForNothingPlaying = true;
+            return;
+        }
+
+        waitsForNothingPlaying = false;
+        init();
+    }
+
+    // Opens the devices of changed audio settings once the composition, which played when they changed, stopped
+    @Scheduled(fixedDelay = 1000)
+    public synchronized void openWhenNothingPlays() {
+        if (!waitsForNothingPlaying || playerService.isPlayingComposition()) {
+            return;
+        }
+
+        waitsForNothingPlaying = false;
         init();
     }
 
