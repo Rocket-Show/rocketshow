@@ -62,7 +62,7 @@ public class DefaultDesignerService implements DesignerService {
     // the highest project version this player knows. A project written by a newer
     // designer still plays as well as it can, but whatever came after this version is
     // missing from it. Package visible for the test of the designer template.
-    static final int SUPPORTED_PROJECT_VERSION = 10;
+    static final int SUPPORTED_PROJECT_VERSION = 11;
 
     // Live preview
     private boolean playPreview = false; // Is the preview playing a composition?
@@ -108,7 +108,9 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     // the place of each fixture of a preset in its chase (see calculatePresetChase) and the number of its steps
-    private record PresetChase(Map<PresetFixtureKey, Integer> fixtureIndices, int fixtureCount) {
+    // the place of each fixture (or pixel) in the chase of a preset and the number of its steps, and the same for the
+    // fixtures with all of their pixels (by fixture uuid), which the pixel effects chase over
+    private record PresetChase(Map<PresetFixtureKey, Integer> fixtureIndices, int fixtureCount, Map<String, Integer> wholeFixtureIndices, int wholeFixtureCount) {
     }
 
     // the chases of the presets of the loaded project, by preset (presets don't override equals)
@@ -620,6 +622,9 @@ public class DefaultDesignerService implements DesignerService {
         List<PresetFixture> orderedFixtures = preset.isUseGlobalFixtureOrder() ? project.getPresetFixtures() : preset.getFixtures();
         Set<DmxChannelAndPixelKey> counted = new HashSet<>();
         int index = 0;
+        Map<String, Integer> wholeFixtureIndices = new HashMap<>();
+        Set<String> wholeCounted = new HashSet<>();
+        int wholeIndex = 0;
 
         for (PresetFixture orderedFixture : orderedFixtures) {
             PresetFixtureKey key = new PresetFixtureKey(orderedFixture.getFixtureUuid(), orderedFixture.getPixelKey());
@@ -637,6 +642,13 @@ public class DefaultDesignerService implements DesignerService {
             if (firstDmxChannelAndPixelKey != null && counted.add(firstDmxChannelAndPixelKey)) {
                 index++;
             }
+
+            // a fixture with all of its pixels takes one step, the same for the fixtures on its channel
+            wholeFixtureIndices.putIfAbsent(orderedFixture.getFixtureUuid(), wholeIndex);
+            String wholeLamp = getWholeLampKey(orderedFixture);
+            if (wholeLamp != null && wholeCounted.add(wholeLamp)) {
+                wholeIndex++;
+            }
         }
 
         Set<DmxChannelAndPixelKey> lamps = new HashSet<>();
@@ -647,7 +659,23 @@ public class DefaultDesignerService implements DesignerService {
             }
         }
 
-        return new PresetChase(fixtureIndices, lamps.size());
+        Set<String> wholeLamps = new HashSet<>();
+        for (PresetFixture presetFixture : preset.getFixtures()) {
+            String wholeLamp = getWholeLampKey(presetFixture);
+            if (wholeLamp != null) {
+                wholeLamps.add(wholeLamp);
+            }
+        }
+
+        return new PresetChase(fixtureIndices, lamps.size(), wholeFixtureIndices, wholeLamps.size());
+    }
+
+    // the fixture of an entry of a preset with all of its pixels: fixtures sharing a DMX universe and address are the
+    // same lamp. Null for a fixture which is gone.
+    private String getWholeLampKey(PresetFixture presetFixture) {
+        Fixture fixture = getFixtureByUuid(project, presetFixture.getFixtureUuid());
+
+        return fixture == null ? null : fixture.getDmxUniverseUuid() + "\u0000" + fixture.getDmxFirstChannel();
     }
 
     // The chase of a preset doesn't change while its project plays: it's worked out once, instead of for each fixture
@@ -1654,7 +1682,10 @@ public class DefaultDesignerService implements DesignerService {
 
                         mixCapabilityValues(state, cachedFixture, values, intensityPercentage, preset.getPreset(), context);
                         mixChannelValues(state, cachedFixture, values, intensityPercentage);
-                        mixEffects(timeMillis, fixtureIndex, fixtureCount, preset, cachedFixture, values, intensityPercentage, state, context);
+                        PresetChase chase = getPresetChase(preset.getPreset());
+                        Integer wholeFixtureIndex = chase.wholeFixtureIndices().get(cachedFixture.getFixture().getUuid());
+
+                        mixEffects(timeMillis, fixtureIndex, fixtureCount, preset, cachedFixture, values, intensityPercentage, state, context, wholeFixtureIndex == null ? 0 : wholeFixtureIndex, chase.wholeFixtureCount());
                     }
                 }
             }
@@ -1724,7 +1755,7 @@ public class DefaultDesignerService implements DesignerService {
         return (effectTimeMillis % loopMillis + loopMillis) % loopMillis;
     }
 
-    private void mixEffects(double timeMillis, int fixtureIndex, Integer fixtureCount, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double intensityPercentage, PresetStepState state, PanTilt.Context context) {
+    private void mixEffects(double timeMillis, int fixtureIndex, Integer fixtureCount, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double intensityPercentage, PresetStepState state, PanTilt.Context context, int wholeFixtureIndex, int wholeFixtureCount) {
         double effectTimeMillis = timeMillis;
 
         if (preset.getRegion() != null) {
@@ -1739,6 +1770,12 @@ public class DefaultDesignerService implements DesignerService {
             if (effect.isVisible() && effectAmount > 0) {
                 if (effect instanceof EffectPanTilt panTilt) {
                     mixPanTiltEffect(panTilt, effectTimeMillis, preset, cachedFixture, values, effectIntensityPercentage, state, context);
+                    continue;
+                }
+
+                // a pixel effect chases from one fixture to the next, with all of their pixels
+                if (effect instanceof EffectPixel pixelEffect) {
+                    mixPixelEffect(pixelEffect, effectTimeMillis, preset, cachedFixture, values, effectIntensityPercentage, wholeFixtureIndex, wholeFixtureCount);
                     continue;
                 }
 
@@ -1800,6 +1837,165 @@ public class DefaultDesignerService implements DesignerService {
 
     // A movement of the moving heads, around where the preset points each of them (or around the middle, if it
     // doesn't), mirrored with the preset, like in the designer
+    // A pixel effect on a part of a fixture (a pixel, or a fixture without pixels): the color of its pattern where the part
+    // is in its fixture, blended with the color the preset puts on it, on its red, green and blue. Its other channels keep
+    // what the preset puts on them, its dimmer as well. This follows the same rules as the designer.
+    private void mixPixelEffect(EffectPixel effect, double effectTimeMillis, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double effectIntensityPercentage, int fixtureIndex, int fixtureCount) {
+        CachedFixtureChannel[] channels = {
+                getColorChannel(cachedFixture, FixtureCapability.FixtureCapabilityColor.Red),
+                getColorChannel(cachedFixture, FixtureCapability.FixtureCapabilityColor.Green),
+                getColorChannel(cachedFixture, FixtureCapability.FixtureCapabilityColor.Blue)
+        };
+
+        if (channels[0] == null && channels[1] == null && channels[2] == null) {
+            return;
+        }
+
+        Double beatsPerMinute = this.getBeatsPerMinute();
+        double curveTimeMillis = getCurveTimeMillis(effect, effectTimeMillis, preset, fixtureCount, beatsPerMinute);
+        Double cycles = effect.getCyclesAtMillis(curveTimeMillis, fixtureIndex, fixtureCount, beatsPerMinute);
+
+        // the effect does not apply anymore after it has finished running
+        if (cycles == null) {
+            return;
+        }
+
+        // the color the preset puts on the part, as red, green and blue between 0 and 1
+        double[] base = new double[3];
+
+        for (int i = 0; i < 3; i++) {
+            FixtureChannelValue value = channels[i] == null ? null : getChannelValue(values, channels[i].getName(), cachedFixture.getProfile().getUuid());
+            base[i] = value == null ? 0 : value.getValue() / channels[i].getMaxValue();
+        }
+
+        // where the part is in its fixture, every fixture starting the random looking patterns somewhere else
+        PixelContext context = getPixelPlace(cachedFixture).copy();
+        context.seed = PixelMath.toInt(effect.getSeed() * 7919 + fixtureIndex * 131);
+
+        if (effect.isMirror()) {
+            context.x = context.x < 0.5 ? context.x * 2 : (1 - context.x) * 2;
+        }
+
+        double[] sample = new double[2];
+        PixelPatterns.sample(effect, cycles, context, sample);
+        PixelPalette palette = effect.getPalette();
+        List<PixelPaletteStop> stops = "preset".equals(palette.getRef()) ? PixelPalette.shadesOf(base) : palette.getStops();
+        double[] color = PixelPalette.colorOf(stops, palette.getBetween(), palette.getRepeat(), sample[0]);
+
+        for (int i = 0; i < 3; i++) {
+            if (channels[i] == null) {
+                continue;
+            }
+
+            double lit = color[i] * sample[1];
+            double target = switch (effect.getBlend()) {
+                case "mask" -> base[i] * sample[1];
+                case "add" -> Math.min(base[i] + lit, 1);
+                case "max" -> Math.max(base[i], lit);
+                default -> lit;
+            };
+
+            FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
+            fixtureChannelValue.setChannelName(channels[i].getName());
+            fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
+            fixtureChannelValue.setValue(channels[i].getMaxValue() * target);
+            mixChannelValue(values, fixtureChannelValue, effectIntensityPercentage);
+        }
+    }
+
+    // the channel of a part of a fixture which lights in a color, the first one if there are several
+    private static CachedFixtureChannel getColorChannel(CachedFixture cachedFixture, FixtureCapability.FixtureCapabilityColor color) {
+        for (CachedFixtureChannel channel : cachedFixture.getChannels()) {
+            for (CachedFixtureCapability channelCapability : channel.getCapabilities()) {
+                if (channelCapability.getCapability().getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity && channelCapability.getCapability().getColor() == color) {
+                    return channel;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    // Where a part of a fixture is in it, for the pixel effects: a pixel in its column and row of the matrix (a bar has
+    // one row), a pixel group in the middle of its pixels, and a part without a pixel (a fixture without pixels, or the
+    // general channels of one with pixels) as the one pixel of the fixture. The designer places them the very same way.
+    PixelContext getPixelPlace(CachedFixture cachedFixture) {
+        if (cachedFixture.getPixelPlace() != null) {
+            return cachedFixture.getPixelPlace();
+        }
+
+        PixelContext place = new PixelContext();
+        CachedFixturePixel pixel = cachedFixture.getPixel();
+        FixtureProfile profile = cachedFixture.getProfile();
+
+        if (pixel != null && profile.getMatrix() != null) {
+            int[] size = getMatrixSize(profile.getMatrix());
+            int columns = Math.max(size[0] == 0 ? 1 : size[0], 1);
+            int rows = Math.max(size[1] == 0 ? 1 : size[1], 1);
+            double column = (columns - 1) / 2.0;
+            double row = (rows - 1) / 2.0;
+
+            if (pixel.getX() > 0) {
+                column = pixel.getX() - 1;
+                row = pixel.getY() - 1;
+            } else {
+                List<CachedFixturePixel> groupPixels = fixturePixelGroupResolveService.getPixelsForKeyOrGroup(profile.getMatrix(), getAllPixelKeys(profile), pixel.getKey());
+
+                if (!groupPixels.isEmpty()) {
+                    double columnSum = 0;
+                    double rowSum = 0;
+
+                    for (CachedFixturePixel groupPixel : groupPixels) {
+                        columnSum += groupPixel.getX() - 1;
+                        rowSum += groupPixel.getY() - 1;
+                    }
+
+                    column = columnSum / groupPixels.size();
+                    row = rowSum / groupPixels.size();
+                }
+            }
+
+            int longest = Math.max(columns, rows);
+
+            place.x = (column + 0.5) / columns;
+            place.y = (row + 0.5) / rows;
+            place.column = (int) Math.floor(column);
+            place.row = (int) Math.floor(row);
+            place.columns = columns;
+            place.rows = rows;
+            place.aspectX = (double) columns / longest;
+            place.aspectY = (double) rows / longest;
+        }
+
+        cachedFixture.setPixelPlace(place);
+
+        return place;
+    }
+
+    // the number of pixels a matrix has on X and Y (0 where it doesn't say), like the designer counts them
+    private static int[] getMatrixSize(FixtureMatrix matrix) {
+        if (matrix.getPixelKeys() != null) {
+            int rows = 0;
+            int columns = 0;
+
+            for (List<List<String>> layer : matrix.getPixelKeys()) {
+                rows = Math.max(rows, layer.size());
+
+                for (List<String> row : layer) {
+                    columns = Math.max(columns, row.size());
+                }
+            }
+
+            return new int[]{columns, rows};
+        }
+
+        List<Integer> pixelCount = matrix.getPixelCount();
+        int columns = pixelCount != null && !pixelCount.isEmpty() && pixelCount.get(0) != null ? pixelCount.get(0) : 0;
+        int rows = pixelCount != null && pixelCount.size() > 1 && pixelCount.get(1) != null ? pixelCount.get(1) : 0;
+
+        return new int[]{columns, rows};
+    }
+
     private void mixPanTiltEffect(EffectPanTilt effect, double effectTimeMillis, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double effectIntensityPercentage, PresetStepState state, PanTilt.Context context) {
         Double beatsPerMinute = this.getBeatsPerMinute();
         double curveTimeMillis = getCurveTimeMillis(effect, effectTimeMillis, preset, context.fixtureCount(), beatsPerMinute);
@@ -2518,6 +2714,7 @@ public class DefaultDesignerService implements DesignerService {
         migrateProjectToVersion8(project);
         migrateProjectToVersion9(project);
         migrateProjectToVersion10(project);
+        migrateProjectToVersion11(project);
     }
 
     // An effect of a type a newer designer added is left out (see EffectUnknown), the rest of the show still plays.
@@ -2823,6 +3020,16 @@ public class DefaultDesignerService implements DesignerService {
         project.setVersion(10);
 
         logger.info("Migrated designer project '" + project.getName() + "' to version 10");
+    }
+
+    // Version 11 brought the pixel effects (EffectPixel), which an older designer would drop when it saves the project.
+    // Nothing changes.
+    private void migrateProjectToVersion11(Project project) {
+        if (project.getVersion() >= 11) {
+            return;
+        }
+
+        project.setVersion(11);
     }
 
     // Put the clips of a composition which are on none of its tracks onto tracks of their own, one per scene, in the

@@ -17,4 +17,7 @@ public class CachedFixture {
     private List<CachedFixtureChannel> channels = new ArrayList<>();
     private List<String> pixelKeysInOrder = new ArrayList<>();
 
+    // where the part is in its fixture, for the pixel effects (see DefaultDesignerService.getPixelPlace), worked out once
+    private PixelContext pixelPlace;
+
 }

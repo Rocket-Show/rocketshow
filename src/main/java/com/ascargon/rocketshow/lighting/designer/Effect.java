@@ -20,7 +20,8 @@ import org.slf4j.LoggerFactory;
         defaultImpl = EffectUnknown.class)
 @JsonSubTypes({
         @JsonSubTypes.Type(value = EffectCurve.class, name = "curve"),
-        @JsonSubTypes.Type(value = EffectPanTilt.class, name = "pan-tilt")
+        @JsonSubTypes.Type(value = EffectPanTilt.class, name = "pan-tilt"),
+        @JsonSubTypes.Type(value = EffectPixel.class, name = "pixel")
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class Effect {

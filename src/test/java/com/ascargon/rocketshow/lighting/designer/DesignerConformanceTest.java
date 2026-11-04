@@ -469,15 +469,17 @@ class DesignerConformanceTest {
                 ObjectNode effectNode = effects.addObject();
                 effectNode.put("uuid", effect.getUuid());
 
-                if (effect instanceof EffectCurve curve && !(effect instanceof EffectPanTilt)) {
+                if (effect instanceof EffectCurve curve && !(effect instanceof EffectPanTilt) && !(effect instanceof EffectPixel)) {
                     effectNode.put("type", "curve");
                     effectNode.put("curveType", curve.getCurveType());
                     effectNode.put("amplitude", curve.getAmplitude());
 
                     ArrayNode channels = effectNode.putArray("channels");
                     listOf(curve.getChannels()).forEach(profileChannels -> channels.addArray().add(profileChannels.getProfileUuid()).add(texts(profileChannels.getChannels())));
+                } else if (effect instanceof EffectUnknown unknown) {
+                    effectNode.put("type", unknown.getType());
                 } else {
-                    effectNode.put("type", "pan-tilt");
+                    effectNode.put("type", effect instanceof EffectPixel ? "pixel" : "pan-tilt");
                 }
             }
         }

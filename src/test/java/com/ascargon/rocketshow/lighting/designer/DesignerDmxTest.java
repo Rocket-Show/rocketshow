@@ -480,6 +480,31 @@ class DesignerDmxTest {
     }
 
     @Test
+    void paintsAPixelEffectOverThePixelsOfABar() throws Exception {
+        ObjectNode project = project();
+        addPixelBars(project);
+        addPreset(project, "Chase", List.of(), List.of());
+        ObjectNode preset = (ObjectNode) project.get("presets").get(0);
+        ArrayNode fixtures = preset.putArray("fixtures");
+        for (String pixelKey : List.of("1", "2", "3")) {
+            fixtures.addObject().put("fixtureUuid", "bar-9ch").put("pixelKey", pixelKey);
+        }
+
+        // a block of a third of the bar, in red, halfway through its period at the time played (5 seconds)
+        ObjectNode effect = ((ArrayNode) preset.get("effects")).addObject();
+        effect.put("type", "pixel");
+        effect.put("uuid", "chase");
+        effect.put("pattern", "chase");
+        effect.put("size", 0.34);
+        effect.put("softness", 0);
+        effect.put("lengthMillis", 10000);
+        effect.putObject("palette").putArray("stops").addObject().put("position", 0).put("color", "#ff0000");
+
+        // Red 1 to 3, green 1 to 3, blue 1 to 3: the middle pixel is lit
+        assertEquals(List.of(0, 255, 0, 0, 0, 0, 0, 0, 0), addresses(play(project).get(FRONT), 31, 39));
+    }
+
+    @Test
     void sendsTheFineChannelsOfThePixels() throws Exception {
         ObjectNode project = project();
         addPixelBars(project);

@@ -22,4 +22,18 @@ class PixelContext {
     // a whole number the random looking patterns start from (of the effect and the fixture)
     int seed = 0;
 
+    PixelContext copy() {
+        PixelContext copy = new PixelContext();
+        copy.x = x;
+        copy.y = y;
+        copy.column = column;
+        copy.row = row;
+        copy.columns = columns;
+        copy.rows = rows;
+        copy.aspectX = aspectX;
+        copy.aspectY = aspectY;
+        copy.seed = seed;
+        return copy;
+    }
+
 }

@@ -214,6 +214,40 @@ public class EffectCurve extends Effect {
         return this.getCyclePosition(timeMillis - phase, false, lengthMillis);
     }
 
+    // How many periods the curve has run through at a moment, counted from where its phase puts its start, with the part
+    // of the one it is in, or null if it does not apply at this moment. It follows the rules of getCyclePositionAtMillis:
+    // a pixel effect needs the number of the pass as well, e.g. to take the next color on each of them.
+    public Double getCyclesAtMillis(double timeMillis, Integer fixtureIndex, Integer fixtureCount, Double beatsPerMinute) {
+        double lengthMillis = this.getLengthMillis(beatsPerMinute);
+        double phasingMillis = this.getPhasingMillis(fixtureIndex, fixtureCount, beatsPerMinute);
+        double phaseMillis = this.getPhaseMillis(beatsPerMinute);
+        double phase = phaseMillis + phasingMillis;
+
+        Double runEndMillis = this.getRunEndMillis(beatsPerMinute);
+
+        if (runEndMillis != null) {
+            double runMillis = timeMillis - phasingMillis;
+
+            if (runMillis < 0) {
+                // this fixture has not started yet
+                return null;
+            }
+
+            if (runMillis >= runEndMillis) {
+                if ("base".equals(this.endMode)) {
+                    return null;
+                }
+
+                double cycles = (runEndMillis - phaseMillis) / lengthMillis;
+
+                // a run of full cycles ends exactly on a cycle border -> hold what it showed just before it
+                return cycles - Math.floor(cycles) < CYCLE_EPSILON ? Math.floor(cycles) - CYCLE_EPSILON : cycles;
+            }
+        }
+
+        return (timeMillis - phase) / lengthMillis;
+    }
+
     // the position inside the current cycle, between 0 and 1
     private double getCyclePosition(double shiftedMillis, boolean atRunEnd, double lengthMillis) {
         double cyclePosition = ((shiftedMillis / lengthMillis) % 1 + 1) % 1;
