@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.lighting.designer;
 
 import com.ascargon.rocketshow.play.CompositionPlayer;
+import org.apache.logging.log4j.Level;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import tools.jackson.databind.ObjectMapper;
@@ -8,6 +9,7 @@ import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -213,6 +215,34 @@ class DesignerDmxTest {
 
         assertEquals(List.of(127, 255, 0, 51, 0, 5), addresses(front, 1, 6));
         assertEquals(List.of(127, 255, 0, 51, 0, 5), addresses(front, 11, 16));
+    }
+
+    @Test
+    void leavesOutAnEffectOfATypeItDoesNotKnow() throws Throwable {
+        ObjectNode project = project();
+        ObjectNode red = capability(project, "ColorIntensity", 1.0);
+        red.put("color", "Red");
+        addPreset(project, "Red", List.of("par-1"), List.of(capability(project, "Intensity", 1.0), red));
+
+        // an effect a newer designer added, next to a curve this one knows (on the green of the par)
+        ArrayNode effects = (ArrayNode) project.get("presets").get(0).get("effects");
+        ObjectNode unknown = effects.addObject();
+        unknown.put("type", "sparkles");
+        unknown.put("uuid", "unknown");
+        unknown.put("density", 0.5);
+        ObjectNode curve = effects.addObject();
+        curve.put("type", "curve");
+        curve.put("uuid", "curve");
+        curve.put("curveType", "square");
+        curve.put("dutyCycle", 1);
+        curve.putArray("capabilities").addObject().put("type", "ColorIntensity").put("color", "Green");
+
+        List<Map<String, Map<Integer, Integer>>> universes = new ArrayList<>();
+        List<String> warnings = DesignerTestEngine.logged(Level.WARN, () -> universes.add(play(project)));
+
+        // the rest of the preset still plays: red from the preset, full green from the curve
+        assertEquals(List.of(255, 255, 255, 0), addresses(universes.getFirst().get(FRONT), 1, 4));
+        assertEquals(1, warnings.stream().filter(warning -> warning.contains("'sparkles'")).count(), warnings.toString());
     }
 
     @Test

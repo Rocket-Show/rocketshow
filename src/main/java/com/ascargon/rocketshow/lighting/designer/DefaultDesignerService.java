@@ -2510,12 +2510,40 @@ public class DefaultDesignerService implements DesignerService {
             logger.warn("Designer project '" + project.getName() + "' was written with a newer designer (project version " + project.getVersion() + ", this Rocket Show knows version " + SUPPORTED_PROJECT_VERSION + "). Parts of the show may be missing. Please update Rocket Show.");
         }
 
+        warnAboutUnknownEffects(project);
+
         migrateProjectToVersion2(project);
         migrateProjectToVersion3(project);
         migrateProjectToVersion7(project);
         migrateProjectToVersion8(project);
         migrateProjectToVersion9(project);
         migrateProjectToVersion10(project);
+    }
+
+    // An effect of a type a newer designer added is left out (see EffectUnknown), the rest of the show still plays.
+    // Reported once for each of these types.
+    private void warnAboutUnknownEffects(Project project) {
+        if (project.getPresets() == null) {
+            return;
+        }
+
+        Set<String> unknownTypes = new LinkedHashSet<>();
+
+        for (Preset preset : project.getPresets()) {
+            if (preset.getEffects() == null) {
+                continue;
+            }
+
+            for (Effect effect : preset.getEffects()) {
+                if (effect instanceof EffectUnknown unknown) {
+                    unknownTypes.add(unknown.getType());
+                }
+            }
+        }
+
+        for (String type : unknownTypes) {
+            logger.warn("Designer project '" + project.getName() + "' uses effects of the type '" + type + "', which this Rocket Show does not know. They are left out. Please update Rocket Show.");
+        }
     }
 
     // The fixtures of a preset (and of the project) are listed with their pixels now: a fixture and each of its pixels
