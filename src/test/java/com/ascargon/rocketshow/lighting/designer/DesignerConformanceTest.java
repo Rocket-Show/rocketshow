@@ -82,6 +82,7 @@ class DesignerConformanceTest {
             case "mixColors" -> color(DefaultDesignerService.mixHexColors(strings(input.get("colors"))));
             case "pixels" -> pixels(input);
             case "pixelGroup" -> pixelGroup(input);
+            case "pixelPattern" -> pixelPattern(input);
             case "channelValues" -> channelValues(input);
             case "migration" -> migration(input);
             default -> throw new IllegalArgumentException("Unknown kind " + kind);
@@ -112,6 +113,67 @@ class DesignerConformanceTest {
 
     private static JsonNode color(Color color) {
         return color == null ? NODES.nullNode() : NODES.arrayNode().add(color.getRed()).add(color.getGreen()).add(color.getBlue());
+    }
+
+    // A pattern of the pixel effects at pixels and moments, through a palette: the place in the palette, the
+    // brightness and the color of each
+    private JsonNode pixelPattern(JsonNode input) {
+        JsonNode settingsNode = input.get("settings");
+        String pattern = text(settingsNode.get("pattern"));
+        double size = settingsNode.get("size").asDouble();
+        double softness = settingsNode.get("softness").asDouble();
+        String direction = text(settingsNode.get("direction"));
+        String shape = text(settingsNode.get("shape"));
+        boolean bounce = settingsNode.get("bounce").asBoolean();
+        PixelPatternSettings settings = new PixelPatternSettings() {
+            public String getPattern() {
+                return pattern;
+            }
+
+            public double getSize() {
+                return size;
+            }
+
+            public double getSoftness() {
+                return softness;
+            }
+
+            public String getDirection() {
+                return direction;
+            }
+
+            public String getShape() {
+                return shape;
+            }
+
+            public boolean isBounce() {
+                return bounce;
+            }
+        };
+        PixelPalette palette = DesignerJson.MAPPER.treeToValue(input.get("palette"), PixelPalette.class);
+
+        ArrayNode samples = NODES.arrayNode();
+        double[] result = new double[2];
+
+        for (JsonNode sample : input.get("samples")) {
+            JsonNode pixel = sample.get("pixel");
+            PixelContext context = new PixelContext();
+            context.x = pixel.get("x").asDouble();
+            context.y = pixel.get("y").asDouble();
+            context.column = pixel.get("column").asInt();
+            context.row = pixel.get("row").asInt();
+            context.columns = pixel.get("columns").asInt();
+            context.rows = pixel.get("rows").asInt();
+            context.aspectX = pixel.get("aspectX").asDouble();
+            context.aspectY = pixel.get("aspectY").asDouble();
+            context.seed = pixel.get("seed").asInt();
+
+            PixelPatterns.sample(settings, sample.get("cycle").asDouble(), context, result);
+            double[] color = palette.colorAt(result[0]);
+            samples.addArray().add(result[0]).add(result[1]).add(color[0]).add(color[1]).add(color[2]);
+        }
+
+        return samples;
     }
 
     private JsonNode effectCurve(JsonNode input) {
