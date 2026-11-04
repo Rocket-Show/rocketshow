@@ -58,13 +58,17 @@
 
 @if (deviceInformation?.available) {
 <div class="form-group row">
+  <label class="col-lg-3 col-form-label">{{ "settings.provisioning.serial" | translate }}</label>
+  <div class="col-lg-9 col-form-label" id="serial">{{ deviceInformation.serial || "-" }}</div>
+</div>
+
+<div class="form-group row">
   <label class="col-lg-3 col-form-label">
     {{ "settings.provisioning.title" | translate }}<i class="fa fa-question-circle-o text-muted ml-1" style="cursor: help;"
       [popover]="'settings.provisioning.help' | translate" triggers="mouseenter:mouseleave" container="body"
       placement="right" aria-hidden="true"></i>
   </label>
-  <div class="col-lg-9 d-flex flex-wrap align-items-center">
-    <span class="mr-3" id="serial">{{ "settings.provisioning.serial" | translate }}: {{ deviceInformation.serial || "-" }}</span>
+  <div class="col-lg-9">
     <a routerLink="/provision" class="btn btn-primary btn-sm" id="openProvision">
       <i class="fa fa-id-card-o fa-fw" aria-hidden="true"></i>
       {{ "settings.provisioning.open" | translate }}</a>
