@@ -29,7 +29,7 @@ class PixelPatternsTest {
     void makesTheShadesOfAColorLikeTheDesigner() {
         List<PixelPaletteStop> shades = PixelPalette.shadesOf(new double[]{1, 0.5, 0});
 
-        assertEquals(List.of("#000000", "#ff8000", "#ffdfbf"), shades.stream().map(PixelPaletteStop::getColor).toList());
+        assertEquals(List.of("#ff8000", "#ffdfbf"), shades.stream().map(PixelPaletteStop::getColor).toList());
     }
 
     @Test

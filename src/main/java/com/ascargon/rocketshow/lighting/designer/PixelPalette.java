@@ -69,12 +69,12 @@ public class PixelPalette {
         return hexToRgb(sorted.getLast().getColor());
     }
 
-    // The shades of a color, for the palette which follows the color of the preset: from black up to the color and on to
-    // most of the way to white. The color as red, green and blue between 0 and 1.
+    // The shades of a color, for the palette which follows the color of the preset: from the color itself most of the
+    // way to white (the patterns make a pixel darker themselves). The color as red, green and blue between 0 and 1.
     static List<PixelPaletteStop> shadesOf(double[] color) {
         double[] light = new double[]{color[0] + (1 - color[0]) * 0.75, color[1] + (1 - color[1]) * 0.75, color[2] + (1 - color[2]) * 0.75};
 
-        return List.of(PixelPaletteStop.of(0, "#000000"), PixelPaletteStop.of(0.62, rgbToHex(color)), PixelPaletteStop.of(1, rgbToHex(light)));
+        return List.of(PixelPaletteStop.of(0, rgbToHex(color)), PixelPaletteStop.of(1, rgbToHex(light)));
     }
 
     // a color like #ff8000 as red, green and blue between 0 and 1, black for anything else
