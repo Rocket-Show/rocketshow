@@ -55,9 +55,6 @@ export class Settings {
   alsaPeriodSize: number;
   alsaPeriodTime: number;
   audioBusList: AudioBus[];
-  videoWidth: number;
-  videoHeight: number;
-  customVideoResolution: boolean;
   videoForceModesetting: boolean;
   lanStaticIpEnable: boolean;
   lanIpAddress: string;
@@ -214,9 +211,6 @@ export class Settings {
       }
     }
 
-    this.videoWidth = data.videoWidth;
-    this.videoHeight = data.videoHeight;
-    this.customVideoResolution = data.customVideoResolution;
     this.videoForceModesetting = data.videoForceModesetting;
     this.lanStaticIpEnable = data.lanStaticIpEnable;
     this.lanIpAddress = data.lanIpAddress;
