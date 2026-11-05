@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ascargon.rocketshow.audio.AudioAnalysisService;
+import com.ascargon.rocketshow.audio.AudioBus;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
@@ -1963,7 +1964,13 @@ public class DefaultDesignerService implements DesignerService {
             return null;
         }
 
-        return frameAudio.computeIfAbsent(effect, key -> new PixelAudio(audioAnalysisService::frame, frameTimeMillis, effect));
+        return frameAudio.computeIfAbsent(effect, key -> {
+            // the buses it follows added together, each frame once in the frame of the lights
+            List<String> buses = effect.getAudioBuses();
+            Map<Integer, double[]> added = new HashMap<>();
+
+            return new PixelAudio(index -> added.computeIfAbsent(index, known -> audioAnalysisService.frame(buses, known)), frameTimeMillis, effect);
+        });
     }
 
     // the settings of a pixel effect with its size following the audio, once in a frame
@@ -2039,21 +2046,29 @@ public class DefaultDesignerService implements DesignerService {
         });
     }
 
-    // whether a project has a pixel effect following the audio of the composition
-    static boolean followsAudio(Project project) {
+    // The audio buses the pixel effects of a project follow: the ones they name, all of them for an effect naming none
+    static Set<String> followedBuses(Project project, List<AudioBus> audioBuses) {
+        Set<String> followed = new HashSet<>();
+
         if (project == null || project.getPresets() == null) {
-            return false;
+            return followed;
         }
 
         for (Preset preset : project.getPresets()) {
             for (Effect effect : preset.getEffects() == null ? List.<Effect>of() : preset.getEffects()) {
                 if (effect instanceof EffectPixel pixel && "composition".equals(pixel.getAudioSource())) {
-                    return true;
+                    if (pixel.getAudioBuses().isEmpty()) {
+                        for (AudioBus audioBus : audioBuses == null ? List.<AudioBus>of() : audioBuses) {
+                            followed.add(audioBus.getUuid());
+                        }
+                    } else {
+                        followed.addAll(pixel.getAudioBuses());
+                    }
                 }
             }
         }
 
-        return false;
+        return followed;
     }
 
     // Package visible for the conformance cases of the designer, which play recorded analyses
@@ -3427,8 +3442,8 @@ public class DefaultDesignerService implements DesignerService {
         // a preview names the composition it plays, if any (see setPreviewComposition)
         this.composition = compositionPlayer == null ? null : getCompositionByName(project, compositionPlayer.getComposition().getName());
 
-        // the pipeline of a composition measures the audio while the project has an effect following it
-        audioAnalysisService.setRequired(followsAudio(project));
+        // the pipeline of a composition measures the buses an effect of the project follows
+        audioAnalysisService.setRequiredBuses(followedBuses(project, settingsService.getSettings().getAudioBusList()));
 
         // Create the caches
         updateCachedFixtures();

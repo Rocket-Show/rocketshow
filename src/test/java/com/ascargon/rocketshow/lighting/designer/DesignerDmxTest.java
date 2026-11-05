@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.lighting.designer;
 
+import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.play.CompositionPlayer;
 import org.apache.logging.log4j.Level;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -218,18 +220,29 @@ class DesignerDmxTest {
     }
 
     @Test
-    void measuresTheAudioOnlyForAProjectWithAnEffectFollowingIt() {
+    void measuresTheBusesTheEffectsOfAProjectFollow() {
+        AudioBus main = new AudioBus();
+        main.setUuid("main");
+        AudioBus click = new AudioBus();
+        click.setUuid("click");
+        List<AudioBus> buses = List.of(main, click);
+
         Project project = new Project();
-        assertFalse(DefaultDesignerService.followsAudio(project));
+        assertEquals(Set.of(), DefaultDesignerService.followedBuses(project, buses));
 
         Preset preset = new Preset();
         EffectPixel effect = new EffectPixel();
         preset.setEffects(new ArrayList<>(List.of(effect)));
         project.setPresets(new ArrayList<>(List.of(preset)));
-        assertFalse(DefaultDesignerService.followsAudio(project));
+        assertEquals(Set.of(), DefaultDesignerService.followedBuses(project, buses));
 
+        // naming no bus, it follows all of them
         effect.setAudioSource("composition");
-        assertTrue(DefaultDesignerService.followsAudio(project));
+        assertEquals(Set.of("main", "click"), DefaultDesignerService.followedBuses(project, buses));
+
+        effect.setAudioBuses(List.of("main"));
+        assertEquals(Set.of("main"), DefaultDesignerService.followedBuses(project, buses));
+        assertEquals(Set.of(), DefaultDesignerService.followedBuses(null, buses));
     }
 
     @Test

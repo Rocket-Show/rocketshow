@@ -343,7 +343,7 @@ class DesignerConformanceTest {
                     values[i] = frame.get(i).asDouble();
                 }
 
-                designerService.getAudioAnalysisService().setFrame(index++, values);
+                designerService.getAudioAnalysisService().setFrame("", index++, values);
             }
         }
 

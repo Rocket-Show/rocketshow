@@ -1,5 +1,8 @@
 package com.ascargon.rocketshow.lighting.designer;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
@@ -237,6 +240,9 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
     private double audioReleaseMillis = 300;
     private String audioFollows = "brightness";
 
+    // the audio buses of Rocket Show it follows, added together, by their uuids: all of them, if none are named
+    private List<String> audioBuses = new ArrayList<>();
+
     public String getAudioSource() {
         return audioSource;
     }
@@ -296,6 +302,14 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
 
     public void setAudioFollows(String audioFollows) {
         this.audioFollows = audioFollows == null || audioFollows.isEmpty() ? "brightness" : audioFollows;
+    }
+
+    public List<String> getAudioBuses() {
+        return audioBuses;
+    }
+
+    public void setAudioBuses(List<String> audioBuses) {
+        this.audioBuses = audioBuses == null ? new ArrayList<>() : new ArrayList<>(audioBuses);
     }
 
     // the level meter and the wave of the audio show it
