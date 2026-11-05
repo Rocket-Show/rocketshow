@@ -53,6 +53,12 @@ public class Project {
     private String selectedCompositionUuid;
     // play the selected preset on its own (solo) instead of the selected scenes
     private boolean previewPreset = false;
+
+    // Whether the dimmers of a fixture which lights in colors only (e.g. an RGB par or a pixel bar with a master
+    // dimmer) start at full where its profile does not say where they start: a color is all it takes to light it, like
+    // a fixture without a dimmer (see DefaultDesignerService.openColorDimmers). It stays dark while its colors are off.
+    // A project of a version before 11 keeps its dimmers off, the way it was played then.
+    private boolean colorDimmersAtFull = true;
     private Composition[] compositions;
     private List<FixtureProfile> fixtureProfiles;
 

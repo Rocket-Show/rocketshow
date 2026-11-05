@@ -203,6 +203,29 @@ class DesignerDmxTest {
     }
 
     @Test
+    void opensTheDimmersOfTheFixturesLightingInColorsInACurrentProject() throws Exception {
+        ObjectNode project = project();
+        addPreset(project, "Red", List.of("par-1", "head"), List.of(color(project, "Red", 1.0)));
+        makeCurrent(project);
+
+        Map<String, Map<Integer, Integer>> universes = play(project);
+
+        // par 1 lit in red by its color alone, par 2 at full as well, but dark without a color
+        assertEquals(List.of(255, 255, 0, 0, 0, 5), addresses(universes.get(FRONT), 1, 6));
+        assertEquals(List.of(255, 0, 0, 0), addresses(universes.get(FRONT), 11, 14));
+        // the moving head shines white through its color wheel: its dimmer stays off
+        assertEquals(List.of(0, 0), addresses(universes.get(BACK), 5, 6));
+    }
+
+    @Test
+    void keepsTheDimmersOfAProjectOfBeforeOff() throws Exception {
+        ObjectNode project = project();
+        addPreset(project, "Red", List.of("par-1"), List.of(color(project, "Red", 1.0)));
+
+        assertEquals(List.of(0, 255, 0, 0, 0, 5), addresses(play(project).get(FRONT), 1, 6));
+    }
+
+    @Test
     void setsTheDimmerAndColorOfEveryFixtureOfAPreset() throws Exception {
         ObjectNode project = project();
         ObjectNode red = capability(project, "ColorIntensity", 1.0);
@@ -515,6 +538,18 @@ class DesignerDmxTest {
         assertEquals(List.of(127, 255, 255, 255, 0, 0), addresses(play(project).get(FRONT), 41, 46));
     }
 
+
+    // the project as the current designer saves it: its clips on a track, which a project of before version 10 gets
+    // when it is migrated
+    private static void makeCurrent(ObjectNode project) {
+        project.put("version", 11);
+        ObjectNode composition = (ObjectNode) project.get("compositions").get(0);
+        composition.putArray("tracks").addObject().put("uuid", "track").put("name", "Track");
+
+        for (var region : composition.get("scenePlaybackRegions")) {
+            ((ObjectNode) region).put("trackUuid", "track");
+        }
+    }
 
     // A preset lighting the pars in one color only
     private void addColorPreset(ObjectNode project, String name, double red, double blue) {

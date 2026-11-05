@@ -2633,6 +2633,7 @@ public class DefaultDesignerService implements DesignerService {
             }
 
             addVirtualDimmers(fixtureParts);
+            openColorDimmers(fixtureParts);
             cachedFixtures.addAll(fixtureParts);
         }
 
@@ -2680,6 +2681,68 @@ public class DefaultDesignerService implements DesignerService {
             addCachedChannel(channels, channel, VIRTUAL_DIMMER_CHANNEL_NAME, null, cachedFixture.getProfile());
             cachedFixture.setChannels(channels);
         }
+    }
+
+    // The dimmers of a fixture which lights in colors only start at full, where its profile does not say where they
+    // start (see Project.colorDimmersAtFull): at the brightest the channel lights steadily, so a dimmer sharing its
+    // channel with a strobe does not strobe. A color is all it takes to light the fixture then, it stays dark while its
+    // colors are off. A fixture with a color wheel (white through its open slot), one mixing its colors with filters
+    // (white without them) and one without colors (e.g. a halogen par) keeps its dimmers off. Like in the designer.
+    private void openColorDimmers(List<CachedFixture> fixtureParts) {
+        if (!project.isColorDimmersAtFull()) {
+            return;
+        }
+
+        List<CachedFixtureChannel> channels = new ArrayList<>();
+        boolean lightsInColors = false;
+
+        for (CachedFixture cachedFixture : fixtureParts) {
+            channels.addAll(cachedFixture.getChannels());
+        }
+
+        for (CachedFixtureChannel channel : channels) {
+            if (channel.getColorWheel() != null) {
+                return;
+            }
+
+            if (channel.getChannel() != null && hasCapability(channel, FixtureCapability.FixtureCapabilityType.ColorIntensity)) {
+                lightsInColors = true;
+            }
+        }
+
+        if (!lightsInColors || SubtractiveColors.mixesSubtractively(channels)) {
+            return;
+        }
+
+        for (CachedFixtureChannel channel : channels) {
+            if (channel.getChannel() == null || channel.getDefaultValue() != null) {
+                continue;
+            }
+
+            List<CachedFixtureCapability> dimmers = new ArrayList<>();
+
+            for (CachedFixtureCapability capability : channel.getCapabilities()) {
+                if (capability.getCapability().getType() == FixtureCapability.FixtureCapabilityType.Intensity) {
+                    dimmers.add(capability);
+                }
+            }
+
+            Double value = getBrightnessValue(channel, dimmers, 1);
+
+            if (value != null) {
+                channel.setDefaultValue(value);
+            }
+        }
+    }
+
+    private static boolean hasCapability(CachedFixtureChannel channel, FixtureCapability.FixtureCapabilityType type) {
+        for (CachedFixtureCapability capability : channel.getCapabilities()) {
+            if (capability.getCapability().getType() == type) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // Unregister all universe states of a previous load/preview and forget them. They must not be
@@ -3024,11 +3087,14 @@ public class DefaultDesignerService implements DesignerService {
 
     // Version 11 brought the pixel effects (EffectPixel), which an older designer would drop when it saves the project.
     // Nothing changes.
+    // Version 11 brought the pixel effects and the dimmers of the fixtures lighting in colors at full (see
+    // Project.colorDimmersAtFull). An older project keeps them off, so it plays as it did, like in the designer.
     private void migrateProjectToVersion11(Project project) {
         if (project.getVersion() >= 11) {
             return;
         }
 
+        project.setColorDimmersAtFull(false);
         project.setVersion(11);
     }
 

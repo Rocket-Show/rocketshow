@@ -438,6 +438,7 @@ class DesignerConformanceTest {
     private static JsonNode migratedProject(Project project) {
         ObjectNode result = NODES.objectNode();
         result.put("version", project.getVersion());
+        result.put("colorDimmersAtFull", project.isColorDimmersAtFull());
         result.set("presetFixtures", presetFixtures(project.getPresetFixtures()));
 
         ArrayNode presets = result.putArray("presets");
