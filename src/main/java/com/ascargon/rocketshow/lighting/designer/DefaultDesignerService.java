@@ -120,6 +120,18 @@ public class DefaultDesignerService implements DesignerService {
     // effects spread across the stage (see PixelStage)
     private Map<Preset, Map<String, Map<CachedFixture, PixelContext>>> stagePixelPlaces = new ConcurrentHashMap<>();
 
+    // For each cached fixture, the one before it on the same DMX address (the same lamp, which it takes the values of),
+    // or -1. Worked out once: looking it up in each frame took longer than the frame with a few thousand pixels.
+    private int[] sameLampIndices = new int[0];
+
+    // Where a part of a fixture sends its channels: the DMX address of each channel of its mode which is one of its own,
+    // the channel and which of its bytes it is (0 for the coarse one, then the fine ones). Worked out once for each part:
+    // going through the whole mode for each part in each frame took the most time of a frame of a matrix.
+    private record OutputChannel(int address, CachedFixtureChannel channel, int fineIndex) {
+    }
+
+    private Map<CachedFixture, List<OutputChannel>> outputChannels = new ConcurrentHashMap<>();
+
     private long lastPlayTimeMillis;
 
     public DefaultDesignerService(
@@ -1008,31 +1020,24 @@ public class DefaultDesignerService implements DesignerService {
         });
     }
 
-    private CachedFixture getAlreadyCalculatedFixture(List<CachedFixture> fixtures, int fixtureIndex) {
-        // Has this fixture already been calculated (same universe and dmx start address as a fixture before)
-        // --> return it
-        CachedFixture currentFixture = fixtures.get(fixtureIndex);
+    // the lamp a part of a fixture is: its universe, its DMX address and its pixel
+    private record LampKey(String universeUuid, int dmxFirstChannel, String pixelKey) {
+    }
 
-        for (int i = 0; i < fixtureIndex; i++) {
-            CachedFixture calculatedFixture = fixtures.get(i);
+    // For each of the passed fixtures, the first one before it with the same universe, DMX address and pixel (the same
+    // lamp), or -1
+    private static int[] getSameLampIndices(List<CachedFixture> fixtures) {
+        int[] indices = new int[fixtures.size()];
+        Map<LampKey, Integer> firstOfLamp = new HashMap<>();
 
-            if (Objects.equals(calculatedFixture.getFixture().getDmxUniverseUuid(),
-                    currentFixture.getFixture().getDmxUniverseUuid())
-                    && calculatedFixture.getFixture().getDmxFirstChannel()
-                    == currentFixture.getFixture().getDmxFirstChannel()
-                    && Objects.equals(
-                    calculatedFixture.getPixel() != null
-                            ? emptyToNull(calculatedFixture.getPixel().getKey())
-                            : null,
-                    currentFixture.getPixel() != null
-                            ? emptyToNull(currentFixture.getPixel().getKey())
-                            : null)) {
-
-                return calculatedFixture;
-            }
+        for (int i = 0; i < fixtures.size(); i++) {
+            CachedFixture fixture = fixtures.get(i);
+            LampKey key = new LampKey(fixture.getFixture().getDmxUniverseUuid(), fixture.getFixture().getDmxFirstChannel(), fixture.getPixel() == null ? null : emptyToNull(fixture.getPixel().getKey()));
+            Integer first = firstOfLamp.putIfAbsent(key, i);
+            indices[i] = first == null ? -1 : first;
         }
 
-        return null;
+        return indices;
     }
 
     // where the preset itself starts, which is what its steps are timed against. The
@@ -1642,7 +1647,7 @@ public class DefaultDesignerService implements DesignerService {
         for (int i = 0; i < cachedFixtures.size(); i++) {
             CachedFixture cachedFixture = cachedFixtures.get(i);
 
-            CachedFixture alreadyCalculatedFixture = getAlreadyCalculatedFixture(cachedFixtures, i);
+            CachedFixture alreadyCalculatedFixture = sameLampIndices.length == cachedFixtures.size() && sameLampIndices[i] >= 0 ? cachedFixtures.get(sameLampIndices[i]) : null;
 
             // all values of the current fixture channels. A fixture on the same DMX address as one before is the same
             // lamp: it takes its values, like in the designer.
@@ -2131,32 +2136,59 @@ public class DefaultDesignerService implements DesignerService {
         return null;
     }
 
-    private void setUniverseValueForChannel(HashMap<Integer, Integer> universe, int channelIndex, CachedFixture cachedFixture, String templateChannelName, String pixelKey, List<FixtureChannelValue> fixtureChannelValues, Double colorDimmer) {
+    // the DMX address of a channel of the mode of a part, if it is a channel of the part (fine channels are not cached
+    // separately: the coarse channel is found for them, the byte they are of it)
+    private void addOutputChannel(List<OutputChannel> outputs, int channelIndex, CachedFixture cachedFixture, String templateChannelName, String pixelKey) {
         String channelName = getChannelNameWithPixelKey(templateChannelName, pixelKey);
-
-        // fine channels are not cached separately -> this returns the coarse channel for them
         CachedFixtureChannel channel = getChannelByName(cachedFixture, channelName);
 
-        if (channel == null || channel.getChannel() == null) {
-            return;
+        if (channel != null && channel.getChannel() != null) {
+            outputs.add(new OutputChannel(channelIndex, channel, getFineIndexByChannelName(channel, channelName)));
         }
+    }
 
-        int fineIndex = getFineIndexByChannelName(channel, channelName);
+    // where a part of a fixture sends its channels, in the order of the channels of its mode (see OutputChannel)
+    private List<OutputChannel> getOutputChannels(CachedFixture cachedFixture) {
+        return outputChannels.computeIfAbsent(cachedFixture, this::calculateOutputChannels);
+    }
 
-        // match this mode channel with the value of its coarse channel
-        for (FixtureChannelValue channelValue : fixtureChannelValues) {
-            if (channel.getName().equals(channelValue.getChannelName())) {
-                double value = applyMasterDimmer(channel, channelValue.getValue());
+    private List<OutputChannel> calculateOutputChannels(CachedFixture cachedFixture) {
+        List<OutputChannel> outputs = new ArrayList<>();
+        int channelIndex = cachedFixture.getFixture().getDmxFirstChannel();
 
-                if (colorDimmer != null) {
-                    value = dim(channel, value, FixtureCapability.FixtureCapabilityType.ColorIntensity, colorDimmer);
+        for (FixtureModeChannel fixtureModeChannel : cachedFixture.getMode().getChannels()) {
+            if (isUnusedChannel(fixtureModeChannel)) {
+                // an unused channel ("null" in the fixture library) still takes its DMX address
+                channelIndex++;
+            } else if (fixtureModeChannel.getName() == null || fixtureModeChannel.getName().isEmpty()) {
+                // reference a channel through a pixel matrix
+                List<CachedFixturePixel> availablePixels = getPixelsInOrder(cachedFixture.getProfile(), fixtureModeChannel.getRepeatFor());
+
+                if (CHANNEL_ORDER_PER_PIXEL.equals(fixtureModeChannel.getChannelOrder())) {
+                    // each channel for each pixel
+                    for (CachedFixturePixel availablePixel : availablePixels) {
+                        for (String modeTemplateChannelName : fixtureModeChannel.getTemplateChannels()) {
+                            addOutputChannel(outputs, channelIndex, cachedFixture, modeTemplateChannelName, availablePixel.getKey());
+                            channelIndex++;
+                        }
+                    }
+                } else if (CHANNEL_ORDER_PER_CHANNEL.equals(fixtureModeChannel.getChannelOrder())) {
+                    // each pixel for each channel
+                    for (String modeTemplateChannelName : fixtureModeChannel.getTemplateChannels()) {
+                        for (CachedFixturePixel availablePixel : availablePixels) {
+                            addOutputChannel(outputs, channelIndex, cachedFixture, modeTemplateChannelName, availablePixel.getKey());
+                            channelIndex++;
+                        }
+                    }
                 }
-
-                int dmxValue = (int) Math.floor(value / Math.pow(256, channel.getChannel().getFineChannelAliases().size() - (fineIndex + 1))) % 256;
-                universe.put(channelIndex, dmxValue);
-                break;
+            } else {
+                // direct reference to a channel
+                addOutputChannel(outputs, channelIndex, cachedFixture, fixtureModeChannel.getName(), null);
+                channelIndex++;
             }
         }
+
+        return outputs;
     }
 
     private double getMasterDimmer() {
@@ -2237,68 +2269,40 @@ public class DefaultDesignerService implements DesignerService {
     private void setUniverseValues(Map<CachedFixture, List<FixtureChannelValue>> fixtures) {
         logger.trace("Set universe values...");
 
-        // Reset all DMX universes
+        // Reset all DMX universes, and find each of them by the uuid it is mapped to (the first one mapped to it)
+        Map<String, HashMap<Integer, Integer>> universes = new HashMap<>();
+
         for (LightingUniverseState universe : lightingUniverses) {
             universe.reset();
+            universes.putIfAbsent(universe.getMappingUuid(), universe.getUniverse());
         }
 
         // loop over each fixture with its values for each channel
         for (Map.Entry<CachedFixture, List<FixtureChannelValue>> entry : fixtures.entrySet()) {
-            String fixtureUniverseUuid = entry.getKey().getFixture().getDmxUniverseUuid();
-            HashMap<Integer, Integer> universe = lightingUniverses.stream()
-                    .filter(u -> Objects.equals(u.getMappingUuid(), fixtureUniverseUuid))
-                    .map(LightingUniverseState::getUniverse)
-                    .findFirst()
-                    .orElse(null);
+            HashMap<Integer, Integer> universe = universes.get(entry.getKey().getFixture().getDmxUniverseUuid());
 
             if (universe == null) {
                 continue;
             }
 
-            if (logger.isTraceEnabled()) {
-                logger.trace("Set universe values for " + entry.getValue().size() + " channels of fixture " + entry.getKey().getFixture().getName());
-            }
-
             Double colorDimmer = getColorDimmer(entry.getKey(), entry.getValue());
 
-            // loop over each channel for this fixture
-            int channelIndex = entry.getKey().getFixture().getDmxFirstChannel();
+            for (OutputChannel output : getOutputChannels(entry.getKey())) {
+                CachedFixtureChannel channel = output.channel();
 
-            for (FixtureModeChannel fixtureModeChannel : entry.getKey().getMode().getChannels()) {
-                logger.trace("Process channel " + fixtureModeChannel.getName());
+                // match this mode channel with the value of its coarse channel
+                for (FixtureChannelValue channelValue : entry.getValue()) {
+                    if (channel.getName().equals(channelValue.getChannelName())) {
+                        double value = applyMasterDimmer(channel, channelValue.getValue());
 
-                if (isUnusedChannel(fixtureModeChannel)) {
-                    // an unused channel ("null" in the fixture library) still takes its DMX address
-                    channelIndex++;
-                } else if (fixtureModeChannel.getName() == null || fixtureModeChannel.getName().isEmpty()) {
-                    // reference a channel through a pixel matrix
-
-                    List<CachedFixturePixel> availablePixels = getPixelsInOrder(entry.getKey().getProfile(), fixtureModeChannel.getRepeatFor());
-
-                    if (CHANNEL_ORDER_PER_PIXEL.equals(fixtureModeChannel.getChannelOrder())) {
-                        // each channel for each pixel
-
-                        for (CachedFixturePixel availablePixel : availablePixels) {
-                            for (String modeTemplateChannelName : fixtureModeChannel.getTemplateChannels()) {
-                                setUniverseValueForChannel(universe, channelIndex, entry.getKey(), modeTemplateChannelName, availablePixel.getKey(), entry.getValue(), colorDimmer);
-                                channelIndex++;
-                            }
+                        if (colorDimmer != null) {
+                            value = dim(channel, value, FixtureCapability.FixtureCapabilityType.ColorIntensity, colorDimmer);
                         }
-                    } else if (CHANNEL_ORDER_PER_CHANNEL.equals(fixtureModeChannel.getChannelOrder())) {
-                        // each pixel for each channel
 
-                        for (String modeTemplateChannelName : fixtureModeChannel.getTemplateChannels()) {
-                            for (CachedFixturePixel availablePixel : availablePixels) {
-                                setUniverseValueForChannel(universe, channelIndex, entry.getKey(), modeTemplateChannelName, availablePixel.getKey(), entry.getValue(), colorDimmer);
-                                channelIndex++;
-                            }
-                        }
+                        int dmxValue = (int) Math.floor(value / Math.pow(256, channel.getChannel().getFineChannelAliases().size() - (output.fineIndex() + 1))) % 256;
+                        universe.put(output.address(), dmxValue);
+                        break;
                     }
-                } else {
-                    // direct reference to a channel
-
-                    setUniverseValueForChannel(universe, channelIndex, entry.getKey(), fixtureModeChannel.getName(), null, entry.getValue(), colorDimmer);
-                    channelIndex++;
                 }
             }
         }
@@ -2680,6 +2684,7 @@ public class DefaultDesignerService implements DesignerService {
         cachedFixtures = new ArrayList<>();
         presetChases = new ConcurrentHashMap<>();
         stagePixelPlaces = new ConcurrentHashMap<>();
+        outputChannels = new ConcurrentHashMap<>();
 
         logger.debug("Calculate cached fixtures...");
 
@@ -2712,6 +2717,7 @@ public class DefaultDesignerService implements DesignerService {
             cachedFixtures.addAll(fixtureParts);
         }
 
+        sameLampIndices = getSameLampIndices(cachedFixtures);
         logger.debug("Calculated " + cachedFixtures.size() + " fixtures");
     }
 
