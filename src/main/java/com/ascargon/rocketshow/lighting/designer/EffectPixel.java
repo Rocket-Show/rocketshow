@@ -154,6 +154,79 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings {
         this.whiteLed = Boolean.TRUE.equals(whiteLed);
     }
 
+    // The picture of a text or an image and how it is shown (see PixelPatternSettings). The designer makes the picture
+    // from the text or the image, this only reads the picture.
+    private PixelBitmap bitmap;
+    private String scroll = "auto";
+    private String align = "center";
+    private double offsetY = 0;
+    private String fit = "contain";
+    private String textColors = "along";
+    private String imageColors = "own";
+
+    @Override
+    public PixelBitmap getBitmap() {
+        return bitmap;
+    }
+
+    public void setBitmap(PixelBitmap bitmap) {
+        this.bitmap = bitmap;
+    }
+
+    @Override
+    public String getScroll() {
+        return scroll;
+    }
+
+    public void setScroll(String scroll) {
+        this.scroll = scroll == null || scroll.isEmpty() ? "auto" : scroll;
+    }
+
+    @Override
+    public String getAlign() {
+        return align;
+    }
+
+    public void setAlign(String align) {
+        this.align = align == null || align.isEmpty() ? "center" : align;
+    }
+
+    @Override
+    public double getOffsetY() {
+        return offsetY;
+    }
+
+    public void setOffsetY(Double offsetY) {
+        this.offsetY = offsetY == null ? 0 : offsetY;
+    }
+
+    @Override
+    public String getFit() {
+        return fit;
+    }
+
+    public void setFit(String fit) {
+        this.fit = fit == null || fit.isEmpty() ? "contain" : fit;
+    }
+
+    @Override
+    public String getTextColors() {
+        return textColors;
+    }
+
+    public void setTextColors(String textColors) {
+        this.textColors = textColors == null || textColors.isEmpty() ? "along" : textColors;
+    }
+
+    @Override
+    public String getImageColors() {
+        return imageColors;
+    }
+
+    public void setImageColors(String imageColors) {
+        this.imageColors = imageColors == null || imageColors.isEmpty() ? "own" : imageColors;
+    }
+
     public String getBlend() {
         return blend;
     }

@@ -1887,11 +1887,12 @@ public class DefaultDesignerService implements DesignerService {
             context.x = context.x < 0.5 ? context.x * 2 : (1 - context.x) * 2;
         }
 
-        double[] sample = new double[2];
+        // the color of the pixel through the palette, or the own one of an image
+        double[] sample = new double[5];
         PixelPatterns.sample(effect, cycles, context, sample);
         PixelPalette palette = effect.getPalette();
         List<PixelPaletteStop> stops = "preset".equals(palette.getRef()) ? PixelPalette.shadesOf(base) : palette.getStops();
-        double[] color = PixelPalette.colorOf(stops, palette.getBetween(), palette.getRepeat(), sample[0]);
+        double[] color = sample[2] >= 0 ? new double[]{sample[2], sample[3], sample[4]} : PixelPalette.colorOf(stops, palette.getBetween(), palette.getRepeat(), sample[0]);
         double[] lit = {color[0] * sample[1], color[1] * sample[1], color[2] * sample[1]};
 
         // the white part of the light on the white LED, if it is to light it

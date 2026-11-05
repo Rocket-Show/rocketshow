@@ -26,6 +26,21 @@ class PixelPatternsTest {
     }
 
     @Test
+    void readsThePictureOfATextOrAnImageLikeTheDesigner() {
+        PixelBitmap bitmap = DesignerJson.MAPPER.readValue("{\"width\": 2, \"height\": 1, \"channels\": 3, \"frames\": [\"/wAAAAD/\", \"!!!\"], \"durations\": [null, 300], \"letterStarts\": null}", PixelBitmap.class);
+
+        assertEquals(255, bitmap.value(bitmap.frame(0), 0, 0, 0));
+        assertEquals(255, bitmap.value(bitmap.frame(0), 1, 0, 2));
+        // outside of the picture, and in a frame which can't be read
+        assertEquals(0, bitmap.value(bitmap.frame(0), 2, 0, 0));
+        assertEquals(0, bitmap.frame(1).length);
+        // a frame without a length shows for 100 ms
+        assertEquals(0, bitmap.frameAt(0.2));
+        assertEquals(1, bitmap.frameAt(0.3));
+        assertEquals(List.of(), bitmap.getLetterStarts());
+    }
+
+    @Test
     void makesTheShadesOfAColorLikeTheDesigner() {
         List<PixelPaletteStop> shades = PixelPalette.shadesOf(new double[]{1, 0.5, 0});
 
@@ -45,7 +60,7 @@ class PixelPatternsTest {
     // how bright each pixel of a bar is at a moment
     private static double[] levels(PixelPatternSettings settings, double cycle, int columns) {
         double[] levels = new double[columns];
-        double[] result = new double[2];
+        double[] result = new double[5];
 
         for (int column = 0; column < columns; column++) {
             PixelContext context = new PixelContext();

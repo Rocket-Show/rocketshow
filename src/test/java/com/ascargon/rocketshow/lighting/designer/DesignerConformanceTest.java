@@ -118,42 +118,14 @@ class DesignerConformanceTest {
     // A pattern of the pixel effects at pixels and moments, through a palette: the place in the palette, the
     // brightness and the color of each
     private JsonNode pixelPattern(JsonNode input) {
-        JsonNode settingsNode = input.get("settings");
-        String pattern = text(settingsNode.get("pattern"));
-        double size = settingsNode.get("size").asDouble();
-        double softness = settingsNode.get("softness").asDouble();
-        String direction = text(settingsNode.get("direction"));
-        String shape = text(settingsNode.get("shape"));
-        boolean bounce = settingsNode.get("bounce").asBoolean();
-        PixelPatternSettings settings = new PixelPatternSettings() {
-            public String getPattern() {
-                return pattern;
-            }
-
-            public double getSize() {
-                return size;
-            }
-
-            public double getSoftness() {
-                return softness;
-            }
-
-            public String getDirection() {
-                return direction;
-            }
-
-            public String getShape() {
-                return shape;
-            }
-
-            public boolean isBounce() {
-                return bounce;
-            }
-        };
+        // the settings of the pattern, read like the ones of an effect (also the picture of a text or an image)
+        ObjectNode settingsNode = ((ObjectNode) input.get("settings")).deepCopy();
+        settingsNode.put("type", "pixel");
+        PixelPatternSettings settings = DesignerJson.MAPPER.treeToValue(settingsNode, EffectPixel.class);
         PixelPalette palette = DesignerJson.MAPPER.treeToValue(input.get("palette"), PixelPalette.class);
 
         ArrayNode samples = NODES.arrayNode();
-        double[] result = new double[2];
+        double[] result = new double[5];
 
         for (JsonNode sample : input.get("samples")) {
             JsonNode pixel = sample.get("pixel");
@@ -169,7 +141,8 @@ class DesignerConformanceTest {
             context.seed = pixel.get("seed").asInt();
 
             PixelPatterns.sample(settings, sample.get("cycle").asDouble(), context, result);
-            double[] color = palette.colorAt(result[0]);
+            // the color of the palette, or the own one of an image
+            double[] color = result[2] >= 0 ? new double[]{result[2], result[3], result[4]} : palette.colorAt(result[0]);
             samples.addArray().add(result[0]).add(result[1]).add(color[0]).add(color[1]).add(color[2]);
         }
 

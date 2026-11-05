@@ -26,4 +26,37 @@ interface PixelPatternSettings {
     // whether a comet runs back and forth instead of starting over
     boolean isBounce();
 
+    // the picture of a text or an image (see PixelBitmap), and how it is shown: how it scrolls ('left', 'right', 'up',
+    // 'down' or 'none', 'auto' for the way of the pattern: a text to the left, an image not), where a text which does
+    // not scroll is aligned ('left', 'center' or 'right'), how many pixels a text is moved up, how an image is fitted
+    // into the pixels ('contain', 'cover', 'stretch' or 'pixels', one of the image for each) and their colors: of a
+    // text 'along' it, of its 'letters' or 'one', of an image its 'own' or its brightness through the 'palette'
+    default PixelBitmap getBitmap() {
+        return null;
+    }
+
+    default String getScroll() {
+        return "auto";
+    }
+
+    default String getAlign() {
+        return "center";
+    }
+
+    default double getOffsetY() {
+        return 0;
+    }
+
+    default String getFit() {
+        return "contain";
+    }
+
+    default String getTextColors() {
+        return "along";
+    }
+
+    default String getImageColors() {
+        return "own";
+    }
+
 }

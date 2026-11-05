@@ -134,9 +134,74 @@ final class PixelPatterns {
         };
     }
 
+    // Where a pixel shows a text: the column and the row of the text in the picture. The text moves a pixel at a time,
+    // through the whole picture in a period, or stands aligned in it.
+    private static int[] textPosition(PixelPatternSettings settings, double cycle, PixelContext context, PixelBitmap bitmap) {
+        String scroll = settings.getScroll() == null || settings.getScroll().isEmpty() || "auto".equals(settings.getScroll()) ? "left" : settings.getScroll();
+        int across = (int) Math.floor(PixelMath.fract(cycle) * (bitmap.getWidth() + context.columns));
+        int down = (int) Math.floor(PixelMath.fract(cycle) * (bitmap.getHeight() + context.rows));
+        int top = (int) Math.floor((context.rows - bitmap.getHeight()) / 2.0) - PixelMath.toInt(settings.getOffsetY());
+        int x = switch (settings.getAlign() == null ? "" : settings.getAlign()) {
+            case "left" -> context.column;
+            case "right" -> context.column - (context.columns - bitmap.getWidth());
+            default -> context.column - (int) Math.floor((context.columns - bitmap.getWidth()) / 2.0);
+        };
+
+        return switch (scroll) {
+            case "right" -> new int[]{context.column - across + bitmap.getWidth(), context.row - top};
+            case "up" -> new int[]{x, context.row + down - context.rows};
+            case "down" -> new int[]{x, context.row - down + bitmap.getHeight()};
+            case "none" -> new int[]{x, context.row - top};
+            default -> new int[]{context.column + across - context.columns, context.row - top};
+        };
+    }
+
+    // Where a pixel shows an image, from 0 to 1 on each axis (outside of it beyond): fitted into the picture whole
+    // ('contain', with dark edges where it is narrower), filling it ('cover'), stretched over it or one pixel of the
+    // image for each pixel ('pixels', in the middle), scrolling around
+    private static double[] imagePosition(PixelPatternSettings settings, double cycle, PixelContext context, PixelBitmap bitmap) {
+        double u = context.x;
+        double v = context.y;
+        double pictureRatio = context.aspectY > 0 ? context.aspectX / context.aspectY : context.columns;
+        double imageRatio = (double) bitmap.getWidth() / bitmap.getHeight();
+
+        switch (settings.getFit() == null ? "" : settings.getFit()) {
+            case "cover" -> {
+                if (imageRatio > pictureRatio) {
+                    u = (u - 0.5) * (pictureRatio / imageRatio) + 0.5;
+                } else {
+                    v = (v - 0.5) * (imageRatio / pictureRatio) + 0.5;
+                }
+            }
+            case "stretch" -> {
+            }
+            case "pixels" -> {
+                u = (context.column - Math.floor((context.columns - bitmap.getWidth()) / 2.0) + 0.5) / bitmap.getWidth();
+                v = (context.row - Math.floor((context.rows - bitmap.getHeight()) / 2.0) + 0.5) / bitmap.getHeight();
+            }
+            default -> {
+                if (imageRatio > pictureRatio) {
+                    v = (v - 0.5) * (imageRatio / pictureRatio) + 0.5;
+                } else {
+                    u = (u - 0.5) * (pictureRatio / imageRatio) + 0.5;
+                }
+            }
+        }
+
+        return switch (settings.getScroll() == null ? "" : settings.getScroll()) {
+            case "left" -> new double[]{PixelMath.fract(u + cycle), v};
+            case "right" -> new double[]{PixelMath.fract(u - cycle), v};
+            case "up" -> new double[]{u, PixelMath.fract(v + cycle)};
+            case "down" -> new double[]{u, PixelMath.fract(v - cycle)};
+            default -> new double[]{u, v};
+        };
+    }
+
     // A pattern at a pixel and a moment: where it puts the pixel in the palette (any number, the palette repeats) into
-    // result[0] and how bright the pixel is (between 0 and 1) into result[1]. The moment is counted in periods of the
-    // effect since it started.
+    // result[0] and how bright the pixel is (between 0 and 1) into result[1]. An image showing its own colors gives the
+    // color of the pixel into result[2] to result[4] (red, green and blue, between 0 and 1) in place of the palette, the
+    // others -1 into result[2]. The moment is counted in periods of the effect since it started. The result has room for
+    // five numbers.
     static void sample(PixelPatternSettings settings, double cycle, PixelContext context, double[] result) {
         double size = settings.getSize();
         double softness = settings.getSoftness();
@@ -394,14 +459,84 @@ final class PixelPatterns {
                     set(result, height, 1 - PixelMath.smoothStep(value - edge, value + edge, height));
                 }
             }
+            case "text" -> {
+                // a text of a pixel for each pixel, scrolling through the picture
+                PixelBitmap bitmap = settings.getBitmap();
+
+                if (bitmap == null || bitmap.getWidth() <= 0 || bitmap.getHeight() <= 0) {
+                    set(result, 0, 0);
+                    return;
+                }
+
+                int[] position = textPosition(settings, cycle, context, bitmap);
+                int value = bitmap.value(bitmap.frame(0), position[0], position[1], 0);
+
+                if (value <= 0) {
+                    set(result, 0, 0);
+                    return;
+                }
+
+                double place = switch (settings.getTextColors() == null ? "" : settings.getTextColors()) {
+                    case "letters" -> {
+                        int letter = 0;
+
+                        for (Integer start : bitmap.getLetterStarts()) {
+                            if (start != null && start <= position[0]) {
+                                letter++;
+                            }
+                        }
+
+                        yield letter * 0.17;
+                    }
+                    case "one" -> 0;
+                    default -> (double) position[0] / bitmap.getWidth();
+                };
+
+                set(result, place, value / 255.0);
+            }
+            case "image" -> {
+                // an image or an animation, fitted into the picture
+                PixelBitmap bitmap = settings.getBitmap();
+
+                if (bitmap == null || bitmap.getWidth() <= 0 || bitmap.getHeight() <= 0) {
+                    set(result, 0, 0);
+                    return;
+                }
+
+                double[] position = imagePosition(settings, cycle, context, bitmap);
+
+                if (position[0] < 0 || position[0] >= 1 || position[1] < 0 || position[1] >= 1) {
+                    set(result, 0, 0);
+                    return;
+                }
+
+                byte[] frame = bitmap.frame(bitmap.frameAt(PixelMath.fract(cycle)));
+                int x = Math.min((int) Math.floor(position[0] * bitmap.getWidth()), bitmap.getWidth() - 1);
+                int y = Math.min((int) Math.floor(position[1] * bitmap.getHeight()), bitmap.getHeight() - 1);
+                int red = bitmap.value(frame, x, y, 0);
+                int green = bitmap.getChannels() == 3 ? bitmap.value(frame, x, y, 1) : red;
+                int blue = bitmap.getChannels() == 3 ? bitmap.value(frame, x, y, 2) : red;
+
+                if ("palette".equals(settings.getImageColors())) {
+                    // how bright it is, through the palette
+                    set(result, (red * 299 + green * 587 + blue * 114) / 255000.0, 1);
+                } else {
+                    set(result, 0, 1);
+                    result[2] = red / 255.0;
+                    result[3] = green / 255.0;
+                    result[4] = blue / 255.0;
+                }
+            }
             // a pattern of a newer designer
             default -> set(result, 0, 0);
         }
     }
 
+    // a place in the palette and a brightness, the color taken from the palette
     private static void set(double[] result, double place, double level) {
         result[0] = place;
         result[1] = level;
+        result[2] = -1;
     }
 
 }
