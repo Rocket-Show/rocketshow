@@ -31,8 +31,15 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings {
     // the shades of the color the preset puts on each pixel, unless a palette of its own is picked
     private PixelPalette palette = presetPalette();
 
-    // 'fixture' paints the pattern over each fixture on its own
+    // 'fixture' paints the pattern over each fixture on its own, 'stage' spreads one picture over all of them, as they
+    // hang on the stage: seen from the 'front' or from above ('top'), framed around the pixels of the preset (see
+    // PixelStage)
     private String spread = "fixture";
+    private String view = "front";
+
+    // a pixel with a white LED lights the white part of the color (the least of red, green and blue) with it, the rest
+    // with red, green and blue
+    private boolean whiteLed = false;
 
     // what it does with the color the preset puts on a pixel: 'replace' it, 'mask' it (the pattern only sets how bright
     // it is), 'add' to it or take the 'max' of both on each of red, green and blue
@@ -129,6 +136,22 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings {
 
     public void setSpread(String spread) {
         this.spread = spread == null || spread.isEmpty() ? "fixture" : spread;
+    }
+
+    public String getView() {
+        return view;
+    }
+
+    public void setView(String view) {
+        this.view = view == null || view.isEmpty() ? "front" : view;
+    }
+
+    public boolean isWhiteLed() {
+        return whiteLed;
+    }
+
+    public void setWhiteLed(Boolean whiteLed) {
+        this.whiteLed = Boolean.TRUE.equals(whiteLed);
     }
 
     public String getBlend() {

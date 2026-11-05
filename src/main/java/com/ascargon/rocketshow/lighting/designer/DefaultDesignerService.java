@@ -116,6 +116,10 @@ public class DefaultDesignerService implements DesignerService {
     // the chases of the presets of the loaded project, by preset (presets don't override equals)
     private Map<Preset, PresetChase> presetChases = new ConcurrentHashMap<>();
 
+    // the places of the parts of a preset in the picture of the stage they make up, by preset and view, for the pixel
+    // effects spread across the stage (see PixelStage)
+    private Map<Preset, Map<String, Map<CachedFixture, PixelContext>>> stagePixelPlaces = new ConcurrentHashMap<>();
+
     private long lastPlayTimeMillis;
 
     public DefaultDesignerService(
@@ -1868,9 +1872,11 @@ public class DefaultDesignerService implements DesignerService {
             base[i] = value == null ? 0 : value.getValue() / channels[i].getMaxValue();
         }
 
-        // where the part is in its fixture, every fixture starting the random looking patterns somewhere else
-        PixelContext context = getPixelPlace(cachedFixture).copy();
-        context.seed = PixelMath.toInt(effect.getSeed() * 7919 + fixtureIndex * 131);
+        // Where the part is in its fixture, every fixture starting the random looking patterns somewhere else. Spread
+        // across the stage, where it is in the picture of the stage, which is one for all of them.
+        boolean stage = "stage".equals(effect.getSpread());
+        PixelContext context = (stage ? getStagePixelPlace(preset.getPreset(), effect.getView(), cachedFixture) : getPixelPlace(cachedFixture)).copy();
+        context.seed = PixelMath.toInt(effect.getSeed() * 7919 + (stage ? 0 : fixtureIndex * 131));
 
         if (effect.isMirror()) {
             context.x = context.x < 0.5 ? context.x * 2 : (1 - context.x) * 2;
@@ -1881,26 +1887,94 @@ public class DefaultDesignerService implements DesignerService {
         PixelPalette palette = effect.getPalette();
         List<PixelPaletteStop> stops = "preset".equals(palette.getRef()) ? PixelPalette.shadesOf(base) : palette.getStops();
         double[] color = PixelPalette.colorOf(stops, palette.getBetween(), palette.getRepeat(), sample[0]);
+        double[] lit = {color[0] * sample[1], color[1] * sample[1], color[2] * sample[1]};
+
+        // the white part of the light on the white LED, if it is to light it
+        CachedFixtureChannel white = effect.isWhiteLed() ? getColorChannel(cachedFixture, FixtureCapability.FixtureCapabilityColor.White) : null;
+        double litWhite = 0;
+
+        if (white != null) {
+            litWhite = Math.min(Math.min(lit[0], lit[1]), lit[2]);
+
+            for (int i = 0; i < 3; i++) {
+                lit[i] = lit[i] - litWhite;
+            }
+        }
 
         for (int i = 0; i < 3; i++) {
-            if (channels[i] == null) {
+            if (channels[i] != null) {
+                mixPixelValue(effect, cachedFixture, channels[i], base[i], lit[i], sample[1], values, effectIntensityPercentage);
+            }
+        }
+
+        if (white != null) {
+            FixtureChannelValue value = getChannelValue(values, white.getName(), cachedFixture.getProfile().getUuid());
+            double baseWhite = value == null ? 0 : value.getValue() / white.getMaxValue();
+
+            mixPixelValue(effect, cachedFixture, white, baseWhite, litWhite, sample[1], values, effectIntensityPercentage);
+        }
+    }
+
+    // A color of a pixel the effect lights, blended with the one the preset puts on it (base, between 0 and 1): the
+    // light of the pattern (lit) in place of it, the base as bright as the pattern makes it (mask), the light added to it
+    // or the brighter of both
+    private void mixPixelValue(EffectPixel effect, CachedFixture cachedFixture, CachedFixtureChannel channel, double base, double lit, double level, List<FixtureChannelValue> values, double effectIntensityPercentage) {
+        double target = switch (effect.getBlend()) {
+            case "mask" -> base * level;
+            case "add" -> Math.min(base + lit, 1);
+            case "max" -> Math.max(base, lit);
+            default -> lit;
+        };
+
+        FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
+        fixtureChannelValue.setChannelName(channel.getName());
+        fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
+        fixtureChannelValue.setValue(channel.getMaxValue() * target);
+        mixChannelValue(values, fixtureChannelValue, effectIntensityPercentage);
+    }
+
+    // Where a part of a fixture is in the picture of the stage the parts of a preset make up (the ones lighting in
+    // colors, see PixelStage), seen from the front or from above. Worked out once for each preset and view.
+    private PixelContext getStagePixelPlace(Preset preset, String view, CachedFixture cachedFixture) {
+        Map<CachedFixture, PixelContext> places = stagePixelPlaces
+                .computeIfAbsent(preset, key -> new ConcurrentHashMap<>())
+                .computeIfAbsent(view, key -> calculateStagePixelPlaces(preset, view));
+        PixelContext place = places.get(cachedFixture);
+
+        return place == null ? getPixelPlace(cachedFixture) : place;
+    }
+
+    private Map<CachedFixture, PixelContext> calculateStagePixelPlaces(Preset preset, String view) {
+        Map<PresetFixtureKey, Integer> indices = getPresetChase(preset).fixtureIndices();
+        Map<String, PanTilt.StagePlacement> placements = PanTilt.getStagePlacements(project);
+        PanTilt.StagePlacement nowhere = new PanTilt.StagePlacement(new double[]{0, 0, 0}, new double[]{0, 0, 0});
+        List<CachedFixture> parts = new ArrayList<>();
+        List<double[]> positions = new ArrayList<>();
+
+        for (CachedFixture part : cachedFixtures) {
+            String pixelKey = part.getPixel() == null ? null : part.getPixel().getKey();
+
+            if (!indices.containsKey(new PresetFixtureKey(part.getFixture().getUuid(), pixelKey))
+                    || (getColorChannel(part, FixtureCapability.FixtureCapabilityColor.Red) == null
+                    && getColorChannel(part, FixtureCapability.FixtureCapabilityColor.Green) == null
+                    && getColorChannel(part, FixtureCapability.FixtureCapabilityColor.Blue) == null)) {
                 continue;
             }
 
-            double lit = color[i] * sample[1];
-            double target = switch (effect.getBlend()) {
-                case "mask" -> base[i] * sample[1];
-                case "add" -> Math.min(base[i] + lit, 1);
-                case "max" -> Math.max(base[i], lit);
-                default -> lit;
-            };
-
-            FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
-            fixtureChannelValue.setChannelName(channels[i].getName());
-            fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
-            fixtureChannelValue.setValue(channels[i].getMaxValue() * target);
-            mixChannelValue(values, fixtureChannelValue, effectIntensityPercentage);
+            PixelContext place = getPixelPlace(part);
+            PanTilt.StagePlacement placement = placements.getOrDefault(part.getFixture().getUuid(), nowhere);
+            parts.add(part);
+            positions.add(PixelStage.position(place, PixelStage.housingSize(part.getProfile(), place.columns, place.rows), placement, part.getFixture().getPositioning()));
         }
+
+        List<PixelContext> contexts = PixelStage.places(positions, view);
+        Map<CachedFixture, PixelContext> places = new HashMap<>();
+
+        for (int i = 0; i < parts.size(); i++) {
+            places.put(parts.get(i), contexts.get(i));
+        }
+
+        return places;
     }
 
     // the channel of a part of a fixture which lights in a color, the first one if there are several
@@ -2605,6 +2679,7 @@ public class DefaultDesignerService implements DesignerService {
         // afterwards
         cachedFixtures = new ArrayList<>();
         presetChases = new ConcurrentHashMap<>();
+        stagePixelPlaces = new ConcurrentHashMap<>();
 
         logger.debug("Calculate cached fixtures...");
 
