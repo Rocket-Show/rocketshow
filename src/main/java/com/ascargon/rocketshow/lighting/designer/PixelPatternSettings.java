@@ -15,10 +15,12 @@ interface PixelPatternSettings {
     // how soft its edges are, between 0 (hard) and 1
     double getSoftness();
 
-    // where it runs to: 'right', 'left', 'out' (from the middle), 'in' (to the middle), 'up' and 'down'
+    // where it runs to: 'right', 'left', 'out' (from the middle), 'in' (to the middle), 'up' and 'down', or which way
+    // it turns: 'cw' (clockwise, the default) and 'ccw'
     String getDirection();
 
-    // the shape of the shapes: 'circle', 'square', 'diamond', 'star' or 'heart'
+    // the shape of the shapes and the tunnel: 'circle', 'square', 'diamond', 'star' or 'heart'. The path of the orbit:
+    // 'circle', 'figure8', 'line' or 'wave', and the curve of the wave: 'sine', 'triangle', 'square' or 'sawtooth'.
     String getShape();
 
     // whether a comet runs back and forth instead of starting over

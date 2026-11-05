@@ -77,6 +77,41 @@ final class PixelPatterns {
         return context.rows > 1 && context.aspectY > 0.2;
     }
 
+    // where the dot of an orbit is at a moment of its period, from -1 to 1 on each axis (up being positive): the shapes
+    // of the movements of the moving heads (see EffectPanTilt)
+    private static double orbitX(double moment) {
+        return CycleSine.sin(moment);
+    }
+
+    private static double orbitY(String shape, double moment) {
+        return switch (shape == null ? "" : shape) {
+            case "figure8" -> CycleSine.sin(moment * 2);
+            case "line" -> CycleSine.sin(moment);
+            case "wave" -> CycleSine.sin(moment * 3);
+            default -> CycleSine.sin(moment + 0.25);
+        };
+    }
+
+    // a curve of a wave at a moment of its period, between 0 and 1
+    private static double waveCurve(String shape, double moment) {
+        return switch (shape == null ? "" : shape) {
+            case "triangle" -> PixelMath.triangle(moment);
+            case "square" -> moment < 0.5 ? 1 : 0;
+            case "sawtooth" -> moment;
+            default -> 0.5 + 0.5 * CycleSine.sin(moment);
+        };
+    }
+
+    // the place of a pixel counted from the end a stack piles up at, in pixels
+    private static int stackIndex(PixelContext context, String direction) {
+        return switch (direction == null ? "" : direction) {
+            case "left" -> context.column;
+            case "up" -> context.row;
+            case "down" -> context.rows - 1 - context.row;
+            default -> context.columns - 1 - context.column;
+        };
+    }
+
     // how far a point (from the middle, -1 to 1 on each axis, up being positive) is out in a shape: 1 on its outline
     private static double shapeDistance(double x, double y, String shape) {
         return switch (shape == null ? "" : shape) {
@@ -223,6 +258,140 @@ final class PixelPatterns {
                     double heat = PixelMath.clamp01(noise * 1.3 - height * (1.15 - size * 0.65) + 0.12);
 
                     set(result, heat, PixelMath.clamp01(heat * 1.7));
+                }
+            }
+            case "center" -> {
+                // pulses running from the middle out to the ends (or the edges of a matrix), or in from them
+                double dx = (context.x - 0.5) * 2 * context.aspectX;
+                double dy = (context.y - 0.5) * 2 * context.aspectY;
+                double distance = isMatrix(context) ? Math.min(1, Math.sqrt(dx * dx + dy * dy)) : Math.abs(context.x - 0.5) * 2;
+                double position = "in".equals(direction) ? 1 - distance : distance;
+                double width = Math.max(size, 0.03);
+                double middle = PixelMath.fract(cycle) * (1 + width) - width / 2;
+                double edge = Math.max(softness * width * 0.5, 1.0 / Math.max(context.columns, context.rows));
+
+                set(result, Math.floor(cycle) * 0.25 + position * 0.3, PixelMath.band(Math.abs(position - middle), width / 2, edge));
+            }
+            case "stripes" -> {
+                // evenly spaced stripes marching along, each in its own color
+                double spacing = 0.08 + size * 0.5;
+                double stripes = along(context, direction) / spacing - cycle + 0.25;
+                double edge = Math.max(0.04 + softness * 0.2, 0.5 / (pixelsAlong(context, direction) * spacing));
+
+                set(result, Math.floor(stripes) * 0.17, PixelMath.band(Math.abs(PixelMath.fract(stripes) - 0.5), 0.25, edge));
+            }
+            case "stack" -> {
+                // pixels dropping in one by one and piling up at the far end, until all of them are there (each row or
+                // column of a matrix on its own)
+                int count = Math.max(2, pixelsAlong(context, direction));
+                int index = Math.min(count - 1, Math.max(0, stackIndex(context, direction)));
+                boolean vertical = "up".equals(direction) || "down".equals(direction);
+                double lane = isMatrix(context) ? PixelMath.hash(vertical ? context.column : 0, vertical ? 0 : context.row, 9) : 0;
+                double progress = PixelMath.fract(cycle + lane);
+                double steps = progress * (count + 1);
+                double step = Math.floor(steps);
+                double place = (double) index / (count - 1);
+
+                if (step >= count || index < step) {
+                    set(result, place, 1);
+                } else {
+                    // the one dropping in, from the near end down to the pile
+                    double falling = count - 1 - (steps - step) * (count - 1 - step);
+
+                    set(result, place, index == Math.floor(falling + 0.5) ? 1 : 0);
+                }
+            }
+            case "sweep" -> {
+                // a beam turning around the middle with a trail behind it, like a radar
+                double turn = ArcTangent.atan2((context.y - 0.5) * context.aspectY, (context.x - 0.5) * context.aspectX) / FULL_CYCLE;
+                double behind = PixelMath.fract(cycle - ("ccw".equals(direction) ? -turn : turn));
+                double trail = 0.12 + size * 0.7;
+                double left = 1 - behind / trail;
+
+                set(result, 1 - (behind / trail) * 0.8, behind < trail ? left * left : 0);
+            }
+            case "spiral" -> {
+                // arms of a spiral turning and seeming to pull inwards
+                double dx = (context.x - 0.5) * 2 * context.aspectX;
+                double dy = (context.y - 0.5) * 2 * context.aspectY;
+                double distance = Math.sqrt(dx * dx + dy * dy);
+                double turn = ArcTangent.atan2(dy, dx) / FULL_CYCLE;
+                double arms = Math.floor(1.5 + size * 5);
+                double arm = PixelMath.fract(turn * arms + distance * 1.4 + ("ccw".equals(direction) ? cycle : -cycle));
+
+                set(result, distance * 0.7, PixelMath.band(Math.abs(arm - 0.5), 0.25, 0.04 + softness * 0.22));
+            }
+            case "checker" -> {
+                // squares swapping every half period, fading over to the other color where it is soft
+                double cells = Math.floor(1.5 + size * 6);
+                double odd = (Math.floor(context.column / cells) + Math.floor(context.row / cells)) % 2;
+                double half = PixelMath.fract(cycle) < 0.5 ? 0 : 1;
+                double fade = PixelMath.smoothStep(0, softness * 0.5 + 0.001, PixelMath.fract(cycle * 2));
+
+                set(result, odd, odd == half ? fade : 1 - fade);
+            }
+            case "rain" -> {
+                // drops falling down the columns, each column at a speed of its own
+                int column = context.column + context.seed;
+                double speed = 0.6 + PixelMath.hash(column, 0, 3) * 0.9;
+                double tail = 0.15 + size * 0.6;
+                double brightest = 0;
+
+                for (int drop = 0; drop < 2; drop++) {
+                    double behind = PixelMath.fract(cycle * speed + PixelMath.hash(column, drop, 5)) * (1 + tail) - context.y;
+
+                    if (behind >= 0 && behind < tail) {
+                        brightest = Math.max(brightest, 1 - behind / tail);
+                    }
+                }
+
+                set(result, brightest, brightest * brightest);
+            }
+            case "tunnel" -> {
+                // frames flying outwards, as if driving through a tunnel: the deeper the closer together
+                double x = (context.x - 0.5) * 2 * context.aspectX;
+                double y = -(context.y - 0.5) * 2 * context.aspectY;
+                double distance = shapeDistance(x, y, settings.getShape());
+                double depth = (0.25 + size * 0.75) / (distance + 0.15) + cycle;
+                double frame = PixelMath.band(Math.abs(PixelMath.fract(depth) - 0.5), 0.22, 0.05 + softness * 0.3);
+
+                set(result, PixelMath.fract(Math.floor(depth) * 0.27), frame * PixelMath.clamp01(distance * 1.6 + 0.15));
+            }
+            case "orbit" -> {
+                // a glowing dot moving along the shape of a movement of the moving heads, with a trail
+                double radius = 0.08 + size * 0.25;
+                double gap = 0.004 + softness * 0.03;
+                double level = 0;
+                double place = 0;
+
+                for (int behind = 0; behind < 7; behind++) {
+                    double moment = PixelMath.fract(cycle - behind * gap);
+                    double dx = (context.x - (0.5 + 0.36 * orbitX(moment))) * context.aspectX;
+                    double dy = (context.y - (0.5 - 0.36 * orbitY(settings.getShape(), moment))) * context.aspectY;
+                    double distance = Math.sqrt(dx * dx + dy * dy) / radius;
+                    double glow = PixelMath.clamp01(1 - distance * distance * 0.5);
+                    double weight = glow * glow * (1 - behind / 7.0);
+
+                    if (weight > level) {
+                        level = weight;
+                        place = moment;
+                    }
+                }
+
+                set(result, place, level);
+            }
+            case "wave" -> {
+                // a matrix filled up to a curve running along, a bar showing the curve itself
+                double moment = PixelMath.fract(along(context, "left".equals(direction) ? "left" : "right") * (0.4 + (1 - size) * 2.2) - cycle);
+                double value = 0.08 + 0.84 * waveCurve(settings.getShape(), moment);
+
+                if (!isMatrix(context)) {
+                    set(result, value, value);
+                } else {
+                    double height = 1 - context.y;
+                    double edge = 0.5 / context.rows;
+
+                    set(result, height, 1 - PixelMath.smoothStep(value - edge, value + edge, height));
                 }
             }
             // a pattern of a newer designer

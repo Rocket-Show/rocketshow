@@ -32,6 +32,51 @@ class PixelPatternsTest {
         assertEquals(List.of("#ff8000", "#ffdfbf"), shades.stream().map(PixelPaletteStop::getColor).toList());
     }
 
+    // a pattern with its settings, the others at their defaults
+    private static PixelPatternSettings settings(String pattern, String direction) {
+        EffectPixel effect = new EffectPixel();
+        effect.setPattern(pattern);
+        effect.setSize(0.2);
+        effect.setSoftness(0);
+        effect.setDirection(direction);
+        return effect;
+    }
+
+    // how bright each pixel of a bar is at a moment
+    private static double[] levels(PixelPatternSettings settings, double cycle, int columns) {
+        double[] levels = new double[columns];
+        double[] result = new double[2];
+
+        for (int column = 0; column < columns; column++) {
+            PixelContext context = new PixelContext();
+            context.x = (column + 0.5) / columns;
+            context.column = column;
+            context.columns = columns;
+            context.aspectY = 1.0 / columns;
+            PixelPatterns.sample(settings, cycle, context, result);
+            levels[column] = result[1];
+        }
+
+        return levels;
+    }
+
+    @Test
+    void stacksThePixelsAtTheFarEndUntilAllOfThemAreThere() {
+        // the first one piled up at the far end, the second one dropping, then all of them
+        assertArrayEquals(new double[]{0, 1, 0, 1}, levels(settings("stack", "right"), 0.3, 4));
+        assertArrayEquals(new double[]{1, 0, 1, 0}, levels(settings("stack", "left"), 0.3, 4));
+        assertArrayEquals(new double[]{1, 1, 1, 1}, levels(settings("stack", "right"), 0.9, 4));
+    }
+
+    @Test
+    void runsPulsesFromTheMiddleOutToTheEndsOfABar() {
+        double[] early = levels(settings("center", "out"), 0.1, 10);
+        double[] late = levels(settings("center", "out"), 0.9, 10);
+
+        assertTrue(early[4] > early[0]);
+        assertTrue(late[0] > late[4]);
+    }
+
     @Test
     void cutsANumberTo32BitsLikeTheDesigner() {
         assertEquals(3, PixelMath.toInt(3.9));
