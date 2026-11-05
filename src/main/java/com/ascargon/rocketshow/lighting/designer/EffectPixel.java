@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  * @author Moritz A. Vieli
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EffectPixel extends EffectCurve implements PixelPatternSettings {
+public class EffectPixel extends EffectCurve implements PixelPatternSettings, PixelAudio.Settings {
 
     // see PixelPatterns
     private String pattern = "chase";
@@ -225,6 +225,82 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings {
 
     public void setImageColors(String imageColors) {
         this.imageColors = imageColors == null || imageColors.isEmpty() ? "own" : imageColors;
+    }
+
+    // The audio it follows: none ('off') or the one of the composition playing, and how (see PixelAudio). The level
+    // meter and the wave of the audio show it, any other pattern follows it with its brightness or with its size.
+    private String audioSource = "off";
+    private String audioBand = "full";
+    private double audioGainDb = 0;
+    private double audioFloorDb = -60;
+    private double audioAttackMillis = 20;
+    private double audioReleaseMillis = 300;
+    private String audioFollows = "brightness";
+
+    public String getAudioSource() {
+        return audioSource;
+    }
+
+    public void setAudioSource(String audioSource) {
+        this.audioSource = audioSource == null || audioSource.isEmpty() ? "off" : audioSource;
+    }
+
+    @Override
+    public String getAudioBand() {
+        return audioBand;
+    }
+
+    public void setAudioBand(String audioBand) {
+        this.audioBand = audioBand == null || audioBand.isEmpty() ? "full" : audioBand;
+    }
+
+    @Override
+    public double getAudioGainDb() {
+        return audioGainDb;
+    }
+
+    public void setAudioGainDb(Double audioGainDb) {
+        this.audioGainDb = audioGainDb == null ? 0 : audioGainDb;
+    }
+
+    @Override
+    public double getAudioFloorDb() {
+        return audioFloorDb;
+    }
+
+    public void setAudioFloorDb(Double audioFloorDb) {
+        this.audioFloorDb = audioFloorDb == null ? -60 : audioFloorDb;
+    }
+
+    @Override
+    public double getAudioAttackMillis() {
+        return audioAttackMillis;
+    }
+
+    public void setAudioAttackMillis(Double audioAttackMillis) {
+        this.audioAttackMillis = audioAttackMillis == null ? 20 : audioAttackMillis;
+    }
+
+    @Override
+    public double getAudioReleaseMillis() {
+        return audioReleaseMillis;
+    }
+
+    public void setAudioReleaseMillis(Double audioReleaseMillis) {
+        this.audioReleaseMillis = audioReleaseMillis == null ? 300 : audioReleaseMillis;
+    }
+
+    public String getAudioFollows() {
+        return audioFollows;
+    }
+
+    public void setAudioFollows(String audioFollows) {
+        this.audioFollows = audioFollows == null || audioFollows.isEmpty() ? "brightness" : audioFollows;
+    }
+
+    // the level meter and the wave of the audio show it
+    boolean showsAudio() {
+        return "meter".equals(getPattern()) || "scope".equals(getPattern());
     }
 
     public String getBlend() {

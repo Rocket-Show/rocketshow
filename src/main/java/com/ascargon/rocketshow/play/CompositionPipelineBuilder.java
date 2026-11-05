@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.play;
 
+import com.ascargon.rocketshow.audio.AudioAnalysisService;
 import com.ascargon.rocketshow.audio.ActivityNotificationAudioService;
 import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
@@ -28,6 +29,7 @@ import org.freedesktop.gstreamer.message.Message;
 import org.freedesktop.gstreamer.message.MessageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.InvalidMidiDataException;
@@ -63,6 +65,16 @@ public class CompositionPipelineBuilder {
     private final AudioService audioService;
     private final MidiRouterFactory midiRouterFactory;
     private final HdmiService hdmiService;
+    private final AudioAnalysisService audioAnalysisService;
+
+    // the names the level of the monitor and the analysis of the pixel effects start with, which tell their messages
+    // apart: the monitor's every second, the analysis' every 20 ms
+    private static final String MONITOR_LEVEL_NAME = "level_";
+    private static final String ANALYSIS_LEVEL_NAME = "analysislevel_";
+    private static final String ANALYSIS_SPECTRUM_NAME = "analysisspectrum_";
+
+    // the bands the spectrum of the analysis is measured in, from 0 Hz to half the sample rate
+    private static final int ANALYSIS_SPECTRUM_BANDS = 128;
 
     public CompositionPipelineBuilder(
             SettingsService settingsService,
@@ -74,6 +86,22 @@ public class CompositionPipelineBuilder {
             MidiRouterFactory midiRouterFactory,
             HdmiService hdmiService
     ) {
+        this(settingsService, capabilitiesService, activityNotificationAudioService, activityNotificationMidiService, operatingSystemInformationService, audioService, midiRouterFactory, hdmiService, new AudioAnalysisService());
+    }
+
+    @Autowired
+    public CompositionPipelineBuilder(
+            SettingsService settingsService,
+            CapabilitiesService capabilitiesService,
+            ActivityNotificationAudioService activityNotificationAudioService,
+            ActivityNotificationMidiService activityNotificationMidiService,
+            OperatingSystemInformationService operatingSystemInformationService,
+            AudioService audioService,
+            MidiRouterFactory midiRouterFactory,
+            HdmiService hdmiService,
+            AudioAnalysisService audioAnalysisService
+    ) {
+        this.audioAnalysisService = audioAnalysisService;
         this.settingsService = settingsService;
         this.capabilitiesService = capabilitiesService;
         this.activityNotificationAudioService = activityNotificationAudioService;
@@ -175,6 +203,11 @@ public class CompositionPipelineBuilder {
         CompositionPipeline compositionPipeline = new CompositionPipeline(this, composition, masterPipeline, listener, recreateExecutor, midiMapping, midiMessageParser);
 
         if (masterPipeline != null) {
+            // what the analysis of the audio measured belongs to the composition before
+            if (!isSample) {
+                audioAnalysisService.clear();
+            }
+
             connectMasterBus(compositionPipeline, listener);
 
             // Prepare the audio devices used by the master files and keep the mixers to link into.
@@ -227,7 +260,22 @@ public class CompositionPipelineBuilder {
             if (message.getType().equals(MessageType.ELEMENT)) {
                 Structure structure = message.getStructure();
 
-                if (structure.getName().equals("level")) {
+                String sourceName = message.getSource() == null ? "" : message.getSource().getName();
+
+                if (structure.getName().equals("level") && sourceName.startsWith(ANALYSIS_LEVEL_NAME)) {
+                    try {
+                        // the analysis of the audio, which the pixel effects follow
+                        audioAnalysisService.addLevel(streamTimeNanos(structure), structure.getDoubles("rms"), structure.getDoubles("peak"));
+                    } catch (Exception e) {
+                        logger.error("Could not process the level of the analysis of the audio", e);
+                    }
+                } else if (structure.getName().equals("spectrum") && sourceName.startsWith(ANALYSIS_SPECTRUM_NAME)) {
+                    try {
+                        audioAnalysisService.addSpectrum(streamTimeNanos(structure), structure.getValues(Float.class, "magnitude"), settingsService.getSettings().getAudioRate());
+                    } catch (Exception e) {
+                        logger.error("Could not process the spectrum of the analysis of the audio", e);
+                    }
+                } else if (structure.getName().equals("level")) {
                     try {
                         // We got a level message
                         activityNotificationAudioService.notifyClients(structure.getDoubles("peak"));
@@ -239,6 +287,12 @@ public class CompositionPipelineBuilder {
         });
 
         GstApi.GST_API.gst_object_unref(bus);
+    }
+
+    // where in the stream a measurement of the audio was made, in nanoseconds
+    private static long streamTimeNanos(Structure structure) {
+        Object streamTime = structure.getValue("stream-time");
+        return streamTime instanceof Number number ? number.longValue() : 0;
     }
 
     // The tick GStreamer's midiparse sends every 10 milliseconds, which is no part of the file
@@ -556,6 +610,13 @@ public class CompositionPipelineBuilder {
     // Build the output chain (mixer -> capsfilter -> [level] -> queue -> volume -> sink) for one
     // audio device into the given pipeline and return the mixer to link audio sources into. Public for the self-test.
     public Element buildAudioOutputChain(Pipeline target, AudioDevice audioDevice, boolean provideClock, boolean enableLevel, List<Element> volumeListTarget) {
+        return buildAudioOutputChain(target, audioDevice, provideClock, enableLevel, false, volumeListTarget);
+    }
+
+    // The same, with the analysis of the audio the pixel effects follow, if asked: a level and a spectrum every 20 ms
+    // after the level of the monitor (mixer -> capsfilter -> [level] -> [analysis level -> spectrum] -> queue ->
+    // volume -> sink), before the volume, so the lights don't change with it.
+    Element buildAudioOutputChain(Pipeline target, AudioDevice audioDevice, boolean provideClock, boolean enableLevel, boolean enableAnalysis, List<Element> volumeListTarget) {
         String audioDeviceAlsaName = audioService.getAudioDeviceAlsaName(audioDevice);
 
         Element audioMixer = ElementFactory.make("audiomixer", "audiomixer_" + audioDeviceAlsaName);
@@ -584,12 +645,39 @@ public class CompositionPipelineBuilder {
             target.add(level);
         }
 
-        if (level == null) {
-            capsFilter.link(queue);
-        } else {
-            capsFilter.link(level);
-            level.link(queue);
+        // the elements between the capsfilter and the queue, one after the other
+        List<Element> analyzers = new ArrayList<>();
+
+        if (level != null) {
+            analyzers.add(level);
         }
+
+        if (enableAnalysis) {
+            Element analysisLevel = ElementFactory.make("level", ANALYSIS_LEVEL_NAME + audioDeviceAlsaName);
+            analysisLevel.set("interval", (long) AudioAnalysisService.FRAME_MILLIS * 1000000);
+            analysisLevel.set("post-messages", true);
+            target.add(analysisLevel);
+            analyzers.add(analysisLevel);
+
+            Element spectrum = ElementFactory.make("spectrum", ANALYSIS_SPECTRUM_NAME + audioDeviceAlsaName);
+            spectrum.set("bands", ANALYSIS_SPECTRUM_BANDS);
+            spectrum.set("interval", (long) AudioAnalysisService.FRAME_MILLIS * 1000000);
+            spectrum.set("threshold", (int) AudioAnalysisService.SILENCE_DB);
+            spectrum.set("post-messages", true);
+            spectrum.set("message-magnitude", true);
+            spectrum.set("message-phase", false);
+            target.add(spectrum);
+            analyzers.add(spectrum);
+        }
+
+        Element previous = capsFilter;
+
+        for (Element analyzer : analyzers) {
+            previous.link(analyzer);
+            previous = analyzer;
+        }
+
+        previous.link(queue);
 
         Element volume = ElementFactory.make("volume", "volume_" + audioDeviceAlsaName);
         target.add(volume);
@@ -612,8 +700,12 @@ public class CompositionPipelineBuilder {
         // Level monitoring is only added on the master pipeline (drives the audio monitor)
         boolean enableLevel = !isSample && settingsService.getSettings().getEnableMonitor();
 
+        // the audio the pixel effects follow is analyzed on the first audio device, if a pixel effect follows it
+        boolean enableAnalysis = !isSample && audioAnalysisService.isRequired();
+
         for (AudioDevice audioDevice : getAudioDeviceList(compositionFileList)) {
-            Element audioMixer = buildAudioOutputChain(ctx.getMasterPipeline(), audioDevice, provideClockFirstAudioDevice, enableLevel, ctx.getVolumeList());
+            Element audioMixer = buildAudioOutputChain(ctx.getMasterPipeline(), audioDevice, provideClockFirstAudioDevice, enableLevel, enableAnalysis, ctx.getVolumeList());
+            enableAnalysis = false;
             audioMixerList.put(audioDevice, audioMixer);
             provideClockFirstAudioDevice = false;
         }

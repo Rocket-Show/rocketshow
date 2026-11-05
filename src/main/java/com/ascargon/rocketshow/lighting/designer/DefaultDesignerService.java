@@ -11,7 +11,9 @@ import com.ascargon.rocketshow.util.FileNames;
 import org.freedesktop.gstreamer.Pipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.ascargon.rocketshow.audio.AudioAnalysisService;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
@@ -134,12 +136,32 @@ public class DefaultDesignerService implements DesignerService {
 
     private long lastPlayTimeMillis;
 
+    // the analysis of the audio of the composition playing, which the pixel effects follow, and what a frame knows of
+    // it while it is worked out: its moment, the audio of each effect following it and the settings of the ones
+    // following it with their size
+    private final AudioAnalysisService audioAnalysisService;
+    private double frameTimeMillis;
+    private final Map<EffectPixel, PixelAudio> frameAudio = new HashMap<>();
+    private final Map<EffectPixel, PixelPatternSettings> frameSizedSettings = new HashMap<>();
+
     public DefaultDesignerService(
             SettingsService settingsService,
             FileFilterService fileFilterService,
             LightingService lightingService,
             FixturePixelGroupResolveService fixturePixelGroupResolveService
     ) {
+        this(settingsService, fileFilterService, lightingService, fixturePixelGroupResolveService, new AudioAnalysisService());
+    }
+
+    @Autowired
+    public DefaultDesignerService(
+            SettingsService settingsService,
+            FileFilterService fileFilterService,
+            LightingService lightingService,
+            FixturePixelGroupResolveService fixturePixelGroupResolveService,
+            AudioAnalysisService audioAnalysisService
+    ) {
+        this.audioAnalysisService = audioAnalysisService;
         this.settingsService = settingsService;
         this.fileFilterService = fileFilterService;
         this.lightingService = lightingService;
@@ -1611,6 +1633,9 @@ public class DefaultDesignerService implements DesignerService {
     private Map<CachedFixture, List<FixtureChannelValue>> getChannelValues(double timeMillis, List<PresetRegionScene> presets) {
         // Loop over all relevant presets and calc the property values from the presets (capabilities and effects)
         HashMap<CachedFixture, List<FixtureChannelValue>> calculatedFixtures = new HashMap<>();
+        frameTimeMillis = timeMillis;
+        frameAudio.clear();
+        frameSizedSettings.clear();
 
         if (project == null) {
             logger.trace("No project set. Skip fixture calculation.");
@@ -1887,9 +1912,20 @@ public class DefaultDesignerService implements DesignerService {
             context.x = context.x < 0.5 ? context.x * 2 : (1 - context.x) * 2;
         }
 
+        // The audio it follows: shown by the level meter and the wave of the audio, followed with its brightness or its
+        // size by the other patterns
+        PixelAudio audio = getPixelAudio(effect);
+        double audioLevel = audio != null && !effect.showsAudio() ? audio.level() : 1;
+        boolean followsSize = audio != null && !effect.showsAudio() && "size".equals(effect.getAudioFollows());
+        PixelPatternSettings settings = followsSize ? getSizedSettings(effect, audioLevel) : effect;
+
         // the color of the pixel through the palette, or the own one of an image
         double[] sample = new double[5];
-        PixelPatterns.sample(effect, cycles, context, sample);
+        PixelPatterns.sample(settings, cycles, context, audio, sample);
+
+        if (!followsSize) {
+            sample[1] = sample[1] * audioLevel;
+        }
         PixelPalette palette = effect.getPalette();
         List<PixelPaletteStop> stops = "preset".equals(palette.getRef()) ? PixelPalette.shadesOf(base) : palette.getStops();
         double[] color = sample[2] >= 0 ? new double[]{sample[2], sample[3], sample[4]} : PixelPalette.colorOf(stops, palette.getBetween(), palette.getRepeat(), sample[0]);
@@ -1919,6 +1955,110 @@ public class DefaultDesignerService implements DesignerService {
 
             mixPixelValue(effect, cachedFixture, white, baseWhite, litWhite, sample[1], values, effectIntensityPercentage);
         }
+    }
+
+    // the audio a pixel effect follows at the moment of the frame, none for one which follows none
+    private PixelAudio getPixelAudio(EffectPixel effect) {
+        if (!"composition".equals(effect.getAudioSource())) {
+            return null;
+        }
+
+        return frameAudio.computeIfAbsent(effect, key -> new PixelAudio(audioAnalysisService::frame, frameTimeMillis, effect));
+    }
+
+    // the settings of a pixel effect with its size following the audio, once in a frame
+    private PixelPatternSettings getSizedSettings(EffectPixel effect, double audioLevel) {
+        return frameSizedSettings.computeIfAbsent(effect, key -> new PixelPatternSettings() {
+            // the size the audio lets it have
+            private final double size = effect.getSize() * audioLevel;
+
+            @Override
+            public String getPattern() {
+                return effect.getPattern();
+            }
+
+            @Override
+            public double getSize() {
+                return size;
+            }
+
+            @Override
+            public double getSoftness() {
+                return effect.getSoftness();
+            }
+
+            @Override
+            public String getDirection() {
+                return effect.getDirection();
+            }
+
+            @Override
+            public String getShape() {
+                return effect.getShape();
+            }
+
+            @Override
+            public boolean isBounce() {
+                return effect.isBounce();
+            }
+
+            @Override
+            public PixelBitmap getBitmap() {
+                return effect.getBitmap();
+            }
+
+            @Override
+            public String getScroll() {
+                return effect.getScroll();
+            }
+
+            @Override
+            public String getAlign() {
+                return effect.getAlign();
+            }
+
+            @Override
+            public double getOffsetY() {
+                return effect.getOffsetY();
+            }
+
+            @Override
+            public String getFit() {
+                return effect.getFit();
+            }
+
+            @Override
+            public String getTextColors() {
+                return effect.getTextColors();
+            }
+
+            @Override
+            public String getImageColors() {
+                return effect.getImageColors();
+            }
+        });
+    }
+
+    // whether a project has a pixel effect following the audio of the composition
+    static boolean followsAudio(Project project) {
+        if (project == null || project.getPresets() == null) {
+            return false;
+        }
+
+        for (Preset preset : project.getPresets()) {
+            for (Effect effect : preset.getEffects() == null ? List.<Effect>of() : preset.getEffects()) {
+                if (effect instanceof EffectPixel pixel && "composition".equals(pixel.getAudioSource())) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    // Package visible for the conformance cases of the designer, which play recorded analyses
+    AudioAnalysisService getAudioAnalysisService() {
+        return audioAnalysisService;
     }
 
     // A color of a pixel the effect lights, blended with the one the preset puts on it (base, between 0 and 1): the
@@ -3286,6 +3426,9 @@ public class DefaultDesignerService implements DesignerService {
 
         // a preview names the composition it plays, if any (see setPreviewComposition)
         this.composition = compositionPlayer == null ? null : getCompositionByName(project, compositionPlayer.getComposition().getName());
+
+        // the pipeline of a composition measures the audio while the project has an effect following it
+        audioAnalysisService.setRequired(followsAudio(project));
 
         // Create the caches
         updateCachedFixtures();

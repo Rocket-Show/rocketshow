@@ -218,6 +218,21 @@ class DesignerDmxTest {
     }
 
     @Test
+    void measuresTheAudioOnlyForAProjectWithAnEffectFollowingIt() {
+        Project project = new Project();
+        assertFalse(DefaultDesignerService.followsAudio(project));
+
+        Preset preset = new Preset();
+        EffectPixel effect = new EffectPixel();
+        preset.setEffects(new ArrayList<>(List.of(effect)));
+        project.setPresets(new ArrayList<>(List.of(preset)));
+        assertFalse(DefaultDesignerService.followsAudio(project));
+
+        effect.setAudioSource("composition");
+        assertTrue(DefaultDesignerService.followsAudio(project));
+    }
+
+    @Test
     void keepsTheDimmersOfAProjectOfBeforeOff() throws Exception {
         ObjectNode project = project();
         addPreset(project, "Red", List.of("par-1"), List.of(color(project, "Red", 1.0)));

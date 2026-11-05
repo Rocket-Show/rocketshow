@@ -328,9 +328,24 @@ class DesignerConformanceTest {
 
     // The values the engine gives every fixture (and pixel) of a project at the passed times, the way it plays the
     // timeline of a composition, the selected preset or the selected scenes of the designer's live preview
-    private JsonNode channelValues(JsonNode project, JsonNode preview, JsonNode times) {
+    private JsonNode channelValues(JsonNode project, JsonNode preview, JsonNode times, JsonNode audio) {
         DefaultDesignerService designerService = designerService();
         designerService.load(null, DesignerJson.MAPPER.treeToValue(resolveProfiles(project), Project.class), null);
+
+        // the analysis of the audio the pixel effects follow, recorded (none: silence)
+        if (audio != null && audio.has("frames")) {
+            int index = 0;
+
+            for (JsonNode frame : audio.get("frames")) {
+                double[] values = new double[frame.size()];
+
+                for (int i = 0; i < values.length; i++) {
+                    values[i] = frame.get(i).asDouble();
+                }
+
+                designerService.getAudioAnalysisService().setFrame(index++, values);
+            }
+        }
 
         String mode = preview.get("mode").asString();
         designerService.setPreviewPreset(false);
@@ -378,7 +393,7 @@ class DesignerConformanceTest {
         ArrayNode runs = NODES.arrayNode();
 
         for (JsonNode run : input.get("runs")) {
-            runs.add(channelValues(input.get("project"), run.get("preview"), run.get("times")));
+            runs.add(channelValues(input.get("project"), run.get("preview"), run.get("times"), input.get("audio")));
         }
 
         return runs;

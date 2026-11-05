@@ -203,6 +203,12 @@ final class PixelPatterns {
     // others -1 into result[2]. The moment is counted in periods of the effect since it started. The result has room for
     // five numbers.
     static void sample(PixelPatternSettings settings, double cycle, PixelContext context, double[] result) {
+        sample(settings, cycle, context, null, result);
+    }
+
+    // the same, with the audio the effect follows (none for one which follows none), which the level meter and the
+    // wave of the audio show
+    static void sample(PixelPatternSettings settings, double cycle, PixelContext context, PixelAudio audio, double[] result) {
         double size = settings.getSize();
         double softness = settings.getSoftness();
         String direction = settings.getDirection();
@@ -457,6 +463,40 @@ final class PixelPatterns {
                     double edge = 0.5 / context.rows;
 
                     set(result, height, 1 - PixelMath.smoothStep(value - edge, value + edge, height));
+                }
+            }
+            case "meter" -> {
+                // A bar filled up to how loud the audio is, a matrix with a column for each band from the lowest to the
+                // highest, like an equalizer. Without audio, a curve going up and down fills it.
+                if (!isMatrix(context)) {
+                    double position = along(context, direction);
+                    double edge = 0.5 / pixelsAlong(context, direction);
+                    double level = audio != null ? audio.level() : PixelMath.triangle(cycle);
+
+                    set(result, position, 1 - PixelMath.smoothStep(level - edge, level + edge, position));
+                } else {
+                    int band = Math.min(PixelAudio.BANDS - 1, (int) Math.floor(((context.column + 0.5) / context.columns) * PixelAudio.BANDS));
+                    double level = audio != null ? audio.band(band) : PixelMath.triangle(cycle + PixelMath.hash(context.column, 0, 4) * 0.5);
+                    double height = 1 - context.y;
+                    double edge = 0.5 / context.rows;
+
+                    set(result, height, 1 - PixelMath.smoothStep(level - edge, level + edge, height));
+                }
+            }
+            case "scope" -> {
+                // How loud the audio was, scrolling along: the newest at the end it runs to, a matrix filled up to it.
+                // Across the pixels from half a second up to five. Without audio, a curve running along.
+                int frames = 25 + (int) Math.floor(size * 225);
+                int back = (int) Math.floor((1 - along(context, "left".equals(direction) ? "left" : "right")) * frames);
+                double level = audio != null ? audio.levelAgo(back) : PixelMath.triangle(cycle - (double) back / frames);
+
+                if (!isMatrix(context)) {
+                    set(result, level, level);
+                } else {
+                    double height = 1 - context.y;
+                    double edge = 0.5 / context.rows;
+
+                    set(result, height, 1 - PixelMath.smoothStep(level - edge, level + edge, height));
                 }
             }
             case "text" -> {
