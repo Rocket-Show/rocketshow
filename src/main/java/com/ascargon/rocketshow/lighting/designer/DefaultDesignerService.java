@@ -11,7 +11,10 @@ import com.ascargon.rocketshow.util.FileNames;
 import org.freedesktop.gstreamer.Pipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.ascargon.rocketshow.audio.AudioAnalysisService;
+import com.ascargon.rocketshow.audio.AudioBus;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
@@ -62,7 +65,7 @@ public class DefaultDesignerService implements DesignerService {
     // the highest project version this player knows. A project written by a newer
     // designer still plays as well as it can, but whatever came after this version is
     // missing from it. Package visible for the test of the designer template.
-    static final int SUPPORTED_PROJECT_VERSION = 10;
+    static final int SUPPORTED_PROJECT_VERSION = 11;
 
     // Live preview
     private boolean playPreview = false; // Is the preview playing a composition?
@@ -108,13 +111,39 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     // the place of each fixture of a preset in its chase (see calculatePresetChase) and the number of its steps
-    private record PresetChase(Map<PresetFixtureKey, Integer> fixtureIndices, int fixtureCount) {
+    // the place of each fixture (or pixel) in the chase of a preset and the number of its steps, and the same for the
+    // fixtures with all of their pixels (by fixture uuid), which the pixel effects chase over
+    private record PresetChase(Map<PresetFixtureKey, Integer> fixtureIndices, int fixtureCount, Map<String, Integer> wholeFixtureIndices, int wholeFixtureCount) {
     }
 
     // the chases of the presets of the loaded project, by preset (presets don't override equals)
     private Map<Preset, PresetChase> presetChases = new ConcurrentHashMap<>();
 
+    // the places of the parts of a preset in the picture of the stage they make up, by preset and view, for the pixel
+    // effects spread across the stage (see PixelStage)
+    private Map<Preset, Map<String, Map<CachedFixture, PixelContext>>> stagePixelPlaces = new ConcurrentHashMap<>();
+
+    // For each cached fixture, the one before it on the same DMX address (the same lamp, which it takes the values of),
+    // or -1. Worked out once: looking it up in each frame took longer than the frame with a few thousand pixels.
+    private int[] sameLampIndices = new int[0];
+
+    // Where a part of a fixture sends its channels: the DMX address of each channel of its mode which is one of its own,
+    // the channel and which of its bytes it is (0 for the coarse one, then the fine ones). Worked out once for each part:
+    // going through the whole mode for each part in each frame took the most time of a frame of a matrix.
+    private record OutputChannel(int address, CachedFixtureChannel channel, int fineIndex) {
+    }
+
+    private Map<CachedFixture, List<OutputChannel>> outputChannels = new ConcurrentHashMap<>();
+
     private long lastPlayTimeMillis;
+
+    // the analysis of the audio of the composition playing, which the pixel effects follow, and what a frame knows of
+    // it while it is worked out: its moment, the audio of each effect following it and the settings of the ones
+    // following it with their size
+    private final AudioAnalysisService audioAnalysisService;
+    private double frameTimeMillis;
+    private final Map<EffectPixel, PixelAudio> frameAudio = new HashMap<>();
+    private final Map<EffectPixel, PixelPatternSettings> frameSizedSettings = new HashMap<>();
 
     public DefaultDesignerService(
             SettingsService settingsService,
@@ -122,6 +151,18 @@ public class DefaultDesignerService implements DesignerService {
             LightingService lightingService,
             FixturePixelGroupResolveService fixturePixelGroupResolveService
     ) {
+        this(settingsService, fileFilterService, lightingService, fixturePixelGroupResolveService, new AudioAnalysisService());
+    }
+
+    @Autowired
+    public DefaultDesignerService(
+            SettingsService settingsService,
+            FileFilterService fileFilterService,
+            LightingService lightingService,
+            FixturePixelGroupResolveService fixturePixelGroupResolveService,
+            AudioAnalysisService audioAnalysisService
+    ) {
+        this.audioAnalysisService = audioAnalysisService;
         this.settingsService = settingsService;
         this.fileFilterService = fileFilterService;
         this.lightingService = lightingService;
@@ -620,6 +661,9 @@ public class DefaultDesignerService implements DesignerService {
         List<PresetFixture> orderedFixtures = preset.isUseGlobalFixtureOrder() ? project.getPresetFixtures() : preset.getFixtures();
         Set<DmxChannelAndPixelKey> counted = new HashSet<>();
         int index = 0;
+        Map<String, Integer> wholeFixtureIndices = new HashMap<>();
+        Set<String> wholeCounted = new HashSet<>();
+        int wholeIndex = 0;
 
         for (PresetFixture orderedFixture : orderedFixtures) {
             PresetFixtureKey key = new PresetFixtureKey(orderedFixture.getFixtureUuid(), orderedFixture.getPixelKey());
@@ -637,6 +681,13 @@ public class DefaultDesignerService implements DesignerService {
             if (firstDmxChannelAndPixelKey != null && counted.add(firstDmxChannelAndPixelKey)) {
                 index++;
             }
+
+            // a fixture with all of its pixels takes one step, the same for the fixtures on its channel
+            wholeFixtureIndices.putIfAbsent(orderedFixture.getFixtureUuid(), wholeIndex);
+            String wholeLamp = getWholeLampKey(orderedFixture);
+            if (wholeLamp != null && wholeCounted.add(wholeLamp)) {
+                wholeIndex++;
+            }
         }
 
         Set<DmxChannelAndPixelKey> lamps = new HashSet<>();
@@ -647,7 +698,23 @@ public class DefaultDesignerService implements DesignerService {
             }
         }
 
-        return new PresetChase(fixtureIndices, lamps.size());
+        Set<String> wholeLamps = new HashSet<>();
+        for (PresetFixture presetFixture : preset.getFixtures()) {
+            String wholeLamp = getWholeLampKey(presetFixture);
+            if (wholeLamp != null) {
+                wholeLamps.add(wholeLamp);
+            }
+        }
+
+        return new PresetChase(fixtureIndices, lamps.size(), wholeFixtureIndices, wholeLamps.size());
+    }
+
+    // the fixture of an entry of a preset with all of its pixels: fixtures sharing a DMX universe and address are the
+    // same lamp. Null for a fixture which is gone.
+    private String getWholeLampKey(PresetFixture presetFixture) {
+        Fixture fixture = getFixtureByUuid(project, presetFixture.getFixtureUuid());
+
+        return fixture == null ? null : fixture.getDmxUniverseUuid() + "\u0000" + fixture.getDmxFirstChannel();
     }
 
     // The chase of a preset doesn't change while its project plays: it's worked out once, instead of for each fixture
@@ -976,31 +1043,24 @@ public class DefaultDesignerService implements DesignerService {
         });
     }
 
-    private CachedFixture getAlreadyCalculatedFixture(List<CachedFixture> fixtures, int fixtureIndex) {
-        // Has this fixture already been calculated (same universe and dmx start address as a fixture before)
-        // --> return it
-        CachedFixture currentFixture = fixtures.get(fixtureIndex);
+    // the lamp a part of a fixture is: its universe, its DMX address and its pixel
+    private record LampKey(String universeUuid, int dmxFirstChannel, String pixelKey) {
+    }
 
-        for (int i = 0; i < fixtureIndex; i++) {
-            CachedFixture calculatedFixture = fixtures.get(i);
+    // For each of the passed fixtures, the first one before it with the same universe, DMX address and pixel (the same
+    // lamp), or -1
+    private static int[] getSameLampIndices(List<CachedFixture> fixtures) {
+        int[] indices = new int[fixtures.size()];
+        Map<LampKey, Integer> firstOfLamp = new HashMap<>();
 
-            if (Objects.equals(calculatedFixture.getFixture().getDmxUniverseUuid(),
-                    currentFixture.getFixture().getDmxUniverseUuid())
-                    && calculatedFixture.getFixture().getDmxFirstChannel()
-                    == currentFixture.getFixture().getDmxFirstChannel()
-                    && Objects.equals(
-                    calculatedFixture.getPixel() != null
-                            ? emptyToNull(calculatedFixture.getPixel().getKey())
-                            : null,
-                    currentFixture.getPixel() != null
-                            ? emptyToNull(currentFixture.getPixel().getKey())
-                            : null)) {
-
-                return calculatedFixture;
-            }
+        for (int i = 0; i < fixtures.size(); i++) {
+            CachedFixture fixture = fixtures.get(i);
+            LampKey key = new LampKey(fixture.getFixture().getDmxUniverseUuid(), fixture.getFixture().getDmxFirstChannel(), fixture.getPixel() == null ? null : emptyToNull(fixture.getPixel().getKey()));
+            Integer first = firstOfLamp.putIfAbsent(key, i);
+            indices[i] = first == null ? -1 : first;
         }
 
-        return null;
+        return indices;
     }
 
     // where the preset itself starts, which is what its steps are timed against. The
@@ -1574,6 +1634,9 @@ public class DefaultDesignerService implements DesignerService {
     private Map<CachedFixture, List<FixtureChannelValue>> getChannelValues(double timeMillis, List<PresetRegionScene> presets) {
         // Loop over all relevant presets and calc the property values from the presets (capabilities and effects)
         HashMap<CachedFixture, List<FixtureChannelValue>> calculatedFixtures = new HashMap<>();
+        frameTimeMillis = timeMillis;
+        frameAudio.clear();
+        frameSizedSettings.clear();
 
         if (project == null) {
             logger.trace("No project set. Skip fixture calculation.");
@@ -1610,7 +1673,7 @@ public class DefaultDesignerService implements DesignerService {
         for (int i = 0; i < cachedFixtures.size(); i++) {
             CachedFixture cachedFixture = cachedFixtures.get(i);
 
-            CachedFixture alreadyCalculatedFixture = getAlreadyCalculatedFixture(cachedFixtures, i);
+            CachedFixture alreadyCalculatedFixture = sameLampIndices.length == cachedFixtures.size() && sameLampIndices[i] >= 0 ? cachedFixtures.get(sameLampIndices[i]) : null;
 
             // all values of the current fixture channels. A fixture on the same DMX address as one before is the same
             // lamp: it takes its values, like in the designer.
@@ -1654,7 +1717,10 @@ public class DefaultDesignerService implements DesignerService {
 
                         mixCapabilityValues(state, cachedFixture, values, intensityPercentage, preset.getPreset(), context);
                         mixChannelValues(state, cachedFixture, values, intensityPercentage);
-                        mixEffects(timeMillis, fixtureIndex, fixtureCount, preset, cachedFixture, values, intensityPercentage, state, context);
+                        PresetChase chase = getPresetChase(preset.getPreset());
+                        Integer wholeFixtureIndex = chase.wholeFixtureIndices().get(cachedFixture.getFixture().getUuid());
+
+                        mixEffects(timeMillis, fixtureIndex, fixtureCount, preset, cachedFixture, values, intensityPercentage, state, context, wholeFixtureIndex == null ? 0 : wholeFixtureIndex, chase.wholeFixtureCount());
                     }
                 }
             }
@@ -1724,7 +1790,7 @@ public class DefaultDesignerService implements DesignerService {
         return (effectTimeMillis % loopMillis + loopMillis) % loopMillis;
     }
 
-    private void mixEffects(double timeMillis, int fixtureIndex, Integer fixtureCount, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double intensityPercentage, PresetStepState state, PanTilt.Context context) {
+    private void mixEffects(double timeMillis, int fixtureIndex, Integer fixtureCount, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double intensityPercentage, PresetStepState state, PanTilt.Context context, int wholeFixtureIndex, int wholeFixtureCount) {
         double effectTimeMillis = timeMillis;
 
         if (preset.getRegion() != null) {
@@ -1739,6 +1805,12 @@ public class DefaultDesignerService implements DesignerService {
             if (effect.isVisible() && effectAmount > 0) {
                 if (effect instanceof EffectPanTilt panTilt) {
                     mixPanTiltEffect(panTilt, effectTimeMillis, preset, cachedFixture, values, effectIntensityPercentage, state, context);
+                    continue;
+                }
+
+                // a pixel effect chases from one fixture to the next, with all of their pixels
+                if (effect instanceof EffectPixel pixelEffect) {
+                    mixPixelEffect(pixelEffect, effectTimeMillis, preset, cachedFixture, values, effectIntensityPercentage, wholeFixtureIndex, wholeFixtureCount);
                     continue;
                 }
 
@@ -1800,6 +1872,365 @@ public class DefaultDesignerService implements DesignerService {
 
     // A movement of the moving heads, around where the preset points each of them (or around the middle, if it
     // doesn't), mirrored with the preset, like in the designer
+    // A pixel effect on a part of a fixture (a pixel, or a fixture without pixels): the color of its pattern where the part
+    // is in its fixture, blended with the color the preset puts on it, on its red, green and blue. Its other channels keep
+    // what the preset puts on them, its dimmer as well. This follows the same rules as the designer.
+    private void mixPixelEffect(EffectPixel effect, double effectTimeMillis, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double effectIntensityPercentage, int fixtureIndex, int fixtureCount) {
+        CachedFixtureChannel[] channels = {
+                getColorChannel(cachedFixture, FixtureCapability.FixtureCapabilityColor.Red),
+                getColorChannel(cachedFixture, FixtureCapability.FixtureCapabilityColor.Green),
+                getColorChannel(cachedFixture, FixtureCapability.FixtureCapabilityColor.Blue)
+        };
+
+        if (channels[0] == null && channels[1] == null && channels[2] == null) {
+            return;
+        }
+
+        Double beatsPerMinute = this.getBeatsPerMinute();
+        double curveTimeMillis = getCurveTimeMillis(effect, effectTimeMillis, preset, fixtureCount, beatsPerMinute);
+        Double cycles = effect.getCyclesAtMillis(curveTimeMillis, fixtureIndex, fixtureCount, beatsPerMinute);
+
+        // the effect does not apply anymore after it has finished running
+        if (cycles == null) {
+            return;
+        }
+
+        // the color the preset puts on the part, as red, green and blue between 0 and 1
+        double[] base = new double[3];
+
+        for (int i = 0; i < 3; i++) {
+            FixtureChannelValue value = channels[i] == null ? null : getChannelValue(values, channels[i].getName(), cachedFixture.getProfile().getUuid());
+            base[i] = value == null ? 0 : value.getValue() / channels[i].getMaxValue();
+        }
+
+        // Where the part is in its fixture, every fixture starting the random looking patterns somewhere else. Spread
+        // across the stage, where it is in the picture of the stage, which is one for all of them.
+        boolean stage = "stage".equals(effect.getSpread());
+        PixelContext context = (stage ? getStagePixelPlace(preset.getPreset(), effect.getView(), cachedFixture) : getPixelPlace(cachedFixture)).copy();
+        context.seed = PixelMath.toInt(effect.getSeed() * 7919 + (stage ? 0 : fixtureIndex * 131));
+
+        if (effect.isMirror()) {
+            context.x = context.x < 0.5 ? context.x * 2 : (1 - context.x) * 2;
+        }
+
+        // The audio it follows: shown by the level meter and the wave of the audio, followed with its brightness or its
+        // size by the other patterns
+        PixelAudio audio = getPixelAudio(effect);
+        double audioLevel = audio != null && !effect.showsAudio() ? audio.level() : 1;
+        boolean followsSize = audio != null && !effect.showsAudio() && "size".equals(effect.getAudioFollows());
+        PixelPatternSettings settings = followsSize ? getSizedSettings(effect, audioLevel) : effect;
+
+        // the color of the pixel through the palette, or the own one of an image
+        double[] sample = new double[5];
+        PixelPatterns.sample(settings, cycles, context, audio, sample);
+
+        if (!followsSize) {
+            sample[1] = sample[1] * audioLevel;
+        }
+        PixelPalette palette = effect.getPalette();
+        List<PixelPaletteStop> stops = "preset".equals(palette.getRef()) ? PixelPalette.shadesOf(base) : palette.getStops();
+        double[] color = sample[2] >= 0 ? new double[]{sample[2], sample[3], sample[4]} : PixelPalette.colorOf(stops, palette.getBetween(), palette.getRepeat(), sample[0]);
+        double[] lit = {color[0] * sample[1], color[1] * sample[1], color[2] * sample[1]};
+
+        // the white part of the light on the white LED, if it is to light it
+        CachedFixtureChannel white = effect.isWhiteLed() ? getColorChannel(cachedFixture, FixtureCapability.FixtureCapabilityColor.White) : null;
+        double litWhite = 0;
+
+        if (white != null) {
+            litWhite = Math.min(Math.min(lit[0], lit[1]), lit[2]);
+
+            for (int i = 0; i < 3; i++) {
+                lit[i] = lit[i] - litWhite;
+            }
+        }
+
+        for (int i = 0; i < 3; i++) {
+            if (channels[i] != null) {
+                mixPixelValue(effect, cachedFixture, channels[i], base[i], lit[i], sample[1], values, effectIntensityPercentage);
+            }
+        }
+
+        if (white != null) {
+            FixtureChannelValue value = getChannelValue(values, white.getName(), cachedFixture.getProfile().getUuid());
+            double baseWhite = value == null ? 0 : value.getValue() / white.getMaxValue();
+
+            mixPixelValue(effect, cachedFixture, white, baseWhite, litWhite, sample[1], values, effectIntensityPercentage);
+        }
+    }
+
+    // the audio a pixel effect follows at the moment of the frame, none for one which follows none
+    private PixelAudio getPixelAudio(EffectPixel effect) {
+        if (!"composition".equals(effect.getAudioSource())) {
+            return null;
+        }
+
+        return frameAudio.computeIfAbsent(effect, key -> {
+            // the buses it follows added together, each frame once in the frame of the lights
+            List<String> buses = effect.getAudioBuses();
+            Map<Integer, double[]> added = new HashMap<>();
+
+            return new PixelAudio(index -> added.computeIfAbsent(index, known -> audioAnalysisService.frame(buses, known)), frameTimeMillis, effect);
+        });
+    }
+
+    // the settings of a pixel effect with its size following the audio, once in a frame
+    private PixelPatternSettings getSizedSettings(EffectPixel effect, double audioLevel) {
+        return frameSizedSettings.computeIfAbsent(effect, key -> new PixelPatternSettings() {
+            // the size the audio lets it have
+            private final double size = effect.getSize() * audioLevel;
+
+            @Override
+            public String getPattern() {
+                return effect.getPattern();
+            }
+
+            @Override
+            public double getSize() {
+                return size;
+            }
+
+            @Override
+            public double getSoftness() {
+                return effect.getSoftness();
+            }
+
+            @Override
+            public String getDirection() {
+                return effect.getDirection();
+            }
+
+            @Override
+            public String getShape() {
+                return effect.getShape();
+            }
+
+            @Override
+            public boolean isBounce() {
+                return effect.isBounce();
+            }
+
+            @Override
+            public PixelBitmap getBitmap() {
+                return effect.getBitmap();
+            }
+
+            @Override
+            public String getScroll() {
+                return effect.getScroll();
+            }
+
+            @Override
+            public String getAlign() {
+                return effect.getAlign();
+            }
+
+            @Override
+            public double getOffsetY() {
+                return effect.getOffsetY();
+            }
+
+            @Override
+            public String getFit() {
+                return effect.getFit();
+            }
+
+            @Override
+            public String getTextColors() {
+                return effect.getTextColors();
+            }
+
+            @Override
+            public String getImageColors() {
+                return effect.getImageColors();
+            }
+        });
+    }
+
+    // The audio buses the pixel effects of a project follow: the ones they name, all of them for an effect naming none
+    static Set<String> followedBuses(Project project, List<AudioBus> audioBuses) {
+        Set<String> followed = new HashSet<>();
+
+        if (project == null || project.getPresets() == null) {
+            return followed;
+        }
+
+        for (Preset preset : project.getPresets()) {
+            for (Effect effect : preset.getEffects() == null ? List.<Effect>of() : preset.getEffects()) {
+                if (effect instanceof EffectPixel pixel && "composition".equals(pixel.getAudioSource())) {
+                    if (pixel.getAudioBuses().isEmpty()) {
+                        for (AudioBus audioBus : audioBuses == null ? List.<AudioBus>of() : audioBuses) {
+                            followed.add(audioBus.getUuid());
+                        }
+                    } else {
+                        followed.addAll(pixel.getAudioBuses());
+                    }
+                }
+            }
+        }
+
+        return followed;
+    }
+
+    // Package visible for the conformance cases of the designer, which play recorded analyses
+    AudioAnalysisService getAudioAnalysisService() {
+        return audioAnalysisService;
+    }
+
+    // A color of a pixel the effect lights, blended with the one the preset puts on it (base, between 0 and 1): the
+    // light of the pattern (lit) in place of it, the base as bright as the pattern makes it (mask), the light added to it
+    // or the brighter of both
+    private void mixPixelValue(EffectPixel effect, CachedFixture cachedFixture, CachedFixtureChannel channel, double base, double lit, double level, List<FixtureChannelValue> values, double effectIntensityPercentage) {
+        double target = switch (effect.getBlend()) {
+            case "mask" -> base * level;
+            case "add" -> Math.min(base + lit, 1);
+            case "max" -> Math.max(base, lit);
+            default -> lit;
+        };
+
+        FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
+        fixtureChannelValue.setChannelName(channel.getName());
+        fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
+        fixtureChannelValue.setValue(channel.getMaxValue() * target);
+        mixChannelValue(values, fixtureChannelValue, effectIntensityPercentage);
+    }
+
+    // Where a part of a fixture is in the picture of the stage the parts of a preset make up (the ones lighting in
+    // colors, see PixelStage), seen from the front or from above. Worked out once for each preset and view.
+    private PixelContext getStagePixelPlace(Preset preset, String view, CachedFixture cachedFixture) {
+        Map<CachedFixture, PixelContext> places = stagePixelPlaces
+                .computeIfAbsent(preset, key -> new ConcurrentHashMap<>())
+                .computeIfAbsent(view, key -> calculateStagePixelPlaces(preset, view));
+        PixelContext place = places.get(cachedFixture);
+
+        return place == null ? getPixelPlace(cachedFixture) : place;
+    }
+
+    private Map<CachedFixture, PixelContext> calculateStagePixelPlaces(Preset preset, String view) {
+        Map<PresetFixtureKey, Integer> indices = getPresetChase(preset).fixtureIndices();
+        Map<String, PanTilt.StagePlacement> placements = PanTilt.getStagePlacements(project);
+        PanTilt.StagePlacement nowhere = new PanTilt.StagePlacement(new double[]{0, 0, 0}, new double[]{0, 0, 0});
+        List<CachedFixture> parts = new ArrayList<>();
+        List<double[]> positions = new ArrayList<>();
+
+        for (CachedFixture part : cachedFixtures) {
+            String pixelKey = part.getPixel() == null ? null : part.getPixel().getKey();
+
+            if (!indices.containsKey(new PresetFixtureKey(part.getFixture().getUuid(), pixelKey))
+                    || (getColorChannel(part, FixtureCapability.FixtureCapabilityColor.Red) == null
+                    && getColorChannel(part, FixtureCapability.FixtureCapabilityColor.Green) == null
+                    && getColorChannel(part, FixtureCapability.FixtureCapabilityColor.Blue) == null)) {
+                continue;
+            }
+
+            PixelContext place = getPixelPlace(part);
+            PanTilt.StagePlacement placement = placements.getOrDefault(part.getFixture().getUuid(), nowhere);
+            parts.add(part);
+            positions.add(PixelStage.position(place, PixelStage.housingSize(part.getProfile(), place.columns, place.rows), placement, part.getFixture().getPositioning()));
+        }
+
+        List<PixelContext> contexts = PixelStage.places(positions, view);
+        Map<CachedFixture, PixelContext> places = new HashMap<>();
+
+        for (int i = 0; i < parts.size(); i++) {
+            places.put(parts.get(i), contexts.get(i));
+        }
+
+        return places;
+    }
+
+    // the channel of a part of a fixture which lights in a color, the first one if there are several
+    private static CachedFixtureChannel getColorChannel(CachedFixture cachedFixture, FixtureCapability.FixtureCapabilityColor color) {
+        for (CachedFixtureChannel channel : cachedFixture.getChannels()) {
+            for (CachedFixtureCapability channelCapability : channel.getCapabilities()) {
+                if (channelCapability.getCapability().getType() == FixtureCapability.FixtureCapabilityType.ColorIntensity && channelCapability.getCapability().getColor() == color) {
+                    return channel;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    // Where a part of a fixture is in it, for the pixel effects: a pixel in its column and row of the matrix (a bar has
+    // one row), a pixel group in the middle of its pixels, and a part without a pixel (a fixture without pixels, or the
+    // general channels of one with pixels) as the one pixel of the fixture. The designer places them the very same way.
+    PixelContext getPixelPlace(CachedFixture cachedFixture) {
+        if (cachedFixture.getPixelPlace() != null) {
+            return cachedFixture.getPixelPlace();
+        }
+
+        PixelContext place = new PixelContext();
+        CachedFixturePixel pixel = cachedFixture.getPixel();
+        FixtureProfile profile = cachedFixture.getProfile();
+
+        if (pixel != null && profile.getMatrix() != null) {
+            int[] size = getMatrixSize(profile.getMatrix());
+            int columns = Math.max(size[0] == 0 ? 1 : size[0], 1);
+            int rows = Math.max(size[1] == 0 ? 1 : size[1], 1);
+            double column = (columns - 1) / 2.0;
+            double row = (rows - 1) / 2.0;
+
+            if (pixel.getX() > 0) {
+                column = pixel.getX() - 1;
+                row = pixel.getY() - 1;
+            } else {
+                List<CachedFixturePixel> groupPixels = fixturePixelGroupResolveService.getPixelsForKeyOrGroup(profile.getMatrix(), getAllPixelKeys(profile), pixel.getKey());
+
+                if (!groupPixels.isEmpty()) {
+                    double columnSum = 0;
+                    double rowSum = 0;
+
+                    for (CachedFixturePixel groupPixel : groupPixels) {
+                        columnSum += groupPixel.getX() - 1;
+                        rowSum += groupPixel.getY() - 1;
+                    }
+
+                    column = columnSum / groupPixels.size();
+                    row = rowSum / groupPixels.size();
+                }
+            }
+
+            int longest = Math.max(columns, rows);
+
+            place.x = (column + 0.5) / columns;
+            place.y = (row + 0.5) / rows;
+            place.column = (int) Math.floor(column);
+            place.row = (int) Math.floor(row);
+            place.columns = columns;
+            place.rows = rows;
+            place.aspectX = (double) columns / longest;
+            place.aspectY = (double) rows / longest;
+        }
+
+        cachedFixture.setPixelPlace(place);
+
+        return place;
+    }
+
+    // the number of pixels a matrix has on X and Y (0 where it doesn't say), like the designer counts them
+    private static int[] getMatrixSize(FixtureMatrix matrix) {
+        if (matrix.getPixelKeys() != null) {
+            int rows = 0;
+            int columns = 0;
+
+            for (List<List<String>> layer : matrix.getPixelKeys()) {
+                rows = Math.max(rows, layer.size());
+
+                for (List<String> row : layer) {
+                    columns = Math.max(columns, row.size());
+                }
+            }
+
+            return new int[]{columns, rows};
+        }
+
+        List<Integer> pixelCount = matrix.getPixelCount();
+        int columns = pixelCount != null && !pixelCount.isEmpty() && pixelCount.get(0) != null ? pixelCount.get(0) : 0;
+        int rows = pixelCount != null && pixelCount.size() > 1 && pixelCount.get(1) != null ? pixelCount.get(1) : 0;
+
+        return new int[]{columns, rows};
+    }
+
     private void mixPanTiltEffect(EffectPanTilt effect, double effectTimeMillis, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double effectIntensityPercentage, PresetStepState state, PanTilt.Context context) {
         Double beatsPerMinute = this.getBeatsPerMinute();
         double curveTimeMillis = getCurveTimeMillis(effect, effectTimeMillis, preset, context.fixtureCount(), beatsPerMinute);
@@ -1861,32 +2292,59 @@ public class DefaultDesignerService implements DesignerService {
         return null;
     }
 
-    private void setUniverseValueForChannel(HashMap<Integer, Integer> universe, int channelIndex, CachedFixture cachedFixture, String templateChannelName, String pixelKey, List<FixtureChannelValue> fixtureChannelValues, Double colorDimmer) {
+    // the DMX address of a channel of the mode of a part, if it is a channel of the part (fine channels are not cached
+    // separately: the coarse channel is found for them, the byte they are of it)
+    private void addOutputChannel(List<OutputChannel> outputs, int channelIndex, CachedFixture cachedFixture, String templateChannelName, String pixelKey) {
         String channelName = getChannelNameWithPixelKey(templateChannelName, pixelKey);
-
-        // fine channels are not cached separately -> this returns the coarse channel for them
         CachedFixtureChannel channel = getChannelByName(cachedFixture, channelName);
 
-        if (channel == null || channel.getChannel() == null) {
-            return;
+        if (channel != null && channel.getChannel() != null) {
+            outputs.add(new OutputChannel(channelIndex, channel, getFineIndexByChannelName(channel, channelName)));
         }
+    }
 
-        int fineIndex = getFineIndexByChannelName(channel, channelName);
+    // where a part of a fixture sends its channels, in the order of the channels of its mode (see OutputChannel)
+    private List<OutputChannel> getOutputChannels(CachedFixture cachedFixture) {
+        return outputChannels.computeIfAbsent(cachedFixture, this::calculateOutputChannels);
+    }
 
-        // match this mode channel with the value of its coarse channel
-        for (FixtureChannelValue channelValue : fixtureChannelValues) {
-            if (channel.getName().equals(channelValue.getChannelName())) {
-                double value = applyMasterDimmer(channel, channelValue.getValue());
+    private List<OutputChannel> calculateOutputChannels(CachedFixture cachedFixture) {
+        List<OutputChannel> outputs = new ArrayList<>();
+        int channelIndex = cachedFixture.getFixture().getDmxFirstChannel();
 
-                if (colorDimmer != null) {
-                    value = dim(channel, value, FixtureCapability.FixtureCapabilityType.ColorIntensity, colorDimmer);
+        for (FixtureModeChannel fixtureModeChannel : cachedFixture.getMode().getChannels()) {
+            if (isUnusedChannel(fixtureModeChannel)) {
+                // an unused channel ("null" in the fixture library) still takes its DMX address
+                channelIndex++;
+            } else if (fixtureModeChannel.getName() == null || fixtureModeChannel.getName().isEmpty()) {
+                // reference a channel through a pixel matrix
+                List<CachedFixturePixel> availablePixels = getPixelsInOrder(cachedFixture.getProfile(), fixtureModeChannel.getRepeatFor());
+
+                if (CHANNEL_ORDER_PER_PIXEL.equals(fixtureModeChannel.getChannelOrder())) {
+                    // each channel for each pixel
+                    for (CachedFixturePixel availablePixel : availablePixels) {
+                        for (String modeTemplateChannelName : fixtureModeChannel.getTemplateChannels()) {
+                            addOutputChannel(outputs, channelIndex, cachedFixture, modeTemplateChannelName, availablePixel.getKey());
+                            channelIndex++;
+                        }
+                    }
+                } else if (CHANNEL_ORDER_PER_CHANNEL.equals(fixtureModeChannel.getChannelOrder())) {
+                    // each pixel for each channel
+                    for (String modeTemplateChannelName : fixtureModeChannel.getTemplateChannels()) {
+                        for (CachedFixturePixel availablePixel : availablePixels) {
+                            addOutputChannel(outputs, channelIndex, cachedFixture, modeTemplateChannelName, availablePixel.getKey());
+                            channelIndex++;
+                        }
+                    }
                 }
-
-                int dmxValue = (int) Math.floor(value / Math.pow(256, channel.getChannel().getFineChannelAliases().size() - (fineIndex + 1))) % 256;
-                universe.put(channelIndex, dmxValue);
-                break;
+            } else {
+                // direct reference to a channel
+                addOutputChannel(outputs, channelIndex, cachedFixture, fixtureModeChannel.getName(), null);
+                channelIndex++;
             }
         }
+
+        return outputs;
     }
 
     private double getMasterDimmer() {
@@ -1967,68 +2425,40 @@ public class DefaultDesignerService implements DesignerService {
     private void setUniverseValues(Map<CachedFixture, List<FixtureChannelValue>> fixtures) {
         logger.trace("Set universe values...");
 
-        // Reset all DMX universes
+        // Reset all DMX universes, and find each of them by the uuid it is mapped to (the first one mapped to it)
+        Map<String, HashMap<Integer, Integer>> universes = new HashMap<>();
+
         for (LightingUniverseState universe : lightingUniverses) {
             universe.reset();
+            universes.putIfAbsent(universe.getMappingUuid(), universe.getUniverse());
         }
 
         // loop over each fixture with its values for each channel
         for (Map.Entry<CachedFixture, List<FixtureChannelValue>> entry : fixtures.entrySet()) {
-            String fixtureUniverseUuid = entry.getKey().getFixture().getDmxUniverseUuid();
-            HashMap<Integer, Integer> universe = lightingUniverses.stream()
-                    .filter(u -> Objects.equals(u.getMappingUuid(), fixtureUniverseUuid))
-                    .map(LightingUniverseState::getUniverse)
-                    .findFirst()
-                    .orElse(null);
+            HashMap<Integer, Integer> universe = universes.get(entry.getKey().getFixture().getDmxUniverseUuid());
 
             if (universe == null) {
                 continue;
             }
 
-            if (logger.isTraceEnabled()) {
-                logger.trace("Set universe values for " + entry.getValue().size() + " channels of fixture " + entry.getKey().getFixture().getName());
-            }
-
             Double colorDimmer = getColorDimmer(entry.getKey(), entry.getValue());
 
-            // loop over each channel for this fixture
-            int channelIndex = entry.getKey().getFixture().getDmxFirstChannel();
+            for (OutputChannel output : getOutputChannels(entry.getKey())) {
+                CachedFixtureChannel channel = output.channel();
 
-            for (FixtureModeChannel fixtureModeChannel : entry.getKey().getMode().getChannels()) {
-                logger.trace("Process channel " + fixtureModeChannel.getName());
+                // match this mode channel with the value of its coarse channel
+                for (FixtureChannelValue channelValue : entry.getValue()) {
+                    if (channel.getName().equals(channelValue.getChannelName())) {
+                        double value = applyMasterDimmer(channel, channelValue.getValue());
 
-                if (isUnusedChannel(fixtureModeChannel)) {
-                    // an unused channel ("null" in the fixture library) still takes its DMX address
-                    channelIndex++;
-                } else if (fixtureModeChannel.getName() == null || fixtureModeChannel.getName().isEmpty()) {
-                    // reference a channel through a pixel matrix
-
-                    List<CachedFixturePixel> availablePixels = getPixelsInOrder(entry.getKey().getProfile(), fixtureModeChannel.getRepeatFor());
-
-                    if (CHANNEL_ORDER_PER_PIXEL.equals(fixtureModeChannel.getChannelOrder())) {
-                        // each channel for each pixel
-
-                        for (CachedFixturePixel availablePixel : availablePixels) {
-                            for (String modeTemplateChannelName : fixtureModeChannel.getTemplateChannels()) {
-                                setUniverseValueForChannel(universe, channelIndex, entry.getKey(), modeTemplateChannelName, availablePixel.getKey(), entry.getValue(), colorDimmer);
-                                channelIndex++;
-                            }
+                        if (colorDimmer != null) {
+                            value = dim(channel, value, FixtureCapability.FixtureCapabilityType.ColorIntensity, colorDimmer);
                         }
-                    } else if (CHANNEL_ORDER_PER_CHANNEL.equals(fixtureModeChannel.getChannelOrder())) {
-                        // each pixel for each channel
 
-                        for (String modeTemplateChannelName : fixtureModeChannel.getTemplateChannels()) {
-                            for (CachedFixturePixel availablePixel : availablePixels) {
-                                setUniverseValueForChannel(universe, channelIndex, entry.getKey(), modeTemplateChannelName, availablePixel.getKey(), entry.getValue(), colorDimmer);
-                                channelIndex++;
-                            }
-                        }
+                        int dmxValue = (int) Math.floor(value / Math.pow(256, channel.getChannel().getFineChannelAliases().size() - (output.fineIndex() + 1))) % 256;
+                        universe.put(output.address(), dmxValue);
+                        break;
                     }
-                } else {
-                    // direct reference to a channel
-
-                    setUniverseValueForChannel(universe, channelIndex, entry.getKey(), fixtureModeChannel.getName(), null, entry.getValue(), colorDimmer);
-                    channelIndex++;
                 }
             }
         }
@@ -2409,6 +2839,8 @@ public class DefaultDesignerService implements DesignerService {
         // afterwards
         cachedFixtures = new ArrayList<>();
         presetChases = new ConcurrentHashMap<>();
+        stagePixelPlaces = new ConcurrentHashMap<>();
+        outputChannels = new ConcurrentHashMap<>();
 
         logger.debug("Calculate cached fixtures...");
 
@@ -2437,9 +2869,11 @@ public class DefaultDesignerService implements DesignerService {
             }
 
             addVirtualDimmers(fixtureParts);
+            openColorDimmers(fixtureParts);
             cachedFixtures.addAll(fixtureParts);
         }
 
+        sameLampIndices = getSameLampIndices(cachedFixtures);
         logger.debug("Calculated " + cachedFixtures.size() + " fixtures");
     }
 
@@ -2486,6 +2920,68 @@ public class DefaultDesignerService implements DesignerService {
         }
     }
 
+    // The dimmers of a fixture which lights in colors only start at full, where its profile does not say where they
+    // start (see Project.colorDimmersAtFull): at the brightest the channel lights steadily, so a dimmer sharing its
+    // channel with a strobe does not strobe. A color is all it takes to light the fixture then, it stays dark while its
+    // colors are off. A fixture with a color wheel (white through its open slot), one mixing its colors with filters
+    // (white without them) and one without colors (e.g. a halogen par) keeps its dimmers off. Like in the designer.
+    private void openColorDimmers(List<CachedFixture> fixtureParts) {
+        if (!project.isColorDimmersAtFull()) {
+            return;
+        }
+
+        List<CachedFixtureChannel> channels = new ArrayList<>();
+        boolean lightsInColors = false;
+
+        for (CachedFixture cachedFixture : fixtureParts) {
+            channels.addAll(cachedFixture.getChannels());
+        }
+
+        for (CachedFixtureChannel channel : channels) {
+            if (channel.getColorWheel() != null) {
+                return;
+            }
+
+            if (channel.getChannel() != null && hasCapability(channel, FixtureCapability.FixtureCapabilityType.ColorIntensity)) {
+                lightsInColors = true;
+            }
+        }
+
+        if (!lightsInColors || SubtractiveColors.mixesSubtractively(channels)) {
+            return;
+        }
+
+        for (CachedFixtureChannel channel : channels) {
+            if (channel.getChannel() == null || channel.getDefaultValue() != null) {
+                continue;
+            }
+
+            List<CachedFixtureCapability> dimmers = new ArrayList<>();
+
+            for (CachedFixtureCapability capability : channel.getCapabilities()) {
+                if (capability.getCapability().getType() == FixtureCapability.FixtureCapabilityType.Intensity) {
+                    dimmers.add(capability);
+                }
+            }
+
+            Double value = getBrightnessValue(channel, dimmers, 1);
+
+            if (value != null) {
+                channel.setDefaultValue(value);
+            }
+        }
+    }
+
+    private static boolean hasCapability(CachedFixtureChannel channel, FixtureCapability.FixtureCapabilityType type) {
+        for (CachedFixtureCapability capability : channel.getCapabilities()) {
+            if (capability.getCapability().getType() == type) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     // Unregister all universe states of a previous load/preview and forget them. They must not be
     // kept around, because setUniverseValues writes to the first state matching a mapping uuid. A
     // stale state would swallow all values, while the currently registered one stays empty.
@@ -2510,12 +3006,41 @@ public class DefaultDesignerService implements DesignerService {
             logger.warn("Designer project '" + project.getName() + "' was written with a newer designer (project version " + project.getVersion() + ", this Rocket Show knows version " + SUPPORTED_PROJECT_VERSION + "). Parts of the show may be missing. Please update Rocket Show.");
         }
 
+        warnAboutUnknownEffects(project);
+
         migrateProjectToVersion2(project);
         migrateProjectToVersion3(project);
         migrateProjectToVersion7(project);
         migrateProjectToVersion8(project);
         migrateProjectToVersion9(project);
         migrateProjectToVersion10(project);
+        migrateProjectToVersion11(project);
+    }
+
+    // An effect of a type a newer designer added is left out (see EffectUnknown), the rest of the show still plays.
+    // Reported once for each of these types.
+    private void warnAboutUnknownEffects(Project project) {
+        if (project.getPresets() == null) {
+            return;
+        }
+
+        Set<String> unknownTypes = new LinkedHashSet<>();
+
+        for (Preset preset : project.getPresets()) {
+            if (preset.getEffects() == null) {
+                continue;
+            }
+
+            for (Effect effect : preset.getEffects()) {
+                if (effect instanceof EffectUnknown unknown) {
+                    unknownTypes.add(unknown.getType());
+                }
+            }
+        }
+
+        for (String type : unknownTypes) {
+            logger.warn("Designer project '" + project.getName() + "' uses effects of the type '" + type + "', which this Rocket Show does not know. They are left out. Please update Rocket Show.");
+        }
     }
 
     // The fixtures of a preset (and of the project) are listed with their pixels now: a fixture and each of its pixels
@@ -2797,6 +3322,19 @@ public class DefaultDesignerService implements DesignerService {
         logger.info("Migrated designer project '" + project.getName() + "' to version 10");
     }
 
+    // Version 11 brought the pixel effects (EffectPixel), which an older designer would drop when it saves the project.
+    // Nothing changes.
+    // Version 11 brought the pixel effects and the dimmers of the fixtures lighting in colors at full (see
+    // Project.colorDimmersAtFull). An older project keeps them off, so it plays as it did, like in the designer.
+    private void migrateProjectToVersion11(Project project) {
+        if (project.getVersion() >= 11) {
+            return;
+        }
+
+        project.setColorDimmersAtFull(false);
+        project.setVersion(11);
+    }
+
     // Put the clips of a composition which are on none of its tracks onto tracks of their own, one per scene, in the
     // order of the scenes. The clips of a scene which overlap each other get another track right below the first one
     // of the scene. A composition without clips keeps having no track. The same as assignTracks of the designer.
@@ -2903,6 +3441,9 @@ public class DefaultDesignerService implements DesignerService {
 
         // a preview names the composition it plays, if any (see setPreviewComposition)
         this.composition = compositionPlayer == null ? null : getCompositionByName(project, compositionPlayer.getComposition().getName());
+
+        // the pipeline of a composition measures the buses an effect of the project follows
+        audioAnalysisService.setRequiredBuses(followedBuses(project, settingsService.getSettings().getAudioBusList()));
 
         // Create the caches
         updateCachedFixtures();

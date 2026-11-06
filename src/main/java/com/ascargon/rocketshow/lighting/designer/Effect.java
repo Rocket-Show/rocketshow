@@ -11,12 +11,17 @@ import org.slf4j.LoggerFactory;
  *
  * @author Moritz A. Vieli
  */
+// an effect of a type this Rocket Show does not know (written by a newer designer) is read as an EffectUnknown, which
+// lights nothing: the rest of the show still plays (see DefaultDesignerService.migrateProject)
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
-        property = "type")
+        property = "type",
+        visible = true,
+        defaultImpl = EffectUnknown.class)
 @JsonSubTypes({
         @JsonSubTypes.Type(value = EffectCurve.class, name = "curve"),
-        @JsonSubTypes.Type(value = EffectPanTilt.class, name = "pan-tilt")
+        @JsonSubTypes.Type(value = EffectPanTilt.class, name = "pan-tilt"),
+        @JsonSubTypes.Type(value = EffectPixel.class, name = "pixel")
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class Effect {

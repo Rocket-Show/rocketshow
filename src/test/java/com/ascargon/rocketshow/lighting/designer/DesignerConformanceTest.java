@@ -82,6 +82,7 @@ class DesignerConformanceTest {
             case "mixColors" -> color(DefaultDesignerService.mixHexColors(strings(input.get("colors"))));
             case "pixels" -> pixels(input);
             case "pixelGroup" -> pixelGroup(input);
+            case "pixelPattern" -> pixelPattern(input);
             case "channelValues" -> channelValues(input);
             case "migration" -> migration(input);
             default -> throw new IllegalArgumentException("Unknown kind " + kind);
@@ -112,6 +113,40 @@ class DesignerConformanceTest {
 
     private static JsonNode color(Color color) {
         return color == null ? NODES.nullNode() : NODES.arrayNode().add(color.getRed()).add(color.getGreen()).add(color.getBlue());
+    }
+
+    // A pattern of the pixel effects at pixels and moments, through a palette: the place in the palette, the
+    // brightness and the color of each
+    private JsonNode pixelPattern(JsonNode input) {
+        // the settings of the pattern, read like the ones of an effect (also the picture of a text or an image)
+        ObjectNode settingsNode = ((ObjectNode) input.get("settings")).deepCopy();
+        settingsNode.put("type", "pixel");
+        PixelPatternSettings settings = DesignerJson.MAPPER.treeToValue(settingsNode, EffectPixel.class);
+        PixelPalette palette = DesignerJson.MAPPER.treeToValue(input.get("palette"), PixelPalette.class);
+
+        ArrayNode samples = NODES.arrayNode();
+        double[] result = new double[5];
+
+        for (JsonNode sample : input.get("samples")) {
+            JsonNode pixel = sample.get("pixel");
+            PixelContext context = new PixelContext();
+            context.x = pixel.get("x").asDouble();
+            context.y = pixel.get("y").asDouble();
+            context.column = pixel.get("column").asInt();
+            context.row = pixel.get("row").asInt();
+            context.columns = pixel.get("columns").asInt();
+            context.rows = pixel.get("rows").asInt();
+            context.aspectX = pixel.get("aspectX").asDouble();
+            context.aspectY = pixel.get("aspectY").asDouble();
+            context.seed = pixel.get("seed").asInt();
+
+            PixelPatterns.sample(settings, sample.get("cycle").asDouble(), context, result);
+            // the color of the palette, or the own one of an image
+            double[] color = result[2] >= 0 ? new double[]{result[2], result[3], result[4]} : palette.colorAt(result[0]);
+            samples.addArray().add(result[0]).add(result[1]).add(color[0]).add(color[1]).add(color[2]);
+        }
+
+        return samples;
     }
 
     private JsonNode effectCurve(JsonNode input) {
@@ -293,9 +328,24 @@ class DesignerConformanceTest {
 
     // The values the engine gives every fixture (and pixel) of a project at the passed times, the way it plays the
     // timeline of a composition, the selected preset or the selected scenes of the designer's live preview
-    private JsonNode channelValues(JsonNode project, JsonNode preview, JsonNode times) {
+    private JsonNode channelValues(JsonNode project, JsonNode preview, JsonNode times, JsonNode audio) {
         DefaultDesignerService designerService = designerService();
         designerService.load(null, DesignerJson.MAPPER.treeToValue(resolveProfiles(project), Project.class), null);
+
+        // the analysis of the audio the pixel effects follow, recorded (none: silence)
+        if (audio != null && audio.has("frames")) {
+            int index = 0;
+
+            for (JsonNode frame : audio.get("frames")) {
+                double[] values = new double[frame.size()];
+
+                for (int i = 0; i < values.length; i++) {
+                    values[i] = frame.get(i).asDouble();
+                }
+
+                designerService.getAudioAnalysisService().setFrame("", index++, values);
+            }
+        }
 
         String mode = preview.get("mode").asString();
         designerService.setPreviewPreset(false);
@@ -343,7 +393,7 @@ class DesignerConformanceTest {
         ArrayNode runs = NODES.arrayNode();
 
         for (JsonNode run : input.get("runs")) {
-            runs.add(channelValues(input.get("project"), run.get("preview"), run.get("times")));
+            runs.add(channelValues(input.get("project"), run.get("preview"), run.get("times"), input.get("audio")));
         }
 
         return runs;
@@ -376,6 +426,7 @@ class DesignerConformanceTest {
     private static JsonNode migratedProject(Project project) {
         ObjectNode result = NODES.objectNode();
         result.put("version", project.getVersion());
+        result.put("colorDimmersAtFull", project.isColorDimmersAtFull());
         result.set("presetFixtures", presetFixtures(project.getPresetFixtures()));
 
         ArrayNode presets = result.putArray("presets");
@@ -407,15 +458,17 @@ class DesignerConformanceTest {
                 ObjectNode effectNode = effects.addObject();
                 effectNode.put("uuid", effect.getUuid());
 
-                if (effect instanceof EffectCurve curve && !(effect instanceof EffectPanTilt)) {
+                if (effect instanceof EffectCurve curve && !(effect instanceof EffectPanTilt) && !(effect instanceof EffectPixel)) {
                     effectNode.put("type", "curve");
                     effectNode.put("curveType", curve.getCurveType());
                     effectNode.put("amplitude", curve.getAmplitude());
 
                     ArrayNode channels = effectNode.putArray("channels");
                     listOf(curve.getChannels()).forEach(profileChannels -> channels.addArray().add(profileChannels.getProfileUuid()).add(texts(profileChannels.getChannels())));
+                } else if (effect instanceof EffectUnknown unknown) {
+                    effectNode.put("type", unknown.getType());
                 } else {
-                    effectNode.put("type", "pan-tilt");
+                    effectNode.put("type", effect instanceof EffectPixel ? "pixel" : "pan-tilt");
                 }
             }
         }

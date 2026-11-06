@@ -14,6 +14,7 @@ import lombok.Setter;
 @Setter
 public class FixturePhysical {
 
-    private int[] dimensions;
+    // in mm (the fixture library also has fractions of them)
+    private double[] dimensions;
 
 }

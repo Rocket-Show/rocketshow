@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.play;
 
+import com.ascargon.rocketshow.audio.AudioAnalysisService;
 import com.ascargon.rocketshow.audio.ActivityNotificationAudioService;
 import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.audio.AudioCompositionFile;
@@ -28,6 +29,7 @@ import org.freedesktop.gstreamer.message.Message;
 import org.freedesktop.gstreamer.message.MessageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.sound.midi.InvalidMidiDataException;
@@ -36,6 +38,7 @@ import javax.sound.midi.ShortMessage;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -63,6 +66,16 @@ public class CompositionPipelineBuilder {
     private final AudioService audioService;
     private final MidiRouterFactory midiRouterFactory;
     private final HdmiService hdmiService;
+    private final AudioAnalysisService audioAnalysisService;
+
+    // the names the level of the monitor and the analysis of the pixel effects start with, which tell their messages
+    // apart: the monitor's every second, the analysis' every 20 ms
+    private static final String MONITOR_LEVEL_NAME = "level_";
+    private static final String ANALYSIS_LEVEL_NAME = "analysislevel_";
+    private static final String ANALYSIS_SPECTRUM_NAME = "analysisspectrum_";
+
+    // the bands the spectrum of the analysis is measured in, from 0 Hz to half the sample rate
+    private static final int ANALYSIS_SPECTRUM_BANDS = 128;
 
     public CompositionPipelineBuilder(
             SettingsService settingsService,
@@ -74,6 +87,22 @@ public class CompositionPipelineBuilder {
             MidiRouterFactory midiRouterFactory,
             HdmiService hdmiService
     ) {
+        this(settingsService, capabilitiesService, activityNotificationAudioService, activityNotificationMidiService, operatingSystemInformationService, audioService, midiRouterFactory, hdmiService, new AudioAnalysisService());
+    }
+
+    @Autowired
+    public CompositionPipelineBuilder(
+            SettingsService settingsService,
+            CapabilitiesService capabilitiesService,
+            ActivityNotificationAudioService activityNotificationAudioService,
+            ActivityNotificationMidiService activityNotificationMidiService,
+            OperatingSystemInformationService operatingSystemInformationService,
+            AudioService audioService,
+            MidiRouterFactory midiRouterFactory,
+            HdmiService hdmiService,
+            AudioAnalysisService audioAnalysisService
+    ) {
+        this.audioAnalysisService = audioAnalysisService;
         this.settingsService = settingsService;
         this.capabilitiesService = capabilitiesService;
         this.activityNotificationAudioService = activityNotificationAudioService;
@@ -175,6 +204,11 @@ public class CompositionPipelineBuilder {
         CompositionPipeline compositionPipeline = new CompositionPipeline(this, composition, masterPipeline, listener, recreateExecutor, midiMapping, midiMessageParser);
 
         if (masterPipeline != null) {
+            // what the analysis of the audio measured belongs to the composition before
+            if (!isSample) {
+                audioAnalysisService.clear();
+            }
+
             connectMasterBus(compositionPipeline, listener);
 
             // Prepare the audio devices used by the master files and keep the mixers to link into.
@@ -227,7 +261,22 @@ public class CompositionPipelineBuilder {
             if (message.getType().equals(MessageType.ELEMENT)) {
                 Structure structure = message.getStructure();
 
-                if (structure.getName().equals("level")) {
+                String sourceName = message.getSource() == null ? "" : message.getSource().getName();
+
+                if (structure.getName().equals("level") && sourceName.startsWith(ANALYSIS_LEVEL_NAME)) {
+                    try {
+                        // the analysis of the audio of a bus, which the pixel effects follow
+                        audioAnalysisService.addLevel(sourceName.substring(ANALYSIS_LEVEL_NAME.length()), streamTimeNanos(structure), structure.getDoubles("rms"), structure.getDoubles("peak"));
+                    } catch (Exception e) {
+                        logger.error("Could not process the level of the analysis of the audio", e);
+                    }
+                } else if (structure.getName().equals("spectrum") && sourceName.startsWith(ANALYSIS_SPECTRUM_NAME)) {
+                    try {
+                        audioAnalysisService.addSpectrum(sourceName.substring(ANALYSIS_SPECTRUM_NAME.length()), streamTimeNanos(structure), structure.getValues(Float.class, "magnitude"), settingsService.getSettings().getAudioRate());
+                    } catch (Exception e) {
+                        logger.error("Could not process the spectrum of the analysis of the audio", e);
+                    }
+                } else if (structure.getName().equals("level")) {
                     try {
                         // We got a level message
                         activityNotificationAudioService.notifyClients(structure.getDoubles("peak"));
@@ -239,6 +288,12 @@ public class CompositionPipelineBuilder {
         });
 
         GstApi.GST_API.gst_object_unref(bus);
+    }
+
+    // where in the stream a measurement of the audio was made, in nanoseconds
+    private static long streamTimeNanos(Structure structure) {
+        Object streamTime = structure.getValue("stream-time");
+        return streamTime instanceof Number number ? number.longValue() : 0;
     }
 
     // The tick GStreamer's midiparse sends every 10 milliseconds, which is no part of the file
@@ -323,6 +378,45 @@ public class CompositionPipelineBuilder {
         } else {
             return 0;
         }
+    }
+
+    // The mix matrix of an audioconvert: each output channel (a row) made of the input channels (its columns), each
+    // at its volume
+    private static void setMixMatrix(Element audioConvert, float[][] matrix) {
+        GValueAPI.GValue mixMatrix = new GValueAPI.GValue();
+        GValueAPI.GVALUE_API.g_value_init(mixMatrix, GstApi.GST_API.gst_value_array_get_type());
+
+        for (float[] row : matrix) {
+            GValueAPI.GValue outputChannel = new GValueAPI.GValue();
+            GValueAPI.GVALUE_API.g_value_init(outputChannel, GstApi.GST_API.gst_value_array_get_type());
+
+            for (float volume : row) {
+                GValueAPI.GValue inputChannel = new GValueAPI.GValue(GType.FLOAT);
+                inputChannel.setValue(volume);
+                GstApi.GST_API.gst_value_array_append_value(outputChannel, inputChannel.getPointer());
+                GValueAPI.GVALUE_API.g_value_unset(inputChannel);
+            }
+
+            GstApi.GST_API.gst_value_array_append_value(mixMatrix, outputChannel.getPointer());
+            GValueAPI.GVALUE_API.g_value_unset(outputChannel);
+        }
+
+        GstApi.GST_API.g_object_set_property(audioConvert, "mix-matrix", mixMatrix.getPointer());
+        GValueAPI.GVALUE_API.g_value_unset(mixMatrix);
+    }
+
+    // The channels of a bus among the ones of its device: a matrix picking them, one output channel for each channel
+    // of the bus (as far as the device has them)
+    float[][] getBusChannelMatrix(AudioBus audioBus, int deviceChannels) {
+        int start = getAudioBusStartChannel(audioBus);
+        int channels = Math.max(0, Math.min(audioBus.getChannels(), deviceChannels - start));
+        float[][] matrix = new float[channels][deviceChannels];
+
+        for (int i = 0; i < channels; i++) {
+            matrix[i][start + i] = 1;
+        }
+
+        return matrix;
     }
 
     // The sink videos play on, for the self-test: playbin picks it on the Raspberry Pi 3
@@ -477,34 +571,19 @@ public class CompositionPipelineBuilder {
 
         logger.debug("Apply mix matrix...");
 
-        // Apply the mix matrix
-        GValueAPI.GValue mixMatrix = new GValueAPI.GValue();
-        GValueAPI.GVALUE_API.g_value_init(mixMatrix, GstApi.GST_API.gst_value_array_get_type());
+        // Apply the mix matrix: each output channel of the device, made of the input channels of the file
+        int deviceChannels = audioService.getChannelCountByAudioDevice(settingsService.getSettings(), audioDevice);
+        float[][] mixMatrix = new float[deviceChannels][audioCompositionFile.getChannels()];
 
-        // Repeat for each output channel
-        for (int i = 0; i < audioService.getChannelCountByAudioDevice(settingsService.getSettings(), audioDevice); i++) {
-            GValueAPI.GValue outputChannel = new GValueAPI.GValue();
-            GValueAPI.GVALUE_API.g_value_init(outputChannel, GstApi.GST_API.gst_value_array_get_type());
-
-            // Fill the channel with the input channels
+        for (int i = 0; i < deviceChannels; i++) {
             for (int j = 0; j < audioCompositionFile.getChannels(); j++) {
-                GValueAPI.GValue inputChannel = new GValueAPI.GValue(GType.FLOAT);
-
-                float channelVolume = getChannelVolume(audioBus, i, j, getCombinedVolume(audioCompositionFile.getVolume(), ctx.getComposition().getAudioVolume()));
-
-                inputChannel.setValue(channelVolume);
-                GstApi.GST_API.gst_value_array_append_value(outputChannel, inputChannel.getPointer());
-                GValueAPI.GVALUE_API.g_value_unset(inputChannel);
+                mixMatrix[i][j] = getChannelVolume(audioBus, i, j, getCombinedVolume(audioCompositionFile.getVolume(), ctx.getComposition().getAudioVolume()));
             }
-
-            GstApi.GST_API.gst_value_array_append_value(mixMatrix, outputChannel.getPointer());
-            GValueAPI.GVALUE_API.g_value_unset(outputChannel);
         }
 
-        logger.debug("Mix-matrix for " + audioCompositionFile.getName() + ": " + mixMatrix);
+        logger.debug("Mix-matrix for " + audioCompositionFile.getName() + ": " + Arrays.deepToString(mixMatrix));
 
-        GstApi.GST_API.g_object_set_property(audioConvert, "mix-matrix", mixMatrix.getPointer());
-        GValueAPI.GVALUE_API.g_value_unset(mixMatrix);
+        setMixMatrix(audioConvert, mixMatrix);
 
         // Find the mixer belonging to the current bus' devices
         Element audioMixer = null;
@@ -556,14 +635,23 @@ public class CompositionPipelineBuilder {
     // Build the output chain (mixer -> capsfilter -> [level] -> queue -> volume -> sink) for one
     // audio device into the given pipeline and return the mixer to link audio sources into. Public for the self-test.
     public Element buildAudioOutputChain(Pipeline target, AudioDevice audioDevice, boolean provideClock, boolean enableLevel, List<Element> volumeListTarget) {
+        return buildAudioOutputChain(target, audioDevice, provideClock, enableLevel, List.of(), volumeListTarget);
+    }
+
+    // The same, with the analysis of the audio buses of the device the pixel effects follow, if any: after the level of
+    // the monitor, a branch for each bus, which picks its channels and measures them every 20 ms (mixer -> capsfilter ->
+    // [level] -> tee -> queue -> volume -> sink, and tee -> queue -> [channels of the bus] -> level -> spectrum ->
+    // fakesink), before the volume, so the lights don't change with it.
+    Element buildAudioOutputChain(Pipeline target, AudioDevice audioDevice, boolean provideClock, boolean enableLevel, List<AudioBus> analyzedBuses, List<Element> volumeListTarget) {
         String audioDeviceAlsaName = audioService.getAudioDeviceAlsaName(audioDevice);
+        int deviceChannels = audioService.getChannelCountByAudioDevice(settingsService.getSettings(), audioDevice);
 
         Element audioMixer = ElementFactory.make("audiomixer", "audiomixer_" + audioDeviceAlsaName);
         target.add(audioMixer);
 
         // Add a capsfilter to enforce multi-channel out. Otherwise only 2 will be mixed
         Element capsFilter = ElementFactory.make("capsfilter", "capsfilter_" + audioDeviceAlsaName);
-        Caps caps = GstApi.GST_API.gst_caps_from_string("audio/x-raw,rate=" + settingsService.getSettings().getAudioRate() + ",channels=" + audioService.getChannelCountByAudioDevice(settingsService.getSettings(), audioDevice));
+        Caps caps = GstApi.GST_API.gst_caps_from_string("audio/x-raw,rate=" + settingsService.getSettings().getAudioRate() + ",channels=" + deviceChannels);
         capsFilter.set("caps", caps);
         target.add(capsFilter);
 
@@ -575,21 +663,30 @@ public class CompositionPipelineBuilder {
         BaseSink sink = audioService.getGstAudioSink(audioDevice, provideClock);
         target.add(sink);
 
-        Element level = null;
+        Element previous = capsFilter;
+
         if (enableLevel) {
-            level = ElementFactory.make("level", "level_" + audioDeviceAlsaName);
+            Element level = ElementFactory.make("level", MONITOR_LEVEL_NAME + audioDeviceAlsaName);
             // 1000 Milliseconds
             level.set("interval", 1000 * 1000000);
             level.set("post-messages", true);
             target.add(level);
+            previous.link(level);
+            previous = level;
         }
 
-        if (level == null) {
-            capsFilter.link(queue);
-        } else {
-            capsFilter.link(level);
-            level.link(queue);
+        if (!analyzedBuses.isEmpty()) {
+            Element tee = ElementFactory.make("tee", "analysistee_" + audioDeviceAlsaName);
+            target.add(tee);
+            previous.link(tee);
+            previous = tee;
+
+            for (AudioBus audioBus : analyzedBuses) {
+                addAnalysisBranch(target, tee, audioBus, deviceChannels);
+            }
         }
+
+        previous.link(queue);
 
         Element volume = ElementFactory.make("volume", "volume_" + audioDeviceAlsaName);
         target.add(volume);
@@ -600,6 +697,78 @@ public class CompositionPipelineBuilder {
         volume.link(sink);
 
         return audioMixer;
+    }
+
+    // The analysis of a bus: its channels picked from the ones of the device, its level and its spectrum measured every
+    // 20 ms, named after the bus (see connectMasterBus). The lights must never hold the audio up: what the analysis
+    // can't keep up with, it leaves out.
+    private void addAnalysisBranch(Pipeline target, Element tee, AudioBus audioBus, int deviceChannels) {
+        float[][] channelMatrix = getBusChannelMatrix(audioBus, deviceChannels);
+
+        if (channelMatrix.length == 0) {
+            return;
+        }
+
+        String name = audioBus.getUuid();
+
+        Element queue = ElementFactory.make("queue", "analysisqueue_" + name);
+        // leaky downstream: the oldest buffers go
+        queue.set("leaky", 2);
+        queue.set("max-size-buffers", 16);
+        queue.set("max-size-bytes", 0);
+        queue.set("max-size-time", 0L);
+        target.add(queue);
+
+        Element convert = ElementFactory.make("audioconvert", "analysisconvert_" + name);
+        setMixMatrix(convert, channelMatrix);
+        target.add(convert);
+
+        Element busCaps = ElementFactory.make("capsfilter", "analysiscaps_" + name);
+        busCaps.set("caps", GstApi.GST_API.gst_caps_from_string("audio/x-raw,channels=" + channelMatrix.length));
+        target.add(busCaps);
+
+        Element level = ElementFactory.make("level", ANALYSIS_LEVEL_NAME + name);
+        level.set("interval", (long) AudioAnalysisService.FRAME_MILLIS * 1000000);
+        level.set("post-messages", true);
+        target.add(level);
+
+        Element spectrum = ElementFactory.make("spectrum", ANALYSIS_SPECTRUM_NAME + name);
+        spectrum.set("bands", ANALYSIS_SPECTRUM_BANDS);
+        spectrum.set("interval", (long) AudioAnalysisService.FRAME_MILLIS * 1000000);
+        spectrum.set("threshold", (int) AudioAnalysisService.SILENCE_DB);
+        spectrum.set("post-messages", true);
+        spectrum.set("message-magnitude", true);
+        spectrum.set("message-phase", false);
+        target.add(spectrum);
+
+        Element analysisSink = ElementFactory.make("fakesink", "analysissink_" + name);
+        analysisSink.set("sync", false);
+        analysisSink.set("async", false);
+        target.add(analysisSink);
+
+        tee.link(queue);
+        queue.link(convert);
+        convert.link(busCaps);
+        busCaps.link(level);
+        level.link(spectrum);
+        spectrum.link(analysisSink);
+    }
+
+    // The buses of a device a pixel effect of the loaded project follows
+    List<AudioBus> getAnalyzedBuses(AudioDevice audioDevice) {
+        List<AudioBus> analyzedBuses = new ArrayList<>();
+        boolean osX = OperatingSystemInformation.Type.OS_X.equals(operatingSystemInformationService.getOperatingSystemInformation().getType());
+
+        for (AudioBus audioBus : settingsService.getSettings().getAudioBusList()) {
+            // on a Mac, every bus plays on the one device
+            boolean onDevice = osX || (audioBus.getAudioDevice() != null && audioDevice != null && audioBus.getAudioDevice().getId() == audioDevice.getId());
+
+            if (onDevice && audioAnalysisService.isRequired(audioBus.getUuid())) {
+                analyzedBuses.add(audioBus);
+            }
+        }
+
+        return analyzedBuses;
     }
 
     // Prepare each used audio device for output in the master pipeline
@@ -613,7 +782,9 @@ public class CompositionPipelineBuilder {
         boolean enableLevel = !isSample && settingsService.getSettings().getEnableMonitor();
 
         for (AudioDevice audioDevice : getAudioDeviceList(compositionFileList)) {
-            Element audioMixer = buildAudioOutputChain(ctx.getMasterPipeline(), audioDevice, provideClockFirstAudioDevice, enableLevel, ctx.getVolumeList());
+            // the buses of the device the pixel effects follow are analyzed, not the ones of a sample
+            List<AudioBus> analyzedBuses = isSample ? List.of() : getAnalyzedBuses(audioDevice);
+            Element audioMixer = buildAudioOutputChain(ctx.getMasterPipeline(), audioDevice, provideClockFirstAudioDevice, enableLevel, analyzedBuses, ctx.getVolumeList());
             audioMixerList.put(audioDevice, audioMixer);
             provideClockFirstAudioDevice = false;
         }

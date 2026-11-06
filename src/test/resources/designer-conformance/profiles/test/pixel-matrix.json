@@ -1,0 +1,62 @@
+{
+  "name": "Matrix of 4 x 3 pixels",
+  "categories": ["Matrix", "Color Changer"],
+  "matrix": {
+    "pixelKeys": [
+      [
+        ["1", "2", "3", "4"],
+        ["5", "6", "7", "8"],
+        ["9", "10", "11", "12"]
+      ]
+    ],
+    "pixelGroups": {
+      "Top": { "y": ["=1"] },
+      "Corners": ["1", "4", "9", "12"]
+    }
+  },
+  "availableChannels": {},
+  "templateChannels": {
+    "Red $pixelKey": { "capability": { "type": "ColorIntensity", "color": "Red" } },
+    "Green $pixelKey": { "capability": { "type": "ColorIntensity", "color": "Green" } },
+    "Blue $pixelKey": { "capability": { "type": "ColorIntensity", "color": "Blue" } },
+    "White $pixelKey": { "capability": { "type": "ColorIntensity", "color": "White" } }
+  },
+  "modes": [
+    {
+      "name": "36-channel",
+      "shortName": "36ch",
+      "channels": [
+        {
+          "insert": "matrixChannels",
+          "repeatFor": "eachPixelXYZ",
+          "channelOrder": "perPixel",
+          "templateChannels": ["Red $pixelKey", "Green $pixelKey", "Blue $pixelKey"]
+        }
+      ]
+    },
+    {
+      "name": "48-channel",
+      "shortName": "48ch",
+      "channels": [
+        {
+          "insert": "matrixChannels",
+          "repeatFor": "eachPixelXYZ",
+          "channelOrder": "perPixel",
+          "templateChannels": ["Red $pixelKey", "Green $pixelKey", "Blue $pixelKey", "White $pixelKey"]
+        }
+      ]
+    },
+    {
+      "name": "6-channel",
+      "shortName": "6ch",
+      "channels": [
+        {
+          "insert": "matrixChannels",
+          "repeatFor": ["Top", "Corners"],
+          "channelOrder": "perPixel",
+          "templateChannels": ["Red $pixelKey", "Green $pixelKey", "Blue $pixelKey"]
+        }
+      ]
+    }
+  ]
+}

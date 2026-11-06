@@ -60,6 +60,16 @@ public class DesignerController {
         return fixtureService.getFixture(uuid);
     }
 
+    // an audio bus as the designer shows it, for a pixel effect to follow
+    public record DesignerAudioBus(String uuid, String name) {
+    }
+
+    // the audio buses the pixel effects of the designer can follow
+    @GetMapping("audio-buses")
+    public List<DesignerAudioBus> getAudioBuses() {
+        return settingsService.getSettings().getAudioBusList().stream().map(audioBus -> new DesignerAudioBus(audioBus.getUuid(), audioBus.getName())).toList();
+    }
+
     @PostMapping("preview")
     public synchronized void preview(
             @RequestBody String projectJson,

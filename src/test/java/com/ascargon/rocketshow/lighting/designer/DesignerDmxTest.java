@@ -1,6 +1,8 @@
 package com.ascargon.rocketshow.lighting.designer;
 
+import com.ascargon.rocketshow.audio.AudioBus;
 import com.ascargon.rocketshow.play.CompositionPlayer;
+import org.apache.logging.log4j.Level;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import tools.jackson.databind.ObjectMapper;
@@ -8,8 +10,10 @@ import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -201,6 +205,55 @@ class DesignerDmxTest {
     }
 
     @Test
+    void opensTheDimmersOfTheFixturesLightingInColorsInACurrentProject() throws Exception {
+        ObjectNode project = project();
+        addPreset(project, "Red", List.of("par-1", "head"), List.of(color(project, "Red", 1.0)));
+        makeCurrent(project);
+
+        Map<String, Map<Integer, Integer>> universes = play(project);
+
+        // par 1 lit in red by its color alone, par 2 at full as well, but dark without a color
+        assertEquals(List.of(255, 255, 0, 0, 0, 5), addresses(universes.get(FRONT), 1, 6));
+        assertEquals(List.of(255, 0, 0, 0), addresses(universes.get(FRONT), 11, 14));
+        // the moving head shines white through its color wheel: its dimmer stays off
+        assertEquals(List.of(0, 0), addresses(universes.get(BACK), 5, 6));
+    }
+
+    @Test
+    void measuresTheBusesTheEffectsOfAProjectFollow() {
+        AudioBus main = new AudioBus();
+        main.setUuid("main");
+        AudioBus click = new AudioBus();
+        click.setUuid("click");
+        List<AudioBus> buses = List.of(main, click);
+
+        Project project = new Project();
+        assertEquals(Set.of(), DefaultDesignerService.followedBuses(project, buses));
+
+        Preset preset = new Preset();
+        EffectPixel effect = new EffectPixel();
+        preset.setEffects(new ArrayList<>(List.of(effect)));
+        project.setPresets(new ArrayList<>(List.of(preset)));
+        assertEquals(Set.of(), DefaultDesignerService.followedBuses(project, buses));
+
+        // naming no bus, it follows all of them
+        effect.setAudioSource("composition");
+        assertEquals(Set.of("main", "click"), DefaultDesignerService.followedBuses(project, buses));
+
+        effect.setAudioBuses(List.of("main"));
+        assertEquals(Set.of("main"), DefaultDesignerService.followedBuses(project, buses));
+        assertEquals(Set.of(), DefaultDesignerService.followedBuses(null, buses));
+    }
+
+    @Test
+    void keepsTheDimmersOfAProjectOfBeforeOff() throws Exception {
+        ObjectNode project = project();
+        addPreset(project, "Red", List.of("par-1"), List.of(color(project, "Red", 1.0)));
+
+        assertEquals(List.of(0, 255, 0, 0, 0, 5), addresses(play(project).get(FRONT), 1, 6));
+    }
+
+    @Test
     void setsTheDimmerAndColorOfEveryFixtureOfAPreset() throws Exception {
         ObjectNode project = project();
         ObjectNode red = capability(project, "ColorIntensity", 1.0);
@@ -213,6 +266,34 @@ class DesignerDmxTest {
 
         assertEquals(List.of(127, 255, 0, 51, 0, 5), addresses(front, 1, 6));
         assertEquals(List.of(127, 255, 0, 51, 0, 5), addresses(front, 11, 16));
+    }
+
+    @Test
+    void leavesOutAnEffectOfATypeItDoesNotKnow() throws Throwable {
+        ObjectNode project = project();
+        ObjectNode red = capability(project, "ColorIntensity", 1.0);
+        red.put("color", "Red");
+        addPreset(project, "Red", List.of("par-1"), List.of(capability(project, "Intensity", 1.0), red));
+
+        // an effect a newer designer added, next to a curve this one knows (on the green of the par)
+        ArrayNode effects = (ArrayNode) project.get("presets").get(0).get("effects");
+        ObjectNode unknown = effects.addObject();
+        unknown.put("type", "sparkles");
+        unknown.put("uuid", "unknown");
+        unknown.put("density", 0.5);
+        ObjectNode curve = effects.addObject();
+        curve.put("type", "curve");
+        curve.put("uuid", "curve");
+        curve.put("curveType", "square");
+        curve.put("dutyCycle", 1);
+        curve.putArray("capabilities").addObject().put("type", "ColorIntensity").put("color", "Green");
+
+        List<Map<String, Map<Integer, Integer>>> universes = new ArrayList<>();
+        List<String> warnings = DesignerTestEngine.logged(Level.WARN, () -> universes.add(play(project)));
+
+        // the rest of the preset still plays: red from the preset, full green from the curve
+        assertEquals(List.of(255, 255, 255, 0), addresses(universes.getFirst().get(FRONT), 1, 4));
+        assertEquals(1, warnings.stream().filter(warning -> warning.contains("'sparkles'")).count(), warnings.toString());
     }
 
     @Test
@@ -450,6 +531,31 @@ class DesignerDmxTest {
     }
 
     @Test
+    void paintsAPixelEffectOverThePixelsOfABar() throws Exception {
+        ObjectNode project = project();
+        addPixelBars(project);
+        addPreset(project, "Chase", List.of(), List.of());
+        ObjectNode preset = (ObjectNode) project.get("presets").get(0);
+        ArrayNode fixtures = preset.putArray("fixtures");
+        for (String pixelKey : List.of("1", "2", "3")) {
+            fixtures.addObject().put("fixtureUuid", "bar-9ch").put("pixelKey", pixelKey);
+        }
+
+        // a block of a third of the bar, in red, halfway through its period at the time played (5 seconds)
+        ObjectNode effect = ((ArrayNode) preset.get("effects")).addObject();
+        effect.put("type", "pixel");
+        effect.put("uuid", "chase");
+        effect.put("pattern", "chase");
+        effect.put("size", 0.34);
+        effect.put("softness", 0);
+        effect.put("lengthMillis", 10000);
+        effect.putObject("palette").putArray("stops").addObject().put("position", 0).put("color", "#ff0000");
+
+        // Red 1 to 3, green 1 to 3, blue 1 to 3: the middle pixel is lit
+        assertEquals(List.of(0, 255, 0, 0, 0, 0, 0, 0, 0), addresses(play(project).get(FRONT), 31, 39));
+    }
+
+    @Test
     void sendsTheFineChannelsOfThePixels() throws Exception {
         ObjectNode project = project();
         addPixelBars(project);
@@ -460,6 +566,18 @@ class DesignerDmxTest {
         assertEquals(List.of(127, 255, 255, 255, 0, 0), addresses(play(project).get(FRONT), 41, 46));
     }
 
+
+    // the project as the current designer saves it: its clips on a track, which a project of before version 10 gets
+    // when it is migrated
+    private static void makeCurrent(ObjectNode project) {
+        project.put("version", 11);
+        ObjectNode composition = (ObjectNode) project.get("compositions").get(0);
+        composition.putArray("tracks").addObject().put("uuid", "track").put("name", "Track");
+
+        for (var region : composition.get("scenePlaybackRegions")) {
+            ((ObjectNode) region).put("trackUuid", "track");
+        }
+    }
 
     // A preset lighting the pars in one color only
     private void addColorPreset(ObjectNode project, String name, double red, double blue) {
