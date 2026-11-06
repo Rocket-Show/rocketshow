@@ -1,0 +1,63 @@
+{
+  "name": "Matrix of 3 x 2 white LEDs",
+  "categories": ["Matrix", "Strobe", "Blinder"],
+  "matrix": {
+    "pixelKeys": [
+      [
+        ["1", "2", "3"],
+        ["4", "5", "6"]
+      ]
+    ]
+  },
+  "availableChannels": {
+    "Master Dimmer": {
+      "capability": {
+        "type": "Intensity"
+      }
+    },
+    "Strobe": {
+      "capability": {
+        "type": "ShutterStrobe",
+        "shutterEffect": "Strobe",
+        "speedStart": "slow",
+        "speedEnd": "fast"
+      }
+    }
+  },
+  "templateChannels": {
+    "Dimmer LED $pixelKey": {
+      "defaultValue": 0,
+      "capability": {
+        "type": "Intensity"
+      }
+    }
+  },
+  "modes": [
+    {
+      "name": "6-channel",
+      "shortName": "6ch",
+      "channels": [
+        {
+          "insert": "matrixChannels",
+          "repeatFor": "eachPixelXYZ",
+          "channelOrder": "perPixel",
+          "templateChannels": ["Dimmer LED $pixelKey"]
+        }
+      ]
+    },
+    {
+      "name": "8-channel",
+      "shortName": "8ch",
+      "channels": [
+        "Master Dimmer",
+        "Strobe",
+        {
+          "insert": "matrixChannels",
+          "repeatFor": "eachPixelXYZ",
+          "channelOrder": "perPixel",
+          "templateChannels": ["Dimmer LED $pixelKey"]
+        }
+      ]
+    }
+  ]
+}

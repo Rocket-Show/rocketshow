@@ -22,7 +22,9 @@ The profiles of `test` are written for the cases: `rgb-par`, `rgb` and `moving-h
 named differently than its wheel, wheels named in a list) and `pixel-bar` (channels per channel, a dimmer of its own,
 the channels of a pixel named directly) are lit on the edges of what they have (`channel-values-edges.json`).
 `pixel-matrix` (pixels given by their keys in rows, RGB and RGBW, groups of a row and of the corners) and `pixel-bar` play
-the pixel effects (`channel-values-pixel-effects.json`).
+the pixel effects (`channel-values-pixel-effects.json`), `white-matrix` (pixels lighting in white only, with a dimmer of
+their own each, alone and next to a master dimmer and a strobe, like the Cameo Flash Matrix 250) the pixel effects on
+white LEDs (`channel-values-pixel-white.json`).
 `beam` (a shutter, a strobe speed, a zoom, a focus, an iris, a frost, a color temperature and a prism, their ranges
 running both ways round, in words and in numbers), `strobe-par` (a strobe sharing its channel with the dimmer, "no
 function" switching another one off, white, amber and UV), `cmy-spot` (colors mixed with filters), `mover` (a movement
