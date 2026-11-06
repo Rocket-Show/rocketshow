@@ -556,6 +556,34 @@ class DesignerDmxTest {
     }
 
     @Test
+    void paintsAPixelEffectOnTheDimmersOfPixelsLightingInWhiteOnly() throws Exception {
+        // the bar with a 16 bit dimmer per pixel and no colors, dimmed by half by the preset
+        ObjectNode project = project();
+        addPixelBars(project);
+        addPreset(project, "Chase", List.of(), List.of(capability(project, "Intensity", 0.5)));
+        ObjectNode preset = (ObjectNode) project.get("presets").get(0);
+        ArrayNode fixtures = preset.putArray("fixtures");
+        for (String pixelKey : List.of("1", "2", "3")) {
+            fixtures.addObject().put("fixtureUuid", "bar-6ch").put("pixelKey", pixelKey);
+        }
+
+        // a block of a third of the bar, in a dark orange, halfway through its period at the time played (5 seconds)
+        ObjectNode effect = ((ArrayNode) preset.get("effects")).addObject();
+        effect.put("type", "pixel");
+        effect.put("uuid", "chase");
+        effect.put("pattern", "chase");
+        effect.put("size", 0.34);
+        effect.put("softness", 0);
+        effect.put("lengthMillis", 10000);
+        effect.putObject("palette").putArray("stops").addObject().put("position", 0).put("color", "#804000");
+
+        // Dimmer 1 and its fine channel, then the ones of the pixels 2 and 3: the middle pixel as bright as the orange
+        // is (its red), dimmed by half
+        List<Integer> dimmers = addresses(play(project).get(FRONT), 41, 46);
+        assertEquals(List.of(0, 64, 0), List.of(dimmers.get(0), dimmers.get(2), dimmers.get(4)));
+    }
+
+    @Test
     void sendsTheFineChannelsOfThePixels() throws Exception {
         ObjectNode project = project();
         addPixelBars(project);

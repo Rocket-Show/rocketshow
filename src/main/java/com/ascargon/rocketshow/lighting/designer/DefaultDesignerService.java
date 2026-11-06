@@ -1874,7 +1874,8 @@ public class DefaultDesignerService implements DesignerService {
     // doesn't), mirrored with the preset, like in the designer
     // A pixel effect on a part of a fixture (a pixel, or a fixture without pixels): the color of its pattern where the part
     // is in its fixture, blended with the color the preset puts on it, on its red, green and blue. Its other channels keep
-    // what the preset puts on them, its dimmer as well. This follows the same rules as the designer.
+    // what the preset puts on them, its dimmer as well. A pixel lighting in white only (see getWhitePixelDimmer) lights as
+    // bright as the color is, on its dimmer. This follows the same rules as the designer.
     private void mixPixelEffect(EffectPixel effect, double effectTimeMillis, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double effectIntensityPercentage, int fixtureIndex, int fixtureCount) {
         CachedFixtureChannel[] channels = {
                 getColorChannel(cachedFixture, FixtureCapability.FixtureCapabilityColor.Red),
@@ -1882,7 +1883,10 @@ public class DefaultDesignerService implements DesignerService {
                 getColorChannel(cachedFixture, FixtureCapability.FixtureCapabilityColor.Blue)
         };
 
-        if (channels[0] == null && channels[1] == null && channels[2] == null) {
+        boolean lightsInColors = channels[0] != null || channels[1] != null || channels[2] != null;
+        CachedFixtureChannel whiteDimmer = lightsInColors ? null : getWhitePixelDimmer(cachedFixture);
+
+        if (!lightsInColors && whiteDimmer == null) {
             return;
         }
 
@@ -1895,12 +1899,15 @@ public class DefaultDesignerService implements DesignerService {
             return;
         }
 
-        // the color the preset puts on the part, as red, green and blue between 0 and 1
-        double[] base = new double[3];
+        // the color the preset puts on the part, as red, green and blue between 0 and 1 (white at full on a pixel lighting
+        // in white only, which its dimmer dims)
+        double[] base = {1, 1, 1};
 
-        for (int i = 0; i < 3; i++) {
-            FixtureChannelValue value = channels[i] == null ? null : getChannelValue(values, channels[i].getName(), cachedFixture.getProfile().getUuid());
-            base[i] = value == null ? 0 : value.getValue() / channels[i].getMaxValue();
+        if (whiteDimmer == null) {
+            for (int i = 0; i < 3; i++) {
+                FixtureChannelValue value = channels[i] == null ? null : getChannelValue(values, channels[i].getName(), cachedFixture.getProfile().getUuid());
+                base[i] = value == null ? 0 : value.getValue() / channels[i].getMaxValue();
+            }
         }
 
         // Where the part is in its fixture, every fixture starting the random looking patterns somewhere else. Spread
@@ -1932,6 +1939,16 @@ public class DefaultDesignerService implements DesignerService {
         double[] color = sample[2] >= 0 ? new double[]{sample[2], sample[3], sample[4]} : PixelPalette.colorOf(stops, palette.getBetween(), palette.getRepeat(), sample[0]);
         double[] lit = {color[0] * sample[1], color[1] * sample[1], color[2] * sample[1]};
 
+        // A pixel lighting in white only lights as bright as the brightest of the red, green and blue of the light, blended
+        // with the white at full the preset puts on it, and dimmed by its dimmer, like a pixel lighting in colors is
+        if (whiteDimmer != null) {
+            FixtureChannelValue value = getChannelValue(values, whiteDimmer.getName(), cachedFixture.getProfile().getUuid());
+            double dimmer = value == null ? 0 : value.getValue() / whiteDimmer.getMaxValue();
+
+            mixPixelValue(effect, cachedFixture, whiteDimmer, 1, Math.max(Math.max(lit[0], lit[1]), lit[2]), sample[1], values, effectIntensityPercentage, dimmer);
+            return;
+        }
+
         // the white part of the light on the white LED, if it is to light it
         CachedFixtureChannel white = effect.isWhiteLed() ? getColorChannel(cachedFixture, FixtureCapability.FixtureCapabilityColor.White) : null;
         double litWhite = 0;
@@ -1946,7 +1963,7 @@ public class DefaultDesignerService implements DesignerService {
 
         for (int i = 0; i < 3; i++) {
             if (channels[i] != null) {
-                mixPixelValue(effect, cachedFixture, channels[i], base[i], lit[i], sample[1], values, effectIntensityPercentage);
+                mixPixelValue(effect, cachedFixture, channels[i], base[i], lit[i], sample[1], values, effectIntensityPercentage, 1);
             }
         }
 
@@ -1954,7 +1971,7 @@ public class DefaultDesignerService implements DesignerService {
             FixtureChannelValue value = getChannelValue(values, white.getName(), cachedFixture.getProfile().getUuid());
             double baseWhite = value == null ? 0 : value.getValue() / white.getMaxValue();
 
-            mixPixelValue(effect, cachedFixture, white, baseWhite, litWhite, sample[1], values, effectIntensityPercentage);
+            mixPixelValue(effect, cachedFixture, white, baseWhite, litWhite, sample[1], values, effectIntensityPercentage, 1);
         }
     }
 
@@ -2078,8 +2095,8 @@ public class DefaultDesignerService implements DesignerService {
 
     // A color of a pixel the effect lights, blended with the one the preset puts on it (base, between 0 and 1): the
     // light of the pattern (lit) in place of it, the base as bright as the pattern makes it (mask), the light added to it
-    // or the brighter of both
-    private void mixPixelValue(EffectPixel effect, CachedFixture cachedFixture, CachedFixtureChannel channel, double base, double lit, double level, List<FixtureChannelValue> values, double effectIntensityPercentage) {
+    // or the brighter of both. Dimmed (between 0 and 1) on the dimmer of a pixel lighting in white only.
+    private void mixPixelValue(EffectPixel effect, CachedFixture cachedFixture, CachedFixtureChannel channel, double base, double lit, double level, List<FixtureChannelValue> values, double effectIntensityPercentage, double dimmer) {
         double target = switch (effect.getBlend()) {
             case "mask" -> base * level;
             case "add" -> Math.min(base + lit, 1);
@@ -2090,12 +2107,40 @@ public class DefaultDesignerService implements DesignerService {
         FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
         fixtureChannelValue.setChannelName(channel.getName());
         fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
-        fixtureChannelValue.setValue(channel.getMaxValue() * target);
+        fixtureChannelValue.setValue(channel.getMaxValue() * target * dimmer);
         mixChannelValue(values, fixtureChannelValue, effectIntensityPercentage);
     }
 
-    // Where a part of a fixture is in the picture of the stage the parts of a preset make up (the ones lighting in
-    // colors, see PixelStage), seen from the front or from above. Worked out once for each preset and view.
+    // The dimmer of a pixel of a bar or a matrix lighting in white only (no red, green and blue, a dimmer of its own, e.g.
+    // a LED of a matrix of white strobes), which a pixel effect lights. None for any other part: a fixture without pixels
+    // and the general channels of one with pixels (e.g. its master dimmer) keep what the preset puts on them. The
+    // designer finds it the same way.
+    private static CachedFixtureChannel getWhitePixelDimmer(CachedFixture cachedFixture) {
+        if (cachedFixture.getPixel() == null) {
+            return null;
+        }
+
+        for (CachedFixtureChannel channel : cachedFixture.getChannels()) {
+            for (CachedFixtureCapability channelCapability : channel.getCapabilities()) {
+                if (channelCapability.getCapability().getType() == FixtureCapability.FixtureCapabilityType.Intensity) {
+                    return channel;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    // whether a pixel effect lights a part of a fixture: in red, green and blue, or in white only
+    private static boolean lightsPixelEffect(CachedFixture cachedFixture) {
+        return getColorChannel(cachedFixture, FixtureCapability.FixtureCapabilityColor.Red) != null
+                || getColorChannel(cachedFixture, FixtureCapability.FixtureCapabilityColor.Green) != null
+                || getColorChannel(cachedFixture, FixtureCapability.FixtureCapabilityColor.Blue) != null
+                || getWhitePixelDimmer(cachedFixture) != null;
+    }
+
+    // Where a part of a fixture is in the picture of the stage the parts of a preset make up (the ones a pixel effect
+    // lights, see PixelStage), seen from the front or from above. Worked out once for each preset and view.
     private PixelContext getStagePixelPlace(Preset preset, String view, CachedFixture cachedFixture) {
         Map<CachedFixture, PixelContext> places = stagePixelPlaces
                 .computeIfAbsent(preset, key -> new ConcurrentHashMap<>())
@@ -2115,10 +2160,7 @@ public class DefaultDesignerService implements DesignerService {
         for (CachedFixture part : cachedFixtures) {
             String pixelKey = part.getPixel() == null ? null : part.getPixel().getKey();
 
-            if (!indices.containsKey(new PresetFixtureKey(part.getFixture().getUuid(), pixelKey))
-                    || (getColorChannel(part, FixtureCapability.FixtureCapabilityColor.Red) == null
-                    && getColorChannel(part, FixtureCapability.FixtureCapabilityColor.Green) == null
-                    && getColorChannel(part, FixtureCapability.FixtureCapabilityColor.Blue) == null)) {
+            if (!indices.containsKey(new PresetFixtureKey(part.getFixture().getUuid(), pixelKey)) || !lightsPixelEffect(part)) {
                 continue;
             }
 
