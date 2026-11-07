@@ -2,6 +2,8 @@ package com.ascargon.rocketshow.lighting.designer;
 
 import com.ascargon.rocketshow.api.NotificationService;
 import com.ascargon.rocketshow.composition.DefaultSetService;
+import com.ascargon.rocketshow.midi.ActionTriggerMidiControlChange;
+import com.ascargon.rocketshow.midi.ActionTriggerMidiNoteOn;
 import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.session.DefaultSessionService;
 import com.ascargon.rocketshow.settings.SettingsService;
@@ -12,6 +14,7 @@ import org.junit.jupiter.api.io.TempDir;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
+import javax.sound.midi.ShortMessage;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,7 +71,7 @@ class ScenePlayerServiceTest {
     }
 
     private DefaultScenePlayerService scenePlayerService() {
-        return new DefaultScenePlayerService(designerService, new DefaultSessionService(settingsService, new DefaultSetService()), notificationService, mock(PlayerService.class), new DefaultSetService());
+        return new DefaultScenePlayerService(designerService, new DefaultSessionService(settingsService, new DefaultSetService()), notificationService, mock(PlayerService.class), new DefaultSetService(), settingsService);
     }
 
     @Test
@@ -85,16 +88,16 @@ class ScenePlayerServiceTest {
 
         scenePlayerService.setMasterDimmer(0.8);
         scenePlayerService.setActiveScenes("Club Lights", List.of("Club Lights-1"));
-        verify(designerService).playManualScenes(club, List.of("Club Lights-1"), 0.8);
+        verify(designerService).playManualScenes(club, List.of("Club Lights-1"), List.of(), 0.8);
 
         // A blackout holds them dark
         scenePlayerService.setBlackout(true);
-        verify(designerService).playManualScenes(club, List.of("Club Lights-1"), 0.0);
+        verify(designerService).playManualScenes(club, List.of("Club Lights-1"), List.of(), 0.0);
 
-        // Nothing is left to play once they are released and the blackout is lifted
+        // Nothing is left to play once they are released and the blackout is lifted: they fade out
         scenePlayerService.setActiveScenes("Club Lights", List.of());
         scenePlayerService.setBlackout(false);
-        verify(designerService, org.mockito.Mockito.atLeastOnce()).stopManualScenes();
+        verify(designerService, org.mockito.Mockito.atLeastOnce()).releaseManualScenes();
     }
 
     @Test
@@ -104,7 +107,7 @@ class ScenePlayerServiceTest {
 
         scenePlayerService.setMasterDimmer(0.3);
 
-        verify(designerService).playManualScenes(club, List.of("Club Lights-0"), 0.3);
+        verify(designerService).playManualScenes(club, List.of("Club Lights-0"), List.of(), 0.3);
     }
 
     @Test
@@ -115,7 +118,7 @@ class ScenePlayerServiceTest {
 
         scenePlayerService.setBlackout(true);
 
-        verify(designerService).playManualScenes(club, List.of(), 0.0);
+        verify(designerService).playManualScenes(club, List.of(), List.of(), 0.0);
     }
 
     @Test
@@ -187,7 +190,7 @@ class ScenePlayerServiceTest {
         when(designerService.getProjectByName("Club Lights")).thenReturn(club);
         DefaultScenePlayerService restarted = scenePlayerService();
 
-        verify(designerService).playManualScenes(club, List.of("Club Lights-0", "Club Lights-1"), 0.5);
+        verify(designerService).playManualScenes(club, List.of("Club Lights-0", "Club Lights-1"), List.of(), 0.5);
         assertEquals("Club Lights", restarted.getProjectName());
         assertEquals(List.of("Club Lights-0", "Club Lights-1"), restarted.getActiveSceneUuids());
         assertFalse(restarted.isBlackout());
@@ -199,7 +202,7 @@ class ScenePlayerServiceTest {
 
         scenePlayerService.setActiveScenes("Deleted", List.of("scene"));
 
-        verify(designerService, never()).playManualScenes(any(), anyList(), anyDouble());
+        verify(designerService, never()).playManualScenes(any(), anyList(), anyList(), anyDouble());
         verify(designerService, org.mockito.Mockito.atLeastOnce()).stopManualScenes();
     }
 
@@ -229,7 +232,7 @@ class ScenePlayerServiceTest {
         scenePlayerService.setActiveScenes("Club Lights", List.of("Club Lights-0", "Club Lights-1"));
 
         scenePlayerService.playScene("Club Lights", "Scene 1", ScenePlayerService.UNTIL_STOPPED);
-        verify(designerService).playManualScenes(club, List.of("Club Lights-1"), 1.0);
+        verify(designerService).playManualScenes(club, List.of("Club Lights-1"), List.of(), 1.0);
         assertEquals(List.of("Club Lights-1"), scenePlayerService.getActiveSceneUuids());
 
         scenePlayerService.playScene("Club Lights", "Club Lights-0", ScenePlayerService.UNTIL_STOPPED);
@@ -317,4 +320,214 @@ class ScenePlayerServiceTest {
         assertEquals("Club Lights", scenePlayerService.getProjectName());
     }
 
+
+    // ---- playing the scenes live ----
+
+    @Test
+    void togglesASceneLikeATapOnThePlayScreen() {
+        DefaultScenePlayerService scenePlayerService = scenePlayerService();
+
+        scenePlayerService.toggleScene("Club Lights", "Scene 1");
+        assertEquals(List.of("Club Lights-1"), scenePlayerService.getActiveSceneUuids());
+
+        scenePlayerService.toggleScene("Club Lights", "Club Lights-1");
+        assertEquals(List.of(), scenePlayerService.getActiveSceneUuids());
+    }
+
+    @Test
+    void flashesASceneOnTopOfTheOnesOnWhileItIsHeld() {
+        DefaultScenePlayerService scenePlayerService = scenePlayerService();
+        scenePlayerService.setActiveScenes("Club Lights", List.of("Club Lights-0"));
+
+        scenePlayerService.flashScene("Club Lights", "Club Lights-1", true);
+        verify(designerService).playManualScenes(club, List.of("Club Lights-0"), List.of("Club Lights-1"), 1.0);
+        assertEquals(List.of("Club Lights-1"), scenePlayerService.getFlashedSceneUuids());
+
+        scenePlayerService.flashScene("Club Lights", "Scene 1", false);
+        assertEquals(List.of(), scenePlayerService.getFlashedSceneUuids());
+        assertEquals(List.of("Club Lights-0"), scenePlayerService.getActiveSceneUuids());
+
+        // a flash alone plays as well, and fades nothing out when it ends
+        scenePlayerService.setActiveScenes("Club Lights", List.of());
+        scenePlayerService.flashScene("Club Lights", "Club Lights-0", true);
+        verify(designerService).playManualScenes(club, List.of(), List.of("Club Lights-0"), 1.0);
+    }
+
+    @Test
+    void stepsThroughTheScenesOfAFolderInTheOrderOfTheDesigner() {
+        // all scenes: 0, then the folder with 3 and 1, then 2
+        Project band = project("Band", 4);
+        when(designerService.getProjectByName("Band")).thenReturn(band);
+        SceneFolder songs = new SceneFolder();
+        songs.setUuid("songs");
+        songs.setName("Songs");
+        songs.setSortIndex(1);
+        band.setSceneFolders(List.of(songs));
+        band.getScenes().get(0).setSortIndex(0);
+        band.getScenes().get(1).setFolderUuid("songs");
+        band.getScenes().get(1).setSortIndex(1);
+        band.getScenes().get(2).setSortIndex(2);
+        band.getScenes().get(3).setFolderUuid("songs");
+        band.getScenes().get(3).setSortIndex(0);
+        DefaultScenePlayerService scenePlayerService = scenePlayerService();
+
+        List<String> stepped = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            scenePlayerService.stepScene("Band", null, 1);
+            stepped.add(scenePlayerService.getActiveSceneUuids().getFirst());
+        }
+        // the last one stays on at the end
+        assertEquals(List.of("Band-0", "Band-3", "Band-1", "Band-2", "Band-2"), stepped);
+
+        scenePlayerService.stepScene("Band", null, -1);
+        assertEquals(List.of("Band-1"), scenePlayerService.getActiveSceneUuids());
+
+        // the scenes of a folder, by its name or its uuid, of the project of the scenes on
+        scenePlayerService.stepScene(null, "Songs", -1);
+        assertEquals(List.of("Band-3"), scenePlayerService.getActiveSceneUuids());
+        scenePlayerService.stepScene("Band", "songs", -1);
+        assertEquals(List.of("Band-3"), scenePlayerService.getActiveSceneUuids());
+
+        assertThrows(IllegalArgumentException.class, () -> scenePlayerService.stepScene("Band", "Ballads", 1));
+    }
+
+    @Test
+    void takesTheTempoFromTheBeatsTapped() {
+        long[] now = {100000};
+        DefaultScenePlayerService scenePlayerService = scenePlayerService();
+        scenePlayerService.setClock(() -> now[0]);
+
+        // the first beat only falls on the beat
+        scenePlayerService.tapTempo();
+        verify(designerService).setLiveBeatsPerMinute(null, true);
+        assertEquals("project", scenePlayerService.getTempoSource());
+
+        now[0] += 500;
+        scenePlayerService.tapTempo();
+        now[0] += 500;
+        scenePlayerService.tapTempo();
+        assertEquals(120.0, scenePlayerService.getBeatsPerMinute());
+        assertEquals("tap", scenePlayerService.getTempoSource());
+        verify(designerService, org.mockito.Mockito.atLeastOnce()).setLiveBeatsPerMinute(120.0, true);
+
+        // a pause starts tapping anew
+        now[0] += 5000;
+        scenePlayerService.tapTempo();
+        now[0] += 400;
+        scenePlayerService.tapTempo();
+        assertEquals(150.0, scenePlayerService.getBeatsPerMinute());
+
+        // remembered over a restart
+        assertEquals(150.0, scenePlayerService().getBeatsPerMinute());
+
+        // back to the tempo of the project
+        when(designerService.getLiveReferenceBeatsPerMinute()).thenReturn(128.0);
+        scenePlayerService.setBeatsPerMinute(null);
+        assertEquals(128.0, scenePlayerService.getBeatsPerMinute());
+        assertEquals("project", scenePlayerService.getTempoSource());
+
+        // set by hand, as far as it goes
+        scenePlayerService.setBeatsPerMinute(1000.0);
+        assertEquals(300.0, scenePlayerService.getBeatsPerMinute());
+        assertEquals("set", scenePlayerService.getTempoSource());
+    }
+
+    @Test
+    void followsTheTempoOfAMidiClockWithoutRememberingIt() {
+        DefaultScenePlayerService scenePlayerService = scenePlayerService();
+
+        scenePlayerService.setClockTempo(126.4, true);
+
+        verify(designerService).setLiveBeatsPerMinute(126.4, true);
+        assertEquals(126.4, scenePlayerService.getBeatsPerMinute());
+        assertEquals("clock", scenePlayerService.getTempoSource());
+        assertEquals("project", scenePlayerService().getTempoSource());
+    }
+
+    @Test
+    void keepsTheSpeedMasterAndTheDimmersOfTheScenes() {
+        DefaultScenePlayerService scenePlayerService = scenePlayerService();
+        scenePlayerService.setActiveScenes("Club Lights", List.of("Club Lights-1"));
+
+        scenePlayerService.setSpeed(9);
+        assertEquals(4.0, scenePlayerService.getSpeed());
+        scenePlayerService.setSpeed(0.5);
+        verify(designerService, org.mockito.Mockito.atLeastOnce()).setLiveSpeed(0.5);
+
+        scenePlayerService.setSceneDimmer("Club Lights-1", 0.4);
+        verify(designerService, org.mockito.Mockito.atLeastOnce()).setLiveSceneDimmers(java.util.Map.of("Club Lights-1", 0.4));
+
+        // remembered over a restart, a scene at full without a dimmer
+        DefaultScenePlayerService restarted = scenePlayerService();
+        assertEquals(0.5, restarted.getSpeed());
+        assertEquals(java.util.Map.of("Club Lights-1", 0.4), restarted.getSceneDimmers());
+        restarted.setSceneDimmer("Club Lights-1", 1);
+        assertEquals(java.util.Map.of(), restarted.getSceneDimmers());
+    }
+
+    // ---- MIDI learn ----
+
+    private static ShortMessage message(int command, int channel, int data1, int data2) throws Exception {
+        return new ShortMessage(command, channel, data1, data2);
+    }
+
+    @Test
+    void learnsTheKeyPadOrButtonOfAMidiControllerForAScene() throws Exception {
+        DefaultScenePlayerService scenePlayerService = scenePlayerService();
+
+        // a trigger set up in the settings stays, whatever is learned
+        ActionTriggerMidiNoteOn ownTrigger = new ActionTriggerMidiNoteOn();
+        ownTrigger.setNote(36);
+        ownTrigger.setChannel(2);
+        ownTrigger.getActionList().add(new ActionScene());
+        settingsService.getSettings().getActionTriggerMidiList().add(ownTrigger);
+
+        scenePlayerService.learn("Club Lights", "Scene 1", "toggle");
+        assertEquals("Club Lights-1", scenePlayerService.getLearning().getScene());
+
+        // a clock tick or a key let go isn't taken
+        assertFalse(scenePlayerService.learnMidi(new ShortMessage(0xF8)));
+        assertFalse(scenePlayerService.learnMidi(message(ShortMessage.NOTE_ON, 2, 36, 0)));
+
+        assertTrue(scenePlayerService.learnMidi(message(ShortMessage.NOTE_ON, 2, 36, 100)));
+        assertEquals(null, scenePlayerService.getLearning());
+        assertEquals(List.of("Club Lights-1 toggle note 2 36"), mappings(scenePlayerService));
+
+        // the same key learned for another scene plays that one instead
+        scenePlayerService.learn("Club Lights", "Scene 0", "toggle");
+        scenePlayerService.learnMidi(message(ShortMessage.NOTE_ON, 2, 36, 90));
+        assertEquals(List.of("Club Lights-0 toggle note 2 36"), mappings(scenePlayerService));
+
+        // a button flashing it, which sends a control change with a value when pressed
+        scenePlayerService.learn("Club Lights", "Scene 0", "flash");
+        scenePlayerService.learnMidi(message(ShortMessage.CONTROL_CHANGE, 0, 20, 127));
+        assertEquals(List.of("Club Lights-0 toggle note 2 36", "Club Lights-0 flash cc 0 20"), mappings(scenePlayerService));
+        ActionTriggerMidiControlChange button = (ActionTriggerMidiControlChange) settingsService.getSettings().getActionTriggerMidiList().getLast();
+        assertEquals(127, button.getValue());
+        assertEquals(ActionScene.SceneActionType.FLASH_SCENE, ((ActionScene) button.getActionList().getFirst()).getSceneActionType());
+
+        scenePlayerService.forgetMidi("Club Lights", "Club Lights-0", "flash");
+        assertEquals(List.of("Club Lights-0 toggle note 2 36"), mappings(scenePlayerService));
+        assertTrue(settingsService.getSettings().getActionTriggerMidiList().contains(ownTrigger));
+        assertEquals(List.of(), scenePlayerService.getMidiMappings("bar"));
+    }
+
+    private static List<String> mappings(DefaultScenePlayerService scenePlayerService) {
+        return scenePlayerService.getMidiMappings("Club Lights").stream()
+                .map(mapping -> mapping.getScene() + " " + mapping.getMode() + " " + mapping.getKind() + " " + mapping.getChannel() + " " + mapping.getNumber())
+                .toList();
+    }
+
+    @Test
+    void stopsWaitingForTheKeyOfASceneAfterAMinute() throws Exception {
+        long[] now = {0};
+        DefaultScenePlayerService scenePlayerService = scenePlayerService();
+        scenePlayerService.setClock(() -> now[0]);
+
+        scenePlayerService.learn("Club Lights", "Scene 1", "toggle");
+        now[0] += 61000;
+
+        assertEquals(null, scenePlayerService.getLearning());
+        assertFalse(scenePlayerService.learnMidi(message(ShortMessage.NOTE_ON, 0, 36, 100)));
+    }
 }

@@ -1,0 +1,48 @@
+<div class="scene-live">
+  <!-- back and GO through the scenes of the folder shown -->
+  <div class="scene-live-group">
+    <button type="button" class="btn btn-scene" [disabled]="!hasProject()" (click)="previous()"
+      [popover]="'play.help.scenes-back' | translate" triggers="mouseenter:mouseleave" container="body" placement="bottom">
+      <i class="fa fa-step-backward fa-fw" aria-hidden="true"></i>
+      {{ 'play.scenes-back' | translate }}
+    </button>
+    <button type="button" class="btn btn-scene btn-scene-go" [disabled]="!hasProject()" (click)="next()"
+      [popover]="'play.help.scenes-go' | translate" triggers="mouseenter:mouseleave" container="body" placement="bottom">
+      {{ 'play.scenes-go' | translate }}
+      <i class="fa fa-step-forward fa-fw" aria-hidden="true"></i>
+    </button>
+  </div>
+
+  <!-- the tempo, tapped as the pointer goes down -->
+  <div class="scene-live-group">
+    <button type="button" class="btn btn-scene btn-scene-tap" (pointerdown)="tap($event)" (keydown.enter)="tap($event)"
+      (keydown.space)="tap($event)" [popover]="'play.help.scenes-tap' | translate" triggers="mouseenter:mouseleave"
+      container="body" placement="bottom">
+      {{ 'play.scenes-tap' | translate }}
+    </button>
+    <span class="scene-live-tempo">
+      <strong>{{ tempo() }}</strong> {{ 'play.scenes-bpm' | translate }}
+      <small class="scene-live-tempo-source">{{ 'play.scenes-tempo-' + tempoSource() | translate }}</small>
+    </span>
+    @if (tempoSource() !== 'project') {
+      <button type="button" class="btn btn-scene btn-scene-small" [attr.aria-label]="'play.scenes-tempo-reset' | translate"
+        [title]="'play.scenes-tempo-reset' | translate" (click)="resetTempo()">
+        <i class="fa fa-undo fa-fw" aria-hidden="true"></i>
+      </button>
+    }
+  </div>
+
+  <!-- the speed master -->
+  <div class="scene-live-group scene-live-speed">
+    <label class="scene-live-label mb-0" for="sceneSpeed">{{ 'play.scenes-speed' | translate }}</label>
+    <input id="sceneSpeed" class="scene-live-fader" type="range" min="10" max="400" step="5" [value]="speedPercent()"
+      (input)="setSpeedPercent($any($event.target).valueAsNumber)">
+    <span class="scene-live-value">{{ speedPercent() }}%</span>
+    @if (speedPercent() !== 100) {
+      <button type="button" class="btn btn-scene btn-scene-small" [attr.aria-label]="'play.scenes-speed-reset' | translate"
+        [title]="'play.scenes-speed-reset' | translate" (click)="resetSpeed()">
+        <i class="fa fa-undo fa-fw" aria-hidden="true"></i>
+      </button>
+    }
+  </div>
+</div>

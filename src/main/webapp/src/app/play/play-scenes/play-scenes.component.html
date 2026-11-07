@@ -59,26 +59,65 @@
     </div>
   }
 
+  @if (scenesService.learn) {
+    <!-- MIDI learn: a tap on a scene waits for the key, pad or button which plays it from then on -->
+    <div class="scenes-learn" role="status">
+      <i class="fa fa-hand-pointer-o scenes-learn-icon" aria-hidden="true"></i>
+      <div class="scenes-learn-text">
+        @if (state?.sceneLearning) {
+          <strong>{{ 'play.scenes-learn-waiting' | translate: { name: learningSceneName() } }}</strong>
+        } @else {
+          <strong>{{ (scenesService.flash ? 'play.scenes-learn-flash' : 'play.scenes-learn-toggle') | translate }}</strong>
+        }
+        {{ 'play.scenes-learn-detail' | translate }}
+      </div>
+    </div>
+  }
+
   <div class="scene-grid">
     @for (tile of tiles(); track tile.scene.uuid) {
-      <button type="button" class="scene-tile" [class.scene-tile-on]="tile.on && !tile.held"
-        [class.scene-tile-held]="tile.held" [attr.aria-pressed]="tile.on"
-        [style.--scene-color]="tile.color" [style.--scene-text]="tile.textColor" (click)="tap(tile)">
-        <span class="scene-tile-top">
-          <i class="fa {{ tile.icon }} scene-tile-icon" aria-hidden="true"></i>
-          @if (tile.dimmerPercent < 100) {
-            <span class="scene-tile-dimmer">{{ tile.dimmerPercent }}%</span>
-          }
-        </span>
-        <span class="scene-tile-name">{{ tile.scene.name }}</span>
-        <span class="scene-tile-status">
-          @if (tile.held) {
-            {{ 'play.scenes-held' | translate }}
-          } @else if (tile.on) {
-            {{ 'play.scenes-on' | translate }}
-          }
-        </span>
-      </button>
+      <div class="scene-cell">
+        <button type="button" class="scene-tile" [class.scene-tile-on]="(tile.on || tile.flashed) && !tile.held"
+          [class.scene-tile-held]="tile.held" [class.scene-tile-learning]="tile.learning" [attr.aria-pressed]="tile.on || tile.flashed"
+          [style.--scene-color]="tile.color" [style.--scene-text]="tile.textColor" (click)="tap(tile)"
+          (pointerdown)="press(tile, $event)" (pointerup)="letGo(tile)" (pointercancel)="letGo(tile)" (lostpointercapture)="letGo(tile)">
+          <span class="scene-tile-top">
+            <i class="fa {{ tile.icon }} scene-tile-icon" aria-hidden="true"></i>
+            @if (tile.dimmerPercent < 100) {
+              <span class="scene-tile-dimmer">{{ tile.dimmerPercent }}%</span>
+            }
+          </span>
+          <span class="scene-tile-name">{{ tile.scene.name }}</span>
+          <span class="scene-tile-status">
+            @if (tile.learning) {
+              {{ 'play.scenes-learn-press' | translate }}
+            } @else if (scenesService.learn) {
+              @for (mapping of tile.midi; track $index) {
+                <span class="scene-tile-midi">{{ midiLabel(mapping) }}</span>
+              }
+            } @else if (tile.held) {
+              {{ 'play.scenes-held' | translate }}
+            } @else if (tile.flashed) {
+              {{ 'play.scenes-flashed' | translate }}
+            } @else if (tile.on) {
+              {{ 'play.scenes-on' | translate }}
+            }
+          </span>
+        </button>
+
+        @if (scenesService.learn && tile.midi.length > 0) {
+          <!-- forget the key, pad or button learned for the scene -->
+          <button type="button" class="scene-cell-forget" [attr.aria-label]="'play.scenes-learn-forget' | translate"
+            [title]="'play.scenes-learn-forget' | translate" (click)="forget(tile)">
+            <i class="fa fa-times" aria-hidden="true"></i>
+          </button>
+        } @else if (tile.on && !scenesService.learn) {
+          <!-- the dimmer of the scene on the Play screen -->
+          <input type="range" class="scene-cell-fader" min="0" max="100" step="1" [value]="tile.liveDimmerPercent"
+            [style.--fill]="tile.liveDimmerPercent + '%'" [attr.aria-label]="'play.scenes-dimmer' | translate: { name: tile.scene.name }"
+            [title]="tile.liveDimmerPercent + '%'" (input)="setDimmer(tile, $any($event.target).valueAsNumber)">
+        }
+      </div>
     }
   </div>
 </div>

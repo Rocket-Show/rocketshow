@@ -48,6 +48,13 @@ public class DefaultActionExecutionService implements ActionExecutionService {
 
     // HTTP actions run one after the other in a thread of their own. A slow or unreachable server must not hold up
     // what triggers the actions, e.g. the MIDI input, a GPIO button or a composition.
+    // turns the scenes flashed for a while off again
+    private final java.util.concurrent.ScheduledExecutorService flashEndScheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "flash-end");
+        thread.setDaemon(true);
+        return thread;
+    });
+
     private final ExecutorService httpActionExecutor = Executors.newSingleThreadExecutor(runnable -> {
         Thread thread = new Thread(runnable, "http-actions");
         thread.setDaemon(true);
@@ -159,6 +166,11 @@ public class DefaultActionExecutionService implements ActionExecutionService {
                 switch (actionScene.getSceneActionType()) {
                     case PLAY_SCENE -> scenePlayerService.playScene(actionScene.getProjectName(), actionScene.getScene(),
                             actionScene.isUntilStopped() ? ScenePlayerService.UNTIL_STOPPED : actionScene.getDurationMillis());
+                    case TOGGLE_SCENE -> scenePlayerService.toggleScene(actionScene.getProjectName(), actionScene.getScene());
+                    case FLASH_SCENE -> flashScene(actionScene);
+                    case NEXT_SCENE -> scenePlayerService.stepScene(actionScene.getProjectName(), actionScene.getFolder(), 1);
+                    case PREVIOUS_SCENE -> scenePlayerService.stepScene(actionScene.getProjectName(), actionScene.getFolder(), -1);
+                    case TAP_TEMPO -> scenePlayerService.tapTempo();
                     case RELEASE_ALL -> scenePlayerService.releaseAll();
                     case BLACKOUT_ON -> scenePlayerService.setBlackout(true);
                     case BLACKOUT_OFF -> scenePlayerService.setBlackout(false);
@@ -211,6 +223,34 @@ public class DefaultActionExecutionService implements ActionExecutionService {
     public void executeFromTrigger(ActionTrigger actionTrigger) throws Exception {
         for (Action action : actionTrigger.getActionList()) {
             execute(action);
+        }
+    }
+
+    @Override
+    public void releaseFromTrigger(ActionTrigger actionTrigger) {
+        for (Action action : actionTrigger.getActionList()) {
+            if (action.isExecuteLocally() && action instanceof ActionScene actionScene && actionScene.getSceneActionType() == ActionScene.SceneActionType.FLASH_SCENE) {
+                try {
+                    scenePlayerService.flashScene(actionScene.getProjectName(), actionScene.getScene(), false);
+                } catch (Exception e) {
+                    logger.error("Could not end the flash of a scene", e);
+                }
+            }
+        }
+    }
+
+    // Flash a scene: until the key or button triggering it is let go (see releaseFromTrigger), or for a while
+    private void flashScene(ActionScene actionScene) {
+        scenePlayerService.flashScene(actionScene.getProjectName(), actionScene.getScene(), true);
+
+        if (!actionScene.isUntilStopped() && actionScene.getDurationMillis() > 0) {
+            flashEndScheduler.schedule(() -> {
+                try {
+                    scenePlayerService.flashScene(actionScene.getProjectName(), actionScene.getScene(), false);
+                } catch (Exception e) {
+                    logger.error("Could not end the flash of a scene", e);
+                }
+            }, actionScene.getDurationMillis(), java.util.concurrent.TimeUnit.MILLISECONDS);
         }
     }
 

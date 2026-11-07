@@ -50,6 +50,29 @@ notes and program changes you can now also trigger on a **control change** (any 
 optional exact value — 127 for a pressed footswitch), a **song select**, and the MIDI **transport**
 messages Start, Continue and Stop that a master sends to run everything on the line at once.
 
+## Playing the scenes live
+
+The scenes of a designer project can be played by hand on the **Play** screen (switch it to **Scenes**), and
+from a MIDI controller:
+
+- **MIDI learn.** Switch on **MIDI learn**, tap a scene and press the key, pad or button which is to play it.
+  A note or a control change is taken, on its channel. A key learned toggles the scene; with **Flash**
+  switched on, it flashes the scene while it is held instead. A key learned for another scene plays that one
+  from then on. The keys learned show on the tiles while MIDI learn is on, each with a button to forget it.
+  They are actions like any other under **Settings → MIDI → Control**.
+- **Flash.** A flashed scene is on at once while its key is held, on top of the others, and off at once when
+  it is let go: on the note off (or a note on with velocity 0), or on the control change to 0 of a button
+  sending another value when pressed.
+- **Back and GO** play the previous and the next scene of the folder shown, in the order of the designer.
+  The actions **Next Scene** and **Previous Scene** do the same from a footswitch, for a folder of your choice.
+- **Tempo.** Effects synced to the beat follow the tempo of the project. Tap a tempo with **Tap** (or the
+  action **Tap Tempo**): each tap falls on a beat. A **MIDI clock** on the MIDI input sets the tempo as well,
+  and once started (MIDI Start) its beats are the beats of the scenes. The **speed master** runs the effects
+  and the steps of the scenes faster or slower.
+
+A scene picked fades in over its fade in time and fades out over its fade out time when it is let go, and
+plays its presets from the moment it is picked: their steps start with the first one.
+
 ## MIDI Show Control
 
 Switch on **Settings → MIDI → MIDI Show Control** and set the **device ID** the desk addresses this

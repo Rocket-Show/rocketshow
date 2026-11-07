@@ -96,6 +96,14 @@ public class DefaultDesignerService implements DesignerService {
     private volatile double manualScenesMasterDimmer = 1;
     private volatile boolean playingManualScenes = false;
 
+    // the scenes picked by hand and flashed while they play: their fades, their own clocks and the live controls of the
+    // Play screen (see LiveScenes)
+    private final LiveScenes liveScenes = new LiveScenes();
+    private List<String> flashedSceneUuids = new ArrayList<>();
+
+    // the scenes picked by hand were let go: they play until they have faded out, then their lights are turned off
+    private volatile boolean releasingManualScenes = false;
+
     private List<LightingUniverseState> lightingUniverses = new ArrayList<>();
 
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
@@ -542,6 +550,9 @@ public class DefaultDesignerService implements DesignerService {
         if (playPreview || (compositionPlayer != null && CompositionPlayer.PlayState.PLAYING.equals(compositionPlayer.getPlayState()))) {
             // Only use active presets in current regions
             presets = getPresetsInTime(timeMillis);
+        } else if (playingManualScenes) {
+            // the scenes picked by hand, each from the moment it was picked, fading in and out (see LiveScenes)
+            presets = liveScenes.getPresets(project.getScenes() == null ? List.of() : project.getScenes(), this::getScenePresets, timeMillis, System.currentTimeMillis());
         } else {
             // previewPreset = solo. Without a selected scene there is nothing else to
             // show than the selected preset anyway.
@@ -1708,7 +1719,7 @@ public class DefaultDesignerService implements DesignerService {
                     if (fixtureIndex != null) {
                         // this fixture is also in the preset -> mix the required values (overwrite existing values,
                         // if set multiple times)
-                        double intensityPercentage = getPresetIntensity(preset, timeMillis);
+                        double intensityPercentage = preset instanceof LiveScenes.LivePreset livePreset ? livePreset.getIntensity(timeMillis) : getPresetIntensity(preset, timeMillis);
                         PresetStepState state = presetStates.get(preset);
 
                         if (state == null) {
@@ -2529,7 +2540,7 @@ public class DefaultDesignerService implements DesignerService {
         return cachedFixtures;
     }
 
-    private void calculateUniverse(long timeMillis) {
+    private void calculateUniverse(double timeMillis) {
         try {
             List<PresetRegionScene> presets = getPresets(timeMillis);
             Map<CachedFixture, List<FixtureChannelValue>> calculatedFixtures = getChannelValues(timeMillis, presets);
@@ -2540,10 +2551,15 @@ public class DefaultDesignerService implements DesignerService {
         }
     }
 
-    private long getCurrentPositionMillis() {
+    private double getCurrentPositionMillis() {
         if (compositionPlayer != null) {
             // We have a compositionPlayer -> use it to sync
             return compositionPlayer.getPositionMillis();
+        }
+
+        if (playingManualScenes) {
+            // the scenes picked by hand run on a clock of their own, as fast as the speed master and the tempo make it
+            return liveScenes.advance(System.currentTimeMillis());
         }
 
         // No compositionPlayer, e.g. only designer preview -> just use the current time as reference
@@ -2565,6 +2581,13 @@ public class DefaultDesignerService implements DesignerService {
                 try {
                     calculateUniverse(getCurrentPositionMillis());
                     lightingService.sendExternalSync(settingsService.getSettings().getEnableMonitor());
+
+                    // the scenes let go have faded out: their lights are turned off (outside this send, which the
+                    // stop waits for)
+                    if (releasingManualScenes && playingManualScenes && liveScenes.isIdle(System.currentTimeMillis())) {
+                        releasingManualScenes = false;
+                        scheduler.execute(this::stopReleasedManualScenes);
+                    }
                 } catch (Exception e) {
                     logger.error("Could not send universe", e);
                 }
@@ -3551,21 +3574,30 @@ public class DefaultDesignerService implements DesignerService {
         project = null;
         pipeline = null;
 
-        // Nothing plays a project of its own anymore -> the scenes picked by hand come back
+        // Nothing plays a project of its own anymore -> the scenes picked by hand come back, unless they were let go
+        // meanwhile
         if (hasManualScenes()) {
-            startManualScenes();
+            if (releasingManualScenes) {
+                stopManualScenes();
+            } else {
+                startManualScenes();
+            }
         }
     }
 
     @Override
-    public synchronized void playManualScenes(Project project, List<String> sceneUuids, double masterDimmer) {
+    public synchronized void playManualScenes(Project project, List<String> sceneUuids, List<String> flashedSceneUuids, double masterDimmer) {
         manualSceneUuids = new ArrayList<>(sceneUuids);
+        this.flashedSceneUuids = flashedSceneUuids == null ? new ArrayList<>() : new ArrayList<>(flashedSceneUuids);
         manualScenesMasterDimmer = masterDimmer;
+        releasingManualScenes = false;
 
         if (playingManualScenes && project == manualScenesProject) {
             // The project plays already: the engine picks the scenes and the master dimmer up with its next universe,
-            // without starting the effects over (e.g. while the master dimmer is being dragged)
+            // without starting the effects over (e.g. while the master dimmer is being dragged). A scene picked starts
+            // there, one let go fades out.
             selectedSceneUuids = manualSceneUuids;
+            updateLiveScenes();
             return;
         }
 
@@ -3592,15 +3624,89 @@ public class DefaultDesignerService implements DesignerService {
         selectedSceneUuids = manualSceneUuids;
         playingManualScenes = true;
 
+        // the scenes start anew, on a clock running at the tempo of the project
+        liveScenes.reset();
+        liveScenes.setReferenceBeatsPerMinute(getBeatsPerMinute(), System.currentTimeMillis());
+        updateLiveScenes();
+
         startPositionMillis = 0;
         startTimer();
+    }
+
+    // hand the scenes picked and flashed to the live scenes, which picks the new ones and lets go of the others
+    private void updateLiveScenes() {
+        liveScenes.setScenes(getScenesByUuids(manualSceneUuids), getScenesByUuids(flashedSceneUuids), System.currentTimeMillis());
+    }
+
+    private List<Scene> getScenesByUuids(List<String> sceneUuids) {
+        List<Scene> scenes = new ArrayList<>();
+
+        for (String sceneUuid : sceneUuids) {
+            Scene scene = getSceneByUuid(sceneUuid);
+
+            if (scene != null) {
+                scenes.add(scene);
+            }
+        }
+
+        return scenes;
+    }
+
+    @Override
+    public synchronized void releaseManualScenes() {
+        if (!playingManualScenes) {
+            stopManualScenes();
+            return;
+        }
+
+        // the scenes fade out, then the timer stops them (see startTimer)
+        manualSceneUuids = new ArrayList<>();
+        flashedSceneUuids = new ArrayList<>();
+        selectedSceneUuids = manualSceneUuids;
+        updateLiveScenes();
+        releasingManualScenes = true;
+    }
+
+    // the scenes let go have faded out: stop them, unless scenes were picked again meanwhile
+    private synchronized void stopReleasedManualScenes() {
+        if (playingManualScenes && manualSceneUuids.isEmpty() && flashedSceneUuids.isEmpty() && liveScenes.isIdle(System.currentTimeMillis())) {
+            stopManualScenes();
+        }
+    }
+
+    @Override
+    public void setLiveSceneDimmers(Map<String, Double> dimmers) {
+        liveScenes.setDimmers(dimmers);
+    }
+
+    @Override
+    public void setLiveSpeed(double speed) {
+        liveScenes.setSpeed(speed, System.currentTimeMillis());
+    }
+
+    @Override
+    public void setLiveBeatsPerMinute(Double beatsPerMinute, boolean onTheBeat) {
+        long now = System.currentTimeMillis();
+        liveScenes.setBeatsPerMinute(beatsPerMinute, now);
+
+        if (onTheBeat) {
+            liveScenes.alignBeat(now);
+        }
+    }
+
+    @Override
+    public Double getLiveReferenceBeatsPerMinute() {
+        return playingManualScenes ? liveScenes.getReferenceBeatsPerMinute() : null;
     }
 
     @Override
     public synchronized void stopManualScenes() {
         manualScenesProject = null;
         manualSceneUuids = new ArrayList<>();
+        flashedSceneUuids = new ArrayList<>();
         manualScenesMasterDimmer = 1;
+        releasingManualScenes = false;
+        liveScenes.reset();
 
         if (!playingManualScenes) {
             return;

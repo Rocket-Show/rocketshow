@@ -1,5 +1,7 @@
 package com.ascargon.rocketshow.midi;
 
+import com.ascargon.rocketshow.lighting.designer.ScenePlayerService;
+import org.springframework.context.annotation.Lazy;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.ActionExecutionService;
 import org.springframework.stereotype.Service;
@@ -13,13 +15,19 @@ public class DefaultActionMidiExecutionService implements ActionMidiExecutionSer
     private final static int START_STATUS = 0xFA;
     private final static int CONTINUE_STATUS = 0xFB;
     private final static int STOP_STATUS = 0xFC;
+    private final static int CLOCK_STATUS = 0xF8;
+
+    private final MidiClockTempo midiClockTempo = new MidiClockTempo();
 
     private final SettingsService settingsService;
     private final ActionExecutionService actionExecutionService;
+    private final ScenePlayerService scenePlayerService;
 
-    public DefaultActionMidiExecutionService(SettingsService settingsService, ActionExecutionService actionExecutionService) {
+    // The scene player is loaded lazily: it tells the apps the state of the device, which needs much of the rest
+    public DefaultActionMidiExecutionService(SettingsService settingsService, ActionExecutionService actionExecutionService, @Lazy ScenePlayerService scenePlayerService) {
         this.settingsService = settingsService;
         this.actionExecutionService = actionExecutionService;
+        this.scenePlayerService = scenePlayerService;
     }
 
     /**
@@ -75,8 +83,59 @@ public class DefaultActionMidiExecutionService implements ActionMidiExecutionSer
         };
     }
 
+    // Whether the message lets go of the key or button of a trigger: a note off (or a note on with velocity 0) of its
+    // note, a control change to 0 of a controller it is triggered by with another value
+    private boolean isReleaseOf(ActionTriggerMidi actionTriggerMidi, ShortMessage shortMessage) {
+        if (actionTriggerMidi.getChannel() != null && actionTriggerMidi.getChannel() != shortMessage.getChannel()) {
+            return false;
+        }
+
+        boolean noteOff = shortMessage.getCommand() == ShortMessage.NOTE_OFF || (shortMessage.getCommand() == ShortMessage.NOTE_ON && shortMessage.getData2() == 0);
+
+        if (noteOff && actionTriggerMidi instanceof ActionTriggerMidiNoteOn actionTriggerMidiNoteOn) {
+            return actionTriggerMidiNoteOn.getNote() == null || actionTriggerMidiNoteOn.getNote() == shortMessage.getData1();
+        }
+
+        if (shortMessage.getCommand() == ShortMessage.CONTROL_CHANGE && shortMessage.getData2() == 0 && actionTriggerMidi instanceof ActionTriggerMidiControlChange actionTriggerMidiControlChange) {
+            return (actionTriggerMidiControlChange.getController() == null || actionTriggerMidiControlChange.getController() == shortMessage.getData1())
+                    && actionTriggerMidiControlChange.getValue() != null && actionTriggerMidiControlChange.getValue() != 0;
+        }
+
+        return false;
+    }
+
     @Override
     public void processMidiSignal(ShortMessage shortMessage) throws Exception {
+        // a MIDI clock gives the tempo the scenes played by hand run at (and where its beats are, once started)
+        int status = shortMessage.getStatus();
+
+        if (status == CLOCK_STATUS) {
+            MidiClockTempo.Beat beat = midiClockTempo.tick(System.nanoTime());
+
+            if (beat != null) {
+                scenePlayerService.setClockTempo(beat.beatsPerMinute(), beat.onTheBeat());
+            }
+
+            return;
+        }
+
+        if (status == START_STATUS) {
+            midiClockTempo.start();
+        } else if (status == STOP_STATUS) {
+            midiClockTempo.stop();
+        }
+
+        // a scene waiting for its key, pad or button takes the message, which triggers nothing else then
+        if (scenePlayerService.learnMidi(shortMessage)) {
+            return;
+        }
+
+        for (ActionTriggerMidi actionTriggerMidi : settingsService.getSettings().getActionTriggerMidiList()) {
+            if (isReleaseOf(actionTriggerMidi, shortMessage)) {
+                actionExecutionService.releaseFromTrigger(actionTriggerMidi);
+            }
+        }
+
         // Map the MIDI event and executeFromTrigger the appropriate actions
 
         // Search for and executeFromTrigger all required actions

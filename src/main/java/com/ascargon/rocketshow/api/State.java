@@ -1,11 +1,13 @@
 package com.ascargon.rocketshow.api;
 
+import com.ascargon.rocketshow.lighting.designer.SceneLearning;
 import com.ascargon.rocketshow.play.CompositionPlayer;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Map;
 
 @XmlRootElement
 @Getter
@@ -33,5 +35,15 @@ public class State {
     private boolean sceneBlackout;
     private double sceneMasterDimmer = 1;
     private boolean scenesHeld;
+
+    // the live controls of the scenes: the ones flashed, the tempo they run at and where it is from ("project", "tap",
+    // "set" or "clock"), the speed master, the dimmer of each scene (the ones at full left out) and the scene waiting
+    // for its key, pad or button of a MIDI controller (see ScenePlayerService)
+    private List<String> flashedSceneUuids;
+    private Double sceneBeatsPerMinute;
+    private String sceneTempoSource;
+    private double sceneSpeed = 1;
+    private Map<String, Double> sceneDimmers;
+    private SceneLearning sceneLearning;
 
 }

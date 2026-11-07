@@ -1125,6 +1125,73 @@ class DesignerDmxTest {
         assertEquals(List.of(255, 0, 0, 255), addresses(front, 1, 4));
     }
 
+    // the scene of a preset added with addPreset
+    private static ObjectNode sceneOf(ObjectNode project, String name) {
+        for (var scene : project.get("scenes")) {
+            if ((name + "-scene").equals(scene.get("uuid").asString())) {
+                return (ObjectNode) scene;
+            }
+        }
+
+        throw new IllegalArgumentException(name);
+    }
+
+    @Test
+    void fadesInTheScenesPickedByHandOverTheirFadeInTime() throws Exception {
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+        sceneOf(project, "Red").put("fadeInMillis", 60000);
+
+        Map<Integer, Integer> front = start(project, (designerService, loadedProject) ->
+                designerService.playManualScenes(loadedProject, List.of("Red-scene"), 1)).get(FRONT);
+
+        // just picked: the dimmer has hardly risen yet, the color is there
+        assertTrue(front.getOrDefault(1, 0) <= 2);
+        assertEquals(255, front.get(2));
+    }
+
+    @Test
+    void fadesOutTheScenesLetGoInsteadOfTurningThemOffAtOnce() throws Exception {
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+        sceneOf(project, "Red").put("fadeOutMillis", 60000);
+
+        Map<Integer, Integer> front = start(project, (designerService, loadedProject) -> {
+            designerService.playManualScenes(loadedProject, List.of("Red-scene"), 1);
+            designerService.releaseManualScenes();
+
+            // they keep playing while they fade out
+            assertTrue(designerService.isPlayingManualScenes());
+        }).get(FRONT);
+
+        assertTrue(front.get(1) >= 253);
+    }
+
+    @Test
+    void flashesAScenePickedByHandOnTopOfTheOthers() throws Exception {
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+        addColorPreset(project, "Blue", 0, 1);
+
+        Map<Integer, Integer> front = start(project, (designerService, loadedProject) ->
+                designerService.playManualScenes(loadedProject, List.of("Blue-scene"), List.of("Red-scene"), 1)).get(FRONT);
+
+        assertEquals(List.of(255, 255, 0, 0), addresses(front, 1, 4));
+    }
+
+    @Test
+    void dimsAScenePickedByHandWithItsDimmerOfThePlayScreen() throws Exception {
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+
+        Map<Integer, Integer> front = start(project, (designerService, loadedProject) -> {
+            designerService.setLiveSceneDimmers(Map.of("Red-scene", 0.5));
+            designerService.playManualScenes(loadedProject, List.of("Red-scene"), 1);
+        }).get(FRONT);
+
+        assertEquals(List.of(127, 255), addresses(front, 1, 2));
+    }
+
     @Test
     void dimsTheScenesPickedByHandWithTheMasterDimmerOfThePlayScreen() throws Exception {
         ObjectNode project = project();

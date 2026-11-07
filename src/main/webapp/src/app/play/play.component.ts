@@ -602,6 +602,37 @@ export class PlayComponent implements OnInit, OnDestroy {
     this.scenesService.stack = !this.scenesService.stack;
   }
 
+  // a scene held flashes it, instead of a tap turning it on
+  toggleSceneFlash() {
+    this.scenesService.flash = !this.scenesService.flash;
+
+    // the keys learned are shown for the way of playing the scenes picked
+    if (this.scenesService.learn && this.currentState?.sceneLearning) {
+      this.cancelSceneLearn();
+    }
+  }
+
+  // a tap on a scene waits for the key, pad or button of a MIDI controller which plays it from then on
+  toggleSceneLearn() {
+    this.scenesService.learn = !this.scenesService.learn;
+
+    if (this.scenesService.learn) {
+      this.scenesService
+        .loadMidiMappings(this.scenesService.viewedProject(this.currentState))
+        .pipe(catchError((err) => this.toastGeneralErrorService.show(err)))
+        .subscribe();
+    } else if (this.currentState?.sceneLearning) {
+      this.cancelSceneLearn();
+    }
+  }
+
+  private cancelSceneLearn() {
+    this.scenesService
+      .cancelLearn(this.currentState)
+      .pipe(catchError((err) => this.toastGeneralErrorService.show(err)))
+      .subscribe();
+  }
+
   releaseAllScenes() {
     this.scenesService
       .releaseAll(this.currentState)

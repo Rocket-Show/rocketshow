@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public interface DesignerService {
@@ -61,12 +62,34 @@ public interface DesignerService {
     // project puts on them, until the next project is loaded
     void setDmxOverrides(List<DmxOverride> dmxOverrides);
 
-    // Play the scenes of the project picked by hand on the Play screen, dimmed by its master dimmer (0 to 1). They play
-    // whenever no composition plays a project of its own: right away, or once the composition closes its project.
-    void playManualScenes(Project project, List<String> sceneUuids, double masterDimmer);
+    // Play the scenes of the project picked by hand on the Play screen and the ones flashed on top of them, dimmed by
+    // its master dimmer (0 to 1). They play whenever no composition plays a project of its own: right away, or once the
+    // composition closes its project. A scene picked fades in and plays from the moment it is picked, one let go fades
+    // out (see LiveScenes).
+    void playManualScenes(Project project, List<String> sceneUuids, List<String> flashedSceneUuids, double masterDimmer);
 
-    // Stop the scenes picked by hand and turn their lights off
+    default void playManualScenes(Project project, List<String> sceneUuids, double masterDimmer) {
+        playManualScenes(project, sceneUuids, List.of(), masterDimmer);
+    }
+
+    // Let go of all scenes picked by hand: they fade out, then their lights are turned off
+    void releaseManualScenes();
+
+    // Stop the scenes picked by hand and turn their lights off at once
     void stopManualScenes();
+
+    // The live controls of the Play screen for the scenes picked by hand: the dimmer of each scene (by its uuid, 0 to
+    // 1), the speed master (1 = as written) and the tempo played live (null = the one of the project), which a beat
+    // falls on right now, if asked to (e.g. a beat tapped)
+    void setLiveSceneDimmers(Map<String, Double> dimmers);
+
+    void setLiveSpeed(double speed);
+
+    void setLiveBeatsPerMinute(Double beatsPerMinute, boolean onTheBeat);
+
+    // The tempo the beat-synced curves of the scenes picked by hand are written for: the one of their project (null
+    // while they don't play)
+    Double getLiveReferenceBeatsPerMinute();
 
     // Whether scenes were picked by hand, whether they play at the moment or wait for a composition to close
     boolean hasManualScenes();

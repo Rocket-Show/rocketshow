@@ -1,5 +1,6 @@
 package com.ascargon.rocketshow.midi;
 
+import com.ascargon.rocketshow.lighting.designer.ScenePlayerService;
 import com.ascargon.rocketshow.settings.Settings;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.ActionExecutionService;
@@ -18,7 +19,8 @@ class DefaultActionMidiExecutionServiceTest {
 
     private final SettingsService settingsService = mock(SettingsService.class);
     private final ActionExecutionService actionExecutionService = mock(ActionExecutionService.class);
-    private final DefaultActionMidiExecutionService actionMidiExecutionService = new DefaultActionMidiExecutionService(settingsService, actionExecutionService);
+    private final ScenePlayerService scenePlayerService = mock(ScenePlayerService.class);
+    private final DefaultActionMidiExecutionService actionMidiExecutionService = new DefaultActionMidiExecutionService(settingsService, actionExecutionService, scenePlayerService);
 
     private final Settings settings = new Settings();
 
@@ -215,4 +217,51 @@ class DefaultActionMidiExecutionServiceTest {
         verify(actionExecutionService).executeFromTrigger(trigger);
     }
 
+
+    @Test
+    void endsTheFlashOfATriggerWhenItsKeyOrButtonIsLetGo() throws Exception {
+        ActionTriggerMidiNoteOn note = addNoteOnTrigger(0, 36);
+        ActionTriggerMidiControlChange button = addControlChangeTrigger(0, 20, 127);
+        ActionTriggerMidiControlChange knob = addControlChangeTrigger(0, 21, null);
+
+        receive(ShortMessage.NOTE_OFF, 0, 36, 64);
+        receive(ShortMessage.NOTE_ON, 0, 36, 0);
+        verify(actionExecutionService, org.mockito.Mockito.times(2)).releaseFromTrigger(note);
+
+        receive(ShortMessage.CONTROL_CHANGE, 0, 20, 0);
+        verify(actionExecutionService).releaseFromTrigger(button);
+
+        // a control without a value of its own isn't let go: 0 is one of its values
+        receive(ShortMessage.CONTROL_CHANGE, 0, 21, 0);
+        verify(actionExecutionService, org.mockito.Mockito.never()).releaseFromTrigger(knob);
+
+        // another note or channel isn't the key
+        receive(ShortMessage.NOTE_OFF, 1, 36, 0);
+        receive(ShortMessage.NOTE_OFF, 0, 37, 0);
+        verify(actionExecutionService, org.mockito.Mockito.times(2)).releaseFromTrigger(note);
+    }
+
+    @Test
+    void letsASceneWaitingForItsKeyTakeTheMessageAlone() throws Exception {
+        ActionTriggerMidiNoteOn note = addNoteOnTrigger(0, 36);
+        when(scenePlayerService.learnMidi(org.mockito.ArgumentMatchers.any())).thenReturn(true);
+
+        receive(ShortMessage.NOTE_ON, 0, 36, 100);
+
+        verify(actionExecutionService, org.mockito.Mockito.never()).executeFromTrigger(note);
+    }
+
+    @Test
+    void givesTheScenesTheTempoOfAMidiClock() throws Exception {
+        // a clock tick triggers nothing
+        ActionTriggerMidiNoteOn anyNote = addNoteOnTrigger(null, null);
+
+        for (int i = 0; i < 24 * 2 + 1; i++) {
+            actionMidiExecutionService.processMidiSignal(new ShortMessage(0xF8));
+        }
+
+        // once a beat, from the second one on
+        verify(scenePlayerService, org.mockito.Mockito.times(2)).setClockTempo(org.mockito.ArgumentMatchers.anyDouble(), org.mockito.ArgumentMatchers.eq(false));
+        verify(actionExecutionService, org.mockito.Mockito.never()).executeFromTrigger(anyNote);
+    }
 }

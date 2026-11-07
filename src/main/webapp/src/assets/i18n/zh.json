@@ -97,9 +97,38 @@
       "scenes-release-all": "关闭所有场景。",
       "scenes-blackout": "关闭灯光并保留所选场景。再次点击即可恢复。",
       "scenes-full-screen": "在整个屏幕上显示 Rocket Show，例如挂在墙上的平板电脑。",
-      "midi-timecode-locked": "本设备正在跟随外部 MIDI 时间码，播放由外部主机控制。"
+      "midi-timecode-locked": "本设备正在跟随外部 MIDI 时间码，播放由外部主机控制。",
+      "scenes-flash": "启用后，按住场景时它会叠加在其他场景之上点亮。",
+      "scenes-learn": "将 MIDI 控制器的按键、打击垫和按钮分配给场景。",
+      "scenes-back": "播放所显示文件夹中的上一个场景。",
+      "scenes-go": "播放所显示文件夹中的下一个场景。",
+      "scenes-tap": "跟随节拍点击，以设定场景效果的速度。"
     },
-    "midi-timecode": "时间码"
+    "midi-timecode": "时间码",
+    "scenes-flash": "闪烁",
+    "scenes-learn": "MIDI 学习",
+    "scenes-flashed": "闪烁中",
+    "scenes-back": "上一个",
+    "scenes-go": "GO",
+    "scenes-tap": "拍击",
+    "scenes-bpm": "BPM",
+    "scenes-tempo-project": "项目速度",
+    "scenes-tempo-tap": "拍击",
+    "scenes-tempo-set": "设定",
+    "scenes-tempo-clock": "MIDI 时钟",
+    "scenes-tempo-reset": "恢复项目速度",
+    "scenes-speed": "速度",
+    "scenes-speed-reset": "恢复正常速度",
+    "scenes-dimmer": "{{name}} 的调光",
+    "scenes-learn-toggle": "点击一个场景，然后按下用于开关它的按键、打击垫或按钮。",
+    "scenes-learn-flash": "点击一个场景，然后按下在按住时闪烁它的按键、打击垫或按钮。",
+    "scenes-learn-waiting": "请在 MIDI 控制器上按下用于“{{name}}”的按键、打击垫或按钮。",
+    "scenes-learn-detail": "完成后关闭 MIDI 学习。",
+    "scenes-learn-press": "请按键…",
+    "scenes-learn-forget": "忘记已学习的按键",
+    "scenes-midi-note": "音符 {{number}}",
+    "scenes-midi-cc": "CC {{number}}",
+    "scenes-midi-channel": "通道 {{channel}}"
   },
   "editor": {
     "compositions": "作品",
@@ -673,7 +702,12 @@
         "RELEASE_ALL": "关闭所有场景",
         "BLACKOUT_ON": "开启全黑",
         "BLACKOUT_OFF": "关闭全黑",
-        "TOGGLE_BLACKOUT": "切换全黑"
+        "TOGGLE_BLACKOUT": "切换全黑",
+        "TOGGLE_SCENE": "切换场景",
+        "FLASH_SCENE": "闪烁场景",
+        "NEXT_SCENE": "下一个场景",
+        "PREVIOUS_SCENE": "上一个场景",
+        "TAP_TEMPO": "拍击速度"
       },
       "project": "设计器项目",
       "scene": "场景",
@@ -682,7 +716,16 @@
       "for-a-time": "持续一段时间",
       "until-stopped-help": "场景会一直开启，直到播放其他场景或关闭所有场景。全黑只会让它暗下来。",
       "for-a-time-help": "超过此时间后场景会再次关闭，除非之前已播放其他场景。",
-      "duration": "持续时间（秒）"
+      "duration": "持续时间（秒）",
+      "folder": "文件夹",
+      "folder-all": "所有场景",
+      "folder-help": "按设计器中的顺序依次切换此文件夹中的场景。到达两端时保持第一个或最后一个场景。",
+      "until-released": "按住期间",
+      "until-released-help": "在触发它的按键或按钮按住期间场景保持点亮：MIDI 音符，或按下时发送数值、松开时发送 0 的按钮。",
+      "help": {
+        "TOGGLE_SCENE": "点亮该场景以替代当前场景；如已点亮则关闭。",
+        "TAP_TEMPO": "每次触发为一拍：场景效果按拍击的速度运行。"
+      }
     }
   },
   "spark": {

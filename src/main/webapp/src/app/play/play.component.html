@@ -30,6 +30,24 @@
                 {{ 'play.scenes-stack' | translate }}
               </button>
 
+              <!-- Flash the scenes while they are held -->
+              <button type="button" (click)="toggleSceneFlash()" class="btn btn-scene"
+                [class.btn-scene-active]="scenesService.flash" [attr.aria-pressed]="scenesService.flash"
+                [popover]="'play.help.scenes-flash' | translate" triggers="mouseenter:mouseleave"
+                container="body" placement="bottom">
+                <i class="fa fa-bolt fa-fw" aria-hidden="true"></i>
+                {{ 'play.scenes-flash' | translate }}
+              </button>
+
+              <!-- Learn the keys, pads and buttons of a MIDI controller for the scenes -->
+              <button type="button" (click)="toggleSceneLearn()" class="btn btn-scene"
+                [class.btn-scene-active]="scenesService.learn" [attr.aria-pressed]="scenesService.learn"
+                [popover]="'play.help.scenes-learn' | translate" triggers="mouseenter:mouseleave"
+                container="body" placement="bottom">
+                <i class="fa fa-music fa-fw" aria-hidden="true"></i>
+                {{ 'play.scenes-learn' | translate }}
+              </button>
+
               <button type="button" (click)="releaseAllScenes()" class="btn btn-scene"
                 [disabled]="!currentState?.activeSceneUuids?.length"
                 [popover]="'play.help.scenes-release-all' | translate" triggers="mouseenter:mouseleave"
@@ -52,6 +70,9 @@
 
           <!-- The master dimmer of the scenes, where the position of the composition is -->
           <app-play-scene-master [state]="currentState"></app-play-scene-master>
+
+          <!-- Back and GO, the tempo and the speed of the scenes -->
+          <app-play-scene-live [state]="currentState"></app-play-scene-live>
           } @else {
 
           <!-- The transport buttons, with the readout beside them where there is room -->
