@@ -1364,4 +1364,56 @@ class DesignerDmxTest {
         assertEquals(0, preview(project, previewPreset).get(FRONT).getOrDefault(16, 0));
     }
 
+
+    private static DmxOverride dmxOverride(String universeUuid, int dmxChannel, int value) {
+        DmxOverride dmxOverride = new DmxOverride();
+        dmxOverride.setUniverseUuid(universeUuid);
+        dmxOverride.setDmxChannel(dmxChannel);
+        dmxOverride.setValue(value);
+        return dmxOverride;
+    }
+
+    @Test
+    void sendsTheValuesOfTheFadersOfTheDesignerOverWhatTheProjectPutsOnTheChannels() throws Exception {
+        // The par lit red at full, dimmed by the master dimmer to half
+        ObjectNode project = project();
+        project.put("masterDimmerValue", 0.5);
+        addPreset(project, "Red", List.of("par-1"), List.of(capability(project, "Intensity", 1.0)));
+
+        java.util.function.Consumer<DefaultDesignerService> faders = designerService -> {
+            designerService.setPreviewComposition("Song");
+            designerService.setDmxOverrides(List.of(
+                    // the dimmer of par 1 (address 1) held at 200, the master dimmer left out
+                    dmxOverride(FRONT, 0, 200),
+                    // an address no fixture is patched to (address 100)
+                    dmxOverride(FRONT, 99, 42),
+                    // the fine pan of the head (address 2)
+                    dmxOverride(BACK, 1, 7),
+                    // out of range: sent as far as DMX goes, or not at all
+                    dmxOverride(FRONT, 2, 300),
+                    dmxOverride(FRONT, 512, 1),
+                    dmxOverride("another-universe", 0, 9)));
+        };
+
+        Map<String, Map<Integer, Integer>> universes = preview(project, faders);
+
+        assertEquals(200, universes.get(FRONT).get(1));
+        assertEquals(42, universes.get(FRONT).get(100));
+        assertEquals(255, universes.get(FRONT).get(3));
+        assertEquals(7, universes.get(BACK).get(2));
+        // the pan itself keeps what the project puts on it: its default of 50 %
+        assertEquals(127, universes.get(BACK).get(1));
+        // the par 2 next to it isn't touched
+        assertEquals(0, universes.get(FRONT).getOrDefault(11, 0));
+    }
+
+    @Test
+    void forgetsTheFadersOfTheDesignerWithTheNextProject() throws Exception {
+        Map<String, Map<Integer, Integer>> universes = preview(project(), designerService -> {
+            designerService.setDmxOverrides(List.of(dmxOverride(FRONT, 99, 42)));
+            designerService.load(null, designerService.getCurrentProject(), null);
+        });
+
+        assertEquals(0, universes.get(FRONT).getOrDefault(100, 0));
+    }
 }

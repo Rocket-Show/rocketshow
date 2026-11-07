@@ -57,6 +57,10 @@ public interface DesignerService {
     // presets do with them (see Maintenance)
     void setMaintenanceFixtureUuids(List<String> resetFixtureUuids, List<String> lampOnFixtureUuids);
 
+    // The DMX channels held at a value by the faders of the DMX channels of the designer: sent as they are, whatever the
+    // project puts on them, until the next project is loaded
+    void setDmxOverrides(List<DmxOverride> dmxOverrides);
+
     // Play the scenes of the project picked by hand on the Play screen, dimmed by its master dimmer (0 to 1). They play
     // whenever no composition plays a project of its own: right away, or once the composition closes its project.
     void playManualScenes(Project project, List<String> sceneUuids, double masterDimmer);

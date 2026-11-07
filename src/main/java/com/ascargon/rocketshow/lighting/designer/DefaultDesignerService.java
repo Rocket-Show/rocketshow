@@ -79,6 +79,9 @@ public class DefaultDesignerService implements DesignerService {
     // the fixtures being identified from the fixture pool of the designer (see Identify)
     private volatile List<String> identifyFixtureUuids = new ArrayList<>();
 
+    // the DMX channels the faders of the designer hold at a value while it previews (see setDmxOverrides)
+    private volatile List<DmxOverride> dmxOverrides = new ArrayList<>();
+
     // the fixtures the designer asks from its fixture pool to reset themselves or to switch their lamp on (see
     // Maintenance)
     private volatile List<String> resetFixtureUuids = new ArrayList<>();
@@ -2504,6 +2507,15 @@ public class DefaultDesignerService implements DesignerService {
                 }
             }
         }
+
+        // a channel held by a fader of the designer sends the value of the fader, the master dimmer included
+        for (DmxOverride dmxOverride : dmxOverrides) {
+            HashMap<Integer, Integer> universe = universes.get(dmxOverride.getUniverseUuid());
+
+            if (universe != null && dmxOverride.getDmxChannel() >= 0 && dmxOverride.getDmxChannel() < 512) {
+                universe.put(dmxOverride.getDmxChannel(), Math.max(0, Math.min(255, dmxOverride.getValue())));
+            }
+        }
     }
 
     // Package visible for the conformance cases of the designer: the values of each fixture (and pixel) of the loaded
@@ -3480,6 +3492,7 @@ public class DefaultDesignerService implements DesignerService {
         this.identifyFixtureUuids = new ArrayList<>();
         this.resetFixtureUuids = new ArrayList<>();
         this.lampOnFixtureUuids = new ArrayList<>();
+        this.dmxOverrides = new ArrayList<>();
 
         // a preview names the composition it plays, if any (see setPreviewComposition)
         this.composition = compositionPlayer == null ? null : getCompositionByName(project, compositionPlayer.getComposition().getName());
@@ -3683,6 +3696,11 @@ public class DefaultDesignerService implements DesignerService {
     public void setMaintenanceFixtureUuids(List<String> resetFixtureUuids, List<String> lampOnFixtureUuids) {
         this.resetFixtureUuids = resetFixtureUuids == null ? new ArrayList<>() : new ArrayList<>(resetFixtureUuids);
         this.lampOnFixtureUuids = lampOnFixtureUuids == null ? new ArrayList<>() : new ArrayList<>(lampOnFixtureUuids);
+    }
+
+    @Override
+    public void setDmxOverrides(List<DmxOverride> dmxOverrides) {
+        this.dmxOverrides = dmxOverrides == null ? new ArrayList<>() : new ArrayList<>(dmxOverrides);
     }
 
     @Override
