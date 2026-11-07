@@ -65,13 +65,44 @@ from a MIDI controller:
   sending another value when pressed.
 - **Back and GO** play the previous and the next scene of the folder shown, in the order of the designer.
   The actions **Next Scene** and **Previous Scene** do the same from a footswitch, for a folder of your choice.
-- **Tempo.** Effects synced to the beat follow the tempo of the project. Tap a tempo with **Tap** (or the
-  action **Tap Tempo**): each tap falls on a beat. A **MIDI clock** on the MIDI input sets the tempo as well,
-  and once started (MIDI Start) its beats are the beats of the scenes. The **speed master** runs the effects
-  and the steps of the scenes faster or slower.
+- **Tempo.** Effects and steps synced to the beat follow the programmed tempo of the project, unless a tempo
+  comes from outside (see below). The **speed master** runs everything in the scenes faster or slower, also
+  what is timed in milliseconds.
 
 A scene picked fades in over its fade in time and fades out over its fade out time when it is let go, and
-plays its presets from the moment it is picked: their steps start with the first one.
+plays its presets from the moment it is picked: their steps start with the first one, on a whole beat.
+
+## Tempo
+
+The effects and steps synced to the beat run on the beats of the tempo playing. That is the programmed tempo
+of the composition or the project, unless a tempo comes from outside. A tempo from outside drives:
+
+- the scenes played by hand,
+- compositions without audio (sync **None** in the designer),
+- the default composition.
+
+A composition with audio always keeps its own tempo, so the lights stay in time with the music.
+
+- **Tap** (on the Play screen, or the **Tempo** action **Tap**). The first tap after a pause is the first
+  beat of a bar, right away. The taps after it give the tempo and move the beats onto them over the next
+  beat, instead of jumping.
+- **1** (or the action **Beat one**) makes now the first beat of a bar, e.g. when the band comes back in.
+- **÷2** and **×2** halve or double the tempo. The actions **Faster** and **Slower** change it by one BPM,
+  and **Set** sets a tempo. **Back to the programmed tempo** (or the action **Programmed tempo**) drops the
+  tempo from outside.
+- A **MIDI clock** on the MIDI input sets the tempo while it runs. Taps are ignored then. **MIDI Start** makes
+  its first tick the first beat of a bar. **Continue** goes on from the **Song Position** it sent last. The
+  tempo of a clock is forgotten when Rocket Show restarts; a tempo tapped or set is kept.
+
+The bars follow the time signature of the composition (4/4 if it has none).
+
+## Hold points
+
+A hold point on the timeline of a composition in the designer stops it there until **GO**. The audio and the
+video pause, but the lights keep running: the effects and steps of the clips at the hold point carry on.
+**GO** on the Play screen, the transport action **GO** or a MIDI Show Control `GO` without a cue number
+goes on from the hold point. Hold points are ignored while Rocket Show follows a MIDI timecode master, because
+the master decides where the composition is.
 
 ## MIDI Show Control
 
@@ -82,7 +113,7 @@ machine with (0–126; commands sent to the all-call ID 127 are always accepted)
 | --- | --- |
 | `LOAD` with a cue number | Selects the composition with that cue number, without playing |
 | `GO` with a cue number | Selects that composition and starts it |
-| `GO` without a cue number | Starts what is currently selected |
+| `GO` without a cue number | Starts what is currently selected, or goes on from the hold point it holds at |
 | `STOP` | Pauses |
 | `RESUME` | Continues |
 | `ALL_OFF`, `RESET`, `GO_OFF` | Stops |

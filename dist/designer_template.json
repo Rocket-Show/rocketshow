@@ -29,12 +29,21 @@
         {
           "sceneUuid": "9e40f72c-be2c-4f6e-ba5f-a293302f26d3",
           "startMillis": 48801,
-          "endMillis": 78801
+          "endMillis": 78801,
+          "trackUuid": "5b0e7c1d-3f7a-4c1e-9a6e-2d4f8b1c7e93"
         }
       ],
       "uuid": "c145e55b-23ec-48ce-85d0-2eb2563fcffd",
       "name": "Example Composition",
-      "audioFileName": "head_smashed_far_away.wav"
+      "audioFileName": "head_smashed_far_away.wav",
+      "tracks": [
+        {
+          "uuid": "5b0e7c1d-3f7a-4c1e-9a6e-2d4f8b1c7e93",
+          "name": "Scene 1",
+          "hidden": false,
+          "solo": false
+        }
+      ]
     }
   ],
   "fixtureProfiles": [
@@ -609,7 +618,7 @@
   "sceneFolders": [],
   "presetFolders": [],
   "fixtureFolders": [],
-  "version": 9,
+  "version": 10,
   "name": "New Project",
   "shareToken": "53171cec-7c65-4d86-929b-8b8c1e3f5957",
   "selectedPresetUuid": "71b6c41a-91a6-4781-bf83-ba8d9ceac985",

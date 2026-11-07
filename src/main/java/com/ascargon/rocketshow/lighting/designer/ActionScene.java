@@ -22,7 +22,7 @@ public class ActionScene extends Action {
         // play the next or the previous scene of a folder instead of the scenes on so far (see ScenePlayerService.stepScene)
         NEXT_SCENE,
         PREVIOUS_SCENE,
-        // a beat of the tempo the scenes run at (see ScenePlayerService.tapTempo)
+        // a beat tapped: kept, so the actions saved with it still load (see ActionTempo, which taps now)
         TAP_TEMPO,
         // turn all scenes off
         RELEASE_ALL,

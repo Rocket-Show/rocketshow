@@ -103,6 +103,7 @@ public class DesignerController {
         designerService.setMaintenanceFixtureUuids(project.getResetFixtureUuids(), project.getLampOnFixtureUuids());
         designerService.setDmxOverrides(project.getDmxOverrides());
         designerService.setPreviewComposition(compositionName);
+        designerService.setPreviewHolds(project.getPreviewHolds(), project.isPreviewHolding());
 
         designerService.startPreview(positionMillis);
     }

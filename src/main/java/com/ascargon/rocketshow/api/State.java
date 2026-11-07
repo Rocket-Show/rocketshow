@@ -36,14 +36,22 @@ public class State {
     private double sceneMasterDimmer = 1;
     private boolean scenesHeld;
 
-    // the live controls of the scenes: the ones flashed, the tempo they run at and where it is from ("project", "tap",
-    // "set" or "clock"), the speed master, the dimmer of each scene (the ones at full left out) and the scene waiting
-    // for its key, pad or button of a MIDI controller (see ScenePlayerService)
+    // the live controls of the scenes: the ones flashed, the speed master, the dimmer of each scene (the ones at full
+    // left out) and the scene waiting for its key, pad or button of a MIDI controller (see ScenePlayerService)
     private List<String> flashedSceneUuids;
-    private Double sceneBeatsPerMinute;
-    private String sceneTempoSource;
     private double sceneSpeed = 1;
     private Map<String, Double> sceneDimmers;
     private SceneLearning sceneLearning;
+
+    // the tempo playing (null while nothing plays without a tempo from outside), where it is from ("project", "tap",
+    // "set" or "clock"), where its beats are at the moment (counted from when they started) and the beats of a bar
+    // (see TempoService)
+    private Double tempoBeatsPerMinute;
+    private String tempoSource = "project";
+    private double tempoBeats;
+    private int tempoBeatsPerBar = 4;
+
+    // whether the composition holds at a hold point until GO
+    private boolean holding;
 
 }

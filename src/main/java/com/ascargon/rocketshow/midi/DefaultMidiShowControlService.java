@@ -117,8 +117,9 @@ public class DefaultMidiShowControlService implements MidiShowControlService {
         switch (command) {
             case MSC_GO -> {
                 if (cue.isEmpty()) {
-                    // A GO without a cue number means "run what is loaded"
-                    submitTransport(playerService::play);
+                    // A GO without a cue number means "run what is loaded", or go on from the hold point it
+                    // holds at
+                    submitTransport(playerService::go);
                 } else if (!midiCompositionSelectionService.selectByShowControlCue(cue, true)) {
                     logger.info("No composition is configured for MIDI Show Control cue '{}'", cue);
                 }

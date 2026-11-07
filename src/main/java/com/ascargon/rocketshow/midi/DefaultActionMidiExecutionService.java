@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.midi;
 
 import com.ascargon.rocketshow.lighting.designer.ScenePlayerService;
+import com.ascargon.rocketshow.lighting.designer.TempoService;
 import org.springframework.context.annotation.Lazy;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.ActionExecutionService;
@@ -16,18 +17,20 @@ public class DefaultActionMidiExecutionService implements ActionMidiExecutionSer
     private final static int CONTINUE_STATUS = 0xFB;
     private final static int STOP_STATUS = 0xFC;
     private final static int CLOCK_STATUS = 0xF8;
+    private final static int SONG_POSITION_STATUS = 0xF2;
 
-    private final MidiClockTempo midiClockTempo = new MidiClockTempo();
 
     private final SettingsService settingsService;
     private final ActionExecutionService actionExecutionService;
     private final ScenePlayerService scenePlayerService;
+    private final TempoService tempoService;
 
     // The scene player is loaded lazily: it tells the apps the state of the device, which needs much of the rest
-    public DefaultActionMidiExecutionService(SettingsService settingsService, ActionExecutionService actionExecutionService, @Lazy ScenePlayerService scenePlayerService) {
+    public DefaultActionMidiExecutionService(SettingsService settingsService, ActionExecutionService actionExecutionService, @Lazy ScenePlayerService scenePlayerService, @Lazy TempoService tempoService) {
         this.settingsService = settingsService;
         this.actionExecutionService = actionExecutionService;
         this.scenePlayerService = scenePlayerService;
+        this.tempoService = tempoService;
     }
 
     /**
@@ -106,23 +109,25 @@ public class DefaultActionMidiExecutionService implements ActionMidiExecutionSer
 
     @Override
     public void processMidiSignal(ShortMessage shortMessage) throws Exception {
-        // a MIDI clock gives the tempo the scenes played by hand run at (and where its beats are, once started)
+        // a MIDI clock gives the tempo from outside and where its beats are, once started (see TempoService)
         int status = shortMessage.getStatus();
 
         if (status == CLOCK_STATUS) {
-            MidiClockTempo.Beat beat = midiClockTempo.tick(System.nanoTime());
+            tempoService.midiClockTick(System.nanoTime());
+            return;
+        }
 
-            if (beat != null) {
-                scenePlayerService.setClockTempo(beat.beatsPerMinute(), beat.onTheBeat());
-            }
-
+        if (status == SONG_POSITION_STATUS) {
+            tempoService.midiSongPosition(shortMessage.getData1() | (shortMessage.getData2() << 7));
             return;
         }
 
         if (status == START_STATUS) {
-            midiClockTempo.start();
+            tempoService.midiClockStart();
+        } else if (status == CONTINUE_STATUS) {
+            tempoService.midiClockContinue();
         } else if (status == STOP_STATUS) {
-            midiClockTempo.stop();
+            tempoService.midiClockStop();
         }
 
         // a scene waiting for its key, pad or button takes the message, which triggers nothing else then

@@ -253,6 +253,17 @@ public class DefaultPlayerService implements PlayerService {
     }
 
     @Override
+    public synchronized void go() throws Exception {
+        // playing a composition holding goes on from its hold point (also on the remote devices)
+        play();
+    }
+
+    @Override
+    public boolean isHolding() {
+        return currentCompositionPlayer.isHolding();
+    }
+
+    @Override
     public void playAsSample(String compositionName) throws Exception {
         // Play this composition in parallel without an option to stop/pause it
         logger.trace("Play composition '" + compositionName + "' as a sample");

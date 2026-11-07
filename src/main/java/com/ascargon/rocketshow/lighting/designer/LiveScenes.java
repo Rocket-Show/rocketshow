@@ -15,10 +15,10 @@ import java.util.function.Function;
  * from where it is. A scene flashed is on at once while it is held, on top of the others.
  * <p>
  * The presets of a scene play from the moment it is picked, like on a clip of the timeline: their steps start with the
- * first one, their effects at their beginning. They run on a clock of their own, which runs as fast as the speed master
- * and the tempo played live make it run: the tempo of the project (the one its beat-synced curves are written for) at
- * a speed of 1 runs it in real time. A scene is picked on a whole beat of that clock, so the beat-synced curves of all
- * scenes run on the same beats, which the beat tapped last lies on.
+ * first one, their effects at their beginning. What is timed in milliseconds runs on a clock of its own, as fast as the
+ * speed master makes it run. What follows the beat (the curves and steps timed in beats) runs on the beats of the
+ * tempo playing (see BeatClock), as fast as the speed master makes them run too. A scene picked starts on a whole beat,
+ * so the beat-synced curves of all scenes run on the same beats, the ones tapped or of a MIDI clock (at a speed of 1).
  *
  * @author Moritz A. Vieli
  */
@@ -27,16 +27,14 @@ public class LiveScenes {
     // where the clips of the scenes end: they play until they are let go, which their fades work out here
     private static final double OPEN_END_MILLIS = 1e15;
 
-    // the tempo a curve synced to the beat falls back to without one of the project (see EffectCurve)
-    public static final double DEFAULT_BEATS_PER_MINUTE = 120;
-
     // a scene picked by hand
     private static final class LiveScene {
         private final Scene scene;
         private final boolean flash;
 
-        // where the presets of the scene play from: on the clock of the live scenes, on a whole beat
+        // where the presets of the scene play from: on the clock of the live scenes, and on its beats (a whole one)
         private final ScenePlaybackRegion region;
+        private final double startBeats;
 
         // the scene without its fades and its dimmer: the fades of its presets are played on it, the ones of the
         // scene are worked out here
@@ -47,15 +45,16 @@ public class LiveScenes {
         private double pickedRealMillis;
         private Double releasedRealMillis;
 
-        private LiveScene(Scene scene, boolean flash, double clockMillis, double beatMillis, double realMillis) {
+        private LiveScene(Scene scene, boolean flash, double clockMillis, double beats, double realMillis) {
             this.scene = scene;
             this.flash = flash;
             this.pickedRealMillis = realMillis;
 
             region = new ScenePlaybackRegion();
             region.setSceneUuid(scene.getUuid());
-            region.setStartMillis(Math.floor(clockMillis / beatMillis) * beatMillis);
+            region.setStartMillis(clockMillis);
             region.setEndMillis(OPEN_END_MILLIS);
+            startBeats = Math.floor(beats + 1e-9);
 
             plain = new Scene();
             plain.setUuid(scene.getUuid());
@@ -103,6 +102,9 @@ public class LiveScenes {
         private final PresetRegionScene plain;
         private double sceneLevel;
 
+        // the beats it has played for
+        private double beats;
+
         private LivePreset(Preset preset, LiveScene liveScene) {
             super(preset, liveScene.region, liveScene.scene);
             plain = new PresetRegionScene(preset, liveScene.region, liveScene.plain);
@@ -113,6 +115,12 @@ public class LiveScenes {
         public double getIntensity(double timeMillis) {
             return sceneLevel * DefaultDesignerService.getPresetIntensity(plain, timeMillis);
         }
+
+        // the time it has played for in beats, as the milliseconds they last at the passed tempo: what follows the beat
+        // runs on it, at that tempo
+        public double getBeatTimeMillis(double beatsPerMinute) {
+            return beats * 60000 / beatsPerMinute;
+        }
     }
 
     private final Map<String, LiveScene> scenes = new LinkedHashMap<>();
@@ -121,67 +129,54 @@ public class LiveScenes {
     // the dimmers of the Play screen, by scene (1 for a scene without one)
     private Map<String, Double> dimmers = new HashMap<>();
 
-    // the clock: where it is, the real time it was there at and how fast it runs
+    // the beats of the tempo playing
+    private final BeatClock beatClock;
+
+    // the clock: where it is, the real time it was there at, its beats and the ones of the tempo then, and how fast it
+    // runs
     private double clockMillis = 0;
     private Double clockRealMillis;
+    private double beats = 0;
+    private double clockTempoBeats = 0;
     private double speed = 1;
-    private Double beatsPerMinute;
-    private double referenceBeatsPerMinute = DEFAULT_BEATS_PER_MINUTE;
+
+    public LiveScenes(BeatClock beatClock) {
+        this.beatClock = beatClock;
+    }
 
     // ---- the clock ----
 
     // where the clock is at the passed real time
     public synchronized double advance(double realMillis) {
-        if (clockRealMillis != null) {
-            clockMillis += (realMillis - clockRealMillis) * getRate();
+        double tempoBeats = beatClock.getBeats(realMillis);
+
+        if (clockRealMillis == null) {
+            // started on the beats of the tempo
+            beats = tempoBeats;
+        } else {
+            clockMillis += (realMillis - clockRealMillis) * speed;
+            beats += (tempoBeats - clockTempoBeats) * speed;
         }
 
         clockRealMillis = realMillis;
+        clockTempoBeats = tempoBeats;
         return clockMillis;
     }
 
-    // how fast the clock runs: as fast as the speed master and the tempo played live (the one of the project, if none)
-    public synchronized double getRate() {
-        double tempo = beatsPerMinute == null ? 1 : beatsPerMinute / referenceBeatsPerMinute;
-        return speed * tempo;
+    // the beats of the clock (see advance)
+    public synchronized double getBeats() {
+        return beats;
     }
 
+    // The speed master. Back at 1, the beats of the scenes fall on the ones of the tempo again (they ran apart while
+    // the speed was another one).
     public synchronized void setSpeed(double speed, double realMillis) {
         advance(realMillis);
         this.speed = speed;
-    }
 
-    // the tempo played live (null = the one of the project)
-    public synchronized void setBeatsPerMinute(Double beatsPerMinute, double realMillis) {
-        advance(realMillis);
-        this.beatsPerMinute = beatsPerMinute;
-    }
-
-    public synchronized Double getBeatsPerMinute() {
-        return beatsPerMinute;
-    }
-
-    // the tempo the beat-synced curves of the project are written for
-    public synchronized void setReferenceBeatsPerMinute(Double referenceBeatsPerMinute, double realMillis) {
-        advance(realMillis);
-        this.referenceBeatsPerMinute = referenceBeatsPerMinute == null || referenceBeatsPerMinute <= 0 ? DEFAULT_BEATS_PER_MINUTE : referenceBeatsPerMinute;
-    }
-
-    public synchronized double getReferenceBeatsPerMinute() {
-        return referenceBeatsPerMinute;
-    }
-
-    // a beat on the clock of the live scenes
-    private double getBeatMillis() {
-        return 60000 / referenceBeatsPerMinute;
-    }
-
-    // Let a beat fall on the passed moment (e.g. a beat tapped): the clock is moved to the closest whole beat, which
-    // moves the beats of all scenes with it
-    public synchronized void alignBeat(double realMillis) {
-        advance(realMillis);
-        double beatMillis = getBeatMillis();
-        clockMillis = Math.round(clockMillis / beatMillis) * beatMillis;
+        if (speed == 1) {
+            beats = clockTempoBeats + Math.round(beats - clockTempoBeats);
+        }
     }
 
     // ---- the scenes ----
@@ -212,7 +207,7 @@ public class LiveScenes {
             }
 
             if (liveScene == null) {
-                liveScenes.put(scene.getUuid(), new LiveScene(scene, flash, clock, getBeatMillis(), realMillis));
+                liveScenes.put(scene.getUuid(), new LiveScene(scene, flash, clock, beats, realMillis));
             } else if (liveScene.releasedRealMillis != null) {
                 // picked again while it fades out: it keeps playing, and fades in from where it is
                 double level = liveScene.level(realMillis);
@@ -313,6 +308,7 @@ public class LiveScenes {
                     Preset preset = presetsOfScene.get(presetIndex);
                     LivePreset livePreset = new LivePreset(preset, liveScene);
                     livePreset.sceneLevel = sceneLevel;
+                    livePreset.beats = beats - liveScene.startBeats;
 
                     // a preset with times of its own only plays within them, from the moment the scene was picked
                     if (DefaultDesignerService.getPresetPlayStartMillis(preset, liveScene.region, liveScene.plain) <= timeMillis

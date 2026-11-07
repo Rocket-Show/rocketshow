@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
@@ -259,6 +260,48 @@ class CompositionPlayerTest {
     private void lightsUntil(String compositionName, long endMillis) {
         when(designerService.getProjectByCompositionName(compositionName)).thenReturn(new Project());
         when(designerService.getCompositionEndMillis(compositionName)).thenReturn(endMillis);
+    }
+
+    @Test
+    void holdsAtAHoldPointUntilGo() throws Exception {
+        compositionPlayer.setComposition(composition(0, 300, 600));
+        when(designerService.getHoldPositions("Actions")).thenReturn(List.of(200.0));
+
+        compositionPlayer.play();
+        waitMillis(500);
+
+        // the media and the actions stand still at the hold point, the lights hold there and run on
+        assertTrue(compositionPlayer.isHolding());
+        assertEquals(CompositionPlayer.PlayState.PAUSED, compositionPlayer.getPlayState());
+        assertEquals(200, compositionPlayer.getPositionMillis());
+        assertEquals(List.of(0L), executedPositions);
+        verify(designerService).hold(200.0);
+        verify(designerService, never()).pause();
+
+        // GO
+        compositionPlayer.play();
+        assertFalse(compositionPlayer.isHolding());
+        verify(designerService).endHold();
+
+        waitForState(CompositionPlayer.PlayState.STOPPED, 3000);
+        assertEquals(List.of(0L, 300L, 600L), executedPositions);
+    }
+
+    @Test
+    void isJustPausedWhenItIsMovedWhileItHolds() throws Exception {
+        compositionPlayer.setComposition(composition(0, 300, 600));
+        when(designerService.getHoldPositions("Actions")).thenReturn(List.of(100.0));
+
+        compositionPlayer.play();
+        waitMillis(300);
+        assertTrue(compositionPlayer.isHolding());
+
+        compositionPlayer.seek(50);
+
+        assertFalse(compositionPlayer.isHolding());
+        assertEquals(CompositionPlayer.PlayState.PAUSED, compositionPlayer.getPlayState());
+        verify(designerService).forgetHolds(50.0);
+        verify(designerService).pause();
     }
 
     @Test

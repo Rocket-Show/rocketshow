@@ -1,6 +1,7 @@
 package com.ascargon.rocketshow.midi;
 
 import com.ascargon.rocketshow.lighting.designer.ScenePlayerService;
+import com.ascargon.rocketshow.lighting.designer.TempoService;
 import com.ascargon.rocketshow.settings.Settings;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.ActionExecutionService;
@@ -20,7 +21,8 @@ class DefaultActionMidiExecutionServiceTest {
     private final SettingsService settingsService = mock(SettingsService.class);
     private final ActionExecutionService actionExecutionService = mock(ActionExecutionService.class);
     private final ScenePlayerService scenePlayerService = mock(ScenePlayerService.class);
-    private final DefaultActionMidiExecutionService actionMidiExecutionService = new DefaultActionMidiExecutionService(settingsService, actionExecutionService, scenePlayerService);
+    private final TempoService tempoService = mock(TempoService.class);
+    private final DefaultActionMidiExecutionService actionMidiExecutionService = new DefaultActionMidiExecutionService(settingsService, actionExecutionService, scenePlayerService, tempoService);
 
     private final Settings settings = new Settings();
 
@@ -252,7 +254,7 @@ class DefaultActionMidiExecutionServiceTest {
     }
 
     @Test
-    void givesTheScenesTheTempoOfAMidiClock() throws Exception {
+    void givesTheTempoTheTicksOfAMidiClock() throws Exception {
         // a clock tick triggers nothing
         ActionTriggerMidiNoteOn anyNote = addNoteOnTrigger(null, null);
 
@@ -260,8 +262,23 @@ class DefaultActionMidiExecutionServiceTest {
             actionMidiExecutionService.processMidiSignal(new ShortMessage(0xF8));
         }
 
-        // once a beat, from the second one on
-        verify(scenePlayerService, org.mockito.Mockito.times(2)).setClockTempo(org.mockito.ArgumentMatchers.anyDouble(), org.mockito.ArgumentMatchers.eq(false));
+        verify(tempoService, org.mockito.Mockito.times(24 * 2 + 1)).midiClockTick(org.mockito.ArgumentMatchers.anyLong());
         verify(actionExecutionService, org.mockito.Mockito.never()).executeFromTrigger(anyNote);
+    }
+
+    @Test
+    void givesTheTempoTheTransportAndTheSongPositionOfAMidiClock() throws Exception {
+        actionMidiExecutionService.processMidiSignal(new ShortMessage(0xFA));
+        verify(tempoService).midiClockStart();
+
+        // the song position in sixteenths: 2 * 128 + 5
+        actionMidiExecutionService.processMidiSignal(new ShortMessage(0xF2, 5, 2));
+        verify(tempoService).midiSongPosition(261);
+
+        actionMidiExecutionService.processMidiSignal(new ShortMessage(0xFB));
+        verify(tempoService).midiClockContinue();
+
+        actionMidiExecutionService.processMidiSignal(new ShortMessage(0xFC));
+        verify(tempoService).midiClockStop();
     }
 }

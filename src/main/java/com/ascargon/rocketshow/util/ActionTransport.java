@@ -17,6 +17,8 @@ public class ActionTransport extends Action {
         STOP,
         SELECT_COMPOSITION_BY_NAME,
         SELECT_COMPOSITION_BY_NAME_AND_PLAY,
+        // on from the hold point the composition holds at, else play it
+        GO,
     }
 
     private TransportActionType transportActionType;

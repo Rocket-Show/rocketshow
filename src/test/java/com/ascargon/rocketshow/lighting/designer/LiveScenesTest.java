@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class LiveScenesTest {
 
+    private BeatClock beatClock;
     private LiveScenes liveScenes;
     private Scene red;
     private Scene blue;
@@ -39,7 +40,9 @@ class LiveScenesTest {
 
     @BeforeEach
     void setUp() {
-        liveScenes = new LiveScenes();
+        // 120 BPM: a beat lasts 500 ms
+        beatClock = new BeatClock(0);
+        liveScenes = new LiveScenes(beatClock);
         red = scene("red", 1000, 2000);
         blue = scene("blue", 0, 0);
         redPreset = preset("red-preset");
@@ -143,12 +146,18 @@ class LiveScenesTest {
     }
 
     @Test
-    void playsThePresetsOfASceneFromTheBeatItWasPickedOn() {
-        // at 120 BPM a beat lasts 500 ms
+    void playsThePresetsOfASceneFromTheMomentAndFromTheBeatItWasPickedOn() {
         liveScenes.advance(0);
         liveScenes.setScenes(List.of(blue), List.of(), 1234);
 
-        assertEquals(1000, presets(1234).getFirst().getRegion().getStartMillis(), 1e-9);
+        LiveScenes.LivePreset preset = (LiveScenes.LivePreset) presets(1234).getFirst();
+        assertEquals(1234, preset.getRegion().getStartMillis(), 1e-9);
+
+        // the beats from the whole one it was picked on: 2.468 beats in, 0.468 beats of 500 ms
+        assertEquals(234, preset.getBeatTimeMillis(120), 1e-9);
+
+        // as long as they last at another tempo
+        assertEquals(468, preset.getBeatTimeMillis(60), 1e-9);
     }
 
     @Test
@@ -164,33 +173,35 @@ class LiveScenesTest {
     }
 
     @Test
-    void runsTheClockAsFastAsTheSpeedMasterAndTheTempoPlayedLive() {
+    void runsTheMillisecondsAsFastAsTheSpeedMasterAndTheBeatsAlsoAtTheTempo() {
         liveScenes.advance(0);
         assertEquals(1000, liveScenes.advance(1000), 1e-9);
+        assertEquals(2, liveScenes.getBeats(), 1e-9);
 
         liveScenes.setSpeed(2, 1000);
         assertEquals(3000, liveScenes.advance(2000), 1e-9);
+        assertEquals(6, liveScenes.getBeats(), 1e-9);
 
-        // 150 BPM played to curves written for the 120 of the project: a quarter faster
+        // a faster tempo runs the beats faster, the milliseconds not
         liveScenes.setSpeed(1, 2000);
-        liveScenes.setReferenceBeatsPerMinute(120.0, 2000);
-        liveScenes.setBeatsPerMinute(150.0, 2000);
-        assertEquals(1.25, liveScenes.getRate(), 1e-9);
-        assertEquals(4250, liveScenes.advance(3000), 1e-9);
-
-        // back to the tempo of the project
-        liveScenes.setBeatsPerMinute(null, 3000);
-        assertEquals(1, liveScenes.getRate(), 1e-9);
+        beatClock.setBeatsPerMinute(150, 2000);
+        assertEquals(4000, liveScenes.advance(3000), 1e-9);
+        assertEquals(8.5, liveScenes.getBeats(), 1e-9);
     }
 
     @Test
-    void letsABeatFallOnTheMomentTapped() {
+    void fallsOnTheBeatsOfTheTempoAgainBackAtASpeedOf1() {
         liveScenes.advance(0);
-        liveScenes.advance(1300);
+        liveScenes.setSpeed(0.5, 0);
 
-        // the closest beat at 120 BPM
-        liveScenes.alignBeat(1300);
-        assertEquals(1500, liveScenes.advance(1300), 1e-9);
+        // a quarter beat behind the tempo
+        liveScenes.advance(250);
+        assertEquals(0.25, liveScenes.getBeats(), 1e-9);
+
+        // on the closest beat of the tempo
+        liveScenes.setSpeed(1, 250);
+        assertEquals(0.5, liveScenes.getBeats(), 1e-9);
+        assertEquals(beatClock.getBeats(250), liveScenes.getBeats(), 1e-9);
     }
 
     @Test
