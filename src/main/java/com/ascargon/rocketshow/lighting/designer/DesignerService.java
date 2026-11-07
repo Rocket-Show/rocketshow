@@ -48,6 +48,8 @@ public interface DesignerService {
 
     void setStepPreviewRunning(boolean stepPreviewRunning, double stepPreviewStartMillis);
 
+    void setHolds(List<CompositionHold> holds);
+
     void setSelectedSceneUuids(List<String> selectedSceneUuids);
 
     // The fixtures being identified from the fixture pool of the designer: they blink at full white, whatever the

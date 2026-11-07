@@ -328,7 +328,7 @@ class DesignerConformanceTest {
 
     // The values the engine gives every fixture (and pixel) of a project at the passed times, the way it plays the
     // timeline of a composition, the selected preset or the selected scenes of the designer's live preview
-    private JsonNode channelValues(JsonNode project, JsonNode preview, JsonNode times, JsonNode audio) {
+    private JsonNode channelValues(JsonNode project, JsonNode preview, JsonNode times, JsonNode audio, JsonNode holds) {
         DefaultDesignerService designerService = designerService();
         designerService.load(null, DesignerJson.MAPPER.treeToValue(resolveProfiles(project), Project.class), null);
 
@@ -367,6 +367,17 @@ class DesignerConformanceTest {
             default -> throw new IllegalArgumentException("Unknown preview mode " + mode);
         }
 
+        // the holds the timeline went through, if any
+        List<CompositionHold> compositionHolds = new ArrayList<>();
+
+        if (holds != null) {
+            for (JsonNode hold : holds) {
+                compositionHolds.add(new CompositionHold(hold.get("positionMillis").asDouble(), hold.get("heldMillis").asDouble()));
+            }
+        }
+
+        designerService.setHolds(compositionHolds);
+
         // the fixtures identified from the fixture pool, if any
         designerService.setIdentifyFixtureUuids(preview.has("identify") ? strings(preview.get("identify")) : new ArrayList<>());
         designerService.setMaintenanceFixtureUuids(preview.has("reset") ? strings(preview.get("reset")) : new ArrayList<>(), preview.has("lampOn") ? strings(preview.get("lampOn")) : new ArrayList<>());
@@ -393,7 +404,7 @@ class DesignerConformanceTest {
         ArrayNode runs = NODES.arrayNode();
 
         for (JsonNode run : input.get("runs")) {
-            runs.add(channelValues(input.get("project"), run.get("preview"), run.get("times"), input.get("audio")));
+            runs.add(channelValues(input.get("project"), run.get("preview"), run.get("times"), input.get("audio"), run.get("holds")));
         }
 
         return runs;

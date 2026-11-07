@@ -63,6 +63,12 @@ public class Preset {
     // number of fixtures.
     private double stepsPhasingGroupSize = 1;
 
+    // how the steps are timed: "millis" as they are written down, "beats" following the tempo they are played at. Their
+    // times are written down at stepsBeatsPerMinute then, and run as much faster or slower as the tempo played is (see
+    // PresetSteps.getStepsTimeMillis).
+    private String stepsLengthMode = "millis";
+    private double stepsBeatsPerMinute = 120;
+
     // the order the steps are played in: "forward", "backward", "pingpong" or "random" (see PresetStepsOrder; an order
     // this Rocket Show doesn't know plays them forward), and where a random order starts from
     private String stepsOrder = "forward";

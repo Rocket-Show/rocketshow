@@ -76,6 +76,10 @@ public class DefaultDesignerService implements DesignerService {
     private double stepPreviewStartMillis = 0;
     private List<String> selectedSceneUuids = new ArrayList<>();
 
+    // the holds the timeline of the composition playing went through (see CompositionHold): the clips spanning them ran
+    // on while the position stood still
+    private volatile List<CompositionHold> holds = new ArrayList<>();
+
     // the fixtures being identified from the fixture pool of the designer (see Identify)
     private volatile List<String> identifyFixtureUuids = new ArrayList<>();
 
@@ -1110,14 +1114,32 @@ public class DefaultDesignerService implements DesignerService {
     // the values a preset applies at the passed time. While nothing is playing, the
     // designer's panels are editing one step, so that is the one to show: the sequence
     // only runs on the timeline, or when the designer asks to watch it.
-    private PresetStepState getPresetStepState(PresetRegionScene preset, double timeMillis) {
+    // A preset chasing its steps over its fixtures is the passed phasing behind for a fixture. Steps following the beat
+    // run as much faster or slower as the tempo played is than the one they are written at; the clips spanning a hold
+    // ran on while the timeline held. The designer works it out the same way, in the same order.
+    private PresetStepState getPresetStepState(PresetRegionScene preset, double timeMillis, double phasingMillis) {
+        boolean followsBeat = "beats".equals(preset.getPreset().getStepsLengthMode());
+
         if (preset.getRegion() != null) {
-            return PresetSteps.getStateAtMillis(preset.getPreset(), timeMillis - getPresetStartMillis(preset));
+            double startMillis = getPresetStartMillis(preset);
+            double heldMillis = preset instanceof LiveScenes.LivePreset ? 0 : CompositionHold.getHeldMillis(holds, startMillis, timeMillis);
+
+            if (followsBeat) {
+                double presetTimeMillis = timeMillis - startMillis + heldMillis;
+                return PresetSteps.getStateAtMillis(preset.getPreset(), PresetSteps.getStepsTimeMillis(preset.getPreset(), presetTimeMillis, getStepsBeatsPerMinute()) - phasingMillis);
+            }
+
+            return PresetSteps.getStateAtMillis(preset.getPreset(), timeMillis - phasingMillis - startMillis + heldMillis);
         }
 
         if (stepPreviewRunning) {
             // the sequence was started by hand, so it runs from the point it was started at
-            return PresetSteps.getStateAtMillis(preset.getPreset(), timeMillis - stepPreviewStartMillis);
+            if (followsBeat) {
+                double presetTimeMillis = timeMillis - stepPreviewStartMillis;
+                return PresetSteps.getStateAtMillis(preset.getPreset(), PresetSteps.getStepsTimeMillis(preset.getPreset(), presetTimeMillis, getStepsBeatsPerMinute()) - phasingMillis);
+            }
+
+            return PresetSteps.getStateAtMillis(preset.getPreset(), timeMillis - phasingMillis - stepPreviewStartMillis);
         }
 
         List<PresetStep> steps = preset.getPreset().getSteps();
@@ -1672,7 +1694,7 @@ public class DefaultDesignerService implements DesignerService {
             // a preset chasing its steps over its fixtures is at a different point of
             // the sequence for each of them, so its state is worked out per fixture below
             if (!PresetSteps.stepsArePhased(preset.getPreset())) {
-                presetStates.put(preset, getPresetStepState(preset, timeMillis));
+                presetStates.put(preset, getPresetStepState(preset, timeMillis, 0));
             }
         }
 
@@ -1723,7 +1745,7 @@ public class DefaultDesignerService implements DesignerService {
                         PresetStepState state = presetStates.get(preset);
 
                         if (state == null) {
-                            state = getPresetStepState(preset, timeMillis - PresetSteps.getStepsPhasingMillis(preset.getPreset(), fixtureIndex, fixtureCounts.get(preset.getPreset())));
+                            state = getPresetStepState(preset, timeMillis, PresetSteps.getStepsPhasingMillis(preset.getPreset(), fixtureIndex, fixtureCounts.get(preset.getPreset())));
                         }
 
                         Integer fixtureCount = fixtureCounts.get(preset.getPreset());
@@ -1786,6 +1808,13 @@ public class DefaultDesignerService implements DesignerService {
         return tempoComposition == null ? null : tempoComposition.getBeatsPerMinute();
     }
 
+    // the tempo the steps following the beat are played at: the one the curves follow, or else their default one, like in
+    // the designer
+    private double getStepsBeatsPerMinute() {
+        Double beatsPerMinute = getBeatsPerMinute();
+        return beatsPerMinute == null ? EffectCurve.DEFAULT_BEATS_PER_MINUTE : beatsPerMinute;
+    }
+
     // a preset that is not placed in a composition has no moment it starts at: the preview
     // clock has been running since the designer was opened, so a curve that stops after a
     // while would always be over already. repeat its run instead, the way the grid of the
@@ -1808,7 +1837,9 @@ public class DefaultDesignerService implements DesignerService {
         double effectTimeMillis = timeMillis;
 
         if (preset.getRegion() != null) {
-            effectTimeMillis = timeMillis - preset.getRegion().getStartMillis();
+            // the clips spanning a hold ran on while the timeline held
+            double heldMillis = preset instanceof LiveScenes.LivePreset ? 0 : CompositionHold.getHeldMillis(holds, preset.getRegion().getStartMillis(), timeMillis);
+            effectTimeMillis = timeMillis - preset.getRegion().getStartMillis() + heldMillis;
         }
 
         for (Effect effect : preset.getPreset().getEffects()) {
@@ -3786,6 +3817,12 @@ public class DefaultDesignerService implements DesignerService {
     public void setStepPreviewRunning(boolean stepPreviewRunning, double stepPreviewStartMillis) {
         this.stepPreviewRunning = stepPreviewRunning;
         this.stepPreviewStartMillis = stepPreviewStartMillis;
+    }
+
+    // the holds the timeline of the composition went through (see CompositionHold)
+    @Override
+    public void setHolds(List<CompositionHold> holds) {
+        this.holds = holds == null ? new ArrayList<>() : new ArrayList<>(holds);
     }
 
     @Override

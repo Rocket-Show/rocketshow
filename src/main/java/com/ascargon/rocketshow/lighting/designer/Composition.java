@@ -21,6 +21,9 @@ class Composition {
     // the tempo of the composition, which the curves synced to the beat run on
     private double beatsPerMinute = EffectCurve.DEFAULT_BEATS_PER_MINUTE;
 
+    // the labels and the hold points on the timeline (see CompositionMarker)
+    private List<CompositionMarker> markers = new ArrayList<>();
+
     // the lanes of the timeline, the topmost first. Where the clips of two tracks overlap, the one higher up is on top.
     private List<Track> tracks = new ArrayList<>();
 
@@ -64,6 +67,14 @@ class Composition {
 
     public void setBeatsPerMinute(double beatsPerMinute) {
         this.beatsPerMinute = beatsPerMinute;
+    }
+
+    public List<CompositionMarker> getMarkers() {
+        return markers;
+    }
+
+    public void setMarkers(List<CompositionMarker> markers) {
+        this.markers = markers == null ? new ArrayList<>() : markers;
     }
 
     public List<Track> getTracks() {

@@ -18,6 +18,17 @@ public final class PresetSteps {
     private PresetSteps() {
     }
 
+    // The time the steps of a preset have run for, from the time it has played for: as it is for steps timed as written
+    // down, as much faster or slower as the tempo played is than the one they are written at for steps following the
+    // beat. The designer works it out the same way (getStepsTimeMillis).
+    public static double getStepsTimeMillis(Preset preset, double presetTimeMillis, double beatsPerMinute) {
+        if (!"beats".equals(preset.getStepsLengthMode()) || !(preset.getStepsBeatsPerMinute() > 0) || !(beatsPerMinute > 0)) {
+            return presetTimeMillis;
+        }
+
+        return (presetTimeMillis * beatsPerMinute) / preset.getStepsBeatsPerMinute();
+    }
+
     // the length of one pass through the steps. Without a length of its own, the last
     // step holds as long as the one before it lasted, which loops an evenly spaced
     // chase the way it is written down.
