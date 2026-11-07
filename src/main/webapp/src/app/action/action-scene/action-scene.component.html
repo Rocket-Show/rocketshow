@@ -92,7 +92,7 @@
   }
 }
 
-@if (action.sceneActionType === 'TOGGLE_SCENE' || action.sceneActionType === 'TAP_TEMPO') {
+@if (action.sceneActionType === 'TOGGLE_SCENE') {
   <div class="form-group row">
     <div class="col-md-9 offset-md-3">
       <small class="form-text text-muted">{{ "action.scene.help." + action.sceneActionType | translate }}</small>

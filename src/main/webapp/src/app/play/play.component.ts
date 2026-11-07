@@ -467,6 +467,12 @@ export class PlayComponent implements OnInit, OnDestroy {
   }
 
   play() {
+    // a composition holding at a hold point continues from there
+    if (this.currentState?.holding) {
+      this.go();
+      return;
+    }
+
     this.currentState.playState = "LOADING";
     this.transportService
       .play()
@@ -476,6 +482,18 @@ export class PlayComponent implements OnInit, OnDestroy {
           return this.toastGeneralErrorService.show(err);
         })
       )
+      .subscribe();
+  }
+
+  // continue the composition holding at a hold point (shown right away, the state of the device confirms it)
+  go() {
+    if (this.currentState) {
+      this.currentState.holding = false;
+    }
+
+    this.transportService
+      .go()
+      .pipe(catchError((err) => this.toastGeneralErrorService.show(err)))
       .subscribe();
   }
 

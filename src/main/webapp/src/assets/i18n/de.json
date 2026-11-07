@@ -102,7 +102,8 @@
       "scenes-learn": "Weise die Tasten, Pads und Knöpfe eines MIDI-Controllers den Szenen zu.",
       "scenes-back": "Spielt die vorherige Szene des angezeigten Ordners.",
       "scenes-go": "Spielt die nächste Szene des angezeigten Ordners.",
-      "scenes-tap": "Tippe im Takt, um das Tempo der Effekte der Szenen einzustellen."
+      "scenes-tap": "Tippe im Takt: die Effekte im Takt folgen ihm, in den Szenen und in den Kompositionen ohne Audio. Der erste Tap nach einer Pause ist der erste Schlag eines Takts.",
+      "go": "Setzt die Komposition an ihrem Haltepunkt fort."
     },
     "midi-timecode": "Timecode",
     "scenes-flash": "Flash",
@@ -112,11 +113,11 @@
     "scenes-go": "GO",
     "scenes-tap": "Tap",
     "scenes-bpm": "BPM",
-    "scenes-tempo-project": "Tempo des Projekts",
+    "scenes-tempo-project": "Programmiertes Tempo",
     "scenes-tempo-tap": "Getappt",
     "scenes-tempo-set": "Eingestellt",
     "scenes-tempo-clock": "MIDI-Clock",
-    "scenes-tempo-reset": "Zurück zum Tempo des Projekts",
+    "scenes-tempo-reset": "Zurück zum programmierten Tempo",
     "scenes-speed": "Tempo-Faktor",
     "scenes-speed-reset": "Zurück zur normalen Geschwindigkeit",
     "scenes-dimmer": "Dimmer von {{name}}",
@@ -128,7 +129,13 @@
     "scenes-learn-forget": "Gelernte Taste vergessen",
     "scenes-midi-note": "Note {{number}}",
     "scenes-midi-cc": "CC {{number}}",
-    "scenes-midi-channel": "Kanal {{channel}}"
+    "scenes-midi-channel": "Kanal {{channel}}",
+    "tempo-halve": "Tempo halbieren",
+    "tempo-double": "Tempo verdoppeln",
+    "tempo-beat-one": "Jetzt ist der erste Schlag eines Takts",
+    "tempo-beats": "Die Schläge eines Takts ({{beats}})",
+    "go": "GO",
+    "holding": "Angehalten — GO drücken"
   },
   "editor": {
     "compositions": "Kompositionen",
@@ -636,7 +643,8 @@
       "LIGHTING": "Lichtsteuerung",
       "RASPBERRY_GPIO": "Externe Steuerung",
       "HTTP": "HTTP",
-      "SCENE": "Szenen"
+      "SCENE": "Szenen",
+      "TEMPO": "Tempo"
     },
     "system": {
       "type": "System Art",
@@ -675,7 +683,8 @@
         "PREVIOUS_COMPOSITION": "Vorherige Komposition",
         "STOP": "Stopp",
         "SELECT_COMPOSITION_BY_NAME": "Komposition nach Name auswählen",
-        "SELECT_COMPOSITION_BY_NAME_AND_PLAY": "Komposition nach Name auswählen und abspielen"
+        "SELECT_COMPOSITION_BY_NAME_AND_PLAY": "Komposition nach Name auswählen und abspielen",
+        "GO": "GO (am Haltepunkt fortsetzen)"
       }
     },
     "lighting": {
@@ -707,8 +716,7 @@
         "TOGGLE_SCENE": "Szene umschalten",
         "FLASH_SCENE": "Szene flashen",
         "NEXT_SCENE": "Nächste Szene",
-        "PREVIOUS_SCENE": "Vorherige Szene",
-        "TAP_TEMPO": "Tap-Tempo"
+        "PREVIOUS_SCENE": "Vorherige Szene"
       },
       "project": "Designer-Projekt",
       "scene": "Szene",
@@ -724,8 +732,31 @@
       "until-released": "Solange gehalten",
       "until-released-help": "Die Szene ist an, solange die auslösende Taste oder der Knopf gehalten wird: eine MIDI-Note oder ein Knopf, der beim Drücken einen Wert und beim Loslassen 0 sendet.",
       "help": {
-        "TOGGLE_SCENE": "Schaltet die Szene anstelle der bisherigen an, oder aus, wenn sie an ist.",
-        "TAP_TEMPO": "Jedes Auslösen ist ein Schlag: die Effekte der Szenen laufen im getappten Tempo."
+        "TOGGLE_SCENE": "Schaltet die Szene anstelle der bisherigen an, oder aus, wenn sie an ist."
+      }
+    },
+    "tempo": {
+      "type": "Befehl",
+      "beats-per-minute": "Tempo (BPM)",
+      "type-enum": {
+        "TAP": "Tap",
+        "BEAT_ONE": "Erster Schlag eines Takts",
+        "SET": "Tempo setzen",
+        "HALVE": "Tempo halbieren",
+        "DOUBLE": "Tempo verdoppeln",
+        "FASTER": "Schneller (+1 BPM)",
+        "SLOWER": "Langsamer (−1 BPM)",
+        "PROJECT": "Programmiertes Tempo"
+      },
+      "help": {
+        "TAP": "Jedes Auslösen ist ein Schlag: die getappten Schläge ergeben das Tempo, der erste nach einer Pause ist der erste Schlag eines Takts.",
+        "BEAT_ONE": "Der Moment des Auslösens ist der erste Schlag eines Takts.",
+        "SET": "Die Effekte im Takt laufen in diesem Tempo.",
+        "HALVE": "Halbiert das laufende Tempo.",
+        "DOUBLE": "Verdoppelt das laufende Tempo.",
+        "FASTER": "Macht das laufende Tempo um einen Schlag pro Minute schneller.",
+        "SLOWER": "Macht das laufende Tempo um einen Schlag pro Minute langsamer.",
+        "PROJECT": "Kehrt zum Tempo zurück, das in der laufenden Komposition oder im laufenden Projekt programmiert ist."
       }
     }
   },

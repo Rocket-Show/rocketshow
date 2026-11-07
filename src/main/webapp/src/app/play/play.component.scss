@@ -131,6 +131,34 @@
     color: var(--sd-primary-text);
 }
 
+/* GO while a composition holds at a hold point: the one button to press, wider and lit */
+.btn-transport-go {
+    width: auto;
+    min-width: 72px;
+    padding: 0 var(--sd-space-3);
+    border-color: var(--sd-primary);
+    border-radius: 23px;
+    background-color: var(--sd-primary);
+    color: var(--sd-on-primary);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    animation: transport-go 1.2s ease-in-out infinite alternate;
+}
+
+.btn-transport-go:hover:not(:disabled) {
+    background-color: var(--sd-primary-hover);
+    color: var(--sd-on-primary);
+}
+
+@keyframes transport-go {
+    from {
+        box-shadow: 0 0 0 0 transparent;
+    }
+    to {
+        box-shadow: 0 0 0 5px var(--sd-primary-soft-strong);
+    }
+}
+
 .list-group-item.active {
     z-index: 0;
 }

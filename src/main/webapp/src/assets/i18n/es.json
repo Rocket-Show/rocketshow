@@ -102,7 +102,8 @@
       "scenes-learn": "Asigna las teclas, pads y botones de un controlador MIDI a las escenas.",
       "scenes-back": "Reproduce la escena anterior de la carpeta mostrada.",
       "scenes-go": "Reproduce la escena siguiente de la carpeta mostrada.",
-      "scenes-tap": "Toca al ritmo para ajustar el tempo de los efectos de las escenas."
+      "scenes-tap": "Toca al ritmo: los efectos sincronizados con el ritmo lo siguen, en las escenas y en las composiciones sin audio. El primer toque tras una pausa es el primer tiempo de un compás.",
+      "go": "Continúa la composición desde su punto de espera."
     },
     "midi-timecode": "Código de tiempo",
     "scenes-flash": "Flash",
@@ -112,11 +113,11 @@
     "scenes-go": "GO",
     "scenes-tap": "Tap",
     "scenes-bpm": "BPM",
-    "scenes-tempo-project": "Tempo del proyecto",
+    "scenes-tempo-project": "Tempo programado",
     "scenes-tempo-tap": "Marcado",
     "scenes-tempo-set": "Ajustado",
     "scenes-tempo-clock": "Reloj MIDI",
-    "scenes-tempo-reset": "Volver al tempo del proyecto",
+    "scenes-tempo-reset": "Volver al tempo programado",
     "scenes-speed": "Velocidad",
     "scenes-speed-reset": "Volver a la velocidad normal",
     "scenes-dimmer": "Dimmer de {{name}}",
@@ -128,7 +129,13 @@
     "scenes-learn-forget": "Olvidar la tecla aprendida",
     "scenes-midi-note": "Nota {{number}}",
     "scenes-midi-cc": "CC {{number}}",
-    "scenes-midi-channel": "Canal {{channel}}"
+    "scenes-midi-channel": "Canal {{channel}}",
+    "tempo-halve": "Reducir el tempo a la mitad",
+    "tempo-double": "Duplicar el tempo",
+    "tempo-beat-one": "Ahora es el primer tiempo de un compás",
+    "tempo-beats": "Los tiempos de un compás ({{beats}})",
+    "go": "GO",
+    "holding": "En espera — pulsa GO"
   },
   "editor": {
     "compositions": "Composiciones",
@@ -635,7 +642,8 @@
       "LIGHTING": "Iluminación",
       "RASPBERRY_GPIO": "Control externo",
       "HTTP": "HTTP",
-      "SCENE": "Escenas"
+      "SCENE": "Escenas",
+      "TEMPO": "Tempo"
     },
     "system": {
       "type": "Tipo de sistema",
@@ -674,7 +682,8 @@
         "PREVIOUS_COMPOSITION": "Composición anterior",
         "STOP": "Detener",
         "SELECT_COMPOSITION_BY_NAME": "Seleccionar composición por nombre",
-        "SELECT_COMPOSITION_BY_NAME_AND_PLAY": "Seleccionar composición por nombre y reproducir"
+        "SELECT_COMPOSITION_BY_NAME_AND_PLAY": "Seleccionar composición por nombre y reproducir",
+        "GO": "GO (continuar desde un punto de espera)"
       }
     },
     "lighting": {
@@ -706,8 +715,7 @@
         "TOGGLE_SCENE": "Alternar escena",
         "FLASH_SCENE": "Flash de escena",
         "NEXT_SCENE": "Escena siguiente",
-        "PREVIOUS_SCENE": "Escena anterior",
-        "TAP_TEMPO": "Tap tempo"
+        "PREVIOUS_SCENE": "Escena anterior"
       },
       "project": "Proyecto del diseñador",
       "scene": "Escena",
@@ -723,8 +731,31 @@
       "until-released": "Mientras se mantenga",
       "until-released-help": "La escena está encendida mientras se mantiene la tecla o el botón que la activa: una nota MIDI, o un botón que envía un valor al pulsarlo y 0 al soltarlo.",
       "help": {
-        "TOGGLE_SCENE": "Enciende la escena en lugar de las anteriores, o la apaga si está encendida.",
-        "TAP_TEMPO": "Cada activación es un pulso: los efectos de las escenas van al tempo marcado."
+        "TOGGLE_SCENE": "Enciende la escena en lugar de las anteriores, o la apaga si está encendida."
+      }
+    },
+    "tempo": {
+      "type": "Comando",
+      "beats-per-minute": "Tempo (BPM)",
+      "type-enum": {
+        "TAP": "Tap",
+        "BEAT_ONE": "Primer tiempo de un compás",
+        "SET": "Fijar tempo",
+        "HALVE": "Tempo a la mitad",
+        "DOUBLE": "Tempo doble",
+        "FASTER": "Más rápido (+1 BPM)",
+        "SLOWER": "Más lento (−1 BPM)",
+        "PROJECT": "Tempo programado"
+      },
+      "help": {
+        "TAP": "Cada activación es un tiempo: los tiempos marcados dan el tempo, el primero tras una pausa es el primer tiempo de un compás.",
+        "BEAT_ONE": "El momento de la activación es el primer tiempo de un compás.",
+        "SET": "Los efectos sincronizados con el ritmo van a este tempo.",
+        "HALVE": "Reduce a la mitad el tempo actual.",
+        "DOUBLE": "Duplica el tempo actual.",
+        "FASTER": "Hace el tempo actual un pulso por minuto más rápido.",
+        "SLOWER": "Hace el tempo actual un pulso por minuto más lento.",
+        "PROJECT": "Vuelve al tempo programado en la composición o el proyecto que suena."
       }
     }
   },

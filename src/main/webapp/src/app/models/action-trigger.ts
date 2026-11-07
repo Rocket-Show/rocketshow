@@ -6,6 +6,7 @@ import { ActionNull } from "./action-null";
 import { ActionRaspberryGpio } from "./action-raspberry-gpio";
 import { ActionScene } from "./action-scene";
 import { ActionSystem } from "./action-system";
+import { ActionTempo } from "./action-tempo";
 import { ActionTransport } from "./action-transport";
 
 export class ActionTrigger {
@@ -36,6 +37,8 @@ export class ActionTrigger {
           actionObject = new ActionHttp(action.actionHttp);
         } else if (action.actionScene) {
           actionObject = new ActionScene(action.actionScene);
+        } else if (action.actionTempo) {
+          actionObject = new ActionTempo(action.actionTempo);
         } else {
           console.warn("Uknown action type", action);
         }

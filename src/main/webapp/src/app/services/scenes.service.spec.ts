@@ -164,16 +164,7 @@ describe("ScenesService", () => {
     http.expectOne("scenes/next?projectName=Garden").flush(null);
   });
 
-  it("taps the tempo, sets it and goes back to the one of the project", () => {
-    service.tapTempo().subscribe();
-    http.expectOne("scenes/tap").flush(null);
-
-    service.setTempo(128).subscribe();
-    http.expectOne("scenes/tempo?value=128").flush(null);
-
-    service.setTempo(undefined).subscribe();
-    http.expectOne("scenes/tempo").flush(null);
-
+  it("sets the speed master", () => {
     service.setSpeed(1.5).subscribe();
     http.expectOne("scenes/speed?value=1.5").flush(null);
   });
