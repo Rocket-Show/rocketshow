@@ -3,6 +3,7 @@ package com.ascargon.rocketshow.api;
 import com.ascargon.rocketshow.composition.CompositionService;
 import com.ascargon.rocketshow.composition.SetService;
 import com.ascargon.rocketshow.lighting.designer.ScenePlayerService;
+import com.ascargon.rocketshow.lighting.designer.TempoService;
 import com.ascargon.rocketshow.midi.MidiTimecodeSlaveService;
 import com.ascargon.rocketshow.play.PlayerService;
 import org.springframework.stereotype.Service;
@@ -12,10 +13,12 @@ public class DefaultStateService implements StateService {
 
     private final ScenePlayerService scenePlayerService;
     private final MidiTimecodeSlaveService midiTimecodeSlaveService;
+    private final TempoService tempoService;
 
-    public DefaultStateService(ScenePlayerService scenePlayerService, MidiTimecodeSlaveService midiTimecodeSlaveService) {
+    public DefaultStateService(ScenePlayerService scenePlayerService, MidiTimecodeSlaveService midiTimecodeSlaveService, TempoService tempoService) {
         this.scenePlayerService = scenePlayerService;
         this.midiTimecodeSlaveService = midiTimecodeSlaveService;
+        this.tempoService = tempoService;
     }
 
     private int getCompositionIndexWithoutSet(
@@ -46,6 +49,7 @@ public class DefaultStateService implements StateService {
             currentState.setCurrentCompositionName(playerService.getCompositionName());
             currentState.setCurrentCompositionDurationMillis(playerService.getCompositionDurationMillis());
             currentState.setPositionMillis(playerService.getPositionMillis());
+            currentState.setHolding(playerService.isHolding());
         }
 
         if (setService == null) {
@@ -68,11 +72,14 @@ public class DefaultStateService implements StateService {
         currentState.setSceneMasterDimmer(scenePlayerService.getMasterDimmer());
         currentState.setScenesHeld(scenePlayerService.isHeld());
         currentState.setFlashedSceneUuids(scenePlayerService.getFlashedSceneUuids());
-        currentState.setSceneBeatsPerMinute(scenePlayerService.getBeatsPerMinute());
-        currentState.setSceneTempoSource(scenePlayerService.getTempoSource());
         currentState.setSceneSpeed(scenePlayerService.getSpeed());
         currentState.setSceneDimmers(scenePlayerService.getSceneDimmers());
         currentState.setSceneLearning(scenePlayerService.getLearning());
+
+        currentState.setTempoBeatsPerMinute(tempoService.getBeatsPerMinute());
+        currentState.setTempoSource(tempoService.getSource());
+        currentState.setTempoBeats(tempoService.getBeats());
+        currentState.setTempoBeatsPerBar(tempoService.getBeatsPerBar());
 
         return currentState;
     }

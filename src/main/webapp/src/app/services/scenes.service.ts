@@ -181,16 +181,6 @@ export class ScenesService {
     return this.http.post(this.url(direction < 0 ? 'scenes/previous' : 'scenes/next', parameters), null);
   }
 
-  // a beat of the tempo the scenes run at
-  tapTempo(): Observable<Object> {
-    return this.http.post('scenes/tap', null);
-  }
-
-  // the tempo the scenes run at (undefined = the one of the project)
-  setTempo(beatsPerMinute: number): Observable<Object> {
-    return this.http.post(beatsPerMinute === undefined ? 'scenes/tempo' : this.url('scenes/tempo', { value: '' + beatsPerMinute }), null);
-  }
-
   // the speed master, 1 = as written
   setSpeed(speed: number): Observable<Object> {
     return this.http.post(this.url('scenes/speed', { value: '' + speed }), null);

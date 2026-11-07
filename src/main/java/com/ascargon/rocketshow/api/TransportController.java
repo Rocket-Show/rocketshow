@@ -50,6 +50,15 @@ class TransportController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    // GO: on from the hold point the composition holds at, else play it (like play)
+    @PostMapping("go")
+    public ResponseEntity<Void> go() throws Exception {
+        logger.info("Received API request for transport/go");
+
+        playerService.go();
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     @PostMapping("play-as-sample")
     public ResponseEntity<Void> playAsSample(@RequestParam("name") String compositionName) throws Exception {
         logger.info("Received API request for transport/play-as-sample");

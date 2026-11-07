@@ -62,6 +62,8 @@
 }
 
 .btn-scene-small {
+    min-width: 46px;
+    justify-content: center;
     padding-left: var(--sd-space-2);
     padding-right: var(--sd-space-2);
 }
@@ -92,4 +94,38 @@
     min-width: 44px;
     text-align: right;
     font-variant-numeric: tabular-nums;
+}
+
+.scene-live-tempo-group {
+    flex-wrap: wrap;
+}
+
+.scene-live-tempo-buttons {
+    display: flex;
+    gap: var(--sd-space-2);
+}
+
+/* the beats of a bar, the one lit which is playing, the first one a little larger */
+.scene-live-beats {
+    display: flex;
+    gap: 4px;
+    margin-top: 3px;
+}
+
+.scene-live-beat {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--sd-surface-4);
+}
+
+.scene-live-beat-one {
+    width: 10px;
+    height: 10px;
+    margin-top: -1px;
+}
+
+.scene-live-beat-on {
+    background-color: var(--sd-primary);
+    box-shadow: 0 0 6px var(--sd-primary);
 }

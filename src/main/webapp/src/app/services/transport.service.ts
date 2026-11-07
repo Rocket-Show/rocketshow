@@ -14,6 +14,13 @@ export class TransportService {
     }));
   }
 
+  // continue a composition holding at a hold point, else play
+  go(): Observable<null> {
+    return this.http.post('transport/go', null).pipe(map((response: Response) => {
+      return null;
+    }));
+  }
+
   stop(): Observable<null> {
     return this.http.post('transport/stop', null).pipe(map((response: Response) => {
       return null;

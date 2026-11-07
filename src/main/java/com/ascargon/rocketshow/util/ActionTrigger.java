@@ -3,6 +3,7 @@ package com.ascargon.rocketshow.util;
 import com.ascargon.rocketshow.api.ActionHttp;
 import com.ascargon.rocketshow.lighting.ActionLighting;
 import com.ascargon.rocketshow.lighting.designer.ActionScene;
+import com.ascargon.rocketshow.lighting.designer.ActionTempo;
 import com.ascargon.rocketshow.midi.ActionMidi;
 import com.ascargon.rocketshow.raspberry.ActionRaspberryGpio;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -29,7 +30,8 @@ public abstract class ActionTrigger {
             @XmlElement(type = ActionLighting.class, name = "actionLighting"),
             @XmlElement(type = ActionRaspberryGpio.class, name = "actionRaspberryGpio"),
             @XmlElement(type = ActionHttp.class, name = "actionHttp"),
-            @XmlElement(type = ActionScene.class, name = "actionScene")})
+            @XmlElement(type = ActionScene.class, name = "actionScene"),
+            @XmlElement(type = ActionTempo.class, name = "actionTempo")})
     @JsonProperty("actionList")
     public List<Action> getActionList() {
         return actionList;

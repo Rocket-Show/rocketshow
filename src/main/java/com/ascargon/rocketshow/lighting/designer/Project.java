@@ -47,6 +47,11 @@ public class Project {
     // them (see DmxOverride)
     private List<DmxOverride> dmxOverrides = new ArrayList<>();
 
+    // the hold points the timeline of the designer held at, with the time held at each, and whether it stands at the
+    // last of them, waiting for GO: its live preview holds along with it (see CompositionHold)
+    private List<CompositionHold> previewHolds = new ArrayList<>();
+    private boolean previewHolding = false;
+
     // the stage the fixtures are spread over (in cm), like in the designer
     private double stageWidthCm = 600;
     private double stageHeightCm = 350;

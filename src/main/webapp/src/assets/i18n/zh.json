@@ -102,7 +102,8 @@
       "scenes-learn": "将 MIDI 控制器的按键、打击垫和按钮分配给场景。",
       "scenes-back": "播放所显示文件夹中的上一个场景。",
       "scenes-go": "播放所显示文件夹中的下一个场景。",
-      "scenes-tap": "跟随节拍点击，以设定场景效果的速度。"
+      "scenes-tap": "跟随节拍点击：与节拍同步的效果会跟随它，包括场景和没有音频的作品。暂停后的第一次点击为小节的第一拍。",
+      "go": "从等待点继续播放作品。"
     },
     "midi-timecode": "时间码",
     "scenes-flash": "闪烁",
@@ -112,11 +113,11 @@
     "scenes-go": "GO",
     "scenes-tap": "拍击",
     "scenes-bpm": "BPM",
-    "scenes-tempo-project": "项目速度",
+    "scenes-tempo-project": "预设速度",
     "scenes-tempo-tap": "拍击",
     "scenes-tempo-set": "设定",
     "scenes-tempo-clock": "MIDI 时钟",
-    "scenes-tempo-reset": "恢复项目速度",
+    "scenes-tempo-reset": "恢复预设速度",
     "scenes-speed": "速度",
     "scenes-speed-reset": "恢复正常速度",
     "scenes-dimmer": "{{name}} 的调光",
@@ -128,7 +129,13 @@
     "scenes-learn-forget": "忘记已学习的按键",
     "scenes-midi-note": "音符 {{number}}",
     "scenes-midi-cc": "CC {{number}}",
-    "scenes-midi-channel": "通道 {{channel}}"
+    "scenes-midi-channel": "通道 {{channel}}",
+    "tempo-halve": "速度减半",
+    "tempo-double": "速度加倍",
+    "tempo-beat-one": "现在是小节的第一拍",
+    "tempo-beats": "小节的拍子（{{beats}}）",
+    "go": "GO",
+    "holding": "等待中 — 按 GO"
   },
   "editor": {
     "compositions": "作品",
@@ -635,7 +642,8 @@
       "LIGHTING": "灯光",
       "RASPBERRY_GPIO": "外部控制",
       "HTTP": "HTTP",
-      "SCENE": "场景"
+      "SCENE": "场景",
+      "TEMPO": "速度"
     },
     "system": {
       "type": "系统类型",
@@ -674,7 +682,8 @@
         "PREVIOUS_COMPOSITION": "上一作品",
         "STOP": "停止",
         "SELECT_COMPOSITION_BY_NAME": "按名称选择作品",
-        "SELECT_COMPOSITION_BY_NAME_AND_PLAY": "按名称选择作品并播放"
+        "SELECT_COMPOSITION_BY_NAME_AND_PLAY": "按名称选择作品并播放",
+        "GO": "GO（从等待点继续）"
       }
     },
     "lighting": {
@@ -706,8 +715,7 @@
         "TOGGLE_SCENE": "切换场景",
         "FLASH_SCENE": "闪烁场景",
         "NEXT_SCENE": "下一个场景",
-        "PREVIOUS_SCENE": "上一个场景",
-        "TAP_TEMPO": "拍击速度"
+        "PREVIOUS_SCENE": "上一个场景"
       },
       "project": "设计器项目",
       "scene": "场景",
@@ -723,8 +731,31 @@
       "until-released": "按住期间",
       "until-released-help": "在触发它的按键或按钮按住期间场景保持点亮：MIDI 音符，或按下时发送数值、松开时发送 0 的按钮。",
       "help": {
-        "TOGGLE_SCENE": "点亮该场景以替代当前场景；如已点亮则关闭。",
-        "TAP_TEMPO": "每次触发为一拍：场景效果按拍击的速度运行。"
+        "TOGGLE_SCENE": "点亮该场景以替代当前场景；如已点亮则关闭。"
+      }
+    },
+    "tempo": {
+      "type": "命令",
+      "beats-per-minute": "速度（BPM）",
+      "type-enum": {
+        "TAP": "拍击",
+        "BEAT_ONE": "小节第一拍",
+        "SET": "设定速度",
+        "HALVE": "速度减半",
+        "DOUBLE": "速度加倍",
+        "FASTER": "加快（+1 BPM）",
+        "SLOWER": "减慢（−1 BPM）",
+        "PROJECT": "预设速度"
+      },
+      "help": {
+        "TAP": "每次触发为一拍：拍击的节拍决定速度，暂停后的第一拍为小节的第一拍。",
+        "BEAT_ONE": "触发的时刻为小节的第一拍。",
+        "SET": "与节拍同步的效果按此速度运行。",
+        "HALVE": "将当前速度减半。",
+        "DOUBLE": "将当前速度加倍。",
+        "FASTER": "将当前速度加快每分钟一拍。",
+        "SLOWER": "将当前速度减慢每分钟一拍。",
+        "PROJECT": "恢复正在播放的作品或项目中预设的速度。"
       }
     }
   },

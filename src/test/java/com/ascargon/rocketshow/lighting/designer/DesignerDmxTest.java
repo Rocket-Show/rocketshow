@@ -1432,6 +1432,92 @@ class DesignerDmxTest {
     }
 
 
+    // The strobe of par 2 (see addBeatSyncedStrobe) playing the composition of the project at 60 BPM with the passed
+    // sync and a tempo from outside (null = none), as the passed composition: lit at 120 BPM, dark at 60
+    private int strobeOfPar2(String syncType, Double outsideBeatsPerMinute, boolean defaultComposition) throws Exception {
+        ObjectNode project = project();
+        addPreset(project, "Strobe", List.of("par-1", "par-2"), List.of());
+        addBeatSyncedStrobe(project);
+        ObjectNode composition = (ObjectNode) project.get("compositions").get(0);
+        composition.put("beatsPerMinute", 60);
+        composition.put("syncType", syncType);
+
+        return start(project, (designerService, loadedProject) -> {
+            designerService.load(compositionPlayer(defaultComposition), loadedProject, null);
+            designerService.setOutsideBeatsPerMinute(outsideBeatsPerMinute);
+            designerService.getBeatClock().setBeats(0, System.currentTimeMillis());
+            designerService.play();
+        }).get(FRONT).getOrDefault(16, 0);
+    }
+
+    @Test
+    void runsTheCurvesOfACompositionWithoutAudioOnTheTempoFromOutside() throws Exception {
+        assertEquals(0, strobeOfPar2("none", null, false));
+        assertEquals(255, strobeOfPar2("none", 120.0, false));
+    }
+
+    @Test
+    void keepsTheTempoOfACompositionWithAudio() throws Exception {
+        assertEquals(0, strobeOfPar2("audio", 120.0, false));
+    }
+
+    @Test
+    void runsTheCurvesOfTheDefaultCompositionOnTheTempoFromOutside() throws Exception {
+        assertEquals(255, strobeOfPar2("audio", 120.0, true));
+    }
+
+    @Test
+    void runsTheCurvesOfTheScenesPickedByHandOnTheTempoFromOutside() throws Exception {
+        ObjectNode project = project();
+        addPreset(project, "Strobe", List.of("par-1", "par-2"), List.of());
+        addBeatSyncedStrobe(project);
+
+        java.util.function.Function<Double, Integer> strobe = outsideBeatsPerMinute -> {
+            try {
+                return start(project, (designerService, loadedProject) -> {
+                    designerService.setOutsideBeatsPerMinute(outsideBeatsPerMinute);
+                    designerService.getBeatClock().setBeats(0, System.currentTimeMillis());
+                    designerService.playManualScenes(loadedProject, List.of("Strobe-scene"), 1);
+                }).get(FRONT).getOrDefault(16, 0);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        };
+
+        // the default tempo of 120 BPM without a composition open, 60 from outside
+        assertEquals(255, strobe.apply(null));
+        assertEquals(0, strobe.apply(60.0));
+    }
+
+    @Test
+    void keepsTheLightsOfTheTimelineOnWhileItHolds() throws Exception {
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+
+        java.util.function.Function<Boolean, List<Integer>> paused = holding -> {
+            try {
+                return addresses(start(project, (designerService, loadedProject) -> {
+                    CompositionPlayer compositionPlayer = compositionPlayer(false);
+                    when(compositionPlayer.getPlayState()).thenReturn(CompositionPlayer.PlayState.PAUSED);
+                    when(compositionPlayer.getPositionMillis()).thenReturn(5000L);
+                    designerService.load(compositionPlayer, loadedProject, null);
+
+                    if (holding) {
+                        designerService.hold(5000);
+                    }
+
+                    designerService.play();
+                }).get(FRONT), 1, 4);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        };
+
+        // paused, the timeline shows nothing; holding, its clips play on
+        assertEquals(List.of(0, 0, 0, 0), paused.apply(false));
+        assertEquals(List.of(255, 255, 0, 0), paused.apply(true));
+    }
+
     private static DmxOverride dmxOverride(String universeUuid, int dmxChannel, int value) {
         DmxOverride dmxOverride = new DmxOverride();
         dmxOverride.setUniverseUuid(universeUuid);

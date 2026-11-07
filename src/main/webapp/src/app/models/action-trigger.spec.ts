@@ -6,6 +6,7 @@ import { ActionNull } from "./action-null";
 import { ActionRaspberryGpio } from "./action-raspberry-gpio";
 import { ActionScene } from "./action-scene";
 import { ActionSystem } from "./action-system";
+import { ActionTempo } from "./action-tempo";
 import { ActionTransport } from "./action-transport";
 import { ActionTriggerComposition } from "./action-trigger-composition";
 
@@ -22,6 +23,7 @@ describe("Actions of a trigger", () => {
     RASPBERRY_GPIO: ActionRaspberryGpio,
     HTTP: ActionHttp,
     SCENE: ActionScene,
+    TEMPO: ActionTempo,
   };
 
   // Like the action editor: a new action has no type, until one is selected
@@ -101,6 +103,24 @@ describe("Actions of a trigger", () => {
     });
 
     expect((trigger.actionList[0] as ActionScene).untilStopped).toBeTrue();
+  });
+
+  it("taps the tempo with a new TEMPO action, and keeps the tempo a TEMPO action sets", () => {
+    const trigger = new ActionTriggerComposition();
+    const tap = newAction("TEMPO") as ActionTempo;
+    const set = newAction("TEMPO") as ActionTempo;
+    set.tempoActionType = "SET";
+    set.beatsPerMinute = 128;
+    trigger.actionList.push(tap, set);
+
+    const loaded = saveAndLoad(trigger).actionList as ActionTempo[];
+
+    expect(loaded[0].tempoActionType).toBe("TAP");
+    expect(loaded[1].tempoActionType).toBe("SET");
+    expect(loaded[1].beatsPerMinute).toBe(128);
+    expect(JSON.parse(JSON.stringify(set))).toEqual({
+      actionTempo: jasmine.objectContaining({ type: "TEMPO", tempoActionType: "SET", beatsPerMinute: 128 }),
+    });
   });
 
   // The unit ignores fields it doesn't know

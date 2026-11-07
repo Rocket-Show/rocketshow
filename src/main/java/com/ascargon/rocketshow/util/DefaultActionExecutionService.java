@@ -5,7 +5,9 @@ import com.ascargon.rocketshow.api.RemoteDevice;
 import com.ascargon.rocketshow.lighting.ActionLighting;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.designer.ActionScene;
+import com.ascargon.rocketshow.lighting.designer.ActionTempo;
 import com.ascargon.rocketshow.lighting.designer.ScenePlayerService;
+import com.ascargon.rocketshow.lighting.designer.TempoService;
 import com.ascargon.rocketshow.midi.ActionMidi;
 import com.ascargon.rocketshow.midi.MidiRouter;
 import com.ascargon.rocketshow.midi.MidiRouterFactory;
@@ -43,6 +45,7 @@ public class DefaultActionExecutionService implements ActionExecutionService {
     private final MidiRouter midiRouter;
     private final RaspberryGpioOutService raspberryGpioOutService;
     private final ScenePlayerService scenePlayerService;
+    private final TempoService tempoService;
 
     private final HttpClient httpClient;
 
@@ -63,13 +66,14 @@ public class DefaultActionExecutionService implements ActionExecutionService {
 
     // Lazy load the playerService to avoid a circular dependency, because the playerService can execute actions and
     // is called by this service for transport actions.
-    public DefaultActionExecutionService(@Lazy PlayerService playerService, SettingsService settingsService, RebootService rebootService, LightingService lightingService, MidiRouterFactory midiRouterFactory, RaspberryGpioOutService raspberryGpioOutService, ScenePlayerService scenePlayerService) {
+    public DefaultActionExecutionService(@Lazy PlayerService playerService, SettingsService settingsService, RebootService rebootService, LightingService lightingService, MidiRouterFactory midiRouterFactory, RaspberryGpioOutService raspberryGpioOutService, ScenePlayerService scenePlayerService, @Lazy TempoService tempoService) {
         this.playerService = playerService;
         this.settingsService = settingsService;
         this.rebootService = rebootService;
         this.lightingService = lightingService;
         this.raspberryGpioOutService = raspberryGpioOutService;
         this.scenePlayerService = scenePlayerService;
+        this.tempoService = tempoService;
 
         midiRouter = midiRouterFactory.getSettingsMidiRouter(Settings::getRemoteMidiRoutingList);
 
@@ -143,6 +147,7 @@ public class DefaultActionExecutionService implements ActionExecutionService {
                 ActionTransport actionTransport = (ActionTransport) action;
                 switch (actionTransport.getTransportActionType()) {
                     case PLAY -> playerService.play();
+                    case GO -> playerService.go();
                     case PLAY_AS_SAMPLE -> playerService.playAsSample(actionTransport.getCompositionName());
                     case TOGGLE_PLAY -> playerService.togglePlay();
                     case PAUSE -> playerService.pause();
@@ -170,11 +175,24 @@ public class DefaultActionExecutionService implements ActionExecutionService {
                     case FLASH_SCENE -> flashScene(actionScene);
                     case NEXT_SCENE -> scenePlayerService.stepScene(actionScene.getProjectName(), actionScene.getFolder(), 1);
                     case PREVIOUS_SCENE -> scenePlayerService.stepScene(actionScene.getProjectName(), actionScene.getFolder(), -1);
-                    case TAP_TEMPO -> scenePlayerService.tapTempo();
+                    case TAP_TEMPO -> tempoService.tap();
                     case RELEASE_ALL -> scenePlayerService.releaseAll();
                     case BLACKOUT_ON -> scenePlayerService.setBlackout(true);
                     case BLACKOUT_OFF -> scenePlayerService.setBlackout(false);
                     case TOGGLE_BLACKOUT -> scenePlayerService.toggleBlackout();
+                }
+            }
+            case TEMPO -> {
+                ActionTempo actionTempo = (ActionTempo) action;
+                switch (actionTempo.getTempoActionType()) {
+                    case TAP -> tempoService.tap();
+                    case BEAT_ONE -> tempoService.beatOne();
+                    case SET -> tempoService.setBeatsPerMinute(actionTempo.getBeatsPerMinute());
+                    case HALVE -> tempoService.halve();
+                    case DOUBLE -> tempoService.doubleTempo();
+                    case FASTER -> tempoService.nudge(1);
+                    case SLOWER -> tempoService.nudge(-1);
+                    case PROJECT -> tempoService.setBeatsPerMinute(null);
                 }
             }
             case SYSTEM -> {

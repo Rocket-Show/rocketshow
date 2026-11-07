@@ -68,21 +68,6 @@ public interface ScenePlayerService {
     // the one of the scenes on.
     void stepScene(String projectName, String folder, int direction);
 
-    // A beat of the tempo the scenes run at: the beats tapped (two at least) give the tempo, each falls on a beat
-    void tapTempo();
-
-    // The tempo the scenes run at, set by hand (null = the one of the project)
-    void setBeatsPerMinute(Double beatsPerMinute);
-
-    // The tempo of a MIDI clock, of each beat it ticks (on the beat after it was started)
-    void setClockTempo(double beatsPerMinute, boolean onTheBeat);
-
-    // The tempo the scenes run at, null while none play without a tempo of their own, and where it is from: "project",
-    // "tap", "set" or "clock"
-    Double getBeatsPerMinute();
-
-    String getTempoSource();
-
     // The speed master: how fast the effects and steps of the scenes run, 1 = as written (from 0.1 to 4)
     void setSpeed(double speed);
 

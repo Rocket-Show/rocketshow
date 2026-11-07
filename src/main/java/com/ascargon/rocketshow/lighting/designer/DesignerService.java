@@ -48,6 +48,8 @@ public interface DesignerService {
 
     void setStepPreviewRunning(boolean stepPreviewRunning, double stepPreviewStartMillis);
 
+    void setHolds(List<CompositionHold> holds);
+
     void setSelectedSceneUuids(List<String> selectedSceneUuids);
 
     // The fixtures being identified from the fixture pool of the designer: they blink at full white, whatever the
@@ -79,17 +81,52 @@ public interface DesignerService {
     void stopManualScenes();
 
     // The live controls of the Play screen for the scenes picked by hand: the dimmer of each scene (by its uuid, 0 to
-    // 1), the speed master (1 = as written) and the tempo played live (null = the one of the project), which a beat
-    // falls on right now, if asked to (e.g. a beat tapped)
+    // 1) and the speed master (1 = as written)
     void setLiveSceneDimmers(Map<String, Double> dimmers);
 
     void setLiveSpeed(double speed);
 
-    void setLiveBeatsPerMinute(Double beatsPerMinute, boolean onTheBeat);
+    // ---- the tempo (see TempoService) ----
 
-    // The tempo the beat-synced curves of the scenes picked by hand are written for: the one of their project (null
-    // while they don't play)
-    Double getLiveReferenceBeatsPerMinute();
+    // The beats of the tempo playing, which the scenes picked by hand and the compositions following the tempo from
+    // outside run on
+    BeatClock getBeatClock();
+
+    // The tempo from outside: tapped, set or of a MIDI clock (null = the programmed one). The scenes picked by hand and
+    // the compositions without audio (and the default composition) follow it.
+    void setOutsideBeatsPerMinute(Double beatsPerMinute);
+
+    Double getOutsideBeatsPerMinute();
+
+    // The tempo of the composition or the scenes playing (null while nothing plays)
+    Double getProgrammedBeatsPerMinute();
+
+    // The tempo playing: the one from outside, else the programmed one (null while neither is)
+    Double getTempoBeatsPerMinute();
+
+    // The beats of a bar of the composition or the scenes playing (4, if nothing plays)
+    int getBeatsPerBar();
+
+    // ---- the holds of the timeline (see CompositionPlayer) ----
+
+    // The timeline of the composition playing holds at the passed hold point until GO (endHold): the position stands
+    // still while the clips playing run on
+    void hold(double positionMillis);
+
+    void endHold();
+
+    boolean isHolding();
+
+    // The position jumped to the passed one: the holds from there on weren't gone through anymore
+    void forgetHolds(double fromPositionMillis);
+
+    // The holds the timeline of the designer went through, and whether it holds at the last of them (its live preview
+    // holds along with it, at the position it is previewed from)
+    void setPreviewHolds(List<CompositionHold> holds, boolean holding);
+
+    // The positions of the hold points of the designer composition of the passed composition, in their order (none
+    // without a designer project)
+    List<Double> getHoldPositions(String compositionName);
 
     // Whether scenes were picked by hand, whether they play at the moment or wait for a composition to close
     boolean hasManualScenes();

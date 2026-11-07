@@ -13,8 +13,8 @@
     </button>
   </div>
 
-  <!-- the tempo, tapped as the pointer goes down -->
-  <div class="scene-live-group">
+  <!-- the tempo: tapped as the pointer goes down, halved, doubled, its first beat of a bar, and its beats -->
+  <div class="scene-live-group scene-live-tempo-group">
     <button type="button" class="btn btn-scene btn-scene-tap" (pointerdown)="tap($event)" (keydown.enter)="tap($event)"
       (keydown.space)="tap($event)" [popover]="'play.help.scenes-tap' | translate" triggers="mouseenter:mouseleave"
       container="body" placement="bottom">
@@ -23,13 +23,27 @@
     <span class="scene-live-tempo">
       <strong>{{ tempo() }}</strong> {{ 'play.scenes-bpm' | translate }}
       <small class="scene-live-tempo-source">{{ 'play.scenes-tempo-' + tempoSource() | translate }}</small>
+      <span class="scene-live-beats" role="img" [attr.aria-label]="'play.tempo-beats' | translate: { beats: beatsPerBar() }">
+        @for (beat of beatIndices(); track beat) {
+          <span #beatDot class="scene-live-beat" [class.scene-live-beat-one]="beat === 0"></span>
+        }
+      </span>
     </span>
-    @if (tempoSource() !== 'project') {
-      <button type="button" class="btn btn-scene btn-scene-small" [attr.aria-label]="'play.scenes-tempo-reset' | translate"
-        [title]="'play.scenes-tempo-reset' | translate" (click)="resetTempo()">
-        <i class="fa fa-undo fa-fw" aria-hidden="true"></i>
-      </button>
-    }
+    <span class="scene-live-tempo-buttons">
+      <button type="button" class="btn btn-scene btn-scene-small" [attr.aria-label]="'play.tempo-halve' | translate"
+        [title]="'play.tempo-halve' | translate" (click)="halve()">÷2</button>
+      <button type="button" class="btn btn-scene btn-scene-small" [attr.aria-label]="'play.tempo-double' | translate"
+        [title]="'play.tempo-double' | translate" (click)="double()">×2</button>
+      <button type="button" class="btn btn-scene btn-scene-small" [attr.aria-label]="'play.tempo-beat-one' | translate"
+        [title]="'play.tempo-beat-one' | translate" (pointerdown)="beatOne($event)" (keydown.enter)="beatOne($event)"
+        (keydown.space)="beatOne($event)">1</button>
+      @if (tempoSource() !== 'project') {
+        <button type="button" class="btn btn-scene btn-scene-small" [attr.aria-label]="'play.scenes-tempo-reset' | translate"
+          [title]="'play.scenes-tempo-reset' | translate" (click)="resetTempo()">
+          <i class="fa fa-undo fa-fw" aria-hidden="true"></i>
+        </button>
+      }
+    </span>
   </div>
 
   <!-- the speed master -->

@@ -110,10 +110,10 @@ class DefaultMidiShowControlServiceTest {
     }
 
     @Test
-    void goWithoutACueRunsWhatIsLoaded() throws Exception {
+    void goWithoutACueRunsWhatIsLoadedOrGoesOnFromAHold() throws Exception {
         service.processMidiMessage(showControl(DEVICE_ID, 0x01, ""));
 
-        verify(playerService, timeout(VERIFY_TIMEOUT_MILLIS)).play();
+        verify(playerService, timeout(VERIFY_TIMEOUT_MILLIS)).go();
         verify(midiCompositionSelectionService, never()).selectByShowControlCue(anyString(), anyBoolean());
     }
 

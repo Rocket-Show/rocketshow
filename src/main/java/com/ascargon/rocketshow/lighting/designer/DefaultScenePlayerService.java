@@ -51,21 +51,10 @@ public class DefaultScenePlayerService implements ScenePlayerService {
     // the scenes flashed at the moment (not remembered over a restart: nothing holds them anymore then)
     private List<String> flashedSceneUuids = new ArrayList<>();
 
-    // the beats tapped last (real time), the tempo they or a MIDI clock gave and where the tempo is from
-    private final List<Long> taps = new ArrayList<>();
-    private Double clockBeatsPerMinute;
-    private String tempoSource = "project";
-
-    // the clock the taps are timed and the learning waits by (another one in the tests)
+    // the clock the learning waits by (another one in the tests)
     private java.util.function.LongSupplier clock = System::currentTimeMillis;
 
-    // a tap after this long starts tapping anew, and how many taps the tempo is taken from at the most
-    private static final long TAP_TIMEOUT_MILLIS = 2000;
-    private static final int TAP_COUNT = 8;
-
-    // the tempi and speeds the scenes can run at
-    private static final double MIN_BEATS_PER_MINUTE = 20;
-    private static final double MAX_BEATS_PER_MINUTE = 300;
+    // the speeds the scenes can run at
     private static final double MIN_SPEED = 0.1;
     private static final double MAX_SPEED = 4;
 
@@ -87,10 +76,6 @@ public class DefaultScenePlayerService implements ScenePlayerService {
         this.setService = setService;
         this.settingsService = settingsService;
 
-        if (sessionService.getSession().getSceneBeatsPerMinute() != null) {
-            tempoSource = "set";
-        }
-
         // Light the stage again with the scenes picked before the restart
         try {
             play();
@@ -99,7 +84,7 @@ public class DefaultScenePlayerService implements ScenePlayerService {
         }
     }
 
-    // the clock the taps are timed by (for the tests)
+    // the clock the learning waits by (for the tests)
     void setClock(java.util.function.LongSupplier clock) {
         this.clock = clock;
     }
@@ -268,7 +253,6 @@ public class DefaultScenePlayerService implements ScenePlayerService {
 
         designerService.setLiveSceneDimmers(getSceneDimmers());
         designerService.setLiveSpeed(session.getSceneSpeed());
-        designerService.setLiveBeatsPerMinute(getLiveBeatsPerMinute(), false);
 
         if (sceneUuids.isEmpty() && flashed.isEmpty() && !session.isSceneBlackout()) {
             // the scenes fade out, then their lights are turned off
@@ -277,11 +261,6 @@ public class DefaultScenePlayerService implements ScenePlayerService {
         }
 
         designerService.playManualScenes(project, sceneUuids, flashed, session.isSceneBlackout() ? 0 : session.getSceneMasterDimmer());
-    }
-
-    // the tempo played live: the one of a MIDI clock, tapped or set (null = the one of the project)
-    private Double getLiveBeatsPerMinute() {
-        return "clock".equals(tempoSource) && clockBeatsPerMinute != null ? clockBeatsPerMinute : sessionService.getSession().getSceneBeatsPerMinute();
     }
 
     // tell every app what changed, without saving the session
@@ -442,75 +421,6 @@ public class DefaultScenePlayerService implements ScenePlayerService {
 
     private static String emptyToNull(String text) {
         return text == null || text.isEmpty() ? null : text;
-    }
-
-    @Override
-    public synchronized void tapTempo() {
-        long now = clock.getAsLong();
-
-        if (!taps.isEmpty() && now - taps.getLast() > TAP_TIMEOUT_MILLIS) {
-            taps.clear();
-        }
-
-        taps.add(now);
-
-        while (taps.size() > TAP_COUNT) {
-            taps.removeFirst();
-        }
-
-        if (taps.size() < 2) {
-            // the first beat only falls on the beat
-            designerService.setLiveBeatsPerMinute(getLiveBeatsPerMinute(), true);
-            return;
-        }
-
-        double beatMillis = (double) (taps.getLast() - taps.getFirst()) / (taps.size() - 1);
-        double beatsPerMinute = Math.max(MIN_BEATS_PER_MINUTE, Math.min(MAX_BEATS_PER_MINUTE, 60000 / beatMillis));
-
-        tempoSource = "tap";
-        sessionService.getSession().setSceneBeatsPerMinute(Math.round(beatsPerMinute * 10) / 10.0);
-        sessionService.save();
-        designerService.setLiveBeatsPerMinute(getLiveBeatsPerMinute(), true);
-        notifyClients();
-    }
-
-    @Override
-    public synchronized void setBeatsPerMinute(Double beatsPerMinute) {
-        taps.clear();
-        tempoSource = beatsPerMinute == null ? "project" : "set";
-        sessionService.getSession().setSceneBeatsPerMinute(beatsPerMinute == null ? null : Math.max(MIN_BEATS_PER_MINUTE, Math.min(MAX_BEATS_PER_MINUTE, beatsPerMinute)));
-        sessionService.save();
-        designerService.setLiveBeatsPerMinute(getLiveBeatsPerMinute(), false);
-        notifyClients();
-    }
-
-    @Override
-    public synchronized void setClockTempo(double beatsPerMinute, boolean onTheBeat) {
-        if (beatsPerMinute < MIN_BEATS_PER_MINUTE || beatsPerMinute > MAX_BEATS_PER_MINUTE) {
-            return;
-        }
-
-        // the apps are only told of a tempo changed by a whole beat per minute: a clock ticks all the time
-        boolean told = "clock".equals(tempoSource) && clockBeatsPerMinute != null && Math.round(clockBeatsPerMinute) == Math.round(beatsPerMinute);
-
-        tempoSource = "clock";
-        clockBeatsPerMinute = beatsPerMinute;
-        designerService.setLiveBeatsPerMinute(beatsPerMinute, onTheBeat);
-
-        if (!told) {
-            notifyClients();
-        }
-    }
-
-    @Override
-    public synchronized Double getBeatsPerMinute() {
-        Double live = getLiveBeatsPerMinute();
-        return live != null ? live : designerService.getLiveReferenceBeatsPerMinute();
-    }
-
-    @Override
-    public synchronized String getTempoSource() {
-        return getLiveBeatsPerMinute() == null ? "project" : tempoSource;
     }
 
     @Override

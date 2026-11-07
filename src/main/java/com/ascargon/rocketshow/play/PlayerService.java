@@ -12,6 +12,12 @@ public interface PlayerService {
 
     void play() throws Exception;
 
+    // GO: on from the hold point the composition holds at (see CompositionPlayer.hold), else play it
+    void go() throws Exception;
+
+    // Whether the composition holds at a hold point until GO
+    boolean isHolding();
+
     void playAsSample(String compositionName) throws Exception;
 
     void pause() throws Exception;

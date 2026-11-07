@@ -113,6 +113,12 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
     // Ensure, each trigger is executed only once (during inconsistencies when re-scheduling periodically)
     private List<ActionTriggerComposition> remainingActionTriggerCompositionList;
 
+    // The hold points of the designer composition still ahead, where the composition holds until GO (see hold), and
+    // whether it holds at one at the moment
+    private List<Double> remainingHoldPositions = new CopyOnWriteArrayList<>();
+    private List<ScheduledFuture<?>> holdHandleList = new ArrayList<>();
+    private volatile boolean holding = false;
+
     public CompositionPlayer(DefaultPlayerService playerService) {
         this.playerService = playerService;
         this.notificationService = playerService.getNotificationService();
@@ -181,6 +187,15 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
     private void calculateRemainingActionTriggerList(long fromMillis) {
         remainingActionTriggerCompositionList = new CopyOnWriteArrayList<>();
         remainingActionTriggerCompositionList.addAll(composition.getActionTriggerList().stream().filter(trigger -> trigger.getPositionMillis() >= fromMillis).toList());
+
+        // The hold points after the position (the one it starts at was gone on from with GO). A composition following
+        // a timecode master doesn't hold (the master decides where it is), nor does the default composition or a sample
+        // (nothing would GO on).
+        remainingHoldPositions = new CopyOnWriteArrayList<>();
+
+        if (!isDefaultComposition && !isSample && !isFollowingTimecode()) {
+            remainingHoldPositions.addAll(designerService.getHoldPositions(composition.getName()).stream().filter(position -> position > fromMillis).toList());
+        }
     }
 
     // Load all files and construct the complete GST pipeline
@@ -455,13 +470,65 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
             ScheduledFuture<?> handle = scheduler.schedule(runnable, actionTriggerComposition.getPositionMillis() - currentPositionMillis, MILLISECONDS);
             actionTriggerHandleList.add(handle);
         }
+
+        // and the hold points
+        for (ScheduledFuture<?> handle : holdHandleList) {
+            handle.cancel(false);
+        }
+
+        holdHandleList = new ArrayList<>();
+
+        for (Double holdPosition : remainingHoldPositions) {
+            holdHandleList.add(scheduler.schedule(() -> hold(holdPosition), Math.round(holdPosition) - currentPositionMillis, MILLISECONDS));
+        }
+    }
+
+    // The composition holds at the passed hold point until GO (see play): the media pauses, the position stands still,
+    // the lights run on (the clips spanning the hold point keep running, see DesignerService.hold).
+    private void hold(double positionMillis) {
+        if (playState != PlayState.PLAYING || isFollowingTimecode() || !remainingHoldPositions.remove(positionMillis)) {
+            return;
+        }
+
+        if (compositionPipeline != null && compositionPipeline.hasAnyH265Stream()) {
+            logger.warn("Hold at {}ms ignored: hardware H.265 decoder does not support pausing/resuming", positionMillis);
+            return;
+        }
+
+        logger.info("Composition '{}' holds at {}ms until GO", composition.getName(), positionMillis);
+
+        try {
+            if (compositionPipeline != null) {
+                compositionPipeline.pause();
+            }
+
+            // the lights hold first, so they never see the composition paused without holding
+            startPosition = Math.round(positionMillis);
+            designerService.hold(positionMillis);
+            holding = true;
+            playState = PlayState.PAUSED;
+
+            stopAutoStopTimer();
+            stopActionTriggerTimer();
+            cancelPendingActionTriggers();
+            midiTimecodeService.stop(this);
+
+            notificationService.notifyClients(playerService, setService);
+        } catch (Exception e) {
+            logger.error("Could not hold the composition at {}ms", positionMillis, e);
+        }
+    }
+
+    // Whether the composition holds at a hold point until GO
+    public boolean isHolding() {
+        return holding;
     }
 
     private void scheduleActionTriggerTimers() {
         // Schedule the timers to execute the actions
 
-        if (composition.getActionTriggerList().isEmpty() || scheduler == null) {
-            // No actions to trigger, or nothing loaded to trigger against
+        if ((composition.getActionTriggerList().isEmpty() && remainingHoldPositions.isEmpty()) || scheduler == null) {
+            // No actions to trigger (nor hold points to hold at), or nothing loaded to trigger against
             return;
         }
 
@@ -495,6 +562,10 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
     // Cancel any action triggers that are scheduled but haven't fired yet, so they don't fire after
     // the composition is paused or stopped (e.g. leaking into a following composition).
     private void cancelPendingActionTriggers() {
+        for (ScheduledFuture<?> handle : holdHandleList) {
+            handle.cancel(false);
+        }
+
         for (ScheduledFuture<?> handle : actionTriggerHandleList) {
             handle.cancel(false);
         }
@@ -504,6 +575,13 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
     public void play() throws Exception {
         if (composition == null) {
             return;
+        }
+
+        if (holding) {
+            // GO: on from the hold point
+            logger.info("Composition '{}' goes on from the hold at {}ms", composition.getName(), startPosition);
+            holding = false;
+            designerService.endHold();
         }
 
         // Load the files, if not already done by a previously by a separate call
@@ -623,6 +701,7 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
         startPosition = 0;
         firstPlayDone = false;
         masterEosReached = false;
+        holding = false;
 
         if (composition == null || playState == PlayState.STOPPED) {
             return;
@@ -682,6 +761,14 @@ public class CompositionPlayer implements CompositionPipelineBuilder.MasterEvent
         }
 
         startPosition = positionMillis;
+
+        // the holds from there on weren't gone through anymore. Holding, the composition is just paused there now.
+        designerService.forgetHolds(positionMillis);
+
+        if (holding) {
+            holding = false;
+            designerService.pause();
+        }
 
         // A (flushing) seek re-activates the pipeline, so we leave any trailing tail and let
         // the pipeline drive position and the end of stream again.

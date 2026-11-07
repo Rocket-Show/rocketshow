@@ -23,7 +23,6 @@ export class ActionSceneComponent implements OnInit {
     "BLACKOUT_ON",
     "BLACKOUT_OFF",
     "TOGGLE_BLACKOUT",
-    "TAP_TEMPO",
   ];
 
   constructor(public scenesService: ScenesService) {}

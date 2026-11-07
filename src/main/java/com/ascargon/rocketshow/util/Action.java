@@ -3,6 +3,7 @@ package com.ascargon.rocketshow.util;
 import com.ascargon.rocketshow.api.ActionHttp;
 import com.ascargon.rocketshow.lighting.ActionLighting;
 import com.ascargon.rocketshow.lighting.designer.ActionScene;
+import com.ascargon.rocketshow.lighting.designer.ActionTempo;
 import com.ascargon.rocketshow.midi.ActionMidi;
 import com.ascargon.rocketshow.raspberry.ActionRaspberryGpio;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -26,7 +27,8 @@ import java.util.List;
         @JsonSubTypes.Type(value = ActionLighting.class, name = "actionLighting"),
         @JsonSubTypes.Type(value = ActionRaspberryGpio.class, name = "actionRaspberryGpio"),
         @JsonSubTypes.Type(value = ActionHttp.class, name = "actionHttp"),
-        @JsonSubTypes.Type(value = ActionScene.class, name = "actionScene")
+        @JsonSubTypes.Type(value = ActionScene.class, name = "actionScene"),
+        @JsonSubTypes.Type(value = ActionTempo.class, name = "actionTempo")
 })
 public abstract class Action {
 
@@ -39,7 +41,8 @@ public abstract class Action {
         LIGHTING,
         RASPBERRY_GPIO,
         HTTP,
-        SCENE
+        SCENE,
+        TEMPO
     }
 
     // Execute this action on remote devices

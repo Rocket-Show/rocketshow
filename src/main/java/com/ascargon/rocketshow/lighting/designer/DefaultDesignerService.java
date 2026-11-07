@@ -76,6 +76,10 @@ public class DefaultDesignerService implements DesignerService {
     private double stepPreviewStartMillis = 0;
     private List<String> selectedSceneUuids = new ArrayList<>();
 
+    // the holds the timeline of the composition playing went through (see CompositionHold): the clips spanning them ran
+    // on while the position stood still
+    private volatile List<CompositionHold> holds = new ArrayList<>();
+
     // the fixtures being identified from the fixture pool of the designer (see Identify)
     private volatile List<String> identifyFixtureUuids = new ArrayList<>();
 
@@ -96,9 +100,23 @@ public class DefaultDesignerService implements DesignerService {
     private volatile double manualScenesMasterDimmer = 1;
     private volatile boolean playingManualScenes = false;
 
+    // The beats of the tempo playing (see BeatClock): the one from outside (tapped, set or of a MIDI clock, see
+    // TempoService), else the programmed one of the composition or the project playing
+    private final BeatClock beatClock = new BeatClock(System.currentTimeMillis());
+    private volatile Double outsideBeatsPerMinute;
+
+    // the beats a clip of a composition following the tempo from outside started on, by its region (see
+    // getBeatTimeMillis), and the beats of the tempo at the moment worked out
+    private final Map<ScenePlaybackRegion, Double> regionStartBeats = new IdentityHashMap<>();
+    private double frameBeats = 0;
+
+    // the timeline of the composition playing holds at a hold point until GO: since when, in real time (see hold)
+    private volatile boolean holding = false;
+    private double holdStartRealMillis = 0;
+
     // the scenes picked by hand and flashed while they play: their fades, their own clocks and the live controls of the
     // Play screen (see LiveScenes)
-    private final LiveScenes liveScenes = new LiveScenes();
+    private final LiveScenes liveScenes = new LiveScenes(beatClock);
     private List<String> flashedSceneUuids = new ArrayList<>();
 
     // the scenes picked by hand were let go: they play until they have faded out, then their lights are turned off
@@ -547,9 +565,10 @@ public class DefaultDesignerService implements DesignerService {
         // Get relevant presets in correct order to process with their corresponding scene, if available
         List<PresetRegionScene> presets = new ArrayList<>();
 
-        if (playPreview || (compositionPlayer != null && CompositionPlayer.PlayState.PLAYING.equals(compositionPlayer.getPlayState()))) {
-            // Only use active presets in current regions
+        if (playPreview || (compositionPlayer != null && (holding || CompositionPlayer.PlayState.PLAYING.equals(compositionPlayer.getPlayState())))) {
+            // Only use active presets in current regions (also while the timeline holds at a hold point)
             presets = getPresetsInTime(timeMillis);
+            updateRegionStartBeats(presets, timeMillis);
         } else if (playingManualScenes) {
             // the scenes picked by hand, each from the moment it was picked, fading in and out (see LiveScenes)
             presets = liveScenes.getPresets(project.getScenes() == null ? List.of() : project.getScenes(), this::getScenePresets, timeMillis, System.currentTimeMillis());
@@ -1110,14 +1129,36 @@ public class DefaultDesignerService implements DesignerService {
     // the values a preset applies at the passed time. While nothing is playing, the
     // designer's panels are editing one step, so that is the one to show: the sequence
     // only runs on the timeline, or when the designer asks to watch it.
-    private PresetStepState getPresetStepState(PresetRegionScene preset, double timeMillis) {
+    // A preset chasing its steps over its fixtures is the passed phasing behind for a fixture. Steps following the beat
+    // run as much faster or slower as the tempo played is than the one they are written at; the clips spanning a hold
+    // ran on while the timeline held. The designer works it out the same way, in the same order.
+    private PresetStepState getPresetStepState(PresetRegionScene preset, double timeMillis, double phasingMillis) {
+        boolean followsBeat = "beats".equals(preset.getPreset().getStepsLengthMode());
+
         if (preset.getRegion() != null) {
-            return PresetSteps.getStateAtMillis(preset.getPreset(), timeMillis - getPresetStartMillis(preset));
+            double startMillis = getPresetStartMillis(preset);
+            double heldMillis = preset instanceof LiveScenes.LivePreset ? 0 : CompositionHold.getHeldMillis(holds, startMillis, timeMillis);
+
+            if (followsBeat) {
+                double beatsPerMinute = isOnTheBeatClock(preset) ? beatClock.getBeatsPerMinute() : getStepsBeatsPerMinute();
+                Double beatTimeMillis = getBeatTimeMillis(preset, beatsPerMinute);
+
+                // on the beats of the tempo from outside, from where the preset starts in its clip
+                double presetTimeMillis = beatTimeMillis == null ? timeMillis - startMillis + heldMillis : beatTimeMillis - (startMillis - preset.getRegion().getStartMillis());
+                return PresetSteps.getStateAtMillis(preset.getPreset(), PresetSteps.getStepsTimeMillis(preset.getPreset(), presetTimeMillis, beatsPerMinute) - phasingMillis);
+            }
+
+            return PresetSteps.getStateAtMillis(preset.getPreset(), timeMillis - phasingMillis - startMillis + heldMillis);
         }
 
         if (stepPreviewRunning) {
             // the sequence was started by hand, so it runs from the point it was started at
-            return PresetSteps.getStateAtMillis(preset.getPreset(), timeMillis - stepPreviewStartMillis);
+            if (followsBeat) {
+                double presetTimeMillis = timeMillis - stepPreviewStartMillis;
+                return PresetSteps.getStateAtMillis(preset.getPreset(), PresetSteps.getStepsTimeMillis(preset.getPreset(), presetTimeMillis, getStepsBeatsPerMinute()) - phasingMillis);
+            }
+
+            return PresetSteps.getStateAtMillis(preset.getPreset(), timeMillis - phasingMillis - stepPreviewStartMillis);
         }
 
         List<PresetStep> steps = preset.getPreset().getSteps();
@@ -1672,7 +1713,7 @@ public class DefaultDesignerService implements DesignerService {
             // a preset chasing its steps over its fixtures is at a different point of
             // the sequence for each of them, so its state is worked out per fixture below
             if (!PresetSteps.stepsArePhased(preset.getPreset())) {
-                presetStates.put(preset, getPresetStepState(preset, timeMillis));
+                presetStates.put(preset, getPresetStepState(preset, timeMillis, 0));
             }
         }
 
@@ -1723,7 +1764,7 @@ public class DefaultDesignerService implements DesignerService {
                         PresetStepState state = presetStates.get(preset);
 
                         if (state == null) {
-                            state = getPresetStepState(preset, timeMillis - PresetSteps.getStepsPhasingMillis(preset.getPreset(), fixtureIndex, fixtureCounts.get(preset.getPreset())));
+                            state = getPresetStepState(preset, timeMillis, PresetSteps.getStepsPhasingMillis(preset.getPreset(), fixtureIndex, fixtureCounts.get(preset.getPreset())));
                         }
 
                         Integer fixtureCount = fixtureCounts.get(preset.getPreset());
@@ -1777,13 +1818,241 @@ public class DefaultDesignerService implements DesignerService {
     // the tempo the curves synced to the beat follow: the one of the composition playing, or else the one of the
     // composition open in the designer, like its own preview. Without either, the curves run on their default tempo.
     private Double getBeatsPerMinute() {
-        Composition tempoComposition = composition;
+        Composition tempoComposition = getTempoComposition();
+        return tempoComposition == null ? null : tempoComposition.getBeatsPerMinute();
+    }
+
+    private Composition getTempoComposition() {
+        Project tempoProject = project;
 
         if (!playPreview && compositionPlayer == null) {
-            tempoComposition = getCompositionByUuid(project, project.getSelectedCompositionUuid());
+            return tempoProject == null ? null : getCompositionByUuid(tempoProject, tempoProject.getSelectedCompositionUuid());
         }
 
-        return tempoComposition == null ? null : tempoComposition.getBeatsPerMinute();
+        return composition;
+    }
+
+    // ---- the tempo ----
+
+    @Override
+    public BeatClock getBeatClock() {
+        return beatClock;
+    }
+
+    // the tempo from outside: tapped, set or of a MIDI clock (null = the programmed one, see TempoService)
+    @Override
+    public void setOutsideBeatsPerMinute(Double beatsPerMinute) {
+        outsideBeatsPerMinute = beatsPerMinute;
+        syncBeatClock();
+    }
+
+    @Override
+    public Double getOutsideBeatsPerMinute() {
+        return outsideBeatsPerMinute;
+    }
+
+    // the tempo of the composition or the scenes playing (null while nothing plays)
+    @Override
+    public Double getProgrammedBeatsPerMinute() {
+        if (project == null || (compositionPlayer == null && !playingManualScenes)) {
+            return null;
+        }
+
+        return getBeatsPerMinute();
+    }
+
+    // the tempo playing: the one from outside, else the programmed one (null while neither is)
+    @Override
+    public Double getTempoBeatsPerMinute() {
+        Double outside = outsideBeatsPerMinute;
+        return outside != null ? outside : getProgrammedBeatsPerMinute();
+    }
+
+    // the beats of a bar of the composition or the scenes playing (4, if nothing plays)
+    @Override
+    public int getBeatsPerBar() {
+        Composition tempoComposition = project == null ? null : getTempoComposition();
+        return tempoComposition == null ? 4 : tempoComposition.getTimeSignatureUpper();
+    }
+
+    // the beat clock runs at the tempo playing (on at the last one, while none plays)
+    private void syncBeatClock() {
+        Double beatsPerMinute = getTempoBeatsPerMinute();
+
+        if (beatsPerMinute != null && beatsPerMinute > 0) {
+            beatClock.setBeatsPerMinute(beatsPerMinute, System.currentTimeMillis());
+        }
+    }
+
+    // ---- the holds of the timeline ----
+
+    // The timeline of the composition playing holds at the passed hold point until GO (see endHold): the position stands
+    // still, the clips playing run on, the time held counting for them (see CompositionHold).
+    @Override
+    public synchronized void hold(double positionMillis) {
+        List<CompositionHold> next = new ArrayList<>(holds);
+        next.add(new CompositionHold(positionMillis, 0));
+        holdStartRealMillis = System.currentTimeMillis();
+        holds = next;
+        holding = true;
+    }
+
+    // GO: the timeline goes on from the hold point
+    @Override
+    public synchronized void endHold() {
+        if (!holding) {
+            return;
+        }
+
+        updateHold();
+        holding = false;
+    }
+
+    @Override
+    public boolean isHolding() {
+        return holding;
+    }
+
+    // the position jumped to the passed one: the holds from there on weren't gone through anymore
+    @Override
+    public synchronized void forgetHolds(double fromPositionMillis) {
+        List<CompositionHold> next = new ArrayList<>();
+
+        for (CompositionHold hold : holds) {
+            if (hold.getPositionMillis() < fromPositionMillis) {
+                next.add(hold);
+            }
+        }
+
+        holds = next;
+        holding = false;
+    }
+
+    @Override
+    public List<Double> getHoldPositions(String compositionName) {
+        Project holdProject = compositionName == null ? null : getProjectByCompositionName(compositionName);
+        Composition holdComposition = holdProject == null ? null : getCompositionByName(holdProject, compositionName);
+        List<Double> positions = new ArrayList<>();
+
+        if (holdComposition == null) {
+            return positions;
+        }
+
+        for (CompositionMarker marker : holdComposition.getMarkers()) {
+            if (marker.isHold()) {
+                positions.add(marker.getPositionMillis());
+            }
+        }
+
+        Collections.sort(positions);
+        return positions;
+    }
+
+    @Override
+    public synchronized void setPreviewHolds(List<CompositionHold> previewHolds, boolean previewHolding) {
+        List<CompositionHold> next = new ArrayList<>();
+
+        if (previewHolds != null) {
+            for (CompositionHold hold : previewHolds) {
+                next.add(new CompositionHold(hold.getPositionMillis(), hold.getHeldMillis()));
+            }
+        }
+
+        holds = next;
+        holding = previewHolding && !next.isEmpty();
+
+        if (holding) {
+            // held for as long already
+            holdStartRealMillis = System.currentTimeMillis() - next.getLast().getHeldMillis();
+        }
+    }
+
+    // the hold going on lasts until now
+    private void updateHold() {
+        List<CompositionHold> current = holds;
+
+        if (holding && !current.isEmpty()) {
+            current.getLast().setHeldMillis(System.currentTimeMillis() - holdStartRealMillis);
+        }
+    }
+
+    // The time a preset of a clip has played for in beats, as the milliseconds they last at the passed tempo, where what
+    // follows the beat runs on the beats of the tempo playing instead of the time played: for the scenes picked by hand,
+    // and for a composition following the tempo from outside (see isFollowingOutsideTempo). Null elsewhere.
+    private Double getBeatTimeMillis(PresetRegionScene preset, double beatsPerMinute) {
+        if (preset instanceof LiveScenes.LivePreset livePreset) {
+            return livePreset.getBeatTimeMillis(beatsPerMinute);
+        }
+
+        if (preset.getRegion() == null) {
+            return null;
+        }
+
+        Double startBeats = regionStartBeats.get(preset.getRegion());
+
+        if (startBeats == null) {
+            return null;
+        }
+
+        return (frameBeats - startBeats) * 60000 / beatsPerMinute;
+    }
+
+    // Whether what follows the beat in the passed preset runs on the beat clock (see getBeatTimeMillis): at the tempo
+    // playing then, so a time in milliseconds (e.g. a phasing) lasts as long as it does
+    private boolean isOnTheBeatClock(PresetRegionScene preset) {
+        return preset instanceof LiveScenes.LivePreset || (preset.getRegion() != null && regionStartBeats.containsKey(preset.getRegion()));
+    }
+
+    // the tempo the curves of the passed preset follow
+    private Double getCurveBeatsPerMinute(PresetRegionScene preset) {
+        return isOnTheBeatClock(preset) ? (Double) beatClock.getBeatsPerMinute() : getBeatsPerMinute();
+    }
+
+    // Whether the composition playing follows the tempo from outside: one without audio to follow, or the default
+    // composition played in between, while a tempo is tapped, set or given by a MIDI clock. A composition with audio
+    // keeps its own tempo: the lights stay in time with the music.
+    private boolean isFollowingOutsideTempo() {
+        CompositionPlayer player = compositionPlayer;
+        Composition playing = composition;
+
+        return outsideBeatsPerMinute != null && !playPreview && player != null && playing != null
+                && (player.isDefaultComposition() || "none".equals(playing.getSyncType()));
+    }
+
+    // the clips of the composition playing at the moment: those following the tempo from outside start on the beat of
+    // it they began on (a whole one), the others forget theirs
+    private void updateRegionStartBeats(List<PresetRegionScene> presets, double timeMillis) {
+        frameBeats = beatClock.getBeats(System.currentTimeMillis());
+
+        if (!isFollowingOutsideTempo()) {
+            regionStartBeats.clear();
+            return;
+        }
+
+        double beatsPerMinute = getStepsBeatsPerMinute();
+        Set<ScenePlaybackRegion> playing = Collections.newSetFromMap(new IdentityHashMap<>());
+
+        for (PresetRegionScene preset : presets) {
+            ScenePlaybackRegion region = preset.getRegion();
+
+            if (region == null) {
+                continue;
+            }
+
+            playing.add(region);
+
+            // a clip joined after it began started as many beats ago
+            regionStartBeats.computeIfAbsent(region, started -> Math.floor(frameBeats - Math.max(0, timeMillis - started.getStartMillis()) * beatsPerMinute / 60000 + 1e-9));
+        }
+
+        regionStartBeats.keySet().retainAll(playing);
+    }
+
+    // the tempo the steps following the beat are played at: the one the curves follow, or else their default one, like in
+    // the designer
+    private double getStepsBeatsPerMinute() {
+        Double beatsPerMinute = getBeatsPerMinute();
+        return beatsPerMinute == null ? EffectCurve.DEFAULT_BEATS_PER_MINUTE : beatsPerMinute;
     }
 
     // a preset that is not placed in a composition has no moment it starts at: the preview
@@ -1792,6 +2061,15 @@ public class DefaultDesignerService implements DesignerService {
     // effect shows it.
     private double getCurveTimeMillis(EffectCurve curve, double effectTimeMillis, PresetRegionScene preset, Integer fixtureCount, Double beatsPerMinute) {
         if (preset.getRegion() != null) {
+            if (curve.isBeatSynced()) {
+                // a curve following the beat runs on the beats of the tempo from outside, where it does
+                Double beatTimeMillis = getBeatTimeMillis(preset, beatsPerMinute != null && beatsPerMinute > 0 ? beatsPerMinute : EffectCurve.DEFAULT_BEATS_PER_MINUTE);
+
+                if (beatTimeMillis != null) {
+                    return beatTimeMillis;
+                }
+            }
+
             return effectTimeMillis;
         }
 
@@ -1808,7 +2086,9 @@ public class DefaultDesignerService implements DesignerService {
         double effectTimeMillis = timeMillis;
 
         if (preset.getRegion() != null) {
-            effectTimeMillis = timeMillis - preset.getRegion().getStartMillis();
+            // the clips spanning a hold ran on while the timeline held
+            double heldMillis = preset instanceof LiveScenes.LivePreset ? 0 : CompositionHold.getHeldMillis(holds, preset.getRegion().getStartMillis(), timeMillis);
+            effectTimeMillis = timeMillis - preset.getRegion().getStartMillis() + heldMillis;
         }
 
         for (Effect effect : preset.getPreset().getEffects()) {
@@ -1830,7 +2110,7 @@ public class DefaultDesignerService implements DesignerService {
 
                 // EffectCurve
                 if (effect instanceof EffectCurve effectCurve) {
-                    Double beatsPerMinute = this.getBeatsPerMinute();
+                    Double beatsPerMinute = getCurveBeatsPerMinute(preset);
                     double curveTimeMillis = getCurveTimeMillis(effectCurve, effectTimeMillis, preset, fixtureCount, beatsPerMinute);
 
                     // capabilities
@@ -1904,7 +2184,7 @@ public class DefaultDesignerService implements DesignerService {
             return;
         }
 
-        Double beatsPerMinute = this.getBeatsPerMinute();
+        Double beatsPerMinute = getCurveBeatsPerMinute(preset);
         double curveTimeMillis = getCurveTimeMillis(effect, effectTimeMillis, preset, fixtureCount, beatsPerMinute);
         Double cycles = effect.getCyclesAtMillis(curveTimeMillis, fixtureIndex, fixtureCount, beatsPerMinute);
 
@@ -2288,7 +2568,7 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     private void mixPanTiltEffect(EffectPanTilt effect, double effectTimeMillis, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double effectIntensityPercentage, PresetStepState state, PanTilt.Context context) {
-        Double beatsPerMinute = this.getBeatsPerMinute();
+        Double beatsPerMinute = getCurveBeatsPerMinute(preset);
         double curveTimeMillis = getCurveTimeMillis(effect, effectTimeMillis, preset, context.fixtureCount(), beatsPerMinute);
         EffectPanTilt.Offset offset = effect.getOffsetAtMillis(curveTimeMillis, context.fixtureIndex(), context.fixtureCount(), beatsPerMinute);
 
@@ -2542,6 +2822,9 @@ public class DefaultDesignerService implements DesignerService {
 
     private void calculateUniverse(double timeMillis) {
         try {
+            syncBeatClock();
+            updateHold();
+
             List<PresetRegionScene> presets = getPresets(timeMillis);
             Map<CachedFixture, List<FixtureChannelValue>> calculatedFixtures = getChannelValues(timeMillis, presets);
 
@@ -2560,6 +2843,11 @@ public class DefaultDesignerService implements DesignerService {
         if (playingManualScenes) {
             // the scenes picked by hand run on a clock of their own, as fast as the speed master and the tempo make it
             return liveScenes.advance(System.currentTimeMillis());
+        }
+
+        if (holding) {
+            // the timeline of the designer holds at the position it is previewed from
+            return startPositionMillis;
         }
 
         // No compositionPlayer, e.g. only designer preview -> just use the current time as reference
@@ -3561,6 +3849,9 @@ public class DefaultDesignerService implements DesignerService {
 
     @Override
     public synchronized void close() {
+        // the composition is over: so are the holds it went through
+        forgetHolds(0);
+
         // The scenes picked by hand on the Play screen aren't the project of a composition: a composition loading or
         // stopping leaves them playing
         if (project == null || playingManualScenes) {
@@ -3624,9 +3915,9 @@ public class DefaultDesignerService implements DesignerService {
         selectedSceneUuids = manualSceneUuids;
         playingManualScenes = true;
 
-        // the scenes start anew, on a clock running at the tempo of the project
+        // the scenes start anew, on the beats of the tempo playing
         liveScenes.reset();
-        liveScenes.setReferenceBeatsPerMinute(getBeatsPerMinute(), System.currentTimeMillis());
+        syncBeatClock();
         updateLiveScenes();
 
         startPositionMillis = 0;
@@ -3682,21 +3973,6 @@ public class DefaultDesignerService implements DesignerService {
     @Override
     public void setLiveSpeed(double speed) {
         liveScenes.setSpeed(speed, System.currentTimeMillis());
-    }
-
-    @Override
-    public void setLiveBeatsPerMinute(Double beatsPerMinute, boolean onTheBeat) {
-        long now = System.currentTimeMillis();
-        liveScenes.setBeatsPerMinute(beatsPerMinute, now);
-
-        if (onTheBeat) {
-            liveScenes.alignBeat(now);
-        }
-    }
-
-    @Override
-    public Double getLiveReferenceBeatsPerMinute() {
-        return playingManualScenes ? liveScenes.getReferenceBeatsPerMinute() : null;
     }
 
     @Override
@@ -3786,6 +4062,12 @@ public class DefaultDesignerService implements DesignerService {
     public void setStepPreviewRunning(boolean stepPreviewRunning, double stepPreviewStartMillis) {
         this.stepPreviewRunning = stepPreviewRunning;
         this.stepPreviewStartMillis = stepPreviewStartMillis;
+    }
+
+    // the holds the timeline of the composition went through (see CompositionHold)
+    @Override
+    public void setHolds(List<CompositionHold> holds) {
+        this.holds = holds == null ? new ArrayList<>() : new ArrayList<>(holds);
     }
 
     @Override

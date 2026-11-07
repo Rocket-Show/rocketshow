@@ -10,6 +10,7 @@ import { ActionLighting } from "../models/action-lighting";
 import { ActionRaspberryGpio } from "../models/action-raspberry-gpio";
 import { ActionHttp } from "../models/action-http";
 import { ActionScene } from "../models/action-scene";
+import { ActionTempo } from "../models/action-tempo";
 
 @Component({
     selector: "app-action",
@@ -62,6 +63,8 @@ export class ActionComponent {
       this.action = new ActionHttp(this.action);
     } else if (newValue === "SCENE") {
       this.action = new ActionScene(this.action);
+    } else if (newValue === "TEMPO") {
+      this.action = new ActionTempo(this.action);
     }
 
     this.change.emit({ index: this.index, newAction: this.action });

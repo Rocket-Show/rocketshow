@@ -392,59 +392,6 @@ class ScenePlayerServiceTest {
     }
 
     @Test
-    void takesTheTempoFromTheBeatsTapped() {
-        long[] now = {100000};
-        DefaultScenePlayerService scenePlayerService = scenePlayerService();
-        scenePlayerService.setClock(() -> now[0]);
-
-        // the first beat only falls on the beat
-        scenePlayerService.tapTempo();
-        verify(designerService).setLiveBeatsPerMinute(null, true);
-        assertEquals("project", scenePlayerService.getTempoSource());
-
-        now[0] += 500;
-        scenePlayerService.tapTempo();
-        now[0] += 500;
-        scenePlayerService.tapTempo();
-        assertEquals(120.0, scenePlayerService.getBeatsPerMinute());
-        assertEquals("tap", scenePlayerService.getTempoSource());
-        verify(designerService, org.mockito.Mockito.atLeastOnce()).setLiveBeatsPerMinute(120.0, true);
-
-        // a pause starts tapping anew
-        now[0] += 5000;
-        scenePlayerService.tapTempo();
-        now[0] += 400;
-        scenePlayerService.tapTempo();
-        assertEquals(150.0, scenePlayerService.getBeatsPerMinute());
-
-        // remembered over a restart
-        assertEquals(150.0, scenePlayerService().getBeatsPerMinute());
-
-        // back to the tempo of the project
-        when(designerService.getLiveReferenceBeatsPerMinute()).thenReturn(128.0);
-        scenePlayerService.setBeatsPerMinute(null);
-        assertEquals(128.0, scenePlayerService.getBeatsPerMinute());
-        assertEquals("project", scenePlayerService.getTempoSource());
-
-        // set by hand, as far as it goes
-        scenePlayerService.setBeatsPerMinute(1000.0);
-        assertEquals(300.0, scenePlayerService.getBeatsPerMinute());
-        assertEquals("set", scenePlayerService.getTempoSource());
-    }
-
-    @Test
-    void followsTheTempoOfAMidiClockWithoutRememberingIt() {
-        DefaultScenePlayerService scenePlayerService = scenePlayerService();
-
-        scenePlayerService.setClockTempo(126.4, true);
-
-        verify(designerService).setLiveBeatsPerMinute(126.4, true);
-        assertEquals(126.4, scenePlayerService.getBeatsPerMinute());
-        assertEquals("clock", scenePlayerService.getTempoSource());
-        assertEquals("project", scenePlayerService().getTempoSource());
-    }
-
-    @Test
     void keepsTheSpeedMasterAndTheDimmersOfTheScenes() {
         DefaultScenePlayerService scenePlayerService = scenePlayerService();
         scenePlayerService.setActiveScenes("Club Lights", List.of("Club Lights-1"));

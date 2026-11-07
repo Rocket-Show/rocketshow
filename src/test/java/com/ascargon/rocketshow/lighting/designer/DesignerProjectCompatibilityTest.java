@@ -54,7 +54,7 @@ class DesignerProjectCompatibilityTest {
 
     // The project version the designer of the web app (@rocketshow/designer) writes. Raise it with the version of
     // dist/designer_template.json, when the web app gets a designer writing a newer version.
-    private static final int WEB_APP_DESIGNER_PROJECT_VERSION = 9;
+    private static final int WEB_APP_DESIGNER_PROJECT_VERSION = 10;
 
     // A position in a composition of the project
     private record Position(String compositionName, long positionMillis) {

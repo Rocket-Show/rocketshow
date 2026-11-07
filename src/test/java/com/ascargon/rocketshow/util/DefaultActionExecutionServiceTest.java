@@ -6,7 +6,9 @@ import com.ascargon.rocketshow.composition.ActionTriggerComposition;
 import com.ascargon.rocketshow.lighting.ActionLighting;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.designer.ActionScene;
+import com.ascargon.rocketshow.lighting.designer.ActionTempo;
 import com.ascargon.rocketshow.lighting.designer.ScenePlayerService;
+import com.ascargon.rocketshow.lighting.designer.TempoService;
 import com.ascargon.rocketshow.midi.ActionMidi;
 import com.ascargon.rocketshow.midi.MidiRouter;
 import com.ascargon.rocketshow.midi.MidiRouterFactory;
@@ -59,6 +61,7 @@ class DefaultActionExecutionServiceTest {
     private final MidiRouter midiRouter = mock(MidiRouter.class);
     private final RaspberryGpioOutService raspberryGpioOutService = mock(RaspberryGpioOutService.class);
     private final ScenePlayerService scenePlayerService = mock(ScenePlayerService.class);
+    private final TempoService tempoService = mock(TempoService.class);
 
     private DefaultActionExecutionService actionExecutionService;
 
@@ -67,7 +70,7 @@ class DefaultActionExecutionServiceTest {
         MidiRouterFactory midiRouterFactory = mock(MidiRouterFactory.class);
         when(midiRouterFactory.getSettingsMidiRouter(any())).thenReturn(midiRouter);
 
-        actionExecutionService = new DefaultActionExecutionService(playerService, settingsService, rebootService, lightingService, midiRouterFactory, raspberryGpioOutService, scenePlayerService);
+        actionExecutionService = new DefaultActionExecutionService(playerService, settingsService, rebootService, lightingService, midiRouterFactory, raspberryGpioOutService, scenePlayerService, tempoService);
     }
 
     private static ActionTransport transport(ActionTransport.TransportActionType type, String compositionName) {
@@ -254,6 +257,36 @@ class DefaultActionExecutionServiceTest {
             assertTrue(millis < 1000, "Waited " + millis + " ms");
             verify(midiRouter, timeout(1000)).sendSignal(any(), eq(MidiSource.ACTION));
         }
+    }
+
+    private static ActionTempo tempo(ActionTempo.TempoActionType type) {
+        ActionTempo action = new ActionTempo();
+        action.setTempoActionType(type);
+        action.setBeatsPerMinute(97);
+        return action;
+    }
+
+    @Test
+    void changesTheTempo() throws Exception {
+        actionExecutionService.executeFromTrigger(trigger(tempo(ActionTempo.TempoActionType.TAP), tempo(ActionTempo.TempoActionType.BEAT_ONE), tempo(ActionTempo.TempoActionType.SET),
+                tempo(ActionTempo.TempoActionType.HALVE), tempo(ActionTempo.TempoActionType.DOUBLE), tempo(ActionTempo.TempoActionType.FASTER),
+                tempo(ActionTempo.TempoActionType.SLOWER), tempo(ActionTempo.TempoActionType.PROJECT)));
+
+        verify(tempoService).tap();
+        verify(tempoService).beatOne();
+        verify(tempoService).setBeatsPerMinute(97.0);
+        verify(tempoService).halve();
+        verify(tempoService).doubleTempo();
+        verify(tempoService).nudge(1);
+        verify(tempoService).nudge(-1);
+        verify(tempoService).setBeatsPerMinute(null);
+    }
+
+    @Test
+    void goesOnFromAHold() throws Exception {
+        actionExecutionService.executeFromTrigger(trigger(transport(ActionTransport.TransportActionType.GO, null)));
+
+        verify(playerService).go();
     }
 
     @Test

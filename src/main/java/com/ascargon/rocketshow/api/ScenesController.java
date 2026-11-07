@@ -110,20 +110,6 @@ public class ScenesController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    // A beat of the tempo the scenes run at
-    @PostMapping("tap")
-    public ResponseEntity<Void> tapTempo() {
-        scenePlayerService.tapTempo();
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    // The tempo the scenes run at (none = the one of the project)
-    @PostMapping("tempo")
-    public ResponseEntity<Void> setTempo(@RequestParam(value = "value", required = false) Double value) {
-        scenePlayerService.setBeatsPerMinute(value);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
     // The speed master, 1 = as written
     @PostMapping("speed")
     public ResponseEntity<Void> setSpeed(@RequestParam("value") double value) {

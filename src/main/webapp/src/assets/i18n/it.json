@@ -102,7 +102,8 @@
       "scenes-learn": "Assegna i tasti, i pad e i pulsanti di un controller MIDI alle scene.",
       "scenes-back": "Riproduce la scena precedente della cartella mostrata.",
       "scenes-go": "Riproduce la scena successiva della cartella mostrata.",
-      "scenes-tap": "Tocca a tempo per impostare il tempo degli effetti delle scene."
+      "scenes-tap": "Tocca a tempo: gli effetti sincronizzati con il battito lo seguono, nelle scene e nelle composizioni senza audio. Il primo tocco dopo una pausa è il primo battito di una battuta.",
+      "go": "Riprende la composizione dal suo punto di attesa."
     },
     "midi-timecode": "Timecode",
     "scenes-flash": "Flash",
@@ -112,11 +113,11 @@
     "scenes-go": "GO",
     "scenes-tap": "Tap",
     "scenes-bpm": "BPM",
-    "scenes-tempo-project": "Tempo del progetto",
+    "scenes-tempo-project": "Tempo programmato",
     "scenes-tempo-tap": "Battuto",
     "scenes-tempo-set": "Impostato",
     "scenes-tempo-clock": "Clock MIDI",
-    "scenes-tempo-reset": "Torna al tempo del progetto",
+    "scenes-tempo-reset": "Torna al tempo programmato",
     "scenes-speed": "Velocità",
     "scenes-speed-reset": "Torna alla velocità normale",
     "scenes-dimmer": "Dimmer di {{name}}",
@@ -128,7 +129,13 @@
     "scenes-learn-forget": "Dimentica il tasto appreso",
     "scenes-midi-note": "Nota {{number}}",
     "scenes-midi-cc": "CC {{number}}",
-    "scenes-midi-channel": "Canale {{channel}}"
+    "scenes-midi-channel": "Canale {{channel}}",
+    "tempo-halve": "Dimezza il tempo",
+    "tempo-double": "Raddoppia il tempo",
+    "tempo-beat-one": "Ora è il primo battito di una battuta",
+    "tempo-beats": "I battiti di una battuta ({{beats}})",
+    "go": "GO",
+    "holding": "In attesa — premi GO"
   },
   "editor": {
     "compositions": "Composizioni",
@@ -635,7 +642,8 @@
       "LIGHTING": "Illuminazione",
       "RASPBERRY_GPIO": "Controllo esterno",
       "HTTP": "HTTP",
-      "SCENE": "Scene"
+      "SCENE": "Scene",
+      "TEMPO": "Tempo"
     },
     "system": {
       "type": "Tipo sistema",
@@ -674,7 +682,8 @@
         "PREVIOUS_COMPOSITION": "Composizione precedente",
         "STOP": "Stop",
         "SELECT_COMPOSITION_BY_NAME": "Seleziona composizione per nome",
-        "SELECT_COMPOSITION_BY_NAME_AND_PLAY": "Seleziona composizione per nome e riproduci"
+        "SELECT_COMPOSITION_BY_NAME_AND_PLAY": "Seleziona composizione per nome e riproduci",
+        "GO": "GO (riprendi da un punto di attesa)"
       }
     },
     "lighting": {
@@ -706,8 +715,7 @@
         "TOGGLE_SCENE": "Alterna scena",
         "FLASH_SCENE": "Flash scena",
         "NEXT_SCENE": "Scena successiva",
-        "PREVIOUS_SCENE": "Scena precedente",
-        "TAP_TEMPO": "Tap tempo"
+        "PREVIOUS_SCENE": "Scena precedente"
       },
       "project": "Progetto del designer",
       "scene": "Scena",
@@ -723,8 +731,31 @@
       "until-released": "Finché tenuto premuto",
       "until-released-help": "La scena è accesa finché il tasto o il pulsante che la attiva è tenuto premuto: una nota MIDI, o un pulsante che invia un valore quando premuto e 0 quando rilasciato.",
       "help": {
-        "TOGGLE_SCENE": "Accende la scena al posto di quelle accese, o la spegne se è accesa.",
-        "TAP_TEMPO": "Ogni attivazione è un battito: gli effetti delle scene seguono il tempo battuto."
+        "TOGGLE_SCENE": "Accende la scena al posto di quelle accese, o la spegne se è accesa."
+      }
+    },
+    "tempo": {
+      "type": "Comando",
+      "beats-per-minute": "Tempo (BPM)",
+      "type-enum": {
+        "TAP": "Tap",
+        "BEAT_ONE": "Primo battito di una battuta",
+        "SET": "Imposta il tempo",
+        "HALVE": "Dimezza il tempo",
+        "DOUBLE": "Raddoppia il tempo",
+        "FASTER": "Più veloce (+1 BPM)",
+        "SLOWER": "Più lento (−1 BPM)",
+        "PROJECT": "Tempo programmato"
+      },
+      "help": {
+        "TAP": "Ogni attivazione è un battito: i battiti dati danno il tempo, il primo dopo una pausa è il primo battito di una battuta.",
+        "BEAT_ONE": "Il momento dell’attivazione è il primo battito di una battuta.",
+        "SET": "Gli effetti sincronizzati con il battito seguono questo tempo.",
+        "HALVE": "Dimezza il tempo in corso.",
+        "DOUBLE": "Raddoppia il tempo in corso.",
+        "FASTER": "Rende il tempo in corso più veloce di un battito al minuto.",
+        "SLOWER": "Rende il tempo in corso più lento di un battito al minuto.",
+        "PROJECT": "Torna al tempo programmato nella composizione o nel progetto in corso."
       }
     }
   },
