@@ -102,7 +102,8 @@
       "scenes-learn": "Assign the keys, pads and buttons of a MIDI controller to the scenes.",
       "scenes-back": "Plays the previous scene of the folder shown.",
       "scenes-go": "Plays the next scene of the folder shown.",
-      "scenes-tap": "Tap along with the beat to set the tempo the effects of the scenes run at."
+      "scenes-tap": "Tap along with the beat: the effects synced to the beat follow it, in the scenes and in the compositions without audio. The first tap after a pause is the first beat of a bar.",
+      "go": "Continues the composition from its hold point."
     },
     "midi-timecode": "Timecode",
     "scenes-flash": "Flash",
@@ -112,11 +113,11 @@
     "scenes-go": "GO",
     "scenes-tap": "Tap",
     "scenes-bpm": "BPM",
-    "scenes-tempo-project": "Tempo of the project",
+    "scenes-tempo-project": "Programmed tempo",
     "scenes-tempo-tap": "Tapped",
     "scenes-tempo-set": "Set",
     "scenes-tempo-clock": "MIDI clock",
-    "scenes-tempo-reset": "Back to the tempo of the project",
+    "scenes-tempo-reset": "Back to the programmed tempo",
     "scenes-speed": "Speed",
     "scenes-speed-reset": "Back to normal speed",
     "scenes-dimmer": "Dimmer of {{name}}",
@@ -128,7 +129,13 @@
     "scenes-learn-forget": "Forget the key learned",
     "scenes-midi-note": "Note {{number}}",
     "scenes-midi-cc": "CC {{number}}",
-    "scenes-midi-channel": "Ch {{channel}}"
+    "scenes-midi-channel": "Ch {{channel}}",
+    "tempo-halve": "Halve the tempo",
+    "tempo-double": "Double the tempo",
+    "tempo-beat-one": "Now is the first beat of a bar",
+    "tempo-beats": "The beats of a bar ({{beats}})",
+    "go": "GO",
+    "holding": "Holding — press GO"
   },
   "editor": {
     "compositions": "Compositions",
@@ -645,7 +652,8 @@
       "LIGHTING": "Lighting",
       "RASPBERRY_GPIO": "External control",
       "HTTP": "HTTP",
-      "SCENE": "Scenes"
+      "SCENE": "Scenes",
+      "TEMPO": "Tempo"
     },
     "system": {
       "type": "System type",
@@ -684,7 +692,8 @@
         "PREVIOUS_COMPOSITION": "Previous Composition",
         "STOP": "Stop",
         "SELECT_COMPOSITION_BY_NAME": "Select Composition by Name",
-        "SELECT_COMPOSITION_BY_NAME_AND_PLAY": "Select Composition by Name and Play"
+        "SELECT_COMPOSITION_BY_NAME_AND_PLAY": "Select Composition by Name and Play",
+        "GO": "GO (continue from a hold point)"
       }
     },
     "lighting": {
@@ -716,8 +725,7 @@
         "TOGGLE_SCENE": "Toggle Scene",
         "FLASH_SCENE": "Flash Scene",
         "NEXT_SCENE": "Next Scene",
-        "PREVIOUS_SCENE": "Previous Scene",
-        "TAP_TEMPO": "Tap Tempo"
+        "PREVIOUS_SCENE": "Previous Scene"
       },
       "project": "Designer project",
       "scene": "Scene",
@@ -733,8 +741,31 @@
       "until-released": "While held",
       "until-released-help": "The scene is on while the key or button triggering it is held: a MIDI note, or a button sending a value when pressed and 0 when let go.",
       "help": {
-        "TOGGLE_SCENE": "Turns the scene on instead of the scenes on so far, or off, if it is on.",
-        "TAP_TEMPO": "Each trigger is a beat: the effects of the scenes run at the tempo tapped."
+        "TOGGLE_SCENE": "Turns the scene on instead of the scenes on so far, or off, if it is on."
+      }
+    },
+    "tempo": {
+      "type": "Command",
+      "beats-per-minute": "Tempo (BPM)",
+      "type-enum": {
+        "TAP": "Tap",
+        "BEAT_ONE": "First Beat of a Bar",
+        "SET": "Set Tempo",
+        "HALVE": "Halve Tempo",
+        "DOUBLE": "Double Tempo",
+        "FASTER": "Faster (+1 BPM)",
+        "SLOWER": "Slower (−1 BPM)",
+        "PROJECT": "Programmed Tempo"
+      },
+      "help": {
+        "TAP": "Each trigger is a beat: the beats tapped give the tempo, the first one after a pause is the first beat of a bar.",
+        "BEAT_ONE": "The moment of the trigger is the first beat of a bar.",
+        "SET": "The effects synced to the beat run at this tempo.",
+        "HALVE": "Halves the tempo playing.",
+        "DOUBLE": "Doubles the tempo playing.",
+        "FASTER": "Makes the tempo playing a beat per minute faster.",
+        "SLOWER": "Makes the tempo playing a beat per minute slower.",
+        "PROJECT": "Goes back to the tempo programmed in the composition or the project playing."
       }
     }
   },

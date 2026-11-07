@@ -19,6 +19,7 @@ export class ActionTransportComponent {
   constructor(private compositionService: CompositionService) {
     this.typeList.push(
       "PLAY",
+      "GO",
       "PLAY_AS_SAMPLE",
       "TOGGLE_PLAY",
       "PAUSE",

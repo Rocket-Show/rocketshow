@@ -102,7 +102,8 @@
       "scenes-learn": "Atribua as teclas, pads e botões de um controlador MIDI às cenas.",
       "scenes-back": "Toca a cena anterior da pasta mostrada.",
       "scenes-go": "Toca a cena seguinte da pasta mostrada.",
-      "scenes-tap": "Toque ao ritmo para definir o tempo dos efeitos das cenas."
+      "scenes-tap": "Toque ao ritmo: os efeitos sincronizados com o ritmo seguem-no, nas cenas e nas composições sem áudio. O primeiro toque após uma pausa é o primeiro tempo de um compasso.",
+      "go": "Continua a composição a partir do seu ponto de espera."
     },
     "midi-timecode": "Código de tempo",
     "scenes-flash": "Flash",
@@ -112,11 +113,11 @@
     "scenes-go": "GO",
     "scenes-tap": "Tap",
     "scenes-bpm": "BPM",
-    "scenes-tempo-project": "Tempo do projeto",
+    "scenes-tempo-project": "Tempo programado",
     "scenes-tempo-tap": "Marcado",
     "scenes-tempo-set": "Definido",
     "scenes-tempo-clock": "Relógio MIDI",
-    "scenes-tempo-reset": "Voltar ao tempo do projeto",
+    "scenes-tempo-reset": "Voltar ao tempo programado",
     "scenes-speed": "Velocidade",
     "scenes-speed-reset": "Voltar à velocidade normal",
     "scenes-dimmer": "Dimmer de {{name}}",
@@ -128,7 +129,13 @@
     "scenes-learn-forget": "Esquecer a tecla aprendida",
     "scenes-midi-note": "Nota {{number}}",
     "scenes-midi-cc": "CC {{number}}",
-    "scenes-midi-channel": "Canal {{channel}}"
+    "scenes-midi-channel": "Canal {{channel}}",
+    "tempo-halve": "Reduzir o tempo para metade",
+    "tempo-double": "Duplicar o tempo",
+    "tempo-beat-one": "Agora é o primeiro tempo de um compasso",
+    "tempo-beats": "Os tempos de um compasso ({{beats}})",
+    "go": "GO",
+    "holding": "Em espera — prima GO"
   },
   "editor": {
     "compositions": "Composições",
@@ -635,7 +642,8 @@
       "LIGHTING": "Iluminação",
       "RASPBERRY_GPIO": "Controlo externo",
       "HTTP": "HTTP",
-      "SCENE": "Cenas"
+      "SCENE": "Cenas",
+      "TEMPO": "Tempo"
     },
     "system": {
       "type": "Tipo de sistema",
@@ -674,7 +682,8 @@
         "PREVIOUS_COMPOSITION": "Composição anterior",
         "STOP": "Parar",
         "SELECT_COMPOSITION_BY_NAME": "Selecionar composição por nome",
-        "SELECT_COMPOSITION_BY_NAME_AND_PLAY": "Selecionar composição por nome e reproduzir"
+        "SELECT_COMPOSITION_BY_NAME_AND_PLAY": "Selecionar composição por nome e reproduzir",
+        "GO": "GO (continuar a partir de um ponto de espera)"
       }
     },
     "lighting": {
@@ -706,8 +715,7 @@
         "TOGGLE_SCENE": "Alternar cena",
         "FLASH_SCENE": "Flash de cena",
         "NEXT_SCENE": "Cena seguinte",
-        "PREVIOUS_SCENE": "Cena anterior",
-        "TAP_TEMPO": "Tap tempo"
+        "PREVIOUS_SCENE": "Cena anterior"
       },
       "project": "Projeto do designer",
       "scene": "Cena",
@@ -723,8 +731,31 @@
       "until-released": "Enquanto premido",
       "until-released-help": "A cena está acesa enquanto a tecla ou o botão que a aciona estiver premido: uma nota MIDI, ou um botão que envia um valor ao premir e 0 ao soltar.",
       "help": {
-        "TOGGLE_SCENE": "Liga a cena em vez das cenas acesas, ou desliga-a se estiver acesa.",
-        "TAP_TEMPO": "Cada acionamento é um tempo: os efeitos das cenas seguem o tempo marcado."
+        "TOGGLE_SCENE": "Liga a cena em vez das cenas acesas, ou desliga-a se estiver acesa."
+      }
+    },
+    "tempo": {
+      "type": "Comando",
+      "beats-per-minute": "Tempo (BPM)",
+      "type-enum": {
+        "TAP": "Tap",
+        "BEAT_ONE": "Primeiro tempo de um compasso",
+        "SET": "Definir tempo",
+        "HALVE": "Tempo para metade",
+        "DOUBLE": "Tempo duplo",
+        "FASTER": "Mais rápido (+1 BPM)",
+        "SLOWER": "Mais lento (−1 BPM)",
+        "PROJECT": "Tempo programado"
+      },
+      "help": {
+        "TAP": "Cada acionamento é um tempo: os tempos marcados dão o tempo, o primeiro após uma pausa é o primeiro tempo de um compasso.",
+        "BEAT_ONE": "O momento do acionamento é o primeiro tempo de um compasso.",
+        "SET": "Os efeitos sincronizados com o ritmo seguem este tempo.",
+        "HALVE": "Reduz para metade o tempo atual.",
+        "DOUBLE": "Duplica o tempo atual.",
+        "FASTER": "Torna o tempo atual uma batida por minuto mais rápido.",
+        "SLOWER": "Torna o tempo atual uma batida por minuto mais lento.",
+        "PROJECT": "Volta ao tempo programado na composição ou no projeto em reprodução."
       }
     }
   },

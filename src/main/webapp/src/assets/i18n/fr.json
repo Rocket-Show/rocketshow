@@ -102,7 +102,8 @@
       "scenes-learn": "Associez les touches, pads et boutons d’un contrôleur MIDI aux scènes.",
       "scenes-back": "Joue la scène précédente du dossier affiché.",
       "scenes-go": "Joue la scène suivante du dossier affiché.",
-      "scenes-tap": "Tapez en rythme pour régler le tempo des effets des scènes."
+      "scenes-tap": "Tapez en rythme : les effets synchronisés sur le temps le suivent, dans les scènes et dans les compositions sans audio. Le premier tap après une pause est le premier temps d’une mesure.",
+      "go": "Reprend la composition depuis son point d’attente."
     },
     "midi-timecode": "Code temporel",
     "scenes-flash": "Flash",
@@ -112,11 +113,11 @@
     "scenes-go": "GO",
     "scenes-tap": "Tap",
     "scenes-bpm": "BPM",
-    "scenes-tempo-project": "Tempo du projet",
+    "scenes-tempo-project": "Tempo programmé",
     "scenes-tempo-tap": "Tapé",
     "scenes-tempo-set": "Réglé",
     "scenes-tempo-clock": "Horloge MIDI",
-    "scenes-tempo-reset": "Revenir au tempo du projet",
+    "scenes-tempo-reset": "Revenir au tempo programmé",
     "scenes-speed": "Vitesse",
     "scenes-speed-reset": "Revenir à la vitesse normale",
     "scenes-dimmer": "Gradateur de {{name}}",
@@ -128,7 +129,13 @@
     "scenes-learn-forget": "Oublier la touche apprise",
     "scenes-midi-note": "Note {{number}}",
     "scenes-midi-cc": "CC {{number}}",
-    "scenes-midi-channel": "Canal {{channel}}"
+    "scenes-midi-channel": "Canal {{channel}}",
+    "tempo-halve": "Diviser le tempo par deux",
+    "tempo-double": "Doubler le tempo",
+    "tempo-beat-one": "Maintenant est le premier temps d’une mesure",
+    "tempo-beats": "Les temps d’une mesure ({{beats}})",
+    "go": "GO",
+    "holding": "En attente — appuyez sur GO"
   },
   "editor": {
     "compositions": "Compositions",
@@ -635,7 +642,8 @@
       "LIGHTING": "Éclairage",
       "RASPBERRY_GPIO": "Contrôle externe",
       "HTTP": "HTTP",
-      "SCENE": "Scènes"
+      "SCENE": "Scènes",
+      "TEMPO": "Tempo"
     },
     "system": {
       "type": "Type de système",
@@ -674,7 +682,8 @@
         "PREVIOUS_COMPOSITION": "Composition précédente",
         "STOP": "Arrêter",
         "SELECT_COMPOSITION_BY_NAME": "Sélectionner une composition par nom",
-        "SELECT_COMPOSITION_BY_NAME_AND_PLAY": "Sélectionner une composition par nom et lire"
+        "SELECT_COMPOSITION_BY_NAME_AND_PLAY": "Sélectionner une composition par nom et lire",
+        "GO": "GO (reprendre depuis un point d’attente)"
       }
     },
     "lighting": {
@@ -706,8 +715,7 @@
         "TOGGLE_SCENE": "Basculer la scène",
         "FLASH_SCENE": "Flasher la scène",
         "NEXT_SCENE": "Scène suivante",
-        "PREVIOUS_SCENE": "Scène précédente",
-        "TAP_TEMPO": "Tap tempo"
+        "PREVIOUS_SCENE": "Scène précédente"
       },
       "project": "Projet du concepteur",
       "scene": "Scène",
@@ -723,8 +731,31 @@
       "until-released": "Tant que maintenu",
       "until-released-help": "La scène est allumée tant que la touche ou le bouton qui la déclenche est maintenu : une note MIDI, ou un bouton envoyant une valeur à l’appui et 0 au relâchement.",
       "help": {
-        "TOGGLE_SCENE": "Allume la scène à la place des scènes allumées, ou l’éteint si elle est allumée.",
-        "TAP_TEMPO": "Chaque déclenchement est un temps : les effets des scènes suivent le tempo tapé."
+        "TOGGLE_SCENE": "Allume la scène à la place des scènes allumées, ou l’éteint si elle est allumée."
+      }
+    },
+    "tempo": {
+      "type": "Commande",
+      "beats-per-minute": "Tempo (BPM)",
+      "type-enum": {
+        "TAP": "Tap",
+        "BEAT_ONE": "Premier temps d’une mesure",
+        "SET": "Régler le tempo",
+        "HALVE": "Tempo divisé par deux",
+        "DOUBLE": "Tempo doublé",
+        "FASTER": "Plus rapide (+1 BPM)",
+        "SLOWER": "Plus lent (−1 BPM)",
+        "PROJECT": "Tempo programmé"
+      },
+      "help": {
+        "TAP": "Chaque déclenchement est un temps : les temps tapés donnent le tempo, le premier après une pause est le premier temps d’une mesure.",
+        "BEAT_ONE": "Le moment du déclenchement est le premier temps d’une mesure.",
+        "SET": "Les effets synchronisés sur le temps suivent ce tempo.",
+        "HALVE": "Divise par deux le tempo en cours.",
+        "DOUBLE": "Double le tempo en cours.",
+        "FASTER": "Accélère le tempo en cours d’un battement par minute.",
+        "SLOWER": "Ralentit le tempo en cours d’un battement par minute.",
+        "PROJECT": "Revient au tempo programmé dans la composition ou le projet en cours."
       }
     }
   },

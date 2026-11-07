@@ -19,6 +19,9 @@
       <option value="SCENE">
         {{ "action.type-enum.SCENE" | translate }}
       </option>
+      <option value="TEMPO">
+        {{ "action.type-enum.TEMPO" | translate }}
+      </option>
       <option value="HTTP">{{ "action.type-enum.HTTP" | translate }}</option>
       <option value="RASPBERRY_GPIO">
         {{ "action.type-enum.RASPBERRY_GPIO" | translate }}
@@ -53,6 +56,11 @@
   <app-action-scene
     [action]="action"
   ></app-action-scene>
+}
+@if (action.type == 'TEMPO') {
+  <app-action-tempo
+    [action]="action"
+  ></app-action-tempo>
 }
 @if (action.type == 'HTTP') {
   <app-action-http

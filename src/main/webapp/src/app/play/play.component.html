@@ -86,6 +86,11 @@
                 @if (currentState?.currentCompositionName) {
                   <span class="transport-name">{{ currentState?.currentCompositionName }}</span>
                 }
+                @if (currentState?.holding) {
+                  <span class="badge badge-primary ml-2 transport-holding" role="status">
+                    <i class="fa fa-pause-circle-o" aria-hidden="true"></i> {{ "play.holding" | translate }}
+                  </span>
+                }
                 @if (currentState?.midiTimecodeLocked) {
                   <span class="badge badge-primary ml-2" [popover]="'play.help.midi-timecode-locked' | translate"
                     triggers="mouseenter:mouseleave" container="body" placement="bottom">
@@ -110,8 +115,16 @@
                 <i class="fa fa-step-backward fa-fw" aria-hidden="true"></i>
               </button>
 
+              <!-- GO: continue the composition holding at a hold point -->
+              @if (currentState?.holding) {
+                <button type="button" (click)="go()" class="btn btn-transport btn-transport-main btn-transport-go"
+                  [popover]="'play.help.go' | translate" triggers="mouseenter:mouseleave" container="body" placement="bottom">
+                  {{ 'play.go' | translate }}
+                </button>
+              }
+
               <!-- Play -->
-              @if (currentState?.playState == 'STOPPED' || currentState?.playState == 'PAUSED') {
+              @if ((currentState?.playState == 'STOPPED' || currentState?.playState == 'PAUSED') && !currentState?.holding) {
                 <button type="button" [disabled]="!currentState?.currentCompositionName" (click)="play()"
                   class="btn btn-transport btn-transport-main"
                   >
