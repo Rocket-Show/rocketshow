@@ -63,7 +63,7 @@ public final class PresetSteps {
             // distribute the passes over all chase steps of the preset
             int count = fixtureCount == null || fixtureCount == 0 ? 1 : fixtureCount;
             double steps = Math.max(Math.ceil((double) count / groupSize), 1);
-            return step / steps * preset.getStepsPhasingCycles() * getStepsLoopMillis(preset);
+            return step / steps * preset.getStepsPhasingCycles() * PresetStepsOrder.getPassMillis(preset);
         }
 
         return step * preset.getStepsPhasingMillis();
@@ -144,6 +144,10 @@ public final class PresetSteps {
             return getStepState(steps.get(0));
         }
 
+        if (PresetStepsOrder.isOrdered(preset)) {
+            return getOrderedStateAtMillis(preset, presetTimeMillis);
+        }
+
         PresetStep first = steps.get(0);
         double timeMillis = presetTimeMillis;
         double loopMillis = 0;
@@ -199,6 +203,70 @@ public final class PresetSteps {
         double position = TransitionCurve.apply(current.getTransitionCurve(), (timeMillis - current.getStartMillis()) / (transitionEndMillis - current.getStartMillis()));
 
         return interpolate(previous, current, position);
+    }
+
+    // The values a preset playing its steps in another order than they are written down in applies at the passed
+    // time, relative to its own start: each step lasts as long as it does written down, and travels from the step
+    // played before it, over the time of its own transition.
+    private static PresetStepState getOrderedStateAtMillis(Preset preset, double presetTimeMillis) {
+        List<PresetStep> steps = preset.getSteps();
+        double[] lengths = PresetStepsOrder.getStepLengths(preset);
+        double passMillis = PresetStepsOrder.getPassMillis(preset);
+        boolean loops = preset.isStepsLoop() && passMillis > 0;
+        double offsetMillis = presetTimeMillis - steps.get(0).getStartMillis();
+        double pass = 0;
+
+        if (loops) {
+            // fold the time into the pass it is in
+            pass = Math.floor(offsetMillis / passMillis);
+            offsetMillis = Math.max(offsetMillis - pass * passMillis, 0);
+        }
+
+        List<Integer> order = PresetStepsOrder.getOrderIndices(preset, pass);
+
+        if (order.isEmpty()) {
+            // none of the steps lasts any time
+            return getStepState(steps.get(0));
+        }
+
+        if (offsetMillis < 0) {
+            // before the sequence starts: the step it opens with is what the preset starts out with
+            return getStepState(steps.get(order.get(0)));
+        }
+
+        // the step played at that time, and where it starts in the pass. The last one holds, if the sequence doesn't
+        // loop.
+        int position = 0;
+        double startMillis = 0;
+
+        while (position < order.size() - 1 && startMillis + lengths[order.get(position)] <= offsetMillis) {
+            startMillis += lengths[order.get(position)];
+            position++;
+        }
+
+        PresetStep current = steps.get(order.get(position));
+        double endMillis = startMillis + lengths[order.get(position)];
+
+        // The step travelled from: the one played before it, which is the last one of the pass before once the
+        // sequence starts over. The first step of a sequence which does not loop has nothing to travel from.
+        PresetStep previous = null;
+
+        if (position > 0) {
+            previous = steps.get(order.get(position - 1));
+        } else if (loops) {
+            List<Integer> previousOrder = PresetStepsOrder.getOrderIndices(preset, pass - 1);
+            previous = steps.get(previousOrder.get(previousOrder.size() - 1));
+        }
+
+        double transitionEndMillis = getTransitionEndMillis(current, startMillis, endMillis);
+
+        if (previous == null || offsetMillis >= transitionEndMillis) {
+            return getStepState(current);
+        }
+
+        double curvePosition = TransitionCurve.apply(current.getTransitionCurve(), (offsetMillis - startMillis) / (transitionEndMillis - startMillis));
+
+        return interpolate(previous, current, curvePosition);
     }
 
     private static boolean capabilityValuesMatch(FixtureCapabilityValue value1, FixtureCapabilityValue value2) {

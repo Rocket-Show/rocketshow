@@ -45,6 +45,7 @@ import { ConnectionComponent } from "./connection/connection.component";
 import { PlayComponent } from "./play/play.component";
 import { PlayModeSwitchComponent } from "./play/play-mode-switch/play-mode-switch.component";
 import { PlaySceneMasterComponent } from "./play/play-scene-master/play-scene-master.component";
+import { PlaySceneLiveComponent } from "./play/play-scene-live/play-scene-live.component";
 import { PlayScenesComponent } from "./play/play-scenes/play-scenes.component";
 import { ActionSceneComponent } from "./action/action-scene/action-scene.component";
 import { SettingsComponent } from "./settings/settings.component";
@@ -148,6 +149,7 @@ const appRoutes: Routes = [
         PlayComponent,
         PlayModeSwitchComponent,
         PlaySceneMasterComponent,
+        PlaySceneLiveComponent,
         PlayScenesComponent,
         SettingsComponent,
         EditorComponent,

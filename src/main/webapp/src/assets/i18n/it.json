@@ -97,9 +97,38 @@
       "scenes-release-all": "Spegne tutte le scene.",
       "scenes-blackout": "Spegne la luce e mantiene le scene selezionate. Tocca di nuovo per riaccenderle.",
       "scenes-full-screen": "Mostra Rocket Show a schermo intero, per esempio su un tablet appeso al muro.",
-      "midi-timecode-locked": "Questo dispositivo sta seguendo un timecode MIDI in ingresso; la riproduzione è comandata dal master esterno."
+      "midi-timecode-locked": "Questo dispositivo sta seguendo un timecode MIDI in ingresso; la riproduzione è comandata dal master esterno.",
+      "scenes-flash": "Se attivo, una scena è accesa finché la tieni premuta, sopra le altre.",
+      "scenes-learn": "Assegna i tasti, i pad e i pulsanti di un controller MIDI alle scene.",
+      "scenes-back": "Riproduce la scena precedente della cartella mostrata.",
+      "scenes-go": "Riproduce la scena successiva della cartella mostrata.",
+      "scenes-tap": "Tocca a tempo per impostare il tempo degli effetti delle scene."
     },
-    "midi-timecode": "Timecode"
+    "midi-timecode": "Timecode",
+    "scenes-flash": "Flash",
+    "scenes-learn": "Apprendi MIDI",
+    "scenes-flashed": "Flash",
+    "scenes-back": "Indietro",
+    "scenes-go": "GO",
+    "scenes-tap": "Tap",
+    "scenes-bpm": "BPM",
+    "scenes-tempo-project": "Tempo del progetto",
+    "scenes-tempo-tap": "Battuto",
+    "scenes-tempo-set": "Impostato",
+    "scenes-tempo-clock": "Clock MIDI",
+    "scenes-tempo-reset": "Torna al tempo del progetto",
+    "scenes-speed": "Velocità",
+    "scenes-speed-reset": "Torna alla velocità normale",
+    "scenes-dimmer": "Dimmer di {{name}}",
+    "scenes-learn-toggle": "Tocca una scena, poi premi il tasto, il pad o il pulsante che la accende e la spegne.",
+    "scenes-learn-flash": "Tocca una scena, poi premi il tasto, il pad o il pulsante che la accende finché è tenuto premuto.",
+    "scenes-learn-waiting": "Premi il tasto, il pad o il pulsante per «{{name}}» sul tuo controller MIDI.",
+    "scenes-learn-detail": "Disattiva «Apprendi MIDI» quando hai finito.",
+    "scenes-learn-press": "Premi un tasto…",
+    "scenes-learn-forget": "Dimentica il tasto appreso",
+    "scenes-midi-note": "Nota {{number}}",
+    "scenes-midi-cc": "CC {{number}}",
+    "scenes-midi-channel": "Canale {{channel}}"
   },
   "editor": {
     "compositions": "Composizioni",
@@ -673,7 +702,12 @@
         "RELEASE_ALL": "Spegni tutte le scene",
         "BLACKOUT_ON": "Blackout attivo",
         "BLACKOUT_OFF": "Blackout disattivo",
-        "TOGGLE_BLACKOUT": "Alterna blackout"
+        "TOGGLE_BLACKOUT": "Alterna blackout",
+        "TOGGLE_SCENE": "Alterna scena",
+        "FLASH_SCENE": "Flash scena",
+        "NEXT_SCENE": "Scena successiva",
+        "PREVIOUS_SCENE": "Scena precedente",
+        "TAP_TEMPO": "Tap tempo"
       },
       "project": "Progetto del designer",
       "scene": "Scena",
@@ -682,7 +716,16 @@
       "for-a-time": "Per un certo tempo",
       "until-stopped-help": "La scena resta accesa finché non si riproduce un'altra scena o si spengono tutte le scene. Un blackout la oscura soltanto.",
       "for-a-time-help": "Dopo questo tempo la scena si spegne di nuovo, a meno che prima non sia stata riprodotta un'altra scena.",
-      "duration": "Durata (secondi)"
+      "duration": "Durata (secondi)",
+      "folder": "Cartella",
+      "folder-all": "Tutte le scene",
+      "folder-help": "Scorre le scene di questa cartella nell’ordine del designer. Agli estremi resta accesa la prima o l’ultima scena.",
+      "until-released": "Finché tenuto premuto",
+      "until-released-help": "La scena è accesa finché il tasto o il pulsante che la attiva è tenuto premuto: una nota MIDI, o un pulsante che invia un valore quando premuto e 0 quando rilasciato.",
+      "help": {
+        "TOGGLE_SCENE": "Accende la scena al posto di quelle accese, o la spegne se è accesa.",
+        "TAP_TEMPO": "Ogni attivazione è un battito: gli effetti delle scene seguono il tempo battuto."
+      }
     }
   },
   "spark": {

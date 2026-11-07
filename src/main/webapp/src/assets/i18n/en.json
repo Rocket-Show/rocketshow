@@ -97,9 +97,38 @@
       "scenes-release-all": "Turns all scenes off.",
       "scenes-blackout": "Turns the light off and keeps the scenes selected. Tap again to bring them back.",
       "scenes-full-screen": "Shows Rocket Show on the whole screen, e.g. on a tablet mounted on the wall.",
-      "midi-timecode-locked": "This device is following an incoming MIDI timecode; the external master controls playback."
+      "midi-timecode-locked": "This device is following an incoming MIDI timecode; the external master controls playback.",
+      "scenes-flash": "When enabled, a scene is on while you hold it, on top of the others.",
+      "scenes-learn": "Assign the keys, pads and buttons of a MIDI controller to the scenes.",
+      "scenes-back": "Plays the previous scene of the folder shown.",
+      "scenes-go": "Plays the next scene of the folder shown.",
+      "scenes-tap": "Tap along with the beat to set the tempo the effects of the scenes run at."
     },
-    "midi-timecode": "Timecode"
+    "midi-timecode": "Timecode",
+    "scenes-flash": "Flash",
+    "scenes-learn": "MIDI learn",
+    "scenes-flashed": "Flashed",
+    "scenes-back": "Back",
+    "scenes-go": "GO",
+    "scenes-tap": "Tap",
+    "scenes-bpm": "BPM",
+    "scenes-tempo-project": "Tempo of the project",
+    "scenes-tempo-tap": "Tapped",
+    "scenes-tempo-set": "Set",
+    "scenes-tempo-clock": "MIDI clock",
+    "scenes-tempo-reset": "Back to the tempo of the project",
+    "scenes-speed": "Speed",
+    "scenes-speed-reset": "Back to normal speed",
+    "scenes-dimmer": "Dimmer of {{name}}",
+    "scenes-learn-toggle": "Tap a scene, then press the key, pad or button which turns it on and off.",
+    "scenes-learn-flash": "Tap a scene, then press the key, pad or button which flashes it while held.",
+    "scenes-learn-waiting": "Press the key, pad or button for “{{name}}” on your MIDI controller.",
+    "scenes-learn-detail": "Turn MIDI learn off when you are done.",
+    "scenes-learn-press": "Press a key…",
+    "scenes-learn-forget": "Forget the key learned",
+    "scenes-midi-note": "Note {{number}}",
+    "scenes-midi-cc": "CC {{number}}",
+    "scenes-midi-channel": "Ch {{channel}}"
   },
   "editor": {
     "compositions": "Compositions",
@@ -683,7 +712,12 @@
         "RELEASE_ALL": "Release All Scenes",
         "BLACKOUT_ON": "Blackout On",
         "BLACKOUT_OFF": "Blackout Off",
-        "TOGGLE_BLACKOUT": "Toggle Blackout"
+        "TOGGLE_BLACKOUT": "Toggle Blackout",
+        "TOGGLE_SCENE": "Toggle Scene",
+        "FLASH_SCENE": "Flash Scene",
+        "NEXT_SCENE": "Next Scene",
+        "PREVIOUS_SCENE": "Previous Scene",
+        "TAP_TEMPO": "Tap Tempo"
       },
       "project": "Designer project",
       "scene": "Scene",
@@ -692,7 +726,16 @@
       "for-a-time": "For a set time",
       "until-stopped-help": "The scene stays on until another scene is played or all scenes are turned off. A blackout only darkens it.",
       "for-a-time-help": "The scene turns off again after this time, unless another scene was played before.",
-      "duration": "Duration (seconds)"
+      "duration": "Duration (seconds)",
+      "folder": "Folder",
+      "folder-all": "All scenes",
+      "folder-help": "Steps through the scenes of this folder, in the order of the designer. The first and the last scene stay on at the ends.",
+      "until-released": "While held",
+      "until-released-help": "The scene is on while the key or button triggering it is held: a MIDI note, or a button sending a value when pressed and 0 when let go.",
+      "help": {
+        "TOGGLE_SCENE": "Turns the scene on instead of the scenes on so far, or off, if it is on.",
+        "TAP_TEMPO": "Each trigger is a beat: the effects of the scenes run at the tempo tapped."
+      }
     }
   },
   "spark": {

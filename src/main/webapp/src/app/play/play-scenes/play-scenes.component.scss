@@ -230,3 +230,82 @@
 .scene-tile-held .scene-tile-status {
     color: var(--scene-color);
 }
+
+/* A tile and what belongs to it: the dimmer of the scene, or the key learned to forget */
+.scene-cell {
+    position: relative;
+    display: flex;
+    min-width: 0;
+}
+
+.scene-cell .scene-tile {
+    flex: 1 1 auto;
+}
+
+/* the dimmer of a scene on, across the right half of the bottom of its tile, wide enough for a finger */
+.scene-cell-fader {
+    position: absolute;
+    right: 12px;
+    bottom: 10px;
+    width: calc(50% - 12px);
+    height: 22px;
+    margin: 0;
+    accent-color: var(--scene-text, var(--sd-text));
+    cursor: pointer;
+    touch-action: none;
+}
+
+.scene-cell-forget {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    border-radius: var(--sd-radius);
+    background-color: var(--sd-surface-4);
+    color: var(--sd-text);
+}
+
+.scene-tile-midi {
+    display: inline-block;
+    margin-right: 4px;
+    padding: 1px 6px;
+    border-radius: var(--sd-radius-sm);
+    background-color: var(--sd-surface-4);
+    color: var(--sd-text);
+    font-size: 0.75rem;
+}
+
+/* waiting for the key, pad or button of a MIDI controller */
+.scene-tile-learning,
+.scene-tile-learning:hover {
+    border-color: var(--sd-primary);
+    animation: scene-tile-learning 1s ease-in-out infinite alternate;
+}
+
+@keyframes scene-tile-learning {
+    from {
+        box-shadow: 0 0 0 0 transparent;
+    }
+    to {
+        box-shadow: 0 0 0 4px var(--sd-primary-soft-strong, rgba(253, 126, 20, 0.28));
+    }
+}
+
+.scenes-learn {
+    display: flex;
+    align-items: center;
+    gap: var(--sd-space-3);
+    margin-bottom: var(--sd-space-3);
+    padding: var(--sd-space-3);
+    border: 1px solid var(--sd-primary);
+    border-radius: var(--sd-radius-lg);
+    background-color: var(--sd-surface-2);
+}
+
+.scenes-learn-icon {
+    color: var(--sd-primary);
+    font-size: 1.5rem;
+}

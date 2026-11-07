@@ -97,9 +97,38 @@
       "scenes-release-all": "Éteint toutes les scènes.",
       "scenes-blackout": "Éteint la lumière et garde les scènes sélectionnées. Touchez à nouveau pour les rallumer.",
       "scenes-full-screen": "Affiche Rocket Show sur tout l'écran, par exemple sur une tablette fixée au mur.",
-      "midi-timecode-locked": "Cet appareil suit un code temporel MIDI entrant ; le maître externe commande la lecture."
+      "midi-timecode-locked": "Cet appareil suit un code temporel MIDI entrant ; le maître externe commande la lecture.",
+      "scenes-flash": "Si activé, une scène est allumée tant que vous la maintenez, par-dessus les autres.",
+      "scenes-learn": "Associez les touches, pads et boutons d’un contrôleur MIDI aux scènes.",
+      "scenes-back": "Joue la scène précédente du dossier affiché.",
+      "scenes-go": "Joue la scène suivante du dossier affiché.",
+      "scenes-tap": "Tapez en rythme pour régler le tempo des effets des scènes."
     },
-    "midi-timecode": "Code temporel"
+    "midi-timecode": "Code temporel",
+    "scenes-flash": "Flash",
+    "scenes-learn": "Apprentissage MIDI",
+    "scenes-flashed": "Flash",
+    "scenes-back": "Retour",
+    "scenes-go": "GO",
+    "scenes-tap": "Tap",
+    "scenes-bpm": "BPM",
+    "scenes-tempo-project": "Tempo du projet",
+    "scenes-tempo-tap": "Tapé",
+    "scenes-tempo-set": "Réglé",
+    "scenes-tempo-clock": "Horloge MIDI",
+    "scenes-tempo-reset": "Revenir au tempo du projet",
+    "scenes-speed": "Vitesse",
+    "scenes-speed-reset": "Revenir à la vitesse normale",
+    "scenes-dimmer": "Gradateur de {{name}}",
+    "scenes-learn-toggle": "Touchez une scène, puis appuyez sur la touche, le pad ou le bouton qui l’allume et l’éteint.",
+    "scenes-learn-flash": "Touchez une scène, puis appuyez sur la touche, le pad ou le bouton qui la flashe tant qu’il est maintenu.",
+    "scenes-learn-waiting": "Appuyez sur la touche, le pad ou le bouton pour « {{name}} » sur votre contrôleur MIDI.",
+    "scenes-learn-detail": "Désactivez l’apprentissage MIDI quand vous avez terminé.",
+    "scenes-learn-press": "Appuyez sur une touche…",
+    "scenes-learn-forget": "Oublier la touche apprise",
+    "scenes-midi-note": "Note {{number}}",
+    "scenes-midi-cc": "CC {{number}}",
+    "scenes-midi-channel": "Canal {{channel}}"
   },
   "editor": {
     "compositions": "Compositions",
@@ -673,7 +702,12 @@
         "RELEASE_ALL": "Éteindre toutes les scènes",
         "BLACKOUT_ON": "Activer le blackout",
         "BLACKOUT_OFF": "Désactiver le blackout",
-        "TOGGLE_BLACKOUT": "Basculer le blackout"
+        "TOGGLE_BLACKOUT": "Basculer le blackout",
+        "TOGGLE_SCENE": "Basculer la scène",
+        "FLASH_SCENE": "Flasher la scène",
+        "NEXT_SCENE": "Scène suivante",
+        "PREVIOUS_SCENE": "Scène précédente",
+        "TAP_TEMPO": "Tap tempo"
       },
       "project": "Projet du concepteur",
       "scene": "Scène",
@@ -682,7 +716,16 @@
       "for-a-time": "Pendant une durée",
       "until-stopped-help": "La scène reste allumée jusqu'à ce qu'une autre scène soit jouée ou que toutes les scènes soient éteintes. Un blackout ne fait que l'assombrir.",
       "for-a-time-help": "La scène s'éteint à nouveau après ce temps, sauf si une autre scène a été jouée avant.",
-      "duration": "Durée (secondes)"
+      "duration": "Durée (secondes)",
+      "folder": "Dossier",
+      "folder-all": "Toutes les scènes",
+      "folder-help": "Parcourt les scènes de ce dossier dans l’ordre du designer. Aux extrémités, la première ou la dernière scène reste allumée.",
+      "until-released": "Tant que maintenu",
+      "until-released-help": "La scène est allumée tant que la touche ou le bouton qui la déclenche est maintenu : une note MIDI, ou un bouton envoyant une valeur à l’appui et 0 au relâchement.",
+      "help": {
+        "TOGGLE_SCENE": "Allume la scène à la place des scènes allumées, ou l’éteint si elle est allumée.",
+        "TAP_TEMPO": "Chaque déclenchement est un temps : les effets des scènes suivent le tempo tapé."
+      }
     }
   },
   "spark": {

@@ -28,4 +28,10 @@ public class Session {
     private boolean sceneBlackout = false;
     private double sceneMasterDimmer = 1;
 
+    // the live controls of the Play screen for the scenes: the speed master (1 = as written), the tempo tapped or set
+    // (null = the one of the project) and the dimmer of each scene (the ones at full left out)
+    private double sceneSpeed = 1;
+    private Double sceneBeatsPerMinute;
+    private List<SceneDimmer> sceneDimmers = new ArrayList<>();
+
 }

@@ -1,0 +1,95 @@
+/* the buttons of the scenes, like the ones of the Play screen above them (see play.component.scss) */
+.btn-scene {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sd-space-2);
+    height: 46px;
+    padding: 0 var(--sd-space-4);
+    border: 1px solid var(--sd-border-strong);
+    border-radius: var(--sd-radius-lg);
+    background-color: var(--sd-surface-2);
+    color: var(--sd-text);
+    font-weight: 600;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-scene:hover:not(:disabled) {
+    background-color: var(--sd-surface-3);
+    color: var(--sd-text);
+}
+
+.btn-scene:focus,
+.btn-scene:active:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.btn-scene:focus-visible {
+    box-shadow: var(--sd-focus-ring);
+}
+
+.scene-live {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sd-space-3) var(--sd-space-4);
+    margin-top: var(--sd-space-3);
+}
+
+.scene-live-group {
+    display: flex;
+    align-items: center;
+    gap: var(--sd-space-2);
+}
+
+.scene-live-speed {
+    flex: 1 1 240px;
+}
+
+/* GO is what is pressed most: it stands out */
+.btn-scene-go {
+    border-color: var(--sd-primary);
+    color: var(--sd-primary-text);
+}
+
+/* tapped many times in a row, wide enough to hit without looking */
+.btn-scene-tap {
+    min-width: 72px;
+    font-weight: 600;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.btn-scene-small {
+    padding-left: var(--sd-space-2);
+    padding-right: var(--sd-space-2);
+}
+
+.scene-live-tempo {
+    min-width: 96px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.scene-live-tempo-source {
+    display: block;
+    color: var(--sd-text-muted);
+    line-height: 1.1;
+}
+
+.scene-live-label {
+    color: var(--sd-text-muted);
+}
+
+.scene-live-fader {
+    flex: 1 1 auto;
+    min-width: 100px;
+    accent-color: var(--sd-primary);
+}
+
+.scene-live-value {
+    min-width: 44px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}

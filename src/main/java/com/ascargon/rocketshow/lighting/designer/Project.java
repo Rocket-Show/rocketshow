@@ -43,6 +43,10 @@ public class Project {
     private List<String> resetFixtureUuids = new ArrayList<>();
     private List<String> lampOnFixtureUuids = new ArrayList<>();
 
+    // the DMX channels the designer holds at a value with the faders of its DMX channels, over what the project puts on
+    // them (see DmxOverride)
+    private List<DmxOverride> dmxOverrides = new ArrayList<>();
+
     // the stage the fixtures are spread over (in cm), like in the designer
     private double stageWidthCm = 600;
     private double stageHeightCm = 350;

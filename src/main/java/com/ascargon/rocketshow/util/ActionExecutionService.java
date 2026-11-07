@@ -9,4 +9,7 @@ public interface ActionExecutionService {
 
     void executeFromTrigger(ActionTrigger actionTrigger) throws Exception;
 
+    // The key or button of the trigger was let go: the scenes it flashes turn off again
+    void releaseFromTrigger(ActionTrigger actionTrigger);
+
 }

@@ -15,6 +15,15 @@ public class ActionScene extends Action {
     public enum SceneActionType {
         // play one scene instead of the scenes on so far, for a while or until the next one
         PLAY_SCENE,
+        // play one scene instead of the scenes on so far, or turn it off, if it is on (like a tap on the Play screen)
+        TOGGLE_SCENE,
+        // light one scene on top of the others while the key or button triggering it is held (or for a while)
+        FLASH_SCENE,
+        // play the next or the previous scene of a folder instead of the scenes on so far (see ScenePlayerService.stepScene)
+        NEXT_SCENE,
+        PREVIOUS_SCENE,
+        // a beat of the tempo the scenes run at (see ScenePlayerService.tapTempo)
+        TAP_TEMPO,
         // turn all scenes off
         RELEASE_ALL,
         BLACKOUT_ON,
@@ -27,6 +36,10 @@ public class ActionScene extends Action {
     // the scene to play: the designer project and the scene in it, by its uuid or by its name
     private String projectName;
     private String scene;
+
+    // the folder of the scenes NEXT_SCENE and PREVIOUS_SCENE step through, by its uuid or its name (none = all scenes
+    // of the project)
+    private String folder;
 
     // play the scene until it is stopped (by another scene or by turning all scenes off), instead of for a while
     private boolean untilStopped = false;

@@ -1125,6 +1125,73 @@ class DesignerDmxTest {
         assertEquals(List.of(255, 0, 0, 255), addresses(front, 1, 4));
     }
 
+    // the scene of a preset added with addPreset
+    private static ObjectNode sceneOf(ObjectNode project, String name) {
+        for (var scene : project.get("scenes")) {
+            if ((name + "-scene").equals(scene.get("uuid").asString())) {
+                return (ObjectNode) scene;
+            }
+        }
+
+        throw new IllegalArgumentException(name);
+    }
+
+    @Test
+    void fadesInTheScenesPickedByHandOverTheirFadeInTime() throws Exception {
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+        sceneOf(project, "Red").put("fadeInMillis", 60000);
+
+        Map<Integer, Integer> front = start(project, (designerService, loadedProject) ->
+                designerService.playManualScenes(loadedProject, List.of("Red-scene"), 1)).get(FRONT);
+
+        // just picked: the dimmer has hardly risen yet, the color is there
+        assertTrue(front.getOrDefault(1, 0) <= 2);
+        assertEquals(255, front.get(2));
+    }
+
+    @Test
+    void fadesOutTheScenesLetGoInsteadOfTurningThemOffAtOnce() throws Exception {
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+        sceneOf(project, "Red").put("fadeOutMillis", 60000);
+
+        Map<Integer, Integer> front = start(project, (designerService, loadedProject) -> {
+            designerService.playManualScenes(loadedProject, List.of("Red-scene"), 1);
+            designerService.releaseManualScenes();
+
+            // they keep playing while they fade out
+            assertTrue(designerService.isPlayingManualScenes());
+        }).get(FRONT);
+
+        assertTrue(front.get(1) >= 253);
+    }
+
+    @Test
+    void flashesAScenePickedByHandOnTopOfTheOthers() throws Exception {
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+        addColorPreset(project, "Blue", 0, 1);
+
+        Map<Integer, Integer> front = start(project, (designerService, loadedProject) ->
+                designerService.playManualScenes(loadedProject, List.of("Blue-scene"), List.of("Red-scene"), 1)).get(FRONT);
+
+        assertEquals(List.of(255, 255, 0, 0), addresses(front, 1, 4));
+    }
+
+    @Test
+    void dimsAScenePickedByHandWithItsDimmerOfThePlayScreen() throws Exception {
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+
+        Map<Integer, Integer> front = start(project, (designerService, loadedProject) -> {
+            designerService.setLiveSceneDimmers(Map.of("Red-scene", 0.5));
+            designerService.playManualScenes(loadedProject, List.of("Red-scene"), 1);
+        }).get(FRONT);
+
+        assertEquals(List.of(127, 255), addresses(front, 1, 2));
+    }
+
     @Test
     void dimsTheScenesPickedByHandWithTheMasterDimmerOfThePlayScreen() throws Exception {
         ObjectNode project = project();
@@ -1364,4 +1431,56 @@ class DesignerDmxTest {
         assertEquals(0, preview(project, previewPreset).get(FRONT).getOrDefault(16, 0));
     }
 
+
+    private static DmxOverride dmxOverride(String universeUuid, int dmxChannel, int value) {
+        DmxOverride dmxOverride = new DmxOverride();
+        dmxOverride.setUniverseUuid(universeUuid);
+        dmxOverride.setDmxChannel(dmxChannel);
+        dmxOverride.setValue(value);
+        return dmxOverride;
+    }
+
+    @Test
+    void sendsTheValuesOfTheFadersOfTheDesignerOverWhatTheProjectPutsOnTheChannels() throws Exception {
+        // The par lit red at full, dimmed by the master dimmer to half
+        ObjectNode project = project();
+        project.put("masterDimmerValue", 0.5);
+        addPreset(project, "Red", List.of("par-1"), List.of(capability(project, "Intensity", 1.0)));
+
+        java.util.function.Consumer<DefaultDesignerService> faders = designerService -> {
+            designerService.setPreviewComposition("Song");
+            designerService.setDmxOverrides(List.of(
+                    // the dimmer of par 1 (address 1) held at 200, the master dimmer left out
+                    dmxOverride(FRONT, 0, 200),
+                    // an address no fixture is patched to (address 100)
+                    dmxOverride(FRONT, 99, 42),
+                    // the fine pan of the head (address 2)
+                    dmxOverride(BACK, 1, 7),
+                    // out of range: sent as far as DMX goes, or not at all
+                    dmxOverride(FRONT, 2, 300),
+                    dmxOverride(FRONT, 512, 1),
+                    dmxOverride("another-universe", 0, 9)));
+        };
+
+        Map<String, Map<Integer, Integer>> universes = preview(project, faders);
+
+        assertEquals(200, universes.get(FRONT).get(1));
+        assertEquals(42, universes.get(FRONT).get(100));
+        assertEquals(255, universes.get(FRONT).get(3));
+        assertEquals(7, universes.get(BACK).get(2));
+        // the pan itself keeps what the project puts on it: its default of 50 %
+        assertEquals(127, universes.get(BACK).get(1));
+        // the par 2 next to it isn't touched
+        assertEquals(0, universes.get(FRONT).getOrDefault(11, 0));
+    }
+
+    @Test
+    void forgetsTheFadersOfTheDesignerWithTheNextProject() throws Exception {
+        Map<String, Map<Integer, Integer>> universes = preview(project(), designerService -> {
+            designerService.setDmxOverrides(List.of(dmxOverride(FRONT, 99, 42)));
+            designerService.load(null, designerService.getCurrentProject(), null);
+        });
+
+        assertEquals(0, universes.get(FRONT).getOrDefault(100, 0));
+    }
 }

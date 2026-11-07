@@ -67,6 +67,12 @@ public class DefaultStateService implements StateService {
         currentState.setSceneBlackout(scenePlayerService.isBlackout());
         currentState.setSceneMasterDimmer(scenePlayerService.getMasterDimmer());
         currentState.setScenesHeld(scenePlayerService.isHeld());
+        currentState.setFlashedSceneUuids(scenePlayerService.getFlashedSceneUuids());
+        currentState.setSceneBeatsPerMinute(scenePlayerService.getBeatsPerMinute());
+        currentState.setSceneTempoSource(scenePlayerService.getTempoSource());
+        currentState.setSceneSpeed(scenePlayerService.getSpeed());
+        currentState.setSceneDimmers(scenePlayerService.getSceneDimmers());
+        currentState.setSceneLearning(scenePlayerService.getLearning());
 
         return currentState;
     }

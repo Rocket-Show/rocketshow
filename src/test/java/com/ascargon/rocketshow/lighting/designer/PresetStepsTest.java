@@ -360,4 +360,74 @@ class PresetStepsTest {
         assertEquals(0, PresetSteps.getStepsPhasingMillis(sequence, 1, 4));
         assertEquals(250, PresetSteps.getStepsPhasingMillis(sequence, 2, 4));
     }
+
+    // three steps a second apart: 10, 20 and 30, each jumping in (no transition)
+    private Preset threeSteps(String order, boolean loop) {
+        Preset sequence = preset(step(0, 10, 0), step(1000, 20, 0), step(2000, 30, 0));
+        sequence.setStepsOrder(order);
+        sequence.setStepsLoop(loop);
+
+        return sequence;
+    }
+
+    private List<Double> played(Preset sequence, int count) {
+        List<Double> values = new ArrayList<>();
+
+        for (int i = 0; i < count; i++) {
+            values.add(dimmerAt(sequence, i * 1000L + 500));
+        }
+
+        return values;
+    }
+
+    @Test
+    void playsTheStepsBackwardHoldingTheFirstOneAtTheEnd() {
+        assertEquals(List.of(30.0, 20.0, 10.0, 10.0, 10.0), played(threeSteps("backward", false), 5));
+        assertEquals(List.of(30.0, 20.0, 10.0, 30.0, 20.0, 10.0), played(threeSteps("backward", true), 6));
+    }
+
+    @Test
+    void playsTheStepsForwardAndBackWithoutPlayingTheEndsTwiceInARow() {
+        assertEquals(List.of(10.0, 20.0, 30.0, 20.0, 10.0, 20.0, 30.0, 20.0, 10.0), played(threeSteps("pingpong", true), 9));
+        assertEquals(List.of(10.0, 20.0, 30.0, 20.0, 10.0, 10.0, 10.0), played(threeSteps("pingpong", false), 7));
+        assertEquals(4000, PresetStepsOrder.getPassMillis(threeSteps("pingpong", true)));
+        assertEquals(5000, PresetStepsOrder.getPassMillis(threeSteps("pingpong", false)));
+    }
+
+    @Test
+    void playsEveryStepOncePerPassInARandomOrderNeverOneTwiceInARow() {
+        Preset sequence = preset(step(0, 10, 0), step(1000, 20, 0), step(2000, 30, 0), step(3000, 40, 0), step(4000, 50, 0));
+        sequence.setStepsOrder("random");
+        sequence.setStepsLoop(true);
+        List<Double> values = played(sequence, 5 * 20);
+
+        for (int pass = 0; pass < 20; pass++) {
+            List<Double> passValues = new ArrayList<>(values.subList(pass * 5, pass * 5 + 5));
+            passValues.sort(Double::compare);
+            assertEquals(List.of(10.0, 20.0, 30.0, 40.0, 50.0), passValues);
+        }
+        for (int i = 1; i < values.size(); i++) {
+            assertTrue(!values.get(i).equals(values.get(i - 1)));
+        }
+
+        sequence.setStepsSeed(2);
+        assertFalse(played(sequence, 5 * 20).equals(values));
+    }
+
+    @Test
+    void travelsIntoAStepFromTheOnePlayedBeforeIt() {
+        Preset sequence = preset(step(0, 10, 0), step(1000, 20, 1000), step(2000, 30, 1000));
+        sequence.setStepsOrder("backward");
+        sequence.setStepsLoop(true);
+
+        // 30 opens the pass, travelling from 10, which ended the pass before
+        assertEquals(20, dimmerAt(sequence, 3500));
+        // 20 travels from 30 over its second
+        assertEquals(25, dimmerAt(sequence, 1500));
+    }
+
+    @Test
+    void playsTheStepsOfAnOrderItDoesNotKnowForward() {
+        assertEquals(List.of(10.0, 20.0, 30.0, 10.0), played(threeSteps("sideways", true), 4));
+    }
 }

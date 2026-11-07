@@ -101,6 +101,7 @@ public class DesignerController {
         designerService.setSelectedSceneUuids(project.getSelectedSceneUuids());
         designerService.setIdentifyFixtureUuids(project.getIdentifyFixtureUuids());
         designerService.setMaintenanceFixtureUuids(project.getResetFixtureUuids(), project.getLampOnFixtureUuids());
+        designerService.setDmxOverrides(project.getDmxOverrides());
         designerService.setPreviewComposition(compositionName);
 
         designerService.startPreview(positionMillis);

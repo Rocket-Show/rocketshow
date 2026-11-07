@@ -13,7 +13,18 @@ export class ActionSceneComponent implements OnInit {
   @Input()
   action: ActionScene;
 
-  public typeList: string[] = ["PLAY_SCENE", "RELEASE_ALL", "BLACKOUT_ON", "BLACKOUT_OFF", "TOGGLE_BLACKOUT"];
+  public typeList: string[] = [
+    "PLAY_SCENE",
+    "TOGGLE_SCENE",
+    "FLASH_SCENE",
+    "NEXT_SCENE",
+    "PREVIOUS_SCENE",
+    "RELEASE_ALL",
+    "BLACKOUT_ON",
+    "BLACKOUT_OFF",
+    "TOGGLE_BLACKOUT",
+    "TAP_TEMPO",
+  ];
 
   constructor(public scenesService: ScenesService) {}
 
@@ -38,8 +49,24 @@ export class ActionSceneComponent implements OnInit {
   selectProject(projectName: string) {
     this.action.projectName = projectName;
 
-    // the scene picked so far belongs to the project picked before
+    // the scene and the folder picked so far belong to the project picked before
     this.action.scene = this.scenes()[0]?.uuid;
+    this.action.folder = undefined;
+  }
+
+  // the types playing one scene, which pick a project and a scene
+  playsScene(): boolean {
+    return ["PLAY_SCENE", "TOGGLE_SCENE", "FLASH_SCENE"].indexOf(this.action.sceneActionType) >= 0;
+  }
+
+  // the types stepping through the scenes of a folder
+  stepsScenes(): boolean {
+    return ["NEXT_SCENE", "PREVIOUS_SCENE"].indexOf(this.action.sceneActionType) >= 0;
+  }
+
+  // the folders of the project at the top of its scene tree, to step through
+  folders() {
+    return this.scenesService.topFolders(this.project());
   }
 
   setUntilStopped(untilStopped: boolean) {

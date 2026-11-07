@@ -63,6 +63,11 @@ public class Preset {
     // number of fixtures.
     private double stepsPhasingGroupSize = 1;
 
+    // the order the steps are played in: "forward", "backward", "pingpong" or "random" (see PresetStepsOrder; an order
+    // this Rocket Show doesn't know plays them forward), and where a random order starts from
+    private String stepsOrder = "forward";
+    private double stepsSeed = 1;
+
     // all related effects. They stay on the preset instead of moving into the steps, so
     // that they keep their phase across a step transition: a step only opens or closes
     // them (see PresetStep.effectAmounts).

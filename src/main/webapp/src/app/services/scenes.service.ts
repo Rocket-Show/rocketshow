@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DesignerScene, DesignerSceneFolder, SceneProject } from '../models/scene-project';
-import { State } from '../models/state';
+import { SceneMidiMapping, State } from '../models/state';
 import { SessionService } from './session.service';
 
 /**
@@ -21,6 +21,14 @@ export class ScenesService {
 
   // a tap adds a scene to the ones already on, instead of lighting only that scene
   stack: boolean = false;
+
+  // a scene held flashes it on top of the others, instead of a tap turning it on
+  flash: boolean = false;
+
+  // a tap on a scene waits for the key, pad or button of a MIDI controller which plays it from then on (in the way the
+  // flash says), and the keys, pads and buttons learned for the scenes of the project shown
+  learn: boolean = false;
+  midiMappings: SceneMidiMapping[] = [];
 
   // the project and its folder shown (undefined = the project of the scenes on, all of its scenes)
   viewedProjectName: string;
@@ -139,6 +147,108 @@ export class ScenesService {
     }
 
     return this.setActiveScenes(project.name, sceneUuids, state);
+  }
+
+  // the scenes flashed at the moment
+  isFlashed(scene: DesignerScene, project: SceneProject, state: State): boolean {
+    return !!state && state.sceneProjectName === project?.name && state.flashedSceneUuids.indexOf(scene.uuid) >= 0;
+  }
+
+  // Light a scene on top of the others at once while it is held (on), and turn it off again
+  flashScene(scene: DesignerScene, project: SceneProject, on: boolean, state: State): Observable<Object> {
+    if (state) {
+      const others = state.sceneProjectName === project.name ? state.flashedSceneUuids.filter((uuid) => uuid !== scene.uuid) : [];
+      state.flashedSceneUuids = on ? others.concat([scene.uuid]) : others;
+    }
+
+    return this.http.post(this.url('scenes/flash', { projectName: project.name, scene: scene.uuid, on: '' + on }), null);
+  }
+
+  // the folder shown, if it is one of the project shown (undefined = all its scenes)
+  viewedFolder(project: SceneProject): string {
+    return this.topFolders(project).some((folder) => folder.uuid === this.viewedFolderUuid) ? this.viewedFolderUuid : undefined;
+  }
+
+  // Play the next (1) or the previous (-1) scene of the folder shown instead of the ones on
+  step(project: SceneProject, direction: number): Observable<Object> {
+    const parameters: { [name: string]: string } = { projectName: project.name };
+    const folder = this.viewedFolder(project);
+
+    if (folder) {
+      parameters.folder = folder;
+    }
+
+    return this.http.post(this.url(direction < 0 ? 'scenes/previous' : 'scenes/next', parameters), null);
+  }
+
+  // a beat of the tempo the scenes run at
+  tapTempo(): Observable<Object> {
+    return this.http.post('scenes/tap', null);
+  }
+
+  // the tempo the scenes run at (undefined = the one of the project)
+  setTempo(beatsPerMinute: number): Observable<Object> {
+    return this.http.post(beatsPerMinute === undefined ? 'scenes/tempo' : this.url('scenes/tempo', { value: '' + beatsPerMinute }), null);
+  }
+
+  // the speed master, 1 = as written
+  setSpeed(speed: number): Observable<Object> {
+    return this.http.post(this.url('scenes/speed', { value: '' + speed }), null);
+  }
+
+  // the dimmer of a scene on the Play screen, from 0 to 1
+  setSceneDimmer(scene: DesignerScene, dimmer: number, state: State): Observable<Object> {
+    if (state) {
+      state.sceneDimmers = { ...state.sceneDimmers, [scene.uuid]: dimmer };
+    }
+
+    return this.http.post(this.url('scenes/dimmer', { scene: scene.uuid, value: '' + dimmer }), null);
+  }
+
+  // Wait for the key, pad or button of a MIDI controller which plays the scene from now on, in the way the flash says
+  learnScene(scene: DesignerScene, project: SceneProject, state: State): Observable<Object> {
+    const mode = this.flash ? 'flash' : 'toggle';
+
+    if (state) {
+      state.sceneLearning = { projectName: project.name, scene: scene.uuid, mode };
+    }
+
+    return this.http.post(this.url('scenes/learn', { projectName: project.name, scene: scene.uuid, mode }), null);
+  }
+
+  cancelLearn(state: State): Observable<Object> {
+    if (state) {
+      state.sceneLearning = undefined;
+    }
+
+    return this.http.post('scenes/learn-cancel', null);
+  }
+
+  loadMidiMappings(project: SceneProject): Observable<SceneMidiMapping[]> {
+    return this.http.get(this.url('scenes/midi', { projectName: project?.name || '' })).pipe(
+      map((mappings: SceneMidiMapping[]) => {
+        this.midiMappings = mappings || [];
+        return this.midiMappings;
+      })
+    );
+  }
+
+  // the keys, pads and buttons learned for a scene, in the way the flash says
+  midiMappingsOf(scene: DesignerScene): SceneMidiMapping[] {
+    const mode = this.flash ? 'flash' : 'toggle';
+    return this.midiMappings.filter((mapping) => mapping.scene === scene.uuid && mapping.mode === mode);
+  }
+
+  forgetMidi(scene: DesignerScene, project: SceneProject): Observable<Object> {
+    const mode = this.flash ? 'flash' : 'toggle';
+    this.midiMappings = this.midiMappings.filter((mapping) => mapping.scene !== scene.uuid || mapping.mode !== mode);
+
+    return this.http.post(this.url('scenes/midi-forget', { projectName: project.name, scene: scene.uuid, mode }), null);
+  }
+
+  // an address with its parameters, each of them encoded
+  private url(path: string, parameters: { [name: string]: string }): string {
+    return path + '?' + Object.keys(parameters).map((name) => name + '=' + encodeURIComponent(parameters[name])).join('&');
   }
 
   releaseAll(state: State): Observable<Object> {

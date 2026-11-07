@@ -13,7 +13,7 @@
   </div>
 </div>
 
-@if (action.sceneActionType === 'PLAY_SCENE') {
+@if (playsScene() || stepsScenes()) {
   <div class="form-group row">
     <label class="col-md-3 col-form-label">{{
       "action.scene.project" | translate
@@ -26,7 +26,27 @@
       </select>
     </div>
   </div>
+}
 
+@if (stepsScenes()) {
+  <!-- the scenes stepped through: the ones of a folder, or all of them -->
+  <div class="form-group row">
+    <label class="col-md-3 col-form-label">{{
+      "action.scene.folder" | translate
+    }}</label>
+    <div class="col-md-9">
+      <select class="custom-select" [(ngModel)]="action.folder">
+        <option [ngValue]="undefined">{{ "action.scene.folder-all" | translate }}</option>
+        @for (folder of folders(); track folder.uuid) {
+          <option [ngValue]="folder.uuid">{{ folder.name }}</option>
+        }
+      </select>
+      <small class="form-text text-muted">{{ "action.scene.folder-help" | translate }}</small>
+    </div>
+  </div>
+}
+
+@if (playsScene()) {
   <div class="form-group row">
     <label class="col-md-3 col-form-label">{{
       "action.scene.scene" | translate
@@ -39,18 +59,22 @@
       </select>
     </div>
   </div>
+}
 
+@if (action.sceneActionType === 'PLAY_SCENE' || action.sceneActionType === 'FLASH_SCENE') {
+  <!-- how long the scene plays: until stopped (or, a flash, until the key triggering it is let go), or for a while -->
   <div class="form-group row">
     <label class="col-md-3 col-form-label">{{
       "action.scene.plays" | translate
     }}</label>
     <div class="col-md-9">
+      @let flash = action.sceneActionType === 'FLASH_SCENE';
       <select class="custom-select" [ngModel]="action.untilStopped" (ngModelChange)="setUntilStopped($event)">
-        <option [ngValue]="true">{{ "action.scene.until-stopped" | translate }}</option>
+        <option [ngValue]="true">{{ (flash ? "action.scene.until-released" : "action.scene.until-stopped") | translate }}</option>
         <option [ngValue]="false">{{ "action.scene.for-a-time" | translate }}</option>
       </select>
       <small class="form-text text-muted">{{
-        (action.untilStopped ? "action.scene.until-stopped-help" : "action.scene.for-a-time-help") | translate
+        (action.untilStopped ? (flash ? "action.scene.until-released-help" : "action.scene.until-stopped-help") : "action.scene.for-a-time-help") | translate
       }}</small>
     </div>
   </div>
@@ -66,4 +90,12 @@
       </div>
     </div>
   }
+}
+
+@if (action.sceneActionType === 'TOGGLE_SCENE' || action.sceneActionType === 'TAP_TEMPO') {
+  <div class="form-group row">
+    <div class="col-md-9 offset-md-3">
+      <small class="form-text text-muted">{{ "action.scene.help." + action.sceneActionType | translate }}</small>
+    </div>
+  </div>
 }

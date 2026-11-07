@@ -137,4 +137,81 @@ describe("ScenesService", () => {
     expect(service.icon(scene("bar"))).toBe(ScenesService.defaultIcon);
   });
 
+
+  it("flashes a scene on top of the others while it is held, and shows it right away", () => {
+    const current = state("Club", ["warm"]);
+
+    service.flashScene(scene("red"), club, true, current).subscribe();
+    http.expectOne("scenes/flash?projectName=Club&scene=red&on=true").flush(null);
+    expect(current.flashedSceneUuids).toEqual(["red"]);
+    expect(service.isFlashed(scene("red"), club, current)).toBeTrue();
+
+    service.flashScene(scene("red"), club, false, current).subscribe();
+    http.expectOne("scenes/flash?projectName=Club&scene=red&on=false").flush(null);
+    expect(current.flashedSceneUuids).toEqual([]);
+  });
+
+  it("steps through the scenes of the folder shown, or through all of them", () => {
+    service.viewedFolderUuid = "party";
+    service.step(club, 1).subscribe();
+    http.expectOne("scenes/next?projectName=Club&folder=party").flush(null);
+
+    service.step(club, -1).subscribe();
+    http.expectOne("scenes/previous?projectName=Club&folder=party").flush(null);
+
+    // a folder of another project
+    service.step(garden, 1).subscribe();
+    http.expectOne("scenes/next?projectName=Garden").flush(null);
+  });
+
+  it("taps the tempo, sets it and goes back to the one of the project", () => {
+    service.tapTempo().subscribe();
+    http.expectOne("scenes/tap").flush(null);
+
+    service.setTempo(128).subscribe();
+    http.expectOne("scenes/tempo?value=128").flush(null);
+
+    service.setTempo(undefined).subscribe();
+    http.expectOne("scenes/tempo").flush(null);
+
+    service.setSpeed(1.5).subscribe();
+    http.expectOne("scenes/speed?value=1.5").flush(null);
+  });
+
+  it("dims a scene on the Play screen and shows it right away", () => {
+    const current = state("Club", ["red"]);
+
+    service.setSceneDimmer(scene("red"), 0.4, current).subscribe();
+    http.expectOne("scenes/dimmer?scene=red&value=0.4").flush(null);
+    expect(current.sceneDimmers).toEqual({ red: 0.4 });
+  });
+
+  it("learns the key of a MIDI controller for a scene in the way the flash says, and forgets it", () => {
+    const current = state("Club", []);
+
+    service.learnScene(scene("red"), club, current).subscribe();
+    http.expectOne("scenes/learn?projectName=Club&scene=red&mode=toggle").flush(null);
+    expect(current.sceneLearning).toEqual({ projectName: "Club", scene: "red", mode: "toggle" });
+
+    service.cancelLearn(current).subscribe();
+    http.expectOne("scenes/learn-cancel").flush(null);
+    expect(current.sceneLearning).toBeUndefined();
+
+    service.flash = true;
+    service.learnScene(scene("red"), club, current).subscribe();
+    http.expectOne("scenes/learn?projectName=Club&scene=red&mode=flash").flush(null);
+
+    service.loadMidiMappings(club).subscribe();
+    http.expectOne("scenes/midi?projectName=Club").flush([
+      { scene: "red", mode: "flash", kind: "note", channel: 0, number: 36 },
+      { scene: "red", mode: "toggle", kind: "cc", channel: 0, number: 20 },
+    ]);
+    expect(service.midiMappingsOf(scene("red")).map((mapping) => mapping.number)).toEqual([36]);
+
+    service.forgetMidi(scene("red"), club).subscribe();
+    http.expectOne("scenes/midi-forget?projectName=Club&scene=red&mode=flash").flush(null);
+    expect(service.midiMappingsOf(scene("red"))).toEqual([]);
+    expect(service.midiMappings.length).toBe(1);
+  });
+
 });
