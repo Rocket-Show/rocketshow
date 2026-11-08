@@ -52,6 +52,28 @@ final class PanTilt {
         return isNumber(value.getAimX()) && isNumber(value.getAimY()) && isNumber(value.getAimZ());
     }
 
+    // does a pan or tilt value say where to point at all?
+    static boolean hasPanTiltValue(FixtureCapabilityValue value) {
+        return hasAim(value) || isNumber(value.getValueDegrees()) || hasPercentage(value);
+    }
+
+    // Is a pan or tilt value a percentage of the range alone (of a project before the degrees): no degrees, no spot and
+    // no fan?
+    private static boolean isPlainPercentage(FixtureCapabilityValue value) {
+        return !hasAim(value)
+                && !isNumber(value.getValueDegrees())
+                && hasPercentage(value)
+                && (!isNumber(value.getSpreadDegrees()) || value.getSpreadDegrees() == 0);
+    }
+
+    // Does a preset travelling from the one value to the other turn each moving head on its own (see
+    // getPanTiltDegrees)? Both have to say where to point the heads. Two percentages of the range alone travel like any
+    // other percentage does, and a value saying nothing is taken as soon as the transition starts, like the slot of a
+    // wheel.
+    static boolean isPanTiltTransition(FixtureCapabilityValue from, FixtureCapabilityValue to) {
+        return isPanTilt(to.getType()) && hasPanTiltValue(from) && hasPanTiltValue(to) && !(isPlainPercentage(from) && isPlainPercentage(to));
+    }
+
     private static boolean isNumber(Double value) {
         return value != null && !value.isNaN();
     }
@@ -101,7 +123,29 @@ final class PanTilt {
     // Where a pan or tilt value points a fixture on its axis, in degrees from the middle of its range, or null if it
     // can't tell (e.g. a spot to aim at, but no idea where the fixture hangs). A spot is where the fixtures point,
     // whatever the mirror of the preset says; everything else is mirrored around the middle.
+    // While a preset travels from one step into the next, each fixture travels from where the value of the step before
+    // points it to where this one does: the fan opens or closes, a spot moves over the stage and a head turns from a
+    // spot to a position on its way. If only one of them can tell, the fixture turns to it as soon as the transition
+    // starts, like a wheel does to its slot.
     static Double getPanTiltDegrees(FixtureCapabilityValue value, double range, boolean mirror, Context context) {
+        Double degrees = getOwnPanTiltDegrees(value, range, mirror, context);
+
+        if (value.getTransitionFrom() == null) {
+            return degrees;
+        }
+
+        Double fromDegrees = getOwnPanTiltDegrees(value.getTransitionFrom(), range, mirror, context);
+        double position = value.getTransitionPosition();
+
+        if (degrees == null || fromDegrees == null) {
+            return position > 0 ? degrees : fromDegrees;
+        }
+
+        return fromDegrees + (degrees - fromDegrees) * position;
+    }
+
+    // where a pan or tilt value points a fixture on its own, without the step it travels from (see getPanTiltDegrees)
+    private static Double getOwnPanTiltDegrees(FixtureCapabilityValue value, double range, boolean mirror, Context context) {
         double spread = getSpreadDegrees(value.getSpreadDegrees(), context);
 
         if (hasAim(value)) {
@@ -131,7 +175,7 @@ final class PanTilt {
 
     // The value of a channel playing a pan or tilt value, or null if the channel doesn't turn the fixture on its axis
     // or the value doesn't say where to. A percentage of the range (of a project before the degrees) is played like it
-    // always was, unless the fixtures are fanned out.
+    // always was, unless the fixtures are fanned out or travel from a step pointing them in another way.
     static Double getPanTiltChannelValue(FixtureCapabilityValue value, CachedFixtureChannel channel, boolean mirror, Context context) {
         Double range = getAxisRange(channel, value.getType());
 
@@ -139,7 +183,7 @@ final class PanTilt {
             return null;
         }
 
-        if (!hasAim(value) && !isNumber(value.getValueDegrees()) && hasPercentage(value) && getSpreadDegrees(value.getSpreadDegrees(), context) == 0) {
+        if (value.getTransitionFrom() == null && !hasAim(value) && !isNumber(value.getValueDegrees()) && hasPercentage(value) && getSpreadDegrees(value.getSpreadDegrees(), context) == 0) {
             return channel.getMaxValue() * (mirror ? 1 - value.getValuePercentage() : value.getValuePercentage());
         }
 

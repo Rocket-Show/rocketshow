@@ -281,11 +281,13 @@ public final class PresetSteps {
     }
 
     private static boolean capabilityValuesMatch(FixtureCapabilityValue value1, FixtureCapabilityValue value2) {
-        // a capability value is identified by what it drives, not by the value it holds
+        // a capability value is identified by what it drives, not by the value it holds: each blade of a framing
+        // shutter travels on its own
         return value1.getType() == value2.getType()
                 && value1.getColor() == value2.getColor()
                 && Objects.equals(value1.getWheel(), value2.getWheel())
-                && Objects.equals(value1.getProfileUuid(), value2.getProfileUuid());
+                && Objects.equals(value1.getProfileUuid(), value2.getProfileUuid())
+                && Objects.equals(value1.getBlade(), value2.getBlade());
     }
 
     private static FixtureCapabilityValue getMatchingCapabilityValue(List<FixtureCapabilityValue> values, FixtureCapabilityValue value) {
@@ -345,6 +347,16 @@ public final class PresetSteps {
                 continue;
             }
 
+            if (PanTilt.isPanTiltTransition(fromValue, toValue)) {
+                // Where the moving heads point travels for each of them on its own, in degrees: from one fan to the
+                // next, from one spot to the next and from a spot to a position (see PanTilt).
+                FixtureCapabilityValue value = toValue.copy();
+                value.setTransitionFrom(fromValue);
+                value.setTransitionPosition(position);
+                state.getFixtureCapabilityValues().add(value);
+                continue;
+            }
+
             if (toValue.getSlotNumber() != null || fromValue.getSlotNumber() != null
                     || toValue.getValuePercentage() == null || fromValue.getValuePercentage() == null) {
                 // a wheel cannot stand between two of its slots: it turns as soon as the
@@ -353,12 +365,8 @@ public final class PresetSteps {
                 continue;
             }
 
-            FixtureCapabilityValue value = new FixtureCapabilityValue();
-            value.setType(toValue.getType());
-            value.setColor(toValue.getColor());
-            value.setWheel(toValue.getWheel());
-            value.setProfileUuid(toValue.getProfileUuid());
-            value.setSlotNumber(toValue.getSlotNumber());
+            // the value keeps all it says besides, e.g. the blade of a framing shutter it moves
+            FixtureCapabilityValue value = toValue.copy();
             value.setValuePercentage(fromValue.getValuePercentage() + (toValue.getValuePercentage() - fromValue.getValuePercentage()) * position);
             state.getFixtureCapabilityValues().add(value);
         }

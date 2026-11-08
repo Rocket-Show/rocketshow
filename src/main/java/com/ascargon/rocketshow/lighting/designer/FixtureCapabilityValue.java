@@ -1,5 +1,7 @@
 package com.ascargon.rocketshow.lighting.designer;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class FixtureCapabilityValue {
 
     private FixtureCapability.FixtureCapabilityType type;
@@ -22,6 +24,55 @@ public class FixtureCapabilityValue {
 
     // the blade of a framing shutter: Top, Right, Bottom or Left
     private String blade;
+
+    // pan and tilt, while a preset travels from one step into the next: the value of the step it travels from and how
+    // far it has come (between 0 and 1). Each moving head travels from where the one value points it to where the
+    // other does, so the heads fan in and out, follow a spot moving over the stage and turn from a spot to a position
+    // alike (see PanTilt). Only the values a preset shows between two of its steps hold this, it is never saved.
+    @JsonIgnore
+    private FixtureCapabilityValue transitionFrom;
+    @JsonIgnore
+    private double transitionPosition;
+
+    // a copy of the value, with all it says
+    public FixtureCapabilityValue copy() {
+        FixtureCapabilityValue copy = new FixtureCapabilityValue();
+        copy.type = type;
+        copy.profileUuid = profileUuid;
+        copy.valuePercentage = valuePercentage;
+        copy.color = color;
+        copy.slotNumber = slotNumber;
+        copy.wheel = wheel;
+        copy.valueDegrees = valueDegrees;
+        copy.spreadDegrees = spreadDegrees;
+        copy.aimX = aimX;
+        copy.aimY = aimY;
+        copy.aimZ = aimZ;
+        copy.blade = blade;
+        copy.transitionFrom = transitionFrom;
+        copy.transitionPosition = transitionPosition;
+        return copy;
+    }
+
+    @JsonIgnore
+    public FixtureCapabilityValue getTransitionFrom() {
+        return transitionFrom;
+    }
+
+    @JsonIgnore
+    public void setTransitionFrom(FixtureCapabilityValue transitionFrom) {
+        this.transitionFrom = transitionFrom;
+    }
+
+    @JsonIgnore
+    public double getTransitionPosition() {
+        return transitionPosition;
+    }
+
+    @JsonIgnore
+    public void setTransitionPosition(double transitionPosition) {
+        this.transitionPosition = transitionPosition;
+    }
 
     public Double getValueDegrees() {
         return valueDegrees;
