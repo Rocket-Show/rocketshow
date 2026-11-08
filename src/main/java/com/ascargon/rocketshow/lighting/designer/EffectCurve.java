@@ -92,6 +92,11 @@ public class EffectCurve extends Effect {
     // heads moves as far (a line fanned "linear" opens and closes the fan of the heads).
     private String fanMode = "none";
 
+    // A curve on the pan or the tilt turns every moving head by the same degrees (see PanTilt): from the middle of what
+    // it reaches, the whole curve from 0 to 1 spanning what a head reaches by default (540° of pan, 270° of tilt). A
+    // curve of a project before it moves each head over a share of its own range instead.
+    private boolean panTiltInDegrees = false;
+
     // how long a beat lasts at the passed tempo
     public static double getBeatMillis(Double beatsPerMinute) {
         double bpm = beatsPerMinute != null && beatsPerMinute > 0 ? beatsPerMinute : DEFAULT_BEATS_PER_MINUTE;
@@ -118,6 +123,31 @@ public class EffectCurve extends Effect {
         }
 
         return this.position + (value - this.position) * this.getFanFactor(place);
+    }
+
+    // The value of a step a curve on the passed capability plays at the passed value of the curve: a percentage, the
+    // pan and the tilt in degrees around the middle of what the heads reach (see panTiltInDegrees)
+    public FixtureCapabilityValue getCapabilityValue(FixtureCapability capability, double value) {
+        FixtureCapabilityValue capabilityValue = new FixtureCapabilityValue();
+        capabilityValue.setType(capability.getType());
+        capabilityValue.setColor(capability.getColor());
+
+        if (panTiltInDegrees && (capability.getType() == FixtureCapability.FixtureCapabilityType.Pan || capability.getType() == FixtureCapability.FixtureCapabilityType.Tilt)) {
+            capabilityValue.setValueDegrees((value - 0.5) * (capability.getType() == FixtureCapability.FixtureCapabilityType.Pan ? PanTilt.DEFAULT_PAN_RANGE_DEGREES : PanTilt.DEFAULT_TILT_RANGE_DEGREES));
+        } else {
+            capabilityValue.setValuePercentage(value);
+        }
+
+        return capabilityValue;
+    }
+
+    public boolean isPanTiltInDegrees() {
+        return panTiltInDegrees;
+    }
+
+    // a value missing or null moves each head over a share of its range, like in the designer (and like curves did)
+    public void setPanTiltInDegrees(Boolean panTiltInDegrees) {
+        this.panTiltInDegrees = Boolean.TRUE.equals(panTiltInDegrees);
     }
 
     public String getFanMode() {

@@ -30,12 +30,27 @@ public class FixtureCapabilityValue {
     // along the fan (see Fan). The percentage is the one in between, which a player not knowing the fans plays. Red,
     // green and blue fanned with stops at the same places make up a gradient of colors.
     private List<FanStop> fan;
+
+    // how a fan goes from one stop to the next: blended (none given), or "steps", each fixture taking the value of a
+    // stop as it is (the stops sharing the fan evenly)
+    private String fanBetween;
     private Double aimX;
     private Double aimY;
     private Double aimZ;
 
     // the blade of a framing shutter: Top, Right, Bottom or Left
     private String blade;
+
+    // the strobe: the effect it flashes in (see CapabilityPositions), a plain strobe if none is given
+    private String shutterEffect;
+
+    // a program the fixture runs on its own (see Programs): its number (0 for none), whether it runs to the sound
+    private Double programNumber;
+    private Boolean soundControlled;
+
+    // what a fixture is asked to do for as long as the preset plays: reset itself, switch its lamp on or off (see
+    // Maintenance)
+    private String maintenanceAction;
 
     // pan and tilt, while a preset travels from one step into the next: the value of the step it travels from and how
     // far it has come (between 0 and 1). Each moving head travels from where the one value points it to where the
@@ -61,8 +76,13 @@ public class FixtureCapabilityValue {
         copy.aimY = aimY;
         copy.aimZ = aimZ;
         copy.blade = blade;
+        copy.shutterEffect = shutterEffect;
         copy.fanShape = fanShape;
         copy.fan = fan == null ? null : new ArrayList<>(fan);
+        copy.fanBetween = fanBetween;
+        copy.programNumber = programNumber;
+        copy.soundControlled = soundControlled;
+        copy.maintenanceAction = maintenanceAction;
         copy.transitionFrom = transitionFrom;
         copy.transitionPosition = transitionPosition;
         return copy;
@@ -83,6 +103,38 @@ public class FixtureCapabilityValue {
     // a fan without any stops is no fan, like in the designer
     public void setFan(List<FanStop> fan) {
         this.fan = fan == null || fan.isEmpty() ? null : fan;
+    }
+
+    public String getFanBetween() {
+        return fanBetween;
+    }
+
+    public void setFanBetween(String fanBetween) {
+        this.fanBetween = fanBetween;
+    }
+
+    public Double getProgramNumber() {
+        return programNumber;
+    }
+
+    public void setProgramNumber(Double programNumber) {
+        this.programNumber = programNumber;
+    }
+
+    public Boolean getSoundControlled() {
+        return soundControlled;
+    }
+
+    public void setSoundControlled(Boolean soundControlled) {
+        this.soundControlled = soundControlled;
+    }
+
+    public String getMaintenanceAction() {
+        return maintenanceAction;
+    }
+
+    public void setMaintenanceAction(String maintenanceAction) {
+        this.maintenanceAction = maintenanceAction;
     }
 
     @JsonIgnore
@@ -143,6 +195,14 @@ public class FixtureCapabilityValue {
 
     public void setAimZ(Double aimZ) {
         this.aimZ = aimZ;
+    }
+
+    public String getShutterEffect() {
+        return shutterEffect;
+    }
+
+    public void setShutterEffect(String shutterEffect) {
+        this.shutterEffect = shutterEffect;
     }
 
     public String getBlade() {

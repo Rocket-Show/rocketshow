@@ -1,0 +1,45 @@
+{
+  "name": "Fine dimmer",
+  "categories": ["Dimmer"],
+  "availableChannels": {
+    "Dimmer": {
+      "fineChannelAliases": ["Dimmer fine"],
+      "dmxValueResolution": "8bit",
+      "defaultValue": 128,
+      "capabilities": [
+        {
+          "dmxRange": [0, 249],
+          "type": "Intensity"
+        },
+        {
+          "dmxRange": [250, 255],
+          "type": "ShutterStrobe",
+          "shutterEffect": "Strobe",
+          "speedStart": "slow",
+          "speedEnd": "fast"
+        }
+      ]
+    },
+    "Zoom": {
+      "fineChannelAliases": ["Zoom fine"],
+      "defaultValue": 32768,
+      "capability": {
+        "type": "Zoom",
+        "angleStart": "5deg",
+        "angleEnd": "40deg"
+      }
+    }
+  },
+  "modes": [
+    {
+      "name": "4-channel",
+      "shortName": "4ch",
+      "channels": ["Dimmer", "Dimmer fine", "Zoom", "Zoom fine"]
+    },
+    {
+      "name": "2-channel",
+      "shortName": "2ch",
+      "channels": ["Dimmer", "Zoom"]
+    }
+  ]
+}

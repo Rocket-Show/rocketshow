@@ -823,8 +823,10 @@ public class DefaultDesignerService implements DesignerService {
             return percentage == null ? null : getMaxValueByChannel(fixtureChannel) / 100 * percentage;
         }
 
-        // DMX value
-        return parseNumber(defaultValue);
+        // DMX value, of a profile writing it in fewer bits than the channel has as well
+        Double value = parseNumber(defaultValue);
+
+        return value == null ? null : value * FixtureChannel.getResolutionMultiplier(fixtureChannel);
     }
 
     private static final Pattern NUMBER = Pattern.compile("[+-]?(\\d+\\.?\\d*|\\.\\d+)([eE][+-]?\\d+)?");
@@ -851,9 +853,9 @@ public class DefaultDesignerService implements DesignerService {
         return false;
     }
 
-    private CachedFixtureCapability getFixtureCapability(FixtureCapability capability, String channelName, FixtureProfile profile) {
+    private CachedFixtureCapability getFixtureCapability(FixtureCapability capability, String channelName, FixtureProfile profile, double resolutionMultiplier) {
         CachedFixtureCapability cachedFixtureCapability = new CachedFixtureCapability();
-        cachedFixtureCapability.setCapability(capability);
+        cachedFixtureCapability.setCapability(FixtureChannel.getCapabilityInFullResolution(capability, resolutionMultiplier));
         if (capability.getSlotNumber() != null) {
             // there is a wheel connected to this capability
             if (capability.getWheel() instanceof String) {
@@ -878,11 +880,14 @@ public class DefaultDesignerService implements DesignerService {
     private List<CachedFixtureCapability> getCapabilitiesByChannel(FixtureChannel fixtureChannel, String channelName, FixtureProfile profile) {
         List<CachedFixtureCapability> capabilities = new ArrayList<>();
 
+        // the ranges of a profile writing them in fewer bits than the channel has, in its full resolution
+        double multiplier = FixtureChannel.getResolutionMultiplier(fixtureChannel);
+
         if (fixtureChannel.getCapability() != null) {
-            capabilities.add(getFixtureCapability(fixtureChannel.getCapability(), channelName, profile));
+            capabilities.add(getFixtureCapability(fixtureChannel.getCapability(), channelName, profile, multiplier));
         } else if (fixtureChannel.getCapabilities() != null) {
             for (FixtureCapability capability : fixtureChannel.getCapabilities()) {
-                capabilities.add(getFixtureCapability(capability, channelName, profile));
+                capabilities.add(getFixtureCapability(capability, channelName, profile, multiplier));
             }
         }
 
@@ -1367,6 +1372,45 @@ public class DefaultDesignerService implements DesignerService {
         return dmxRange.get(0) + (dmxRange.get(1) - dmxRange.get(0)) * (bestBrightness - range[0]) / (range[1] - range[0]);
     }
 
+    // The value a curve on a capability puts on a channel of a fixture, played like a value of a step: a dimmer or a
+    // color within the range of the channel giving the brightness (not over a strobe sharing the channel), a position
+    // (e.g. a zoom, see CapabilityPositions) by the capability of the channel doing it, the pan and the tilt mirrored
+    // with the preset. Null, if the channel doesn't do it. The designer plays them the very same way
+    // (getCurveChannelValue of its preview).
+    private Double getCurveChannelValue(FixtureCapabilityValue capabilityValue, CachedFixtureChannel cachedChannel, Preset preset) {
+        FixtureCapability.FixtureCapabilityType type = capabilityValue.getType();
+
+        if (type == FixtureCapability.FixtureCapabilityType.ShutterStrobe) {
+            // the strobe on a channel of its speed as well, like the strobe of a step
+            Double strobe = CapabilityPositions.getPositionedChannelValue(cachedChannel, type, capabilityValue.getValuePercentage(), null);
+
+            return strobe != null ? strobe : CapabilityPositions.getPositionedChannelValue(cachedChannel, FixtureCapability.FixtureCapabilityType.StrobeSpeed, capabilityValue.getValuePercentage(), null);
+        }
+
+        if (CapabilityPositions.isPositionedType(type)) {
+            return CapabilityPositions.getPositionedChannelValue(cachedChannel, type, capabilityValue.getValuePercentage(), null);
+        }
+
+        List<CachedFixtureCapability> matching = cachedChannel.getCapabilities().stream()
+                .filter(channelCapability -> capabilitiesMatch(type, channelCapability.getCapability().getType(), capabilityValue.getColor(), channelCapability.getCapability().getColor(), null, null, null, null))
+                .toList();
+
+        if (matching.isEmpty()) {
+            return null;
+        }
+
+        if (isBrightness(capabilityValue)) {
+            // the capability of the channel giving the brightness, of the ones doing it
+            return getBrightnessValue(cachedChannel, matching, capabilityValue.getValuePercentage());
+        }
+
+        if (PanTilt.isPanTilt(type)) {
+            return PanTilt.getPanTiltChannelValue(capabilityValue, cachedChannel, preset != null && preset.mirrorsCapability(type), null);
+        }
+
+        return null;
+    }
+
     private static FixtureChannelValue getChannelValue(List<FixtureChannelValue> values, String channelName, String profileUuid) {
         for (FixtureChannelValue value : values) {
             if (value.getChannelName().equals(channelName) && value.getProfileUuid().equals(profileUuid)) {
@@ -1493,7 +1537,30 @@ public class DefaultDesignerService implements DesignerService {
     // the value a positioned capability value (see CapabilityPositions) drives a channel of a fixture of the passed
     // profile to, or null, if the channel doesn't do it
     private static Double getPositionedChannelValue(FixtureCapabilityValue capabilityValue, CachedFixtureChannel channel, String profileUuid) {
-        if (!hasValue(capabilityValue) || (emptyToNull(capabilityValue.getProfileUuid()) != null && !capabilityValue.getProfileUuid().equals(profileUuid))) {
+        if (emptyToNull(capabilityValue.getProfileUuid()) != null && !capabilityValue.getProfileUuid().equals(profileUuid)) {
+            return null;
+        }
+
+        // a program of the fixture, at the speed of the value
+        if (capabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Effect) {
+            return Programs.getProgramChannelValue(channel, capabilityValue.getProgramNumber(), capabilityValue.getSoundControlled(), capabilityValue.getValuePercentage());
+        }
+
+        // a reset or the lamp switched on or off, on the channel doing it
+        if (capabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Maintenance) {
+            Maintenance.Found found = emptyToNull(capabilityValue.getMaintenanceAction()) == null
+                    ? null
+                    : Maintenance.getCapability(List.of(channel), Maintenance.Action.of(capabilityValue.getMaintenanceAction()));
+
+            return found == null ? null : CapabilityPositions.getCenter(found.capability());
+        }
+
+        // a rotation turning (a wheel, if it names one) to an angle and holding it there
+        if (CapabilityPositions.isRotationType(capabilityValue.getType()) && capabilityValue.getValueDegrees() != null && !capabilityValue.getValueDegrees().isNaN()) {
+            return CapabilityPositions.getRotationAngleChannelValue(channel, capabilityValue.getType(), capabilityValue.getValueDegrees(), capabilityValue.getWheel());
+        }
+
+        if (!hasValue(capabilityValue)) {
             return null;
         }
 
@@ -1501,7 +1568,7 @@ public class DefaultDesignerService implements DesignerService {
             return CapabilityPositions.getShakeChannelValue(channel, capabilityValue.getWheel(), capabilityValue.getSlotNumber(), capabilityValue.getValuePercentage());
         }
 
-        return CapabilityPositions.getPositionedChannelValue(channel, capabilityValue.getType(), capabilityValue.getValuePercentage(), capabilityValue.getBlade());
+        return CapabilityPositions.getPositionedChannelValue(channel, capabilityValue.getType(), capabilityValue.getValuePercentage(), capabilityValue.getBlade(), capabilityValue.getShutterEffect(), capabilityValue.getWheel());
     }
 
     // the value a pan or tilt value points a fixture of the passed profile at with a channel, or null, if the channel
@@ -1532,7 +1599,8 @@ public class DefaultDesignerService implements DesignerService {
         double presetBrightness = brightnessBelow == null ? 0 : getPresetDimmerBrightness(state, cachedFixture, preset, brightnessBelow);
 
         // a fixture mixing its colors with filters is given the colors the other way round (see SubtractiveColors)
-        List<FixtureCapabilityValue> capabilityValues = SubtractiveColors.getFixtureCapabilityValues(state.getFixtureCapabilityValues(), cachedFixture.getChannels());
+        // and the colors play on the emitters besides red, green and blue (see EmitterColors)
+        List<FixtureCapabilityValue> capabilityValues = SubtractiveColors.getFixtureCapabilityValues(state.getFixtureCapabilityValues(), cachedFixture.getChannels(), preset != null && preset.isEmittersFromColor());
 
         // mix the capability values of the state the preset is in
         for (FixtureCapabilityValue presetCapabilityValue : capabilityValues) {
@@ -1555,8 +1623,9 @@ public class DefaultDesignerService implements DesignerService {
                         continue;
                     }
 
-                    if (CapabilityPositions.isPositionedType(presetCapabilityValue.getType())) {
-                        // a position is played on the channel as a whole, by the capability of it doing it
+                    if (CapabilityPositions.isPositionedType(presetCapabilityValue.getType()) || CapabilityPositions.isCommandType(presetCapabilityValue.getType())) {
+                        // a position (and a program or maintenance) is played on the channel as a whole, by the
+                        // capability of it doing it
                         Double value = getPositionedChannelValue(presetCapabilityValue, cachedChannel, cachedFixture.getProfile().getUuid());
 
                         if (value != null) {
@@ -1759,19 +1828,29 @@ public class DefaultDesignerService implements DesignerService {
                 for (PresetRegionScene preset : presets) {
                     // search for this fixture in the preset and get it's preset-specific index (for chasing effects)
                     String pixelKey = cachedFixture.getPixel() != null ? cachedFixture.getPixel().getKey() : null;
-                    Integer fixtureIndex = getFixtureIndex(preset.getPreset(), cachedFixture.getFixture().getUuid(), pixelKey);
+                    Integer presetIndex = getFixtureIndex(preset.getPreset(), cachedFixture.getFixture().getUuid(), pixelKey);
 
-                    if (fixtureIndex != null) {
+                    if (presetIndex != null) {
                         // this fixture is also in the preset -> mix the required values (overwrite existing values,
-                        // if set multiple times)
+                        // if set multiple times). Its chases and its fans in its own order follow the pattern of the
+                        // preset.
+                        Integer presetCount = fixtureCounts.get(preset.getPreset());
+                        int fixtureIndex = presetIndex;
+                        Integer fixtureCount = presetCount;
+
+                        if (presetCount != null) {
+                            SelectionPattern.Place pattern = preset.getPreset().getPatternPlace(presetIndex, presetCount);
+                            fixtureIndex = pattern.index();
+                            fixtureCount = pattern.count();
+                        }
+
                         double intensityPercentage = preset instanceof LiveScenes.LivePreset livePreset ? livePreset.getIntensity(timeMillis) : getPresetIntensity(preset, timeMillis);
                         PresetStepState state = presetStates.get(preset);
 
                         if (state == null) {
-                            state = getPresetStepState(preset, timeMillis, PresetSteps.getStepsPhasingMillis(preset.getPreset(), fixtureIndex, fixtureCounts.get(preset.getPreset())));
+                            state = getPresetStepState(preset, timeMillis, PresetSteps.getStepsPhasingMillis(preset.getPreset(), fixtureIndex, fixtureCount));
                         }
 
-                        Integer fixtureCount = fixtureCounts.get(preset.getPreset());
                         PanTilt.Context context = new PanTilt.Context(fixtureIndex, fixtureCount == null ? 1 : fixtureCount, placements.get(cachedFixture.getFixture().getUuid()), getStageFanPlace(preset.getPreset(), cachedFixture));
 
                         // what the preset puts on this fixture, the fans worked out for its place in them (see Fan)
@@ -2120,25 +2199,23 @@ public class DefaultDesignerService implements DesignerService {
                     Double beatsPerMinute = getCurveBeatsPerMinute(preset);
                     double curveTimeMillis = getCurveTimeMillis(effectCurve, effectTimeMillis, preset, fixtureCount, beatsPerMinute);
 
-                    // capabilities
-                    for (FixtureCapability capability : effectCurve.getCapabilities()) {
-                        for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
-                            for (CachedFixtureCapability channelCapability : cachedChannel.getCapabilities()) {
-                                if (capabilitiesMatch(capability.getType(), channelCapability.getCapability().getType(), capability.getColor(), channelCapability.getCapability().getColor(), null, null, null, null)) {
-                                    // swung as far as the place of the fixture in the fan of the preset says
-                                    Double value = effectCurve.getFannedValue(effectCurve.getValueAtMillis(curveTimeMillis, fixtureIndex, fixtureCount, beatsPerMinute), Fan.getFanPlace(context));
+                    // capabilities, swung as far as the place of the fixture in the fan of the preset says
+                    Double curveValue = effectCurve.getFannedValue(effectCurve.getValueAtMillis(curveTimeMillis, fixtureIndex, fixtureCount, beatsPerMinute), Fan.getFanPlace(context));
 
-                                    // the curve does not apply anymore after it has finished running
-                                    if (value != null) {
-                                        // a preset which mirrors this axis mirrors the movement of its curves as well
-                                        value = preset.getPreset().getMirroredValuePercentage(capability.getType(), value);
+                    // the curve does not apply anymore after it has finished running
+                    if (curveValue != null) {
+                        for (FixtureCapability capability : effectCurve.getCapabilities()) {
+                            FixtureCapabilityValue capabilityValue = effectCurve.getCapabilityValue(capability, curveValue);
 
-                                        FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
-                                        fixtureChannelValue.setChannelName(cachedChannel.getName());
-                                        fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
-                                        fixtureChannelValue.setValue(cachedChannel.getMaxValue() * value);
-                                        mixChannelValue(values, fixtureChannelValue, effectIntensityPercentage);
-                                    }
+                            for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
+                                Double channelValue = getCurveChannelValue(capabilityValue, cachedChannel, preset.getPreset());
+
+                                if (channelValue != null) {
+                                    FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
+                                    fixtureChannelValue.setChannelName(cachedChannel.getName());
+                                    fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
+                                    fixtureChannelValue.setValue(channelValue);
+                                    mixChannelValue(values, fixtureChannelValue, effectIntensityPercentage);
                                 }
                             }
                         }

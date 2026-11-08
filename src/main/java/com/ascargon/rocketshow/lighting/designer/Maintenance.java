@@ -6,7 +6,9 @@ import java.util.regex.Pattern;
 
 /**
  * What the fixture pool of the designer asks a fixture to do on the live preview, through a maintenance capability of
- * its profile: reset itself (e.g. a moving head which lost its position) or switch its lamp on. It is held over
+ * its profile: reset itself (e.g. a moving head which lost its position) or switch its lamp on. A preset can ask for it
+ * as well, and to switch the lamp off, for as long as it plays (see FixtureCapabilityValue.maintenanceAction). It is
+ * held over
  * everything the presets do with the fixture for as long as the designer asks for it. The designer plays it the very
  * same way (maintenance.ts).
  */
@@ -14,7 +16,22 @@ final class Maintenance {
 
     enum Action {
         RESET,
-        LAMP_ON
+        LAMP_ON,
+        LAMP_OFF;
+
+        // the action a preset names ("reset", "lamp-on", "lamp-off"), or null for one it doesn't know
+        static Action of(String name) {
+            if (name == null) {
+                return null;
+            }
+
+            return switch (name) {
+                case "reset" -> RESET;
+                case "lamp-on" -> LAMP_ON;
+                case "lamp-off" -> LAMP_OFF;
+                default -> null;
+            };
+        }
     }
 
     /**
@@ -26,20 +43,26 @@ final class Maintenance {
     // a maintenance capability doing nothing but the action, and one doing it among other things
     private static final Map<Action, Pattern> EXACTLY = Map.of(
             Action.RESET, Pattern.compile("^(fixture |total |full )?reset( all)?$"),
-            Action.LAMP_ON, Pattern.compile("^lamp on$")
+            Action.LAMP_ON, Pattern.compile("^lamp on$"),
+            Action.LAMP_OFF, Pattern.compile("^lamp off$")
     );
 
     private static final Map<Action, Pattern> AMONG = Map.of(
             Action.RESET, Pattern.compile("\\breset\\b"),
-            Action.LAMP_ON, Pattern.compile("\\blamp\\s*on\\b")
+            Action.LAMP_ON, Pattern.compile("\\blamp\\s*on\\b"),
+            Action.LAMP_OFF, Pattern.compile("\\blamp\\s*off\\b")
     );
 
     private Maintenance() {
     }
 
-    // the channel and the capability of a fixture doing the passed action, or null if it can't
+    // the channel and the capability of a fixture doing the passed action, or null if it can't (or the action is none)
     static Found getCapability(List<CachedFixtureChannel> channels, Action action) {
         Found found = null;
+
+        if (action == null) {
+            return null;
+        }
 
         for (CachedFixtureChannel channel : channels) {
             if (channel.getChannel() == null) {

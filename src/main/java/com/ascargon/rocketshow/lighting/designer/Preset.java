@@ -92,6 +92,17 @@ public class Preset {
     // ("left-right", "front-back", "bottom-top").
     private String fanOrder = "preset";
 
+    // the pattern the fixtures are put in for the chases and the fans in the order of the preset (see
+    // SelectionPattern): so many fixtures in a group (1: each on its own), so many wings (1: none) and repeated every so
+    // many (0: not). A preset written before the patterns puts its fixtures in its own order.
+    private double patternGroupSize = 1;
+    private double patternWings = 1;
+    private double patternEvery = 0;
+
+    // light the white and the amber LEDs of a fixture with red, green and blue with the white and the amber parts of the
+    // colors of the preset (see EmitterColors). A preset written before the designer knew it doesn't.
+    private boolean emittersFromColor = false;
+
     // position offset, relative to the scene start
     // (null = start/end of the scene itself)
     private Double startMillis;
@@ -112,6 +123,11 @@ public class Preset {
     // a preset written before the fans followed the stage fans in its own order, like in the designer
     public void setFanOrder(String fanOrder) {
         this.fanOrder = fanOrder == null || fanOrder.isEmpty() ? "preset" : fanOrder;
+    }
+
+    // where a fixture at the passed place in the order of the preset is in its pattern (see SelectionPattern)
+    public SelectionPattern.Place getPatternPlace(int index, int count) {
+        return SelectionPattern.getPatternPlace(index, count, patternGroupSize, patternWings, patternEvery);
     }
 
     // whether the preset mirrors what it puts on the passed capability

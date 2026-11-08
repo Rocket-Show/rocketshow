@@ -88,9 +88,19 @@ final class Fan {
     // and the last one beyond them. Of two stops at the same place (a hard edge), the first one is taken right there. A
     // fixture which can't be told apart from the others is in the middle.
     static double getFanValue(List<FanStop> stops, Double place) {
+        return getFanValue(stops, place, null);
+    }
+
+    // the same with how the fan goes from one stop to the next: "steps", the stop of the share of the fan the place is
+    // in, each stop taking as much of the fan as the others, without blending into the next one
+    static double getFanValue(List<FanStop> stops, Double place, String between) {
         double position = place == null ? 0.5 : place;
         List<FanStop> sorted = new ArrayList<>(stops);
         sorted.sort(Comparator.comparingDouble(FanStop::getPosition));
+
+        if ("steps".equals(between)) {
+            return sorted.get((int) Math.min(sorted.size() - 1, Math.floor(position * sorted.size()))).getValuePercentage();
+        }
 
         if (position <= sorted.get(0).getPosition()) {
             return sorted.get(0).getValuePercentage();
@@ -174,7 +184,7 @@ final class Fan {
 
     // the percentage a value puts on a fixture at a place in the fan: of its stops, if it is fanned
     private static Double getPlacedPercentage(FixtureCapabilityValue value, Double place) {
-        return isFanned(value) ? getFanValue(value.getFan(), place) : value.getValuePercentage();
+        return isFanned(value) ? getFanValue(value.getFan(), place, value.getFanBetween()) : value.getValuePercentage();
     }
 
     // Does the value need to be worked out for each fixture on its own: a fan, or travelling from or into one? Not the
@@ -207,6 +217,7 @@ final class Fan {
 
             FixtureCapabilityValue placed = value.copy();
             placed.setFan(null);
+            placed.setFanBetween(null);
             placed.setTransitionFrom(null);
             placed.setTransitionPosition(0);
 
@@ -215,7 +226,7 @@ final class Fan {
                 double to = getPlacedPercentage(value, place);
                 placed.setValuePercentage(from + (to - from) * value.getTransitionPosition());
             } else {
-                placed.setValuePercentage(getFanValue(value.getFan(), place));
+                placed.setValuePercentage(getFanValue(value.getFan(), place, value.getFanBetween()));
             }
 
             placedValues.add(placed);

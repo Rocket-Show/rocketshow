@@ -37,3 +37,11 @@ commands to reset itself and to switch its lamp on) and `effects-spot` (gobos sh
 on one range or on two, a rotation turning to an angle only, the pulse of an iris and of a frost sharing their channels
 and the blades of a framing shutter) point, aim and move the moving heads, next to `moving-head` and `mover`, and play
 the rotations, the blades, the pulses and the shakes (`channel-values-movements.json`).
+`effects-strobe` (a shutter closing, opening and flashing in a strobe, at random, in pulses, ramps, lightning, spikes and
+to the sound), `bicolor` (a warm and a cold white without a channel for the color temperature) and `fine-dimmer` (a dimmer
+of 16 bits whose profile writes its ranges and its default value in 8 bits, next to a zoom written in 16 bits, with and
+without its fine channels) play the strobe effects, the white and the color temperature on the emitters, the curves on
+any capability and the channels written in fewer bits than they have (`channel-values-attributes.json`). `program-spot`
+(two gobo wheels, each turned by a channel of its own, at a speed and to an angle, built-in programs at a speed and to
+the sound, a channel of their speed, a lamp switched on and off and a reset) plays the gobo wheels turning on their own,
+the programs and the maintenance asked for by a preset (`channel-values-show.json`).

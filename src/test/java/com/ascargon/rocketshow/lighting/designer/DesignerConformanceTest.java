@@ -179,7 +179,8 @@ class DesignerConformanceTest {
         ObjectNode capability = NODES.objectNode();
 
         for (String property : List.of("type", "color", "wheel", "profileUuid", "valuePercentage", "slotNumber",
-                "valueDegrees", "spreadDegrees", "fanShape", "fan", "aimX", "aimY", "aimZ", "blade")) {
+                "valueDegrees", "spreadDegrees", "fanShape", "fan", "fanBetween", "shutterEffect", "programNumber", "soundControlled",
+                "maintenanceAction", "aimX", "aimY", "aimZ", "blade")) {
             if (written.has(property) && !written.get(property).isNull()) {
                 capability.set(property, written.get(property));
             }

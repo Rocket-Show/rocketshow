@@ -407,4 +407,34 @@ class EffectCurveTest {
         assertEquals(0, curve.getValueAtMillis(300, 1, 2, null), 1e-9);
     }
 
+    @Test
+    void turnsTheHeadsByTheSameDegreesOrByAShareOfTheirRange() {
+        FixtureCapability pan = new FixtureCapability();
+        pan.setType(FixtureCapability.FixtureCapabilityType.Pan);
+        FixtureCapability tilt = new FixtureCapability();
+        tilt.setType(FixtureCapability.FixtureCapabilityType.Tilt);
+        FixtureCapability red = new FixtureCapability();
+        red.setType(FixtureCapability.FixtureCapabilityType.ColorIntensity);
+        red.setColor(FixtureCapability.FixtureCapabilityColor.Red);
+
+        // a curve of a project before the degrees: a share of the range of each head
+        EffectCurve share = new EffectCurve();
+        assertFalse(share.isPanTiltInDegrees());
+        assertEquals(0.7, share.getCapabilityValue(pan, 0.7).getValuePercentage());
+        assertNull(share.getCapabilityValue(pan, 0.7).getValueDegrees());
+
+        // in degrees around the middle, the whole curve over what a head reaches by default
+        EffectCurve degrees = new EffectCurve();
+        degrees.setPanTiltInDegrees(true);
+        assertEquals(108, degrees.getCapabilityValue(pan, 0.7).getValueDegrees(), 1e-9);
+        assertEquals(-135, degrees.getCapabilityValue(tilt, 0).getValueDegrees(), 1e-9);
+        assertNull(degrees.getCapabilityValue(tilt, 0).getValuePercentage());
+
+        // anything else as a percentage, its color kept
+        assertEquals(0.7, degrees.getCapabilityValue(red, 0.7).getValuePercentage());
+        assertEquals(FixtureCapability.FixtureCapabilityColor.Red, degrees.getCapabilityValue(red, 0.7).getColor());
+
+        degrees.setPanTiltInDegrees(null);
+        assertFalse(degrees.isPanTiltInDegrees());
+    }
 }

@@ -151,6 +151,31 @@ class DesignerParityTest {
     }
 
     @Test
+    void readsTheValuesOfAChannelWrittenInFewerBitsThanItHas() {
+        // 16 bits written in 8 bits: the default and the ranges in 16 bits, from the start of the start to the end of
+        // the end
+        FixtureChannel dimmer = channel("{\"defaultValue\": 128, \"dmxValueResolution\": \"8bit\", \"fineChannelAliases\": [\"Dimmer fine\"]}");
+        assertEquals(256, FixtureChannel.getResolutionMultiplier(dimmer));
+        assertEquals(32768, DefaultDesignerService.getDefaultValueByChannel(dimmer));
+        assertEquals(65535d / 100 * 50, DefaultDesignerService.getDefaultValueByChannel(channel("{\"defaultValue\": \"50%\", \"dmxValueResolution\": \"8bit\", \"fineChannelAliases\": [\"Dimmer fine\"]}")));
+
+        FixtureCapability intensity = new FixtureCapability();
+        intensity.setType(FixtureCapability.FixtureCapabilityType.Intensity);
+        intensity.setDmxRange(List.of(0, 249));
+        FixtureCapability scaled = FixtureChannel.getCapabilityInFullResolution(intensity, 256);
+        assertEquals(List.of(0, 63999), scaled.getDmxRange());
+        assertEquals(FixtureCapability.FixtureCapabilityType.Intensity, scaled.getType());
+        // the capability of the profile stays as it is
+        assertEquals(List.of(0, 249), intensity.getDmxRange());
+
+        // 24 bits written in 16 bits, and written in their full resolution or without saying it
+        assertEquals(256, FixtureChannel.getResolutionMultiplier(channel("{\"dmxValueResolution\": \"16bit\", \"fineChannelAliases\": [\"Fine\", \"Finer\"]}")));
+        assertEquals(1, FixtureChannel.getResolutionMultiplier(channel("{\"dmxValueResolution\": \"16bit\", \"fineChannelAliases\": [\"Fine\"]}")));
+        assertEquals(1, FixtureChannel.getResolutionMultiplier(channel("{\"fineChannelAliases\": [\"Fine\"]}")));
+        assertEquals(1, FixtureChannel.getResolutionMultiplier(channel("{\"dmxValueResolution\": \"12bit\", \"fineChannelAliases\": [\"Fine\"]}")));
+    }
+
+    @Test
     void readsTheColorsLikeTheDesigner() {
         Color orange = DefaultDesignerService.hexToRgb("#ff8000");
         assertEquals(List.of(255d, 128d, 0d), List.of(orange.getRed(), orange.getGreen(), orange.getBlue()));
