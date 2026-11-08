@@ -86,6 +86,12 @@ public class Preset {
     private boolean mirrorPan = false;
     private boolean mirrorTilt = false;
 
+    // How the fixtures of the preset are put in the order of a fan, which everything fanned out over them follows (the
+    // values of the steps, a gradient of colors and the effects, see Fan): in the order of the preset ("preset"), or by
+    // where they are on the stage, from the left to the right, from the front to the back or from the bottom to the top
+    // ("left-right", "front-back", "bottom-top").
+    private String fanOrder = "preset";
+
     // position offset, relative to the scene start
     // (null = start/end of the scene itself)
     private Double startMillis;
@@ -102,6 +108,11 @@ public class Preset {
     // how the fades are shaped over their time (see TransitionCurve)
     private String fadeInCurve = "linear";
     private String fadeOutCurve = "linear";
+
+    // a preset written before the fans followed the stage fans in its own order, like in the designer
+    public void setFanOrder(String fanOrder) {
+        this.fanOrder = fanOrder == null || fanOrder.isEmpty() ? "preset" : fanOrder;
+    }
 
     // whether the preset mirrors what it puts on the passed capability
     public boolean mirrorsCapability(FixtureCapability.FixtureCapabilityType type) {

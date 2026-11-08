@@ -152,6 +152,10 @@ public class DefaultDesignerService implements DesignerService {
     // effects spread across the stage (see PixelStage)
     private Map<Preset, Map<String, Map<CachedFixture, PixelContext>>> stagePixelPlaces = new ConcurrentHashMap<>();
 
+    // the places of the parts of a preset in its fan, by preset and order, for a preset fanning by where they are on
+    // the stage (see Fan)
+    private Map<Preset, Map<String, Map<CachedFixture, Double>>> stageFanPlaces = new ConcurrentHashMap<>();
+
     // For each cached fixture, the one before it on the same DMX address (the same lamp, which it takes the values of),
     // or -1. Worked out once: looking it up in each frame took longer than the frame with a few thousand pixels.
     private int[] sameLampIndices = new int[0];
@@ -1768,7 +1772,10 @@ public class DefaultDesignerService implements DesignerService {
                         }
 
                         Integer fixtureCount = fixtureCounts.get(preset.getPreset());
-                        PanTilt.Context context = new PanTilt.Context(fixtureIndex, fixtureCount == null ? 1 : fixtureCount, placements.get(cachedFixture.getFixture().getUuid()));
+                        PanTilt.Context context = new PanTilt.Context(fixtureIndex, fixtureCount == null ? 1 : fixtureCount, placements.get(cachedFixture.getFixture().getUuid()), getStageFanPlace(preset.getPreset(), cachedFixture));
+
+                        // what the preset puts on this fixture, the fans worked out for its place in them (see Fan)
+                        state = getFixtureState(state, context);
 
                         mixCapabilityValues(state, cachedFixture, values, intensityPercentage, preset.getPreset(), context);
                         mixChannelValues(state, cachedFixture, values, intensityPercentage);
@@ -2118,7 +2125,8 @@ public class DefaultDesignerService implements DesignerService {
                         for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
                             for (CachedFixtureCapability channelCapability : cachedChannel.getCapabilities()) {
                                 if (capabilitiesMatch(capability.getType(), channelCapability.getCapability().getType(), capability.getColor(), channelCapability.getCapability().getColor(), null, null, null, null)) {
-                                    Double value = effectCurve.getValueAtMillis(curveTimeMillis, fixtureIndex, fixtureCount, beatsPerMinute);
+                                    // swung as far as the place of the fixture in the fan of the preset says
+                                    Double value = effectCurve.getFannedValue(effectCurve.getValueAtMillis(curveTimeMillis, fixtureIndex, fixtureCount, beatsPerMinute), Fan.getFanPlace(context));
 
                                     // the curve does not apply anymore after it has finished running
                                     if (value != null) {
@@ -2142,7 +2150,7 @@ public class DefaultDesignerService implements DesignerService {
                             for (String channel : channelProfile.getChannels()) {
                                 for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
                                     if (cachedChannel.getName().equals(channel)) {
-                                        Double value = effectCurve.getValueAtMillis(curveTimeMillis, fixtureIndex, fixtureCount, beatsPerMinute);
+                                        Double value = effectCurve.getFannedValue(effectCurve.getValueAtMillis(curveTimeMillis, fixtureIndex, fixtureCount, beatsPerMinute), Fan.getFanPlace(context));
 
                                         // the curve does not apply anymore after it has finished running
                                         if (value != null) {
@@ -2186,7 +2194,10 @@ public class DefaultDesignerService implements DesignerService {
 
         Double beatsPerMinute = getCurveBeatsPerMinute(preset);
         double curveTimeMillis = getCurveTimeMillis(effect, effectTimeMillis, preset, fixtureCount, beatsPerMinute);
-        Double cycles = effect.getCyclesAtMillis(curveTimeMillis, fixtureIndex, fixtureCount, beatsPerMinute);
+        // a still pattern stands where its phase and the chase put it
+        Double cycles = effect.isStill()
+                ? Double.valueOf(effect.getStillCycles(fixtureIndex, fixtureCount, beatsPerMinute))
+                : effect.getCyclesAtMillis(curveTimeMillis, fixtureIndex, fixtureCount, beatsPerMinute);
 
         // the effect does not apply anymore after it has finished running
         if (cycles == null) {
@@ -2433,6 +2444,77 @@ public class DefaultDesignerService implements DesignerService {
                 || getWhitePixelDimmer(cachedFixture) != null;
     }
 
+    // The state of a preset on one of its fixtures: the values fanned out over the fixtures worked out for its place in
+    // the fan (see Fan), travelling from the ones of the step before for the fixture on its own. The state itself, if
+    // nothing is fanned.
+    private static PresetStepState getFixtureState(PresetStepState state, PanTilt.Context context) {
+        List<FixtureCapabilityValue> capabilityValues = Fan.getFixtureFanValues(state.getFixtureCapabilityValues(), context);
+
+        if (capabilityValues == state.getFixtureCapabilityValues()) {
+            return state;
+        }
+
+        PresetStepState fixtureState = new PresetStepState();
+        fixtureState.setCurrentStep(state.getCurrentStep());
+        fixtureState.setFixtureChannelValues(state.getFixtureChannelValues());
+        fixtureState.setFixtureCapabilityValues(capabilityValues);
+        fixtureState.setEffectAmounts(state.getEffectAmounts());
+
+        return fixtureState;
+    }
+
+    // Where a part of a fixture is in the fan of a preset fanning by where its parts are on the stage (see Fan), worked
+    // out once for each preset and order: NaN if they are all at the same place, null for a preset fanning in its own
+    // order
+    private Double getStageFanPlace(Preset preset, CachedFixture cachedFixture) {
+        if (!Fan.isStageFanOrder(preset.getFanOrder())) {
+            return null;
+        }
+
+        Map<CachedFixture, Double> places = stageFanPlaces
+                .computeIfAbsent(preset, key -> new ConcurrentHashMap<>())
+                .computeIfAbsent(preset.getFanOrder(), order -> calculateStageFanPlaces(preset, order));
+        Double place = places.get(cachedFixture);
+
+        return place == null ? Double.NaN : place;
+    }
+
+    private Map<CachedFixture, Double> calculateStageFanPlaces(Preset preset, String order) {
+        Map<PresetFixtureKey, Integer> indices = getPresetChase(preset).fixtureIndices();
+        Map<String, PanTilt.StagePlacement> placements = PanTilt.getStagePlacements(project);
+        List<CachedFixture> parts = new ArrayList<>();
+        List<double[]> positions = new ArrayList<>();
+
+        for (CachedFixture part : cachedFixtures) {
+            String pixelKey = part.getPixel() == null ? null : part.getPixel().getKey();
+
+            if (!indices.containsKey(new PresetFixtureKey(part.getFixture().getUuid(), pixelKey))) {
+                continue;
+            }
+
+            parts.add(part);
+            positions.add(getPartStagePosition(part, placements));
+        }
+
+        List<Double> fanPlaces = Fan.getStageFanPlaces(positions, order);
+        Map<CachedFixture, Double> places = new HashMap<>();
+
+        for (int i = 0; i < parts.size(); i++) {
+            places.put(parts.get(i), fanPlaces.get(i));
+        }
+
+        return places;
+    }
+
+    // where a part of a fixture is on the stage (in cm): its LED on the front of the housing of the fixture, the middle
+    // of the front of a fixture without pixels (see PixelStage)
+    private double[] getPartStagePosition(CachedFixture part, Map<String, PanTilt.StagePlacement> placements) {
+        PixelContext place = getPixelPlace(part);
+        PanTilt.StagePlacement placement = placements.getOrDefault(part.getFixture().getUuid(), new PanTilt.StagePlacement(new double[]{0, 0, 0}, new double[]{0, 0, 0}));
+
+        return PixelStage.position(place, PixelStage.housingSize(part.getProfile(), place.columns, place.rows), placement, part.getFixture().getPositioning());
+    }
+
     // Where a part of a fixture is in the picture of the stage the parts of a preset make up (the ones a pixel effect
     // lights, see PixelStage), seen from the front or from above. Worked out once for each preset and view.
     private PixelContext getStagePixelPlace(Preset preset, String view, CachedFixture cachedFixture) {
@@ -2447,7 +2529,6 @@ public class DefaultDesignerService implements DesignerService {
     private Map<CachedFixture, PixelContext> calculateStagePixelPlaces(Preset preset, String view) {
         Map<PresetFixtureKey, Integer> indices = getPresetChase(preset).fixtureIndices();
         Map<String, PanTilt.StagePlacement> placements = PanTilt.getStagePlacements(project);
-        PanTilt.StagePlacement nowhere = new PanTilt.StagePlacement(new double[]{0, 0, 0}, new double[]{0, 0, 0});
         List<CachedFixture> parts = new ArrayList<>();
         List<double[]> positions = new ArrayList<>();
 
@@ -2458,10 +2539,8 @@ public class DefaultDesignerService implements DesignerService {
                 continue;
             }
 
-            PixelContext place = getPixelPlace(part);
-            PanTilt.StagePlacement placement = placements.getOrDefault(part.getFixture().getUuid(), nowhere);
             parts.add(part);
-            positions.add(PixelStage.position(place, PixelStage.housingSize(part.getProfile(), place.columns, place.rows), placement, part.getFixture().getPositioning()));
+            positions.add(getPartStagePosition(part, placements));
         }
 
         List<PixelContext> contexts = PixelStage.places(positions, view);
@@ -2570,7 +2649,7 @@ public class DefaultDesignerService implements DesignerService {
     private void mixPanTiltEffect(EffectPanTilt effect, double effectTimeMillis, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double effectIntensityPercentage, PresetStepState state, PanTilt.Context context) {
         Double beatsPerMinute = getCurveBeatsPerMinute(preset);
         double curveTimeMillis = getCurveTimeMillis(effect, effectTimeMillis, preset, context.fixtureCount(), beatsPerMinute);
-        EffectPanTilt.Offset offset = effect.getOffsetAtMillis(curveTimeMillis, context.fixtureIndex(), context.fixtureCount(), beatsPerMinute);
+        EffectPanTilt.Offset offset = effect.getOffsetAtMillis(curveTimeMillis, context.fixtureIndex(), context.fixtureCount(), beatsPerMinute, context.fanPlace());
 
         // the movement does not apply anymore after it has finished running
         if (offset == null) {
@@ -3205,6 +3284,7 @@ public class DefaultDesignerService implements DesignerService {
         cachedFixtures = new ArrayList<>();
         presetChases = new ConcurrentHashMap<>();
         stagePixelPlaces = new ConcurrentHashMap<>();
+        stageFanPlaces = new ConcurrentHashMap<>();
         outputChannels = new ConcurrentHashMap<>();
 
         logger.debug("Calculate cached fixtures...");

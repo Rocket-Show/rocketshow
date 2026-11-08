@@ -149,4 +149,81 @@ class PanTiltTest {
         assertEquals(-30, PanTilt.getPresetPanTiltDegrees(values, FixtureCapability.FixtureCapabilityType.Pan, "profile", 540, true, null));
         assertNull(PanTilt.getPresetPanTiltDegrees(values, FixtureCapability.FixtureCapabilityType.Tilt, "profile", 270, false, null));
     }
+
+    // a value travelling from the one of the step before, like a preset shows it between two of its steps
+    private static FixtureCapabilityValue travelling(FixtureCapabilityValue from, FixtureCapabilityValue to, double position) {
+        FixtureCapabilityValue between = to.copy();
+        between.setTransitionFrom(from);
+        between.setTransitionPosition(position);
+        return between;
+    }
+
+    @Test
+    void tellsWhichValuesTravelForEachFixtureOnItsOwn() {
+        FixtureCapabilityValue percentage = value(FixtureCapability.FixtureCapabilityType.Pan);
+        percentage.setValuePercentage(0.3);
+        FixtureCapabilityValue otherPercentage = value(FixtureCapability.FixtureCapabilityType.Pan);
+        otherPercentage.setValuePercentage(0.6);
+        FixtureCapabilityValue degrees = value(FixtureCapability.FixtureCapabilityType.Pan);
+        degrees.setValueDegrees(10d);
+        FixtureCapabilityValue fanned = value(FixtureCapability.FixtureCapabilityType.Pan);
+        fanned.setValuePercentage(0.3);
+        fanned.setSpreadDegrees(40d);
+
+        // two percentages of the range alone travel like any other percentage
+        assertFalse(PanTilt.isPanTiltTransition(percentage, otherPercentage));
+        // degrees and a fan travel for each fixture
+        assertTrue(PanTilt.isPanTiltTransition(percentage, degrees));
+        assertTrue(PanTilt.isPanTiltTransition(percentage, fanned));
+        // a value saying nothing is taken as soon as the transition starts
+        assertFalse(PanTilt.isPanTiltTransition(value(FixtureCapability.FixtureCapabilityType.Pan), degrees));
+    }
+
+    @Test
+    void opensTheFanForEachFixtureOnItsOwnBetweenTwoSteps() {
+        FixtureCapabilityValue ahead = value(FixtureCapability.FixtureCapabilityType.Pan);
+        ahead.setValueDegrees(0d);
+        FixtureCapabilityValue fanned = value(FixtureCapability.FixtureCapabilityType.Pan);
+        fanned.setValueDegrees(20d);
+        fanned.setSpreadDegrees(120d);
+        PanTilt.Context first = new PanTilt.Context(0, 3, null);
+        PanTilt.Context middle = new PanTilt.Context(1, 3, null);
+        PanTilt.Context last = new PanTilt.Context(2, 3, null);
+
+        // halfway: the heads point halfway to the middle of the fan, the first and the last one halfway out to its sides
+        assertEquals(-20, PanTilt.getPanTiltDegrees(travelling(ahead, fanned, 0.5), 540, false, first), 1e-9);
+        assertEquals(10, PanTilt.getPanTiltDegrees(travelling(ahead, fanned, 0.5), 540, false, middle), 1e-9);
+        assertEquals(40, PanTilt.getPanTiltDegrees(travelling(ahead, fanned, 0.5), 540, false, last), 1e-9);
+
+        // from where they start to where they end up, mirrored with the preset
+        assertEquals(0, PanTilt.getPanTiltDegrees(travelling(ahead, fanned, 0), 540, false, last));
+        assertEquals(80, PanTilt.getPanTiltDegrees(travelling(ahead, fanned, 1), 540, false, last));
+        assertEquals(-20, PanTilt.getPanTiltDegrees(travelling(ahead, fanned, 0.25), 540, true, last), 1e-9);
+
+        // the channel follows the head, a percentage of the range included
+        CachedFixtureChannel wide = channel(FixtureCapability.FixtureCapabilityType.Pan, "0deg", "630deg");
+        FixtureCapabilityValue middlePercentage = value(FixtureCapability.FixtureCapabilityType.Pan);
+        middlePercentage.setValuePercentage(0.5);
+        assertEquals(255 * (0.5 + 40.0 / 630), PanTilt.getPanTiltChannelValue(travelling(middlePercentage, fanned, 0.5), wide, false, last), 1e-9);
+    }
+
+    @Test
+    void turnsTheFixturesFromASpotToAPosition() {
+        PanTilt.StagePlacement hanging = new PanTilt.StagePlacement(new double[]{0, 405.4, 0}, new double[]{0, 0, 0});
+        FixtureCapabilityValue spot = value(FixtureCapability.FixtureCapabilityType.Tilt);
+        spot.setAimX(0d);
+        spot.setAimY(0d);
+        spot.setAimZ(400d);
+        FixtureCapabilityValue down = value(FixtureCapability.FixtureCapabilityType.Tilt);
+        down.setValueDegrees(0d);
+
+        // from 45° up to the front down to straight down
+        assertEquals(-22.5, PanTilt.getPanTiltDegrees(travelling(spot, down, 0.5), 270, false, new PanTilt.Context(0, 1, hanging)), 1e-9);
+
+        // without knowing where the fixture hangs, it turns to the position as soon as the transition starts
+        assertNull(PanTilt.getPanTiltDegrees(travelling(spot, down, 0), 270, false, null));
+        assertEquals(0, PanTilt.getPanTiltDegrees(travelling(spot, down, 0.01), 270, false, null));
+        assertEquals(0, PanTilt.getPanTiltDegrees(travelling(down, spot, 0), 270, false, null));
+        assertNull(PanTilt.getPanTiltDegrees(travelling(down, spot, 0.5), 270, false, null));
+    }
 }

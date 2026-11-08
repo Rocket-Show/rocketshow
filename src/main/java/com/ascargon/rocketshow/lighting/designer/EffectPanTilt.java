@@ -1,13 +1,15 @@
 package com.ascargon.rocketshow.lighting.designer;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
  * A movement of the moving heads of a preset around where the preset points them (or around the middle, if it
  * doesn't): a circle, a figure 8, a line back and forth or a wave (back and forth on the pan, nodding three times on
  * the tilt on the way), its size given in degrees on each axis, which moves every model the same way. It runs on the
- * timing of a curve: its period, its phase, the chase over the fixtures and how long it runs. The designer plays it
- * the very same way (effect-pan-tilt.ts).
+ * timing of a curve: its period, its phase, the chase over the fixtures, how long it runs and how far it moves each
+ * fixture by its place in the fan of the preset (a line fanned "linear" opens and closes the fan of the heads, see
+ * EffectCurve.fanMode). The designer plays it the very same way (effect-pan-tilt.ts).
  *
  * @author Moritz A. Vieli
  */
@@ -26,6 +28,7 @@ public class EffectPanTilt extends EffectCurve {
     private double sizePanDegrees = 60;
     private double sizeTiltDegrees = 30;
 
+
     // where the shape is at a position inside its cycle (between 0 and 1), from -1 to 1 on each axis
     public Offset getShapePosition(double cyclePosition) {
         double twice = (cyclePosition * 2) % 1;
@@ -40,9 +43,15 @@ public class EffectPanTilt extends EffectCurve {
         };
     }
 
-    // how far the passed fixture is moved away from where the preset points it, or null if the movement does not apply
-    // at this moment
+
+    // How far the passed fixture is moved away from where the preset points it, or null if the movement does not apply
+    // at this moment. Fanned, it moves as far as its place in the fan of the preset says (its place on the stage, if the
+    // preset fans by it, see Fan).
     public Offset getOffsetAtMillis(double timeMillis, Integer fixtureIndex, Integer fixtureCount, Double beatsPerMinute) {
+        return getOffsetAtMillis(timeMillis, fixtureIndex, fixtureCount, beatsPerMinute, null);
+    }
+
+    public Offset getOffsetAtMillis(double timeMillis, Integer fixtureIndex, Integer fixtureCount, Double beatsPerMinute, Double fanPlace) {
         Double cyclePosition = this.getCyclePositionAtMillis(timeMillis, fixtureIndex, fixtureCount, beatsPerMinute);
 
         if (cyclePosition == null) {
@@ -50,8 +59,9 @@ public class EffectPanTilt extends EffectCurve {
         }
 
         Offset shapePosition = this.getShapePosition(cyclePosition);
+        double fan = this.getFanFactor(Fan.getFanPlace(fixtureIndex, fixtureCount, fanPlace));
 
-        return new Offset(sizePanDegrees / 2 * shapePosition.pan(), sizeTiltDegrees / 2 * shapePosition.tilt());
+        return new Offset(sizePanDegrees / 2 * shapePosition.pan() * fan, sizeTiltDegrees / 2 * shapePosition.tilt() * fan);
     }
 
     public String getShape() {
@@ -62,6 +72,7 @@ public class EffectPanTilt extends EffectCurve {
     public void setShape(String shape) {
         this.shape = shape == null || shape.isEmpty() ? "circle" : shape;
     }
+
 
     public double getSizePanDegrees() {
         return sizePanDegrees;

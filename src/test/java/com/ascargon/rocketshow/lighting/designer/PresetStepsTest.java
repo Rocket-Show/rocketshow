@@ -238,6 +238,88 @@ class PresetStepsTest {
         assertEquals(0.6, state.getFixtureCapabilityValues().get(0).getValuePercentage(), 1e-10);
     }
 
+    private FixtureCapabilityValue capability(FixtureCapability.FixtureCapabilityType type, String blade, Double valuePercentage, Double valueDegrees, Double spreadDegrees) {
+        FixtureCapabilityValue capabilityValue = new FixtureCapabilityValue();
+        capabilityValue.setType(type);
+        capabilityValue.setBlade(blade);
+        capabilityValue.setValuePercentage(valuePercentage);
+        capabilityValue.setValueDegrees(valueDegrees);
+        capabilityValue.setSpreadDegrees(spreadDegrees);
+
+        return capabilityValue;
+    }
+
+    private FixtureCapabilityValue findCapability(PresetStepState state, FixtureCapability.FixtureCapabilityType type, String blade) {
+        return state.getFixtureCapabilityValues().stream()
+                .filter(value -> value.getType() == type && java.util.Objects.equals(value.getBlade(), blade))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    @Test
+    void eachMovingHeadTravelsOnItsOwnFromOneFanToTheNext() {
+        PresetStep from = step(0, 0, 0);
+        PresetStep to = step(1000, 0, 1000);
+        from.getFixtureCapabilityValues().add(capability(FixtureCapability.FixtureCapabilityType.Pan, null, null, 0d, null));
+        from.getFixtureCapabilityValues().add(capability(FixtureCapability.FixtureCapabilityType.Tilt, null, 0.2, null, null));
+        to.getFixtureCapabilityValues().add(capability(FixtureCapability.FixtureCapabilityType.Pan, null, null, 20d, 120d));
+        to.getFixtureCapabilityValues().add(capability(FixtureCapability.FixtureCapabilityType.Tilt, null, 0.6, null, null));
+
+        PresetStepState state = PresetSteps.getStateAtMillis(preset(from, to), 1250);
+        FixtureCapabilityValue pan = findCapability(state, FixtureCapability.FixtureCapabilityType.Pan, null);
+        FixtureCapabilityValue tilt = findCapability(state, FixtureCapability.FixtureCapabilityType.Tilt, null);
+
+        // where the heads point is worked out for each of them, from the value they travel from (see PanTilt)
+        assertEquals(20, pan.getValueDegrees());
+        assertEquals(120, pan.getSpreadDegrees());
+        assertEquals(from.getFixtureCapabilityValues().get(0), pan.getTransitionFrom());
+        assertEquals(0.25, pan.getTransitionPosition());
+
+        // two percentages of the range alone travel like any other percentage
+        assertEquals(0.3, tilt.getValuePercentage(), 1e-10);
+        assertEquals(null, tilt.getTransitionFrom());
+
+        // a step on its own travels from nothing, and the values of a step are never touched
+        assertEquals(null, PresetSteps.getStateAtMillis(preset(from, to), 2000).getFixtureCapabilityValues().get(0).getTransitionFrom());
+        assertEquals(null, to.getFixtureCapabilityValues().get(0).getTransitionFrom());
+    }
+
+    @Test
+    void aFanTravelsForEachFixtureOnItsOwn() {
+        PresetStep from = step(0, 0, 0);
+        PresetStep to = step(1000, 0, 1000);
+        from.getFixtureCapabilityValues().add(capability(FixtureCapability.FixtureCapabilityType.Intensity, null, 1d, null, null));
+        FixtureCapabilityValue fanned = capability(FixtureCapability.FixtureCapabilityType.Intensity, null, 0.6, null, null);
+        fanned.setFan(List.of(FanStop.of(0, 0.2), FanStop.of(1, 1)));
+        to.getFixtureCapabilityValues().add(fanned);
+
+        PresetStepState state = PresetSteps.getStateAtMillis(preset(from, to), 1500);
+        FixtureCapabilityValue dimmer = findCapability(state, FixtureCapability.FixtureCapabilityType.Intensity, null);
+
+        // the fan and the value it travels from are kept, each fixture works out its own value (see Fan)
+        assertEquals(fanned.getFan(), dimmer.getFan());
+        assertEquals(from.getFixtureCapabilityValues().get(0), dimmer.getTransitionFrom());
+        assertEquals(0.5, dimmer.getTransitionPosition());
+        assertEquals(0.6, Fan.getFixtureFanValues(state.getFixtureCapabilityValues(), new PanTilt.Context(0, 3, null)).get(0).getValuePercentage(), 1e-12);
+    }
+
+    @Test
+    void eachBladeOfAFramingShutterTravelsFromTheSameBlade() {
+        PresetStep from = step(0, 0, 0);
+        PresetStep to = step(1000, 0, 1000);
+        from.getFixtureCapabilityValues().add(capability(FixtureCapability.FixtureCapabilityType.BladeInsertion, "Top", 0d, null, null));
+        from.getFixtureCapabilityValues().add(capability(FixtureCapability.FixtureCapabilityType.BladeInsertion, "Bottom", 1d, null, null));
+        to.getFixtureCapabilityValues().add(capability(FixtureCapability.FixtureCapabilityType.BladeInsertion, "Bottom", 0.5, null, null));
+        to.getFixtureCapabilityValues().add(capability(FixtureCapability.FixtureCapabilityType.BladeInsertion, "Top", 1d, null, null));
+
+        PresetStepState state = PresetSteps.getStateAtMillis(preset(from, to), 1500);
+
+        // each keeps its blade, which says which blade of the shutter it moves
+        assertEquals(2, state.getFixtureCapabilityValues().size());
+        assertEquals(0.5, findCapability(state, FixtureCapability.FixtureCapabilityType.BladeInsertion, "Top").getValuePercentage(), 1e-10);
+        assertEquals(0.75, findCapability(state, FixtureCapability.FixtureCapabilityType.BladeInsertion, "Bottom").getValuePercentage(), 1e-10);
+    }
+
     private FixtureCapabilityValue colorIntensity(double valuePercentage) {
         FixtureCapabilityValue capabilityValue = new FixtureCapabilityValue();
         capabilityValue.setType(FixtureCapability.FixtureCapabilityType.ColorIntensity);

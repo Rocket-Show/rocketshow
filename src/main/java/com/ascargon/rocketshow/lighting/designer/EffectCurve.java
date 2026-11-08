@@ -85,11 +85,48 @@ public class EffectCurve extends Effect {
     // how many fixtures share the same chase step (1 = each fixture on its own)
     private double phasingGroupSize = 1;
 
+    // How far the curve swings on each fixture by its place in the fan of the preset (see Fan): "none" as far on all of
+    // them, "linear" the most on the first and the last one, the other way round on the one than on the other,
+    // "center" the most on the first and the last one, the same way, "side" from not at all on the first one to the
+    // most on the last one. The one in the middle stands still, except from the first one. A movement of the moving
+    // heads moves as far (a line fanned "linear" opens and closes the fan of the heads).
+    private String fanMode = "none";
+
     // how long a beat lasts at the passed tempo
     public static double getBeatMillis(Double beatsPerMinute) {
         double bpm = beatsPerMinute != null && beatsPerMinute > 0 ? beatsPerMinute : DEFAULT_BEATS_PER_MINUTE;
 
         return 60000 / bpm;
+    }
+
+    // whether the curve swings as far as the place of each fixture in the fan says
+    @JsonIgnore
+    public boolean isFanned() {
+        return "linear".equals(fanMode) || "center".equals(fanMode) || "side".equals(fanMode);
+    }
+
+    // how far the curve swings on a fixture at the passed place in the fan (see Fan), from -1 to 1
+    public double getFanFactor(Double place) {
+        return Fan.getFanFactor(fanMode, place);
+    }
+
+    // The value of the curve on a fixture at the passed place in the fan, swung around its position as far as the place
+    // says, or null if it doesn't apply at this moment
+    public Double getFannedValue(Double value, Double place) {
+        if (value == null || !this.isFanned()) {
+            return value;
+        }
+
+        return this.position + (value - this.position) * this.getFanFactor(place);
+    }
+
+    public String getFanMode() {
+        return fanMode;
+    }
+
+    // a value missing or null swings as far on all the fixtures, like in the designer (and like curves always did)
+    public void setFanMode(String fanMode) {
+        this.fanMode = fanMode == null || fanMode.isEmpty() ? "none" : fanMode;
     }
 
     // whether the curve follows the tempo instead of a fixed time

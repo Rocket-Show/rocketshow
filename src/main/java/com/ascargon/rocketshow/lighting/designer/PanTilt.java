@@ -28,10 +28,15 @@ final class PanTilt {
     }
 
     /**
-     * What places a fixture of a preset at a spot of its own: its place in the chase of the preset (to fan it out) and
-     * where it hangs (to aim it at a spot, null if it isn't known).
+     * What places a fixture of a preset at a spot of its own: its place in the chase of the preset and in its fan (to
+     * fan it out, see Fan: its place on the stage if the preset fans by it, NaN if the fixtures can't be told apart
+     * there, null to take its place in the chase) and where it hangs (to aim it at a spot, null if it isn't known).
      */
-    record Context(int fixtureIndex, int fixtureCount, StagePlacement placement) {
+    record Context(int fixtureIndex, int fixtureCount, StagePlacement placement, Double fanPlace) {
+
+        Context(int fixtureIndex, int fixtureCount, StagePlacement placement) {
+            this(fixtureIndex, fixtureCount, placement, null);
+        }
     }
 
     /**
@@ -50,6 +55,28 @@ final class PanTilt {
     // does the value point the fixtures at a spot on the stage?
     static boolean hasAim(FixtureCapabilityValue value) {
         return isNumber(value.getAimX()) && isNumber(value.getAimY()) && isNumber(value.getAimZ());
+    }
+
+    // does a pan or tilt value say where to point at all?
+    static boolean hasPanTiltValue(FixtureCapabilityValue value) {
+        return hasAim(value) || isNumber(value.getValueDegrees()) || hasPercentage(value);
+    }
+
+    // Is a pan or tilt value a percentage of the range alone (of a project before the degrees): no degrees, no spot and
+    // no fan?
+    private static boolean isPlainPercentage(FixtureCapabilityValue value) {
+        return !hasAim(value)
+                && !isNumber(value.getValueDegrees())
+                && hasPercentage(value)
+                && (!isNumber(value.getSpreadDegrees()) || value.getSpreadDegrees() == 0);
+    }
+
+    // Does a preset travelling from the one value to the other turn each moving head on its own (see
+    // getPanTiltDegrees)? Both have to say where to point the heads. Two percentages of the range alone travel like any
+    // other percentage does, and a value saying nothing is taken as soon as the transition starts, like the slot of a
+    // wheel.
+    static boolean isPanTiltTransition(FixtureCapabilityValue from, FixtureCapabilityValue to) {
+        return isPanTilt(to.getType()) && hasPanTiltValue(from) && hasPanTiltValue(to) && !(isPlainPercentage(from) && isPlainPercentage(to));
     }
 
     private static boolean isNumber(Double value) {
@@ -88,21 +115,48 @@ final class PanTilt {
         return channel.getMaxValue() * position;
     }
 
-    // the degrees the passed fixture of a preset is turned by to fan the fixtures out: the first one by half of them to
-    // one side, the last one by half of them to the other
-    static double getSpreadDegrees(Double spreadDegrees, Context context) {
-        if (!isNumber(spreadDegrees) || context == null || context.fixtureCount() < 2) {
+    // The degrees the passed fixture of a preset is turned by to fan the fixtures out: the first one by half of them to
+    // one side, the last one by half of them to the other, or ("center" as the shape) the one in the middle by half of
+    // them to one side, the ends by half of them to the other (see Fan)
+    static double getSpreadDegrees(Double spreadDegrees, Context context, String shape) {
+        if (!isNumber(spreadDegrees) || context == null) {
             return 0;
         }
 
-        return spreadDegrees * ((double) context.fixtureIndex() / (context.fixtureCount() - 1) - 0.5);
+        return Fan.getSpreadOffset(spreadDegrees, shape, Fan.getFanPlace(context));
+    }
+
+    static double getSpreadDegrees(Double spreadDegrees, Context context) {
+        return getSpreadDegrees(spreadDegrees, context, null);
     }
 
     // Where a pan or tilt value points a fixture on its axis, in degrees from the middle of its range, or null if it
     // can't tell (e.g. a spot to aim at, but no idea where the fixture hangs). A spot is where the fixtures point,
     // whatever the mirror of the preset says; everything else is mirrored around the middle.
+    // While a preset travels from one step into the next, each fixture travels from where the value of the step before
+    // points it to where this one does: the fan opens or closes, a spot moves over the stage and a head turns from a
+    // spot to a position on its way. If only one of them can tell, the fixture turns to it as soon as the transition
+    // starts, like a wheel does to its slot.
     static Double getPanTiltDegrees(FixtureCapabilityValue value, double range, boolean mirror, Context context) {
-        double spread = getSpreadDegrees(value.getSpreadDegrees(), context);
+        Double degrees = getOwnPanTiltDegrees(value, range, mirror, context);
+
+        if (value.getTransitionFrom() == null) {
+            return degrees;
+        }
+
+        Double fromDegrees = getOwnPanTiltDegrees(value.getTransitionFrom(), range, mirror, context);
+        double position = value.getTransitionPosition();
+
+        if (degrees == null || fromDegrees == null) {
+            return position > 0 ? degrees : fromDegrees;
+        }
+
+        return fromDegrees + (degrees - fromDegrees) * position;
+    }
+
+    // where a pan or tilt value points a fixture on its own, without the step it travels from (see getPanTiltDegrees)
+    private static Double getOwnPanTiltDegrees(FixtureCapabilityValue value, double range, boolean mirror, Context context) {
+        double spread = getSpreadDegrees(value.getSpreadDegrees(), context, value.getFanShape());
 
         if (hasAim(value)) {
             if (context == null || context.placement() == null) {
@@ -131,7 +185,7 @@ final class PanTilt {
 
     // The value of a channel playing a pan or tilt value, or null if the channel doesn't turn the fixture on its axis
     // or the value doesn't say where to. A percentage of the range (of a project before the degrees) is played like it
-    // always was, unless the fixtures are fanned out.
+    // always was, unless the fixtures are fanned out or travel from a step pointing them in another way.
     static Double getPanTiltChannelValue(FixtureCapabilityValue value, CachedFixtureChannel channel, boolean mirror, Context context) {
         Double range = getAxisRange(channel, value.getType());
 
@@ -139,7 +193,7 @@ final class PanTilt {
             return null;
         }
 
-        if (!hasAim(value) && !isNumber(value.getValueDegrees()) && hasPercentage(value) && getSpreadDegrees(value.getSpreadDegrees(), context) == 0) {
+        if (value.getTransitionFrom() == null && !hasAim(value) && !isNumber(value.getValueDegrees()) && hasPercentage(value) && getSpreadDegrees(value.getSpreadDegrees(), context, value.getFanShape()) == 0) {
             return channel.getMaxValue() * (mirror ? 1 - value.getValuePercentage() : value.getValuePercentage());
         }
 

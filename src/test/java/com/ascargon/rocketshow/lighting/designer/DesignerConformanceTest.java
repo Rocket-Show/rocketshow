@@ -172,15 +172,22 @@ class DesignerConformanceTest {
         return result;
     }
 
-    // a capability value as the designer writes it (e.g. the color "Warm White"), without the properties missing
+    // a capability value as the designer writes it (e.g. the color "Warm White"), without the properties missing. A pan
+    // or tilt value between two steps names the value it travels from and how far it has come (see PanTilt).
     private static ObjectNode capability(FixtureCapabilityValue value) {
         ObjectNode written = DesignerJson.MAPPER.valueToTree(value);
         ObjectNode capability = NODES.objectNode();
 
-        for (String property : List.of("type", "color", "wheel", "profileUuid", "valuePercentage", "slotNumber")) {
+        for (String property : List.of("type", "color", "wheel", "profileUuid", "valuePercentage", "slotNumber",
+                "valueDegrees", "spreadDegrees", "fanShape", "fan", "aimX", "aimY", "aimZ", "blade")) {
             if (written.has(property) && !written.get(property).isNull()) {
                 capability.set(property, written.get(property));
             }
+        }
+
+        if (value.getTransitionFrom() != null) {
+            capability.set("transitionFrom", capability(value.getTransitionFrom()));
+            capability.put("transitionPosition", value.getTransitionPosition());
         }
 
         return capability;
