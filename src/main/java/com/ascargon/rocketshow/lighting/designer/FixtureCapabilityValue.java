@@ -37,6 +37,9 @@ public class FixtureCapabilityValue {
     // the blade of a framing shutter: Top, Right, Bottom or Left
     private String blade;
 
+    // the strobe: the effect it flashes in (see CapabilityPositions), a plain strobe if none is given
+    private String shutterEffect;
+
     // pan and tilt, while a preset travels from one step into the next: the value of the step it travels from and how
     // far it has come (between 0 and 1). Each moving head travels from where the one value points it to where the
     // other does, so the heads fan in and out, follow a spot moving over the stage and turn from a spot to a position
@@ -61,6 +64,7 @@ public class FixtureCapabilityValue {
         copy.aimY = aimY;
         copy.aimZ = aimZ;
         copy.blade = blade;
+        copy.shutterEffect = shutterEffect;
         copy.fanShape = fanShape;
         copy.fan = fan == null ? null : new ArrayList<>(fan);
         copy.transitionFrom = transitionFrom;
@@ -143,6 +147,14 @@ public class FixtureCapabilityValue {
 
     public void setAimZ(Double aimZ) {
         this.aimZ = aimZ;
+    }
+
+    public String getShutterEffect() {
+        return shutterEffect;
+    }
+
+    public void setShutterEffect(String shutterEffect) {
+        this.shutterEffect = shutterEffect;
     }
 
     public String getBlade() {

@@ -35,7 +35,6 @@ public class FixtureCapability {
         WheelShake,
         WheelSlotRotation,
         WheelRotation,
-        Effec,
         EffectSpeed,
         EffectDuration,
         EffectParameter,

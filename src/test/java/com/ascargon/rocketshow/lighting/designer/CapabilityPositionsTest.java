@@ -286,4 +286,56 @@ class CapabilityPositionsTest {
         assertNull(CapabilityPositions.getShakeChannelValue(goboChannel, "Channel", 2d, 0));
         assertNull(CapabilityPositions.getShakeChannelValue(goboChannel, "Other", 2d, 1));
     }
+
+    private static FixtureCapability shutter(int low, int high, String effect, boolean random, boolean sound) {
+        FixtureCapability capability = range(low, high, FixtureCapability.FixtureCapabilityType.ShutterStrobe);
+        capability.setShutterEffect(effect);
+        capability.setSpeedStart("slow");
+        capability.setSpeedEnd("fast");
+        capability.setRandomTiming(random ? Boolean.TRUE : null);
+        capability.setSoundControlled(sound ? Boolean.TRUE : null);
+        return capability;
+    }
+
+    @Test
+    void flashesTheStrobeInAnEffectOrInTheClosestOneTheChannelHas() {
+        FixtureCapability closed = range(0, 9, FixtureCapability.FixtureCapabilityType.ShutterStrobe);
+        closed.setShutterEffect("Closed");
+        FixtureCapability open = range(10, 19, FixtureCapability.FixtureCapabilityType.ShutterStrobe);
+        open.setShutterEffect("Open");
+        CachedFixtureChannel shutter = channel(List.of(
+                closed,
+                open,
+                shutter(20, 59, "Strobe", false, false),
+                shutter(60, 79, "Strobe", true, false),
+                shutter(80, 99, "Pulse", false, false),
+                shutter(100, 119, "RampUp", false, false),
+                shutter(140, 159, "Lightning", false, false),
+                shutter(180, 199, "Pulse", true, false),
+                shutter(200, 255, "Strobe", false, true)));
+        FixtureCapability.FixtureCapabilityType strobe = FixtureCapability.FixtureCapabilityType.ShutterStrobe;
+
+        // the effect asked for, a plain strobe without one
+        assertEquals(29.75, CapabilityPositions.getPositionedChannelValue(shutter, strobe, 0.25, null, null), 1e-9);
+        assertEquals(64.75, CapabilityPositions.getPositionedChannelValue(shutter, strobe, 0.25, null, "Random"), 1e-9);
+        assertEquals(84.75, CapabilityPositions.getPositionedChannelValue(shutter, strobe, 0.25, null, "Pulse"), 1e-9);
+        assertEquals(104.75, CapabilityPositions.getPositionedChannelValue(shutter, strobe, 0.25, null, "RampUp"), 1e-9);
+        assertEquals(213.75, CapabilityPositions.getPositionedChannelValue(shutter, strobe, 0.25, null, "Sound"), 1e-9);
+
+        // the closest one it has: a ramp down pulses, a burst flashes at random, spikes flash at random as well
+        assertEquals(84.75, CapabilityPositions.getPositionedChannelValue(shutter, strobe, 0.25, null, "RampDown"), 1e-9);
+        assertEquals(64.75, CapabilityPositions.getPositionedChannelValue(shutter, strobe, 0.25, null, "Burst"), 1e-9);
+        assertEquals(64.75, CapabilityPositions.getPositionedChannelValue(shutter, strobe, 0.25, null, "Spikes"), 1e-9);
+        assertEquals(29.75, CapabilityPositions.getPositionedChannelValue(shutter, strobe, 0.25, null, "Unknown"), 1e-9);
+
+        // the shutter closed whatever the value, open at 0 whatever the effect
+        assertEquals(4, CapabilityPositions.getPositionedChannelValue(shutter, strobe, 0.7, null, "Closed"));
+        assertEquals(14, CapabilityPositions.getPositionedChannelValue(shutter, strobe, 0, null, "Pulse"));
+
+        // a par with a plain strobe only strobes, and can't close
+        CachedFixtureChannel par = channel(List.of(range(0, 9, FixtureCapability.FixtureCapabilityType.NoFunction), shutter(10, 255, "Strobe", false, false)));
+        assertEquals(10 + 245 * 0.25, CapabilityPositions.getPositionedChannelValue(par, strobe, 0.25, null, "Lightning"), 1e-9);
+        assertNull(CapabilityPositions.getPositionedChannelValue(par, strobe, 0.5, null, "Closed"));
+        assertTrue(CapabilityPositions.STROBE_EFFECTS.contains("RampUpDown"));
+    }
 }

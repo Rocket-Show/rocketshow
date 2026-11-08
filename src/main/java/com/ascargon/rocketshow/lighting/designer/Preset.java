@@ -92,6 +92,10 @@ public class Preset {
     // ("left-right", "front-back", "bottom-top").
     private String fanOrder = "preset";
 
+    // light the white LEDs of a fixture with red, green, blue and white with the white part of the colors of the
+    // preset (see EmitterColors). A preset written before the designer knew it doesn't.
+    private boolean whiteFromColor = false;
+
     // position offset, relative to the scene start
     // (null = start/end of the scene itself)
     private Double startMillis;

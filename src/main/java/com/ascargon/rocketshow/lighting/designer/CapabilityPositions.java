@@ -282,10 +282,81 @@ final class CapabilityPositions {
         return null;
     }
 
+    /**
+     * The effects a strobe can flash in (see FixtureCapabilityValue.shutterEffect), on every model: as the fixture
+     * library names them, and a strobe flashing at random ("Random") or to the sound ("Sound"). A fixture which can't
+     * flash in the effect asked for flashes in the closest one it has, in the end as a plain strobe. "Closed" closes
+     * the shutter. The designer plays them the very same way (capability-position.ts).
+     */
+    static final List<String> STROBE_EFFECTS = List.of(
+            "Strobe", "Random", "Pulse", "RampUp", "RampDown", "RampUpDown", "Lightning", "Spikes", "Burst", "Sound", "Closed");
+
+    // what a fixture flashes in instead of an effect it doesn't have, one after the other, a plain strobe at last
+    private static final Map<String, List<String>> STROBE_FALLBACKS = Map.ofEntries(
+            entry("Random", List.of("Spikes", "Lightning")),
+            entry("RampUp", List.of("RampUpDown", "Pulse")),
+            entry("RampDown", List.of("RampUpDown", "Pulse")),
+            entry("RampUpDown", List.of("Pulse")),
+            entry("Lightning", List.of("Random", "Spikes")),
+            entry("Spikes", List.of("Random", "Lightning")),
+            entry("Burst", List.of("Random")));
+
+    // The capabilities of the channel flashing in an effect: a strobe at random is a strobe with a random timing (or
+    // any other effect at random), one to the sound any effect controlled by the sound, preferring a strobe. Any other
+    // effect flashes on its own, not at random or to the sound, if the channel has it that way.
+    private static List<CachedFixtureCapability> getStrobesOf(CachedFixtureChannel channel, String effect) {
+        List<CachedFixtureCapability> shutters = ofType(channel, FixtureCapability.FixtureCapabilityType.ShutterStrobe);
+
+        if ("Random".equals(effect) || "Sound".equals(effect)) {
+            List<CachedFixtureCapability> matching = shutters.stream()
+                    .filter(channelCapability -> Boolean.TRUE.equals("Random".equals(effect) ? channelCapability.getCapability().getRandomTiming() : channelCapability.getCapability().getSoundControlled()))
+                    .toList();
+            List<CachedFixtureCapability> strobes = matching.stream()
+                    .filter(channelCapability -> "Strobe".equals(channelCapability.getCapability().getShutterEffect()))
+                    .toList();
+
+            return strobes.isEmpty() ? matching : strobes;
+        }
+
+        List<CachedFixtureCapability> effects = shutters.stream()
+                .filter(channelCapability -> effect.equals(channelCapability.getCapability().getShutterEffect()))
+                .toList();
+        List<CachedFixtureCapability> regular = effects.stream()
+                .filter(channelCapability -> !Boolean.TRUE.equals(channelCapability.getCapability().getRandomTiming()) && !Boolean.TRUE.equals(channelCapability.getCapability().getSoundControlled()))
+                .toList();
+
+        return regular.isEmpty() ? effects : regular;
+    }
+
+    // The capability of the channel flashing in the passed effect (a plain strobe without one), or in the closest one
+    // the channel has (see STROBE_FALLBACKS), in the end in a strobe flashing on its own (not at random or to the
+    // sound), or else any of them
+    private static CachedFixtureCapability getStrobe(CachedFixtureChannel channel, String shutterEffect) {
+        String effect = shutterEffect != null && STROBE_EFFECTS.contains(shutterEffect) ? shutterEffect : "Strobe";
+        List<String> candidates = new java.util.ArrayList<>();
+        candidates.add(effect);
+        candidates.addAll(STROBE_FALLBACKS.getOrDefault(effect, List.of()));
+        candidates.add("Strobe");
+
+        for (String candidate : candidates) {
+            List<CachedFixtureCapability> strobes = getStrobesOf(channel, candidate);
+
+            if (!strobes.isEmpty()) {
+                return getWidest(channel, strobes);
+            }
+        }
+
+        return null;
+    }
+
     // the capability of the channel a positioned capability value is played with, or null if the channel doesn't do
     // it. A channel has one capability doing it: the widest one, unless the value says which kind it is. A blade is
     // played by the capabilities of the blade the value names.
     static CachedFixtureCapability getPositionedCapability(CachedFixtureChannel channel, FixtureCapability.FixtureCapabilityType type, double valuePercentage, String blade) {
+        return getPositionedCapability(channel, type, valuePercentage, blade, null);
+    }
+
+    static CachedFixtureCapability getPositionedCapability(CachedFixtureChannel channel, FixtureCapability.FixtureCapabilityType type, double valuePercentage, String blade, String shutterEffect) {
         if (isBladeType(type)) {
             return getWidest(channel, ofType(channel, type).stream()
                     .filter(channelCapability -> isEmpty(blade) || blade.equals(channelCapability.getCapability().getBlade()))
@@ -298,16 +369,19 @@ final class CapabilityPositions {
         }
 
         if (type == FixtureCapability.FixtureCapabilityType.ShutterStrobe) {
-            if (valuePercentage > 0) {
-                // a strobe flashing on its own, not at random or to the sound, or else any of them
-                List<CachedFixtureCapability> strobes = ofType(channel, type).stream()
-                        .filter(channelCapability -> "Strobe".equals(channelCapability.getCapability().getShutterEffect()))
-                        .toList();
-                List<CachedFixtureCapability> regular = strobes.stream()
-                        .filter(channelCapability -> !Boolean.TRUE.equals(channelCapability.getCapability().getRandomTiming()) && !Boolean.TRUE.equals(channelCapability.getCapability().getSoundControlled()))
-                        .toList();
+            if ("Closed".equals(shutterEffect)) {
+                // the shutter closed, whatever the value says, or else nothing to do
+                for (CachedFixtureCapability channelCapability : ofType(channel, type)) {
+                    if ("Closed".equals(channelCapability.getCapability().getShutterEffect())) {
+                        return channelCapability;
+                    }
+                }
 
-                return getWidest(channel, regular.isEmpty() ? strobes : regular);
+                return null;
+            }
+
+            if (valuePercentage > 0) {
+                return getStrobe(channel, shutterEffect);
             }
 
             // the shutter open, or else no strobe
@@ -360,7 +434,7 @@ final class CapabilityPositions {
             return true;
         }
 
-        if (type == FixtureCapability.FixtureCapabilityType.ShutterStrobe && valuePercentage <= 0) {
+        if (type == FixtureCapability.FixtureCapabilityType.ShutterStrobe && (valuePercentage <= 0 || "Closed".equals(capability.getShutterEffect()))) {
             return true;
         }
 
@@ -381,11 +455,15 @@ final class CapabilityPositions {
 
     // the value of a channel playing a positioned capability value (0 to 1), or null if the channel doesn't do it
     static Double getPositionedChannelValue(CachedFixtureChannel channel, FixtureCapability.FixtureCapabilityType type, double valuePercentage, String blade) {
+        return getPositionedChannelValue(channel, type, valuePercentage, blade, null);
+    }
+
+    static Double getPositionedChannelValue(CachedFixtureChannel channel, FixtureCapability.FixtureCapabilityType type, double valuePercentage, String blade, String shutterEffect) {
         if (isRotationType(type)) {
             return getRotationChannelValue(channel, type, valuePercentage);
         }
 
-        CachedFixtureCapability channelCapability = getPositionedCapability(channel, type, valuePercentage, blade);
+        CachedFixtureCapability channelCapability = getPositionedCapability(channel, type, valuePercentage, blade, shutterEffect);
 
         if (channelCapability == null) {
             return null;
