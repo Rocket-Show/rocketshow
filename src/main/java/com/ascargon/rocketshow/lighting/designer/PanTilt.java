@@ -28,10 +28,15 @@ final class PanTilt {
     }
 
     /**
-     * What places a fixture of a preset at a spot of its own: its place in the chase of the preset (to fan it out) and
-     * where it hangs (to aim it at a spot, null if it isn't known).
+     * What places a fixture of a preset at a spot of its own: its place in the chase of the preset and in its fan (to
+     * fan it out, see Fan: its place on the stage if the preset fans by it, NaN if the fixtures can't be told apart
+     * there, null to take its place in the chase) and where it hangs (to aim it at a spot, null if it isn't known).
      */
-    record Context(int fixtureIndex, int fixtureCount, StagePlacement placement) {
+    record Context(int fixtureIndex, int fixtureCount, StagePlacement placement, Double fanPlace) {
+
+        Context(int fixtureIndex, int fixtureCount, StagePlacement placement) {
+            this(fixtureIndex, fixtureCount, placement, null);
+        }
     }
 
     /**
@@ -110,14 +115,19 @@ final class PanTilt {
         return channel.getMaxValue() * position;
     }
 
-    // the degrees the passed fixture of a preset is turned by to fan the fixtures out: the first one by half of them to
-    // one side, the last one by half of them to the other
-    static double getSpreadDegrees(Double spreadDegrees, Context context) {
-        if (!isNumber(spreadDegrees) || context == null || context.fixtureCount() < 2) {
+    // The degrees the passed fixture of a preset is turned by to fan the fixtures out: the first one by half of them to
+    // one side, the last one by half of them to the other, or ("center" as the shape) the one in the middle by half of
+    // them to one side, the ends by half of them to the other (see Fan)
+    static double getSpreadDegrees(Double spreadDegrees, Context context, String shape) {
+        if (!isNumber(spreadDegrees) || context == null) {
             return 0;
         }
 
-        return spreadDegrees * ((double) context.fixtureIndex() / (context.fixtureCount() - 1) - 0.5);
+        return Fan.getSpreadOffset(spreadDegrees, shape, Fan.getFanPlace(context));
+    }
+
+    static double getSpreadDegrees(Double spreadDegrees, Context context) {
+        return getSpreadDegrees(spreadDegrees, context, null);
     }
 
     // Where a pan or tilt value points a fixture on its axis, in degrees from the middle of its range, or null if it
@@ -146,7 +156,7 @@ final class PanTilt {
 
     // where a pan or tilt value points a fixture on its own, without the step it travels from (see getPanTiltDegrees)
     private static Double getOwnPanTiltDegrees(FixtureCapabilityValue value, double range, boolean mirror, Context context) {
-        double spread = getSpreadDegrees(value.getSpreadDegrees(), context);
+        double spread = getSpreadDegrees(value.getSpreadDegrees(), context, value.getFanShape());
 
         if (hasAim(value)) {
             if (context == null || context.placement() == null) {
@@ -183,7 +193,7 @@ final class PanTilt {
             return null;
         }
 
-        if (value.getTransitionFrom() == null && !hasAim(value) && !isNumber(value.getValueDegrees()) && hasPercentage(value) && getSpreadDegrees(value.getSpreadDegrees(), context) == 0) {
+        if (value.getTransitionFrom() == null && !hasAim(value) && !isNumber(value.getValueDegrees()) && hasPercentage(value) && getSpreadDegrees(value.getSpreadDegrees(), context, value.getFanShape()) == 0) {
             return channel.getMaxValue() * (mirror ? 1 - value.getValuePercentage() : value.getValuePercentage());
         }
 

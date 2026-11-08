@@ -347,9 +347,10 @@ public final class PresetSteps {
                 continue;
             }
 
-            if (PanTilt.isPanTiltTransition(fromValue, toValue)) {
+            if (PanTilt.isPanTiltTransition(fromValue, toValue) || Fan.isFanTransition(fromValue, toValue)) {
                 // Where the moving heads point travels for each of them on its own, in degrees: from one fan to the
-                // next, from one spot to the next and from a spot to a position (see PanTilt).
+                // next, from one spot to the next and from a spot to a position (see PanTilt). A value fanned out over
+                // the fixtures travels for each of them as well, e.g. from one gradient of colors to the next (see Fan).
                 FixtureCapabilityValue value = toValue.copy();
                 value.setTransitionFrom(fromValue);
                 value.setTransitionPosition(position);

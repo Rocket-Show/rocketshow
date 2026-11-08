@@ -48,6 +48,10 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
     // it is), 'add' to it or take the 'max' of both on each of red, green and blue
     private String blend = "replace";
 
+    // A still pattern stands where its phase and the chase put it at the start of its period, e.g. a gradient of the
+    // flow spread over the stage, moved along with the phase. It doesn't run, so it never stops either.
+    private boolean still = false;
+
     private static PixelPalette presetPalette() {
         PixelPalette palette = new PixelPalette();
         palette.setRef("preset");
@@ -323,6 +327,23 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
 
     public void setBlend(String blend) {
         this.blend = blend == null || blend.isEmpty() ? "replace" : blend;
+    }
+
+    public boolean isStill() {
+        return still;
+    }
+
+    // a pattern of an effect written before it could stand still runs
+    public void setStill(Boolean still) {
+        this.still = still != null && still;
+    }
+
+    // How many periods a still pattern stands at on the passed fixture (see still): where its phase and the chase put
+    // it at the start of its period, like a running one is there at its start
+    public double getStillCycles(Integer fixtureIndex, Integer fixtureCount, Double beatsPerMinute) {
+        double phase = this.getPhaseMillis(beatsPerMinute) + this.getPhasingMillis(fixtureIndex, fixtureCount, beatsPerMinute);
+
+        return (0 - phase) / this.getLengthMillis(beatsPerMinute);
     }
 
 }

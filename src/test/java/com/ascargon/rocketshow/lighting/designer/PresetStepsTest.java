@@ -285,6 +285,25 @@ class PresetStepsTest {
     }
 
     @Test
+    void aFanTravelsForEachFixtureOnItsOwn() {
+        PresetStep from = step(0, 0, 0);
+        PresetStep to = step(1000, 0, 1000);
+        from.getFixtureCapabilityValues().add(capability(FixtureCapability.FixtureCapabilityType.Intensity, null, 1d, null, null));
+        FixtureCapabilityValue fanned = capability(FixtureCapability.FixtureCapabilityType.Intensity, null, 0.6, null, null);
+        fanned.setFan(List.of(FanStop.of(0, 0.2), FanStop.of(1, 1)));
+        to.getFixtureCapabilityValues().add(fanned);
+
+        PresetStepState state = PresetSteps.getStateAtMillis(preset(from, to), 1500);
+        FixtureCapabilityValue dimmer = findCapability(state, FixtureCapability.FixtureCapabilityType.Intensity, null);
+
+        // the fan and the value it travels from are kept, each fixture works out its own value (see Fan)
+        assertEquals(fanned.getFan(), dimmer.getFan());
+        assertEquals(from.getFixtureCapabilityValues().get(0), dimmer.getTransitionFrom());
+        assertEquals(0.5, dimmer.getTransitionPosition());
+        assertEquals(0.6, Fan.getFixtureFanValues(state.getFixtureCapabilityValues(), new PanTilt.Context(0, 3, null)).get(0).getValuePercentage(), 1e-12);
+    }
+
+    @Test
     void eachBladeOfAFramingShutterTravelsFromTheSameBlade() {
         PresetStep from = step(0, 0, 0);
         PresetStep to = step(1000, 0, 1000);
