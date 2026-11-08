@@ -1537,7 +1537,30 @@ public class DefaultDesignerService implements DesignerService {
     // the value a positioned capability value (see CapabilityPositions) drives a channel of a fixture of the passed
     // profile to, or null, if the channel doesn't do it
     private static Double getPositionedChannelValue(FixtureCapabilityValue capabilityValue, CachedFixtureChannel channel, String profileUuid) {
-        if (!hasValue(capabilityValue) || (emptyToNull(capabilityValue.getProfileUuid()) != null && !capabilityValue.getProfileUuid().equals(profileUuid))) {
+        if (emptyToNull(capabilityValue.getProfileUuid()) != null && !capabilityValue.getProfileUuid().equals(profileUuid)) {
+            return null;
+        }
+
+        // a program of the fixture, at the speed of the value
+        if (capabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Effect) {
+            return Programs.getProgramChannelValue(channel, capabilityValue.getProgramNumber(), capabilityValue.getSoundControlled(), capabilityValue.getValuePercentage());
+        }
+
+        // a reset or the lamp switched on or off, on the channel doing it
+        if (capabilityValue.getType() == FixtureCapability.FixtureCapabilityType.Maintenance) {
+            Maintenance.Found found = emptyToNull(capabilityValue.getMaintenanceAction()) == null
+                    ? null
+                    : Maintenance.getCapability(List.of(channel), Maintenance.Action.of(capabilityValue.getMaintenanceAction()));
+
+            return found == null ? null : CapabilityPositions.getCenter(found.capability());
+        }
+
+        // a rotation turning (a wheel, if it names one) to an angle and holding it there
+        if (CapabilityPositions.isRotationType(capabilityValue.getType()) && capabilityValue.getValueDegrees() != null && !capabilityValue.getValueDegrees().isNaN()) {
+            return CapabilityPositions.getRotationAngleChannelValue(channel, capabilityValue.getType(), capabilityValue.getValueDegrees(), capabilityValue.getWheel());
+        }
+
+        if (!hasValue(capabilityValue)) {
             return null;
         }
 
@@ -1545,7 +1568,7 @@ public class DefaultDesignerService implements DesignerService {
             return CapabilityPositions.getShakeChannelValue(channel, capabilityValue.getWheel(), capabilityValue.getSlotNumber(), capabilityValue.getValuePercentage());
         }
 
-        return CapabilityPositions.getPositionedChannelValue(channel, capabilityValue.getType(), capabilityValue.getValuePercentage(), capabilityValue.getBlade(), capabilityValue.getShutterEffect());
+        return CapabilityPositions.getPositionedChannelValue(channel, capabilityValue.getType(), capabilityValue.getValuePercentage(), capabilityValue.getBlade(), capabilityValue.getShutterEffect(), capabilityValue.getWheel());
     }
 
     // the value a pan or tilt value points a fixture of the passed profile at with a channel, or null, if the channel
@@ -1577,7 +1600,7 @@ public class DefaultDesignerService implements DesignerService {
 
         // a fixture mixing its colors with filters is given the colors the other way round (see SubtractiveColors)
         // and the colors play on the emitters besides red, green and blue (see EmitterColors)
-        List<FixtureCapabilityValue> capabilityValues = SubtractiveColors.getFixtureCapabilityValues(state.getFixtureCapabilityValues(), cachedFixture.getChannels(), preset != null && preset.isWhiteFromColor());
+        List<FixtureCapabilityValue> capabilityValues = SubtractiveColors.getFixtureCapabilityValues(state.getFixtureCapabilityValues(), cachedFixture.getChannels(), preset != null && preset.isEmittersFromColor());
 
         // mix the capability values of the state the preset is in
         for (FixtureCapabilityValue presetCapabilityValue : capabilityValues) {
@@ -1600,8 +1623,9 @@ public class DefaultDesignerService implements DesignerService {
                         continue;
                     }
 
-                    if (CapabilityPositions.isPositionedType(presetCapabilityValue.getType())) {
-                        // a position is played on the channel as a whole, by the capability of it doing it
+                    if (CapabilityPositions.isPositionedType(presetCapabilityValue.getType()) || CapabilityPositions.isCommandType(presetCapabilityValue.getType())) {
+                        // a position (and a program or maintenance) is played on the channel as a whole, by the
+                        // capability of it doing it
                         Double value = getPositionedChannelValue(presetCapabilityValue, cachedChannel, cachedFixture.getProfile().getUuid());
 
                         if (value != null) {
@@ -1804,19 +1828,29 @@ public class DefaultDesignerService implements DesignerService {
                 for (PresetRegionScene preset : presets) {
                     // search for this fixture in the preset and get it's preset-specific index (for chasing effects)
                     String pixelKey = cachedFixture.getPixel() != null ? cachedFixture.getPixel().getKey() : null;
-                    Integer fixtureIndex = getFixtureIndex(preset.getPreset(), cachedFixture.getFixture().getUuid(), pixelKey);
+                    Integer presetIndex = getFixtureIndex(preset.getPreset(), cachedFixture.getFixture().getUuid(), pixelKey);
 
-                    if (fixtureIndex != null) {
+                    if (presetIndex != null) {
                         // this fixture is also in the preset -> mix the required values (overwrite existing values,
-                        // if set multiple times)
+                        // if set multiple times). Its chases and its fans in its own order follow the pattern of the
+                        // preset.
+                        Integer presetCount = fixtureCounts.get(preset.getPreset());
+                        int fixtureIndex = presetIndex;
+                        Integer fixtureCount = presetCount;
+
+                        if (presetCount != null) {
+                            SelectionPattern.Place pattern = preset.getPreset().getPatternPlace(presetIndex, presetCount);
+                            fixtureIndex = pattern.index();
+                            fixtureCount = pattern.count();
+                        }
+
                         double intensityPercentage = preset instanceof LiveScenes.LivePreset livePreset ? livePreset.getIntensity(timeMillis) : getPresetIntensity(preset, timeMillis);
                         PresetStepState state = presetStates.get(preset);
 
                         if (state == null) {
-                            state = getPresetStepState(preset, timeMillis, PresetSteps.getStepsPhasingMillis(preset.getPreset(), fixtureIndex, fixtureCounts.get(preset.getPreset())));
+                            state = getPresetStepState(preset, timeMillis, PresetSteps.getStepsPhasingMillis(preset.getPreset(), fixtureIndex, fixtureCount));
                         }
 
-                        Integer fixtureCount = fixtureCounts.get(preset.getPreset());
                         PanTilt.Context context = new PanTilt.Context(fixtureIndex, fixtureCount == null ? 1 : fixtureCount, placements.get(cachedFixture.getFixture().getUuid()), getStageFanPlace(preset.getPreset(), cachedFixture));
 
                         // what the preset puts on this fixture, the fans worked out for its place in them (see Fan)

@@ -50,8 +50,8 @@ final class SubtractiveColors {
 
     // The colors play on the emitters besides red, green and blue first (see EmitterColors): the white part of them on
     // the white LEDs, if the preset asks for it, and the color temperature on a warm and a cold white.
-    static List<FixtureCapabilityValue> getFixtureCapabilityValues(List<FixtureCapabilityValue> values, List<CachedFixtureChannel> channels, boolean whiteFromColor) {
-        List<FixtureCapabilityValue> capabilityValues = EmitterColors.getEmitterValues(values, channels, whiteFromColor);
+    static List<FixtureCapabilityValue> getFixtureCapabilityValues(List<FixtureCapabilityValue> values, List<CachedFixtureChannel> channels, boolean emittersFromColor) {
+        List<FixtureCapabilityValue> capabilityValues = EmitterColors.getEmitterValues(values, channels, emittersFromColor);
 
         if (!mixesSubtractively(channels)) {
             return capabilityValues;

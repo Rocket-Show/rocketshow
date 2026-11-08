@@ -6,16 +6,28 @@ import java.util.List;
 /**
  * The colors and the color temperature of a preset on the emitters of a fixture besides red, green and blue:
  * <ul>
- * <li>A preset lighting the white LEDs with the white part of its colors (Preset.whiteFromColor) gives a fixture with
- * red, green, blue and white the least of red, green and blue on its white, and only the rest on red, green and blue
- * (pure white on the white alone), unless the preset sets the white itself.</li>
  * <li>The color temperature of a preset plays on a fixture without a channel for it on its warm and its cold white (a
- * bicolor fixture): only the warm one at the warm end, both at full in the middle, only the cold one at the cold end,
- * unless the preset sets either of them itself.</li>
+ * bicolor fixture): only the warm one at the warm end, both at full in the middle, only the cold one at the cold end.
+ * A fixture with red, green and blue but without a warm and a cold white shows it as a color: warm white, white in the
+ * middle, a cold white. Neither, if the preset sets either of them (or any of red, green and blue) itself.</li>
+ * <li>A preset lighting the white and the amber LEDs with the parts of its colors (Preset.emittersFromColor) gives a
+ * fixture with red, green, blue and white the least of red, green and blue on its white, and of the rest the amber part
+ * (all of the red with three quarters as much of the green) on its amber, only the rest on red, green and blue, unless
+ * the preset sets the white or the amber itself.</li>
  * </ul>
  * The designer plays them the very same way (emitter-color.ts).
  */
 final class EmitterColors {
+
+    // the color a color temperature is shown with on red, green and blue: at the warm end, in the middle, at the cold end
+    private static final double[][] TEMPERATURE_COLORS = {
+            {1, 0.6, 0.3},
+            {1, 1, 1},
+            {0.8, 0.88, 1},
+    };
+
+    // how much green the light of an amber LED has, the red at full
+    private static final double AMBER_GREEN = 0.75;
 
     private EmitterColors() {
     }
@@ -61,82 +73,123 @@ final class EmitterColors {
      * The capability values of a preset as the passed channels of a fixture play them on their emitters (see above). The
      * passed values are returned as they are if nothing changes.
      */
-    static List<FixtureCapabilityValue> getEmitterValues(List<FixtureCapabilityValue> values, List<CachedFixtureChannel> channels, boolean whiteFromColor) {
+    static List<FixtureCapabilityValue> getEmitterValues(List<FixtureCapabilityValue> values, List<CachedFixtureChannel> channels, boolean emittersFromColor) {
         List<FixtureCapabilityValue> result = values;
-
-        // the color temperature on a warm and a cold white
-        FixtureCapabilityValue temperature = findValue(values, FixtureCapability.FixtureCapabilityType.ColorTemperature, null);
-
-        if (temperature != null
-                && !hasCapability(channels, FixtureCapability.FixtureCapabilityType.ColorTemperature, null)
-                && hasCapability(channels, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.WarmWhite)
-                && hasCapability(channels, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.ColdWhite)) {
-            double cold = Math.min(Math.max(temperature.getValuePercentage(), 0), 1);
-            List<FixtureCapabilityValue> added = new ArrayList<>();
-
-            if (findValue(values, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.WarmWhite) == null) {
-                added.add(emitterValue(FixtureCapability.FixtureCapabilityColor.WarmWhite, Math.min(1, 2 * (1 - cold))));
-            }
-
-            if (findValue(values, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.ColdWhite) == null) {
-                added.add(emitterValue(FixtureCapability.FixtureCapabilityColor.ColdWhite, Math.min(1, 2 * cold)));
-            }
-
-            if (!added.isEmpty()) {
-                List<FixtureCapabilityValue> withAdded = new ArrayList<>(result);
-                withAdded.addAll(added);
-                result = withAdded;
-            }
-        }
-
-        // the white part of the colors on the white LEDs
-        if (!whiteFromColor || !hasCapability(channels, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.White)) {
-            return result;
-        }
-
         List<FixtureCapability.FixtureCapabilityColor> rgb = List.of(FixtureCapability.FixtureCapabilityColor.Red, FixtureCapability.FixtureCapabilityColor.Green, FixtureCapability.FixtureCapabilityColor.Blue);
+        boolean hasRgb = true;
 
         for (FixtureCapability.FixtureCapabilityColor color : rgb) {
             if (!hasCapability(channels, FixtureCapability.FixtureCapabilityType.ColorIntensity, color)) {
-                return result;
+                hasRgb = false;
             }
         }
 
-        if (findValue(values, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.White) != null) {
+        // the color temperature on a warm and a cold white, or as a color
+        FixtureCapabilityValue temperature = findValue(values, FixtureCapability.FixtureCapabilityType.ColorTemperature, null);
+
+        if (temperature != null && !hasCapability(channels, FixtureCapability.FixtureCapabilityType.ColorTemperature, null)) {
+            double cold = Math.min(Math.max(temperature.getValuePercentage(), 0), 1);
+
+            if (hasCapability(channels, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.WarmWhite)
+                    && hasCapability(channels, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.ColdWhite)) {
+                List<FixtureCapabilityValue> added = new ArrayList<>();
+
+                if (findValue(values, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.WarmWhite) == null) {
+                    added.add(emitterValue(FixtureCapability.FixtureCapabilityColor.WarmWhite, Math.min(1, 2 * (1 - cold))));
+                }
+
+                if (findValue(values, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.ColdWhite) == null) {
+                    added.add(emitterValue(FixtureCapability.FixtureCapabilityColor.ColdWhite, Math.min(1, 2 * cold)));
+                }
+
+                if (!added.isEmpty()) {
+                    List<FixtureCapabilityValue> withAdded = new ArrayList<>(result);
+                    withAdded.addAll(added);
+                    result = withAdded;
+                }
+            } else if (hasRgb && noneOf(values, rgb)) {
+                int half = cold < 0.5 ? 0 : 1;
+                double share = cold < 0.5 ? cold * 2 : cold * 2 - 1;
+                List<FixtureCapabilityValue> withColor = new ArrayList<>(result);
+
+                for (int index = 0; index < rgb.size(); index++) {
+                    withColor.add(emitterValue(rgb.get(index),
+                            TEMPERATURE_COLORS[half][index] + (TEMPERATURE_COLORS[half + 1][index] - TEMPERATURE_COLORS[half][index]) * share));
+                }
+
+                result = withColor;
+            }
+        }
+
+        // the white and the amber parts of the colors on their LEDs
+        if (!emittersFromColor || !hasRgb) {
             return result;
         }
 
+        boolean white = hasCapability(channels, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.White)
+                && findValue(result, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.White) == null;
+        boolean amber = hasCapability(channels, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.Amber)
+                && findValue(result, FixtureCapability.FixtureCapabilityType.ColorIntensity, FixtureCapability.FixtureCapabilityColor.Amber) == null;
         List<FixtureCapabilityValue> colors = new ArrayList<>();
 
         for (FixtureCapability.FixtureCapabilityColor color : rgb) {
-            FixtureCapabilityValue value = findValue(values, FixtureCapability.FixtureCapabilityType.ColorIntensity, color);
-
-            if (value == null) {
-                return result;
-            }
-
-            colors.add(value);
+            colors.add(findValue(result, FixtureCapability.FixtureCapabilityType.ColorIntensity, color));
         }
 
-        double white = Math.min(Math.min(colors.get(0).getValuePercentage(), colors.get(1).getValuePercentage()), colors.get(2).getValuePercentage());
-        List<FixtureCapabilityValue> withWhite = new ArrayList<>();
+        if ((!white && !amber) || colors.contains(null)) {
+            return result;
+        }
+
+        double red = colors.get(0).getValuePercentage();
+        double green = colors.get(1).getValuePercentage();
+        double blue = colors.get(2).getValuePercentage();
+        List<FixtureCapabilityValue> added = new ArrayList<>();
+
+        if (white) {
+            double whitePart = Math.min(Math.min(red, green), blue);
+            red -= whitePart;
+            green -= whitePart;
+            blue -= whitePart;
+            added.add(emitterValue(FixtureCapability.FixtureCapabilityColor.White, whitePart));
+        }
+
+        if (amber) {
+            double amberPart = Math.min(red, green / AMBER_GREEN);
+            red -= amberPart;
+            green -= amberPart * AMBER_GREEN;
+            added.add(emitterValue(FixtureCapability.FixtureCapabilityColor.Amber, amberPart));
+        }
+
+        double[] rest = {red, green, blue};
+        List<FixtureCapabilityValue> withParts = new ArrayList<>();
 
         for (FixtureCapabilityValue value : result) {
             int index = indexOfSame(colors, value);
 
             if (index < 0) {
-                withWhite.add(value);
+                withParts.add(value);
                 continue;
             }
 
-            FixtureCapabilityValue rest = value.copy();
-            rest.setValuePercentage(value.getValuePercentage() - white);
-            withWhite.add(rest);
+            FixtureCapabilityValue restValue = value.copy();
+            restValue.setValuePercentage(rest[index]);
+            withParts.add(restValue);
         }
 
-        withWhite.add(emitterValue(FixtureCapability.FixtureCapabilityColor.White, white));
+        withParts.addAll(added);
 
-        return withWhite;
+        return withParts;
+    }
+
+    // does the step set none of the passed colors?
+    private static boolean noneOf(List<FixtureCapabilityValue> values, List<FixtureCapability.FixtureCapabilityColor> colors) {
+        for (FixtureCapability.FixtureCapabilityColor color : colors) {
+            if (findValue(values, FixtureCapability.FixtureCapabilityType.ColorIntensity, color) != null) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     // where the very same value is in the list (not one equal to it), or -1

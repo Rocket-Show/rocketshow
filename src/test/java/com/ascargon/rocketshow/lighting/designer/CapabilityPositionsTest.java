@@ -338,4 +338,86 @@ class CapabilityPositionsTest {
         assertNull(CapabilityPositions.getPositionedChannelValue(par, strobe, 0.5, null, "Closed"));
         assertTrue(CapabilityPositions.STROBE_EFFECTS.contains("RampUpDown"));
     }
+
+    // a range turning the wheel "Gobo 1"
+    private static FixtureCapability gobo1(int low, int high) {
+        FixtureCapability capability = range(low, high, FixtureCapability.FixtureCapabilityType.WheelSlotRotation);
+        capability.setWheel("Gobo 1");
+        return capability;
+    }
+
+    @Test
+    void turnsOneWheelOfSeveralAndTurnsItToAnAngle() {
+        FixtureCapability anticlockwise = gobo1(0, 63);
+        anticlockwise.setSpeedStart("fast CCW");
+        anticlockwise.setSpeedEnd("slow CCW");
+        FixtureCapability stop = gobo1(64, 67);
+        stop.setSpeed("stop");
+        FixtureCapability clockwise = gobo1(68, 127);
+        clockwise.setSpeedStart("slow CW");
+        clockwise.setSpeedEnd("fast CW");
+        FixtureCapability indexed = gobo1(128, 255);
+        indexed.setAngleStart("0deg");
+        indexed.setAngleEnd("360deg");
+        CachedFixtureChannel rotation = channel(List.of(anticlockwise, stop, clockwise, indexed));
+        FixtureCapability.FixtureCapabilityType type = FixtureCapability.FixtureCapabilityType.WheelSlotRotation;
+
+        assertTrue(CapabilityPositions.turnsWheel(rotation, type, "Gobo 1"));
+        assertFalse(CapabilityPositions.turnsWheel(rotation, type, "Gobo 2"));
+
+        // at a speed, only the wheel it turns
+        assertEquals(127, CapabilityPositions.getRotationChannelValue(rotation, type, 1, "Gobo 1"));
+        assertNull(CapabilityPositions.getRotationChannelValue(rotation, type, 1, "Gobo 2"));
+        // any wheel, if none is asked for
+        assertEquals(127, CapabilityPositions.getRotationChannelValue(rotation, type, 1));
+        assertEquals(127, CapabilityPositions.getPositionedChannelValue(rotation, type, 1, null, null, "Gobo 1"));
+        assertNull(CapabilityPositions.getPositionedChannelValue(rotation, type, 1, null, null, "Gobo 2"));
+
+        // to an angle, held there: beyond the range at its end
+        assertEquals(191.5, CapabilityPositions.getRotationAngleChannelValue(rotation, type, 180, "Gobo 1"), 1e-9);
+        assertEquals(255, CapabilityPositions.getRotationAngleChannelValue(rotation, type, 400, "Gobo 1"));
+        assertEquals(128, CapabilityPositions.getRotationAngleChannelValue(rotation, type, -10, null));
+        assertNull(CapabilityPositions.getRotationAngleChannelValue(rotation, type, 90, "Gobo 2"));
+
+        // a capability at a single angle is played in its middle, the closest one wins
+        FixtureCapability at0 = range(0, 9, type);
+        at0.setAngle("0deg");
+        FixtureCapability at90 = range(10, 19, type);
+        at90.setAngle("90deg");
+        CachedFixtureChannel steps = channel(List.of(at0, at90));
+        assertEquals(14, CapabilityPositions.getRotationAngleChannelValue(steps, type, 60, null));
+        assertEquals(4, CapabilityPositions.getRotationAngleChannelValue(steps, type, 40, null));
+        // half way, the first one
+        assertEquals(4, CapabilityPositions.getRotationAngleChannelValue(steps, type, 45, null));
+
+        // a rotation without a wheel of its own turns the wheel named like its channel
+        FixtureCapability named = capability(type);
+        named.setSpeedStart("slow CW");
+        named.setSpeedEnd("fast CW");
+        assertTrue(CapabilityPositions.turnsWheel(channel(List.of(named)), type, "Channel"));
+        assertFalse(CapabilityPositions.turnsWheel(channel(List.of(named)), type, "Gobo 1"));
+    }
+
+    @Test
+    void runsProgramsAndEffectSpeedsTheWayTheirSpeedsRun() {
+        FixtureCapability program = range(100, 255, FixtureCapability.FixtureCapabilityType.Effect);
+        program.setSpeedStart("fast");
+        program.setSpeedEnd("slow");
+        assertTrue(CapabilityPositions.isRangeReversed(program));
+
+        FixtureCapability effectSpeed = capability(FixtureCapability.FixtureCapabilityType.EffectSpeed);
+        effectSpeed.setSpeedStart("slow");
+        effectSpeed.setSpeedEnd("fast");
+        assertFalse(CapabilityPositions.isRangeReversed(effectSpeed));
+        assertTrue(CapabilityPositions.isPositionedType(FixtureCapability.FixtureCapabilityType.EffectSpeed));
+        assertEquals(255 * 0.25, CapabilityPositions.getPositionedChannelValue(channel(List.of(effectSpeed)), FixtureCapability.FixtureCapabilityType.EffectSpeed, 0.25, null), 1e-9);
+
+        effectSpeed.setSpeedStart("fast");
+        effectSpeed.setSpeedEnd("slow");
+        assertEquals(255 * 0.75, CapabilityPositions.getPositionedChannelValue(channel(List.of(effectSpeed)), FixtureCapability.FixtureCapabilityType.EffectSpeed, 0.25, null), 1e-9);
+
+        assertTrue(CapabilityPositions.isCommandType(FixtureCapability.FixtureCapabilityType.Effect));
+        assertTrue(CapabilityPositions.isCommandType(FixtureCapability.FixtureCapabilityType.Maintenance));
+        assertFalse(CapabilityPositions.isCommandType(FixtureCapability.FixtureCapabilityType.EffectSpeed));
+    }
 }

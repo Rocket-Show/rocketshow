@@ -42,7 +42,8 @@ final class CapabilityPositions {
             FixtureCapability.FixtureCapabilityType.BladeRotation,
             FixtureCapability.FixtureCapabilityType.BladeSystemRotation,
             FixtureCapability.FixtureCapabilityType.IrisEffect,
-            FixtureCapability.FixtureCapabilityType.FrostEffect
+            FixtureCapability.FixtureCapabilityType.FrostEffect,
+            FixtureCapability.FixtureCapabilityType.EffectSpeed
     );
 
     // the rotations, which turn either way
@@ -107,6 +108,12 @@ final class CapabilityPositions {
 
     static boolean isPositionedType(FixtureCapability.FixtureCapabilityType type) {
         return POSITIONED_TYPES.contains(type);
+    }
+
+    // What a preset asks a fixture to do besides a position, played on the channel doing it: run one of its programs
+    // (see Programs) or reset itself and switch its lamp on or off (see Maintenance)
+    static boolean isCommandType(FixtureCapability.FixtureCapabilityType type) {
+        return type == FixtureCapability.FixtureCapabilityType.Effect || type == FixtureCapability.FixtureCapabilityType.Maintenance;
     }
 
     static boolean isRotationType(FixtureCapability.FixtureCapabilityType type) {
@@ -208,7 +215,7 @@ final class CapabilityPositions {
             case FogOutput, Fog -> ends(capability.getFogOutputStart(), capability.getFogOutputEnd(), capability.getFogOutput());
             case BladeInsertion -> ends(capability.getInsertionStart(), capability.getInsertionEnd(), capability.getInsertion());
             case BladeRotation, BladeSystemRotation -> ends(capability.getAngleStart(), capability.getAngleEnd(), capability.getAngle());
-            case IrisEffect, FrostEffect -> ends(capability.getSpeedStart(), capability.getSpeedEnd(), capability.getSpeed());
+            case IrisEffect, FrostEffect, Effect, EffectSpeed -> ends(capability.getSpeedStart(), capability.getSpeedEnd(), capability.getSpeed());
             case WheelShake -> ends(capability.getShakeSpeedStart(), capability.getShakeSpeedEnd(), capability.getShakeSpeed());
             default -> new RangeEnds(null, null, false);
         };
@@ -268,7 +275,7 @@ final class CapabilityPositions {
 
     // the capability of the channel switching the passed one off: "no function" on a channel which has the passed one
     // (e.g. "no strobe" below the strobe of a par)
-    private static CachedFixtureCapability getOff(CachedFixtureChannel channel, FixtureCapability.FixtureCapabilityType type) {
+    static CachedFixtureCapability getOff(CachedFixtureChannel channel, FixtureCapability.FixtureCapabilityType type) {
         if (ofType(channel, type).isEmpty()) {
             return null;
         }
@@ -447,7 +454,7 @@ final class CapabilityPositions {
     }
 
     // the middle of a capability, or null for one without a range of its own (like in the designer)
-    private static Double getCenter(CachedFixtureCapability channelCapability) {
+    static Double getCenter(CachedFixtureCapability channelCapability) {
         FixtureCapability capability = channelCapability.getCapability();
 
         return capability.getDmxRange() != null && capability.getDmxRange().size() == 2 ? channelCapability.getCenterValue() : null;
@@ -459,8 +466,12 @@ final class CapabilityPositions {
     }
 
     static Double getPositionedChannelValue(CachedFixtureChannel channel, FixtureCapability.FixtureCapabilityType type, double valuePercentage, String blade, String shutterEffect) {
+        return getPositionedChannelValue(channel, type, valuePercentage, blade, shutterEffect, null);
+    }
+
+    static Double getPositionedChannelValue(CachedFixtureChannel channel, FixtureCapability.FixtureCapabilityType type, double valuePercentage, String blade, String shutterEffect, String wheel) {
         if (isRotationType(type)) {
-            return getRotationChannelValue(channel, type, valuePercentage);
+            return getRotationChannelValue(channel, type, valuePercentage, wheel);
         }
 
         CachedFixtureCapability channelCapability = getPositionedCapability(channel, type, valuePercentage, blade, shutterEffect);
@@ -481,7 +492,7 @@ final class CapabilityPositions {
     }
 
     // the value at the passed position (0 to 1) within the range of a capability of the channel
-    private static Double getRangeValue(CachedFixtureChannel channel, CachedFixtureCapability channelCapability, double position) {
+    static Double getRangeValue(CachedFixtureChannel channel, CachedFixtureCapability channelCapability, double position) {
         FixtureCapability capability = channelCapability.getCapability();
 
         if (channel.getCapabilities().size() == 1) {
@@ -533,14 +544,87 @@ final class CapabilityPositions {
         return getRangeValue(channel, widest, towardsEnd ? stop + (1 - stop) * amount : stop - stop * amount);
     }
 
+    // the wheels a capability turns: the ones it names, or else the one named like its channel
+    private static List<String> getTurnedWheels(CachedFixtureChannel channel, CachedFixtureCapability channelCapability) {
+        Object wheel = channelCapability.getCapability().getWheel();
+
+        if (wheel instanceof List<?> wheels) {
+            return wheels.stream().map(String::valueOf).toList();
+        }
+
+        return wheel instanceof String name ? List.of(name) : List.of(channel.getName());
+    }
+
+    // does a capability turn the passed wheel (any wheel, if none is passed)?
+    private static boolean turns(CachedFixtureChannel channel, CachedFixtureCapability channelCapability, String wheel) {
+        return isEmpty(wheel) || getTurnedWheels(channel, channelCapability).contains(wheel);
+    }
+
+    // does a capability of the passed type of the channel turn the passed wheel (a rotation of a gobo wheel)?
+    static boolean turnsWheel(CachedFixtureChannel channel, FixtureCapability.FixtureCapabilityType type, String wheel) {
+        return ofType(channel, type).stream().anyMatch(channelCapability -> turns(channel, channelCapability, wheel));
+    }
+
+    private static String getAngleStart(FixtureCapability capability) {
+        return capability.getAngleStart() != null ? capability.getAngleStart() : capability.getAngle();
+    }
+
+    private static String getAngleEnd(FixtureCapability capability) {
+        return capability.getAngleEnd() != null ? capability.getAngleEnd() : capability.getAngle();
+    }
+
+    // The value of a channel turning a wheel (or anything else) to the passed angle in degrees and holding it there (an
+    // indexed gobo), or null if the channel can't: in the range of angles the angle is in, or else at the end of the
+    // range closest to it. A capability at a single angle is played in its middle.
+    static Double getRotationAngleChannelValue(CachedFixtureChannel channel, FixtureCapability.FixtureCapabilityType type, double degrees, String wheel) {
+        CachedFixtureCapability best = null;
+        double bestDistance = Double.MAX_VALUE;
+        Double bestPosition = null;
+
+        for (CachedFixtureCapability channelCapability : ofType(channel, type)) {
+            if (!turns(channel, channelCapability, wheel)) {
+                continue;
+            }
+
+            FixtureCapability capability = channelCapability.getCapability();
+            Double start = getPropertyRank(getAngleStart(capability));
+            Double end = getPropertyRank(getAngleEnd(capability));
+
+            if (start == null || end == null) {
+                continue;
+            }
+
+            double low = Math.min(start, end);
+            double high = Math.max(start, end);
+            double distance = degrees < low ? low - degrees : degrees > high ? degrees - high : 0;
+
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                best = channelCapability;
+                bestPosition = start.doubleValue() == end.doubleValue() ? null : (Math.max(low, Math.min(high, degrees)) - start) / (end - start);
+            }
+        }
+
+        if (best == null) {
+            return null;
+        }
+
+        return bestPosition == null ? getCenter(best) : getRangeValue(channel, best, bestPosition);
+    }
+
     // The value of a channel turning something at the passed speed: anticlockwise below the middle (fastest at 0),
     // stopped in the middle, clockwise above it (fastest at 1), or null if the channel doesn't turn it that way. The
     // widest range turning the asked way only is taken from slow to fast, or else one turning both ways, from where it
     // stops.
     static Double getRotationChannelValue(CachedFixtureChannel channel, FixtureCapability.FixtureCapabilityType type, double valuePercentage) {
+        return getRotationChannelValue(channel, type, valuePercentage, null);
+    }
+
+    // the same, turning only the passed wheel (any wheel, if none is passed)
+    static Double getRotationChannelValue(CachedFixtureChannel channel, FixtureCapability.FixtureCapabilityType type, double valuePercentage, String wheel) {
         double speed = Math.max(Math.min(valuePercentage * 2 - 1, 1), -1);
         List<CachedFixtureCapability> rotations = ofType(channel, type).stream()
-                .filter(channelCapability -> getRotationEnds(channelCapability) != null)
+                .filter(channelCapability -> getRotationEnds(channelCapability) != null && turns(channel, channelCapability, wheel))
                 .toList();
 
         if (rotations.isEmpty()) {
