@@ -1825,10 +1825,12 @@ public class DefaultDesignerService implements DesignerService {
                     }
                 }
 
-                // the movements of the presets, played over where all of them point the fixture
-                List<PendingMovement> movements = new ArrayList<>();
+                // the effects following what the presets give the fixture, played once all of them are mixed
+                List<FixtureChannelValue> defaultValues = new ArrayList<>(values);
+                FollowingEffects following = new FollowingEffects();
 
-                for (PresetRegionScene preset : presets) {
+                for (int layer = 0; layer < presets.size(); layer++) {
+                    PresetRegionScene preset = presets.get(layer);
                     // search for this fixture in the preset and get it's preset-specific index (for chasing effects)
                     String pixelKey = cachedFixture.getPixel() != null ? cachedFixture.getPixel().getKey() : null;
                     Integer presetIndex = getFixtureIndex(preset.getPreset(), cachedFixture.getFixture().getUuid(), pixelKey);
@@ -1864,11 +1866,11 @@ public class DefaultDesignerService implements DesignerService {
                         PresetChase chase = getPresetChase(preset.getPreset());
                         Integer wholeFixtureIndex = chase.wholeFixtureIndices().get(cachedFixture.getFixture().getUuid());
 
-                        mixEffects(timeMillis, fixtureIndex, fixtureCount, preset, cachedFixture, values, intensityPercentage, state, context, wholeFixtureIndex == null ? 0 : wholeFixtureIndex, chase.wholeFixtureCount(), movements);
+                        mixEffects(timeMillis, fixtureIndex, fixtureCount, preset, cachedFixture, values, intensityPercentage, state, context, wholeFixtureIndex == null ? 0 : wholeFixtureIndex, chase.wholeFixtureCount(), following, layer);
                     }
                 }
 
-                mixMovements(movements, cachedFixture, values);
+                mixFollowingEffects(following, cachedFixture, values, defaultValues);
             }
 
             // a fixture being identified from the fixture pool of the designer blinks, whatever the presets light it with
@@ -2173,11 +2175,34 @@ public class DefaultDesignerService implements DesignerService {
         return (effectTimeMillis % loopMillis + loopMillis) % loopMillis;
     }
 
-    // A movement of the moving heads, played once all the presets are mixed (see mixMovements)
-    private record PendingMovement(EffectPanTilt effect, double effectTimeMillis, PresetRegionScene preset, double intensityPercentage, PanTilt.Context context) {
+    // An effect following what the presets give a fixture, played once all of them are mixed (see
+    // mixFollowingEffects): a movement, a curve on the pan, the tilt or the dimmer (its capabilities following the
+    // presets), or a pixel effect in the colors of the preset or blended with them
+    private record FollowingEffect(Effect effect, List<FixtureCapability> capabilities, double effectTimeMillis, PresetRegionScene preset, double intensityPercentage, PanTilt.Context context, int fixtureIndex, Integer fixtureCount, int wholeFixtureIndex, int wholeFixtureCount, int layer) {
     }
 
-    private void mixEffects(double timeMillis, int fixtureIndex, Integer fixtureCount, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double intensityPercentage, PresetStepState state, PanTilt.Context context, int wholeFixtureIndex, int wholeFixtureCount, List<PendingMovement> movements) {
+    private static final class FollowingEffects {
+        private final List<FollowingEffect> effects = new ArrayList<>();
+
+        // the topmost preset playing a pixel effect in colors of its own on the fixture, which covers the pixel effects
+        // of the presets below it following the presets
+        private int coveringPixelLayer = -1;
+    }
+
+    // whether a curve on the capability follows what the presets give a fixture: the pan and the tilt swing around
+    // where they point it, the dimmer pulses the brightness they light it with
+    private static boolean followsPresets(FixtureCapability capability) {
+        return capability.getType() == FixtureCapability.FixtureCapabilityType.Intensity
+                || capability.getType() == FixtureCapability.FixtureCapabilityType.Pan
+                || capability.getType() == FixtureCapability.FixtureCapabilityType.Tilt;
+    }
+
+    // whether a pixel effect follows the color the presets give a pixel: in its shades, or blended with it
+    private static boolean pixelFollowsPresets(EffectPixel effect) {
+        return "preset".equals(effect.getPalette().getRef()) || !"replace".equals(effect.getBlend());
+    }
+
+    private void mixEffects(double timeMillis, int fixtureIndex, Integer fixtureCount, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double intensityPercentage, PresetStepState state, PanTilt.Context context, int wholeFixtureIndex, int wholeFixtureCount, FollowingEffects following, int layer) {
         double effectTimeMillis = timeMillis;
 
         if (preset.getRegion() != null) {
@@ -2192,15 +2217,19 @@ public class DefaultDesignerService implements DesignerService {
             double effectIntensityPercentage = intensityPercentage * effectAmount;
 
             if (effect.isVisible() && effectAmount > 0) {
-                // a movement runs around where all the presets point the heads, see mixMovements
+                // a movement runs around where all the presets point the heads, see mixFollowingEffects
                 if (effect instanceof EffectPanTilt panTilt) {
-                    movements.add(new PendingMovement(panTilt, effectTimeMillis, preset, effectIntensityPercentage, context));
+                    following.effects.add(new FollowingEffect(panTilt, null, effectTimeMillis, preset, effectIntensityPercentage, context, fixtureIndex, fixtureCount, wholeFixtureIndex, wholeFixtureCount, layer));
                     continue;
                 }
 
                 // a pixel effect chases from one fixture to the next, with all of their pixels
                 if (effect instanceof EffectPixel pixelEffect) {
-                    mixPixelEffect(pixelEffect, effectTimeMillis, preset, cachedFixture, values, effectIntensityPercentage, wholeFixtureIndex, wholeFixtureCount);
+                    if (pixelFollowsPresets(pixelEffect)) {
+                        following.effects.add(new FollowingEffect(pixelEffect, null, effectTimeMillis, preset, effectIntensityPercentage, context, fixtureIndex, fixtureCount, wholeFixtureIndex, wholeFixtureCount, layer));
+                    } else if (mixPixelEffect(pixelEffect, effectTimeMillis, preset, cachedFixture, values, effectIntensityPercentage, wholeFixtureIndex, wholeFixtureCount, values)) {
+                        following.coveringPixelLayer = Math.max(following.coveringPixelLayer, layer);
+                    }
                     continue;
                 }
 
@@ -2208,6 +2237,11 @@ public class DefaultDesignerService implements DesignerService {
                 if (effect instanceof EffectCurve effectCurve) {
                     Double beatsPerMinute = getCurveBeatsPerMinute(preset);
                     double curveTimeMillis = getCurveTimeMillis(effectCurve, effectTimeMillis, preset, fixtureCount, beatsPerMinute);
+                    List<FixtureCapability> followingCapabilities = effectCurve.getCapabilities().stream().filter(DefaultDesignerService::followsPresets).toList();
+
+                    if (!followingCapabilities.isEmpty()) {
+                        following.effects.add(new FollowingEffect(effectCurve, followingCapabilities, effectTimeMillis, preset, effectIntensityPercentage, context, fixtureIndex, fixtureCount, wholeFixtureIndex, wholeFixtureCount, layer));
+                    }
 
                     // capabilities, swung as far as the place of the fixture in the fan of the preset says
                     Double curveValue = effectCurve.getFannedValue(effectCurve.getValueAtMillis(curveTimeMillis, fixtureIndex, fixtureCount, beatsPerMinute), Fan.getFanPlace(context));
@@ -2215,6 +2249,10 @@ public class DefaultDesignerService implements DesignerService {
                     // the curve does not apply anymore after it has finished running
                     if (curveValue != null) {
                         for (FixtureCapability capability : effectCurve.getCapabilities()) {
+                            if (followsPresets(capability)) {
+                                continue;
+                            }
+
                             FixtureCapabilityValue capabilityValue = effectCurve.getCapabilityValue(capability, curveValue);
 
                             for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
@@ -2263,7 +2301,9 @@ public class DefaultDesignerService implements DesignerService {
     // is in its fixture, blended with the color the preset puts on it, on its red, green and blue. Its other channels keep
     // what the preset puts on them, its dimmer as well. A pixel lighting in white only (see getWhitePixelDimmer) lights as
     // bright as the color is, on its dimmer. This follows the same rules as the designer.
-    private void mixPixelEffect(EffectPixel effect, double effectTimeMillis, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double effectIntensityPercentage, int fixtureIndex, int fixtureCount) {
+    // The color the presets put on the part is read from the passed base values (all the presets, for an effect
+    // following them). Whether the effect lit the part.
+    private boolean mixPixelEffect(EffectPixel effect, double effectTimeMillis, PresetRegionScene preset, CachedFixture cachedFixture, List<FixtureChannelValue> values, double effectIntensityPercentage, int fixtureIndex, int fixtureCount, List<FixtureChannelValue> baseValues) {
         CachedFixtureChannel[] channels = {
                 getColorChannel(cachedFixture, FixtureCapability.FixtureCapabilityColor.Red),
                 getColorChannel(cachedFixture, FixtureCapability.FixtureCapabilityColor.Green),
@@ -2274,7 +2314,7 @@ public class DefaultDesignerService implements DesignerService {
         CachedFixtureChannel whiteDimmer = lightsInColors ? null : getWhitePixelDimmer(cachedFixture);
 
         if (!lightsInColors && whiteDimmer == null) {
-            return;
+            return false;
         }
 
         Double beatsPerMinute = getCurveBeatsPerMinute(preset);
@@ -2286,7 +2326,7 @@ public class DefaultDesignerService implements DesignerService {
 
         // the effect does not apply anymore after it has finished running
         if (cycles == null) {
-            return;
+            return false;
         }
 
         // the color the preset puts on the part, as red, green and blue between 0 and 1 (white at full on a pixel lighting
@@ -2295,7 +2335,7 @@ public class DefaultDesignerService implements DesignerService {
 
         if (whiteDimmer == null) {
             for (int i = 0; i < 3; i++) {
-                FixtureChannelValue value = channels[i] == null ? null : getChannelValue(values, channels[i].getName(), cachedFixture.getProfile().getUuid());
+                FixtureChannelValue value = channels[i] == null ? null : getChannelValue(baseValues, channels[i].getName(), cachedFixture.getProfile().getUuid());
                 base[i] = value == null ? 0 : value.getValue() / channels[i].getMaxValue();
             }
         }
@@ -2332,11 +2372,11 @@ public class DefaultDesignerService implements DesignerService {
         // A pixel lighting in white only lights as bright as the brightest of the red, green and blue of the light, blended
         // with the white at full the preset puts on it, and dimmed by its dimmer, like a pixel lighting in colors is
         if (whiteDimmer != null) {
-            FixtureChannelValue value = getChannelValue(values, whiteDimmer.getName(), cachedFixture.getProfile().getUuid());
+            FixtureChannelValue value = getChannelValue(baseValues, whiteDimmer.getName(), cachedFixture.getProfile().getUuid());
             double dimmer = value == null ? 0 : value.getValue() / whiteDimmer.getMaxValue();
 
             mixPixelValue(effect, cachedFixture, whiteDimmer, 1, Math.max(Math.max(lit[0], lit[1]), lit[2]), sample[1], values, effectIntensityPercentage, dimmer);
-            return;
+            return true;
         }
 
         // the white part of the light on the white LED, if it is to light it
@@ -2358,11 +2398,13 @@ public class DefaultDesignerService implements DesignerService {
         }
 
         if (white != null) {
-            FixtureChannelValue value = getChannelValue(values, white.getName(), cachedFixture.getProfile().getUuid());
+            FixtureChannelValue value = getChannelValue(baseValues, white.getName(), cachedFixture.getProfile().getUuid());
             double baseWhite = value == null ? 0 : value.getValue() / white.getMaxValue();
 
             mixPixelValue(effect, cachedFixture, white, baseWhite, litWhite, sample[1], values, effectIntensityPercentage, 1);
         }
+
+        return true;
     }
 
     // the audio a pixel effect follows at the moment of the frame, none for one which follows none
@@ -2731,16 +2773,25 @@ public class DefaultDesignerService implements DesignerService {
         return new int[]{columns, rows};
     }
 
-    // The movements of the moving heads run around where the presets point them, whichever preset does it: the one of
-    // the movement, one below it or one above it. Where they point (the default of the channel without a preset) is the
-    // middle of all the movements, which are mixed in the order of their presets, the one on top over the others. Each
-    // is mirrored with its preset, like in the designer.
-    private void mixMovements(List<PendingMovement> movements, CachedFixture cachedFixture, List<FixtureChannelValue> values) {
-        if (movements.isEmpty()) {
+    // The effects following what the presets give a fixture, whichever preset gives it: the one of the effect, one below
+    // it or one above it. They are mixed in the order of their presets, the one on top over the others, like in the
+    // designer.
+    // - A movement and a curve on the pan or the tilt swing the heads around where the presets point them (the default
+    //   of the channel without a preset), each mirrored with its preset.
+    // - A curve on the dimmer pulses the brightness the presets light the fixture with: from none at 0 to all of it at
+    //   1. Without a preset setting the dimmer, the curve lights it on its own, from 0 to full.
+    // - A pixel effect in the colors of its preset, or blended with them, takes the color all the presets put on a
+    //   pixel, unless a pixel effect in colors of its own of a preset above covers it.
+    private void mixFollowingEffects(FollowingEffects following, CachedFixture cachedFixture, List<FixtureChannelValue> values, List<FixtureChannelValue> defaultValues) {
+        if (following.effects.isEmpty()) {
             return;
         }
 
-        // where the presets point the fixture on each axis, before it moves
+        // what the presets give the fixture, before the effects following them
+        List<FixtureChannelValue> presetValues = new ArrayList<>(values);
+        String profileUuid = cachedFixture.getProfile().getUuid();
+
+        // where the presets point the fixture on each axis
         record Axis(CachedFixtureChannel cachedChannel, FixtureCapability.FixtureCapabilityType type, double range, double center) {
         }
 
@@ -2758,33 +2809,115 @@ public class DefaultDesignerService implements DesignerService {
                     continue;
                 }
 
-                FixtureChannelValue value = getChannelValue(values, cachedChannel.getName(), cachedFixture.getProfile().getUuid());
+                FixtureChannelValue value = getChannelValue(presetValues, cachedChannel.getName(), profileUuid);
                 axes.add(new Axis(cachedChannel, type, range, value == null ? 0 : PanTilt.getAxisDegrees(cachedChannel, range, value.getValue())));
             }
         }
 
-        for (PendingMovement movement : movements) {
-            PanTilt.Context context = movement.context();
-            Double beatsPerMinute = getCurveBeatsPerMinute(movement.preset());
-            double curveTimeMillis = getCurveTimeMillis(movement.effect(), movement.effectTimeMillis(), movement.preset(), context.fixtureCount(), beatsPerMinute);
-            EffectPanTilt.Offset offset = movement.effect().getOffsetAtMillis(curveTimeMillis, context.fixtureIndex(), context.fixtureCount(), beatsPerMinute, context.fanPlace());
+        // how bright the presets light the dimmer: full, if none of them sets it (it still has its default value)
+        CachedFixtureChannel dimmer = getDimmerChannel(cachedFixture);
+        FixtureChannelValue dimmerValue = dimmer == null ? null : getChannelValue(presetValues, dimmer.getName(), profileUuid);
+        double brightness = dimmerValue == null || dimmerValue == getChannelValue(defaultValues, dimmer.getName(), profileUuid)
+                ? 1
+                : getDimmerBrightness(cachedFixture, presetValues);
 
-            // the movement does not apply anymore after it has finished running
-            if (offset == null) {
+        for (FollowingEffect item : following.effects) {
+            PanTilt.Context context = item.context();
+
+            if (item.effect() instanceof EffectPixel pixelEffect) {
+                if (item.layer() >= following.coveringPixelLayer) {
+                    mixPixelEffect(pixelEffect, item.effectTimeMillis(), item.preset(), cachedFixture, values, item.intensityPercentage(), item.wholeFixtureIndex(), item.wholeFixtureCount(), presetValues);
+                }
+
                 continue;
             }
 
-            for (Axis axis : axes) {
-                boolean mirror = movement.preset().getPreset().mirrorsCapability(axis.type());
-                double move = axis.type() == FixtureCapability.FixtureCapabilityType.Pan ? offset.pan() : offset.tilt();
+            Double beatsPerMinute = getCurveBeatsPerMinute(item.preset());
 
-                FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
-                fixtureChannelValue.setChannelName(axis.cachedChannel().getName());
-                fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
-                fixtureChannelValue.setValue(PanTilt.getAxisChannelValue(axis.cachedChannel(), axis.range(), axis.center() + (mirror ? -move : move)));
-                this.mixChannelValue(values, fixtureChannelValue, movement.intensityPercentage());
+            if (item.effect() instanceof EffectPanTilt movement) {
+                double curveTimeMillis = getCurveTimeMillis(movement, item.effectTimeMillis(), item.preset(), context.fixtureCount(), beatsPerMinute);
+                EffectPanTilt.Offset offset = movement.getOffsetAtMillis(curveTimeMillis, context.fixtureIndex(), context.fixtureCount(), beatsPerMinute, context.fanPlace());
+
+                // the movement does not apply anymore after it has finished running
+                if (offset == null) {
+                    continue;
+                }
+
+                for (Axis axis : axes) {
+                    boolean mirror = item.preset().getPreset().mirrorsCapability(axis.type());
+                    double move = axis.type() == FixtureCapability.FixtureCapabilityType.Pan ? offset.pan() : offset.tilt();
+                    mixAxisValue(values, cachedFixture, axis.cachedChannel(), axis.range(), axis.center() + (mirror ? -move : move), item.intensityPercentage());
+                }
+
+                continue;
+            }
+
+            // a curve, swung as far as the place of the fixture in the fan of the preset says
+            EffectCurve curve = (EffectCurve) item.effect();
+            double curveTimeMillis = getCurveTimeMillis(curve, item.effectTimeMillis(), item.preset(), item.fixtureCount(), beatsPerMinute);
+            Double curveValue = curve.getFannedValue(curve.getValueAtMillis(curveTimeMillis, item.fixtureIndex(), item.fixtureCount(), beatsPerMinute), Fan.getFanPlace(context));
+
+            // the curve does not apply anymore after it has finished running
+            if (curveValue == null) {
+                continue;
+            }
+
+            for (FixtureCapability capability : item.capabilities()) {
+                if (capability.getType() == FixtureCapability.FixtureCapabilityType.Intensity) {
+                    FixtureCapabilityValue capabilityValue = curve.getCapabilityValue(capability, curveValue * brightness);
+
+                    for (CachedFixtureChannel cachedChannel : cachedFixture.getChannels()) {
+                        Double channelValue = getCurveChannelValue(capabilityValue, cachedChannel, item.preset().getPreset());
+
+                        if (channelValue != null) {
+                            FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
+                            fixtureChannelValue.setChannelName(cachedChannel.getName());
+                            fixtureChannelValue.setProfileUuid(profileUuid);
+                            fixtureChannelValue.setValue(channelValue);
+                            mixChannelValue(values, fixtureChannelValue, item.intensityPercentage());
+                        }
+                    }
+
+                    continue;
+                }
+
+                // the pan or the tilt: as far from where the presets point the heads as the curve says from the middle
+                FixtureCapabilityValue capabilityValue = curve.getCapabilityValue(capability, curveValue);
+                boolean mirror = item.preset().getPreset().mirrorsCapability(capability.getType());
+
+                for (Axis axis : axes) {
+                    if (axis.type() == capability.getType()) {
+                        Double degrees = PanTilt.getPanTiltDegrees(capabilityValue, axis.range(), mirror, null);
+
+                        if (degrees != null) {
+                            mixAxisValue(values, cachedFixture, axis.cachedChannel(), axis.range(), axis.center() + degrees, item.intensityPercentage());
+                        }
+                    }
+                }
             }
         }
+    }
+
+    // points a fixture at the passed degrees on the axis of a channel, mixed over what it points at with the intensity
+    private void mixAxisValue(List<FixtureChannelValue> values, CachedFixture cachedFixture, CachedFixtureChannel cachedChannel, double range, double degrees, double intensityPercentage) {
+        FixtureChannelValue fixtureChannelValue = new FixtureChannelValue();
+        fixtureChannelValue.setChannelName(cachedChannel.getName());
+        fixtureChannelValue.setProfileUuid(cachedFixture.getProfile().getUuid());
+        fixtureChannelValue.setValue(PanTilt.getAxisChannelValue(cachedChannel, range, degrees));
+        mixChannelValue(values, fixtureChannelValue, intensityPercentage);
+    }
+
+    // the first channel of a part of a fixture with a dimmer on it, none without (like getDimmerBrightness)
+    private static CachedFixtureChannel getDimmerChannel(CachedFixture cachedFixture) {
+        for (CachedFixtureChannel channel : cachedFixture.getChannels()) {
+            for (CachedFixtureCapability capability : channel.getCapabilities()) {
+                if (capability.getCapability().getType() == FixtureCapability.FixtureCapabilityType.Intensity) {
+                    return channel;
+                }
+            }
+        }
+
+        return null;
     }
 
     // the position of a channel name inside the fine channel aliases of a cached channel
