@@ -18,4 +18,7 @@ public class FixtureChannelValue {
     private String profileUuid;
     private Double value;
 
+    // turned off in the preset editor of the designer: kept, to be turned on again, but not played (see PlayedValues)
+    private Boolean deactivated;
+
 }

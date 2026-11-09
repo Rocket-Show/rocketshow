@@ -52,6 +52,10 @@ public class FixtureCapabilityValue {
     // Maintenance)
     private String maintenanceAction;
 
+    // turned off in the preset editor of the designer: kept with all it says, to be turned on again, but not played
+    // (see PlayedValues)
+    private Boolean deactivated;
+
     // pan and tilt, while a preset travels from one step into the next: the value of the step it travels from and how
     // far it has come (between 0 and 1). Each moving head travels from where the one value points it to where the
     // other does, so the heads fan in and out, follow a spot moving over the stage and turn from a spot to a position
@@ -83,6 +87,7 @@ public class FixtureCapabilityValue {
         copy.programNumber = programNumber;
         copy.soundControlled = soundControlled;
         copy.maintenanceAction = maintenanceAction;
+        copy.deactivated = deactivated;
         copy.transitionFrom = transitionFrom;
         copy.transitionPosition = transitionPosition;
         return copy;
@@ -259,5 +264,13 @@ public class FixtureCapabilityValue {
 
     public void setWheel(String wheel) {
         this.wheel = wheel;
+    }
+
+    public Boolean getDeactivated() {
+        return deactivated;
+    }
+
+    public void setDeactivated(Boolean deactivated) {
+        this.deactivated = deactivated;
     }
 }

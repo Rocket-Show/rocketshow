@@ -119,10 +119,10 @@ public final class PresetSteps {
         state.setCurrentStep(step);
 
         if (step.getFixtureChannelValues() != null) {
-            state.setFixtureChannelValues(step.getFixtureChannelValues());
+            state.setFixtureChannelValues(PlayedValues.ofChannels(step.getFixtureChannelValues()));
         }
         if (step.getFixtureCapabilityValues() != null) {
-            state.setFixtureCapabilityValues(step.getFixtureCapabilityValues());
+            state.setFixtureCapabilityValues(PlayedValues.ofCapabilities(step.getFixtureCapabilityValues()));
         }
         if (step.getEffectAmounts() != null) {
             for (PresetStepEffectAmount effectAmount : step.getEffectAmounts()) {
@@ -142,10 +142,10 @@ public final class PresetSteps {
             PresetStepState state = new PresetStepState();
 
             if (preset.getFixtureChannelValues() != null) {
-                state.setFixtureChannelValues(preset.getFixtureChannelValues());
+                state.setFixtureChannelValues(PlayedValues.ofChannels(preset.getFixtureChannelValues()));
             }
             if (preset.getFixtureCapabilityValues() != null) {
-                state.setFixtureCapabilityValues(preset.getFixtureCapabilityValues());
+                state.setFixtureCapabilityValues(PlayedValues.ofCapabilities(preset.getFixtureCapabilityValues()));
             }
 
             return state;
@@ -316,10 +316,16 @@ public final class PresetSteps {
         // the preset is on the step it is travelling into from the moment that step starts
         state.setCurrentStep(to);
 
+        // a value turned off is not there to travel from or to (see PlayedValues)
+        List<FixtureChannelValue> fromChannelValues = PlayedValues.ofChannels(from.getFixtureChannelValues());
+        List<FixtureChannelValue> toChannelValues = PlayedValues.ofChannels(to.getFixtureChannelValues());
+        List<FixtureCapabilityValue> fromCapabilityValues = PlayedValues.ofCapabilities(from.getFixtureCapabilityValues());
+        List<FixtureCapabilityValue> toCapabilityValues = PlayedValues.ofCapabilities(to.getFixtureCapabilityValues());
+
         // A value only one of the two steps carries is held as it is: a step not naming
         // a channel means it does not drive that channel, not that it drives it to zero.
-        for (FixtureChannelValue toValue : to.getFixtureChannelValues()) {
-            FixtureChannelValue fromValue = getMatchingChannelValue(from.getFixtureChannelValues(), toValue);
+        for (FixtureChannelValue toValue : toChannelValues) {
+            FixtureChannelValue fromValue = getMatchingChannelValue(fromChannelValues, toValue);
 
             if (fromValue == null) {
                 state.getFixtureChannelValues().add(toValue);
@@ -333,14 +339,14 @@ public final class PresetSteps {
             state.getFixtureChannelValues().add(value);
         }
 
-        for (FixtureChannelValue fromValue : from.getFixtureChannelValues()) {
-            if (getMatchingChannelValue(to.getFixtureChannelValues(), fromValue) == null) {
+        for (FixtureChannelValue fromValue : fromChannelValues) {
+            if (getMatchingChannelValue(toChannelValues, fromValue) == null) {
                 state.getFixtureChannelValues().add(fromValue);
             }
         }
 
-        for (FixtureCapabilityValue toValue : to.getFixtureCapabilityValues()) {
-            FixtureCapabilityValue fromValue = getMatchingCapabilityValue(from.getFixtureCapabilityValues(), toValue);
+        for (FixtureCapabilityValue toValue : toCapabilityValues) {
+            FixtureCapabilityValue fromValue = getMatchingCapabilityValue(fromCapabilityValues, toValue);
 
             if (fromValue == null) {
                 state.getFixtureCapabilityValues().add(toValue);
@@ -372,8 +378,8 @@ public final class PresetSteps {
             state.getFixtureCapabilityValues().add(value);
         }
 
-        for (FixtureCapabilityValue fromValue : from.getFixtureCapabilityValues()) {
-            if (getMatchingCapabilityValue(to.getFixtureCapabilityValues(), fromValue) == null) {
+        for (FixtureCapabilityValue fromValue : fromCapabilityValues) {
+            if (getMatchingCapabilityValue(toCapabilityValues, fromValue) == null) {
                 state.getFixtureCapabilityValues().add(fromValue);
             }
         }
