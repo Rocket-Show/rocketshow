@@ -126,19 +126,19 @@ class DesignerFrameBenchmark {
         designerService.load(null, designerService.getAllProjects().getFirst(), null);
         designerService.setSelectedSceneUuids(List.of("scene"));
 
-        Method calculateUniverse = DefaultDesignerService.class.getDeclaredMethod("calculateUniverse", long.class);
+        Method calculateUniverse = DefaultDesignerService.class.getDeclaredMethod("calculateUniverse", double.class);
         calculateUniverse.setAccessible(true);
 
         // warm up, then measure
         for (int frame = 0; frame < 200; frame++) {
-            calculateUniverse.invoke(designerService, (long) frame * 25);
+            calculateUniverse.invoke(designerService, frame * 25.0);
         }
 
         int frames = 400;
         long start = System.nanoTime();
 
         for (int frame = 0; frame < frames; frame++) {
-            calculateUniverse.invoke(designerService, (long) frame * 25);
+            calculateUniverse.invoke(designerService, frame * 25.0);
         }
 
         double millisPerFrame = (System.nanoTime() - start) / 1e6 / frames;
