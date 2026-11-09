@@ -115,6 +115,12 @@ final class PanTilt {
         return channel.getMaxValue() * position;
     }
 
+    // the degrees from the middle of its range the passed value of a channel points its fixture at (see
+    // getAxisChannelValue)
+    static double getAxisDegrees(CachedFixtureChannel channel, double range, double value) {
+        return (value / channel.getMaxValue() - 0.5) * range;
+    }
+
     // The degrees the passed fixture of a preset is turned by to fan the fixtures out: the first one by half of them to
     // one side, the last one by half of them to the other, or ("center" as the shape) the one in the middle by half of
     // them to one side, the ends by half of them to the other (see Fan)
@@ -200,25 +206,6 @@ final class PanTilt {
         Double degrees = getPanTiltDegrees(value, range, mirror, context);
 
         return degrees == null ? null : getAxisChannelValue(channel, range, degrees);
-    }
-
-    // Where the passed values of a preset point a fixture of the passed profile on an axis, in degrees from the middle
-    // of its range, or null if they don't (a later value wins, like when they are mixed). A movement of the preset runs
-    // around it (see EffectPanTilt).
-    static Double getPresetPanTiltDegrees(List<FixtureCapabilityValue> values, FixtureCapability.FixtureCapabilityType type, String profileUuid, double range, boolean mirror, Context context) {
-        Double degrees = null;
-
-        for (FixtureCapabilityValue value : values) {
-            if (value.getType() == type && (value.getProfileUuid() == null || value.getProfileUuid().equals(profileUuid))) {
-                Double valueDegrees = getPanTiltDegrees(value, range, mirror, context);
-
-                if (valueDegrees != null) {
-                    degrees = valueDegrees;
-                }
-            }
-        }
-
-        return degrees;
     }
 
     // ---- where the fixtures hang ----

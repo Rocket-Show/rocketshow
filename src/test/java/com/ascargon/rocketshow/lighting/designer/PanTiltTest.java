@@ -135,19 +135,14 @@ class PanTiltTest {
     }
 
     @Test
-    void findsWherePresetPointsAFixtureTheLastValueWinning() {
-        FixtureCapabilityValue first = value(FixtureCapability.FixtureCapabilityType.Pan);
-        first.setValueDegrees(10d);
-        FixtureCapabilityValue other = value(FixtureCapability.FixtureCapabilityType.Pan);
-        other.setValueDegrees(20d);
-        other.setProfileUuid("other");
-        FixtureCapabilityValue last = value(FixtureCapability.FixtureCapabilityType.Pan);
-        last.setValueDegrees(30d);
-        List<FixtureCapabilityValue> values = List.of(first, other, last, value(FixtureCapability.FixtureCapabilityType.Pan));
+    void readsWhereTheValueOfAChannelPointsItsFixture() {
+        CachedFixtureChannel wide = channel(FixtureCapability.FixtureCapabilityType.Pan, "0deg", "630deg");
 
-        assertEquals(30, PanTilt.getPresetPanTiltDegrees(values, FixtureCapability.FixtureCapabilityType.Pan, "profile", 540, false, null));
-        assertEquals(-30, PanTilt.getPresetPanTiltDegrees(values, FixtureCapability.FixtureCapabilityType.Pan, "profile", 540, true, null));
-        assertNull(PanTilt.getPresetPanTiltDegrees(values, FixtureCapability.FixtureCapabilityType.Tilt, "profile", 270, false, null));
+        // the middle of the range, its ends and back from the value pointing at some degrees
+        assertEquals(0, PanTilt.getAxisDegrees(wide, 630, 127.5));
+        assertEquals(-315, PanTilt.getAxisDegrees(wide, 630, 0));
+        assertEquals(315, PanTilt.getAxisDegrees(wide, 630, 255));
+        assertEquals(90, PanTilt.getAxisDegrees(wide, 630, PanTilt.getAxisChannelValue(wide, 630, 90)), 1e-9);
     }
 
     // a value travelling from the one of the step before, like a preset shows it between two of its steps
