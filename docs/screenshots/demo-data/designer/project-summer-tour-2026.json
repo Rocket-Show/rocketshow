@@ -14,6 +14,43 @@
   "previewPreset": false,
   "compositions": [
     {
+      "syncType": "none",
+      "audioFileInLibrary": false,
+      "beatsPerMinute": 120,
+      "timeSignatureUpper": 4,
+      "timeSignatureLower": 4,
+      "snapToGrid": true,
+      "tempoGuessed": true,
+      "gridType": "musical",
+      "gridOffsetMillis": 0,
+      "gridResolution": 1,
+      "durationMillis": 92000,
+      "markers": [
+        {
+          "uuid": "a8000000-0000-4000-8000-000000000060",
+          "name": "Band ready?",
+          "positionMillis": 30000,
+          "type": "hold"
+        }
+      ],
+      "tracks": [
+        {
+          "uuid": "a8000000-0000-4000-8000-000000000042",
+          "name": "Lights"
+        }
+      ],
+      "scenePlaybackRegions": [
+        {
+          "sceneUuid": "a8000000-0000-4000-8000-000000000030",
+          "startMillis": 0,
+          "endMillis": 92000,
+          "trackUuid": "a8000000-0000-4000-8000-000000000042"
+        }
+      ],
+      "uuid": "a7000000-0000-4000-8000-000000000029",
+      "name": "Intro \u2013 Countdown"
+    },
+    {
       "syncType": "audio",
       "audioFileInLibrary": true,
       "beatsPerMinute": 120,
@@ -24,57 +61,132 @@
       "gridType": "musical",
       "gridOffsetMillis": 0,
       "gridResolution": 1,
-      "durationMillis": 0,
+      "durationMillis": 245000,
       "scenePlaybackRegions": [
         {
           "sceneUuid": "f6000000-0000-4000-8000-000000000022",
           "startMillis": 0,
-          "endMillis": 15000
+          "endMillis": 15000,
+          "trackUuid": "a8000000-0000-4000-8000-000000000040"
         },
         {
           "sceneUuid": "f6000000-0000-4000-8000-000000000023",
           "startMillis": 15000,
-          "endMillis": 45000
+          "endMillis": 45000,
+          "trackUuid": "a8000000-0000-4000-8000-000000000040"
         },
         {
           "sceneUuid": "f6000000-0000-4000-8000-000000000024",
           "startMillis": 45000,
-          "endMillis": 75000
+          "endMillis": 75000,
+          "trackUuid": "a8000000-0000-4000-8000-000000000040"
         },
         {
           "sceneUuid": "f6000000-0000-4000-8000-000000000023",
           "startMillis": 75000,
-          "endMillis": 105000
+          "endMillis": 105000,
+          "trackUuid": "a8000000-0000-4000-8000-000000000040"
         },
         {
           "sceneUuid": "f6000000-0000-4000-8000-000000000024",
           "startMillis": 105000,
-          "endMillis": 135000
+          "endMillis": 135000,
+          "trackUuid": "a8000000-0000-4000-8000-000000000040"
         },
         {
           "sceneUuid": "f6000000-0000-4000-8000-000000000025",
           "startMillis": 135000,
-          "endMillis": 165000
+          "endMillis": 165000,
+          "trackUuid": "a8000000-0000-4000-8000-000000000040"
         },
         {
           "sceneUuid": "f6000000-0000-4000-8000-000000000026",
           "startMillis": 165000,
-          "endMillis": 167000
+          "endMillis": 167000,
+          "trackUuid": "a8000000-0000-4000-8000-000000000040"
         },
         {
           "sceneUuid": "f6000000-0000-4000-8000-000000000024",
           "startMillis": 167000,
-          "endMillis": 205000
+          "endMillis": 205000,
+          "trackUuid": "a8000000-0000-4000-8000-000000000040"
         },
         {
           "sceneUuid": "f6000000-0000-4000-8000-000000000027",
           "startMillis": 205000,
-          "endMillis": 243000
+          "endMillis": 243000,
+          "trackUuid": "a8000000-0000-4000-8000-000000000040"
+        },
+        {
+          "sceneUuid": "a8000000-0000-4000-8000-000000000032",
+          "startMillis": 135000,
+          "endMillis": 165000,
+          "trackUuid": "a8000000-0000-4000-8000-000000000041"
+        },
+        {
+          "sceneUuid": "a8000000-0000-4000-8000-000000000034",
+          "startMillis": 165000,
+          "endMillis": 167000,
+          "trackUuid": "a8000000-0000-4000-8000-000000000041"
         }
       ],
       "uuid": "a7000000-0000-4000-8000-000000000028",
       "name": "Neon Skyline",
-      "audioFileName": "neon_skyline_backing.wav"
+      "audioFileName": "neon_skyline_backing.wav",
+      "tracks": [
+        {
+          "uuid": "a8000000-0000-4000-8000-000000000041",
+          "name": "Accents"
+        },
+        {
+          "uuid": "a8000000-0000-4000-8000-000000000040",
+          "name": "Song"
+        }
+      ],
+      "markers": [
+        {
+          "uuid": "a8000000-0000-4000-8000-000000000050",
+          "name": "Verse 1",
+          "positionMillis": 15000,
+          "type": "label"
+        },
+        {
+          "uuid": "a8000000-0000-4000-8000-000000000051",
+          "name": "Chorus 1",
+          "positionMillis": 45000,
+          "type": "label"
+        },
+        {
+          "uuid": "a8000000-0000-4000-8000-000000000052",
+          "name": "Verse 2",
+          "positionMillis": 75000,
+          "type": "label"
+        },
+        {
+          "uuid": "a8000000-0000-4000-8000-000000000053",
+          "name": "Chorus 2",
+          "positionMillis": 105000,
+          "type": "label"
+        },
+        {
+          "uuid": "a8000000-0000-4000-8000-000000000054",
+          "name": "Bridge",
+          "positionMillis": 135000,
+          "type": "label"
+        },
+        {
+          "uuid": "a8000000-0000-4000-8000-000000000055",
+          "name": "Last chorus",
+          "positionMillis": 167000,
+          "type": "label"
+        },
+        {
+          "uuid": "a8000000-0000-4000-8000-000000000056",
+          "name": "Outro",
+          "positionMillis": 205000,
+          "type": "label"
+        }
+      ]
     }
   ],
   "fixtureProfiles": [
@@ -589,6 +701,95 @@
       "name": "RGBW LED PAR",
       "manufacturerName": "Generic",
       "manufacturerShortName": "generic"
+    },
+    {
+      "createdFromFile": false,
+      "categories": [
+        "Pixel Bar"
+      ],
+      "physical": {
+        "dimensions": [
+          1000,
+          70,
+          80
+        ],
+        "lens": {
+          "degreesMinMax": [
+            25,
+            25
+          ]
+        }
+      },
+      "matrix": {
+        "pixelCount": [
+          8,
+          1,
+          1
+        ]
+      },
+      "availableChannels": {
+        "Dimmer": {
+          "fineChannelAliases": [],
+          "capabilities": [],
+          "capability": {
+            "dmxRange": [],
+            "type": "Intensity"
+          }
+        }
+      },
+      "templateChannels": {
+        "Red $pixelKey": {
+          "fineChannelAliases": [],
+          "capabilities": [],
+          "capability": {
+            "dmxRange": [],
+            "type": "ColorIntensity",
+            "color": "Red"
+          }
+        },
+        "Green $pixelKey": {
+          "fineChannelAliases": [],
+          "capabilities": [],
+          "capability": {
+            "dmxRange": [],
+            "type": "ColorIntensity",
+            "color": "Green"
+          }
+        },
+        "Blue $pixelKey": {
+          "fineChannelAliases": [],
+          "capabilities": [],
+          "capability": {
+            "dmxRange": [],
+            "type": "ColorIntensity",
+            "color": "Blue"
+          }
+        }
+      },
+      "wheels": {},
+      "modes": [
+        {
+          "name": "25-channel",
+          "shortName": "25ch",
+          "channels": [
+            "Dimmer",
+            {
+              "insert": "matrixChannels",
+              "repeatFor": "eachPixelABC",
+              "channelOrder": "perPixel",
+              "templateChannels": [
+                "Red $pixelKey",
+                "Green $pixelKey",
+                "Blue $pixelKey"
+              ]
+            }
+          ]
+        }
+      ],
+      "uuid": "generic/led-pixel-bar-8",
+      "name": "LED Pixel Bar 8",
+      "manufacturerName": "Generic",
+      "manufacturerShortName": "generic"
     }
   ],
   "fixtures": [
@@ -741,6 +942,36 @@
       "name": "PAR 6",
       "dmxUniverseUuid": "f869189e-4068-4800-a61f-66a1499946fd",
       "modeShortName": "6ch"
+    },
+    {
+      "dmxFirstChannel": 72,
+      "positioning": "manual",
+      "positionX": -160,
+      "positionY": 35,
+      "positionZ": 280,
+      "rotationX": 0,
+      "rotationY": 0,
+      "rotationZ": 0,
+      "uuid": "a8000000-0000-4000-8000-000000000001",
+      "profileUuid": "generic/led-pixel-bar-8",
+      "name": "LED bar left",
+      "dmxUniverseUuid": "f869189e-4068-4800-a61f-66a1499946fd",
+      "modeShortName": "25ch"
+    },
+    {
+      "dmxFirstChannel": 97,
+      "positioning": "manual",
+      "positionX": 160,
+      "positionY": 35,
+      "positionZ": 280,
+      "rotationX": 0,
+      "rotationY": 0,
+      "rotationZ": 0,
+      "uuid": "a8000000-0000-4000-8000-000000000002",
+      "profileUuid": "generic/led-pixel-bar-8",
+      "name": "LED bar right",
+      "dmxUniverseUuid": "f869189e-4068-4800-a61f-66a1499946fd",
+      "modeShortName": "25ch"
     }
   ],
   "presetFixtures": [
@@ -783,6 +1014,14 @@
     {
       "fixtureUuid": "b2000000-0000-4000-8000-000000000010",
       "sortIndex": 9
+    },
+    {
+      "fixtureUuid": "a8000000-0000-4000-8000-000000000001",
+      "sortIndex": 10
+    },
+    {
+      "fixtureUuid": "a8000000-0000-4000-8000-000000000002",
+      "sortIndex": 11
     }
   ],
   "universes": [],
@@ -801,7 +1040,8 @@
       "fadeOutCurve": "linear",
       "uuid": "f6000000-0000-4000-8000-000000000022",
       "name": "Intro",
-      "color": "#3b82f6"
+      "color": "#3b82f6",
+      "folderUuid": "a8000000-0000-4000-8000-000000000020"
     },
     {
       "sortIndex": 1,
@@ -817,7 +1057,8 @@
       "fadeOutCurve": "linear",
       "uuid": "f6000000-0000-4000-8000-000000000023",
       "name": "Verse",
-      "color": "#f59e0b"
+      "color": "#f59e0b",
+      "folderUuid": "a8000000-0000-4000-8000-000000000020"
     },
     {
       "sortIndex": 2,
@@ -825,7 +1066,8 @@
       "expanded": true,
       "presetUuids": [
         "c3000000-0000-4000-8000-000000000011",
-        "c3000000-0000-4000-8000-000000000015"
+        "c3000000-0000-4000-8000-000000000015",
+        "a8000000-0000-4000-8000-000000000011"
       ],
       "dimmer": 1,
       "fadeInMillis": 0,
@@ -834,7 +1076,9 @@
       "fadeOutCurve": "linear",
       "uuid": "f6000000-0000-4000-8000-000000000024",
       "name": "Chorus",
-      "color": "#d946ef"
+      "color": "#d946ef",
+      "folderUuid": "a8000000-0000-4000-8000-000000000020",
+      "icon": "fa-star"
     },
     {
       "sortIndex": 3,
@@ -851,7 +1095,8 @@
       "fadeOutCurve": "linear",
       "uuid": "f6000000-0000-4000-8000-000000000025",
       "name": "Bridge",
-      "color": "#8b5cf6"
+      "color": "#8b5cf6",
+      "folderUuid": "a8000000-0000-4000-8000-000000000020"
     },
     {
       "sortIndex": 4,
@@ -867,7 +1112,9 @@
       "fadeOutCurve": "linear",
       "uuid": "f6000000-0000-4000-8000-000000000026",
       "name": "Hit",
-      "color": "#f8fafc"
+      "color": "#f8fafc",
+      "folderUuid": "a8000000-0000-4000-8000-000000000020",
+      "icon": "fa-bolt"
     },
     {
       "sortIndex": 5,
@@ -883,7 +1130,100 @@
       "fadeOutCurve": "linear",
       "uuid": "f6000000-0000-4000-8000-000000000027",
       "name": "Outro",
-      "color": "#ef4444"
+      "color": "#ef4444",
+      "folderUuid": "a8000000-0000-4000-8000-000000000020"
+    },
+    {
+      "sortIndex": 0,
+      "colorAuto": false,
+      "expanded": false,
+      "presetUuids": [
+        "c3000000-0000-4000-8000-000000000013"
+      ],
+      "dimmer": 0.5,
+      "fadeInMillis": 3000,
+      "fadeOutMillis": 3000,
+      "fadeInCurve": "linear",
+      "fadeOutCurve": "linear",
+      "uuid": "a8000000-0000-4000-8000-000000000030",
+      "name": "Walk-in",
+      "color": "#1e40af",
+      "folderUuid": "a8000000-0000-4000-8000-000000000021",
+      "icon": "fa-moon-o"
+    },
+    {
+      "sortIndex": 1,
+      "colorAuto": false,
+      "expanded": false,
+      "presetUuids": [
+        "c3000000-0000-4000-8000-000000000018",
+        "c3000000-0000-4000-8000-000000000011"
+      ],
+      "dimmer": 1,
+      "fadeInMillis": 1500,
+      "fadeOutMillis": 0,
+      "fadeInCurve": "linear",
+      "fadeOutCurve": "linear",
+      "uuid": "a8000000-0000-4000-8000-000000000031",
+      "name": "Speech",
+      "color": "#f97316",
+      "folderUuid": "a8000000-0000-4000-8000-000000000021",
+      "icon": "fa-microphone"
+    },
+    {
+      "sortIndex": 2,
+      "colorAuto": false,
+      "expanded": false,
+      "presetUuids": [
+        "a8000000-0000-4000-8000-000000000012"
+      ],
+      "dimmer": 1,
+      "fadeInMillis": 2000,
+      "fadeOutMillis": 2000,
+      "fadeInCurve": "linear",
+      "fadeOutCurve": "linear",
+      "uuid": "a8000000-0000-4000-8000-000000000032",
+      "name": "Sunset",
+      "color": "#ec4899",
+      "folderUuid": "a8000000-0000-4000-8000-000000000021",
+      "icon": "fa-sun-o"
+    },
+    {
+      "sortIndex": 3,
+      "colorAuto": false,
+      "expanded": false,
+      "presetUuids": [
+        "a8000000-0000-4000-8000-000000000011",
+        "c3000000-0000-4000-8000-000000000015"
+      ],
+      "dimmer": 1,
+      "fadeInMillis": 0,
+      "fadeOutMillis": 0,
+      "fadeInCurve": "linear",
+      "fadeOutCurve": "linear",
+      "uuid": "a8000000-0000-4000-8000-000000000033",
+      "name": "Pixel party",
+      "color": "#06b6d4",
+      "folderUuid": "a8000000-0000-4000-8000-000000000021",
+      "icon": "fa-star"
+    },
+    {
+      "sortIndex": 4,
+      "colorAuto": false,
+      "expanded": false,
+      "presetUuids": [
+        "c3000000-0000-4000-8000-000000000020"
+      ],
+      "dimmer": 1,
+      "fadeInMillis": 0,
+      "fadeOutMillis": 0,
+      "fadeInCurve": "linear",
+      "fadeOutCurve": "linear",
+      "uuid": "a8000000-0000-4000-8000-000000000034",
+      "name": "Strobe hit",
+      "color": "#f8fafc",
+      "folderUuid": "a8000000-0000-4000-8000-000000000021",
+      "icon": "fa-bolt"
     }
   ],
   "presets": [
@@ -1168,6 +1508,12 @@
             {
               "type": "Intensity",
               "valuePercentage": 1.0
+            },
+            {
+              "type": "Pan",
+              "valueDegrees": 0,
+              "spreadDegrees": 60,
+              "fanShape": "linear"
             }
           ],
           "effectAmounts": [],
@@ -1197,7 +1543,7 @@
           "lengthBeats": 4,
           "phaseMillis": 0,
           "phaseBeats": 0,
-          "amplitude": 0.95,
+          "amplitude": 0.475,
           "position": 0.5,
           "dutyCycle": 0.5,
           "runMode": "infinite",
@@ -1419,15 +1765,280 @@
       "fadeOutCurve": "linear",
       "uuid": "c3000000-0000-4000-8000-000000000020",
       "name": "White flash"
+    },
+    {
+      "sortIndex": 5,
+      "colorAuto": true,
+      "fixtures": [
+        {
+          "fixtureUuid": "a8000000-0000-4000-8000-000000000001"
+        },
+        {
+          "fixtureUuid": "a8000000-0000-4000-8000-000000000002"
+        }
+      ],
+      "fixtureFolders": [],
+      "useGlobalFixtureOrder": true,
+      "fixtureChannelValues": [],
+      "fixtureCapabilityValues": [
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 1,
+          "color": "Red"
+        },
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 0.55,
+          "color": "Green"
+        },
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 0.1,
+          "color": "Blue"
+        },
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 0.35,
+          "color": "White"
+        },
+        {
+          "type": "Intensity",
+          "valuePercentage": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "startMillis": 0,
+          "transitionCurve": "linear",
+          "fixtureChannelValues": [],
+          "fixtureCapabilityValues": [
+            {
+              "type": "Intensity",
+              "valuePercentage": 1.0
+            }
+          ],
+          "effectAmounts": [],
+          "uuid": "a8000000-0000-4000-8000-000000000101"
+        }
+      ],
+      "stepsLoop": false,
+      "stepsPhasingMode": "millis",
+      "stepsPhasingMillis": 0,
+      "stepsPhasingCycles": 1,
+      "stepsPhasingGroupSize": 1,
+      "effects": [
+        {
+          "visible": true,
+          "type": "pixel",
+          "channels": [],
+          "lengthMode": "beats",
+          "lengthMillis": 1000,
+          "lengthBeats": 2,
+          "phaseMillis": 0,
+          "phaseBeats": 0,
+          "amplitude": 1,
+          "position": 0.5,
+          "dutyCycle": 0.5,
+          "runMode": "infinite",
+          "runCycles": 1,
+          "runDurationMillis": 5000,
+          "endMode": "hold",
+          "phasingMode": "millis",
+          "phasingMillis": 0,
+          "phasingBeats": 0,
+          "phasingCycles": 1,
+          "phasingGroupSize": 1,
+          "uuid": "a8000000-0000-4000-8000-000000000010",
+          "curveType": "sine",
+          "capabilities": [],
+          "pattern": "flow",
+          "size": 0.5,
+          "softness": 0.4,
+          "direction": "right",
+          "shape": "circle",
+          "bounce": false,
+          "seed": 1,
+          "mirror": true,
+          "palette": {
+            "ref": "pink-cyan",
+            "stops": [
+              {
+                "position": 0,
+                "color": "#ff2e88"
+              },
+              {
+                "position": 1,
+                "color": "#00d1ff"
+              }
+            ],
+            "between": "smooth",
+            "repeat": "mirror"
+          },
+          "spread": "stage",
+          "view": "front",
+          "whiteLed": false,
+          "blend": "replace"
+        }
+      ],
+      "mirrorPan": false,
+      "mirrorTilt": false,
+      "fadeInMillis": 0,
+      "fadeOutMillis": 0,
+      "fadeInCurve": "linear",
+      "fadeOutCurve": "linear",
+      "uuid": "a8000000-0000-4000-8000-000000000011",
+      "name": "Pixel flow"
+    },
+    {
+      "sortIndex": 6,
+      "colorAuto": true,
+      "fixtures": [
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000005"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000006"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000007"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000008"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000009"
+        },
+        {
+          "fixtureUuid": "b2000000-0000-4000-8000-000000000010"
+        }
+      ],
+      "fixtureFolders": [],
+      "useGlobalFixtureOrder": true,
+      "fixtureChannelValues": [],
+      "fixtureCapabilityValues": [
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 1,
+          "color": "Red"
+        },
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 0.55,
+          "color": "Green"
+        },
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 0.1,
+          "color": "Blue"
+        },
+        {
+          "type": "ColorIntensity",
+          "valuePercentage": 0.35,
+          "color": "White"
+        },
+        {
+          "type": "Intensity",
+          "valuePercentage": 1.0
+        }
+      ],
+      "steps": [
+        {
+          "startMillis": 0,
+          "transitionCurve": "linear",
+          "fixtureChannelValues": [],
+          "fixtureCapabilityValues": [
+            {
+              "type": "ColorIntensity",
+              "color": "Red",
+              "valuePercentage": 1,
+              "fan": [
+                {
+                  "position": 0,
+                  "valuePercentage": 1
+                },
+                {
+                  "position": 1,
+                  "valuePercentage": 0.85
+                }
+              ]
+            },
+            {
+              "type": "ColorIntensity",
+              "color": "Green",
+              "valuePercentage": 0.25,
+              "fan": [
+                {
+                  "position": 0,
+                  "valuePercentage": 0.45
+                },
+                {
+                  "position": 1,
+                  "valuePercentage": 0.0
+                }
+              ]
+            },
+            {
+              "type": "ColorIntensity",
+              "color": "Blue",
+              "valuePercentage": 0.4,
+              "fan": [
+                {
+                  "position": 0,
+                  "valuePercentage": 0.0
+                },
+                {
+                  "position": 1,
+                  "valuePercentage": 0.8
+                }
+              ]
+            },
+            {
+              "type": "Intensity",
+              "valuePercentage": 1.0
+            }
+          ],
+          "effectAmounts": [],
+          "uuid": "a8000000-0000-4000-8000-000000000102"
+        }
+      ],
+      "stepsLoop": false,
+      "stepsPhasingMode": "millis",
+      "stepsPhasingMillis": 0,
+      "stepsPhasingCycles": 1,
+      "stepsPhasingGroupSize": 1,
+      "effects": [],
+      "mirrorPan": false,
+      "mirrorTilt": false,
+      "fadeInMillis": 0,
+      "fadeOutMillis": 0,
+      "fadeInCurve": "linear",
+      "fadeOutCurve": "linear",
+      "uuid": "a8000000-0000-4000-8000-000000000012",
+      "name": "Sunset gradient",
+      "fanOrder": "left-right"
     }
   ],
-  "sceneFolders": [],
+  "sceneFolders": [
+    {
+      "uuid": "a8000000-0000-4000-8000-000000000020",
+      "name": "Neon Skyline",
+      "sortIndex": 0,
+      "expanded": true
+    },
+    {
+      "uuid": "a8000000-0000-4000-8000-000000000021",
+      "name": "Between songs",
+      "sortIndex": 1,
+      "expanded": false
+    }
+  ],
   "presetFolders": [],
   "fixtureFolders": [],
-  "version": 7,
+  "version": 11,
   "name": "Summer Tour 2026",
   "shareToken": "00000000-0000-4000-8000-000000000000",
   "selectedPresetUuid": "c3000000-0000-4000-8000-000000000015",
   "selectedStepUuid": "d4000000-0000-4000-8000-000000000016",
-  "selectedCompositionUuid": "a7000000-0000-4000-8000-000000000028"
+  "selectedCompositionUuid": "a7000000-0000-4000-8000-000000000028",
+  "colorDimmersAtFull": true
 }

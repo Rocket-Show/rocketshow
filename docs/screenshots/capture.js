@@ -22,8 +22,9 @@
  *   --list          print the shot names and exit
  *
  * The shot list is at the bottom of this file. Every entry is one image,
- * written as <name>.webp; the docs page refers to them by that name, so keep a
- * name once the page uses it.
+ * written as <name>.webp (or as <file>.webp, for the pictures of the other
+ * pages of the website one folder up); the docs page refers to them by that
+ * name, so keep a name once the page uses it.
  */
 
 'use strict';
@@ -68,9 +69,14 @@ const demo = {
     profiles: {
       'generic/rgbw-par': load('designer/profile-generic-rgbw-par.json'),
       'stairville/mh-100': load('designer/profile-stairville-mh-100.json'),
+      'generic/led-pixel-bar-8': load('designer/profile-generic-led-pixel-bar-8.json'),
     },
   },
 };
+
+// the scenes of the designer project by their names, for the shots of the Play screen
+const SCENES = Object.fromEntries(demo.designer.project.scenes.map((scene) => [scene.name, scene.uuid]));
+const SCENE_FOLDERS = Object.fromEntries(demo.designer.project.sceneFolders.map((folder) => [folder.name, folder.uuid]));
 
 /*
  * A stand-in for the audio files, so the designer's timeline has a waveform to
@@ -120,6 +126,10 @@ class FakeDevice {
     this.session = { ...demo.system.session, ...(options.session || {}) };
     this.settings = JSON.parse(JSON.stringify(demo.settings));
     this.olaOutputPorts = demo.system.olaOutputPorts;
+    // the designer project as the device has it saved, e.g. with another preset selected
+    this.project = { ...demo.designer.project, ...(options.project || {}) };
+    // the keys, pads and buttons of a MIDI controller learned for the scenes on the Play screen
+    this.sceneMidi = options.sceneMidi || [];
     if (this.edition === 'community') {
       // A Raspberry Pi with USB interfaces instead of SPARK's own outputs
       Object.assign(this.settings, demo.system.community.settings);
@@ -135,6 +145,19 @@ class FakeDevice {
       return { name: null, notes: null, compositionList: [], currentCompositionIndex: 0 };
     }
     return { ...set, currentCompositionIndex: this.state.currentCompositionIndex };
+  }
+
+  // GET /api/scenes/projects: the designer projects with scenes, which the Play screen lights by hand
+  sceneProjects() {
+    const project = this.project;
+    return [{
+      name: project.name,
+      scenes: project.scenes.map((scene) => ({
+        uuid: scene.uuid, name: scene.name, folderUuid: scene.folderUuid, sortIndex: scene.sortIndex, icon: scene.icon,
+        color: scene.color, colorAuto: scene.colorAuto, displayColor: scene.color, dimmer: scene.dimmer,
+      })),
+      sceneFolders: project.sceneFolders,
+    }];
   }
 
   pushState() {
@@ -191,7 +214,9 @@ class FakeDevice {
         return profile ? json(profile) : notFound();
       },
       'projects': () => json(demo.designer.projects),
-      'project': () => json(demo.designer.project),
+      'project': () => json(this.project),
+      'scenes/projects': () => json(this.sceneProjects()),
+      'scenes/midi': () => json(this.sceneMidi),
     };
 
     const post = {
@@ -209,6 +234,10 @@ class FakeDevice {
       },
       'session/set-play-view-mode': () => {
         this.session.playViewMode = query.get('value');
+        return ok();
+      },
+      'session/set-play-mode': () => {
+        this.session.playMode = query.get('value');
         return ok();
       },
       'composition/test-play': () => json({ durationMillis: JSON.parse(body || '{}').durationMillis || 0 }),
@@ -382,6 +411,36 @@ const openComposition = (name) => async (page) => {
 // rendered, and rendering it without a graphics card is what makes them slow.
 const NO_STAGE = { previewHidden: 'true' };
 
+// How the designer shares the room between its panels (see LayoutService of the designer): the rows share the
+// height, the panels of a row its width.
+const layout = (shares, folded = [], name = 'default') => JSON.stringify({ folded, shares: {
+  'row-0': 42, 'row-1': 40, 'row-2': 18, scenes: 20, presets: 20, preview: 60, editor: 70, fixtures: 24, master: 6,
+  ...shares }, layout: name });
+const SHOW_LAYOUT = layout({ 'row-0': 58, 'row-2': 42, scenes: 25, preview: 75 },
+  ['presets', 'editor', 'fixtures', 'master'], 'show');
+
+const PRESETS = Object.fromEntries(demo.designer.project.presets.map((preset) => [preset.name, preset.uuid]));
+
+// The Play screen showing the scenes, two of them on and the tempo tapped
+const LIVE_SCENES = {
+  session: { playMode: 'scenes' },
+  state: {
+    playState: 'STOPPED', positionMillis: 0,
+    sceneProjectName: demo.designer.project.name,
+    activeSceneUuids: [SCENES['Chorus'], SCENES['Pixel party']],
+    sceneDimmers: { [SCENES['Pixel party']]: 0.8 },
+    tempoBeatsPerMinute: 128, tempoSource: 'tap', tempoBeatsPerBar: 4,
+  },
+};
+
+// the pads of a MIDI controller learned for the scenes between the songs
+const SCENE_MIDI = [
+  { scene: SCENES['Walk-in'], kind: 'note', channel: 0, number: 36, mode: 'toggle' },
+  { scene: SCENES['Speech'], kind: 'note', channel: 0, number: 37, mode: 'toggle' },
+  { scene: SCENES['Sunset'], kind: 'note', channel: 0, number: 38, mode: 'toggle' },
+  { scene: SCENES['Strobe hit'], kind: 'note', channel: 0, number: 39, mode: 'flash' },
+];
+
 const SHOTS = [
   // Getting started
   {
@@ -451,6 +510,41 @@ const SHOTS = [
       await page.locator('.navbar-actions .btn').click();
       await page.waitForTimeout(500);
     },
+  },
+
+  // The scenes, lit by hand on the Play screen
+  {
+    name: 'start-scenes',
+    device: LIVE_SCENES,
+    run: async (page) => {
+      await page.getByRole('button', { name: 'Stack' }).click();
+    },
+    viewport: { width: 1280, height: 720 },
+  },
+  {
+    name: 'start-scenes-learn',
+    device: { ...LIVE_SCENES, sceneMidi: SCENE_MIDI },
+    run: async (page) => {
+      await page.getByRole('tab', { name: 'Between songs' }).click();
+      await page.getByRole('button', { name: 'MIDI learn' }).click();
+    },
+    viewport: { width: 1280, height: 600 },
+  },
+  {
+    name: 'start-scenes-phone',
+    device: LIVE_SCENES,
+    viewport: { width: 390, height: 844 },
+    scale: 2,
+    mobile: true,
+  },
+  {
+    // a hold point of the designer reached: the composition waits for GO
+    name: 'start-hold',
+    device: { state: { playState: 'PAUSED', holding: true, positionMillis: 30000, currentCompositionName: 'Intro – Countdown',
+      currentCompositionDurationMillis: 92000, currentCompositionIndex: 0 } },
+    viewport: { width: 1280, height: 760 },
+    element: '.card-transport',
+    pad: 12,
   },
 
   // Compositions
@@ -538,6 +632,17 @@ const SHOTS = [
     viewport: { width: 1100, height: 900 },
   },
   {
+    name: 'editor-action-scene',
+    path: '/editor',
+    run: async (page) => {
+      await openComposition('Applause & Outro')(page);
+      await page.locator('.list-group-item', { hasText: 'Scene' }).locator('a.btn', { hasText: '...' }).click();
+      await page.waitForSelector('.card-modal');
+    },
+    element: '.modal-content',
+    viewport: { width: 1100, height: 900 },
+  },
+  {
     name: 'editor-set',
     path: '/editor',
     run: async (page) => {
@@ -562,14 +667,16 @@ const SHOTS = [
     viewport: { width: 1440, height: 1000 },
     scale: 1.5,
     settle: 2500,
+    localStorage: { designerLayout: layout({ 'row-0': 40, 'row-1': 36, 'row-2': 24 }) },
   },
   {
+    // the Show layout of the View menu: the scenes, the stage and a large timeline
     name: 'designer-timeline',
     path: '/designer',
     viewport: { width: 1440, height: 1000 },
     settle: 2500,
     element: '#row3',
-    localStorage: NO_STAGE,
+    localStorage: { ...NO_STAGE, designerLayout: SHOW_LAYOUT },
   },
   {
     name: 'designer-effects',
@@ -584,6 +691,41 @@ const SHOTS = [
     localStorage: NO_STAGE,
   },
   {
+    name: 'designer-pixel-effect',
+    device: { project: { selectedPresetUuid: PRESETS['Pixel flow'], selectedSceneUuids: [SCENES['Pixel party']] } },
+    path: '/designer',
+    viewport: { width: 1440, height: 1000 },
+    run: async (page) => {
+      await page.waitForTimeout(1500);
+      await page.click('#v-pills-effects-tab');
+    },
+    settle: 2500,
+    element: '#row2',
+    localStorage: { ...NO_STAGE, designerLayout: layout({ 'row-0': 25, 'row-1': 55, 'row-2': 20 }) },
+  },
+  {
+    name: 'designer-fan',
+    device: { project: { selectedPresetUuid: PRESETS['Sunset gradient'], selectedSceneUuids: [SCENES['Sunset']] } },
+    path: '/designer',
+    viewport: { width: 1440, height: 1000 },
+    settle: 2000,
+    element: '#row2',
+    localStorage: { ...NO_STAGE, designerLayout: layout({ 'row-0': 25, 'row-1': 55, 'row-2': 20 }) },
+  },
+  {
+    name: 'designer-dmx-channels',
+    path: '/designer',
+    viewport: { width: 1440, height: 1000 },
+    run: async (page) => {
+      await page.waitForTimeout(1500);
+      await page.locator('.navbar a.dropdown-toggle', { hasText: 'Settings' }).click();
+      await page.getByText('DMX channels').click();
+    },
+    settle: 1500,
+    element: '.modal-content',
+    localStorage: NO_STAGE,
+  },
+  {
     name: 'designer-fixture-pool',
     path: '/designer',
     viewport: { width: 1440, height: 1000 },
@@ -595,6 +737,29 @@ const SHOTS = [
     element: '.modal-content',
     localStorage: NO_STAGE,
   },
+
+  // The pictures on the other pages of the website (features, home, SPARK), one folder up
+  {
+    name: 'site-app-home',
+    file: '../app-home',
+    viewport: { width: 380, height: 468 },
+    scale: 2,
+    mobile: true,
+  },
+  {
+    name: 'site-composition-editor',
+    file: '../composition-editor',
+    path: '/editor',
+    run: openComposition('Neon Skyline'),
+    viewport: { width: 1000, height: 592 },
+    scale: 1.2,
+  },
+  { name: 'site-settings-audio', file: '../settings-audio', path: '/settings', run: settingsTab('audio'),
+    viewport: { width: 1000, height: 577 }, scale: 1.2 },
+  { name: 'site-settings-midi', file: '../settings-midi', path: '/settings', run: settingsTab('midi'),
+    viewport: { width: 1000, height: 577 }, scale: 1.2 },
+  { name: 'site-settings-external-control', file: '../settings-external-control', path: '/settings',
+    run: settingsTab('external-control'), viewport: { width: 1000, height: 577 }, scale: 1.2 },
 
   // Settings
   { name: 'settings-system', path: '/settings', fullPage: true },
@@ -669,7 +834,7 @@ const SHOTS = [
     try {
       const png = await shoot(browser, baseUrl, shot);
       const webp = await toWebp(browser, png, 0.82);
-      fs.writeFileSync(path.join(OUT_DIR, shot.name + '.webp'), webp);
+      fs.writeFileSync(path.join(OUT_DIR, (shot.file || shot.name) + '.webp'), webp);
       console.log(Math.round(webp.length / 1024) + ' KB');
     } catch (e) {
       failed++;

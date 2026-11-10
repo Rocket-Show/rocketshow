@@ -653,7 +653,14 @@
     "loop": false,
     "audioVolume": 1,
     "leadSheetList": [],
-    "actionTriggerList": []
+    "actionTriggerList": [
+      {
+        "positionMillis": 0,
+        "actionList": [
+          { "actionScene": { "type": "SCENE", "sceneActionType": "PLAY_SCENE", "projectName": "Summer Tour 2026", "scene": "a8000000-0000-4000-8000-000000000031", "untilStopped": true, "durationMillis": 0, "executeLocally": true, "remoteDeviceList": [] } }
+        ]
+      }
+    ]
   },
   {
     "name": "Walk-in Loop",

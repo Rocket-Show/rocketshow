@@ -1,5 +1,11 @@
 [
   {
+    "uuid": "generic/led-pixel-bar-8",
+    "name": "LED Pixel Bar 8",
+    "manufacturerShortName": "generic",
+    "manufacturerName": "Generic"
+  },
+  {
     "uuid": "generic/rgbw-par",
     "name": "RGBW LED PAR",
     "manufacturerShortName": "generic",

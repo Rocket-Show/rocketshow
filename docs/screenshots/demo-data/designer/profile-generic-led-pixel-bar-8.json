@@ -1,0 +1,85 @@
+{
+  "categories": [
+    "Pixel Bar"
+  ],
+  "physical": {
+    "dimensions": [
+      1000,
+      70,
+      80
+    ],
+    "lens": {
+      "degreesMinMax": [
+        25,
+        25
+      ]
+    }
+  },
+  "matrix": {
+    "pixelCount": [
+      8,
+      1,
+      1
+    ]
+  },
+  "availableChannels": {
+    "Dimmer": {
+      "fineChannelAliases": [],
+      "capabilities": [],
+      "capability": {
+        "dmxRange": [],
+        "type": "Intensity"
+      }
+    }
+  },
+  "templateChannels": {
+    "Red $pixelKey": {
+      "fineChannelAliases": [],
+      "capabilities": [],
+      "capability": {
+        "dmxRange": [],
+        "type": "ColorIntensity",
+        "color": "Red"
+      }
+    },
+    "Green $pixelKey": {
+      "fineChannelAliases": [],
+      "capabilities": [],
+      "capability": {
+        "dmxRange": [],
+        "type": "ColorIntensity",
+        "color": "Green"
+      }
+    },
+    "Blue $pixelKey": {
+      "fineChannelAliases": [],
+      "capabilities": [],
+      "capability": {
+        "dmxRange": [],
+        "type": "ColorIntensity",
+        "color": "Blue"
+      }
+    }
+  },
+  "wheels": {},
+  "modes": [
+    {
+      "name": "25-channel",
+      "shortName": "25ch",
+      "channels": [
+        "Dimmer",
+        {
+          "insert": "matrixChannels",
+          "repeatFor": "eachPixelABC",
+          "channelOrder": "perPixel",
+          "templateChannels": [
+            "Red $pixelKey",
+            "Green $pixelKey",
+            "Blue $pixelKey"
+          ]
+        }
+      ]
+    }
+  ],
+  "name": "LED Pixel Bar 8"
+}
