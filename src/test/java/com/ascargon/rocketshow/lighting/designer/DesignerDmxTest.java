@@ -1168,6 +1168,48 @@ class DesignerDmxTest {
     }
 
     @Test
+    void stopsTheScenesLetGoOnceTheyFadedOut() throws Exception {
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+
+        start(project, (designerService, loadedProject) -> {
+            designerService.playManualScenes(loadedProject, List.of("Red-scene"), 1);
+            designerService.releaseManualScenes();
+
+            // without a fade out, they are gone within a few frames
+            long until = System.currentTimeMillis() + 5000;
+            while (designerService.isPlayingManualScenes() && System.currentTimeMillis() < until) {
+                Thread.onSpinWait();
+            }
+
+            assertFalse(designerService.isPlayingManualScenes());
+            assertFalse(designerService.hasManualScenes());
+        });
+    }
+
+    @Test
+    void letsGoOfTheScenesPickedByHandWhileTheyWaitForAComposition() throws Exception {
+        ObjectNode project = project();
+        addColorPreset(project, "Red", 1, 0);
+        addColorPreset(project, "Blue", 0, 1);
+
+        Map<Integer, Integer> front = start(project, (designerService, loadedProject) -> {
+            designerService.load(compositionPlayer(false), loadedProject, null);
+            designerService.playManualScenes(loadedProject, List.of("Red-scene"), 1);
+            designerService.releaseManualScenes();
+            assertFalse(designerService.hasManualScenes());
+
+            // the composition is over: they don't come back
+            designerService.close();
+            assertFalse(designerService.isPlayingManualScenes());
+
+            designerService.playManualScenes(loadedProject, List.of("Blue-scene"), 1);
+        }).get(FRONT);
+
+        assertEquals(List.of(255, 0, 0, 255), addresses(front, 1, 4));
+    }
+
+    @Test
     void flashesAScenePickedByHandOnTopOfTheOthers() throws Exception {
         ObjectNode project = project();
         addColorPreset(project, "Red", 1, 0);

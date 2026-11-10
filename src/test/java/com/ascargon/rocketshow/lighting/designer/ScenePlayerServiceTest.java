@@ -26,7 +26,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
@@ -476,5 +478,170 @@ class ScenePlayerServiceTest {
 
         assertEquals(null, scenePlayerService.getLearning());
         assertFalse(scenePlayerService.learnMidi(message(ShortMessage.NOTE_ON, 0, 36, 100)));
+    }
+
+    // how often the apps were told about the scenes
+    private int notified() {
+        return (int) mockingDetails(notificationService).getInvocations().stream()
+                .filter(invocation -> invocation.getMethod().getName().equals("notifyClients"))
+                .count();
+    }
+
+    @Test
+    void flashesASceneOfAnotherProjectInsteadOfTheScenesOn() {
+        Project bar = project("bar", 1);
+        when(designerService.getProjectByName("bar")).thenReturn(bar);
+        DefaultScenePlayerService scenePlayerService = scenePlayerService();
+        scenePlayerService.setActiveScenes("Club Lights", List.of("Club Lights-0"));
+        clearInvocations(notificationService);
+
+        scenePlayerService.flashScene("bar", "bar-0", true);
+
+        assertEquals("bar", scenePlayerService.getProjectName());
+        assertEquals(List.of(), scenePlayerService.getActiveSceneUuids());
+        assertEquals(List.of("bar-0"), scenePlayerService.getFlashedSceneUuids());
+        verify(designerService).playManualScenes(bar, List.of(), List.of("bar-0"), 1.0);
+        assertTrue(notified() >= 1);
+
+        // let go, the apps are told again
+        int told = notified();
+        scenePlayerService.flashScene("bar", "bar-0", false);
+        assertEquals(told + 1, notified());
+    }
+
+    @Test
+    void stepsForwardWithoutADirectionAndToTheLastSceneBackwards() {
+        DefaultScenePlayerService scenePlayerService = scenePlayerService();
+
+        // nothing on: backwards to the last scene, forwards to the first one
+        scenePlayerService.stepScene("Club Lights", null, -1);
+        assertEquals(List.of("Club Lights-1"), scenePlayerService.getActiveSceneUuids());
+        scenePlayerService.setActiveScenes("Club Lights", List.of());
+        scenePlayerService.stepScene("Club Lights", null, 0);
+        assertEquals(List.of("Club Lights-0"), scenePlayerService.getActiveSceneUuids());
+
+        // no direction is forwards
+        scenePlayerService.stepScene("Club Lights", null, 0);
+        assertEquals(List.of("Club Lights-1"), scenePlayerService.getActiveSceneUuids());
+    }
+
+    @Test
+    void stepsIntoAFolderGivenByItsUuid() {
+        Project band = project("Band", 2);
+        when(designerService.getProjectByName("Band")).thenReturn(band);
+        SceneFolder songs = new SceneFolder();
+        songs.setUuid("songs");
+        songs.setName("Songs");
+        band.setSceneFolders(List.of(songs));
+        band.getScenes().get(1).setFolderUuid("songs");
+        DefaultScenePlayerService scenePlayerService = scenePlayerService();
+        scenePlayerService.setActiveScenes("Band", List.of("Band-0"));
+
+        scenePlayerService.stepScene("Band", "songs", 1);
+
+        assertEquals(List.of("Band-1"), scenePlayerService.getActiveSceneUuids());
+    }
+
+    @Test
+    void keepsTheDimmersOfTheOtherScenes() {
+        DefaultScenePlayerService scenePlayerService = scenePlayerService();
+
+        scenePlayerService.setSceneDimmer("Club Lights-0", 0.4);
+        scenePlayerService.setSceneDimmer("Club Lights-1", 0.6);
+        scenePlayerService.setSceneDimmer("Club Lights-1", 0.7);
+
+        assertEquals(java.util.Map.of("Club Lights-0", 0.4, "Club Lights-1", 0.7), scenePlayerService.getSceneDimmers());
+    }
+
+    @Test
+    void waitsForTheKeyOfASceneForAMinuteAndCanBeCancelled() throws Exception {
+        long[] now = {0};
+        DefaultScenePlayerService scenePlayerService = scenePlayerService();
+        scenePlayerService.setClock(() -> now[0]);
+
+        scenePlayerService.learn("Club Lights", "Scene 1", "toggle");
+        assertEquals(1, notified());
+        now[0] += 60000;
+        assertEquals("Club Lights-1", scenePlayerService.getLearning().getScene());
+
+        scenePlayerService.cancelLearn();
+        assertEquals(null, scenePlayerService.getLearning());
+        assertEquals(2, notified());
+
+        // nothing to cancel
+        scenePlayerService.cancelLearn();
+        assertEquals(2, notified());
+    }
+
+    @Test
+    void learnsOnlyAKeyOrAButtonAndRemembersItUntilStopped() throws Exception {
+        DefaultScenePlayerService scenePlayerService = scenePlayerService();
+        scenePlayerService.learn("Club Lights", "Scene 1", "toggle");
+
+        // a pitch bend is no key and no button
+        assertFalse(scenePlayerService.learnMidi(message(ShortMessage.PITCH_BEND, 0, 0, 64)));
+        assertEquals("Club Lights-1", scenePlayerService.getLearning().getScene());
+
+        int told = notified();
+        assertTrue(scenePlayerService.learnMidi(message(ShortMessage.NOTE_ON, 0, 36, 100)));
+        assertEquals(told + 1, notified());
+
+        // a scene toggled by its key stays on until it is stopped, and that is kept with the settings
+        ActionScene learned = (ActionScene) settingsService.getSettings().getActionTriggerMidiList().getLast().getActionList().getFirst();
+        assertTrue(learned.isUntilStopped());
+        List<com.ascargon.rocketshow.midi.ActionTriggerMidi> saved = TestSettings.inDirectory(directory).getSettings().getActionTriggerMidiList();
+        assertEquals(1, saved.size());
+        assertEquals(36, ((ActionTriggerMidiNoteOn) saved.getFirst()).getNote());
+    }
+
+    @Test
+    void learnsAnotherKeyForASceneInsteadOfTheOneBefore() throws Exception {
+        DefaultScenePlayerService scenePlayerService = scenePlayerService();
+
+        scenePlayerService.learn("Club Lights", "Scene 1", "toggle");
+        scenePlayerService.learnMidi(message(ShortMessage.NOTE_ON, 0, 36, 100));
+        scenePlayerService.learn("Club Lights", "Scene 1", "toggle");
+        scenePlayerService.learnMidi(message(ShortMessage.NOTE_ON, 0, 40, 100));
+
+        assertEquals(List.of("Club Lights-1 toggle note 0 40"), mappings(scenePlayerService));
+    }
+
+    @Test
+    void tellsTheKeysAndButtonsOfTheScenesApart() throws Exception {
+        DefaultScenePlayerService scenePlayerService = scenePlayerService();
+
+        // keys of another note, and a button of the same number, on the same channel
+        scenePlayerService.learn("Club Lights", "Scene 0", "toggle");
+        scenePlayerService.learnMidi(message(ShortMessage.NOTE_ON, 0, 36, 100));
+        scenePlayerService.learn("Club Lights", "Scene 1", "toggle");
+        scenePlayerService.learnMidi(message(ShortMessage.NOTE_ON, 0, 37, 100));
+        scenePlayerService.learn("Club Lights", "Scene 0", "flash");
+        scenePlayerService.learnMidi(message(ShortMessage.CONTROL_CHANGE, 0, 36, 127));
+        assertEquals(List.of("Club Lights-0 toggle note 0 36", "Club Lights-1 toggle note 0 37", "Club Lights-0 flash cc 0 36"), mappings(scenePlayerService));
+
+        // a button of another number, then the same button for another scene
+        scenePlayerService.learn("Club Lights", "Scene 1", "flash");
+        scenePlayerService.learnMidi(message(ShortMessage.CONTROL_CHANGE, 0, 37, 127));
+        assertEquals(4, mappings(scenePlayerService).size());
+        scenePlayerService.learn("Club Lights", "Scene 1", "flash");
+        scenePlayerService.learnMidi(message(ShortMessage.CONTROL_CHANGE, 0, 36, 127));
+        assertEquals(List.of("Club Lights-0 toggle note 0 36", "Club Lights-1 toggle note 0 37", "Club Lights-1 flash cc 0 36"), mappings(scenePlayerService));
+    }
+
+    @Test
+    void forgetsAKeyAndTellsTheAppsOnlyWhenThereWasOne() throws Exception {
+        DefaultScenePlayerService scenePlayerService = scenePlayerService();
+        scenePlayerService.learn("Club Lights", "Scene 1", "toggle");
+        scenePlayerService.learnMidi(message(ShortMessage.NOTE_ON, 0, 36, 100));
+        int told = notified();
+
+        scenePlayerService.forgetMidi("Club Lights", "Club Lights-1", "flash");
+        assertEquals(told, notified());
+        assertEquals(1, mappings(scenePlayerService).size());
+
+        scenePlayerService.forgetMidi("Club Lights", "Club Lights-1", "toggle");
+        assertEquals(told + 1, notified());
+        assertEquals(List.of(), mappings(scenePlayerService));
+        assertEquals(List.of(), TestSettings.inDirectory(directory).getSettings().getActionTriggerMidiList());
     }
 }

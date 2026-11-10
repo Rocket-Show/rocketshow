@@ -384,7 +384,8 @@ class DesignerConformanceTest {
             }
         }
 
-        designerService.setHolds(compositionHolds);
+        // the way the live preview of the designer hands them over
+        designerService.setPreviewHolds(compositionHolds, false);
 
         // the fixtures identified from the fixture pool, if any
         designerService.setIdentifyFixtureUuids(preview.has("identify") ? strings(preview.get("identify")) : new ArrayList<>());

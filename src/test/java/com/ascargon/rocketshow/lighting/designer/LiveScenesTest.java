@@ -205,6 +205,25 @@ class LiveScenesTest {
     }
 
     @Test
+    void isNotIdleWhileASceneIsFlashed() {
+        liveScenes.setScenes(List.of(), List.of(blue), 0);
+        assertFalse(liveScenes.isIdle(100));
+
+        liveScenes.setScenes(List.of(), List.of(), 200);
+        assertTrue(liveScenes.isIdle(200));
+    }
+
+    @Test
+    void staysAtFullWhenItIsPickedAgainTheMomentItIsLetGo() {
+        liveScenes.setScenes(List.of(red), List.of(), 0);
+        liveScenes.setScenes(List.of(), List.of(), 5000);
+        liveScenes.setScenes(List.of(red), List.of(), 5000);
+
+        assertEquals(1, level(red, 5000), 1e-9);
+        assertEquals(1, level(red, 5500), 1e-9);
+    }
+
+    @Test
     void startsAnew() {
         liveScenes.advance(0);
         liveScenes.setScenes(List.of(blue), List.of(), 500);

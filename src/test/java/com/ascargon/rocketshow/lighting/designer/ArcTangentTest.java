@@ -38,5 +38,14 @@ class ArcTangentTest {
         assertEquals(Math.PI / 2, ArcTangent.atan2(1, 0));
         assertEquals(-Math.PI / 2, ArcTangent.atan2(-1, 0));
         assertEquals(StrictMath.atan2(-1, -1), ArcTangent.atan2(-1, -1), 0);
+        assertEquals(StrictMath.atan2(0.5, 1), ArcTangent.atan2(0.5, 1), 0);
+    }
+
+    @Test
+    void takesTheEdgesOfItsRangesLikeTheStrictArcTangent() {
+        for (double x : new double[]{0.4375, 0.6875, 1.1875, 2.4375, Math.nextDown(0.4375), Math.nextDown(0.6875), Math.nextDown(1.1875), Math.nextDown(2.4375)}) {
+            assertEquals(StrictMath.atan(x), ArcTangent.atan(x), 0, String.valueOf(x));
+            assertEquals(StrictMath.atan(-x), ArcTangent.atan(-x), 0, String.valueOf(-x));
+        }
     }
 }
