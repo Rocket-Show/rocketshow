@@ -38,15 +38,6 @@
           { "actionTransport": { "type": "TRANSPORT", "transportActionType": "TOGGLE_PLAY", "executeLocally": true, "remoteDeviceList": ["Backstage Video"] } }
         ]
       }
-    },
-    {
-      "actionTriggerMidiNoteOn": {
-        "channel": 0,
-        "note": 48,
-        "actionList": [
-          { "actionScene": { "type": "SCENE", "sceneActionType": "NEXT_SCENE", "projectName": "Summer Tour 2026", "folder": "a8000000-0000-4000-8000-000000000020", "untilStopped": true, "durationMillis": 0, "executeLocally": true, "remoteDeviceList": [] } }
-        ]
-      }
     }
   ],
 
