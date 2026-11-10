@@ -25,7 +25,9 @@ The images land in `../spark/website/assets/images/docs/` as `<name>.webp`,
 ready to commit in the website repository. The pictures of the other pages of
 the website (the phone on the home page, the composition editor and the
 settings on the features page) land one folder up, in
-`../spark/website/assets/images/`. Options:
+`../spark/website/assets/images/`. The designer (`designer.webp`) and its
+pixel pattern picker (`designer-pixel-patterns.webp`) are shown on the other
+pages as well, straight from the docs folder. Options:
 
 | Option         | Meaning                                                        |
 |----------------|----------------------------------------------------------------|
@@ -101,8 +103,7 @@ repository refers to the images by name.
 
 ## The online designer
 
-The pictures of the online designer (the large one on the designer page and
-elsewhere, and the AI designing looks) need what only the online designer has:
-the menu with Share and the user, and the AI. They are taken in the
-show-designer repository from the same demo project, see
+The picture of the AI designing looks (`designer-ai.webp`) needs what only
+the online designer has: the AI, for a user who is signed in. It is taken in
+the show-designer repository from the same demo project, see
 `web/screenshots/README.md` there.

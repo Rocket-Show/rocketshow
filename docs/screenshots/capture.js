@@ -662,6 +662,7 @@ const SHOTS = [
 
   // Designer
   {
+    // also the main picture of the designer on the other pages of the website
     name: 'designer',
     path: '/designer',
     viewport: { width: 1440, height: 1000 },
@@ -702,6 +703,25 @@ const SHOTS = [
     settle: 2500,
     element: '#row2',
     localStorage: { ...NO_STAGE, designerLayout: layout({ 'row-0': 25, 'row-1': 55, 'row-2': 20 }) },
+  },
+  {
+    // the pattern picker of a pixel effect open, its tiles moving: the whole designer, for the designer page as well
+    name: 'designer-pixel-patterns',
+    device: { project: { selectedPresetUuid: PRESETS['Pixel flow'], selectedSceneUuids: [SCENES['Pixel party']] } },
+    path: '/designer',
+    viewport: { width: 1440, height: 1000 },
+    scale: 1.5,
+    run: async (page) => {
+      await page.waitForTimeout(1500);
+      await page.click('#v-pills-effects-tab');
+      await page.waitForTimeout(800);
+      await page.locator('.pixel-picker-toggle').first().click();
+      await page.waitForSelector('.pixel-picker-tile');
+      // a moment into the patterns, so the chases have run onto the tiles
+      await page.clock.setFixedTime(new Date('2026-07-18T21:14:01.700+02:00'));
+    },
+    settle: 3000,
+    localStorage: { designerLayout: layout({ 'row-0': 36, 'row-1': 46, 'row-2': 18 }) },
   },
   {
     name: 'designer-fan',
