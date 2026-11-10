@@ -265,9 +265,9 @@
 
       <!-- For larger screens -->
       <div class="list-group d-none d-sm-flex" style="flex: 0 0 auto;">
-        <div class="list-group-item flex-column align-items-start">
+        <div class="list-group-item set-header">
           @if (viewMode === 'grid') {
-            <button class="btn-view-toggle mr-3" (click)="toggleViewMode()"
+            <button class="btn-view-toggle" (click)="toggleViewMode()"
               [popover]="'play.help.switch-to-setlist' | translate" triggers="mouseenter:mouseleave"
               container="body" placement="bottom">
               <i class="fa fa-play-circle-o fa-fw" aria-hidden="true"></i>
@@ -295,10 +295,13 @@
               }
             </ul>
           </div>
-          @if (viewMode === 'grid' && scenesAvailable()) {
-            <span class="float-right ml-3 d-none d-lg-inline"><ng-container *ngTemplateOutlet="modeSwitchControl"></ng-container></span>
-          }
-          <span style="margin-top: 3px" class="float-right">{{ totalPlayTime }}</span>
+          <div class="set-header-end">
+            <span class="set-header-time">{{ totalPlayTime }}</span>
+            <!-- Without the transport in the grid, the switch to the scenes is here (next to the menu below lg) -->
+            @if (viewMode === 'grid' && scenesAvailable()) {
+              <div class="d-none d-lg-flex"><ng-container *ngTemplateOutlet="modeSwitchControl"></ng-container></div>
+            }
+          </div>
         </div>
       </div>
 
@@ -351,9 +354,9 @@
 
       <!-- For smaller screens -->
       <div class="list-group d-sm-none" style="flex: 0 0 auto;">
-        <div class="list-group-item flex-column align-items-start pt-2 pb-2">
+        <div class="list-group-item set-header">
           @if (viewMode === 'grid') {
-            <button class="btn-view-toggle mr-2" (click)="toggleViewMode()"
+            <button class="btn-view-toggle" (click)="toggleViewMode()"
               [popover]="'play.help.switch-to-setlist' | translate" triggers="mouseenter:mouseleave"
               container="body" placement="bottom">
               <i class="fa fa-play-circle-o fa-fw" aria-hidden="true"></i>
@@ -382,10 +385,9 @@
             </ul>
           </div>
 
-          @if (viewMode === 'grid' && scenesAvailable()) {
-            <span class="float-right ml-3 d-none d-lg-inline"><ng-container *ngTemplateOutlet="modeSwitchControl"></ng-container></span>
-          }
-          <span style="margin-top: 3px" class="float-right">{{ totalPlayTime }}</span>
+          <div class="set-header-end">
+            <span class="set-header-time">{{ totalPlayTime }}</span>
+          </div>
         </div>
       </div>
 

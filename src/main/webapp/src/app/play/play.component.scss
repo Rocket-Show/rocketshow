@@ -179,6 +179,26 @@
     box-shadow: 0px 0px 12px 0px rgba(253, 126, 20, 0.75);
 }
 
+/* The set header: the view toggle and the set on the left, the time of the set (and in the grid the switch to the
+   scenes) on the right, all on one centred line, however high the switch is */
+.set-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sd-space-2) var(--sd-space-3);
+}
+
+.set-header-end {
+    display: flex;
+    align-items: center;
+    gap: var(--sd-space-4);
+    margin-left: auto;
+}
+
+.set-header-time {
+    font-variant-numeric: tabular-nums;
+}
+
 /* View toggle button in set header */
 .btn-view-toggle {
     background: transparent;
