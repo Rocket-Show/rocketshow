@@ -240,6 +240,10 @@ Handling the image displaying.
 Responsible for the connection of Rocket Show to the Open Lighting Architecture to control connected lighting
 interfaces. Services for designer project playback also lies here.
 
+The Java engine playing the designer projects (`lighting/designer`) is to be replaced by the lighting engine shared
+with the designer (`Rocket-Show/lighting-engine`), loaded as WebAssembly: see
+[docs/lighting-engine.md](./docs/lighting-engine.md).
+
 The sources of the inluded jar file with the OLA client are copied from an archive into ola-java-client-src.
 
 ##### MIDI
