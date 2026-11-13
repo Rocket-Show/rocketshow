@@ -91,7 +91,45 @@ tar xvzf /root/defaults.tar.gz
 mv defaults/* .
 rm -rf defaults
 
-# The fixture library is synced with the online designer once the app runs
+# The fixture library, as a device syncs it with the online designer (as the image of the Spark does it): from cursor 0,
+# without a registration, one file per version and library.json last. The device syncs from there once it is online.
+python3 - fixtures <<'PYTHON'
+import gzip, json, os, sys, urllib.request
+
+directory = sys.argv[1]
+os.makedirs(directory, exist_ok=True)
+cursor, manufacturers, versions = 0, {}, {}
+
+while True:
+    request = urllib.request.Request(
+        'https://api.rocketshow.net/designer/api/library-sync',
+        data=json.dumps({'cursor': cursor, 'since': 0}).encode(),
+        headers={'Content-Type': 'application/json', 'Accept-Encoding': 'gzip'},
+    )
+    with urllib.request.urlopen(request, timeout=120) as response:
+        body = response.read()
+        if response.headers.get('Content-Encoding') == 'gzip':
+            body = gzip.decompress(body)
+    page = json.loads(body)
+
+    for manufacturer in page['manufacturers']:
+        manufacturers[manufacturer['shortName']] = {'name': manufacturer['name'], 'website': manufacturer['website']}
+    for version in page['versions']:
+        versions[version['uuid']] = version
+    for uuid, profile in page['profiles'].items():
+        manufacturer, fixture = uuid.split('/')
+        os.makedirs(os.path.join(directory, manufacturer), exist_ok=True)
+        with open(os.path.join(directory, manufacturer, fixture + '.json'), 'w') as file:
+            json.dump(profile, file)
+
+    cursor = page['cursor']
+    if not page['more']:
+        break
+
+with open(os.path.join(directory, 'library.json'), 'w') as file:
+    json.dump({'cursor': cursor, 'manufacturers': manufacturers, 'versions': list(versions.values())}, file)
+print('Fixture library: %d versions, cursor %d' % (len(versions), cursor))
+PYTHON
 
 # Install wireless access point, but only enable from the java app (after setting the country)
 # https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md
