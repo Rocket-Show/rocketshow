@@ -134,7 +134,7 @@ class OnlineApiTest extends ApiTest {
                 get("/api/ai-looks"),
                 post("/api/ai-looks").contentType(MediaType.APPLICATION_JSON).content("{}"),
                 get("/api/ai-fixtures"),
-                multipart("/api/ai-fixtures").param("action", "lookup"),
+                post("/api/ai-fixtures").param("action", "lookup"),
                 get("/api/fixture-vote?uuid=acme/par~2"),
                 post("/api/fixture-vote").contentType(MediaType.APPLICATION_JSON).content("{}"),
                 delete("/api/fixture-vote?uuid=acme/par~2&mode=8ch"),
