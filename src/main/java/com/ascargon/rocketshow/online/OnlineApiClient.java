@@ -24,7 +24,7 @@ import java.util.zip.GZIPInputStream;
 @Service
 public class OnlineApiClient {
 
-    public final static String DEFAULT_URL = "https://www.rocketshow.net/designer/api/";
+    public final static String DEFAULT_URL = "https://api.rocketshow.net/designer/api/";
 
     // A unit without internet (e.g. on a stage network) gives up soon
     private final static Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
