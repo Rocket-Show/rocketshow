@@ -1,8 +1,9 @@
 # Fixture profiles for the tests
 
-A few profiles of the fixture library the units download (`https://www.rocketshow.net/designer/downloads/fixtures.zip`),
-which is built from the [Open Fixture Library](https://github.com/OpenLightingProject/open-fixture-library) (MIT
-license). Each one stands for something the designer engine has to handle:
+A few profiles of the fixture library the units downloaded as a zip until they synced it with the online designer
+(`https://www.rocketshow.net/designer/downloads/fixtures.zip`), which is built from the
+[Open Fixture Library](https://github.com/OpenLightingProject/open-fixture-library) (MIT license). Each one stands for
+something the designer engine has to handle:
 
 | Profile | Why |
 |---|---|

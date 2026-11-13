@@ -1,11 +1,12 @@
 package com.ascargon.rocketshow.lighting.designer;
 
+import com.ascargon.rocketshow.online.AccountService;
+import com.ascargon.rocketshow.online.DeviceRegistrationService;
+import com.ascargon.rocketshow.online.OnlineApiClient;
 import com.ascargon.rocketshow.settings.Settings;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.util.FileFilterService;
-import com.sun.net.httpserver.HttpServer;
 import org.apache.commons.io.FileUtils;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
@@ -16,34 +17,25 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Profiles of the fixture library the units download (src/test/resources/fixtures/): searching them like the designer
- * does and playing every mode of them.
+ * Profiles of the fixture library the units downloaded as a zip until the sync with the online designer (see
+ * FixtureLibrarySyncTest), in src/test/resources/fixtures/: searching them like the designer does, as a unit does until
+ * its first sync replaces them, and playing every mode of them.
  */
 class FixtureLibraryTest {
 
@@ -66,7 +58,8 @@ class FixtureLibraryTest {
         SettingsService settingsService = mock(SettingsService.class);
         when(settingsService.getSettings()).thenReturn(settings);
 
-        fixtureService = new DefaultFixtureService(settingsService, mock(FileFilterService.class));
+        fixtureService = new DefaultFixtureService(settingsService, mock(FileFilterService.class), mock(DeviceRegistrationService.class),
+                mock(AccountService.class), new OnlineApiClient("http://127.0.0.1:1/designer/api/"));
     }
 
     private List<String> profileUuids() throws Exception {
@@ -155,7 +148,7 @@ class FixtureLibraryTest {
 
     @Test
     void listsEveryProfileOfTheLibrary() throws Exception {
-        List<SearchFixtureTemplate> fixtures = fixtureService.searchFixtures(null, null, null, null);
+        List<SearchFixtureTemplate> fixtures = fixtureService.searchFixtures(null, null, null, null, null);
 
         assertEquals(profileUuids(), fixtures.stream().map(SearchFixtureTemplate::getUuid).sorted().toList());
 
@@ -163,171 +156,41 @@ class FixtureLibraryTest {
         assertEquals("MH-100", movingHead.getName());
         assertEquals("Stairville", movingHead.getManufacturerName());
         assertEquals("stairville", movingHead.getManufacturerShortName());
+        assertEquals("Moving Head", movingHead.getMainCategory());
+        assertEquals("stairville/mh-100", movingHead.getFixture());
+        assertEquals("ofl", movingHead.getOrigin());
+        assertTrue(movingHead.getBest());
+    }
+
+    @Test
+    void listsTheManufacturersOfTheLibrary() {
+        List<FixtureManufacturer> manufacturers = fixtureService.getManufacturers();
+
+        assertEquals(List.of("adb", "chauvet-dj", "dts", "elation", "etc", "hong-yi", "ibiza-light", "panasonic", "stairville", "varytec"),
+                manufacturers.stream().map(FixtureManufacturer::shortName).toList());
+        assertEquals(new FixtureManufacturer("adb", "ADB", "https://www.adbstagelight.com"), manufacturers.get(0));
     }
 
     @Test
     void findsTheOtherProfilesBesideABrokenOne() throws Exception {
         Files.writeString(library.resolve("stairville/broken.json"), "{\"name\": \"Broken\", \"modes\": [");
 
-        List<String> uuids = fixtureService.searchFixtures(null, null, null, null).stream().map(SearchFixtureTemplate::getUuid).sorted().toList();
+        List<String> uuids = fixtureService.searchFixtures(null, null, null, null, null).stream().map(SearchFixtureTemplate::getUuid).sorted().toList();
 
         assertEquals(profileUuids().stream().filter(uuid -> !uuid.equals("stairville/broken")).toList(), uuids);
     }
 
     @Test
     void findsAProfileByItsUuid() throws Exception {
-        assertEquals(List.of("stairville/mh-100"), fixtureService.searchFixtures("stairville/mh-100", null, null, null).stream().map(SearchFixtureTemplate::getUuid).toList());
-        assertNull(fixtureService.searchFixtures("stairville/unknown", null, null, null));
+        assertEquals(List.of("stairville/mh-100"), fixtureService.searchFixtures("stairville/mh-100", null, null, null, null).stream().map(SearchFixtureTemplate::getUuid).toList());
+        assertEquals(List.of("stairville/mh-100"), fixtureService.searchFixtures(null, "stairville/mh-100", null, null, null).stream().map(SearchFixtureTemplate::getUuid).toList());
+        assertEquals(List.of(), fixtureService.searchFixtures("stairville/unknown", null, null, null, null));
+        assertNull(fixtureService.getFixture("stairville/unknown"));
     }
 
     @Test
     void readsAProfile() throws Exception {
         assertEquals("MH-100", objectMapper.readTree(fixtureService.getFixture("stairville/mh-100")).get("name").asString());
-    }
-
-    // The library on rocketshow.net
-    private String serve(byte[] library) throws IOException {
-        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-        server.createContext("/designer/downloads/fixtures.zip", exchange -> {
-            exchange.sendResponseHeaders(200, library.length);
-            exchange.getResponseBody().write(library);
-            exchange.close();
-        });
-        server.start();
-        servers.add(server);
-        return "http://127.0.0.1:" + server.getAddress().getPort() + "/designer/downloads/fixtures.zip";
-    }
-
-    private final List<HttpServer> servers = new ArrayList<>();
-
-    @AfterEach
-    void stopServers() {
-        servers.forEach(server -> server.stop(0));
-    }
-
-    private static byte[] zip(Map<String, String> files) throws IOException {
-        ByteArrayOutputStream zip = new ByteArrayOutputStream();
-        try (ZipOutputStream zipOutputStream = new ZipOutputStream(zip)) {
-            for (Map.Entry<String, String> file : files.entrySet()) {
-                zipOutputStream.putNextEntry(new ZipEntry(file.getKey()));
-                zipOutputStream.write(file.getValue().getBytes(StandardCharsets.UTF_8));
-                zipOutputStream.closeEntry();
-            }
-        }
-        return zip.toByteArray();
-    }
-
-    private static final Map<String, String> NEW_LIBRARY = Map.of(
-            "manufacturers.json", "{\"acme\": {\"name\": \"Acme\"}}",
-            "acme/par.json", "{\"name\": \"Par\", \"modes\": []}"
-    );
-
-    private List<String> filesBesideTheLibrary() throws IOException {
-        try (Stream<Path> paths = Files.list(directory)) {
-            return paths.map(path -> path.getFileName().toString()).sorted().toList();
-        }
-    }
-
-    @Test
-    void updatesTheLibraryAtTheStartOnceAWeek() throws Exception {
-        AtomicInteger downloads = new AtomicInteger();
-        byte[] newLibrary = zip(NEW_LIBRARY);
-        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-        server.createContext("/designer/downloads/fixtures.zip", exchange -> {
-            downloads.incrementAndGet();
-            exchange.sendResponseHeaders(200, newLibrary.length);
-            exchange.getResponseBody().write(newLibrary);
-            exchange.close();
-        });
-        server.start();
-        servers.add(server);
-        fixtureService.libraryUrl = "http://127.0.0.1:" + server.getAddress().getPort() + "/designer/downloads/fixtures.zip";
-
-        // Last updated 8 days ago
-        File manufacturers = library.resolve("manufacturers.json").toFile();
-        assertTrue(manufacturers.setLastModified(System.currentTimeMillis() - Duration.ofDays(8).toMillis()));
-        fixtureService.updateProfilesIfOutdated();
-        assertEquals(1, downloads.get());
-        assertEquals(List.of("acme/par"), fixtureService.searchFixtures(null, null, null, null).stream().map(SearchFixtureTemplate::getUuid).toList());
-
-        // Just updated: kept at the next starts
-        fixtureService.updateProfilesIfOutdated();
-        assertEquals(1, downloads.get());
-
-        // Missing, e.g. a new unit
-        FileUtils.deleteDirectory(library.toFile());
-        fixtureService.updateProfilesIfOutdated();
-        assertEquals(2, downloads.get());
-        assertTrue(library.resolve("manufacturers.json").toFile().isFile());
-    }
-
-    @Test
-    void updatesTheLibrary() throws Exception {
-        List<String> before = fixtureService.searchFixtures(null, null, null, null).stream().map(SearchFixtureTemplate::getUuid).toList();
-        assertTrue(before.contains("stairville/mh-100"));
-
-        fixtureService.libraryUrl = serve(zip(NEW_LIBRARY));
-        fixtureService.updateProfiles();
-
-        assertEquals(List.of("acme/par"), fixtureService.searchFixtures(null, null, null, null).stream().map(SearchFixtureTemplate::getUuid).toList());
-        assertEquals(List.of("fixtures"), filesBesideTheLibrary());
-    }
-
-    @Test
-    void keepsTheLibraryWhenTheDownloadBreaksOff() throws Exception {
-        byte[] library = zip(NEW_LIBRARY);
-        fixtureService.libraryUrl = serve(Arrays.copyOf(library, library.length / 2));
-
-        assertThrows(IOException.class, () -> fixtureService.updateProfiles());
-
-        assertEquals(profileUuids(), fixtureService.searchFixtures(null, null, null, null).stream().map(SearchFixtureTemplate::getUuid).sorted().toList());
-        assertEquals(List.of("fixtures"), filesBesideTheLibrary());
-    }
-
-    @Test
-    void keepsTheLibraryWhenTheDownloadIsNoLibrary() throws Exception {
-        fixtureService.libraryUrl = serve(zip(Map.of("index.html", "<html>Maintenance</html>")));
-
-        assertThrows(IOException.class, () -> fixtureService.updateProfiles());
-
-        assertEquals(profileUuids(), fixtureService.searchFixtures(null, null, null, null).stream().map(SearchFixtureTemplate::getUuid).sorted().toList());
-        assertEquals(List.of("fixtures"), filesBesideTheLibrary());
-    }
-
-    @Test
-    void keepsTheLibraryWithoutInternet() throws Exception {
-        fixtureService.libraryUrl = "http://127.0.0.1:1/designer/downloads/fixtures.zip";
-
-        assertThrows(IOException.class, () -> fixtureService.updateProfiles());
-
-        assertEquals(profileUuids(), fixtureService.searchFixtures(null, null, null, null).stream().map(SearchFixtureTemplate::getUuid).sorted().toList());
-    }
-
-    @Test
-    void updatesTheLibraryOverTheLeftoversOfAnUpdateBrokenOff() throws Exception {
-        // The download unpacked half way and the library replaced before
-        Files.createDirectories(directory.resolve(".fixtures-download/acme"));
-        Files.writeString(directory.resolve(".fixtures-download/acme/stale.json"), "{\"name\": \"Stale\", \"modes\": []}");
-        FileUtils.copyDirectory(library.toFile(), directory.resolve(".fixtures-old").toFile());
-
-        fixtureService.libraryUrl = serve(zip(NEW_LIBRARY));
-        fixtureService.updateProfiles();
-
-        assertEquals(List.of("acme/par"), fixtureService.searchFixtures(null, null, null, null).stream().map(SearchFixtureTemplate::getUuid).toList());
-        assertEquals(List.of("fixtures"), filesBesideTheLibrary());
-    }
-
-    @Test
-    void bringsTheLibraryBackWhenTheUnitWasSwitchedOffWhileReplacingIt() throws Exception {
-        // The library had been moved aside, the new one not yet in its place
-        List<String> profiles = profileUuids();
-        Files.move(library, directory.resolve(".fixtures-old"));
-        fixtureService.libraryUrl = "http://127.0.0.1:1/designer/downloads/fixtures.zip";
-
-        assertThrows(IOException.class, () -> fixtureService.updateProfiles());
-
-        assertEquals(profiles, profileUuids());
-        assertEquals(profiles, fixtureService.searchFixtures(null, null, null, null).stream().map(SearchFixtureTemplate::getUuid).sorted().toList());
     }
 
     @TestFactory

@@ -569,6 +569,23 @@
       "enable": "Attivato"
     },
     "security": "Sicurezza",
+    "account": {
+      "title": "Account",
+      "intro": "Collega questo dispositivo al tuo account del designer online su rocketshow.net per usare l'IA del designer e valutare i profili dei fari. Il dispositivo riceve una chiave propria per l'account, la tua password non viene mai salvata.",
+      "account": "Account",
+      "linked": "Collegato a {{username}}",
+      "email": "E-mail",
+      "password": "Password",
+      "login": "Accedi",
+      "logout": "Esci",
+      "register": "Non hai ancora un account?",
+      "register-link": "Registrati gratuitamente nel designer online su rocketshow.net",
+      "wrong-credentials": "L'e-mail o la password non sono corrette.",
+      "unreachable": "Impossibile raggiungere rocketshow.net. Assicurati che il dispositivo sia connesso a internet.",
+      "error": "Non è stato possibile collegare il dispositivo all'account. Riprova più tardi.",
+      "statistics": "A ogni sincronizzazione della libreria dei fari, questo dispositivo invia statistiche di utilizzo a rocketshow.net, che sia collegato o no: la sua versione, il suo hardware, la sua lingua, il numero delle sue composizioni, set e progetti del designer, i profili dei fari che usano e, finché è collegato, il suo nome. Mai i nomi né il contenuto dei tuoi file.",
+      "privacy-policy": "Informativa sulla privacy"
+    },
     "session": "Sessione",
     "password": "Password",
     "change": "Modifica",

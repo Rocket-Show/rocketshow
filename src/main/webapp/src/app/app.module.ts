@@ -103,6 +103,7 @@ import { ActionMidiComponent } from "./action/action-midi/action-midi.component"
 import { LoginComponent } from "./login/login.component";
 import { ParticleBackgroundComponent } from "./particle-background/particle-background.component";
 import { SettingsSecurityComponent } from "./settings/settings-security/settings-security.component";
+import { SettingsAccountComponent } from "./settings/settings-account/settings-account.component";
 import { ChangePasswordDialogComponent } from './settings/change-password-dialog/change-password-dialog.component';
 import { NewApiKeyDialogComponent } from "./settings/new-api-key-dialog/new-api-key-dialog.component";
 import { SelfTestResultDialogComponent } from "./settings/self-test-result-dialog/self-test-result-dialog.component";
@@ -179,6 +180,7 @@ const appRoutes: Routes = [
         MidiMappingComponent,
         SettingsInfoComponent,
         SettingsSecurityComponent,
+        SettingsAccountComponent,
         LeadSheetComponent,
         EditorCompositionLeadSheetComponent,
         EditorMediaComponent,

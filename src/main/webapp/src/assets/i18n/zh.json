@@ -569,6 +569,23 @@
       "enable": "启用"
     },
     "security": "安全",
+    "account": {
+      "title": "账户",
+      "intro": "将此设备与您在 rocketshow.net 上的在线设计器账户关联，即可使用设计器的 AI 功能并评价灯具配置文件。设备会为该账户获得专属密钥，您的密码绝不会被保存。",
+      "account": "账户",
+      "linked": "已关联到 {{username}}",
+      "email": "电子邮箱",
+      "password": "密码",
+      "login": "登录",
+      "logout": "退出登录",
+      "register": "还没有账户？",
+      "register-link": "在 rocketshow.net 的在线设计器中免费注册",
+      "wrong-credentials": "电子邮箱或密码错误。",
+      "unreachable": "无法连接到 rocketshow.net。请确保设备已连接到互联网。",
+      "error": "无法将设备与账户关联。请稍后重试。",
+      "statistics": "每次同步灯具库时，无论是否已关联，此设备都会向 rocketshow.net 发送使用统计：其版本、硬件、语言，作品、集合和设计器项目的数量，这些项目使用的灯具配置文件，以及在已关联期间的设备名称。绝不发送您文件的名称或内容。",
+      "privacy-policy": "隐私政策"
+    },
     "session": "会话",
     "password": "密码",
     "change": "更改",

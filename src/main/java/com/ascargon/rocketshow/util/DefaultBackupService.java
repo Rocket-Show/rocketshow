@@ -39,6 +39,8 @@ public class DefaultBackupService implements BackupService {
 
     private final static Logger logger = LoggerFactory.getLogger(DefaultBackupService.class);
 
+    // Not the account of the online designer the device is linked to, nor the identifier of the device (see the online
+    // package): a backup restored on another device must not arrive linked, nor make it this device
     private final List<String> backedUpFileList = Arrays.asList("compositions", "sets", "designer", "fixtures", "media", "session.xml", "settings.xml");
 
     private final SettingsService settingsService;

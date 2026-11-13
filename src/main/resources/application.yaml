@@ -18,6 +18,8 @@ spring:
     default-property-inclusion: non_null
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+      # A manual of up to 32 MB, which the designer hands on to the AI of the online designer (OnlineApiController),
+      # with the other fields of its form
+      max-file-size: 32MB
+      max-request-size: 33MB
       location: ${ROCKETSHOW_UPLOAD_TMP_DIR:./upload-tmp}

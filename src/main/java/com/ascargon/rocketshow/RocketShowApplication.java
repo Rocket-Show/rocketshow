@@ -63,14 +63,9 @@ public class RocketShowApplication {
         // Start the designer preview, if necessary
         context.getBean(DesignerService.class);
 
-        // Update the fixture profiles once a week, if possible
-        FixtureService fixtureService = context.getBean(FixtureService.class);
-        try {
-            fixtureService.updateProfilesIfOutdated();
-        } catch (Exception e) {
-            // do nothing. maybe we're not connected to the internet. the user
-            // is able to update the profiles manually from the webapp.
-        }
+        // Sync the fixture library with the online designer in the background, without holding up the start: soon and
+        // then every day, as far as the unit is online. The web app syncs it on demand as well.
+        context.getBean(FixtureService.class).startBackgroundSync();
 
         RocketShowApplication.args = args;
         RocketShowApplication.context = context;

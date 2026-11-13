@@ -1,9 +1,13 @@
 package com.ascargon.rocketshow.util;
 
+import com.ascargon.rocketshow.online.DefaultAccountService;
+import com.ascargon.rocketshow.online.DefaultDeviceIdentifierService;
 import com.ascargon.rocketshow.settings.Settings;
 import com.ascargon.rocketshow.settings.SettingsService;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +26,7 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -123,6 +128,36 @@ class DefaultBackupServiceTest {
         assertFalse(Files.exists(basePath.resolve("compositions/New.xml")));
         assertEquals("audio", read("media/audio/song.wav"));
         assertFalse(Files.exists(basePath.resolve(".restore")));
+    }
+
+    @Test
+    void leavesTheAccountAndTheIdentifierOfTheDeviceOut() throws Exception {
+        // A backup restored on another device must neither arrive linked to the account of this one, nor make it this
+        // device
+        writeData();
+        write(DefaultAccountService.FILE_NAME, "{\"token\": \"token-of-this-device\"}");
+        write(DefaultDeviceIdentifierService.FILE_NAME, "id-of-this-device");
+        byte[] backup = createBackup();
+
+        List<String> entries = new ArrayList<>();
+        try (TarArchiveInputStream tar = new TarArchiveInputStream(new GzipCompressorInputStream(new ByteArrayInputStream(backup)))) {
+            TarArchiveEntry entry;
+            while ((entry = tar.getNextEntry()) != null) {
+                entries.add(entry.getName());
+            }
+        }
+        assertTrue(entries.contains("settings.xml"));
+        assertFalse(entries.stream().anyMatch(name -> name.contains(DefaultAccountService.FILE_NAME) || name.contains(DefaultDeviceIdentifierService.FILE_NAME)), entries.toString());
+
+        // Restored on another device: its own stay
+        write(DefaultAccountService.FILE_NAME, "{\"token\": \"token-of-another-device\"}");
+        write(DefaultDeviceIdentifierService.FILE_NAME, "id-of-another-device");
+        upload(backup);
+        backupService.restoreFinish();
+
+        assertTrue(rebooted.await(30, TimeUnit.SECONDS));
+        assertEquals("{\"token\": \"token-of-another-device\"}", read(DefaultAccountService.FILE_NAME));
+        assertEquals("id-of-another-device", read(DefaultDeviceIdentifierService.FILE_NAME));
     }
 
     @Test

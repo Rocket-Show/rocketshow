@@ -91,10 +91,7 @@ tar xvzf /root/defaults.tar.gz
 mv defaults/* .
 rm -rf defaults
 
-# Download the current set of fixtures
-wget https://rocketshow.net/designer/downloads/fixtures.zip
-unzip fixtures.zip -d fixtures
-rm fixtures.zip
+# The fixture library is synced with the online designer once the app runs
 
 # Install wireless access point, but only enable from the java app (after setting the country)
 # https://www.raspberrypi.org/documentation/configuration/wireless/access-point.md

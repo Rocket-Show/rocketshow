@@ -570,6 +570,23 @@
       "enable": "Enabled"
     },
     "security": "Security",
+    "account": {
+      "title": "Account",
+      "intro": "Link this device with your account of the online designer on rocketshow.net to use the AI of the designer and to rate fixture profiles. The device gets a key of its own for the account, your password is never stored.",
+      "account": "Account",
+      "linked": "Linked with {{username}}",
+      "email": "Email",
+      "password": "Password",
+      "login": "Log in",
+      "logout": "Log out",
+      "register": "No account yet?",
+      "register-link": "Register for free in the online designer on rocketshow.net",
+      "wrong-credentials": "The email or the password is wrong.",
+      "unreachable": "rocketshow.net could not be reached. Please make sure the device is connected to the internet.",
+      "error": "The device could not be linked with the account. Please try again later.",
+      "statistics": "With each sync of the fixture library, this device sends usage statistics to rocketshow.net, whether it is linked or not: its version, its hardware, its language, the number of its compositions, sets and designer projects, the fixture profiles they use and, while it is linked, its name. Never the names or the contents of your files.",
+      "privacy-policy": "Privacy policy"
+    },
     "session": "Session",
     "password": "Password",
     "change": "Change",

@@ -6,6 +6,7 @@ import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.lighting.designer.DesignerJson;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
+import com.ascargon.rocketshow.lighting.designer.FixtureManufacturer;
 import com.ascargon.rocketshow.lighting.designer.FixtureService;
 import com.ascargon.rocketshow.lighting.designer.Project;
 import com.ascargon.rocketshow.lighting.designer.SearchFixtureTemplate;
@@ -50,14 +51,30 @@ public class DesignerController {
         return controllerService.handleException(exception);
     }
 
+    // The search of the fixture library, answering like the one of the online designer: the best version of each
+    // fixture, the version with the passed uuid, or all versions of the passed fixture
     @GetMapping("fixtures")
-    public List<SearchFixtureTemplate> searchFixtures(@RequestParam(value = "uuid", required = false) String uuid, @RequestParam(value = "manufacturerShortName", required = false) String manufacturerShortName, @RequestParam(value = "name", required = false) String name, @RequestParam(value = "mainCategory", required = false) String mainCategory) throws Exception {
-        return fixtureService.searchFixtures(uuid, manufacturerShortName, name, mainCategory);
+    public List<SearchFixtureTemplate> searchFixtures(
+            @RequestParam(value = "uuid", required = false) String uuid,
+            @RequestParam(value = "fixture", required = false) String fixture,
+            @RequestParam(value = "manufacturerShortName", required = false) String manufacturerShortName,
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "mainCategory", required = false) String mainCategory
+    ) throws Exception {
+        return fixtureService.searchFixtures(uuid, fixture, manufacturerShortName, name, mainCategory);
     }
 
+    // The profile of a version, null like from the online designer when the library has none
     @GetMapping("fixture")
     public String getFixture(@RequestParam("uuid") String uuid) throws Exception {
-        return fixtureService.getFixture(uuid);
+        String profile = fixtureService.getFixture(uuid);
+        return profile == null ? "null" : profile;
+    }
+
+    // The manufacturers of the fixture library, e.g. for a profile the AI generates
+    @GetMapping("manufacturer")
+    public List<FixtureManufacturer> getManufacturers() {
+        return fixtureService.getManufacturers();
     }
 
     // an audio bus as the designer shows it, for a pixel effect to follow
@@ -156,6 +173,7 @@ public class DesignerController {
         playerService.compositionsChanged();
     }
 
+    // Syncs the fixture library with the online designer, waiting for it
     @PostMapping("update-profiles")
     public void updateProfiles() throws Exception {
         fixtureService.updateProfiles();
