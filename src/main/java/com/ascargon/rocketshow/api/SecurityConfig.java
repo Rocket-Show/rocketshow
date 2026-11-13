@@ -91,9 +91,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/lead-sheet/**").hasRole("ADMIN")
                         .requestMatchers("/api/system/settings").hasRole("ADMIN")
                         .requestMatchers("/api/system/factory-reset").hasRole("ADMIN")
-                        // The account of the online designer the device is linked to: not for other units with an API
-                        // key
+                        // The account of the online designer the device is linked to, and what the designer does as
+                        // that account: not for other units with an API key
                         .requestMatchers("/api/account", "/api/account/**").hasRole("ADMIN")
+                        .requestMatchers("/api/ai-looks", "/api/ai-fixtures", "/api/fixture-vote", "/api/fixture-offer").hasRole("ADMIN")
 
                         // Everything else under /api requires authenticated access
                         .requestMatchers("/api/**").authenticated()
