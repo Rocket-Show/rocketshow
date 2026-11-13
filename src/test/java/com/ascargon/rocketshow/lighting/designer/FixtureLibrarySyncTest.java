@@ -289,6 +289,60 @@ class FixtureLibrarySyncTest {
         assertNull(fixtureService.getFixture("acme/spot~6"));
     }
 
+    private static String uuidOf(FakeOnlineApi.Request request) {
+        return URLDecoder.decode(request.query().substring("uuid=".length()), StandardCharsets.UTF_8);
+    }
+
+    @Test
+    void takesAVersionNewerThanTheLibraryFromTheOnlineDesigner() throws Exception {
+        // E.g. found by the AI dialog of the designer in the online library, after the last sync
+        syncFirstTime();
+        ObjectNode spot = version("acme/spot~6", "acme/spot", "Acme", "Spot");
+        onlineApi.answer("fixtures", request -> FakeOnlineApi.Answer.json(uuidOf(request).equals("acme/spot~6") ? "[" + spot + "]" : "[]"));
+        onlineApi.answer("fixture", request -> FakeOnlineApi.Answer.json(uuidOf(request).equals("acme/spot~6") ? profile("Spot").toString() : "null"));
+
+        List<SearchFixtureTemplate> found = fixtureService.searchFixtures("acme/spot~6", null, null, null, null);
+        assertEquals(List.of("acme/spot~6"), found.stream().map(SearchFixtureTemplate::getUuid).toList());
+        assertEquals("acme/spot", found.get(0).getFixture());
+        assertEquals("Spot", MAPPER.readTree(fixtureService.getFixture("acme/spot~6")).get("name").asString());
+
+        // Kept in the library, for a project using it without internet
+        assertTrue(Files.isRegularFile(library.resolve("acme/spot~6.json")));
+        onlineApi.close();
+        assertEquals("Spot", MAPPER.readTree(fixtureService.getFixture("acme/spot~6")).get("name").asString());
+        assertEquals(1, onlineApi.getRequests("fixture").size());
+
+        // Not known to the search until the next sync, but nothing else changed
+        assertEquals(List.of("acme/par~2", "stairville/mh-100~1"), best());
+        assertEquals(List.of("fixtures"), filesBesideTheLibrary());
+    }
+
+    @Test
+    void answersAVersionTheOnlineDesignerDoesNotKnowEither() throws Exception {
+        syncFirstTime();
+        onlineApi.answer("fixtures", request -> FakeOnlineApi.Answer.json("[]"));
+        onlineApi.answer("fixture", request -> FakeOnlineApi.Answer.json("null"));
+
+        assertEquals(List.of(), fixtureService.searchFixtures("acme/unknown~99", null, null, null, null));
+        assertNull(fixtureService.getFixture("acme/unknown~99"));
+        assertFalse(Files.exists(library.resolve("acme/unknown~99.json")));
+
+        // A plain uuid names a fixture of the library, never asked for online
+        assertEquals(List.of(), fixtureService.searchFixtures("acme/unknown", null, null, null, null));
+        assertNull(fixtureService.getFixture("acme/unknown"));
+        assertEquals(List.of("acme/unknown~99"), onlineApi.getRequests("fixtures").stream().map(FixtureLibrarySyncTest::uuidOf).toList());
+        assertEquals(List.of("acme/unknown~99"), onlineApi.getRequests("fixture").stream().map(FixtureLibrarySyncTest::uuidOf).toList());
+    }
+
+    @Test
+    void answersAVersionTheLibraryDoesNotKnowWithoutInternet() throws Exception {
+        syncFirstTime();
+        onlineApi.close();
+
+        assertEquals(List.of(), fixtureService.searchFixtures("acme/spot~6", null, null, null, null));
+        assertNull(fixtureService.getFixture("acme/spot~6"));
+    }
+
     @Test
     void keepsTheLibraryWhenAPageFails() throws Exception {
         syncFirstTime();

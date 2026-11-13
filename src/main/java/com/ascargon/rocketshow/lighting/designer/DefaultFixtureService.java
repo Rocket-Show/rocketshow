@@ -64,6 +64,9 @@ public class DefaultFixtureService implements FixtureService {
     // A page holds a few hundred versions
     private final static Duration SYNC_PAGE_TIMEOUT = Duration.ofSeconds(60);
 
+    // The designer waits for a version the library doesn't know yet
+    private final static Duration ONLINE_LOOKUP_TIMEOUT = Duration.ofSeconds(30);
+
     // The library is synced shortly after the start, without holding it up (the network of a unit may need a moment
     // after booting), then once a day. A sync which failed (e.g. no internet at a gig) is tried again within the hour,
     // so a unit going online later gets the library the same day. Package visible for the tests.
@@ -383,6 +386,11 @@ public class DefaultFixtureService implements FixtureService {
 
         if (uuid != null) {
             SearchFixtureTemplate version = library.find(uuid);
+
+            if (version == null && isVersionUuid(uuid)) {
+                version = findOnline(uuid);
+            }
+
             versions = version == null ? List.of() : List.of(version);
         } else if (fixture != null) {
             versions = library.versionsOf(fixture);
@@ -430,7 +438,44 @@ public class DefaultFixtureService implements FixtureService {
         SearchFixtureTemplate version = getLibrary().find(uuid);
         File file = new File(libraryDirectory, checkUuid(version == null ? uuid : version.getUuid()) + ".json");
 
+        if (!file.isFile() && version == null && isVersionUuid(uuid)) {
+            loadOnline(uuid, file);
+        }
+
         return file.isFile() ? FileUtils.readFileToString(file, StandardCharsets.UTF_8) : null;
+    }
+
+    // A version names its version after a tilde, a plain uuid names a fixture
+    private static boolean isVersionUuid(String uuid) {
+        return uuid.contains("~");
+    }
+
+    // A version newer than the last sync, e.g. one the AI dialog of the designer found in the online library: what the
+    // online designer knows of it, null when it doesn't know it or can't be reached
+    private SearchFixtureTemplate findOnline(String uuid) {
+        try {
+            OnlineApiClient.Response response = onlineApiClient.send("GET", "fixtures?uuid=" + URLEncoder.encode(uuid, StandardCharsets.UTF_8),
+                    Map.of(), null, ONLINE_LOOKUP_TIMEOUT);
+            JsonNode versions = response.isSuccessful() ? mapper.readTree(response.body()) : null;
+
+            if (versions != null && versions.isArray() && !versions.isEmpty()) {
+                return mapper.treeToValue(versions.get(0), SearchFixtureTemplate.class);
+            }
+        } catch (Exception e) {
+            logger.debug("Could not look the version {} of the fixture library up online", uuid, e);
+        }
+
+        return null;
+    }
+
+    // The profile of such a version, kept in the library: a project using it works offline afterwards, and the next
+    // sync brings what the search needs of it
+    private void loadOnline(String uuid, File file) {
+        try {
+            loadProfile(uuid, file);
+        } catch (IOException e) {
+            logger.debug("Could not load the profile {} of the fixture library online", uuid, e);
+        }
     }
 
     // The library as it was synced last, null if there is none (e.g. the library of the zip or a new unit)

@@ -135,8 +135,9 @@ The unit tests live in `src/test/java`:
   to `src/test/resources/designer-conformance` with `testing/sync-designer-conformance.sh`, which CI checks)
 - Fixture library: synced with the online designer page by page (with the registration of the unit, as its account
   when linked), the profiles a version came without loaded on their own, kept as it was when a sync breaks off, the
-  unit is offline or the answer is no page, nothing written outside of it, in the background after the start
-  (`FixtureLibrarySyncTest`, against a fake of the online designer), searched like the online designer: the best
+  unit is offline or the answer is no page, nothing written outside of it, in the background after the start, a
+  version newer than the library taken from the online designer and kept (`FixtureLibrarySyncTest`, against a fake of
+  the online designer), searched like the online designer: the best
   version of each fixture, filters, a version, the versions of a fixture in their ranking, a plain uuid
   (`FixtureLibrarySearchTest`), the library of the zip of earlier releases searched and read like the designer, and
   every mode of a few real profiles played by the engine (`FixtureLibraryTest`, profiles in
