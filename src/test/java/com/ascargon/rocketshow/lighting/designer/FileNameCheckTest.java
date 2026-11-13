@@ -1,6 +1,9 @@
 package com.ascargon.rocketshow.lighting.designer;
 
 import com.ascargon.rocketshow.lighting.LightingService;
+import com.ascargon.rocketshow.online.AccountService;
+import com.ascargon.rocketshow.online.DeviceRegistrationService;
+import com.ascargon.rocketshow.online.OnlineApiClient;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.settings.TestSettings;
 import com.ascargon.rocketshow.util.FileFilterService;
@@ -8,13 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -42,21 +40,8 @@ class FileNameCheckTest {
     }
 
     private DefaultFixtureService fixtureService() {
-        return new DefaultFixtureService(settingsService, mock(FileFilterService.class));
-    }
-
-    private Path zip(String... entryNames) throws IOException {
-        Path zip = directory.resolve("fixtures.zip");
-
-        try (OutputStream outputStream = Files.newOutputStream(zip); ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
-            for (String entryName : entryNames) {
-                zipOutputStream.putNextEntry(new ZipEntry(entryName));
-                zipOutputStream.write(entryName.getBytes(StandardCharsets.UTF_8));
-                zipOutputStream.closeEntry();
-            }
-        }
-
-        return zip;
+        return new DefaultFixtureService(settingsService, mock(FileFilterService.class), mock(DeviceRegistrationService.class),
+                mock(AccountService.class), new OnlineApiClient("http://127.0.0.1:1/designer/api/"));
     }
 
     @Test
@@ -102,19 +87,12 @@ class FileNameCheckTest {
     }
 
     @Test
-    void extractsTheFixtureProfiles() throws Exception {
-        fixtureService().extractFolder(zip("acme/par.json").toString());
+    void readsVersionsOfAProfile() throws Exception {
+        // Named by the uuid of the version, "<manufacturer>/<fixture>~<version>"
+        Path fixture = Files.createDirectories(directory.resolve("fixtures/acme")).resolve("par~3.json");
+        Files.writeString(fixture, "{\"name\":\"Par\"}");
 
-        assertEquals("acme/par.json", Files.readString(directory.resolve("fixtures/acme/par.json")));
-    }
-
-    @Test
-    void doesNotExtractFilesOutsideTheFixtureFolder() throws Exception {
-        Path zip = zip("../evil.txt");
-
-        assertThrows(IOException.class, () -> fixtureService().extractFolder(zip.toString()));
-
-        assertFalse(Files.exists(directory.resolve("evil.txt")));
+        assertEquals("{\"name\":\"Par\"}", fixtureService().getFixture("acme/par~3"));
     }
 
 }
