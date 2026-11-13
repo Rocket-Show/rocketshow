@@ -133,8 +133,19 @@ The unit tests live in `src/test/java`:
   timeline, as a preset and as scenes, and projects of every older version migrated, recorded from the designer and
   copied
   to `src/test/resources/designer-conformance` with `testing/sync-designer-conformance.sh`, which CI checks)
-- Fixture library: searching and reading it like the designer, updating it from rocketshow.net once a week, every mode
-  of a few real profiles played by the engine (`FixtureLibraryTest`, profiles in `src/test/resources/fixtures/`)
+- Fixture library: synced with the online designer page by page (with the registration of the unit, as its account
+  when linked), the profiles a version came without loaded on their own, kept as it was when a sync breaks off, the
+  unit is offline or the answer is no page, nothing written outside of it, in the background after the start
+  (`FixtureLibrarySyncTest`, against a fake of the online designer), searched like the online designer: the best
+  version of each fixture, filters, a version, the versions of a fixture in their ranking, a plain uuid
+  (`FixtureLibrarySearchTest`), the library of the zip of earlier releases searched and read like the designer, and
+  every mode of a few real profiles played by the engine (`FixtureLibraryTest`, profiles in
+  `src/test/resources/fixtures/`)
+- The online designer on the unit: the identifier of the unit (`DefaultDeviceIdentifierServiceTest`), what it registers
+  with (`DefaultDeviceRegistrationServiceTest`), linking it to an account with the token in a file of its own
+  (`DefaultAccountServiceTest`), out of the settings the web app gets and out of the backups (`OnlineApiTest`,
+  `DefaultBackupServiceTest`), and the requests of the designer handed on to the online designer as that account: the
+  AI, the votes, a manual uploaded, not linked, refused (`OnlineApiTest`)
 - GPIO buttons, the reset button and outputs, on the simulated pins of the Pi4J mock plugin (`GpioTest`)
 - Reading what the system tells: disk space, LAN, the device information file, the whole output of commands
   (`SystemOutputTest`)
@@ -302,7 +313,7 @@ The designer migrations are tested with a project in version 2 and the same proj
 - [x] `RocketShowApplicationTests` passes without GStreamer, OLA or GPIO hardware, checked by CI.
 - [x] MIDI triggers, including note on with velocity 0.
 - [x] Security rules of the API (MockMvc through the filter chain) and saving the settings like the web app does.
-- [x] File names from the web app (path traversal), zip entries of the fixture library.
+- [x] File names from the web app (path traversal), profiles of the fixture library synced from the online designer.
 - [x] Remote units which don't answer.
 - [x] Generated `.asoundrc` and `hostapd.conf`, output channels of audio buses.
 - [x] DMX mixing, universe mapping and MIDI to DMX.
