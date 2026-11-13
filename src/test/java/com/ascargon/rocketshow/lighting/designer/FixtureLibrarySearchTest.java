@@ -191,6 +191,11 @@ class FixtureLibrarySearchTest {
     }
 
     @Test
+    void listsTheManufacturers() {
+        assertEquals(List.of(new FixtureManufacturer("stairville", "Stairville", "https://example.com")), fixtureService.getManufacturers());
+    }
+
+    @Test
     void readsTheOtherVersionsBesideOneItCannotRead() throws Exception {
         ObjectNode libraryFile = (ObjectNode) MAPPER.readTree(library.resolve(DefaultFixtureService.LIBRARY_FILE_NAME).toFile());
         ObjectNode broken = ((ArrayNode) libraryFile.get("versions")).addObject();

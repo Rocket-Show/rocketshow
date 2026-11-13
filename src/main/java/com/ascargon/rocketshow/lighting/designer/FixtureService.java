@@ -14,6 +14,9 @@ public interface FixtureService {
     // The profile of the version with the passed uuid, null if the library has none
     String getFixture(String uuid) throws Exception;
 
+    // The manufacturers of the library
+    List<FixtureManufacturer> getManufacturers();
+
     // Syncs the library with the online designer and waits for it
     void updateProfiles() throws Exception;
 

@@ -27,6 +27,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -122,15 +123,17 @@ public class DefaultFixtureService implements FixtureService {
         return value == null ? 0 : value;
     }
 
-    // The versions of the library, found by their uuid and by their fixture
+    // The versions of the library, found by their uuid and by their fixture, and its manufacturers
     private static class Library {
 
         private final List<SearchFixtureTemplate> versions;
+        private final List<FixtureManufacturer> manufacturers;
         private final Map<String, SearchFixtureTemplate> byUuid = new HashMap<>();
         private final Map<String, List<SearchFixtureTemplate>> byFixture = new HashMap<>();
 
-        private Library(List<SearchFixtureTemplate> versions) {
+        private Library(List<SearchFixtureTemplate> versions, List<FixtureManufacturer> manufacturers) {
             this.versions = versions;
+            this.manufacturers = manufacturers.stream().sorted(Comparator.comparing(FixtureManufacturer::shortName)).toList();
 
             for (SearchFixtureTemplate version : versions) {
                 byUuid.putIfAbsent(version.getUuid(), version);
@@ -271,13 +274,20 @@ public class DefaultFixtureService implements FixtureService {
         File libraryFile = new File(libraryDirectory, LIBRARY_FILE_NAME);
 
         if (!libraryFile.isFile()) {
-            return new Library(readZipLibrary());
+            return readZipLibrary();
         }
 
         List<SearchFixtureTemplate> versions = new ArrayList<>();
+        List<FixtureManufacturer> manufacturers = new ArrayList<>();
 
         try {
-            for (JsonNode version : mapper.readTree(libraryFile).path("versions")) {
+            JsonNode library = mapper.readTree(libraryFile);
+
+            for (Map.Entry<String, JsonNode> manufacturer : library.path("manufacturers").properties()) {
+                manufacturers.add(new FixtureManufacturer(manufacturer.getKey(), text(manufacturer.getValue().get("name")), text(manufacturer.getValue().get("website"))));
+            }
+
+            for (JsonNode version : library.path("versions")) {
                 try {
                     SearchFixtureTemplate searchFixtureTemplate = mapper.treeToValue(version, SearchFixtureTemplate.class);
 
@@ -293,32 +303,35 @@ public class DefaultFixtureService implements FixtureService {
             logger.error("Could not read the fixture library {}", libraryFile, e);
         }
 
-        return new Library(versions);
+        return new Library(versions, manufacturers);
     }
 
     // The library downloaded as a zip until this release: a profile per fixture, named by its plain uuid. Searched
     // until the first sync replaces it, e.g. on a unit updated without internet.
-    private List<SearchFixtureTemplate> readZipLibrary() {
+    private Library readZipLibrary() {
         List<SearchFixtureTemplate> versions = new ArrayList<>();
+        List<FixtureManufacturer> manufacturers = new ArrayList<>();
         File manufacturersFile = new File(libraryDirectory, MANUFACTURERS_FILE_NAME);
 
         if (!manufacturersFile.isFile()) {
-            return versions;
+            return new Library(versions, manufacturers);
         }
 
         try {
-            Manufacturers manufacturers = mapper.readValue(manufacturersFile, Manufacturers.class);
+            Manufacturers zipManufacturers = mapper.readValue(manufacturersFile, Manufacturers.class);
 
-            logger.debug("Found {} manufacturers", manufacturers.getManufacturers().size());
+            logger.debug("Found {} manufacturers", zipManufacturers.getManufacturers().size());
 
-            for (Map.Entry<String, Manufacturer> entry : manufacturers.getManufacturers().entrySet()) {
-                readZipManufacturer(entry.getKey(), entry.getValue() == null ? null : entry.getValue().getName(), versions);
+            for (Map.Entry<String, Manufacturer> entry : zipManufacturers.getManufacturers().entrySet()) {
+                String name = entry.getValue() == null ? null : entry.getValue().getName();
+                manufacturers.add(new FixtureManufacturer(entry.getKey(), name, entry.getValue() == null ? null : entry.getValue().getWebsite()));
+                readZipManufacturer(entry.getKey(), name, versions);
             }
         } catch (Exception e) {
             logger.error("Could not read the manufacturers of the fixture library", e);
         }
 
-        return versions;
+        return new Library(versions, manufacturers);
     }
 
     private void readZipManufacturer(String manufacturerShortName, String manufacturerName, List<SearchFixtureTemplate> versions) {
@@ -378,6 +391,11 @@ public class DefaultFixtureService implements FixtureService {
         }
 
         return versions.stream().filter(version -> matches(version, manufacturerShortName, name, mainCategory)).toList();
+    }
+
+    @Override
+    public List<FixtureManufacturer> getManufacturers() {
+        return getLibrary().manufacturers;
     }
 
     // The uuid is "<manufacturer>/<fixture>" or "<manufacturer>/<fixture>~<version>" and must not leave the fixture

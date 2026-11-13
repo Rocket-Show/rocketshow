@@ -179,6 +179,8 @@ class FixtureLibrarySyncTest {
         assertEquals("Stairville", libraryFile.get("manufacturers").get("stairville").get("name").asString());
         assertEquals("https://example.com", libraryFile.get("manufacturers").get("acme").get("website").asString());
         assertEquals(List.of(MH_100, PAR), List.of(libraryFile.get("versions").get(0), libraryFile.get("versions").get(1)));
+        assertEquals(List.of(new FixtureManufacturer("acme", "Acme", "https://example.com"), new FixtureManufacturer("stairville", "Stairville", "https://example.com")),
+                fixtureService.getManufacturers());
 
         // The registration with each page
         List<FakeOnlineApi.Request> requests = onlineApi.getRequests("library-sync");

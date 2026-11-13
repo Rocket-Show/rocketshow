@@ -6,6 +6,7 @@ import com.ascargon.rocketshow.play.PlayerService;
 import com.ascargon.rocketshow.settings.SettingsService;
 import com.ascargon.rocketshow.lighting.designer.DesignerJson;
 import com.ascargon.rocketshow.lighting.designer.DesignerService;
+import com.ascargon.rocketshow.lighting.designer.FixtureManufacturer;
 import com.ascargon.rocketshow.lighting.designer.FixtureService;
 import com.ascargon.rocketshow.lighting.designer.Project;
 import com.ascargon.rocketshow.lighting.designer.SearchFixtureTemplate;
@@ -68,6 +69,12 @@ public class DesignerController {
     public String getFixture(@RequestParam("uuid") String uuid) throws Exception {
         String profile = fixtureService.getFixture(uuid);
         return profile == null ? "null" : profile;
+    }
+
+    // The manufacturers of the fixture library, e.g. for a profile the AI generates
+    @GetMapping("manufacturer")
+    public List<FixtureManufacturer> getManufacturers() {
+        return fixtureService.getManufacturers();
     }
 
     // an audio bus as the designer shows it, for a pixel effect to follow

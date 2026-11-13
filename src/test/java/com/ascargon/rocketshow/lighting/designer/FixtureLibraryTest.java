@@ -163,6 +163,15 @@ class FixtureLibraryTest {
     }
 
     @Test
+    void listsTheManufacturersOfTheLibrary() {
+        List<FixtureManufacturer> manufacturers = fixtureService.getManufacturers();
+
+        assertEquals(List.of("adb", "chauvet-dj", "dts", "elation", "etc", "hong-yi", "ibiza-light", "panasonic", "stairville", "varytec"),
+                manufacturers.stream().map(FixtureManufacturer::shortName).toList());
+        assertEquals(new FixtureManufacturer("adb", "ADB", "https://www.adbstagelight.com"), manufacturers.get(0));
+    }
+
+    @Test
     void findsTheOtherProfilesBesideABrokenOne() throws Exception {
         Files.writeString(library.resolve("stairville/broken.json"), "{\"name\": \"Broken\", \"modes\": [");
 
