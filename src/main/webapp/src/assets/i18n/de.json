@@ -570,6 +570,23 @@
       "enable": "Aktiviert"
     },
     "security": "Sicherheit",
+    "account": {
+      "title": "Konto",
+      "intro": "Verknüpfe dieses Gerät mit deinem Konto des Online-Designers auf rocketshow.net, um die KI des Designers zu nutzen und Fixture-Profile zu bewerten. Das Gerät erhält einen eigenen Schlüssel für das Konto, dein Passwort wird nie gespeichert.",
+      "account": "Konto",
+      "linked": "Verknüpft mit {{username}}",
+      "email": "E-Mail",
+      "password": "Passwort",
+      "login": "Anmelden",
+      "logout": "Abmelden",
+      "register": "Noch kein Konto?",
+      "register-link": "Registriere dich kostenlos im Online-Designer auf rocketshow.net",
+      "wrong-credentials": "Die E-Mail-Adresse oder das Passwort ist falsch.",
+      "unreachable": "rocketshow.net konnte nicht erreicht werden. Bitte stelle sicher, dass das Gerät eine Internetverbindung hat.",
+      "error": "Das Gerät konnte nicht mit dem Konto verknüpft werden. Bitte versuche es später noch einmal.",
+      "statistics": "Mit jedem Abgleich der Fixture-Bibliothek sendet dieses Gerät Nutzungsstatistiken an rocketshow.net, ob es verknüpft ist oder nicht: seine Version, seine Hardware, seine Sprache, die Anzahl seiner Kompositionen, Sets und Designer-Projekte, die Fixture-Profile, die diese verwenden, und, solange es verknüpft ist, seinen Namen. Nie die Namen oder den Inhalt deiner Dateien.",
+      "privacy-policy": "Datenschutzerklärung"
+    },
     "session": "Sitzung",
     "password": "Passwort",
     "change": "Ändern",

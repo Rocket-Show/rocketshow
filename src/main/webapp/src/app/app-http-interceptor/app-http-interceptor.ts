@@ -40,7 +40,9 @@ export class AppHttpInterceptor implements HttpInterceptor {
 
     const methodsWithBody = ['POST', 'PUT', 'PATCH'];
 
-    if (methodsWithBody.includes(req.method) && !req.headers.has('Content-Type')) {
+    // A form with a file (e.g. a manual for the AI of the designer) gets its type and the boundary of its parts from the
+    // browser
+    if (methodsWithBody.includes(req.method) && !req.headers.has('Content-Type') && !(req.body instanceof FormData)) {
       req = req.clone({
         setHeaders: {
           'Content-Type': 'application/json',

@@ -17,6 +17,8 @@
                   }}</a>
                 <a class="nav-link" data-toggle="pill" href="#security" role="tab">{{ "settings.security" | translate
                   }}</a>
+                <a class="nav-link" data-toggle="pill" href="#account" role="tab">{{ "settings.account.title" |
+                  translate }}</a>
                 <a class="nav-link" data-toggle="pill" href="#network" role="tab">{{ "settings.network" | translate
                   }}</a>
                 <a class="nav-link" data-toggle="pill" href="#midi" role="tab">{{ "settings.midi" | translate }}</a>
@@ -45,6 +47,9 @@
                     </div>
                     <div class="tab-pane" id="security" role="tabpanel">
                       <app-settings-security></app-settings-security>
+                    </div>
+                    <div class="tab-pane" id="account" role="tabpanel">
+                      <app-settings-account></app-settings-account>
                     </div>
                     <div class="tab-pane" id="network" role="tabpanel">
                       <app-settings-network></app-settings-network>

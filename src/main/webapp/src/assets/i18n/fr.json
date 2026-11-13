@@ -569,6 +569,23 @@
       "enable": "Activé"
     },
     "security": "Sécurité",
+    "account": {
+      "title": "Compte",
+      "intro": "Associez cet appareil à votre compte du concepteur en ligne sur rocketshow.net pour utiliser l'IA du concepteur et évaluer les profils de projecteurs. L'appareil reçoit sa propre clé pour le compte, votre mot de passe n'est jamais enregistré.",
+      "account": "Compte",
+      "linked": "Associé à {{username}}",
+      "email": "E-mail",
+      "password": "Mot de passe",
+      "login": "Se connecter",
+      "logout": "Se déconnecter",
+      "register": "Pas encore de compte ?",
+      "register-link": "Inscrivez-vous gratuitement dans le concepteur en ligne sur rocketshow.net",
+      "wrong-credentials": "L'e-mail ou le mot de passe est incorrect.",
+      "unreachable": "Impossible de joindre rocketshow.net. Veuillez vous assurer que l'appareil est connecté à internet.",
+      "error": "L'appareil n'a pas pu être associé au compte. Veuillez réessayer plus tard.",
+      "statistics": "À chaque synchronisation de la bibliothèque de projecteurs, cet appareil envoie des statistiques d'utilisation à rocketshow.net, qu'il soit associé ou non : sa version, son matériel, sa langue, le nombre de ses compositions, sets et projets du concepteur, les profils de projecteurs qu'ils utilisent et, tant qu'il est associé, son nom. Jamais les noms ni le contenu de vos fichiers.",
+      "privacy-policy": "Politique de confidentialité"
+    },
     "session": "Session",
     "password": "Mot de passe",
     "change": "Modifier",

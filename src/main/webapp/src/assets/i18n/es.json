@@ -569,6 +569,23 @@
       "enable": "Activado"
     },
     "security": "Seguridad",
+    "account": {
+      "title": "Cuenta",
+      "intro": "Vincula este dispositivo con tu cuenta del diseñador en línea en rocketshow.net para usar la IA del diseñador y valorar perfiles de focos. El dispositivo recibe una clave propia para la cuenta, tu contraseña nunca se guarda.",
+      "account": "Cuenta",
+      "linked": "Vinculado con {{username}}",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "login": "Iniciar sesión",
+      "logout": "Cerrar sesión",
+      "register": "¿Aún no tienes cuenta?",
+      "register-link": "Regístrate gratis en el diseñador en línea en rocketshow.net",
+      "wrong-credentials": "El correo electrónico o la contraseña no son correctos.",
+      "unreachable": "No se pudo acceder a rocketshow.net. Asegúrate de que el dispositivo está conectado a internet.",
+      "error": "No se pudo vincular el dispositivo con la cuenta. Inténtalo de nuevo más tarde.",
+      "statistics": "Con cada sincronización de la biblioteca de focos, este dispositivo envía estadísticas de uso a rocketshow.net, esté vinculado o no: su versión, su hardware, su idioma, el número de sus composiciones, sets y proyectos del diseñador, los perfiles de focos que usan y, mientras esté vinculado, su nombre. Nunca los nombres ni el contenido de tus archivos.",
+      "privacy-policy": "Política de privacidad"
+    },
     "session": "Sesión",
     "password": "Contraseña",
     "change": "Cambiar",

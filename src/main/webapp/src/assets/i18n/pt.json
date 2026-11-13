@@ -569,6 +569,23 @@
       "enable": "Ativado"
     },
     "security": "Segurança",
+    "account": {
+      "title": "Conta",
+      "intro": "Associe este dispositivo à sua conta do designer online em rocketshow.net para usar a IA do designer e avaliar perfis de projetores. O dispositivo recebe uma chave própria para a conta, a sua palavra-passe nunca é guardada.",
+      "account": "Conta",
+      "linked": "Associado a {{username}}",
+      "email": "E-mail",
+      "password": "Palavra-passe",
+      "login": "Iniciar sessão",
+      "logout": "Terminar sessão",
+      "register": "Ainda não tem conta?",
+      "register-link": "Registe-se gratuitamente no designer online em rocketshow.net",
+      "wrong-credentials": "O e-mail ou a palavra-passe estão incorretos.",
+      "unreachable": "Não foi possível aceder a rocketshow.net. Certifique-se de que o dispositivo está ligado à internet.",
+      "error": "Não foi possível associar o dispositivo à conta. Tente novamente mais tarde.",
+      "statistics": "Em cada sincronização da biblioteca de projetores, este dispositivo envia estatísticas de utilização para rocketshow.net, esteja associado ou não: a sua versão, o seu hardware, o seu idioma, o número das suas composições, sets e projetos do designer, os perfis de projetores que utilizam e, enquanto estiver associado, o seu nome. Nunca os nomes nem o conteúdo dos seus ficheiros.",
+      "privacy-policy": "Política de privacidade"
+    },
     "session": "Sessão",
     "password": "Palavra-passe",
     "change": "Alterar",
