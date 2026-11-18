@@ -130,6 +130,8 @@ class FakeDevice {
     this.project = { ...demo.designer.project, ...(options.project || {}) };
     // the keys, pads and buttons of a MIDI controller learned for the scenes on the Play screen
     this.sceneMidi = options.sceneMidi || [];
+    // the account of the online designer the device is linked with (Settings → Account)
+    this.account = options.account || { linked: false };
     if (this.edition === 'community') {
       // A Raspberry Pi with USB interfaces instead of SPARK's own outputs
       Object.assign(this.settings, demo.system.community.settings);
@@ -217,6 +219,7 @@ class FakeDevice {
       'project': () => json(this.project),
       'scenes/projects': () => json(this.sceneProjects()),
       'scenes/midi': () => json(this.sceneMidi),
+      'account': () => json(this.account),
     };
 
     const post = {
@@ -242,6 +245,8 @@ class FakeDevice {
       },
       'composition/test-play': () => json({ durationMillis: JSON.parse(body || '{}').durationMillis || 0 }),
       'system/enable-ssh': () => ({ status: 200, contentType: 'text/plain', body: 'k7-rocket-42' }),
+      'account/login': () => json((this.account = { linked: true, username: 'mainstage' })),
+      'account/logout': () => json((this.account = { linked: false })),
     };
 
     const handler = (method === 'GET' ? get : post)[route];
@@ -794,6 +799,7 @@ const SHOTS = [
     element: '.modal-content',
   },
   { name: 'settings-security', path: '/settings', run: settingsTab('security'), fullPage: true },
+  { name: 'settings-account', path: '/settings', run: settingsTab('account'), fullPage: true },
   {
     name: 'settings-api-key',
     path: '/settings',
