@@ -343,7 +343,7 @@ class AudioVideoSelfTestTest {
         new VideoSelfTest(hdmiService, mock(CompositionPipelineBuilder.class), capabilitiesService, mock(GstreamerInitService.class)).run(context);
 
         assertTrue(context.getChecks().stream().allMatch(check -> check.getResult() == SelfTestOutcome.SKIPPED), context.getChecks().toString());
-        assertEquals(4, context.getChecks().size());
+        assertEquals(5, context.getChecks().size());
         assertEquals("GStreamer is not available", context.getChecks().getFirst().getDetails());
     }
 
@@ -494,6 +494,72 @@ class AudioVideoSelfTestTest {
         // In CI, the software decoder of the bad plugins
         assertTrue(check.getTarget().endsWith("(software)") || check.getTarget().endsWith("(hardware)"), check.getTarget());
         assertEquals("10 frames of H.265 decoded", check.getDetails());
+    }
+
+    @Test
+    void tellsTheH264DecoderAlsoWithoutDisplay() throws Exception {
+        SelfTestContext context = context();
+
+        videoSelfTest(ElementFactory.make("appsink", "videosink")).run(context);
+
+        // Like on the unit: FFmpeg's decoder (gstreamer1.0-libav) is there or not, CI only has the bad plugins
+        SelfTestCheck check = checks(context, VideoSelfTest.H264_DECODER).getFirst();
+        boolean avdec = isInstalled(VideoSelfTest.AVDEC_H264);
+        assertEquals(avdec ? SelfTestOutcome.PASSED : SelfTestOutcome.FAILED, check.getResult(), check.toString());
+        if (!avdec && isInstalled("openh264dec")) {
+            assertEquals("openh264dec (software)", check.getTarget());
+        }
+    }
+
+    private static boolean isInstalled(String element) {
+        try {
+            return ElementFactory.find(element) != null;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    @Test
+    void theH264DecodersComeInTheOrderUridecodebinPicksThem() {
+        List<VideoSelfTest.Decoder> decoders = VideoSelfTest.getH264Decoders();
+
+        for (int i = 1; i < decoders.size(); i++) {
+            int before = ElementFactory.find(decoders.get(i - 1).name()).getRank();
+            int after = ElementFactory.find(decoders.get(i).name()).getRank();
+            assertTrue(before >= after, decoders.toString());
+        }
+    }
+
+    @Test
+    void theH264DecoderPassesWithTheDecoderOfFfmpeg() {
+        // A Raspberry Pi 4 picks its hardware decoder, FFmpeg's decodes what the hardware can't
+        SelfTestCheck check = VideoSelfTest.checkH264Decoder(List.of(new VideoSelfTest.Decoder("v4l2h264dec", true),
+                new VideoSelfTest.Decoder("avdec_h264", false), new VideoSelfTest.Decoder("openh264dec", false)));
+
+        assertEquals(SelfTestOutcome.PASSED, check.getResult());
+        assertEquals("v4l2h264dec (hardware)", check.getTarget());
+        assertEquals("avdec_h264 is installed", check.getDetails());
+    }
+
+    @Test
+    void theH264DecoderFailsWithOpenH264Only() {
+        // A Raspberry Pi 5 without gstreamer1.0-libav
+        SelfTestCheck check = VideoSelfTest.checkH264Decoder(List.of(new VideoSelfTest.Decoder("openh264dec", false)));
+
+        assertEquals(SelfTestOutcome.FAILED, check.getResult());
+        assertEquals("openh264dec (software)", check.getTarget());
+        assertEquals("avdec_h264 is not installed (package gstreamer1.0-libav): H.264 videos decode with openh264dec "
+                + "instead, on one CPU core, and not every H.264 video", check.getDetails());
+    }
+
+    @Test
+    void theH264DecoderFailsWithoutAnyDecoder() {
+        SelfTestCheck check = VideoSelfTest.checkH264Decoder(List.of());
+
+        assertEquals(SelfTestOutcome.FAILED, check.getResult());
+        assertEquals(null, check.getTarget());
+        assertEquals("avdec_h264 is not installed (package gstreamer1.0-libav), nor any other decoder: H.264 videos don't play",
+                check.getDetails());
     }
 
 }

@@ -497,6 +497,7 @@
         "audio-loopback": "Bucle de audio",
         "video": "Vídeo",
         "video-decoder": "Decodificador de vídeo",
+        "h264-decoder": "Decodificador de vídeo H.264",
         "midi-out": "Salida MIDI",
         "midi-loopback": "Bucle MIDI",
         "gpio-out": "Salidas GPIO",
