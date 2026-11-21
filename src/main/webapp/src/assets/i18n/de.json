@@ -498,6 +498,7 @@
         "audio-loopback": "Audio-Schleife",
         "video": "Video",
         "video-decoder": "Video-Decoder",
+        "h264-decoder": "H.264-Video-Decoder",
         "midi-out": "MIDI-Ausgang",
         "midi-loopback": "MIDI-Schleife",
         "gpio-out": "GPIO-Ausgänge",

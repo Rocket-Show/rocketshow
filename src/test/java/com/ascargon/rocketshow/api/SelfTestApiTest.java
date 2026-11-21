@@ -40,7 +40,7 @@ class SelfTestApiTest extends ApiTest {
         List<String> names = new ArrayList<>();
         result.get("checks").forEach(check -> names.add(check.get("name").asText()));
         assertTrue(names.containsAll(List.of("health", "storage", "updates", "watchdog", "read-only-root", "clock", "lan",
-                "access-point", "audio", "audio-loopback", "video", "video-decoder", "midi-out", "midi-loopback", "gpio-out",
+                "access-point", "audio", "audio-loopback", "video", "video-decoder", "h264-decoder", "midi-out", "midi-loopback", "gpio-out",
                 "gpio-loopback", "reset-button", "dmx-interface", "dmx", "power")), names.toString());
 
         // The data directory takes a file (errors of the machine of the tests in its kernel log may fail the check)

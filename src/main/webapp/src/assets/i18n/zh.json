@@ -497,6 +497,7 @@
         "audio-loopback": "音频回环",
         "video": "视频",
         "video-decoder": "视频解码器",
+        "h264-decoder": "H.264 视频解码器",
         "midi-out": "MIDI 输出",
         "midi-loopback": "MIDI 回环",
         "gpio-out": "GPIO 输出",

@@ -497,6 +497,7 @@
         "audio-loopback": "Loop audio",
         "video": "Video",
         "video-decoder": "Decoder video",
+        "h264-decoder": "Decoder video H.264",
         "midi-out": "Uscita MIDI",
         "midi-loopback": "Loop MIDI",
         "gpio-out": "Uscite GPIO",

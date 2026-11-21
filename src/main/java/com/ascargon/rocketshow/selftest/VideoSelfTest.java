@@ -10,8 +10,10 @@ import org.freedesktop.gstreamer.Caps;
 import org.freedesktop.gstreamer.Element;
 import org.freedesktop.gstreamer.ElementFactory;
 import org.freedesktop.gstreamer.Pad;
+import org.freedesktop.gstreamer.PadDirection;
 import org.freedesktop.gstreamer.PadProbeReturn;
 import org.freedesktop.gstreamer.Pipeline;
+import org.freedesktop.gstreamer.PluginFeature;
 import org.freedesktop.gstreamer.State;
 import org.freedesktop.gstreamer.elements.URIDecodeBin;
 import org.springframework.stereotype.Service;
@@ -30,13 +32,20 @@ import java.util.stream.Collectors;
 /**
  * Plays a test picture on the screen, with the sink of the videos of a composition, and decodes a short H.265 video
  * onto it like a composition does (with the hardware decoder, if the unit has one). Whether a picture appears needs
- * someone looking or a capture device.
+ * someone looking or a capture device. Also tells whether the unit has the decoder of FFmpeg for H.264 videos.
  */
 @Service
 class VideoSelfTest implements SelfTestStep {
 
     static final String VIDEO = "video";
     static final String VIDEO_DECODER = "video-decoder";
+    static final String H264_DECODER = "h264-decoder";
+
+    // The decoder of FFmpeg for H.264 (package gstreamer1.0-libav). Without it, a unit without a hardware decoder for
+    // H.264 (e.g. a Raspberry Pi 5) decodes H.264 with openh264dec, if at all: on one CPU core and not every H.264
+    // video. On a unit at an LED processor, it stopped videos of compositions with "not-negotiated".
+    static final String AVDEC_H264 = "avdec_h264";
+    private static final String OPENH264DEC = "openh264dec";
 
     // A video of 10 frames of 640x360 in H.265
     static final String H265_VIDEO = "/selftest/h265.mp4";
@@ -69,7 +78,7 @@ class VideoSelfTest implements SelfTestStep {
 
     @Override
     public List<String> getCheckNames() {
-        return List.of(VIDEO, VIDEO_DECODER);
+        return List.of(VIDEO, VIDEO_DECODER, H264_DECODER);
     }
 
     @Override
@@ -77,6 +86,7 @@ class VideoSelfTest implements SelfTestStep {
         if (!capabilitiesService.getCapabilities().isGstreamer()) {
             context.report(SelfTestCheck.skipped(VIDEO, null, "GStreamer is not available"));
             context.report(SelfTestCheck.skipped(VIDEO_DECODER, null, "GStreamer is not available"));
+            context.report(SelfTestCheck.skipped(H264_DECODER, null, "GStreamer is not available"));
             return;
         }
 
@@ -87,6 +97,50 @@ class VideoSelfTest implements SelfTestStep {
         } else {
             context.report(decode());
         }
+
+        // Needs no display: only which decoders GStreamer has
+        context.report(checkH264Decoder(getH264Decoders()));
+    }
+
+    // A decoder GStreamer has, e.g. "avdec_h264 (software)"
+    record Decoder(String name, boolean hardware) {
+
+        @Override
+        public String toString() {
+            return name + (hardware ? " (hardware)" : " (software)");
+        }
+    }
+
+    // The decoders GStreamer has for H.264, the one uridecodebin picks for the videos of compositions first (by rank)
+    static List<Decoder> getH264Decoders() {
+        return ElementFactory.listGetElementsFilter(ElementFactory.ListType.DECODER, PluginFeature.Rank.MARGINAL,
+                        Caps.fromString("video/x-h264"), PadDirection.SINK, false).stream()
+                .map(factory -> new Decoder(factory.getName(), factory.getKlass().contains("Hardware")))
+                .toList();
+    }
+
+    // Whether the decoder of FFmpeg for H.264 is installed. The decoder uridecodebin picks goes into the target, e.g. a
+    // hardware decoder on a Raspberry Pi 4. Package visible for the tests.
+    static SelfTestCheck checkH264Decoder(List<Decoder> decoders) {
+        Decoder picked = decoders.isEmpty() ? null : decoders.getFirst();
+        String target = picked == null ? null : picked.toString();
+
+        if (decoders.stream().anyMatch(decoder -> decoder.name().equals(AVDEC_H264))) {
+            return SelfTestCheck.passed(H264_DECODER, target, AVDEC_H264 + " is installed");
+        }
+
+        String missing = AVDEC_H264 + " is not installed (package gstreamer1.0-libav)";
+
+        if (picked == null) {
+            return SelfTestCheck.failed(H264_DECODER, null, missing + ", nor any other decoder: H.264 videos don't play");
+        }
+
+        if (picked.name().equals(OPENH264DEC)) {
+            return SelfTestCheck.failed(H264_DECODER, target, missing + ": H.264 videos decode with " + OPENH264DEC
+                    + " instead, on one CPU core, and not every H.264 video");
+        }
+
+        return SelfTestCheck.failed(H264_DECODER, target, missing + ": H.264 videos only decode with " + picked.name());
     }
 
     private static String describe(HdmiService.ConnectedDisplay connectedDisplay) {
