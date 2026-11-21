@@ -9,7 +9,7 @@
 # from it and built in a temporary folder. Needs Rust with the target wasm32-unknown-unknown.
 set -e
 
-revision=5f84480e22ff7088d12d24c86dc044e8eaf1abab
+revision=9801adfd1765365f8c3e2464a82ce0304763e3d7
 
 engine="${1:-$(dirname "$0")/../../lighting-engine}"
 
