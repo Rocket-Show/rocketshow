@@ -49,6 +49,33 @@
                 </executions>
             </plugin>
 
+            <!-- The shared lighting engine works out the lights (engine.wasm, see docs/lighting-engine.md): it is built,
+                 not kept in the repository, and a build without it has no lights -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.6.2</version>
+                <executions>
+                    <execution>
+                        <id>lighting-engine</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireFilesExist>
+                                    <files>
+                                        <file>${project.basedir}/src/main/resources/lighting-engine/engine.wasm</file>
+                                    </files>
+                                    <message>engine.wasm of the shared lighting engine is missing: build it with testing/build-lighting-engine.sh (needs Rust with the target wasm32-unknown-unknown, see docs/lighting-engine.md)</message>
+                                </requireFilesExist>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- Compile the webapp -->
             <plugin>
                 <groupId>com.github.eirslett</groupId>
@@ -259,48 +286,6 @@
     </dependencies>
 
     <profiles>
-        <!-- Mutation testing of the engine playing the projects of the designer: how many of the faults put into
-             it the tests notice. ./mvnw test-compile org.pitest:pitest-maven:mutationCoverage -Pmutation
-             -Dskip.npm -Dskip.installnodenpm (report in target/pit-reports) -->
-        <profile>
-            <id>mutation</id>
-            <properties>
-                <pit.threads>2</pit.threads>
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.pitest</groupId>
-                        <artifactId>pitest-maven</artifactId>
-                        <version>1.30.1</version>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.pitest</groupId>
-                                <artifactId>pitest-junit5-plugin</artifactId>
-                                <version>1.2.3</version>
-                            </dependency>
-                        </dependencies>
-                        <configuration>
-                            <targetClasses>
-                                <param>com.ascargon.rocketshow.lighting.designer.*</param>
-                            </targetClasses>
-                            <targetTests>
-                                <param>com.ascargon.rocketshow.lighting.designer.*</param>
-                            </targetTests>
-                            <threads>${pit.threads}</threads>
-                            <!-- the tests notice 94 % of the faults today: fail, once they notice clearly fewer -->
-                            <mutationThreshold>92</mutationThreshold>
-                            <timestampedReports>false</timestampedReports>
-                            <outputFormats>
-                                <param>HTML</param>
-                                <param>CSV</param>
-                            </outputFormats>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
         <!-- Measure the coverage of the tests: ./mvnw test -Pcoverage (report in target/site/jacoco) -->
         <profile>
             <id>coverage</id>
@@ -330,8 +315,9 @@
                                 </goals>
                             </execution>
                             <!-- Fail when the coverage drops clearly below what the tests reach today, also without
-                                 GStreamer (e.g. locally): 74 % of the lines and 61 % of the branches of the whole
-                                 app, 79 % and 65 % with GStreamer (in CI) -->
+                                 GStreamer (e.g. locally): 72 % of the lines and 63 % of the branches of the whole
+                                 app, more with GStreamer (in CI). The tests of the Java engine, which covered a lot,
+                                 went with it. -->
                             <execution>
                                 <id>check</id>
                                 <phase>test</phase>
@@ -346,7 +332,7 @@
                                                 <limit>
                                                     <counter>LINE</counter>
                                                     <value>COVEREDRATIO</value>
-                                                    <minimum>0.72</minimum>
+                                                    <minimum>0.70</minimum>
                                                 </limit>
                                                 <limit>
                                                     <counter>BRANCH</counter>
@@ -358,9 +344,7 @@
                                         <!-- Every package, also new ones. Not the start of the app, the GStreamer
                                              bindings and the few lines about HDMI and images, which need real
                                              devices or GStreamer. The player reaches 51 % of its lines without
-                                             GStreamer, 84 % with. Nor the shared lighting engine, whose tests need
-                                             engine.wasm: a build without it (and without Rust) must pass as well
-                                             (see docs/lighting-engine.md). -->
+                                             GStreamer, 84 % with. -->
                                         <rule>
                                             <element>PACKAGE</element>
                                             <excludes>
@@ -368,7 +352,6 @@
                                                 <exclude>com.ascargon.rocketshow.gstreamer</exclude>
                                                 <exclude>com.ascargon.rocketshow.video</exclude>
                                                 <exclude>com.ascargon.rocketshow.image</exclude>
-                                                <exclude>com.ascargon.rocketshow.lighting.engine</exclude>
                                             </excludes>
                                             <limits>
                                                 <limit>

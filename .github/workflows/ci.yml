@@ -27,7 +27,7 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
       - name: Build engine.wasm of the shared lighting engine
-        # For the tests of the shared lighting engine and of shadow mode (see docs/lighting-engine.md)
+        # It works out the lights: the build needs it (see docs/lighting-engine.md)
         run: sh testing/build-lighting-engine.sh
       - name: Run the unit tests
         run: ./mvnw -B test -Pcoverage -Dskip.npm -Dskip.installnodenpm
@@ -124,6 +124,12 @@ jobs:
         with:
           path: ~/.npm
           key: npm-${{ hashFiles('src/main/webapp/package-lock.json') }}
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - name: Build engine.wasm of the shared lighting engine
+        # It works out the lights and goes into the jar (see docs/lighting-engine.md)
+        run: sh testing/build-lighting-engine.sh
       - name: Build the application including the web app
         run: ./mvnw -B package -DskipTests
       - uses: actions/upload-artifact@v4
@@ -195,6 +201,12 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: maven
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - name: Build engine.wasm of the shared lighting engine
+        # The build needs it (see docs/lighting-engine.md)
+        run: sh testing/build-lighting-engine.sh
       - name: Generate the sample of the release, if missing
         id: sample
         run: |

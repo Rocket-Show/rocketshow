@@ -18,7 +18,6 @@ import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * engine.wasm of the shared lighting engine in the JVM comes to the very same bits as the native build of the engine,
@@ -26,8 +25,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * native build (conformance/core-digests.json of the engine, copied to src/test/resources/lighting-engine) are compared
  * with the ones of the cases played here (this repository's copy, src/test/resources/designer-conformance), the way
  * tools/conformance-wasm.mjs of the engine plays them in Node.
- * <p>
- * Skipped without engine.wasm (see testing/build-lighting-engine.sh).
  */
 public class LightingEngineConformanceTest {
 
@@ -40,9 +37,7 @@ public class LightingEngineConformanceTest {
 
     @BeforeAll
     public static void loadTheEngine() {
-        if (LightingEngine.isAvailable()) {
-            engine = LightingEngine.loadPacked();
-        }
+        engine = LightingEngine.loadPacked();
     }
 
     /**
@@ -215,7 +210,6 @@ public class LightingEngineConformanceTest {
 
     @TestFactory
     Stream<DynamicTest> comesToTheBitsOfTheNativeBuild() throws IOException {
-        assumeTrue(engine != null, "No engine.wasm in this build, see testing/build-lighting-engine.sh");
 
         JsonNode recorded = MAPPER.readTree(DIGESTS.toFile());
         List<DynamicTest> tests = new ArrayList<>();

@@ -1,8 +1,8 @@
 #!/bin/sh
 # Builds engine.wasm of the shared lighting engine (Rocket-Show/lighting-engine) at the revision Rocket Show plays
 # with, and copies it to src/main/resources/lighting-engine, from where the build packs it into the jar (see
-# docs/lighting-engine.md). The file is not in this repository: without it, Rocket Show plays with its own engine
-# only, shadow mode can't be turned on and the tests needing it are skipped.
+# docs/lighting-engine.md). The engine works out the lights: the file is not in this repository, and the Maven build
+# fails without it. Run this before the first build, and again when the revision below changes.
 #
 # Pass the path of a checkout of the engine, by default the one next to this repository; without one, the engine is
 # cloned from GitHub (it is open source) into a temporary folder. A checkout is left alone: the revision is exported

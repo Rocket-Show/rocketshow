@@ -27,8 +27,8 @@ import java.util.function.Function;
  * ranges cross it. The module runs one call at a time: every call goes through this object's lock. A fault of the
  * engine (a trap) comes out as a RuntimeException; the module may be broken afterwards, so it is loaded anew then.
  * <p>
- * engine.wasm is not in the repository (testing/build-lighting-engine.sh builds it into the resources): without it,
- * isAvailable() is false and Rocket Show plays with its own engine only.
+ * engine.wasm is not in the repository: testing/build-lighting-engine.sh builds it into the resources, and the Maven
+ * build fails without it.
  */
 public class LightingEngine {
 
@@ -202,13 +202,6 @@ public class LightingEngine {
         } catch (IOException e) {
             return null;
         }
-    }
-
-    /**
-     * Whether this build of Rocket Show packs engine.wasm.
-     */
-    public static boolean isAvailable() {
-        return LightingEngine.class.getResource(RESOURCE) != null;
     }
 
     /**
