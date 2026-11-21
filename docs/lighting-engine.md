@@ -85,9 +85,10 @@ interpreter of the JVM, 2.4 ms a frame for the 60 heads and 20 ms for the pixels
 compiler
 (`-XX:-DontCompileHugeMethods -XX:+UnlockExperimentalVMOptions -XX:MaxNodeLimit=400000 -XX:NodeLimitFudgeFactor=8000`)
 brought the 60 heads to 0.38 ms, with a long warm-up and a 99th percentile of 1.9 ms. Instead, the engine keeps the
-stages of a frame and three groups of the pixel patterns functions of their own (branch `claude/jvm-method-size` of the
-engine, commit `7696905`): no function of a frame is larger than 6 KB, nothing is computed differently (the digests are
-the same) and the native frame times are unchanged. Rocket Show builds `engine.wasm` from that revision.
+stages of a frame and three groups of the pixel patterns functions of their own (merged into the engine's `main` on 21
+November 2026, commit `5f84480`): no function of a frame is larger than 6 KB, nothing is computed differently (the
+digests are the same) and the native frame times are unchanged. Rocket Show builds `engine.wasm` from that revision, the
+same one as the designer.
 
 **On SPARK's hardware**, the gate is still to be measured. On a device with Java 21, from a checkout of this branch with
 `engine.wasm` built into it (`testing/build-lighting-engine.sh`, or the file copied to
@@ -222,12 +223,12 @@ The designer switches first: the recorded values come from it, and it updates it
 within the hour. Rocket Show on a stage is where a fault costs most, so it switches last and with shadow mode first.
 Until step 4 is done there are three engines, not one: new engine features wait, or land in the shared engine only.
 
-**`engine.wasm` is not in this repository.** The engine's repository is private and has no licence yet, and this one is
-public. `testing/build-lighting-engine.sh` builds the file at the revision Rocket Show plays with (from a checkout of
-the engine, needing Rust) into `src/main/resources/lighting-engine`, which is ignored by git, and the build packs it
-into the jar from there. Without it, Rocket Show builds and plays as before. Open for the release: shipping the file
-(its licence, and building it on the image build server or taking it from a release of the engine), and with it the
-tests in CI; and merging the branch of the engine, so the designer and Rocket Show load the same file again.
+**`engine.wasm` is built, not kept in this repository.** The engine is open source since 21 November 2026
+([Rocket-Show/lighting-engine](https://github.com/Rocket-Show/lighting-engine), GPL-3.0-or-later, like Rocket Show).
+`testing/build-lighting-engine.sh` builds the file at the revision Rocket Show plays with (from a checkout of the engine
+next to this repository, or else cloned from GitHub; it needs Rust) into `src/main/resources/lighting-engine`, which is
+ignored by git, and the build packs it into the jar from there: run it before the jar for a release is built. Without
+it, Rocket Show builds and plays as before. CI builds it before the unit tests, so the tests of the engine run there.
 
 ## 8. Risks
 

@@ -177,6 +177,11 @@ public class DefaultDesignerService implements DesignerService {
 
     private Map<CachedFixture, List<OutputChannel>> outputChannels = new ConcurrentHashMap<>();
 
+    // the place of each fixture in the project: fixtures sharing DMX addresses are written into the universe in this
+    // order, the later ones over the earlier ones, as the shared lighting engine does (and whatever order the values
+    // were worked out in)
+    private Map<Fixture, Integer> fixtureOrder = new IdentityHashMap<>();
+
     private long lastPlayTimeMillis;
 
     // the moment of real time of the frame worked out (see calculateUniverse)
@@ -3114,8 +3119,12 @@ public class DefaultDesignerService implements DesignerService {
             universes.putIfAbsent(universe.getMappingUuid(), universe.getUniverse());
         }
 
-        // loop over each fixture with its values for each channel
-        for (Map.Entry<CachedFixture, List<FixtureChannelValue>> entry : fixtures.entrySet()) {
+        // loop over each fixture with its values for each channel, in the order of the project
+        List<Map.Entry<CachedFixture, List<FixtureChannelValue>>> ordered = new ArrayList<>(fixtures.entrySet());
+        Map<Fixture, Integer> order = fixtureOrder;
+        ordered.sort(Comparator.comparingInt(entry -> order.getOrDefault(entry.getKey().getFixture(), Integer.MAX_VALUE)));
+
+        for (Map.Entry<CachedFixture, List<FixtureChannelValue>> entry : ordered) {
             HashMap<Integer, Integer> universe = universes.get(entry.getKey().getFixture().getDmxUniverseUuid());
 
             if (universe == null) {
@@ -3766,6 +3775,14 @@ public class DefaultDesignerService implements DesignerService {
         stagePixelPlaces = new ConcurrentHashMap<>();
         stageFanPlaces = new ConcurrentHashMap<>();
         outputChannels = new ConcurrentHashMap<>();
+
+        Map<Fixture, Integer> order = new IdentityHashMap<>();
+
+        for (Fixture fixture : project.getFixtures()) {
+            order.putIfAbsent(fixture, order.size());
+        }
+
+        fixtureOrder = order;
 
         logger.debug("Calculate cached fixtures...");
 

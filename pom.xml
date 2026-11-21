@@ -359,7 +359,8 @@
                                              bindings and the few lines about HDMI and images, which need real
                                              devices or GStreamer. The player reaches 51 % of its lines without
                                              GStreamer, 84 % with. Nor the shared lighting engine, whose tests need
-                                             engine.wasm, which CI hasn't (see docs/lighting-engine.md). -->
+                                             engine.wasm: a build without it (and without Rust) must pass as well
+                                             (see docs/lighting-engine.md). -->
                                         <rule>
                                             <element>PACKAGE</element>
                                             <excludes>
