@@ -112,11 +112,12 @@ afterwards): the device's own project (a pixel tube of 16 pixels, a scene and a 
 a project keeps all four cores busy for about 30 seconds while the JVM compiles; then the whole of Rocket Show with both
 engines takes about a quarter of one core for the 30 heads.
 
-**The engine driving the lights on the same SPARK** (21 November 2026, the jar of step 4 laid over the installed one,
-the device put back afterwards, logging at INFO): each project played in the live preview of the designer at 40 Hz, its
-universe sent to OLA (read back from OLA's universe 1 while it played). A frame is all the engine does for it on its
-thread (the inputs handed over, the render, the universes copied out), measured over a whole minute after the first; the
-processor time is the one of the whole Java process of Rocket Show, `top` every 10 s over a minute.
+**The engine driving the lights on the same SPARK** (21 November 2026, the jar of step 4 with `engine.wasm` of `5f84480`
+laid over the installed one, the device put back afterwards, logging at INFO): each project played in the live preview
+of the designer at 40 Hz, its universe sent to OLA (read back from OLA's universe 1 while it played). A frame is all the
+engine does for it on its thread (the inputs handed over, the render, the universes copied out), measured over a whole
+minute after the first; the processor time is the one of the whole Java process of Rocket Show, `top` every 10 s over a
+minute.
 
 | Project                                       | Compile | A frame: average, slowest | Frames dropped in the minute | Rocket Show's process |
 | --------------------------------------------- | ------: | ------------------------: | ---------------------------: | --------------------: |
