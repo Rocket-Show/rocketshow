@@ -25,7 +25,8 @@ public class BeatClock {
 
     /**
      * Told of the moves of the clock other than a tempo: a beat aligned, the first beat of a bar, the beats set, each
-     * with its moment. Shadow mode hands them to the shared lighting engine (see ShadowEngine).
+     * with its moment. The designer service hands them to the beat clock of the shared lighting engine (see
+     * EngineRenderer).
      */
     public interface Listener {
 

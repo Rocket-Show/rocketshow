@@ -1,6 +1,5 @@
 package com.ascargon.rocketshow.lighting.engine;
 
-import com.ascargon.rocketshow.lighting.LightingUniverseState;
 import com.ascargon.rocketshow.lighting.designer.CompositionHold;
 import com.ascargon.rocketshow.lighting.designer.DesignerProjectJson;
 import com.ascargon.rocketshow.lighting.designer.DmxOverride;
@@ -15,12 +14,13 @@ import java.util.Set;
 
 /**
  * A project of the designer played by the shared lighting engine, with the inputs the designer service drives (see
- * section 4 of docs/lighting-engine.md): the wrapper which takes the place of the computing of lighting/designer.
+ * section 4 of docs/lighting-engine.md): the uuids of the project turned into the numbers of the show, real time into
+ * the clock of the engine.
  * <p>
- * The project is handed over migrated to the current version (DefaultDesignerService.migrateProject) and compiled
- * once; the uuids of the project are turned into the numbers of the show by its index. The moments are milliseconds
- * of real time (System.currentTimeMillis()), the positions milliseconds of the timeline, both passed to the engine as
- * whole microseconds. A frame is worked out by render and read with getUniverse or writeTo, without allocating.
+ * The project is handed over migrated to the current version (see ProjectMigration) and compiled once; the uuids of
+ * the project are turned into the numbers of the show by its index. The moments are milliseconds of real time
+ * (System.currentTimeMillis()), the positions milliseconds of the timeline, both passed to the engine as whole
+ * microseconds. A frame is worked out by render and read with getValue or copyUniverses.
  * <p>
  * Not thread safe: one thread drives it. Close it when it is done with.
  */
@@ -34,7 +34,7 @@ public class DesignerEngine implements AutoCloseable {
 
     // the universes of the last frame, and where each starts in it, by the uuid of the universe of the project
     private final byte[] universes;
-    private final Map<String, Integer> universeOffsets = new HashMap<>();
+    private final Map<String, Integer> universeOffsets;
 
     // what was handed to the engine last, to hand over only what changed
     private Set<String> liveScenes = new HashSet<>();
@@ -47,15 +47,21 @@ public class DesignerEngine implements AutoCloseable {
      * IllegalArgumentException saying why for a project the engine can't play.
      */
     public DesignerEngine(LightingEngine engine, Project project, double nowMillis) {
-        this(engine, DesignerProjectJson.write(project), nowMillis);
+        this(engine, DesignerProjectJson.writeForEngine(project), nowMillis);
     }
 
     /**
      * Compile the passed JSON of a project of the current version and make an engine playing it.
      */
     public DesignerEngine(LightingEngine engine, String projectJson, double nowMillis) {
-        CompiledShow compiled = engine.compile(projectJson);
+        this(engine, engine.compile(projectJson), nowMillis);
+    }
 
+    /**
+     * Make an engine playing a show compiled before (with the same module). Throws an IllegalArgumentException saying
+     * why for a project the compiler made no show of.
+     */
+    public DesignerEngine(LightingEngine engine, CompiledShow compiled, double nowMillis) {
         if (!compiled.isShow()) {
             throw new IllegalArgumentException("The lighting engine can't play the project (" + compiled.code() + "): " + compiled.message());
         }
@@ -64,10 +70,13 @@ public class DesignerEngine implements AutoCloseable {
         this.index = compiled.index();
         this.show = engine.play(compiled.show(), index, 0);
         this.universes = new byte[show.getUniverseCount() * EngineShow.UNIVERSE_SIZE];
+        Map<String, Integer> offsets = new HashMap<>();
 
         for (int universe = 0; universe < index.universes().size() && universe < show.getUniverseCount(); universe++) {
-            universeOffsets.putIfAbsent(index.universes().get(universe), universe * EngineShow.UNIVERSE_SIZE);
+            offsets.putIfAbsent(index.universes().get(universe), universe * EngineShow.UNIVERSE_SIZE);
         }
+
+        this.universeOffsets = Map.copyOf(offsets);
     }
 
     public ShowIndex getIndex() {
@@ -380,24 +389,18 @@ public class DesignerEngine implements AutoCloseable {
     }
 
     /**
-     * Write the last frame to the passed universes, like the designer service does: each universe by the uuid it is
-     * mapped to, the first one mapped to it. The channels the show puts no fixture on stay unset.
+     * The universes of the last frame, copied: 512 channels for each universe of the show, one after the other (see
+     * getUniverseOffsets).
      */
-    public void writeTo(List<LightingUniverseState> lightingUniverses) {
-        Set<String> written = new HashSet<>();
+    public byte[] copyUniverses() {
+        return universes.clone();
+    }
 
-        for (LightingUniverseState lightingUniverse : lightingUniverses) {
-            lightingUniverse.reset();
-            Integer offset = universeOffsets.get(lightingUniverse.getMappingUuid());
-
-            if (offset == null || !written.add(lightingUniverse.getMappingUuid())) {
-                continue;
-            }
-
-            for (int channel = 0; channel < EngineShow.UNIVERSE_SIZE; channel++) {
-                lightingUniverse.getUniverse().put(channel, universes[offset + channel] & 0xff);
-            }
-        }
+    /**
+     * Where each universe of the project starts in the universes of a frame, by its uuid. Never changed.
+     */
+    public Map<String, Integer> getUniverseOffsets() {
+        return universeOffsets;
     }
 
     @Override

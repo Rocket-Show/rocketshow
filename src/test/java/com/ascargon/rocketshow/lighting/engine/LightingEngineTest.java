@@ -120,7 +120,7 @@ class LightingEngineTest {
             LightingUniverseState other = new LightingUniverseState();
             other.setMappingUuid("other");
             other.getUniverse().put(0, 99);
-            engine.writeTo(List.of(mapped, twice, other));
+            new EngineRenderer.Rendered(0, 2000, true, engine.copyUniverses(), engine.getUniverseOffsets()).writeTo(List.of(mapped, twice, other));
 
             assertEquals(63, mapped.getUniverse().get(0));
             assertEquals(512, mapped.getUniverse().size());

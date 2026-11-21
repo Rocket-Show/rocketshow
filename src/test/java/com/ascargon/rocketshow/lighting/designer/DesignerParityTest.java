@@ -7,13 +7,13 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * The engine reads and works out a project like the designer does, where the two could differ: numbers which are
- * null, missing or not whole, the default values, colors and pixel groups of the fixture library. The specs of the
- * designer check the same cases (see "parity" in the specs of the designer).
+ * Rocket Show reads a project like the designer does, where the two could differ: numbers which are null, missing, not
+ * whole or written as text, names it doesn't know and the pixel groups of the fixture library. What it reads is what
+ * it hands to the lighting engine (see DesignerProjectJson). The specs of the designer check the same cases (see
+ * "parity" in the specs of the designer).
  */
 class DesignerParityTest {
 
@@ -72,7 +72,7 @@ class DesignerParityTest {
         // as a double, not a float
         assertEquals(0.1, curve.getAmplitude());
         assertEquals(0.3, curve.getDutyCycle());
-        assertEquals(0.25, curve.getPhasingMillis(1, 2, null));
+        assertEquals(0.25, curve.getPhasingMillis());
 
         Preset preset = read("{\"fadeInMillis\": 1000.5, \"startMillis\": 250.25, \"stepsPhasingCycles\": 0.1}", Preset.class);
         assertEquals(1000.5, preset.getFadeInMillis());
@@ -84,119 +84,8 @@ class DesignerParityTest {
         assertEquals(6857.142857, region.getEndMillis());
     }
 
-    @Test
-    void roundsTheNumbersOfFixturesAndCyclesLikeTheDesigner() {
-        // a group of 1.5 fixtures is one of 2 (it was one of 1 before)
-        EffectCurve curve = read("{\"type\": \"curve\", \"phasingMillis\": 100, \"phasingGroupSize\": 1.5, \"runMode\": \"cycles\", \"runCycles\": 1.5, \"lengthMillis\": 1000}", EffectCurve.class);
-        assertEquals(0, curve.getPhasingMillis(1, 4, null));
-        assertEquals(100, curve.getPhasingMillis(2, 4, null));
-        assertEquals(2000, curve.getRunEndMillis(null));
-
-        Preset preset = read("{\"stepsPhasingMillis\": 100, \"stepsPhasingGroupSize\": 1.5}", Preset.class);
-        assertEquals(0, PresetSteps.getStepsPhasingMillis(preset, 1, 4));
-        assertEquals(100, PresetSteps.getStepsPhasingMillis(preset, 2, 4));
-
-        // 2.5 rounds up, like Math.round of the browser
-        preset.setStepsPhasingGroupSize(2.5);
-        assertEquals(0, PresetSteps.getStepsPhasingMillis(preset, 2, 4));
-        assertEquals(100, PresetSteps.getStepsPhasingMillis(preset, 3, 4));
-    }
-
-    @Test
-    void fadesOverTheFractionsOfAMillisecond() {
-        Scene scene = read("{\"fadeInMillis\": 1000}", Scene.class);
-        ScenePlaybackRegion region = read("{\"startMillis\": 0.5, \"endMillis\": 10000}", ScenePlaybackRegion.class);
-        Preset preset = new Preset();
-
-        assertEquals(0.5, DefaultDesignerService.getPresetIntensity(new PresetRegionScene(preset, region, scene), 500.5));
-    }
-
-    @Test
-    void readsTheNumbersOfTheFixtureLibraryLikeTheDesigner() {
-        assertEquals(12.5, DefaultDesignerService.parseNumber("12.5"));
-        assertEquals(12.5, DefaultDesignerService.parseNumber(" 12.5 "));
-        assertEquals(-3d, DefaultDesignerService.parseNumber("-3"));
-        assertEquals(0.5, DefaultDesignerService.parseNumber(".5"));
-        assertEquals(5d, DefaultDesignerService.parseNumber("5."));
-        assertEquals(1000d, DefaultDesignerService.parseNumber("1e3"));
-
-        // neither Double.parseDouble only nor Number() only
-        assertNull(DefaultDesignerService.parseNumber("1d"));
-        assertNull(DefaultDesignerService.parseNumber("NaN"));
-        assertNull(DefaultDesignerService.parseNumber("Infinity"));
-        assertNull(DefaultDesignerService.parseNumber("0x10"));
-        assertNull(DefaultDesignerService.parseNumber(""));
-        assertNull(DefaultDesignerService.parseNumber("bright"));
-    }
-
     private static FixtureChannel channel(String json) {
         return read(json, FixtureChannel.class);
-    }
-
-    @Test
-    void readsTheDefaultValuesLikeTheDesigner() {
-        // a fraction of a percent on a 16 bit channel (the designer took 12 % before)
-        assertEquals(65535 * 0.125, DefaultDesignerService.getDefaultValueByChannel(channel("{\"defaultValue\": \"12.5%\", \"fineChannelAliases\": [\"Tilt fine\"]}")));
-        assertEquals(255 * 0.333, DefaultDesignerService.getDefaultValueByChannel(channel("{\"defaultValue\": \"33.3%\"}")), 1e-9);
-        assertEquals(128.5, DefaultDesignerService.getDefaultValueByChannel(channel("{\"defaultValue\": 128.5}")));
-
-        // a default of 0 is one (the designer left it out before)
-        assertEquals(0, DefaultDesignerService.getDefaultValueByChannel(channel("{\"defaultValue\": 0}")));
-        assertEquals(0, DefaultDesignerService.getDefaultValueByChannel(channel("{\"defaultValue\": \"0%\"}")));
-
-        // none, and one which can't be read (which stopped the whole project before)
-        assertNull(DefaultDesignerService.getDefaultValueByChannel(channel("{}")));
-        assertNull(DefaultDesignerService.getDefaultValueByChannel(channel("{\"defaultValue\": \"high\"}")));
-        assertNull(DefaultDesignerService.getDefaultValueByChannel(channel("{\"defaultValue\": \"high%\"}")));
-    }
-
-    @Test
-    void readsTheValuesOfAChannelWrittenInFewerBitsThanItHas() {
-        // 16 bits written in 8 bits: the default and the ranges in 16 bits, from the start of the start to the end of
-        // the end
-        FixtureChannel dimmer = channel("{\"defaultValue\": 128, \"dmxValueResolution\": \"8bit\", \"fineChannelAliases\": [\"Dimmer fine\"]}");
-        assertEquals(256, FixtureChannel.getResolutionMultiplier(dimmer));
-        assertEquals(32768, DefaultDesignerService.getDefaultValueByChannel(dimmer));
-        assertEquals(65535d / 100 * 50, DefaultDesignerService.getDefaultValueByChannel(channel("{\"defaultValue\": \"50%\", \"dmxValueResolution\": \"8bit\", \"fineChannelAliases\": [\"Dimmer fine\"]}")));
-
-        FixtureCapability intensity = new FixtureCapability();
-        intensity.setType(FixtureCapability.FixtureCapabilityType.Intensity);
-        intensity.setDmxRange(List.of(0, 249));
-        FixtureCapability scaled = FixtureChannel.getCapabilityInFullResolution(intensity, 256);
-        assertEquals(List.of(0, 63999), scaled.getDmxRange());
-        assertEquals(FixtureCapability.FixtureCapabilityType.Intensity, scaled.getType());
-        // the capability of the profile stays as it is
-        assertEquals(List.of(0, 249), intensity.getDmxRange());
-
-        // 24 bits written in 16 bits, and written in their full resolution or without saying it
-        assertEquals(256, FixtureChannel.getResolutionMultiplier(channel("{\"dmxValueResolution\": \"16bit\", \"fineChannelAliases\": [\"Fine\", \"Finer\"]}")));
-        assertEquals(1, FixtureChannel.getResolutionMultiplier(channel("{\"dmxValueResolution\": \"16bit\", \"fineChannelAliases\": [\"Fine\"]}")));
-        assertEquals(1, FixtureChannel.getResolutionMultiplier(channel("{\"fineChannelAliases\": [\"Fine\"]}")));
-        assertEquals(1, FixtureChannel.getResolutionMultiplier(channel("{\"dmxValueResolution\": \"12bit\", \"fineChannelAliases\": [\"Fine\"]}")));
-    }
-
-    @Test
-    void readsTheColorsLikeTheDesigner() {
-        Color orange = DefaultDesignerService.hexToRgb("#ff8000");
-        assertEquals(List.of(255d, 128d, 0d), List.of(orange.getRed(), orange.getGreen(), orange.getBlue()));
-
-        Color shortOrange = DefaultDesignerService.hexToRgb("#f80");
-        assertEquals(List.of(255d, 136d, 0d), List.of(shortOrange.getRed(), shortOrange.getGreen(), shortOrange.getBlue()));
-
-        Color withoutHash = DefaultDesignerService.hexToRgb("FF8000");
-        assertEquals(List.of(255d, 128d, 0d), List.of(withoutHash.getRed(), withoutHash.getGreen(), withoutHash.getBlue()));
-
-        assertNull(DefaultDesignerService.hexToRgb("orange"));
-        assertNull(DefaultDesignerService.hexToRgb("#ff80"));
-        assertNull(DefaultDesignerService.hexToRgb(null));
-    }
-
-    @Test
-    void leavesTheColorsOutWhichItCannotReadWhenItMixesThem() {
-        Color mixed = DefaultDesignerService.mixHexColors(List.of("#ff0000", "orange", "#0000ff"));
-        assertEquals(List.of(127.5, 0d, 127.5), List.of(mixed.getRed(), mixed.getGreen(), mixed.getBlue()));
-
-        assertNull(DefaultDesignerService.mixHexColors(List.of("orange")));
     }
 
     private static List<FixtureMatrixPixelGroup> pixelGroups(String pixelGroups) {
@@ -235,32 +124,6 @@ class DesignerParityTest {
         // a group without a definition has no pixels (it had all of them before)
         assertFalse(groups.get(5).isAll());
         assertNull(groups.get(5).getConstraints());
-        assertEquals(List.of(), new DefaultFixturePixelGroupResolveService().resolveGroupPixels(groups.get(5), List.of(new CachedFixturePixel())));
-    }
-
-    private static CachedFixturePixel pixel(String key, int x) {
-        CachedFixturePixel pixel = new CachedFixturePixel();
-        pixel.setKey(key);
-        pixel.setX(x);
-        return pixel;
-    }
-
-    @Test
-    void resolvesThePixelGroupsLikeTheDesigner() {
-        DefaultFixturePixelGroupResolveService service = new DefaultFixturePixelGroupResolveService();
-        List<CachedFixturePixel> pixels = List.of(pixel("b", 1), pixel("a", 2), pixel("c", 3));
-
-        // a plain number is written without a sign
-        FixtureMatrixPixelGroup plus = pixelGroups("{\"group\": {\"x\": [\"+2\"]}}").getFirst();
-        assertThrows(IllegalArgumentException.class, () -> service.resolveGroupPixels(plus, pixels));
-
-        // constraints by position keep the order of the pixels, only a name sorts them
-        FixtureMatrixPixelGroup positions = pixelGroups("{\"group\": {\"x\": [\">=1\"], \"name\": []}}").getFirst();
-        assertEquals(List.of("b", "a", "c"), service.resolveGroupPixels(positions, pixels).stream().map(CachedFixturePixel::getKey).toList());
-
-        // only the digits 0 to 9 are numbers
-        assertTrue(DefaultFixturePixelGroupResolveService.compareKeys("2", "10") < 0);
-        assertTrue(DefaultFixturePixelGroupResolveService.compareKeys("٢", "10") > 0);
     }
 
 }

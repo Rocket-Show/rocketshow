@@ -50,7 +50,7 @@ class DesignerProjectJsonTest {
         SettingsService settingsService = mock(SettingsService.class);
         when(settingsService.getSettings()).thenReturn(settings);
 
-        return new DefaultDesignerService(settingsService, mock(FileFilterService.class), mock(LightingService.class), new DefaultFixturePixelGroupResolveService());
+        return new DefaultDesignerService(settingsService, mock(FileFilterService.class), mock(LightingService.class));
     }
 
     @Test
@@ -90,7 +90,7 @@ class DesignerProjectJsonTest {
                     LightingEngineConformanceTest.digestOf(CONFORMANCE.resolve("cases").resolve(file.getKey()), projectNode -> {
                         try {
                             Project project = DesignerJson.MAPPER.readValue(LightingEngineConformanceTest.resolveProfiles(projectNode), Project.class);
-                            designerService.migrateProject(project);
+                            ProjectMigration.migrate(project);
                             return DesignerProjectJson.write(project);
                         } catch (IOException e) {
                             throw new IllegalStateException(e);

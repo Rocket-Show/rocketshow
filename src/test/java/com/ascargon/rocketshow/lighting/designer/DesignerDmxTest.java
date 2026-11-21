@@ -1142,8 +1142,11 @@ class DesignerDmxTest {
         addColorPreset(project, "Red", 1, 0);
         sceneOf(project, "Red").put("fadeInMillis", 60000);
 
-        Map<Integer, Integer> front = start(project, (designerService, loadedProject) ->
-                designerService.playManualScenes(loadedProject, List.of("Red-scene"), 1)).get(FRONT);
+        Map<Integer, Integer> front = start(project, (designerService, loadedProject) -> {
+            // a frame a period after the scene was picked (in the very moment it is picked, it isn't there yet)
+            designerService.renderAhead = true;
+            designerService.playManualScenes(loadedProject, List.of("Red-scene"), 1);
+        }).get(FRONT);
 
         // just picked: the dimmer has hardly risen yet, the color is there
         assertTrue(front.getOrDefault(1, 0) <= 2);

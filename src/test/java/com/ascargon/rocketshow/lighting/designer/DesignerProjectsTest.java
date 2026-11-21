@@ -30,7 +30,7 @@ class DesignerProjectsTest {
     Path directory;
 
     private DefaultDesignerService designerService() {
-        return new DefaultDesignerService(TestSettings.inDirectory(directory), new DefaultFileFilterService(), mock(LightingService.class), new DefaultFixturePixelGroupResolveService());
+        return new DefaultDesignerService(TestSettings.inDirectory(directory), new DefaultFileFilterService(), mock(LightingService.class));
     }
 
     private static List<String> names(DefaultDesignerService designerService) {
@@ -48,7 +48,7 @@ class DesignerProjectsTest {
         Files.writeString(designer.resolve("._Show.json"), "binary");
 
         // The app starts with the designer service
-        DefaultDesignerService designerService = new DefaultDesignerService(settingsService, new DefaultFileFilterService(), mock(LightingService.class), new DefaultFixturePixelGroupResolveService());
+        DefaultDesignerService designerService = new DefaultDesignerService(settingsService, new DefaultFileFilterService(), mock(LightingService.class));
 
         assertEquals(List.of("Show"), designerService.getAllProjects().stream().map(Project::getName).toList());
     }
@@ -56,7 +56,7 @@ class DesignerProjectsTest {
     @Test
     void writesNoHalfProjects() throws Exception {
         SettingsService settingsService = TestSettings.inDirectory(directory);
-        DefaultDesignerService designerService = new DefaultDesignerService(settingsService, new DefaultFileFilterService(), mock(LightingService.class), new DefaultFixturePixelGroupResolveService());
+        DefaultDesignerService designerService = new DefaultDesignerService(settingsService, new DefaultFileFilterService(), mock(LightingService.class));
 
         designerService.saveProject("{\"name\": \"Show\", \"version\": 7}");
 
