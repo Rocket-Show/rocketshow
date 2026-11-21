@@ -313,9 +313,11 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
         }
         appliedWlanAp = wlanAp;
 
+        boolean readOnlyFileSystem = settingsService.isReadOnlyFileSystem();
+
         // Update the access point configuration
         String fileName = "/etc/hostapd/hostapd.conf";
-        if (settingsService.isReadOnlyFileSystem()) {
+        if (readOnlyFileSystem) {
             fileName = "/data/rocketshow/hostapd.conf";
         }
 
@@ -333,13 +335,19 @@ public class DefaultSettingsUpdateSystemService implements SettingsUpdateSystemS
             commands.add(new String[]{"sudo", new ApplicationHome(RocketShowApplication.class).getDir() + File.separator + "set-wifi-ap-country.sh", countryCode});
         }
 
-        // Activate/deactivate the access point completely
+        // Activate/deactivate the access point completely. A read-only root file system (SPARK) can't keep hostapd
+        // enabled or disabled: its image leaves hostapd disabled, and the access point runs because these settings are
+        // applied at each start. systemctl enable/disable would only fail there.
         if (enable) {
-            commands.add(new String[]{"sudo", "systemctl", "enable", "hostapd"});
+            if (!readOnlyFileSystem) {
+                commands.add(new String[]{"sudo", "systemctl", "enable", "hostapd"});
+            }
             // Restart, even if already started, to cater for updated configs
             commands.add(new String[]{"sudo", "systemctl", "restart", "hostapd"});
         } else {
-            commands.add(new String[]{"sudo", "systemctl", "disable", "hostapd"});
+            if (!readOnlyFileSystem) {
+                commands.add(new String[]{"sudo", "systemctl", "disable", "hostapd"});
+            }
             commands.add(new String[]{"sudo", "systemctl", "stop", "hostapd"});
         }
 

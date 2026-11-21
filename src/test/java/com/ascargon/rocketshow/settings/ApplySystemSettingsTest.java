@@ -37,6 +37,7 @@ class ApplySystemSettingsTest {
     private final LanInfo lanInfo = new LanInfo();
     private final ApplicationEventPublisher applicationEventPublisher = mock(ApplicationEventPublisher.class);
     private final AtomicInteger alsaReloads = new AtomicInteger();
+    private final SettingsService settingsService = mock(SettingsService.class);
     private DefaultSettingsUpdateSystemService settingsUpdateSystemService;
 
     @BeforeEach
@@ -51,7 +52,6 @@ class ApplySystemSettingsTest {
         settings.setAudioOutput(Settings.AudioOutput.HEADPHONES);
         lanInfo.setIpAddress("192.168.1.20");
 
-        SettingsService settingsService = mock(SettingsService.class);
         when(settingsService.getSettings()).thenReturn(settings);
         OperatingSystemInformation operatingSystemInformation = new OperatingSystemInformation();
         operatingSystemInformation.setType(OperatingSystemInformation.Type.LINUX);
@@ -127,6 +127,18 @@ class ApplySystemSettingsTest {
 
         settings.setWlanApEnable(false);
         assertEquals(List.of("sudo systemctl disable hostapd", "sudo systemctl stop hostapd"), apply().subList(1, 3));
+    }
+
+    @Test
+    void onlyStartsAndStopsTheAccessPointOnAReadOnlyFileSystem() throws Exception {
+        // SPARK: the image keeps hostapd disabled, and systemctl can't enable or disable it on the read-only root
+        when(settingsService.isReadOnlyFileSystem()).thenReturn(true);
+
+        assertEquals(List.of("sudo set-wifi-ap-country.sh CH", "sudo systemctl restart hostapd"), apply().subList(0, 2));
+        assertEquals(List.of("/data/rocketshow/hostapd.conf"), files);
+
+        settings.setWlanApEnable(false);
+        assertEquals(List.of("sudo set-wifi-ap-country.sh CH", "sudo systemctl stop hostapd"), apply());
     }
 
     @Test
