@@ -38,8 +38,7 @@ public class Project {
     // the fixtures the designer is identifying from its fixture pool: they blink at full white in its live preview
     private List<String> identifyFixtureUuids = new ArrayList<>();
 
-    // the fixtures the designer asks from its fixture pool to reset themselves or to switch their lamp on (see
-    // Maintenance)
+    // the fixtures the designer asks from its fixture pool to reset themselves or to switch their lamp on
     private List<String> resetFixtureUuids = new ArrayList<>();
     private List<String> lampOnFixtureUuids = new ArrayList<>();
 

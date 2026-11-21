@@ -1,26 +1,18 @@
 package com.ascargon.rocketshow.lighting.designer;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A Rocket Show Designer effect.
+ * A curve of the Rocket Show Designer: a value swinging over time on the channels of the fixtures of a preset, also
+ * the timing the movements and the pixel effects run on.
  *
  * @author Moritz A. Vieli
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EffectCurve extends Effect {
-
-    private final static Logger logger = LoggerFactory.getLogger(EffectCurve.class);
-
-    // a cycle border is never hit exactly when the curve is sampled, so the value held
-    // after a run is taken just before it
-    private final static double CYCLE_EPSILON = 1e-9;
 
     // the tempo a curve synced to the beat falls back to: a preset previewed on its own is
     // not played inside a composition, so there is no tempo to take it from
@@ -85,61 +77,17 @@ public class EffectCurve extends Effect {
     // how many fixtures share the same chase step (1 = each fixture on its own)
     private double phasingGroupSize = 1;
 
-    // How far the curve swings on each fixture by its place in the fan of the preset (see Fan): "none" as far on all of
-    // them, "linear" the most on the first and the last one, the other way round on the one than on the other,
-    // "center" the most on the first and the last one, the same way, "side" from not at all on the first one to the
-    // most on the last one. The one in the middle stands still, except from the first one. A movement of the moving
-    // heads moves as far (a line fanned "linear" opens and closes the fan of the heads).
+    // How far the curve swings on each fixture by its place in the fan of the preset: "none" as far on all of them,
+    // "linear" the most on the first and the last one, the other way round on the one than on the other, "center" the
+    // most on the first and the last one, the same way, "side" from not at all on the first one to the most on the last
+    // one. The one in the middle stands still, except from the first one. A movement of the moving heads moves as far (a
+    // line fanned "linear" opens and closes the fan of the heads).
     private String fanMode = "none";
 
-    // A curve on the pan or the tilt turns every moving head by the same degrees (see PanTilt): from the middle of what
-    // it reaches, the whole curve from 0 to 1 spanning what a head reaches by default (540° of pan, 270° of tilt). A
-    // curve of a project before it moves each head over a share of its own range instead.
+    // A curve on the pan or the tilt turns every moving head by the same degrees: from the middle of what it reaches,
+    // the whole curve from 0 to 1 spanning what a head reaches by default (540° of pan, 270° of tilt). A curve of a
+    // project before it moves each head over a share of its own range instead.
     private boolean panTiltInDegrees = false;
-
-    // how long a beat lasts at the passed tempo
-    public static double getBeatMillis(Double beatsPerMinute) {
-        double bpm = beatsPerMinute != null && beatsPerMinute > 0 ? beatsPerMinute : DEFAULT_BEATS_PER_MINUTE;
-
-        return 60000 / bpm;
-    }
-
-    // whether the curve swings as far as the place of each fixture in the fan says
-    @JsonIgnore
-    public boolean isFanned() {
-        return "linear".equals(fanMode) || "center".equals(fanMode) || "side".equals(fanMode);
-    }
-
-    // how far the curve swings on a fixture at the passed place in the fan (see Fan), from -1 to 1
-    public double getFanFactor(Double place) {
-        return Fan.getFanFactor(fanMode, place);
-    }
-
-    // The value of the curve on a fixture at the passed place in the fan, swung around its position as far as the place
-    // says, or null if it doesn't apply at this moment
-    public Double getFannedValue(Double value, Double place) {
-        if (value == null || !this.isFanned()) {
-            return value;
-        }
-
-        return this.position + (value - this.position) * this.getFanFactor(place);
-    }
-
-    // The value of a step a curve on the passed capability plays at the passed value of the curve: a percentage, the
-    // pan and the tilt in degrees around the middle of what the heads reach (see panTiltInDegrees)
-    public FixtureCapabilityValue getCapabilityValue(FixtureCapability capability, double value) {
-        FixtureCapabilityValue capabilityValue = new FixtureCapabilityValue();
-        capabilityValue.setType(capability.getType());
-        capabilityValue.setColor(capability.getColor());
-
-        if (panTiltInDegrees && (capability.getType() == FixtureCapability.FixtureCapabilityType.Pan || capability.getType() == FixtureCapability.FixtureCapabilityType.Tilt)) {
-            capabilityValue.setValueDegrees((value - 0.5) * (capability.getType() == FixtureCapability.FixtureCapabilityType.Pan ? PanTilt.DEFAULT_PAN_RANGE_DEGREES : PanTilt.DEFAULT_TILT_RANGE_DEGREES));
-        } else {
-            capabilityValue.setValuePercentage(value);
-        }
-
-        return capabilityValue;
-    }
 
     public boolean isPanTiltInDegrees() {
         return panTiltInDegrees;
@@ -157,284 +105,6 @@ public class EffectCurve extends Effect {
     // a value missing or null swings as far on all the fixtures, like in the designer (and like curves always did)
     public void setFanMode(String fanMode) {
         this.fanMode = fanMode == null || fanMode.isEmpty() ? "none" : fanMode;
-    }
-
-    // whether the curve follows the tempo instead of a fixed time
-    @JsonIgnore
-    public boolean isBeatSynced() {
-        return "beats".equals(this.lengthMode);
-    }
-
-    // the period of the curve at the tempo it is played at
-    public double getLengthMillis(Double beatsPerMinute) {
-        if (!this.isBeatSynced()) {
-            return this.lengthMillis;
-        }
-
-        // a period of zero would divide by zero when the cycle is sampled
-        return Math.max(this.lengthBeats * getBeatMillis(beatsPerMinute), 1);
-    }
-
-    // the time the curve is shifted by inside its period
-    public double getPhaseMillis(Double beatsPerMinute) {
-        if (!this.isBeatSynced()) {
-            return this.phaseMillis;
-        }
-
-        return this.phaseBeats * getBeatMillis(beatsPerMinute);
-    }
-
-    // the time the curve is shifted by for the passed fixture of the preset
-    public double getPhasingMillis(Integer fixtureIndex, Integer fixtureCount, Double beatsPerMinute) {
-        // a number of fixtures: the designer rounds it
-        long groupSize = Math.max(Math.round(this.phasingGroupSize), 1);
-        double step = Math.floor((double) (fixtureIndex == null ? 0 : fixtureIndex) / groupSize);
-
-        if ("spread".equals(this.phasingMode)) {
-            // distribute the cycles over all chase steps of the preset
-            int count = fixtureCount == null || fixtureCount == 0 ? 1 : fixtureCount;
-            double steps = Math.max(Math.ceil((double) count / groupSize), 1);
-            return step / steps * this.phasingCycles * this.getLengthMillis(beatsPerMinute);
-        }
-
-        if ("beats".equals(this.phasingMode)) {
-            return step * this.phasingBeats * getBeatMillis(beatsPerMinute);
-        }
-
-        return step * this.phasingMillis;
-    }
-
-    // how long the curve runs, measured from the moment its fixture starts, or null if it
-    // never stops
-    @JsonIgnore
-    public Double getRunEndMillis(Double beatsPerMinute) {
-        if ("cycles".equals(this.runMode)) {
-            // a number of cycles: the designer rounds it
-            return Math.max(Math.round(this.runCycles), 1) * this.getLengthMillis(beatsPerMinute);
-        }
-
-        if ("duration".equals(this.runMode)) {
-            return Math.max(this.runDurationMillis, 0);
-        }
-
-        return null;
-    }
-
-    // how long one pass of a curve that stops takes, from the moment the first fixture
-    // starts until the last one has finished, plus a rest that shows what it leaves behind.
-    // a preset that is not placed in a composition has no moment it starts at, so it is
-    // previewed by repeating this pass. null for a curve that never stops.
-    @JsonIgnore
-    public Double getRunLoopMillis(Integer fixtureCount, Double beatsPerMinute) {
-        Double runEndMillis = this.getRunEndMillis(beatsPerMinute);
-
-        if (runEndMillis == null) {
-            return null;
-        }
-
-        // the chase delays the fixtures against each other, so the pass is only over once
-        // the last of them has run
-        int count = fixtureCount == null || fixtureCount == 0 ? 1 : fixtureCount;
-        double chaseMillis = Math.abs(this.getPhasingMillis(Math.max(count - 1, 0), fixtureCount, beatsPerMinute));
-
-        return Math.max((runEndMillis + chaseMillis) * 1.25, 1);
-    }
-
-    // the value the curve puts on its channels, or null if it does not apply at this
-    // moment - the fixtures keep whatever the rest of the preset puts on them then
-    @Override
-    public Double getValueAtMillis(double timeMillis, Integer fixtureIndex, Integer fixtureCount, Double beatsPerMinute) {
-        Double cyclePosition = this.getCyclePositionAtMillis(timeMillis, fixtureIndex, fixtureCount, beatsPerMinute);
-
-        return cyclePosition == null ? null : this.getCurveValue(cyclePosition);
-    }
-
-    // where the curve is inside its cycle (between 0 and 1) for the passed fixture, or null if it does not apply at
-    // this moment
-    public Double getCyclePositionAtMillis(double timeMillis, Integer fixtureIndex, Integer fixtureCount, Double beatsPerMinute) {
-        double lengthMillis = this.getLengthMillis(beatsPerMinute);
-        double phasingMillis = this.getPhasingMillis(fixtureIndex, fixtureCount, beatsPerMinute);
-        double phaseMillis = this.getPhaseMillis(beatsPerMinute);
-        double phase = phaseMillis + phasingMillis;
-
-        Double runEndMillis = this.getRunEndMillis(beatsPerMinute);
-
-        if (runEndMillis != null) {
-            // the chase delays the whole run of a fixture, so each of them runs its cycles
-            // completely. the phase only shifts the curve inside the run.
-            double runMillis = timeMillis - phasingMillis;
-
-            if (runMillis < 0) {
-                // this fixture has not started yet
-                return null;
-            }
-
-            if (runMillis >= runEndMillis) {
-                if ("base".equals(this.endMode)) {
-                    return null;
-                }
-
-                return this.getCyclePosition(runEndMillis - phaseMillis, true, lengthMillis);
-            }
-        }
-
-        return this.getCyclePosition(timeMillis - phase, false, lengthMillis);
-    }
-
-    // How many periods the curve has run through at a moment, counted from where its phase puts its start, with the part
-    // of the one it is in, or null if it does not apply at this moment. It follows the rules of getCyclePositionAtMillis:
-    // a pixel effect needs the number of the pass as well, e.g. to take the next color on each of them.
-    public Double getCyclesAtMillis(double timeMillis, Integer fixtureIndex, Integer fixtureCount, Double beatsPerMinute) {
-        double lengthMillis = this.getLengthMillis(beatsPerMinute);
-        double phasingMillis = this.getPhasingMillis(fixtureIndex, fixtureCount, beatsPerMinute);
-        double phaseMillis = this.getPhaseMillis(beatsPerMinute);
-        double phase = phaseMillis + phasingMillis;
-
-        Double runEndMillis = this.getRunEndMillis(beatsPerMinute);
-
-        if (runEndMillis != null) {
-            double runMillis = timeMillis - phasingMillis;
-
-            if (runMillis < 0) {
-                // this fixture has not started yet
-                return null;
-            }
-
-            if (runMillis >= runEndMillis) {
-                if ("base".equals(this.endMode)) {
-                    return null;
-                }
-
-                double cycles = (runEndMillis - phaseMillis) / lengthMillis;
-
-                // a run of full cycles ends exactly on a cycle border -> hold what it showed just before it
-                return cycles - Math.floor(cycles) < CYCLE_EPSILON ? Math.floor(cycles) - CYCLE_EPSILON : cycles;
-            }
-        }
-
-        return (timeMillis - phase) / lengthMillis;
-    }
-
-    // the position inside the current cycle, between 0 and 1
-    private double getCyclePosition(double shiftedMillis, boolean atRunEnd, double lengthMillis) {
-        double cyclePosition = ((shiftedMillis / lengthMillis) % 1 + 1) % 1;
-
-        if (atRunEnd && cyclePosition < CYCLE_EPSILON) {
-            // a run of full cycles ends exactly on a cycle border, where the curve has already
-            // jumped back to its beginning -> hold what it showed just before it
-            return 1 - CYCLE_EPSILON;
-        }
-
-        return cyclePosition;
-    }
-
-    // the duty cycle, kept inside the range the curves are defined for
-    private double getClampedDutyCycle() {
-        return Math.max(Math.min(this.dutyCycle, 1), 0);
-    }
-
-    // remaps the position inside the cycle of a sine or a triangle, so the curve is on over
-    // the duty cycle. it stays symmetric around its peak: below 50 % it runs faster and
-    // rests at its trough for the rest of the cycle, above it rests at its peak and dips
-    // faster. the plain 50 % leaves it untouched.
-    private double warpCyclePosition(double cyclePosition) {
-        double duty = this.getClampedDutyCycle();
-
-        if (duty == 0.5) {
-            return cyclePosition;
-        }
-
-        // never on or never off: the curve rests at its trough or its peak
-        if (duty <= 0) {
-            return 0.75;
-        }
-
-        if (duty >= 1) {
-            return 0.25;
-        }
-
-        // both curves are symmetric around their peak at a quarter of the cycle, so only the
-        // distance from it counts: 0 on the peak, 0.5 on the trough
-        double fromPeak = Math.abs((cyclePosition + 0.25) % 1 - 0.5);
-
-        // the plain curve falls from its peak to its trough over half the cycle and crosses
-        // its position halfway. warped, it crosses it at half the duty cycle and falls over
-        // the shorter of the on and off parts, so it neither overshoots its peak nor its
-        // trough and rests at them over the rest.
-        double fall = Math.min(duty, 1 - duty);
-        double warpedFromPeak = Math.max(Math.min(0.25 + (fromPeak - duty / 2) / fall * 0.5, 0.5), 0);
-
-        return 0.25 + warpedFromPeak;
-    }
-
-    // how far a sawtooth has ramped up at a position inside its cycle, between 0 (its
-    // bottom) and 1 (its top), before it jumps back at the end of the cycle. it keeps the
-    // jump where it is and is on over the duty cycle before it: below 50 % it ramps faster
-    // and rests at its bottom before, above it ramps right after the jump and rests at its
-    // top. the plain 50 % ramps over the whole cycle.
-    private double getRamp(double cyclePosition) {
-        double duty = this.getClampedDutyCycle();
-
-        if (duty == 0.5) {
-            return cyclePosition;
-        }
-
-        // never on or never off: the curve rests at its bottom or its top
-        if (duty <= 0) {
-            return 0;
-        }
-
-        if (duty >= 1) {
-            return 1;
-        }
-
-        // the ramp crosses its middle where the duty cycle begins and takes twice the shorter
-        // of the on and off parts, so it fits into the cycle on both sides of its middle
-        double rampLength = 2 * Math.min(duty, 1 - duty);
-
-        return Math.max(Math.min(0.5 + (cyclePosition - (1 - duty)) / rampLength, 1), 0);
-    }
-
-    // the value of the curve at a position inside its cycle, between 0 and 1. every curve swings over its whole
-    // amplitude around its position (before project version 8, the curves except the square swung over half of it).
-    private double getCurveValue(double cyclePosition) {
-        // Calculate the value between 0 and 1 according to the curve
-        double value = 0d;
-        double warped;
-
-        switch (this.curveType) {
-            case "sine":
-                warped = this.warpCyclePosition(cyclePosition);
-                value = position + amplitude / 2 * CycleSine.sin(warped);
-                break;
-            case "square":
-                // on while the sine is above its position: over the duty cycle, centered on
-                // the peak of the sine at a quarter of the cycle
-                double duty = this.getClampedDutyCycle();
-                double fromOn = ((cyclePosition - 0.25 + duty / 2) % 1 + 1) % 1;
-
-                if (fromOn < duty) {
-                    value = position + amplitude / 2;
-                } else {
-                    value = position - amplitude / 2;
-                }
-                break;
-            case "triangle":
-                // rises and falls linearly, in phase with the sine
-                warped = this.warpCyclePosition(cyclePosition);
-                value = position + amplitude / 2 * (1 - 4 * Math.abs((warped + 0.25) % 1 - 0.5));
-                break;
-            case "sawtooth":
-                // ramps up, then jumps back at the end of the cycle
-                value = position + amplitude / 2 * (2 * this.getRamp(cyclePosition) - 1);
-                break;
-            case "reverse-sawtooth":
-                // the sawtooth run backwards: jumps up at the beginning of the cycle, then ramps down
-                value = position + amplitude / 2 * (2 * this.getRamp(1 - cyclePosition) - 1);
-                break;
-        }
-
-        return Math.max(Math.min(value, 1), 0);
     }
 
     public String getCurveType() {

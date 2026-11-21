@@ -21,7 +21,7 @@ public class Preset {
     private String name;
 
     // OBSOLETE: the fixtures of the preset in a project before version 2, which named the fixtures only (replaced with
-    // the fixtures and their pixels, see DefaultDesignerService.migrateProjectToVersion2)
+    // the fixtures and their pixels, see ProjectMigration)
     private List<String> fixtureUuids;
 
     // all related fixtures, in the order they are chased in (only relevant, if
@@ -40,15 +40,15 @@ public class Preset {
     private List<FixtureCapabilityValue> fixtureCapabilityValues;
 
     // the states this preset runs through over its playing time, in the order they are
-    // reached. Empty only in a project written before the designer knew steps, which
-    // PresetSteps falls back to the values above for.
+    // reached. Empty only in a project written before the designer knew steps, which is
+    // migrated to one step of the values above (see ProjectMigration).
     private List<PresetStep> steps = new ArrayList<>();
 
     // start the sequence over instead of holding the last step
     private boolean stepsLoop = false;
 
     // the length of one pass (null = the last step holds as long as the one before it
-    // lasted, see PresetSteps.getStepsLoopMillis)
+    // lasted)
     private Double stepsLoopMillis;
 
     // how the sequence is shifted from one fixture to the next (chasing), following the
@@ -64,13 +64,12 @@ public class Preset {
     private double stepsPhasingGroupSize = 1;
 
     // how the steps are timed: "millis" as they are written down, "beats" following the tempo they are played at. Their
-    // times are written down at stepsBeatsPerMinute then, and run as much faster or slower as the tempo played is (see
-    // PresetSteps.getStepsTimeMillis).
+    // times are written down at stepsBeatsPerMinute then, and run as much faster or slower as the tempo played is.
     private String stepsLengthMode = "millis";
     private double stepsBeatsPerMinute = 120;
 
-    // the order the steps are played in: "forward", "backward", "pingpong" or "random" (see PresetStepsOrder; an order
-    // this Rocket Show doesn't know plays them forward), and where a random order starts from
+    // the order the steps are played in: "forward", "backward", "pingpong" or "random" (an order the lighting engine
+    // doesn't know plays them forward), and where a random order starts from
     private String stepsOrder = "forward";
     private double stepsSeed = 1;
 
@@ -87,20 +86,19 @@ public class Preset {
     private boolean mirrorTilt = false;
 
     // How the fixtures of the preset are put in the order of a fan, which everything fanned out over them follows (the
-    // values of the steps, a gradient of colors and the effects, see Fan): in the order of the preset ("preset"), or by
+    // values of the steps, a gradient of colors and the effects): in the order of the preset ("preset"), or by
     // where they are on the stage, from the left to the right, from the front to the back or from the bottom to the top
     // ("left-right", "front-back", "bottom-top").
     private String fanOrder = "preset";
 
-    // the pattern the fixtures are put in for the chases and the fans in the order of the preset (see
-    // SelectionPattern): so many fixtures in a group (1: each on its own), so many wings (1: none) and repeated every so
-    // many (0: not). A preset written before the patterns puts its fixtures in its own order.
+    // the pattern the fixtures are put in for the chases and the fans in the order of the preset: so many fixtures in a
+    // group (1: each on its own), so many wings (1: none) and repeated every so many (0: not). A preset written before the patterns puts its fixtures in its own order.
     private double patternGroupSize = 1;
     private double patternWings = 1;
     private double patternEvery = 0;
 
     // light the white and the amber LEDs of a fixture with red, green and blue with the white and the amber parts of the
-    // colors of the preset (see EmitterColors). A preset written before the designer knew it doesn't.
+    // colors of the preset. A preset written before the designer knew it doesn't.
     private boolean emittersFromColor = false;
 
     // position offset, relative to the scene start
@@ -116,30 +114,13 @@ public class Preset {
     private boolean fadeInPre = false;
     private boolean fadeOutPost = false;
 
-    // how the fades are shaped over their time (see TransitionCurve)
+    // how the fades are shaped over their time (linear, or a curve of the designer)
     private String fadeInCurve = "linear";
     private String fadeOutCurve = "linear";
 
     // a preset written before the fans followed the stage fans in its own order, like in the designer
     public void setFanOrder(String fanOrder) {
         this.fanOrder = fanOrder == null || fanOrder.isEmpty() ? "preset" : fanOrder;
-    }
-
-    // where a fixture at the passed place in the order of the preset is in its pattern (see SelectionPattern)
-    public SelectionPattern.Place getPatternPlace(int index, int count) {
-        return SelectionPattern.getPatternPlace(index, count, patternGroupSize, patternWings, patternEvery);
-    }
-
-    // whether the preset mirrors what it puts on the passed capability
-    public boolean mirrorsCapability(FixtureCapability.FixtureCapabilityType type) {
-        return (type == FixtureCapability.FixtureCapabilityType.Pan && mirrorPan)
-                || (type == FixtureCapability.FixtureCapabilityType.Tilt && mirrorTilt);
-    }
-
-    // the position the preset points its fixtures at on the passed capability: a mirrored
-    // axis is folded around the middle of its range, the rest is passed through
-    public double getMirroredValuePercentage(FixtureCapability.FixtureCapabilityType type, double valuePercentage) {
-        return mirrorsCapability(type) ? 1 - valuePercentage : valuePercentage;
     }
 
 }

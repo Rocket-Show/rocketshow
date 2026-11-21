@@ -13,15 +13,6 @@ public class PixelPaletteStop {
     private double position = 0;
     private String color = "#000000";
 
-    // (not a constructor: Jackson would read the stops of a project with it, instead of keeping the defaults of the
-    // values which are null)
-    static PixelPaletteStop of(double position, String color) {
-        PixelPaletteStop stop = new PixelPaletteStop();
-        stop.position = position;
-        stop.color = color;
-        return stop;
-    }
-
     public double getPosition() {
         return position;
     }

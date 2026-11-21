@@ -96,8 +96,7 @@ public class FixtureCapability {
     private Boolean randomTiming;
     private Boolean soundControlled;
 
-    // the ends of the ranges the positioned capabilities are played in (see CapabilityPositions), like the fixture
-    // library writes them (e.g. "10deg", "wide" or "3200K")
+    // the ends of the ranges the positioned capabilities are played in, like the fixture library writes them (e.g. "10deg", "wide" or "3200K")
     private String speed;
     private String speedStart;
     private String speedEnd;

@@ -37,20 +37,4 @@ public class PresetStep {
     // how much of each effect of the preset this step lets through
     private List<PresetStepEffectAmount> effectAmounts = new ArrayList<>();
 
-    // how much of the passed effect this step lets through (effects a step says nothing
-    // about run fully, which is what a preset without any step settings did before)
-    public double getEffectAmount(String effectUuid) {
-        if (effectAmounts == null) {
-            return 1;
-        }
-
-        for (PresetStepEffectAmount effectAmount : effectAmounts) {
-            if (effectAmount.getEffectUuid() != null && effectAmount.getEffectUuid().equals(effectUuid)) {
-                return effectAmount.getAmount();
-            }
-        }
-
-        return 1;
-    }
-
 }
