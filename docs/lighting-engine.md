@@ -87,8 +87,9 @@ compiler
 brought the 60 heads to 0.38 ms, with a long warm-up and a 99th percentile of 1.9 ms. Instead, the engine keeps the
 stages of a frame and three groups of the pixel patterns functions of their own (merged into the engine's `main` on 21
 November 2026, commit `5f84480`): no function of a frame is larger than 6 KB, nothing is computed differently (the
-digests are the same) and the native frame times are unchanged. Rocket Show builds `engine.wasm` from that revision, the
-same one as the designer.
+digests are the same) and the native frame times are unchanged. Rocket Show builds `engine.wasm` of the engine's `main`,
+the same revision as the designer and the stick: `9801adf` since 21 November 2026, which keeps those functions apart in
+the WebAssembly build only and works a curve out once for the fixtures it plays alike (no value changed).
 
 **On SPARK's hardware the gate is met** (21 November 2026, a SPARK with a Raspberry Pi Compute Module 5, 4 cores, 2 GB,
 OpenJDK 21.0.11, Rocket Show 3.3 running beside it, `engine.wasm` of `5f84480`):
