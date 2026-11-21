@@ -47,7 +47,7 @@ public class Scene {
     private boolean fadeInPre = false;
     private boolean fadeOutPost = false;
 
-    // how the fades are shaped over their time (see TransitionCurve)
+    // how the fades are shaped over their time (linear, or a curve of the designer)
     private String fadeInCurve = "linear";
     private String fadeOutCurve = "linear";
 

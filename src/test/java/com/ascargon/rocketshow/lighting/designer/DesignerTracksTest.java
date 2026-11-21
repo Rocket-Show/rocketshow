@@ -256,7 +256,7 @@ class DesignerTracksTest {
                 region("second", 0, 4000), region("first", 0, 4000), region("first", 2000, 6000), region("second", 5000, 8000)
         });
 
-        DefaultDesignerService.assignTracks(composition, List.of(first, second));
+        ProjectMigration.assignTracks(composition, List.of(first, second));
 
         // the clips of the first scene which overlap each other are on two tracks, right below each other
         assertEquals(List.of("First", "First 2", "Second"), composition.getTracks().stream().map(Track::getName).toList());
@@ -277,7 +277,7 @@ class DesignerTracksTest {
         Composition composition = new Composition();
         composition.setScenePlaybackRegions(new ScenePlaybackRegion[]{region("scene", 0, 4000), region("scene", 4000, 8000)});
 
-        DefaultDesignerService.assignTracks(composition, List.of(scene));
+        ProjectMigration.assignTracks(composition, List.of(scene));
 
         // a clip ends where the next one starts
         assertEquals(List.of("Scene"), composition.getTracks().stream().map(Track::getName).toList());
@@ -301,7 +301,7 @@ class DesignerTracksTest {
         onTrack.setTrackUuid("track");
         composition.setScenePlaybackRegions(new ScenePlaybackRegion[]{onTrack, region("second", 0, 4000)});
 
-        DefaultDesignerService.assignTracks(composition, List.of(first, second));
+        ProjectMigration.assignTracks(composition, List.of(first, second));
 
         assertEquals(List.of("Track", "Second"), composition.getTracks().stream().map(Track::getName).toList());
         assertEquals("track", onTrack.getTrackUuid());
@@ -324,7 +324,7 @@ class DesignerTracksTest {
         composition.getTracks().add(track);
         composition.setScenePlaybackRegions(new ScenePlaybackRegion[]{region("unnamed", 0, 4000), region("unnamed", 2000, 6000), region("first", 0, 1000)});
 
-        DefaultDesignerService.assignTracks(composition, List.of(unnamed, first));
+        ProjectMigration.assignTracks(composition, List.of(unnamed, first));
 
         assertEquals(List.of("Track 2", "Track 3", "Track 4", "First"), composition.getTracks().stream().map(Track::getName).toList());
     }
@@ -334,7 +334,7 @@ class DesignerTracksTest {
         Composition composition = new Composition();
         composition.setScenePlaybackRegions(new ScenePlaybackRegion[0]);
 
-        DefaultDesignerService.assignTracks(composition, List.of(new Scene()));
+        ProjectMigration.assignTracks(composition, List.of(new Scene()));
 
         assertEquals(List.of(), composition.getTracks());
     }

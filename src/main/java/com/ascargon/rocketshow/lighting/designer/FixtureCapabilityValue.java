@@ -1,8 +1,5 @@
 package com.ascargon.rocketshow.lighting.designer;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import java.util.ArrayList;
 import java.util.List;
 
 public class FixtureCapabilityValue {
@@ -18,16 +15,16 @@ public class FixtureCapabilityValue {
     private String wheel;
 
     // pan and tilt: the position in degrees from the middle of the range, the degrees the fixtures are fanned out
-    // over and the spot on the stage (in cm) they point at (see PanTilt)
+    // over and the spot on the stage (in cm) they point at
     private Double valueDegrees;
     private Double spreadDegrees;
 
     // pan and tilt: the shape of the fan the degrees are spread over, from the first fixture to the last one or
-    // ('center') from the one in the middle out to both ends (see Fan)
+    // ('center') from the one in the middle out to both ends
     private String fanShape;
 
     // A value with a percentage fanned out over the fixtures of the preset: the value of each fixture by its place
-    // along the fan (see Fan). The percentage is the one in between, which a player not knowing the fans plays. Red,
+    // along the fan. The percentage is the one in between, which a player not knowing the fans plays. Red,
     // green and blue fanned with stops at the same places make up a gradient of colors.
     private List<FanStop> fan;
 
@@ -41,57 +38,18 @@ public class FixtureCapabilityValue {
     // the blade of a framing shutter: Top, Right, Bottom or Left
     private String blade;
 
-    // the strobe: the effect it flashes in (see CapabilityPositions), a plain strobe if none is given
+    // the strobe: the effect it flashes in, a plain strobe if none is given
     private String shutterEffect;
 
-    // a program the fixture runs on its own (see Programs): its number (0 for none), whether it runs to the sound
+    // a program the fixture runs on its own: its number (0 for none), whether it runs to the sound
     private Double programNumber;
     private Boolean soundControlled;
 
-    // what a fixture is asked to do for as long as the preset plays: reset itself, switch its lamp on or off (see
-    // Maintenance)
+    // what a fixture is asked to do for as long as the preset plays: reset itself, switch its lamp on or off
     private String maintenanceAction;
 
     // turned off in the preset editor of the designer: kept with all it says, to be turned on again, but not played
-    // (see PlayedValues)
     private Boolean deactivated;
-
-    // pan and tilt, while a preset travels from one step into the next: the value of the step it travels from and how
-    // far it has come (between 0 and 1). Each moving head travels from where the one value points it to where the
-    // other does, so the heads fan in and out, follow a spot moving over the stage and turn from a spot to a position
-    // alike (see PanTilt). Only the values a preset shows between two of its steps hold this, it is never saved.
-    @JsonIgnore
-    private FixtureCapabilityValue transitionFrom;
-    @JsonIgnore
-    private double transitionPosition;
-
-    // a copy of the value, with all it says
-    public FixtureCapabilityValue copy() {
-        FixtureCapabilityValue copy = new FixtureCapabilityValue();
-        copy.type = type;
-        copy.profileUuid = profileUuid;
-        copy.valuePercentage = valuePercentage;
-        copy.color = color;
-        copy.slotNumber = slotNumber;
-        copy.wheel = wheel;
-        copy.valueDegrees = valueDegrees;
-        copy.spreadDegrees = spreadDegrees;
-        copy.aimX = aimX;
-        copy.aimY = aimY;
-        copy.aimZ = aimZ;
-        copy.blade = blade;
-        copy.shutterEffect = shutterEffect;
-        copy.fanShape = fanShape;
-        copy.fan = fan == null ? null : new ArrayList<>(fan);
-        copy.fanBetween = fanBetween;
-        copy.programNumber = programNumber;
-        copy.soundControlled = soundControlled;
-        copy.maintenanceAction = maintenanceAction;
-        copy.deactivated = deactivated;
-        copy.transitionFrom = transitionFrom;
-        copy.transitionPosition = transitionPosition;
-        return copy;
-    }
 
     public String getFanShape() {
         return fanShape;
@@ -140,26 +98,6 @@ public class FixtureCapabilityValue {
 
     public void setMaintenanceAction(String maintenanceAction) {
         this.maintenanceAction = maintenanceAction;
-    }
-
-    @JsonIgnore
-    public FixtureCapabilityValue getTransitionFrom() {
-        return transitionFrom;
-    }
-
-    @JsonIgnore
-    public void setTransitionFrom(FixtureCapabilityValue transitionFrom) {
-        this.transitionFrom = transitionFrom;
-    }
-
-    @JsonIgnore
-    public double getTransitionPosition() {
-        return transitionPosition;
-    }
-
-    @JsonIgnore
-    public void setTransitionPosition(double transitionPosition) {
-        this.transitionPosition = transitionPosition;
     }
 
     public Double getValueDegrees() {

@@ -9,11 +9,6 @@ public class EffectUnknown extends Effect {
     // the type the designer gave it
     private String type;
 
-    @Override
-    public Double getValueAtMillis(double timeMillis, Integer fixtureIndex, Integer fixtureCount, Double beatsPerMinute) {
-        return null;
-    }
-
     public String getType() {
         return type;
     }

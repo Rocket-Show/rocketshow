@@ -3,8 +3,6 @@ package com.ascargon.rocketshow.lighting.designer;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A Rocket Show Designer effect.
@@ -12,7 +10,7 @@ import org.slf4j.LoggerFactory;
  * @author Moritz A. Vieli
  */
 // an effect of a type this Rocket Show does not know (written by a newer designer) is read as an EffectUnknown, which
-// lights nothing: the rest of the show still plays (see DefaultDesignerService.migrateProject)
+// lights nothing: the rest of the show still plays (see ProjectMigration)
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
         property = "type",
@@ -25,8 +23,6 @@ import org.slf4j.LoggerFactory;
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class Effect {
-
-    private final static Logger logger = LoggerFactory.getLogger(Effect.class);
 
     public enum EffectChannel {
         colorRed,
@@ -43,12 +39,6 @@ public abstract class Effect {
     private String uuid;
     private EffectChannel[] effectChannels;
     private boolean visible = true;
-
-    // the value the effect puts on its channels, or null if it does not apply at this
-    // moment - the fixtures keep whatever the rest of the preset puts on them then.
-    // the tempo is the one of the composition the effect is played in, which the curves
-    // synced to the beat run on. it is null while a preset is previewed on its own.
-    public abstract Double getValueAtMillis(double timeMillis, Integer fixtureIndex, Integer fixtureCount, Double beatsPerMinute);
 
     public String getUuid() {
         return uuid;

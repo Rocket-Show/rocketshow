@@ -11,7 +11,6 @@ import com.ascargon.rocketshow.gstreamer.GstDiscovererService;
 import com.ascargon.rocketshow.gstreamer.GstreamerInitService;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.designer.DefaultDesignerService;
-import com.ascargon.rocketshow.lighting.designer.DefaultFixturePixelGroupResolveService;
 import com.ascargon.rocketshow.midi.ActionTriggerMidi;
 import com.ascargon.rocketshow.midi.MidiTimecodeService;
 import com.ascargon.rocketshow.play.CompositionPipelineBuilder;
@@ -82,7 +81,7 @@ class RenameCompositionTest {
         when(gstDiscovererService.getDurationMillis(any())).thenReturn(90_000L);
         when(gstDiscovererService.getChannels(any())).thenReturn(2);
 
-        designerService = new DefaultDesignerService(settingsService, mock(FileFilterService.class), mock(LightingService.class), new DefaultFixturePixelGroupResolveService());
+        designerService = new DefaultDesignerService(settingsService, mock(FileFilterService.class), mock(LightingService.class));
         compositionService = new DefaultCompositionService(settingsService, capabilitiesService, gstDiscovererService, designerService);
         playerService = new DefaultPlayerService(mock(NotificationService.class), settingsService, compositionService, setService, sessionService,
                 mock(LightingService.class), designerService, mock(MidiTimecodeService.class), mock(ActionExecutionService.class),

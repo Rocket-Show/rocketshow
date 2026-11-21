@@ -43,7 +43,7 @@ class DesignerCompositionEndTest {
         composition.put("syncType", "none");
         composition.putArray("scenePlaybackRegions");
 
-        designerService = new DefaultDesignerService(TestSettings.inDirectory(directory), new DefaultFileFilterService(), mock(LightingService.class), new DefaultFixturePixelGroupResolveService());
+        designerService = new DefaultDesignerService(TestSettings.inDirectory(directory), new DefaultFileFilterService(), mock(LightingService.class));
     }
 
     // a scene playing one preset

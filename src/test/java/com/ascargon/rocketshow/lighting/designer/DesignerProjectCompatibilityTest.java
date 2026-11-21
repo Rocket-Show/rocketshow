@@ -161,7 +161,7 @@ class DesignerProjectCompatibilityTest {
         doAnswer(invocation -> lightingUniverses.add(invocation.getArgument(0))).when(lightingService).addLightingUniverse(any());
         doAnswer(invocation -> lightingUniverses.remove((LightingUniverseState) invocation.getArgument(0))).when(lightingService).removeLightingUniverse(any());
 
-        DefaultDesignerService designerService = new DefaultDesignerService(settingsService, fileFilterService, lightingService, new DefaultFixturePixelGroupResolveService());
+        DefaultDesignerService designerService = new DefaultDesignerService(settingsService, fileFilterService, lightingService);
 
         assertEquals(1, designerService.getAllProjects().size());
         Project project = designerService.getAllProjects().getFirst();
@@ -231,7 +231,7 @@ class DesignerProjectCompatibilityTest {
         SettingsService settingsService = mock(SettingsService.class);
         when(settingsService.getSettings()).thenReturn(getSettings(projectBasePath, project));
 
-        DefaultDesignerService designerService = new DefaultDesignerService(settingsService, mock(FileFilterService.class), mock(LightingService.class), new DefaultFixturePixelGroupResolveService());
+        DefaultDesignerService designerService = new DefaultDesignerService(settingsService, mock(FileFilterService.class), mock(LightingService.class));
         designerService.load(null, project, null);
         designerService.close();
     }
@@ -286,7 +286,7 @@ class DesignerProjectCompatibilityTest {
         // In the format of the designer the web app comes with, so a new project is not migrated in it. The engine may
         // know a newer one already, e.g. until that designer is released: then the engine migrates it like any other.
         assertEquals(WEB_APP_DESIGNER_PROJECT_VERSION, project.getVersion());
-        assertTrue(WEB_APP_DESIGNER_PROJECT_VERSION <= DefaultDesignerService.SUPPORTED_PROJECT_VERSION);
+        assertTrue(WEB_APP_DESIGNER_PROJECT_VERSION <= ProjectMigration.SUPPORTED_PROJECT_VERSION);
         assertFalse(positions.isEmpty());
 
         List<String> errors = getErrorsWhilePlaying(template, positions, universes);
@@ -322,7 +322,7 @@ class DesignerProjectCompatibilityTest {
 
         migrate(project);
 
-        assertEquals(DefaultDesignerService.SUPPORTED_PROJECT_VERSION, project.getVersion());
+        assertEquals(ProjectMigration.SUPPORTED_PROJECT_VERSION, project.getVersion());
         assertEquals(1, preset.getSteps().size());
         assertEquals(look, preset.getSteps().getFirst().getFixtureCapabilityValues());
     }
@@ -334,7 +334,7 @@ class DesignerProjectCompatibilityTest {
 
         migrate(project);
 
-        assertEquals(DefaultDesignerService.SUPPORTED_PROJECT_VERSION, project.getVersion());
+        assertEquals(ProjectMigration.SUPPORTED_PROJECT_VERSION, project.getVersion());
         assertEquals(steps, project.getPresets().getFirst().getSteps());
     }
 
@@ -352,7 +352,7 @@ class DesignerProjectCompatibilityTest {
 
         migrate(project);
 
-        assertEquals(DefaultDesignerService.SUPPORTED_PROJECT_VERSION, project.getVersion());
+        assertEquals(ProjectMigration.SUPPORTED_PROJECT_VERSION, project.getVersion());
         assertEquals(sineAmplitude / 2, sine.getAmplitude());
         assertEquals(0.5f, square.getAmplitude());
     }
@@ -520,9 +520,9 @@ class DesignerProjectCompatibilityTest {
     @Test
     void warnsAboutAProjectOfANewerDesigner() throws Throwable {
         Project newer = readProject(getMigrationProject("Template version 7.json"));
-        newer.setVersion(DefaultDesignerService.SUPPORTED_PROJECT_VERSION + 1);
+        newer.setVersion(ProjectMigration.SUPPORTED_PROJECT_VERSION + 1);
         Project current = readProject(getMigrationProject("Template version 7.json"));
-        current.setVersion(DefaultDesignerService.SUPPORTED_PROJECT_VERSION);
+        current.setVersion(ProjectMigration.SUPPORTED_PROJECT_VERSION);
 
         List<String> warnings = DesignerTestEngine.logged(Level.WARN, () -> migrate(newer));
 

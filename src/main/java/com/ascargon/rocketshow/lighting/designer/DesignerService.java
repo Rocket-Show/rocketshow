@@ -57,7 +57,7 @@ public interface DesignerService {
     void setIdentifyFixtureUuids(List<String> identifyFixtureUuids);
 
     // the fixtures the designer asks from its fixture pool to reset themselves or to switch their lamp on, over what the
-    // presets do with them (see Maintenance)
+    // presets do with them
     void setMaintenanceFixtureUuids(List<String> resetFixtureUuids, List<String> lampOnFixtureUuids);
 
     // The DMX channels held at a value by the faders of the DMX channels of the designer: sent as they are, whatever the
@@ -67,7 +67,7 @@ public interface DesignerService {
     // Play the scenes of the project picked by hand on the Play screen and the ones flashed on top of them, dimmed by
     // its master dimmer (0 to 1). They play whenever no composition plays a project of its own: right away, or once the
     // composition closes its project. A scene picked fades in and plays from the moment it is picked, one let go fades
-    // out (see LiveScenes).
+    // out.
     void playManualScenes(Project project, List<String> sceneUuids, List<String> flashedSceneUuids, double masterDimmer);
 
     default void playManualScenes(Project project, List<String> sceneUuids, double masterDimmer) {

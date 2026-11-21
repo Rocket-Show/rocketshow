@@ -178,7 +178,10 @@ class DesignerTestEngine {
         context.updateLoggers();
 
         try {
-            DefaultDesignerService designerService = new DefaultDesignerService(settingsService, mock(FileFilterService.class), lightingService, new DefaultFixturePixelGroupResolveService());
+            DefaultDesignerService designerService = new DefaultDesignerService(settingsService, mock(FileFilterService.class), lightingService);
+
+            // the values of the position played, which stands still here
+            designerService.renderAhead = false;
             start.accept(designerService, designerService.getAllProjects().getFirst());
 
             try {

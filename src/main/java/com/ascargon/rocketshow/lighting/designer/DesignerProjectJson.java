@@ -1,10 +1,10 @@
 package com.ascargon.rocketshow.lighting.designer;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import tools.jackson.core.JsonGenerator;
-import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.SerializationContext;
 import tools.jackson.databind.ValueSerializer;
 import tools.jackson.databind.annotation.JsonSerialize;
@@ -14,7 +14,7 @@ import java.util.List;
 
 /**
  * Writes a project as the designer writes it, for the shared lighting engine, whose compiler reads the JSON of the
- * designer (see docs/lighting-engine.md): the project is migrated here first, then written with this. Written with
+ * designer (see docs/lighting-engine.md): the project is migrated first (see ProjectMigration), then written with this. Written with
  * DesignerJson, a project keeps everything the designer saved, but its fixture profiles are written another way (the
  * channels, template channels and wheels of a profile unwrapped into it, a channel of a mode as an object, the pixel
  * groups of a matrix as a list): here they
@@ -148,11 +148,24 @@ public final class DesignerProjectJson {
 
     }
 
-    private static final ObjectMapper MAPPER = JsonMapper.builder()
+    // What the designer previews (the selection, the fixtures identified, the faders, the holds of its timeline): Rocket
+    // Show hands it to the engine as inputs of its own, the compiler doesn't read it. Left out, a project previewed
+    // with another selection is the same show, which isn't compiled again.
+    @JsonIgnoreProperties(value = {"selectedPresetUuid", "selectedStepUuid", "stepPreviewRunning", "stepPreviewStartMillis",
+            "selectedSceneUuids", "identifyFixtureUuids", "resetFixtureUuids", "lampOnFixtureUuids", "dmxOverrides",
+            "previewHolds", "previewHolding", "previewPreset"}, ignoreUnknown = true)
+    abstract static class ProjectForEngineMixIn {
+    }
+
+    private static final JsonMapper MAPPER = JsonMapper.builder()
             .changeDefaultPropertyInclusion(inclusion -> inclusion.withValueInclusion(JsonInclude.Include.NON_NULL))
             .addMixIn(FixtureProfile.class, FixtureProfileMixIn.class)
             .addMixIn(FixtureMode.class, FixtureModeMixIn.class)
             .addMixIn(FixtureMatrix.class, FixtureMatrixMixIn.class)
+            .build();
+
+    private static final JsonMapper ENGINE_MAPPER = MAPPER.rebuild()
+            .addMixIn(Project.class, ProjectForEngineMixIn.class)
             .build();
 
     private DesignerProjectJson() {
@@ -163,6 +176,14 @@ public final class DesignerProjectJson {
      */
     public static String write(Project project) {
         return MAPPER.writeValueAsString(project);
+    }
+
+    /**
+     * The JSON of the passed project as the designer writes it, without what the designer previews (see
+     * ProjectForEngineMixIn): what the compiler of the lighting engine is handed.
+     */
+    public static String writeForEngine(Project project) {
+        return ENGINE_MAPPER.writeValueAsString(project);
     }
 
 }

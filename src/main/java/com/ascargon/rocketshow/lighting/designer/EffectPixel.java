@@ -14,9 +14,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  * @author Moritz A. Vieli
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EffectPixel extends EffectCurve implements PixelPatternSettings, PixelAudio.Settings {
+public class EffectPixel extends EffectCurve {
 
-    // see PixelPatterns
+    // the pattern, one of the 23 of the lighting engine
     private String pattern = "chase";
     private double size = 0.25;
     private double softness = 0.3;
@@ -35,8 +35,7 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
     private PixelPalette palette = presetPalette();
 
     // 'fixture' paints the pattern over each fixture on its own, 'stage' spreads one picture over all of them, as they
-    // hang on the stage: seen from the 'front' or from above ('top'), framed around the pixels of the preset (see
-    // PixelStage)
+    // hang on the stage: seen from the 'front' or from above ('top'), framed around the pixels of the preset
     private String spread = "fixture";
     private String view = "front";
 
@@ -58,7 +57,6 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
         return palette;
     }
 
-    @Override
     public String getPattern() {
         return pattern;
     }
@@ -68,7 +66,6 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
         this.pattern = pattern == null || pattern.isEmpty() ? "chase" : pattern;
     }
 
-    @Override
     public double getSize() {
         return size;
     }
@@ -77,7 +74,6 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
         this.size = size;
     }
 
-    @Override
     public double getSoftness() {
         return softness;
     }
@@ -86,7 +82,6 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
         this.softness = softness;
     }
 
-    @Override
     public String getDirection() {
         return direction;
     }
@@ -95,7 +90,6 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
         this.direction = direction == null || direction.isEmpty() ? "right" : direction;
     }
 
-    @Override
     public String getShape() {
         return shape;
     }
@@ -104,7 +98,6 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
         this.shape = shape == null || shape.isEmpty() ? "circle" : shape;
     }
 
-    @Override
     public boolean isBounce() {
         return bounce;
     }
@@ -161,8 +154,8 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
         this.whiteLed = Boolean.TRUE.equals(whiteLed);
     }
 
-    // The picture of a text or an image and how it is shown (see PixelPatternSettings). The designer makes the picture
-    // from the text or the image, this only reads the picture.
+    // The picture of a text or an image and how it is shown. The designer makes the picture from the text or the image,
+    // this only reads the picture.
     private PixelBitmap bitmap;
     private String scroll = "auto";
     private String align = "center";
@@ -171,7 +164,6 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
     private String textColors = "along";
     private String imageColors = "own";
 
-    @Override
     public PixelBitmap getBitmap() {
         return bitmap;
     }
@@ -180,7 +172,6 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
         this.bitmap = bitmap;
     }
 
-    @Override
     public String getScroll() {
         return scroll;
     }
@@ -189,7 +180,6 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
         this.scroll = scroll == null || scroll.isEmpty() ? "auto" : scroll;
     }
 
-    @Override
     public String getAlign() {
         return align;
     }
@@ -198,7 +188,6 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
         this.align = align == null || align.isEmpty() ? "center" : align;
     }
 
-    @Override
     public double getOffsetY() {
         return offsetY;
     }
@@ -207,7 +196,6 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
         this.offsetY = offsetY == null ? 0 : offsetY;
     }
 
-    @Override
     public String getFit() {
         return fit;
     }
@@ -216,7 +204,6 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
         this.fit = fit == null || fit.isEmpty() ? "contain" : fit;
     }
 
-    @Override
     public String getTextColors() {
         return textColors;
     }
@@ -225,7 +212,6 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
         this.textColors = textColors == null || textColors.isEmpty() ? "along" : textColors;
     }
 
-    @Override
     public String getImageColors() {
         return imageColors;
     }
@@ -234,8 +220,8 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
         this.imageColors = imageColors == null || imageColors.isEmpty() ? "own" : imageColors;
     }
 
-    // The audio it follows: none ('off') or the one of the composition playing, and how (see PixelAudio). The level
-    // meter and the wave of the audio show it, any other pattern follows it with its brightness or with its size.
+    // The audio it follows: none ('off') or the one of the composition playing, and how. The level meter and the wave of
+    // the audio show it, any other pattern follows it with its brightness or with its size.
     private String audioSource = "off";
     private String audioBand = "full";
     private double audioGainDb = 0;
@@ -244,7 +230,9 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
     private double audioReleaseMillis = 300;
     private String audioFollows = "brightness";
 
-    // the audio buses of Rocket Show it follows, added together, by their uuids: all of them, if none are named
+    // the audio buses of Rocket Show it follows, added together, by their uuids: all of them, if none are named. The
+    // lighting engine takes one stream of audio: the buses all effects of the project follow, added together (see
+    // DefaultDesignerService.followedBuses)
     private List<String> audioBuses = new ArrayList<>();
 
     public String getAudioSource() {
@@ -255,7 +243,6 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
         this.audioSource = audioSource == null || audioSource.isEmpty() ? "off" : audioSource;
     }
 
-    @Override
     public String getAudioBand() {
         return audioBand;
     }
@@ -264,7 +251,6 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
         this.audioBand = audioBand == null || audioBand.isEmpty() ? "full" : audioBand;
     }
 
-    @Override
     public double getAudioGainDb() {
         return audioGainDb;
     }
@@ -273,7 +259,6 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
         this.audioGainDb = audioGainDb == null ? 0 : audioGainDb;
     }
 
-    @Override
     public double getAudioFloorDb() {
         return audioFloorDb;
     }
@@ -282,7 +267,6 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
         this.audioFloorDb = audioFloorDb == null ? -60 : audioFloorDb;
     }
 
-    @Override
     public double getAudioAttackMillis() {
         return audioAttackMillis;
     }
@@ -291,7 +275,6 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
         this.audioAttackMillis = audioAttackMillis == null ? 20 : audioAttackMillis;
     }
 
-    @Override
     public double getAudioReleaseMillis() {
         return audioReleaseMillis;
     }
@@ -316,11 +299,6 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
         this.audioBuses = audioBuses == null ? new ArrayList<>() : new ArrayList<>(audioBuses);
     }
 
-    // the level meter and the wave of the audio show it
-    boolean showsAudio() {
-        return "meter".equals(getPattern()) || "scope".equals(getPattern());
-    }
-
     public String getBlend() {
         return blend;
     }
@@ -336,14 +314,6 @@ public class EffectPixel extends EffectCurve implements PixelPatternSettings, Pi
     // a pattern of an effect written before it could stand still runs
     public void setStill(Boolean still) {
         this.still = still != null && still;
-    }
-
-    // How many periods a still pattern stands at on the passed fixture (see still): where its phase and the chase put
-    // it at the start of its period, like a running one is there at its start
-    public double getStillCycles(Integer fixtureIndex, Integer fixtureCount, Double beatsPerMinute) {
-        double phase = this.getPhaseMillis(beatsPerMinute) + this.getPhasingMillis(fixtureIndex, fixtureCount, beatsPerMinute);
-
-        return (0 - phase) / this.getLengthMillis(beatsPerMinute);
     }
 
 }

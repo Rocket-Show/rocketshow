@@ -56,7 +56,7 @@ class DesignerHoldsTest {
 
     @BeforeEach
     void setUp() {
-        designerService = new DefaultDesignerService(TestSettings.inDirectory(directory), new DefaultFileFilterService(), mock(LightingService.class), new DefaultFixturePixelGroupResolveService());
+        designerService = new DefaultDesignerService(TestSettings.inDirectory(directory), new DefaultFileFilterService(), mock(LightingService.class));
     }
 
     @Test

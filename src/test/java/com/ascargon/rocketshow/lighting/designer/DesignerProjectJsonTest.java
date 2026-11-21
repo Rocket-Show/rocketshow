@@ -1,7 +1,6 @@
 package com.ascargon.rocketshow.lighting.designer;
 
 import com.ascargon.rocketshow.lighting.LightingService;
-import com.ascargon.rocketshow.lighting.engine.LightingEngine;
 import com.ascargon.rocketshow.lighting.engine.LightingEngineConformanceTest;
 import com.ascargon.rocketshow.settings.Settings;
 import com.ascargon.rocketshow.settings.SettingsService;
@@ -21,7 +20,6 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -30,8 +28,6 @@ import static org.mockito.Mockito.when;
  * written with DesignerProjectJson) plays the same as the JSON of the designer: the bits of every value of every frame
  * of the channelValues cases come to the digests the engine recorded from its native build (see
  * LightingEngineConformanceTest, which plays the JSON of the cases as it is).
- * <p>
- * The test playing them is skipped without engine.wasm (see testing/build-lighting-engine.sh).
  */
 class DesignerProjectJsonTest {
 
@@ -50,7 +46,7 @@ class DesignerProjectJsonTest {
         SettingsService settingsService = mock(SettingsService.class);
         when(settingsService.getSettings()).thenReturn(settings);
 
-        return new DefaultDesignerService(settingsService, mock(FileFilterService.class), mock(LightingService.class), new DefaultFixturePixelGroupResolveService());
+        return new DefaultDesignerService(settingsService, mock(FileFilterService.class), mock(LightingService.class));
     }
 
     @Test
@@ -78,7 +74,6 @@ class DesignerProjectJsonTest {
 
     @TestFactory
     Stream<DynamicTest> handsTheProjectsOverToTheSharedEngineAsTheDesignerWritesThem() throws IOException {
-        assumeTrue(LightingEngine.isAvailable(), "No engine.wasm in this build, see testing/build-lighting-engine.sh");
         LightingEngineConformanceTest.loadTheEngine();
 
         DefaultDesignerService designerService = designerService();
@@ -90,7 +85,7 @@ class DesignerProjectJsonTest {
                     LightingEngineConformanceTest.digestOf(CONFORMANCE.resolve("cases").resolve(file.getKey()), projectNode -> {
                         try {
                             Project project = DesignerJson.MAPPER.readValue(LightingEngineConformanceTest.resolveProfiles(projectNode), Project.class);
-                            designerService.migrateProject(project);
+                            ProjectMigration.migrate(project);
                             return DesignerProjectJson.write(project);
                         } catch (IOException e) {
                             throw new IllegalStateException(e);

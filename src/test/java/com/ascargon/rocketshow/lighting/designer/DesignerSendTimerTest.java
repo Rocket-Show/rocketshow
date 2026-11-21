@@ -87,7 +87,7 @@ class DesignerSendTimerTest {
     @TempDir
     Path basePath;
 
-    // What the engine sent, each time it sent: the values of the universe by DMX address (1 to 512)
+    // What the engine sent, each time it sent: the values of the universe by DMX address (1 to 512), the ones lit
     private final List<Map<Integer, Integer>> sent = new CopyOnWriteArrayList<>();
 
     // The universes registered with the lighting service
@@ -123,7 +123,7 @@ class DesignerSendTimerTest {
             return null;
         }).when(lightingService).sendExternalSync(anyBoolean());
 
-        DefaultDesignerService designerService = new DefaultDesignerService(settingsService, fileFilterService, lightingService, new DefaultFixturePixelGroupResolveService());
+        DefaultDesignerService designerService = new DefaultDesignerService(settingsService, fileFilterService, lightingService);
         Project project = designerService.getAllProjects().getFirst();
         for (Fixture fixture : project.getFixtures()) {
             LightingUniverse lightingUniverse = new LightingUniverse();
@@ -169,15 +169,20 @@ class DesignerSendTimerTest {
         doAnswer(invocation -> universes.add(invocation.getArgument(0))).when(lightingService).addLightingUniverse(any());
         doAnswer(invocation -> universes.remove((LightingUniverseState) invocation.getArgument(0))).when(lightingService).removeLightingUniverse(any());
         doAnswer(invocation -> {
+            // the channels lit (the engine sends all 512 channels of a universe, the others at 0)
             Map<Integer, Integer> values = new HashMap<>();
             for (LightingUniverseState universe : universes) {
-                universe.getUniverse().forEach((channel, value) -> values.put(channel + 1, value));
+                universe.getUniverse().forEach((channel, value) -> {
+                    if (value != 0) {
+                        values.put(channel + 1, value);
+                    }
+                });
             }
             sent.add(values);
             return null;
         }).when(lightingService).sendExternalSync(anyBoolean());
 
-        return new DefaultDesignerService(settingsService, mock(FileFilterService.class), lightingService, new DefaultFixturePixelGroupResolveService());
+        return new DefaultDesignerService(settingsService, mock(FileFilterService.class), lightingService);
     }
 
     // A composition playing the song at the passed position

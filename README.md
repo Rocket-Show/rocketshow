@@ -13,9 +13,13 @@ Refer to [the docs](./docs/index.md) to find out how to use Rocket Show.
 
 ### Build
 
-1. Build: `./mvnw clean package -Dmaven.test.skip=true`
-2. Start: `java -jar target/rocketshow.jar`
-3. Open the web app on http://localhost:8080
+1. Build the lighting engine once (and again when Rocket Show moves to another revision of it):
+   `sh testing/build-lighting-engine.sh`. It needs Rust with the target `wasm32-unknown-unknown`
+   (`rustup target add wasm32-unknown-unknown`); the build fails without it, see
+   [docs/lighting-engine.md](./docs/lighting-engine.md).
+2. Build: `./mvnw clean package -Dmaven.test.skip=true`
+3. Start: `java -jar target/rocketshow.jar`
+4. Open the web app on http://localhost:8080
 
 Use this command to skip tests and NPM build:
 ```shell
@@ -240,9 +244,9 @@ Handling the image displaying.
 Responsible for the connection of Rocket Show to the Open Lighting Architecture to control connected lighting
 interfaces. Services for designer project playback also lies here.
 
-The Java engine playing the designer projects (`lighting/designer`) is to be replaced by the lighting engine shared
-with the designer (`Rocket-Show/lighting-engine`), loaded as WebAssembly: see
-[docs/lighting-engine.md](./docs/lighting-engine.md).
+The designer projects are played by the lighting engine shared with the designer (`Rocket-Show/lighting-engine`),
+loaded as WebAssembly (`lighting/engine`): `lighting/designer` keeps the projects, migrates the old ones and hands the
+engine what plays. See [docs/lighting-engine.md](./docs/lighting-engine.md).
 
 The sources of the inluded jar file with the OLA client are copied from an archive into ola-java-client-src.
 

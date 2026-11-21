@@ -235,8 +235,9 @@ class FixtureLibraryTest {
 
     private static final Consumer<ArrayNode> RED = values -> values.addObject().put("type", "ColorIntensity").put("color", "Red").put("valuePercentage", 1.0);
 
+    // the last address lit (the engine sends all 512 channels of a universe, the ones without light at 0)
     private static int lastAddress(Map<Integer, Integer> universe) {
-        return universe.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
+        return universe.entrySet().stream().filter(entry -> entry.getValue() != 0).mapToInt(Map.Entry::getKey).max().orElse(0);
     }
 
     @Test
@@ -246,7 +247,7 @@ class FixtureLibraryTest {
 
         assertEquals(255, universe.get(4));
         assertEquals(0, universe.getOrDefault(1, 0));
-        assertTrue(lastAddress(universe) <= 6, "Sent up to address " + lastAddress(universe));
+        assertTrue(lastAddress(universe) <= 6, "Lit up to address " + lastAddress(universe));
     }
 
     @Test
@@ -262,7 +263,7 @@ class FixtureLibraryTest {
 
         assertEquals(255, universe.get(28));
         assertEquals(0, universe.getOrDefault(4, 0));
-        assertTrue(lastAddress(universe) <= 36, "Sent up to address " + lastAddress(universe));
+        assertTrue(lastAddress(universe) <= 36, "Lit up to address " + lastAddress(universe));
     }
 
     @Test
@@ -278,7 +279,7 @@ class FixtureLibraryTest {
         assertEquals(255, universe.get(28));
         assertEquals(0, universe.getOrDefault(29, 0));
         assertEquals(255, universe.get(30));
-        assertTrue(lastAddress(universe) <= 36, "Sent up to address " + lastAddress(universe));
+        assertTrue(lastAddress(universe) <= 36, "Lit up to address " + lastAddress(universe));
     }
 
     @Test

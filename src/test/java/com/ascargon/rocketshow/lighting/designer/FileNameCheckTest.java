@@ -36,7 +36,7 @@ class FileNameCheckTest {
     }
 
     private DefaultDesignerService designerService() {
-        return new DefaultDesignerService(settingsService, mock(FileFilterService.class), mock(LightingService.class), new DefaultFixturePixelGroupResolveService());
+        return new DefaultDesignerService(settingsService, mock(FileFilterService.class), mock(LightingService.class));
     }
 
     private DefaultFixtureService fixtureService() {

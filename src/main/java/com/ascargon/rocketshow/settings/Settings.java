@@ -199,10 +199,6 @@ public class Settings {
     private Integer designerFrequencyHertz;
     private Boolean designerLivePreview = false;
 
-    // Shadow mode of the shared lighting engine (see docs/lighting-engine.md and ShadowEngine): it plays the projects of
-    // the designer beside the Java engine, which still drives the lights, and the differences are logged. Only in a
-    // build packing engine.wasm.
-    private Boolean designerShadowEngine = false;
     private Boolean updateTestBranch = false;
 
     private List<Instrument> instrumentList = new ArrayList<>();

@@ -11,11 +11,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * The boundary of engine.wasm in the JVM and the wrapper playing a project with it (DesignerEngine). The tests needing
- * engine.wasm are skipped without it (see testing/build-lighting-engine.sh).
+ * The boundary of engine.wasm in the JVM and the wrapper playing a project with it (DesignerEngine).
  */
 class LightingEngineTest {
 
@@ -55,7 +53,6 @@ class LightingEngineTest {
 
     @Test
     void knowsWhatItIs() {
-        assumeTrue(LightingEngine.isAvailable());
         LightingEngine engine = LightingEngine.loadPacked();
 
         assertEquals(1, engine.formatVersion() >> 16, "the major version of the compiled show format");
@@ -66,7 +63,6 @@ class LightingEngineTest {
 
     @Test
     void saysWhyItCannotCompileAProject() {
-        assumeTrue(LightingEngine.isAvailable());
         CompiledShow compiled = LightingEngine.loadPacked().compile("{\"version\": 11, \"fixtures\": 7}");
 
         assertEquals(CompiledShow.UNREADABLE, compiled.code());
@@ -76,7 +72,6 @@ class LightingEngineTest {
 
     @Test
     void playsTheTimelineIntoTheUniverses() {
-        assumeTrue(LightingEngine.isAvailable());
 
         try (DesignerEngine engine = new DesignerEngine(LightingEngine.loadPacked(), PROJECT, 1000)) {
             assertTrue(engine.playTimeline("Song", true, false));
@@ -120,7 +115,7 @@ class LightingEngineTest {
             LightingUniverseState other = new LightingUniverseState();
             other.setMappingUuid("other");
             other.getUniverse().put(0, 99);
-            engine.writeTo(List.of(mapped, twice, other));
+            new EngineRenderer.Rendered(0, 2000, true, engine.copyUniverses(), engine.getUniverseOffsets()).writeTo(List.of(mapped, twice, other));
 
             assertEquals(63, mapped.getUniverse().get(0));
             assertEquals(512, mapped.getUniverse().size());
@@ -131,7 +126,6 @@ class LightingEngineTest {
 
     @Test
     void turnsAFaultOfTheEngineIntoAnException() {
-        assumeTrue(LightingEngine.isAvailable());
         LightingEngine engine = LightingEngine.loadPacked();
 
         // an engine which isn't one: the module traps reading memory it hasn't
