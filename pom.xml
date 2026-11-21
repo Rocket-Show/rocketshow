@@ -316,8 +316,7 @@
                             </execution>
                             <!-- Fail when the coverage drops clearly below what the tests reach today, also without
                                  GStreamer (e.g. locally): 72 % of the lines and 63 % of the branches of the whole
-                                 app, more with GStreamer (in CI). The tests of the Java engine, which covered a lot,
-                                 went with it. -->
+                                 app, 84 % and 74 % with GStreamer (in CI) -->
                             <execution>
                                 <id>check</id>
                                 <phase>test</phase>

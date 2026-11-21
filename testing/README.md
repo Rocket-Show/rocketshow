@@ -35,26 +35,18 @@ CI (`.github/workflows/ci.yml`) runs on every push and on pull requests from for
 
 - **Unit tests:** `./mvnw -B test -Pcoverage` without the web app build, with GStreamer and its base, good and bad
   plugins installed, so the tests playing real media run (CI requires them, elsewhere they are skipped without
-  GStreamer). The summary of the run shows the line coverage, the full JaCoCo report is kept as an artifact
-  (`coverage-report`), and so are the reports of failed tests. The run fails when the tests cover less than 72 % of
-  the lines or 58 % of the branches (today 83 % and 72 %), or when a package drops below its own minimum (the
+  GStreamer), and `engine.wasm` of the lighting engine built first (`testing/build-lighting-engine.sh`, with Rust: the
+  build needs it). The summary of the run shows the line coverage, the full JaCoCo report is kept as an artifact
+  (`coverage-report`), and so are the reports of failed tests. The run fails when the tests cover less than 70 % of
+  the lines or 58 % of the branches (today 84 % and 74 %), or when a package drops below its own minimum (the
   `coverage` profile in `pom.xml`: every package 45 % of its lines, the well tested ones 60 % or 70 %).
 - **Web app unit tests:** the unit tests of the web app in headless Chrome (see [below](#web-app-unit-tests)).
-- **Build with web app:** `./mvnw -B package -DskipTests`. The built `rocketshow.jar` is kept as a build artifact for
-  14 days, so every commit has a jar to put on a test unit.
+- **Build with web app:** `engine.wasm` built, then `./mvnw -B package -DskipTests`. The built `rocketshow.jar` is
+  kept as a build artifact for 14 days, so every commit has a jar to put on a test unit.
 - **Web app smoke test:** starts the built jar as a new unit and drives the web app in a browser (see
   [below](#web-app-smoke-test)).
 - **Release sample:** on `master` (releases are built from it) and when started by hand, generates the sample files of
   the version in the pom if they are missing (see [Files of earlier releases](#files-of-earlier-releases)).
-
-Mutation testing (`.github/workflows/mutation.yml`, once a week and when started by hand) puts faults into the engine
-playing the projects of the designer (`lighting/designer`) and checks that its tests notice them (PIT, the `mutation`
-profile in `pom.xml`). Today they notice 94 % of them; the run fails below 92 %. The report is kept as an artifact
-(`mutation-report`). Locally, in about half an hour:
-
-```shell
-./mvnw test-compile org.pitest:pitest-maven:mutationCoverage -Pmutation -Dskip.npm -Dskip.installnodenpm
-```
 
 Dependabot (`.github/dependabot.yml`) proposes updates of Maven, npm and the GitHub actions once a month, one grouped
 pull request per ecosystem, so each update goes through CI. Security updates come as soon as they are known, once the
@@ -120,27 +112,21 @@ The unit tests live in `src/test/java`:
   (`DefaultLightingServiceTest`, `DefaultMidi2LightingConvertServiceTest`), also with a universe mapping removed,
   patching the universes in OLA, with a
   simulated OLA (`OlaSetupTest`)
-- Lighting designer: presets (`PresetMirrorTest`, `PresetIntensityTest`, `PresetStepsTest`), effect curves and fades
-  (`EffectCurveTest`, `TransitionCurveTest`, mirroring the specs of the designer), pixels and pixel groups of fixture
-  matrices (`FixturePixelGroupTest`), the DMX values a project sends with the master dimmer and the live preview of
-  presets, scenes and the timeline (`DesignerDmxTest`), when it starts and stops sending (playing, pausing, closing,
-  the preview, the scenes picked by hand) and nothing sent once stopped (`DesignerSendTimerTest`), projects
-  read and worked out exactly like the designer reads them: values which are null, missing or not whole, default
-  values, numbers and colors of the fixture library, the order and the older forms of pixel groups (`DesignerParityTest`
-  and the new cases of `DesignerDmxTest`, mirroring the parity spec of the designer), and the very same values as the
-  designer for its conformance cases, compared exactly (`DesignerConformanceTest`: curves, steps, fades, the fixture
-  library, test fixtures right on the edges of their ranges, wheels and pixels, whole projects played on the
-  timeline, as a preset and as scenes, and projects of every older version migrated, recorded from the designer and
-  copied
-  to `src/test/resources/designer-conformance` with `testing/sync-designer-conformance.sh`, which CI checks)
-- The shared lighting engine (`docs/lighting-engine.md`), where the build has `engine.wasm`
-  (`testing/build-lighting-engine.sh`; skipped without, also in CI): the bits of every frame of the conformance cases
-  through `engine.wasm` in the JVM, from the JSON of the cases and from projects handed over the way Rocket Show hands
-  them over (`LightingEngineConformanceTest`, `DesignerProjectJsonTest`), the wrapper and a trap of the engine
-  (`LightingEngineTest`), and shadow mode: the universes of both engines over all cases, a composition with a hold,
-  the scenes picked by hand and the preview of the designer, and the show playing on when the shared engine fails or is
-  missing (`DesignerShadowEngineTest`, `DesignerShadowModeTest`). Its frame time: `LightingEngineBenchmark`, run on its
-  own
+- Lighting designer, played by the shared lighting engine: the DMX values a project sends with the master dimmer and
+  the live preview of presets, scenes and the timeline (`DesignerDmxTest`), the tracks of the timeline
+  (`DesignerTracksTest`), the holds and the tempo (`DesignerHoldsTest`), when it starts and stops sending (playing,
+  pausing, closing, the preview, the scenes picked by hand) and nothing sent once stopped (`DesignerSendTimerTest`),
+  the send timer going on while the engine takes long for a frame, a fault of the engine and the audio buses the pixel
+  effects follow (`DesignerLightingEngineTest`), projects read like the designer reads them: values which are null,
+  missing, not whole or written as text, the order and the older forms of pixel groups (`DesignerParityTest`,
+  mirroring the parity spec of the designer), the pixels of fixture matrices (`MatrixPixelsTest`), and projects of
+  every older version migrated exactly like the designer migrates them (`DesignerMigrationConformanceTest`, the cases
+  of the kind `migration` recorded from the designer and copied to `src/test/resources/designer-conformance` with
+  `testing/sync-designer-conformance.sh`, which CI checks)
+- The shared lighting engine (`docs/lighting-engine.md`): the bits of every frame of the conformance cases of the kind
+  `channelValues` through `engine.wasm` in the JVM, from the JSON of the cases and from projects handed over the way
+  Rocket Show hands them over (`LightingEngineConformanceTest`, `DesignerProjectJsonTest`), the wrapper and a trap of
+  the engine (`LightingEngineTest`). Its frame time: `LightingEngineBenchmark`, run on its own
 - Fixture library: synced with the online designer page by page (with the registration of the unit, as its account
   when linked), the profiles a version came without loaded on their own, kept as it was when a sync breaks off, the
   unit is offline or the answer is no page, nothing written outside of it, in the background after the start, a
@@ -327,11 +313,10 @@ The designer migrations are tested with a project in version 2 and the same proj
 - [x] Generated `.asoundrc` and `hostapd.conf`, output channels of audio buses.
 - [x] DMX mixing, universe mapping and MIDI to DMX.
 - [x] The whole app started with the full release sample.
-- [x] Designer effect curves, fades and pixel groups, mirroring the specs of the designer.
-- [x] The designer engine reads and works out a project like the preview of the designer (nulls, fractions, defaults
-  of the fixture library, pixel groups), mirroring its parity spec.
-- [x] The conformance cases of the designer, which the engine has to come to exactly (941 cases, the copy checked in
-  CI).
+- [x] Designer projects read like the preview of the designer reads them (nulls, fractions, pixel groups), mirroring
+  its parity spec; old projects migrated exactly like the designer migrates them.
+- [x] The lighting engine shared with the designer comes to the very same bits as its native build for every frame of
+  the conformance cases of the designer (the copy checked in CI).
 - [x] Compositions and sets: storing, durations, keeping the sets up to date.
 - [x] Parsing the output of the system: RAUC, disk space, LAN, device information, command output while debugging.
 - [x] The player's set logic: next, previous, empty and deleted sets, auto select.
