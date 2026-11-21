@@ -358,7 +358,8 @@
                                         <!-- Every package, also new ones. Not the start of the app, the GStreamer
                                              bindings and the few lines about HDMI and images, which need real
                                              devices or GStreamer. The player reaches 51 % of its lines without
-                                             GStreamer, 84 % with. -->
+                                             GStreamer, 84 % with. Nor the shared lighting engine, whose tests need
+                                             engine.wasm, which CI hasn't (see docs/lighting-engine.md). -->
                                         <rule>
                                             <element>PACKAGE</element>
                                             <excludes>
@@ -366,6 +367,7 @@
                                                 <exclude>com.ascargon.rocketshow.gstreamer</exclude>
                                                 <exclude>com.ascargon.rocketshow.video</exclude>
                                                 <exclude>com.ascargon.rocketshow.image</exclude>
+                                                <exclude>com.ascargon.rocketshow.lighting.engine</exclude>
                                             </excludes>
                                             <limits>
                                                 <limit>
