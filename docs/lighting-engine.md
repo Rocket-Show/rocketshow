@@ -263,10 +263,12 @@ The engine computes in single precision and on whole nanoseconds, where the Java
 | 3. Shadow mode | Both engines, the differences logged                                                                                   | No differences reported                               | None but the edges of section 5, on the cases and live on a SPARK   |
 | 4. The switch  | The engine drives the lights; the Java engine, its tests and the cases only it played are deleted                      | The frame times on SPARK's hardware                   | Done, 21 November 2026 (sections 3 and 4)                           |
 
-The designer switched first: the recorded values come from it, and it updates itself, so a fault is fixed for everyone
-within the hour. Rocket Show on a stage is where a fault costs most, so it switched last, after shadow mode. The owner
-decided on 21 November 2026 that the Java engine could be retired without a release in shadow mode: shadow mode had
-found no difference but the edges of section 5. New engine features land in the shared engine only.
+The designer was to switch first: the recorded values come from it, and it updates itself, so a fault is fixed for
+everyone within the hour. Rocket Show on a stage is where a fault costs most, so it was to switch last, after shadow
+mode. The owner decided on 21 November 2026 that the Java engine could be retired now: shadow mode had found no
+difference but the edges of section 5. The designer (1.83.0) has the shared engine behind a switch, off: until it
+switches, it previews with its own engine, the one the recorded values come from, which Rocket Show comes to within 1.
+New engine features land in the shared engine only.
 
 **`engine.wasm` is built, not kept in this repository.** The engine is open source since 21 November 2026
 ([Rocket-Show/lighting-engine](https://github.com/Rocket-Show/lighting-engine), GPL-3.0-or-later, like Rocket Show).
