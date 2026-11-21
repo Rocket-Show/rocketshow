@@ -23,6 +23,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - name: Build engine.wasm of the shared lighting engine
+        # For the tests of the shared lighting engine and of shadow mode (see docs/lighting-engine.md)
+        run: sh testing/build-lighting-engine.sh
       - name: Run the unit tests
         run: ./mvnw -B test -Pcoverage -Dskip.npm -Dskip.installnodenpm
         env:

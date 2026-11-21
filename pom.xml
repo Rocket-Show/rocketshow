@@ -22,6 +22,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>21</java.version>
         <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
+        <endive.version>1.2.0</endive.version>
     </properties>
 
     <build>
@@ -189,6 +190,19 @@
             <version>1.4.0</version>
         </dependency>
 
+        <!-- The shared lighting engine (engine.wasm, see docs/lighting-engine.md) inside the JVM: the WebAssembly
+             runtime and its compiler, which turns the module into JVM bytecode when it is loaded -->
+        <dependency>
+            <groupId>run.endive</groupId>
+            <artifactId>runtime</artifactId>
+            <version>${endive.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>run.endive</groupId>
+            <artifactId>compiler</artifactId>
+            <version>${endive.version}</version>
+        </dependency>
+
         <!-- To access Raspberry Pi GPIO pins -->
         <dependency>
             <groupId>com.pi4j</groupId>
@@ -344,7 +358,9 @@
                                         <!-- Every package, also new ones. Not the start of the app, the GStreamer
                                              bindings and the few lines about HDMI and images, which need real
                                              devices or GStreamer. The player reaches 51 % of its lines without
-                                             GStreamer, 84 % with. -->
+                                             GStreamer, 84 % with. Nor the shared lighting engine, whose tests need
+                                             engine.wasm: a build without it (and without Rust) must pass as well
+                                             (see docs/lighting-engine.md). -->
                                         <rule>
                                             <element>PACKAGE</element>
                                             <excludes>
@@ -352,6 +368,7 @@
                                                 <exclude>com.ascargon.rocketshow.gstreamer</exclude>
                                                 <exclude>com.ascargon.rocketshow.video</exclude>
                                                 <exclude>com.ascargon.rocketshow.image</exclude>
+                                                <exclude>com.ascargon.rocketshow.lighting.engine</exclude>
                                             </excludes>
                                             <limits>
                                                 <limit>
