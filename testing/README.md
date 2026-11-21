@@ -133,6 +133,14 @@ The unit tests live in `src/test/java`:
   timeline, as a preset and as scenes, and projects of every older version migrated, recorded from the designer and
   copied
   to `src/test/resources/designer-conformance` with `testing/sync-designer-conformance.sh`, which CI checks)
+- The shared lighting engine (`docs/lighting-engine.md`), where the build has `engine.wasm`
+  (`testing/build-lighting-engine.sh`; skipped without, also in CI): the bits of every frame of the conformance cases
+  through `engine.wasm` in the JVM, from the JSON of the cases and from projects handed over the way Rocket Show hands
+  them over (`LightingEngineConformanceTest`, `DesignerProjectJsonTest`), the wrapper and a trap of the engine
+  (`LightingEngineTest`), and shadow mode: the universes of both engines over all cases, a composition with a hold,
+  the scenes picked by hand and the preview of the designer, and the show playing on when the shared engine fails or is
+  missing (`DesignerShadowEngineTest`, `DesignerShadowModeTest`). Its frame time: `LightingEngineBenchmark`, run on its
+  own
 - Fixture library: synced with the online designer page by page (with the registration of the unit, as its account
   when linked), the profiles a version came without loaded on their own, kept as it was when a sync breaks off, the
   unit is offline or the answer is no page, nothing written outside of it, in the background after the start, a

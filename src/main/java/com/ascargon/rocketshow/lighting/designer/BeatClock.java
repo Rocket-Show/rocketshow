@@ -20,8 +20,29 @@ public class BeatClock {
     private double shiftBeats = 0;
     private double shiftEndRealMillis = 0;
 
+    // told when the clock is moved other than by a tempo (see Listener)
+    private volatile Listener listener;
+
+    /**
+     * Told of the moves of the clock other than a tempo: a beat aligned, the first beat of a bar, the beats set, each
+     * with its moment. Shadow mode hands them to the shared lighting engine (see ShadowEngine).
+     */
+    public interface Listener {
+
+        void alignBeat(double realMillis);
+
+        void beatOne(boolean jump, double realMillis);
+
+        void setBeats(double beats, double realMillis);
+
+    }
+
     public BeatClock(double realMillis) {
         anchorRealMillis = realMillis;
+    }
+
+    public void setListener(Listener listener) {
+        this.listener = listener;
     }
 
     // where the clock is at the passed real time, in beats
@@ -80,6 +101,12 @@ public class BeatClock {
     public synchronized void alignBeat(double realMillis) {
         double beats = getBeats(realMillis);
         shift(Math.round(beats) - beats, 1, realMillis);
+
+        Listener told = listener;
+
+        if (told != null) {
+            told.alignBeat(realMillis);
+        }
     }
 
     // The first beat of a bar falls on the passed moment. Jumping ahead to the next whole bar, the beats repeat the
@@ -88,9 +115,14 @@ public class BeatClock {
     public synchronized void beatOne(int beatsPerBar, boolean jump, double realMillis) {
         int bar = Math.max(1, beatsPerBar);
         double beats = getBeats(realMillis);
+        Listener told = listener;
+
+        if (told != null) {
+            told.beatOne(jump, realMillis);
+        }
 
         if (jump) {
-            setBeats(Math.ceil(beats / bar - 1e-9) * bar, realMillis);
+            jumpTo(Math.ceil(beats / bar - 1e-9) * bar, realMillis);
             return;
         }
 
@@ -105,6 +137,16 @@ public class BeatClock {
 
     // where the clock is at the passed moment, at once (e.g. a song position of a MIDI clock)
     public synchronized void setBeats(double beats, double realMillis) {
+        jumpTo(beats, realMillis);
+
+        Listener told = listener;
+
+        if (told != null) {
+            told.setBeats(beats, realMillis);
+        }
+    }
+
+    private void jumpTo(double beats, double realMillis) {
         anchorBeats = beats;
         anchorRealMillis = realMillis;
         shiftBeats = 0;

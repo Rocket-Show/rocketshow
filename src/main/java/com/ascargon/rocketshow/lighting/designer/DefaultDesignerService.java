@@ -5,6 +5,7 @@ import com.ascargon.rocketshow.play.CompositionPlayer;
 import com.ascargon.rocketshow.lighting.LightingService;
 import com.ascargon.rocketshow.lighting.LightingUniverse;
 import com.ascargon.rocketshow.lighting.LightingUniverseState;
+import com.ascargon.rocketshow.lighting.engine.ShadowEngine;
 import com.ascargon.rocketshow.util.AtomicFile;
 import com.ascargon.rocketshow.util.FileFilterService;
 import com.ascargon.rocketshow.util.FileNames;
@@ -122,6 +123,14 @@ public class DefaultDesignerService implements DesignerService {
     // the scenes picked by hand were let go: they play until they have faded out, then their lights are turned off
     private volatile boolean releasingManualScenes = false;
 
+    // Shadow mode: the shared lighting engine plays the same as this engine beside it, the lights still driven by this
+    // one, and the differences are logged (see ShadowEngine and the setting designerShadowEngine). Null while it is off.
+    private volatile ShadowEngine shadowEngine;
+    private boolean shadowEngineMissingLogged = false;
+
+    // makes the shadow engine, none without engine.wasm (package visible for the tests)
+    Function<AudioAnalysisService, ShadowEngine> shadowEngineFactory = ShadowEngine::createIfAvailable;
+
     private List<LightingUniverseState> lightingUniverses = new ArrayList<>();
 
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
@@ -169,6 +178,9 @@ public class DefaultDesignerService implements DesignerService {
     private Map<CachedFixture, List<OutputChannel>> outputChannels = new ConcurrentHashMap<>();
 
     private long lastPlayTimeMillis;
+
+    // the moment of real time of the frame worked out (see calculateUniverse)
+    private double frameRealMillis;
 
     // the analysis of the audio of the composition playing, which the pixel effects follow, and what a frame knows of
     // it while it is worked out: its moment, the audio of each effect following it and the settings of the ones
@@ -575,7 +587,7 @@ public class DefaultDesignerService implements DesignerService {
             updateRegionStartBeats(presets, timeMillis);
         } else if (playingManualScenes) {
             // the scenes picked by hand, each from the moment it was picked, fading in and out (see LiveScenes)
-            presets = liveScenes.getPresets(project.getScenes() == null ? List.of() : project.getScenes(), this::getScenePresets, timeMillis, System.currentTimeMillis());
+            presets = liveScenes.getPresets(project.getScenes() == null ? List.of() : project.getScenes(), this::getScenePresets, timeMillis, frameRealMillis);
         } else {
             // previewPreset = solo. Without a selected scene there is nothing else to
             // show than the selected preset anyway.
@@ -1935,8 +1947,15 @@ public class DefaultDesignerService implements DesignerService {
     // the tempo from outside: tapped, set or of a MIDI clock (null = the programmed one, see TempoService)
     @Override
     public void setOutsideBeatsPerMinute(Double beatsPerMinute) {
+        long now = System.currentTimeMillis();
         outsideBeatsPerMinute = beatsPerMinute;
-        syncBeatClock();
+        syncBeatClock(now);
+
+        ShadowEngine shadow = shadowEngine;
+
+        if (shadow != null) {
+            shadow.setTempo(now, beatsPerMinute);
+        }
     }
 
     @Override
@@ -1970,10 +1989,14 @@ public class DefaultDesignerService implements DesignerService {
 
     // the beat clock runs at the tempo playing (on at the last one, while none plays)
     private void syncBeatClock() {
+        syncBeatClock(System.currentTimeMillis());
+    }
+
+    private void syncBeatClock(long nowMillis) {
         Double beatsPerMinute = getTempoBeatsPerMinute();
 
         if (beatsPerMinute != null && beatsPerMinute > 0) {
-            beatClock.setBeatsPerMinute(beatsPerMinute, System.currentTimeMillis());
+            beatClock.setBeatsPerMinute(beatsPerMinute, nowMillis);
         }
     }
 
@@ -2062,10 +2085,14 @@ public class DefaultDesignerService implements DesignerService {
 
     // the hold going on lasts until now
     private void updateHold() {
+        updateHold(System.currentTimeMillis());
+    }
+
+    private void updateHold(long nowMillis) {
         List<CompositionHold> current = holds;
 
         if (holding && !current.isEmpty()) {
-            current.getLast().setHeldMillis(System.currentTimeMillis() - holdStartRealMillis);
+            current.getLast().setHeldMillis(nowMillis - holdStartRealMillis);
         }
     }
 
@@ -2115,7 +2142,7 @@ public class DefaultDesignerService implements DesignerService {
     // the clips of the composition playing at the moment: those following the tempo from outside start on the beat of
     // it they began on (a whole one), the others forget theirs
     private void updateRegionStartBeats(List<PresetRegionScene> presets, double timeMillis) {
-        frameBeats = beatClock.getBeats(System.currentTimeMillis());
+        frameBeats = beatClock.getBeats(frameRealMillis);
 
         if (!isFollowingOutsideTempo()) {
             regionStartBeats.clear();
@@ -3130,6 +3157,7 @@ public class DefaultDesignerService implements DesignerService {
     // Package visible for the conformance cases of the designer: the values of each fixture (and pixel) of the loaded
     // project at the passed time, the way the universe is worked out (the designer's clock isn't on whole milliseconds)
     Map<CachedFixture, List<FixtureChannelValue>> calculateChannelValues(double timeMillis) {
+        frameRealMillis = System.currentTimeMillis();
         return getChannelValues(timeMillis, getPresets(timeMillis));
     }
 
@@ -3139,9 +3167,14 @@ public class DefaultDesignerService implements DesignerService {
     }
 
     private void calculateUniverse(double timeMillis) {
+        calculateUniverse(timeMillis, System.currentTimeMillis());
+    }
+
+    private void calculateUniverse(double timeMillis, long nowMillis) {
         try {
-            syncBeatClock();
-            updateHold();
+            syncBeatClock(nowMillis);
+            updateHold(nowMillis);
+            frameRealMillis = nowMillis;
 
             List<PresetRegionScene> presets = getPresets(timeMillis);
             Map<CachedFixture, List<FixtureChannelValue>> calculatedFixtures = getChannelValues(timeMillis, presets);
@@ -3150,9 +3183,215 @@ public class DefaultDesignerService implements DesignerService {
         } catch (Exception e) {
             logger.error("Could not calculate the universe", e);
         }
+
+        ShadowEngine shadow = shadowEngine;
+
+        if (shadow != null) {
+            shadowFrame(shadow, timeMillis, nowMillis);
+        }
+    }
+
+    // ---- shadow mode ----
+
+    // Shadow mode follows its setting with each project loaded: the shared lighting engine compiles the project,
+    // migrated, and plays it beside this engine (see ShadowEngine). Nothing of it may keep the project from playing.
+    private void loadShadowEngine(Project project) {
+        try {
+            boolean on = Boolean.TRUE.equals(settingsService.getSettings().getDesignerShadowEngine());
+
+            if (on && shadowEngine == null) {
+                ShadowEngine shadow = shadowEngineFactory.apply(audioAnalysisService);
+
+                if (shadow == null) {
+                    if (!shadowEngineMissingLogged) {
+                        logger.warn("Shadow mode is on, but this build of Rocket Show has no shared lighting engine (engine.wasm): it stays off");
+                        shadowEngineMissingLogged = true;
+                    }
+
+                    return;
+                }
+
+                shadowEngine = shadow;
+                beatClock.setListener(new BeatClock.Listener() {
+                    @Override
+                    public void alignBeat(double realMillis) {
+                        ShadowEngine current = shadowEngine;
+
+                        if (current != null) {
+                            current.tap(realMillis);
+                        }
+                    }
+
+                    @Override
+                    public void beatOne(boolean jump, double realMillis) {
+                        ShadowEngine current = shadowEngine;
+
+                        if (current != null) {
+                            current.beatOne(realMillis, jump);
+                        }
+                    }
+
+                    @Override
+                    public void setBeats(double beats, double realMillis) {
+                        ShadowEngine current = shadowEngine;
+
+                        if (current != null) {
+                            current.setBeats(realMillis, beats);
+                        }
+                    }
+                });
+            } else if (!on && shadowEngine != null) {
+                beatClock.setListener(null);
+                shadowEngine.close();
+                shadowEngine = null;
+            }
+
+            if (shadowEngine != null) {
+                long now = System.currentTimeMillis();
+                shadowEngine.load(project, now, new ShadowEngine.Load(getShadowChannelNames(), getShadowFineChannels(), getShadowAudioBuses(project),
+                        beatClock.getBeats(now), beatClock.getBeatsPerMinute(), outsideBeatsPerMinute));
+            }
+        } catch (Throwable e) {
+            logger.error("Could not start the shadow mode of the shared lighting engine", e);
+        }
+    }
+
+    private void unloadShadowEngine() {
+        ShadowEngine shadow = shadowEngine;
+
+        if (shadow != null) {
+            shadow.unload();
+        }
+    }
+
+    // what is on each channel of each universe of the loaded project (the fixture and its channel), for the log of
+    // shadow mode
+    private Map<String, String[]> getShadowChannelNames() {
+        Map<String, String[]> names = new HashMap<>();
+
+        for (CachedFixture cachedFixture : cachedFixtures == null ? List.<CachedFixture>of() : cachedFixtures) {
+            String universeUuid = cachedFixture.getFixture().getDmxUniverseUuid();
+
+            if (universeUuid == null) {
+                continue;
+            }
+
+            String[] channels = names.computeIfAbsent(universeUuid, uuid -> new String[512]);
+
+            for (OutputChannel output : getOutputChannels(cachedFixture)) {
+                if (output.address() >= 0 && output.address() < channels.length && channels[output.address()] == null) {
+                    Fixture fixture = cachedFixture.getFixture();
+                    channels[output.address()] = (fixture.getName() == null ? fixture.getUuid() : fixture.getName()) + " " + output.channel().getName() + (output.fineIndex() > 0 ? " (fine " + output.fineIndex() + ")" : "");
+                }
+            }
+        }
+
+        return names;
+    }
+
+    // the channels of each universe of the loaded project sent in several bytes, from the coarse one to the finest one,
+    // which shadow mode compares as one number
+    private Map<String, List<int[]>> getShadowFineChannels() {
+        Map<String, List<int[]>> fineChannels = new HashMap<>();
+
+        for (CachedFixture cachedFixture : cachedFixtures == null ? List.<CachedFixture>of() : cachedFixtures) {
+            String universeUuid = cachedFixture.getFixture().getDmxUniverseUuid();
+            Map<CachedFixtureChannel, TreeMap<Integer, Integer>> bytes = new IdentityHashMap<>();
+
+            for (OutputChannel output : getOutputChannels(cachedFixture)) {
+                if (output.address() >= 0 && output.address() < 512) {
+                    bytes.computeIfAbsent(output.channel(), channel -> new TreeMap<>()).put(output.fineIndex(), output.address());
+                }
+            }
+
+            for (TreeMap<Integer, Integer> addresses : bytes.values()) {
+                if (universeUuid != null && addresses.size() > 1) {
+                    fineChannels.computeIfAbsent(universeUuid, uuid -> new ArrayList<>()).add(addresses.values().stream().mapToInt(Integer::intValue).toArray());
+                }
+            }
+        }
+
+        return fineChannels;
+    }
+
+    // The audio the shared engine is handed: it takes one stream, where an effect here follows the buses it names
+    // added together. The buses of the effects following the audio if all name the same, else all buses measured.
+    static List<String> getShadowAudioBuses(Project project) {
+        Set<List<String>> busLists = new HashSet<>();
+
+        for (Preset preset : project == null || project.getPresets() == null ? List.<Preset>of() : project.getPresets()) {
+            for (Effect effect : preset.getEffects() == null ? List.<Effect>of() : preset.getEffects()) {
+                if (effect instanceof EffectPixel pixel && "composition".equals(pixel.getAudioSource())) {
+                    busLists.add(pixel.getAudioBuses());
+                }
+            }
+        }
+
+        return busLists.size() == 1 ? busLists.iterator().next() : List.of();
+    }
+
+    // what played in the frame just worked out and what it came to, for shadow mode (see getPresets for what plays)
+    private void shadowFrame(ShadowEngine shadow, double timeMillis, long nowMillis) {
+        try {
+            CompositionPlayer player = compositionPlayer;
+            boolean timeline = playPreview || (player != null && (holding || CompositionPlayer.PlayState.PLAYING.equals(player.getPlayState())));
+            ShadowEngine.Mode mode;
+
+            if (timeline) {
+                mode = ShadowEngine.Mode.TIMELINE;
+            } else if (playingManualScenes) {
+                mode = ShadowEngine.Mode.LIVE;
+            } else if (previewPreset || selectedSceneUuids == null || selectedSceneUuids.isEmpty()) {
+                mode = ShadowEngine.Mode.PREVIEW_PRESET;
+            } else {
+                mode = ShadowEngine.Mode.PREVIEW_SCENES;
+            }
+
+            List<CompositionHold> heldHolds = new ArrayList<>();
+
+            for (CompositionHold hold : holds) {
+                heldHolds.add(new CompositionHold(hold.getPositionMillis(), hold.getHeldMillis()));
+            }
+
+            Map<String, int[]> universes = new HashMap<>();
+
+            for (LightingUniverseState lightingUniverse : lightingUniverses) {
+                if (lightingUniverse.getMappingUuid() == null || universes.containsKey(lightingUniverse.getMappingUuid())) {
+                    continue;
+                }
+
+                int[] values = new int[512];
+                lightingUniverse.getUniverse().forEach((channel, value) -> {
+                    if (channel != null && value != null && channel >= 0 && channel < values.length) {
+                        values[channel] = value;
+                    }
+                });
+                universes.put(lightingUniverse.getMappingUuid(), values);
+            }
+
+            Composition playing = composition;
+
+            shadow.frame(new ShadowEngine.Frame(nowMillis, timeMillis, mode, playing == null ? null : playing.getName(), player != null,
+                    player != null && player.isDefaultComposition(), selectedPresetUuid, selectedStepUuid,
+                    selectedSceneUuids == null ? List.of() : List.copyOf(selectedSceneUuids), stepPreviewRunning, stepPreviewStartMillis,
+                    heldHolds, holding, identifyFixtureUuids, resetFixtureUuids, lampOnFixtureUuids, dmxOverrides,
+                    playingManualScenes ? manualScenesMasterDimmer : 1, outsideBeatsPerMinute, universes));
+        } catch (Throwable e) {
+            logger.debug("Could not hand the frame to the shadow engine", e);
+        }
+    }
+
+    // Package visible for the tests of shadow mode
+    ShadowEngine getShadowEngine() {
+        return shadowEngine;
     }
 
     private double getCurrentPositionMillis() {
+        return getCurrentPositionMillis(System.currentTimeMillis());
+    }
+
+    // the position at the passed moment of real time, the one of the frame
+    private double getCurrentPositionMillis(long nowMillis) {
         if (compositionPlayer != null) {
             // We have a compositionPlayer -> use it to sync
             return compositionPlayer.getPositionMillis();
@@ -3160,7 +3399,7 @@ public class DefaultDesignerService implements DesignerService {
 
         if (playingManualScenes) {
             // the scenes picked by hand run on a clock of their own, as fast as the speed master and the tempo make it
-            return liveScenes.advance(System.currentTimeMillis());
+            return liveScenes.advance(nowMillis);
         }
 
         if (holding) {
@@ -3169,7 +3408,7 @@ public class DefaultDesignerService implements DesignerService {
         }
 
         // No compositionPlayer, e.g. only designer preview -> just use the current time as reference
-        return System.currentTimeMillis() - lastPlayTimeMillis + startPositionMillis;
+        return nowMillis - lastPlayTimeMillis + startPositionMillis;
     }
 
     private void startTimer() {
@@ -3185,7 +3424,9 @@ public class DefaultDesignerService implements DesignerService {
         final Runnable universeSender = () -> {
             synchronized (universeSendLock) {
                 try {
-                    calculateUniverse(getCurrentPositionMillis());
+                    // one moment of real time for all of the frame (also the one shadow mode works out)
+                    long now = System.currentTimeMillis();
+                    calculateUniverse(getCurrentPositionMillis(now), now);
                     lightingService.sendExternalSync(settingsService.getSettings().getEnableMonitor());
 
                     // the scenes let go have faded out: their lights are turned off (outside this send, which the
@@ -4145,6 +4386,8 @@ public class DefaultDesignerService implements DesignerService {
         }
 
         lightingService.setExternalSync(true);
+
+        loadShadowEngine(project);
     }
 
     @Override
@@ -4183,6 +4426,7 @@ public class DefaultDesignerService implements DesignerService {
 
         project = null;
         pipeline = null;
+        unloadShadowEngine();
 
         // Nothing plays a project of its own anymore -> the scenes picked by hand come back, unless they were let go
         // meanwhile
@@ -4237,6 +4481,13 @@ public class DefaultDesignerService implements DesignerService {
         // the scenes start anew, on the beats of the tempo playing
         liveScenes.reset();
         syncBeatClock();
+
+        ShadowEngine shadow = shadowEngine;
+
+        if (shadow != null) {
+            shadow.startLive(System.currentTimeMillis());
+        }
+
         updateLiveScenes();
 
         startPositionMillis = 0;
@@ -4245,7 +4496,14 @@ public class DefaultDesignerService implements DesignerService {
 
     // hand the scenes picked and flashed to the live scenes, which picks the new ones and lets go of the others
     private void updateLiveScenes() {
-        liveScenes.setScenes(getScenesByUuids(manualSceneUuids), getScenesByUuids(flashedSceneUuids), System.currentTimeMillis());
+        long now = System.currentTimeMillis();
+        liveScenes.setScenes(getScenesByUuids(manualSceneUuids), getScenesByUuids(flashedSceneUuids), now);
+
+        ShadowEngine shadow = shadowEngine;
+
+        if (shadow != null) {
+            shadow.setLiveScenes(now, manualSceneUuids, flashedSceneUuids);
+        }
     }
 
     private List<Scene> getScenesByUuids(List<String> sceneUuids) {
@@ -4287,11 +4545,24 @@ public class DefaultDesignerService implements DesignerService {
     @Override
     public void setLiveSceneDimmers(Map<String, Double> dimmers) {
         liveScenes.setDimmers(dimmers);
+
+        ShadowEngine shadow = shadowEngine;
+
+        if (shadow != null) {
+            shadow.setLiveDimmers(dimmers);
+        }
     }
 
     @Override
     public void setLiveSpeed(double speed) {
-        liveScenes.setSpeed(speed, System.currentTimeMillis());
+        long now = System.currentTimeMillis();
+        liveScenes.setSpeed(speed, now);
+
+        ShadowEngine shadow = shadowEngine;
+
+        if (shadow != null) {
+            shadow.setLiveSpeed(now, speed);
+        }
     }
 
     @Override
@@ -4311,6 +4582,7 @@ public class DefaultDesignerService implements DesignerService {
         stopTimer();
         removeLightingUniverses();
         project = null;
+        unloadShadowEngine();
 
         // Nothing sends the universes of the scenes anymore -> turn the lights off, instead of leaving the values sent
         // last on the wire
