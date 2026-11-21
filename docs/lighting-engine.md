@@ -90,16 +90,30 @@ November 2026, commit `5f84480`): no function of a frame is larger than 6 KB, no
 digests are the same) and the native frame times are unchanged. Rocket Show builds `engine.wasm` from that revision, the
 same one as the designer.
 
-**On SPARK's hardware**, the gate is still to be measured. On a device with Java 21, from a checkout of this branch with
-`engine.wasm` built into it (`testing/build-lighting-engine.sh`, or the file copied to
-`src/main/resources/lighting-engine/engine.wasm`), with Rocket Show stopped:
+**On SPARK's hardware the gate is met** (21 November 2026, a SPARK with a Raspberry Pi Compute Module 5, 4 cores, 2 GB,
+OpenJDK 21.0.11, Rocket Show 3.3 running beside it, `engine.wasm` of `5f84480`):
+
+| Rig                                       | Compile | First 200 frames (each) | Warm: median, 99th percentile | Interpreted |
+| ----------------------------------------- | ------: | ----------------------: | ----------------------------: | ----------: |
+| 30 moving heads, two scenes               |   66 ms |                 10.8 ms |               0.90 ms, 4.4 ms |       51 ms |
+| 60 moving heads (17 channels), two scenes |   75 ms |                  2.3 ms |               1.77 ms, 2.2 ms |      102 ms |
+| 2,048 RGB pixels with a plasma            |  366 ms |                 24.8 ms |              18.3 ms, 18.5 ms |             |
+
+Loading `engine.wasm` (compiled to bytecode) takes 3.2 s there; all of it takes about five times as long as on a Mac.
+The 60 heads take a third of the 5 ms gate. The pixels fit into a frame of 25 ms, but only just: a rig that large would
+need more before the Java engine goes (step 4). The benchmark ran with the test classes and the libraries of the build
+copied onto the device and a small main calling `LightingEngineBenchmark`, which the Maven command below does on a
+checkout:
 
 ```shell
 ./mvnw -B test -Dtest=LightingEngineBenchmark -Dskip.npm -Dskip.installnodenpm
 ```
 
-It prints the lines starting with `BENCHMARK`. If the 60 heads take more than 5 ms a frame there, the fallback is the
-native library.
+**Shadow mode on the same SPARK**, its jar laid over the installed one for the test (the device was put back
+afterwards): the device's own project (a pixel tube of 16 pixels, a scene and a composition) over 3,767 frames, and the
+30 moving heads with fans, a chase, a circle and steps over 2,180 frames, none of them differing by more than 1. Loading
+a project keeps all four cores busy for about 30 seconds while the JVM compiles; then the whole of Rocket Show with both
+engines takes about a quarter of one core for the 30 heads.
 
 **Two things built in.** Shadow mode warms the engine up on load by rendering 300 frames of the project in an engine of
 their own, since the first calls run before the JVM has optimised them. And the universes are read out of the module's
@@ -214,7 +228,7 @@ on its beats, not on the catching up).
 
 | Step           | What is built                                                                                                          | Gate                                                  | Status                                                                 |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------- |
-| 1. Spike       | `engine.wasm` in Endive or Chicory on SPARK's hardware, compiled to bytecode and warmed up, playing the 60-fixture rig | A frame under 5 ms, or the native library through JNA | Endive 1.2.0: 0.35 ms on a Mac. On SPARK's hardware not measured yet   |
+| 1. Spike       | `engine.wasm` in Endive or Chicory on SPARK's hardware, compiled to bytecode and warmed up, playing the 60-fixture rig | A frame under 5 ms, or the native library through JNA | Endive 1.2.0: 0.35 ms on a Mac, 1.77 ms on SPARK (Compute Module 5)    |
 | 2. Wrapper     | The wrapper of section 4 behind `DesignerService`, the conformance digests in CI                                       | The same bits as the native build                     | Built, the same bits. The tests skip in CI, which has no `engine.wasm` |
 | 3. Shadow mode | One release with both engines, the differences logged                                                                  | A release without differences reported                | Built, off by default (`designerShadowEngine`)                         |
 | 4. The switch  | The engine is the default; the Java engine, its tests and the copy of the conformance cases are deleted                |                                                       | Not started                                                            |
