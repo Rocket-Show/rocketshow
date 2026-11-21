@@ -288,7 +288,9 @@ public class EngineRenderer implements AutoCloseable {
         try {
             json = DesignerProjectJson.writeForEngine(project);
         } catch (Throwable e) {
+            // nothing of the project played before may play on in its place
             logger.error("Could not hand the project '{}' to the lighting engine", project.getName(), e);
+            unload();
             return;
         }
 
