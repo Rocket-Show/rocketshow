@@ -1,0 +1,17 @@
+{
+  "channel-values-attributes.json": "757f88d07b3badfe",
+  "channel-values-capabilities.json": "18b8fc88b7c9f7ee",
+  "channel-values-color-dimmers.json": "78c33e8d0b06f5fb",
+  "channel-values-edges.json": "5ee0642f7de221f9",
+  "channel-values-fans.json": "7d640e9463d2d636",
+  "channel-values-library.json": "cf57d0959692800b",
+  "channel-values-mixing-edges.json": "948dddc0c24a6c96",
+  "channel-values-movements.json": "15fb9c61bcdf21e7",
+  "channel-values-pixel-audio.json": "9e162b0bb9833da5",
+  "channel-values-pixel-effects.json": "dc47ec8112872e4f",
+  "channel-values-pixel-stage.json": "d8a7286f41b0de19",
+  "channel-values-pixel-white.json": "303623e05e48b832",
+  "channel-values-scenarios.json": "bb114f80c119557e",
+  "channel-values-show.json": "aa5a701a00b665b4",
+  "channel-values-timing.json": "5eef5f4396bef99d"
+}

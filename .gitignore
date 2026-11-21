@@ -37,3 +37,7 @@ log/*
 /testing/smoke/node_modules
 /testing/smoke/package-lock.json
 /testing/smoke/screenshots
+
+# engine.wasm of the shared lighting engine, built by testing/build-lighting-engine.sh (not to be committed)
+/src/main/resources/lighting-engine/engine.wasm
+/src/main/resources/lighting-engine/engine.revision

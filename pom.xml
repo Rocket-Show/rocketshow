@@ -22,6 +22,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>21</java.version>
         <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
+        <endive.version>1.2.0</endive.version>
     </properties>
 
     <build>
@@ -187,6 +188,19 @@
             <groupId>org.freedesktop.gstreamer</groupId>
             <artifactId>gst1-java-core</artifactId>
             <version>1.4.0</version>
+        </dependency>
+
+        <!-- The shared lighting engine (engine.wasm, see docs/lighting-engine.md) inside the JVM: the WebAssembly
+             runtime and its compiler, which turns the module into JVM bytecode when it is loaded -->
+        <dependency>
+            <groupId>run.endive</groupId>
+            <artifactId>runtime</artifactId>
+            <version>${endive.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>run.endive</groupId>
+            <artifactId>compiler</artifactId>
+            <version>${endive.version}</version>
         </dependency>
 
         <!-- To access Raspberry Pi GPIO pins -->
