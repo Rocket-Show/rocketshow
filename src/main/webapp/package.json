@@ -34,7 +34,7 @@
     "ngx-bootstrap": "^20.0.2",
     "ngx-bootstrap-slider": "^2.1.0",
     "ngx-dropzone-wrapper": "^16.0.0",
-    "ngx-toastr": "^19.0.0",
+    "ngx-toastr": "^20.0.5",
     "ngx-translate-multi-http-loader": "^3.0.0",
     "rxjs": "^6.6.3",
     "sortablejs": "^1.15.7",
